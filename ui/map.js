@@ -17,6 +17,88 @@ const _labelCanvas    = document.createElement('canvas');
 const _labelCtx       = _labelCanvas.getContext('2d');
 
 // ──────────────────────────────────────────────────────────────
+// POLYLABEL — визуальный центр полигона (mapbox/polylabel)
+// Находит точку внутри полигона, максимально удалённую от границ
+// ──────────────────────────────────────────────────────────────
+function polylabel(polygon, precision) {
+  precision = precision || 1.0;
+  // Находим bbox
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  const outerRing = polygon[0];
+  for (let i = 0; i < outerRing.length; i++) {
+    const p = outerRing[i];
+    if (p[0] < minX) minX = p[0];
+    if (p[1] < minY) minY = p[1];
+    if (p[0] > maxX) maxX = p[0];
+    if (p[1] > maxY) maxY = p[1];
+  }
+  const width = maxX - minX;
+  const height = maxY - minY;
+  const cellSize = Math.min(width, height);
+  if (cellSize === 0) return [minX, minY];
+  let h = cellSize / 2;
+  // Приоритетная очередь (простая реализация)
+  const cells = [];
+  function Cell(x, y, h) {
+    this.x = x; this.y = y; this.h = h;
+    this.d = _pointToPolygonDist(x, y, polygon);
+    this.max = this.d + this.h * Math.SQRT2;
+  }
+  for (let x = minX; x < maxX; x += cellSize)
+    for (let y = minY; y < maxY; y += cellSize)
+      cells.push(new Cell(x + h, y + h, h));
+  cells.sort((a, b) => b.max - a.max);
+  // Центроид как начальное приближение
+  let bestCell = _getCentroidCell(polygon);
+  let maxIter = 500;
+  while (cells.length && maxIter-- > 0) {
+    const cell = cells.shift();
+    if (cell.d > bestCell.d) bestCell = cell;
+    if (cell.max - bestCell.d <= precision) continue;
+    h = cell.h / 2;
+    const children = [
+      new Cell(cell.x - h, cell.y - h, h), new Cell(cell.x + h, cell.y - h, h),
+      new Cell(cell.x - h, cell.y + h, h), new Cell(cell.x + h, cell.y + h, h),
+    ];
+    for (const c of children) cells.push(c);
+    cells.sort((a, b) => b.max - a.max);
+  }
+  return [bestCell.x, bestCell.y];
+}
+function _pointToPolygonDist(x, y, polygon) {
+  let inside = false, minDistSq = Infinity;
+  for (let k = 0; k < polygon.length; k++) {
+    const ring = polygon[k];
+    for (let i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
+      const a = ring[i], b = ring[j];
+      if ((a[1] > y !== b[1] > y) && (x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0]))
+        inside = !inside;
+      const dx = b[0] - a[0], dy = b[1] - a[1];
+      let t = ((x - a[0]) * dx + (y - a[1]) * dy) / (dx * dx + dy * dy);
+      t = Math.max(0, Math.min(1, t));
+      const px = a[0] + t * dx - x, py = a[1] + t * dy - y;
+      const dSq = px * px + py * py;
+      if (dSq < minDistSq) minDistSq = dSq;
+    }
+  }
+  return (inside ? 1 : -1) * Math.sqrt(minDistSq);
+}
+function _getCentroidCell(polygon) {
+  let area = 0, x = 0, y = 0;
+  const ring = polygon[0];
+  for (let i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
+    const a = ring[i], b = ring[j];
+    const f = a[0] * b[1] - b[0] * a[1];
+    x += (a[0] + b[0]) * f;
+    y += (a[1] + b[1]) * f;
+    area += f * 3;
+  }
+  if (area === 0) return { x: ring[0][0], y: ring[0][1], h: 0, d: 0, max: 0 };
+  const cx = x / area, cy = y / area;
+  return { x: cx, y: cy, h: 0, d: _pointToPolygonDist(cx, cy, polygon), max: 0 };
+}
+
+// ──────────────────────────────────────────────────────────────
 // ИНИЦИАЛИЗАЦИЯ КАРТЫ
 // ──────────────────────────────────────────────────────────────
 
@@ -522,18 +604,55 @@ function renderNationLabels() {
     if (!nd.totalGeoArea) continue;
     const lat = nd.wLat / nd.totalGeoArea;
     const lng = nd.wLng / nd.totalGeoArea;
+
+    // Вычисляем географический bbox нации для определения ориентации
+    let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+    for (const reg of nd.regions) {
+      for (const c of reg.coords) {
+        if (c[0] < minLat) minLat = c[0];
+        if (c[0] > maxLat) maxLat = c[0];
+        if (c[1] < minLng) minLng = c[1];
+        if (c[1] > maxLng) maxLng = c[1];
+      }
+    }
+    const geoWidth = maxLng - minLng;
+    const geoHeight = maxLat - minLat;
+
+    // Вычисляем визуальный центр через polylabel
+    // Используем наибольший регион для центрирования
+    let bestCenter = [lat, lng];
+    let largestArea = 0;
+    for (const reg of nd.regions) {
+      if (reg.geoArea > largestArea) {
+        largestArea = reg.geoArea;
+        try {
+          // polylabel ожидает [[[lng, lat], ...]]
+          const ring = reg.coords.map(c => [c[1], c[0]]);
+          ring.push(ring[0]); // замыкаем
+          const result = polylabel([ring], 0.005);
+          bestCenter = [result[1], result[0]]; // обратно в [lat, lng]
+        } catch (e) {
+          bestCenter = reg.center || [lat, lng];
+        }
+      }
+    }
+
     const icon = L.divIcon({
       className: 'nation-name-label',
       html: `<span class="nation-label-span">${nd.name}</span>`,
-      iconSize: [420, 80],
-      iconAnchor: [210, 40],
+      iconSize: [420, 120],
+      iconAnchor: [210, 60],
     });
-    const marker = L.marker([lat, lng], { icon, interactive: false, zIndexOffset: 500 });
+    const marker = L.marker(bestCenter, { icon, interactive: false, zIndexOffset: 500 });
     marker.addTo(leafletMap);
     const el = marker.getElement();
     if (el) { el.style.transition = 'opacity 0.35s ease'; el.style.opacity = '0'; el.style.pointerEvents = 'none'; }
 
-    nationLabelData.push({ nationId, name: nd.name, lat, lng, regions: nd.regions, totalGeoArea: nd.totalGeoArea, marker });
+    nationLabelData.push({
+      nationId, name: nd.name, lat: bestCenter[0], lng: bestCenter[1],
+      regions: nd.regions, totalGeoArea: nd.totalGeoArea, marker,
+      geoWidth, geoHeight,
+    });
   }
   // Приоритет: крупные нации первыми
   nationLabelData.sort((a, b) => b.totalGeoArea - a.totalGeoArea);
@@ -548,22 +667,44 @@ function _updateNationLabelVisibility() {
     const el = d.marker.getElement();
     if (!el) continue;
 
-    // Суммарная пиксельная площадь всех регионов нации
+    // Суммарная пиксельная площадь и bbox всех регионов нации
     let totalPxArea = 0;
     let largestPxArea = 0;
     let largestPoly = null;
+    let pxMinX = Infinity, pxMaxX = -Infinity, pxMinY = Infinity, pxMaxY = -Infinity;
     for (const reg of d.regions) {
       const poly = reg.coords.map(c => leafletMap.latLngToContainerPoint([c[0], c[1]]));
       const area = _pxPolyArea(poly);
       totalPxArea += area;
       if (area > largestPxArea) { largestPxArea = area; largestPoly = poly; }
+      for (const p of poly) {
+        if (p.x < pxMinX) pxMinX = p.x;
+        if (p.x > pxMaxX) pxMaxX = p.x;
+        if (p.y < pxMinY) pxMinY = p.y;
+        if (p.y > pxMaxY) pxMaxY = p.y;
+      }
     }
 
-    // Размер шрифта пропорционален √площади
-    const fontSize = Math.max(9, Math.min(52, Math.sqrt(totalPxArea) * 0.14));
+    const pxWidth = pxMaxX - pxMinX;
+    const pxHeight = pxMaxY - pxMinY;
+
+    // Определяем нужен ли вертикальный текст (узкий высокий регион)
+    const isVertical = pxHeight > pxWidth * 1.3;
+    // Для вертикального текста — вписываем в высоту, для горизонтального — в ширину
+    const targetDim = isVertical ? pxHeight * 0.65 : pxWidth * 0.65;
+
+    // Подбираем размер шрифта чтобы текст занимал ~65% ширины/высоты региона
+    let fontSize = 8;
+    const fontFamily = 'Cinzel, Palatino, Georgia, serif';
+    while (fontSize < 72) {
+      _labelCtx.font = `700 ${fontSize + 1}px ${fontFamily}`;
+      if (_labelCtx.measureText(d.name).width > targetDim) break;
+      fontSize++;
+    }
+    fontSize = Math.max(9, Math.min(72, fontSize));
 
     // Ширина текста
-    _labelCtx.font = `700 ${fontSize}px Cinzel, Palatino, Georgia, serif`;
+    _labelCtx.font = `700 ${fontSize}px ${fontFamily}`;
     const textW = _labelCtx.measureText(d.name).width * 1.2;
     const textH = fontSize * 1.4;
     const textArea = textW * textH;
@@ -579,7 +720,16 @@ function _updateNationLabelVisibility() {
     }
 
     const span = el.querySelector('.nation-label-span');
-    if (span) span.style.fontSize = fontSize + 'px';
+    if (span) {
+      span.style.fontSize = fontSize + 'px';
+      // Вертикальный текст для узких высоких регионов
+      if (isVertical) {
+        span.style.transform = 'rotate(-90deg)';
+        span.style.transformOrigin = 'center center';
+      } else {
+        span.style.transform = 'none';
+      }
+    }
     el.style.opacity = (fits && centroidOk) ? '1' : '0';
   }
 }
