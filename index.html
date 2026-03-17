@@ -217,8 +217,14 @@
       font-family: 'Cinzel', 'Palatino Linotype', 'Georgia', serif;
       font-style: normal;
       font-weight: 700;
-      /* Тиснение — светлый текст с тёмным контуром, вдавлен в карту */
-      color: rgba(245, 232, 208, 0.88);
+      /*
+       * Эффект как в Pax Historia / Imperator Rome:
+       * Тёмный текст + mix-blend-mode: multiply = текст "впечатан" в карту.
+       * multiply затемняет пиксели карты под буквами — текст не может
+       * выглядеть "парящим" потому что он буквально является частью
+       * цвета карты, а не отдельным слоем поверх неё.
+       */
+      color: rgba(35, 25, 15, 0.75);
       letter-spacing: 0.12em;
       text-transform: uppercase;
       white-space: nowrap;
@@ -226,16 +232,16 @@
       display: block;
       text-align: center;
       line-height: 1;
+      /* КЛЮЧЕВОЙ ЭФФЕКТ — multiply вдавливает текст в карту */
+      mix-blend-mode: multiply;
+      /* Тонкая тёмная обводка для читаемости на светлых регионах */
       paint-order: stroke fill;
-      -webkit-text-stroke: 2.5px rgba(100, 60, 20, 0.75);
-      /* Тиснение: контур + мягкое свечение + светлый верх + тёмный низ */
+      -webkit-text-stroke: 0.5px rgba(20, 15, 5, 0.3);
+      /* Тиснение: светлый блик снизу (свет сверху) + тёмный край сверху */
       text-shadow:
-        0px 0px 1px rgba(60, 30, 10, 0.9),
-        0px 0px 3px rgba(60, 30, 10, 0.5),
-        0px 1px 0px rgba(255, 240, 200, 0.3),
-        0px -1px 0px rgba(60, 30, 10, 0.4);
-      opacity: 0.85;
-      /* Никаких: drop-shadow, box-shadow, background */
+        0px  1px 0px rgba(255, 245, 220, 0.2),
+        0px -1px 0px rgba(0, 0, 0, 0.15);
+      /* Никаких: drop-shadow, box-shadow, background, яркой обводки */
       background: none;
     }
 
