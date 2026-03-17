@@ -173,10 +173,20 @@ function initLeafletMap() {
   renderNationLabels();
 
   // Пересчёт подписей при изменении вида
-  // Скрываем SVG во время анимации зума — текст всё равно в неверных координатах
+  // move: копируем transform pane → SVG движется синхронно с картой
+  leafletMap.on('move', _syncNationSvgTransform);
+  // moveend: сбрасываем transform (pane тоже сброшен) и пересчитываем позиции
+  leafletMap.on('moveend', () => {
+    if (_nationSvg) _nationSvg.style.transform = '';
+    scheduleNationLabelUpdate();
+  });
+  // zoom: скрываем SVG во время анимации — координаты меняются
   leafletMap.on('zoomstart', () => { if (_nationSvg) _nationSvg.style.opacity = '0'; });
-  leafletMap.on('zoomend',   () => { scheduleNationLabelUpdate(); if (_nationSvg) setTimeout(() => { if (_nationSvg) _nationSvg.style.opacity = '1'; }, 90); });
-  leafletMap.on('moveend',   scheduleNationLabelUpdate);
+  leafletMap.on('zoomend',   () => {
+    if (_nationSvg) _nationSvg.style.transform = '';
+    scheduleNationLabelUpdate();
+    setTimeout(() => { if (_nationSvg) _nationSvg.style.opacity = '1'; }, 90);
+  });
   window.addEventListener('resize', scheduleNationLabelUpdate);
 
   // AWMC overlay отключён: границы провинций теперь из map.json
@@ -568,15 +578,16 @@ function _pointInPolyPx(pt, poly) {
 
 // Создаёт/пересоздаёт SVG overlay для подписей наций
 function _ensureNationSvg() {
-  const overlayPane = leafletMap.getPanes().overlayPane;
-  if (_nationSvg && overlayPane.contains(_nationSvg)) return;
+  const container = leafletMap.getContainer();
+  if (_nationSvg && container.contains(_nationSvg)) return;
 
   if (_nationSvg) { try { _nationSvg.remove(); } catch (e) {} }
 
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  // SVG внутри overlayPane — Leaflet двигает его вместе с картой через CSS transform,
-  // поэтому во время панорамирования текст остаётся точно над своими провинциями.
-  svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;transition:opacity 0.25s ease;';
+  // SVG прикреплён к контейнеру карты (не к pane).
+  // Во время панорамирования мы копируем CSS transform overlayPane на этот SVG
+  // через _syncNationSvgTransform — текст движется синхронно с картой.
+  svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:601;overflow:visible;transition:opacity 0.25s ease;';
 
   svg.innerHTML = `
     <defs>
@@ -592,9 +603,17 @@ function _ensureNationSvg() {
     <g id="nlbl-g"></g>
   `;
 
-  overlayPane.appendChild(svg);
+  container.appendChild(svg);
   _nationSvg      = svg;
   _nationSvgGroup = svg.querySelector('#nlbl-g');
+}
+
+// Копирует CSS transform overlayPane на SVG — вызывается на каждый move.
+// Так текст «плывёт» вместе с картой без пересчёта координат.
+function _syncNationSvgTransform() {
+  if (!_nationSvg) return;
+  const t = leafletMap.getPanes().overlayPane.style.transform;
+  _nationSvg.style.transform = t;
 }
 
 // Строит структуры данных (вызывается один раз или при смене хода)
@@ -711,9 +730,7 @@ function _updateNationLabelVisibility() {
     let pxMinY = Infinity, pxMaxY = -Infinity;
 
     for (const reg of d.regions) {
-      // latLngToLayerPoint — координаты в пространстве overlayPane (не контейнера).
-      // Именно их должен использовать SVG внутри overlayPane.
-      const poly = reg.coords.map(c => leafletMap.latLngToLayerPoint([c[0], c[1]]));
+      const poly = reg.coords.map(c => leafletMap.latLngToContainerPoint([c[0], c[1]]));
       totalPxArea += _pxPolyArea(poly);
       for (const p of poly) {
         if (p.x < pxMinX) pxMinX = p.x;
@@ -735,10 +752,9 @@ function _updateNationLabelVisibility() {
     const bboxCx = (pxMinX + pxMaxX) / 2;
     const bboxCy = (pxMinY + pxMaxY) / 2;
 
-    // Проверяем видимость через containerPoint (для отсечения по вьюпорту)
-    const cPxCheck = leafletMap.latLngToContainerPoint([d.lat, d.lng]);
-    if (cPxCheck.x < -300 || cPxCheck.x > mapSize.x + 300 ||
-        cPxCheck.y < -300 || cPxCheck.y > mapSize.y + 300) continue;
+    // Отбрасываем если нация вне видимой области
+    if (bboxCx < -300 || bboxCx > mapSize.x + 300 ||
+        bboxCy < -300 || bboxCy > mapSize.y + 300) continue;
 
     // ── 3. Ориентация и целевая длина текста ────────────────
     // Вертикальный текст если нация заметно выше, чем шире
