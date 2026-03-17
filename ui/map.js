@@ -173,17 +173,17 @@ function initLeafletMap() {
   renderNationLabels();
 
   // Пересчёт подписей при изменении вида
-  // move: копируем transform pane → SVG движется синхронно с картой
-  leafletMap.on('move', _syncNationSvgTransform);
-  // moveend: сбрасываем transform (pane тоже сброшен) и пересчитываем позиции
-  leafletMap.on('moveend', () => {
-    if (_nationSvg) _nationSvg.style.transform = '';
-    scheduleNationLabelUpdate();
+  // move: пересчитываем позиции через RAF — один раз за кадр, без задержки.
+  // latLngToContainerPoint всегда возвращает правильные координаты даже во время пана.
+  let _panRafId = null;
+  leafletMap.on('move', () => {
+    if (_panRafId) cancelAnimationFrame(_panRafId);
+    _panRafId = requestAnimationFrame(() => { _panRafId = null; _updateNationLabelVisibility(); });
   });
-  // zoom: скрываем SVG во время анимации — координаты меняются
+  leafletMap.on('moveend', scheduleNationLabelUpdate);
+  // zoom: скрываем SVG во время анимации масштаба
   leafletMap.on('zoomstart', () => { if (_nationSvg) _nationSvg.style.opacity = '0'; });
   leafletMap.on('zoomend',   () => {
-    if (_nationSvg) _nationSvg.style.transform = '';
     scheduleNationLabelUpdate();
     setTimeout(() => { if (_nationSvg) _nationSvg.style.opacity = '1'; }, 90);
   });
@@ -608,13 +608,6 @@ function _ensureNationSvg() {
   _nationSvgGroup = svg.querySelector('#nlbl-g');
 }
 
-// Копирует CSS transform mapPane на SVG — вызывается на каждый move.
-// Leaflet двигает именно mapPane (родитель всех pane), а не overlayPane напрямую.
-function _syncNationSvgTransform() {
-  if (!_nationSvg) return;
-  const t = leafletMap.getPanes().mapPane.style.transform;
-  _nationSvg.style.transform = t;
-}
 
 // Строит структуры данных (вызывается один раз или при смене хода)
 function renderNationLabels() {
