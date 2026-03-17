@@ -608,11 +608,11 @@ function _ensureNationSvg() {
   _nationSvgGroup = svg.querySelector('#nlbl-g');
 }
 
-// Копирует CSS transform overlayPane на SVG — вызывается на каждый move.
-// Так текст «плывёт» вместе с картой без пересчёта координат.
+// Копирует CSS transform mapPane на SVG — вызывается на каждый move.
+// Leaflet двигает именно mapPane (родитель всех pane), а не overlayPane напрямую.
 function _syncNationSvgTransform() {
   if (!_nationSvg) return;
-  const t = leafletMap.getPanes().overlayPane.style.transform;
+  const t = leafletMap.getPanes().mapPane.style.transform;
   _nationSvg.style.transform = t;
 }
 
