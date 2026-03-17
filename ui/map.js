@@ -685,37 +685,94 @@ function _updateNationLabelVisibility() {
       }
     }
 
-    const pxWidth = pxMaxX - pxMinX;
-    const pxHeight = pxMaxY - pxMinY;
+    // Вычисляем bbox НАИБОЛЬШЕГО полигона (не всей нации!)
+    let lpMinX = Infinity, lpMaxX = -Infinity, lpMinY = Infinity, lpMaxY = -Infinity;
+    if (largestPoly) {
+      for (const p of largestPoly) {
+        if (p.x < lpMinX) lpMinX = p.x;
+        if (p.x > lpMaxX) lpMaxX = p.x;
+        if (p.y < lpMinY) lpMinY = p.y;
+        if (p.y > lpMaxY) lpMaxY = p.y;
+      }
+    }
+    const lpWidth = lpMaxX - lpMinX;
+    const lpHeight = lpMaxY - lpMinY;
+
+    // Находим максимальную горизонтальную/вертикальную ширину
+    // через центр метки внутри наибольшего полигона
+    const cPx = leafletMap.latLngToContainerPoint([d.lat, d.lng]);
+    let spanLeft = cPx.x, spanRight = cPx.x;
+    let spanTop = cPx.y, spanBottom = cPx.y;
+    if (largestPoly) {
+      // Горизонтальный размах через центр (y = cPx.y)
+      const y = cPx.y;
+      const intersectsX = [];
+      for (let i = 0, j = largestPoly.length - 1; i < largestPoly.length; j = i++) {
+        const a = largestPoly[i], b = largestPoly[j];
+        if ((a.y > y) !== (b.y > y)) {
+          intersectsX.push(a.x + (y - a.y) * (b.x - a.x) / (b.y - a.y));
+        }
+      }
+      intersectsX.sort((a, b) => a - b);
+      if (intersectsX.length >= 2) {
+        // Найти пару, содержащую cPx.x
+        for (let i = 0; i < intersectsX.length - 1; i += 2) {
+          if (intersectsX[i] <= cPx.x && cPx.x <= intersectsX[i + 1]) {
+            spanLeft = intersectsX[i];
+            spanRight = intersectsX[i + 1];
+            break;
+          }
+        }
+      }
+      // Вертикальный размах через центр (x = cPx.x)
+      const x = cPx.x;
+      const intersectsY = [];
+      for (let i = 0, j = largestPoly.length - 1; i < largestPoly.length; j = i++) {
+        const a = largestPoly[i], b = largestPoly[j];
+        if ((a.x > x) !== (b.x > x)) {
+          intersectsY.push(a.y + (x - a.x) * (b.y - a.y) / (b.x - a.x));
+        }
+      }
+      intersectsY.sort((a, b) => a - b);
+      if (intersectsY.length >= 2) {
+        for (let i = 0; i < intersectsY.length - 1; i += 2) {
+          if (intersectsY[i] <= cPx.y && cPx.y <= intersectsY[i + 1]) {
+            spanTop = intersectsY[i];
+            spanBottom = intersectsY[i + 1];
+            break;
+          }
+        }
+      }
+    }
+    const hSpan = spanRight - spanLeft;   // горизонтальная ширина через центр
+    const vSpan = spanBottom - spanTop;   // вертикальная высота через центр
 
     // Определяем нужен ли вертикальный текст (узкий высокий регион)
-    const isVertical = pxHeight > pxWidth * 1.3;
-    // Для вертикального текста — вписываем в высоту, для горизонтального — в ширину
-    const targetDim = isVertical ? pxHeight * 0.65 : pxWidth * 0.65;
+    const isVertical = vSpan > hSpan * 1.5;
+    // Максимальная допустимая ширина текста — 80% от размаха через центр
+    const maxTextWidth = (isVertical ? vSpan : hSpan) * 0.80;
 
-    // Подбираем размер шрифта чтобы текст занимал ~65% ширины/высоты региона
+    // Подбираем размер шрифта чтобы текст помещался
     let fontSize = 8;
     const fontFamily = 'Cinzel, Palatino, Georgia, serif';
-    while (fontSize < 72) {
+    while (fontSize < 52) {
       _labelCtx.font = `700 ${fontSize + 1}px ${fontFamily}`;
-      if (_labelCtx.measureText(d.name).width > targetDim) break;
+      if (_labelCtx.measureText(d.name).width > maxTextWidth) break;
       fontSize++;
     }
-    fontSize = Math.max(9, Math.min(72, fontSize));
+    fontSize = Math.max(9, Math.min(52, fontSize));
 
-    // Ширина текста
+    // Финальная проверка — текст не должен быть шире допустимого
     _labelCtx.font = `700 ${fontSize}px ${fontFamily}`;
-    const textW = _labelCtx.measureText(d.name).width * 1.2;
-    const textH = fontSize * 1.4;
-    const textArea = textW * textH;
+    const textW = _labelCtx.measureText(d.name).width;
+    const textH = fontSize * 1.2;
 
-    // Проверка вместимости: текст ≤ 80% площади
-    const fits = totalPxArea > 500 && (textArea / totalPxArea) <= 0.80;
+    // Проверка вместимости
+    const fits = totalPxArea > 500 && maxTextWidth > 30;
 
     // Центроид должен лежать внутри наибольшего полигона
     let centroidOk = true;
     if (largestPoly) {
-      const cPx = leafletMap.latLngToContainerPoint([d.lat, d.lng]);
       centroidOk = _pointInPolyPx(cPx, largestPoly);
     }
 
