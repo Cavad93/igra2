@@ -626,7 +626,7 @@ function _pcaAnglePx(points) {
   return 0.5 * Math.atan2(2 * cxy, cxx - cyy);
 }
 
-// Проекция: повёрнутый bbox вдоль угла angle
+// Повёрнутый bbox вдоль угла angle
 function _rotatedSpan(points, angle) {
   const cos = Math.cos(angle), sin = Math.sin(angle);
   let minU = Infinity, maxU = -Infinity, minV = Infinity, maxV = -Infinity;
@@ -641,6 +641,56 @@ function _rotatedSpan(points, angle) {
     if (v < minV) minV = v; if (v > maxV) maxV = v;
   }
   return { width: maxU - minU, height: maxV - minV, cx, cy };
+}
+
+// Ширина суши через точку (cx,cy) вдоль направления angle.
+// Возвращает длину сегмента суши, содержащего центр (или ближайшего).
+function _landWidthThrough(cx, cy, angle, pxPolys) {
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  const allSegments = [];
+
+  for (const poly of pxPolys) {
+    const crossings = [];
+    const n = poly.length;
+    for (let i = 0, j = n - 1; i < n; j = i++) {
+      const ax = poly[j].x - cx, ay = poly[j].y - cy;
+      const bx = poly[i].x - cx, by = poly[i].y - cy;
+      const va = -ax * sin + ay * cos;
+      const vb = -bx * sin + by * cos;
+      if (va * vb >= 0) continue;
+      const frac = va / (va - vb);
+      const t = (ax + frac * (bx - ax)) * cos + (ay + frac * (by - ay)) * sin;
+      crossings.push(t);
+    }
+    if (crossings.length < 2) continue;
+    crossings.sort((a, b) => a - b);
+    for (let k = 0; k < crossings.length - 1; k += 2) {
+      allSegments.push({ a: crossings[k], b: crossings[k + 1] });
+    }
+  }
+
+  if (!allSegments.length) return 0;
+
+  // Сливаем перекрывающиеся сегменты
+  allSegments.sort((x, y) => x.a - y.a);
+  const merged = [{ ...allSegments[0] }];
+  for (let i = 1; i < allSegments.length; i++) {
+    const last = merged[merged.length - 1];
+    if (allSegments[i].a <= last.b + 1) {
+      last.b = Math.max(last.b, allSegments[i].b);
+    } else {
+      merged.push({ ...allSegments[i] });
+    }
+  }
+
+  // Сегмент, содержащий t=0 (центральную точку)
+  for (const seg of merged) {
+    if (seg.a <= 0 && seg.b >= 0) return seg.b - seg.a;
+  }
+  // Центр не на суше → ближайший сегмент
+  let best = 0;
+  for (const seg of merged) if (seg.b - seg.a > best) best = seg.b - seg.a;
+  return best;
 }
 
 // Визуальный центр кластера через polylabel (на наибольшем регионе кластера)
@@ -785,40 +835,76 @@ function _updateNationLabelVisibility() {
     let angle = _pcaAnglePx(allPts);
     const span = _rotatedSpan(allPts, angle);
 
-    // Если территория шире вертикально — корректируем чтобы текст шёл вдоль длинной оси
-    if (span.height > span.width) {
-      angle += Math.PI / 2;
-    }
-    // Нормализуем в [-π/2, π/2] чтобы текст не был вверх ногами
+    if (span.height > span.width) angle += Math.PI / 2;
+    // Нормализуем в [-π/2, π/2]
     while (angle >  Math.PI / 2) angle -= Math.PI;
     while (angle < -Math.PI / 2) angle += Math.PI;
 
     const finalSpan = _rotatedSpan(allPts, angle);
-    const mainW = finalSpan.width;
-    const mainH = finalSpan.height;
+    if (finalSpan.width < 14 && finalSpan.height < 14) continue;
 
-    if (mainW < 14 && mainH < 14) continue;
-
-    // ── 3. Визуальный центр кластера в пикселях ──
+    // ── 3. Визуальный центр + поиск оптимального положения ──
     const centerPt = leafletMap.latLngToContainerPoint([d.lat, d.lng]);
     let tx = centerPt.x, ty = centerPt.y;
 
-    // Проверяем что центр попадает на суше — если нет, берём centroid пикселей
+    // Проверяем что polylabel-центр на суше
     let onLand = false;
     for (const poly of pxPolys) {
       if (_pointInPolyPx(centerPt, poly)) { onLand = true; break; }
     }
     if (!onLand) {
-      tx = finalSpan.cx;
-      ty = finalSpan.cy;
+      // Если нет — ищем точку на суше ближе к centroid
+      tx = finalSpan.cx; ty = finalSpan.cy;
+      for (const poly of pxPolys) {
+        if (_pointInPolyPx({ x: tx, y: ty }, poly)) { onLand = true; break; }
+      }
+      if (!onLand) {
+        // Берём центр наибольшего полигона
+        let maxA = 0;
+        for (const poly of pxPolys) {
+          const a = _pxPolyArea(poly);
+          if (a > maxA) {
+            maxA = a;
+            let sx = 0, sy = 0;
+            for (const p of poly) { sx += p.x; sy += p.y; }
+            tx = sx / poly.length; ty = sy / poly.length;
+          }
+        }
+      }
     }
 
-    // Отбрасываем если кластер вне видимой области
+    // Отбрасываем если вне видимой области
     if (tx < -300 || tx > mapSize.x + 300 ||
         ty < -300 || ty > mapSize.y + 300) continue;
 
-    // ── 4. Размер шрифта — по ширине вдоль главной оси ──
-    const textLen = Math.max(18, Math.floor(mainW * 0.78));
+    // ── 4. Сканируем ширину суши вдоль текстовой оси через центр ──
+    // Пробуем несколько параллельных линий и берём лучшую позицию
+    const perpX = -Math.sin(angle), perpY = Math.cos(angle);
+    let bestW = 0, bestTx = tx, bestTy = ty;
+
+    const offsets = [0, -0.15, 0.15, -0.30, 0.30];
+    for (const frac of offsets) {
+      const off = frac * finalSpan.height;
+      const sx = tx + perpX * off;
+      const sy = ty + perpY * off;
+      // Проверяем что точка на суше
+      let isLand = false;
+      for (const poly of pxPolys) {
+        if (_pointInPolyPx({ x: sx, y: sy }, poly)) { isLand = true; break; }
+      }
+      if (!isLand) continue;
+      const w = _landWidthThrough(sx, sy, angle, pxPolys);
+      if (w > bestW) { bestW = w; bestTx = sx; bestTy = sy; }
+    }
+
+    tx = bestTx; ty = bestTy;
+    if (bestW < 14) bestW = finalSpan.width; // fallback
+
+    // Высота суши (перпендикулярно тексту) для ограничения размера шрифта
+    const landH = _landWidthThrough(tx, ty, angle + Math.PI / 2, pxPolys);
+
+    // ── 5. Размер шрифта — по ширине суши ──
+    const textLen = Math.max(18, Math.floor(bestW * 0.82));
 
     let fontSize = 7;
     while (fontSize < 68) {
@@ -826,12 +912,12 @@ function _updateNationLabelVisibility() {
       if (_labelCtx.measureText(d.name).width > textLen) break;
       fontSize++;
     }
-    // Ограничиваем по высоте (не выше 40% высоты кластера)
-    const maxByH = Math.floor(mainH * 0.40);
+    // Ограничиваем высотой: не более 55% высоты суши через центр
+    const maxByH = landH > 10 ? Math.floor(landH * 0.55) : 68;
     fontSize = Math.max(MIN_FONT, Math.min(68, fontSize, maxByH));
     if (fontSize < MIN_FONT) continue;
 
-    // ── 5. SVG <text> ──
+    // ── 6. SVG <text> ──
     const angleDeg = angle * 180 / Math.PI;
     const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     el.setAttribute('x', tx.toFixed(1));
