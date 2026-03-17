@@ -1,0 +1,2359 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ancient Strategy — Сиракузы 301 BC</title>
+
+  <!-- Leaflet.js — интерактивные карты, без npm.
+       Без integrity= чтобы корректно загружаться с file:// -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    /* ══════════════════════════════════════════════════
+       БАЗОВЫЙ СБРОС И ПЕРЕМЕННЫЕ
+    ══════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-deep:      #0d0a05;
+      --bg-panel:     #1a1208;
+      --bg-section:   #221a0e;
+      --bg-hover:     #2a2010;
+      --border-gold:  #6b4f1a;
+      --border-light: #8B6914;
+      --text-gold:    #d4a853;
+      --text-light:   #f0d8a0;
+      --text-dim:     #8a6e3a;
+      --text-white:   #fff8e7;
+      --sea:          #1a3a5c;
+      --positive:     #4caf50;
+      --negative:     #f44336;
+      --warning:      #ff9800;
+      --accent:       #FFD700;
+      --panel-w:      260px;
+      --header-h:     42px;
+      --footer-h:     180px;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      background: var(--bg-deep);
+      color: var(--text-light);
+      font-size: 13px;
+    }
+
+    /* ══════════════════════════════════════════════════
+       LAYOUT
+    ══════════════════════════════════════════════════ */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* Верхняя строка */
+    #top-bar {
+      height: var(--header-h);
+      background: linear-gradient(to bottom, #2a1a08, #1a1208);
+      border-bottom: 2px solid var(--border-gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    #game-date {
+      font-size: 14px;
+      color: var(--text-gold);
+      letter-spacing: 1px;
+    }
+
+    #game-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--accent);
+      letter-spacing: 3px;
+      text-shadow: 0 0 12px rgba(255,215,0,0.4);
+    }
+
+    #end-turn-btn {
+      background: linear-gradient(to bottom, #5a3010, #3a1a08);
+      color: var(--text-gold);
+      border: 1px solid var(--border-gold);
+      padding: 6px 18px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      border-radius: 2px;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+    #end-turn-btn:hover:not(:disabled) {
+      background: linear-gradient(to bottom, #7a4018, #5a2a10);
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 8px rgba(255,215,0,0.3);
+    }
+    #end-turn-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Основная область */
+    #main-area {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ══════════════════════════════════════════════════
+       БОКОВЫЕ ПАНЕЛИ
+    ══════════════════════════════════════════════════ */
+    #left-panel, #right-panel {
+      width: var(--panel-w);
+      flex-shrink: 0;
+      background: var(--bg-panel);
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-gold) var(--bg-deep);
+    }
+    #left-panel  { border-right: 2px solid var(--border-gold); }
+    #right-panel { border-left:  2px solid var(--border-gold); }
+
+    /* Скроллбар webkit */
+    #left-panel::-webkit-scrollbar,
+    #right-panel::-webkit-scrollbar { width: 5px; }
+    #left-panel::-webkit-scrollbar-thumb,
+    #right-panel::-webkit-scrollbar-thumb { background: var(--border-gold); border-radius: 2px; }
+
+    /* ══════════════════════════════════════════════════
+       ЦЕНТРАЛЬНАЯ ОБЛАСТЬ — КАРТА
+    ══════════════════════════════════════════════════ */
+    #center-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: var(--sea);
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    #map-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      /* Leaflet требует явный height */
+      min-height: 0;
+    }
+
+    /* Leaflet перекрывает стандартные стили — сбрасываем */
+    .leaflet-container {
+      width: 100% !important;
+      height: 100% !important;
+      background: #1a3a5c !important;
+      font-family: 'Cinzel', 'Georgia', serif;
+    }
+
+    /* Кнопки зума в стиле игры */
+    .leaflet-control-zoom a {
+      background: rgba(26,18,8,0.92) !important;
+      color: var(--text-gold) !important;
+      border-color: var(--border-gold) !important;
+      font-size: 16px !important;
+      font-weight: normal !important;
+    }
+    .leaflet-control-zoom a:hover {
+      background: rgba(42,32,16,0.95) !important;
+      color: var(--accent) !important;
+    }
+
+    /* Атрибуция CAWM */
+    .leaflet-control-attribution {
+      background: rgba(13,10,5,0.75) !important;
+      color: var(--text-dim) !important;
+      font-size: 10px !important;
+      border-top: 1px solid var(--border-gold) !important;
+    }
+    .leaflet-control-attribution a {
+      color: var(--text-gold) !important;
+    }
+
+    /* Тултип региона */
+    .leaflet-tooltip.region-tooltip {
+      background: rgba(13,10,5,0.95);
+      border: 1px solid var(--border-gold, #6b4f1a);
+      border-radius: 3px;
+      color: #f0d8a0;
+      padding: 5px 8px;
+      font-family: 'Georgia', serif;
+      font-size: 11px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      pointer-events: none;
+    }
+    .leaflet-tooltip.region-tooltip::before {
+      border-top-color: rgba(107,79,26,0.8);
+    }
+    .rt-name   { font-size: 13px; font-weight: bold; color: #d4a853; }
+    .rt-nation { font-size: 10px; margin-top: 1px; }
+    .rt-pop    { font-size: 10px; color: #8a6e3a; margin-top: 2px; }
+
+    /* Подписи названий наций */
+    .nation-name-label {
+      background: none !important; border: none !important; box-shadow: none !important;
+      /* isolation: auto нужен чтобы mix-blend-mode работал сквозь контейнер */
+    }
+    .nation-label-span {
+      font-family: 'Cinzel', 'Palatino', 'Georgia', serif;
+      font-style: normal;
+      font-weight: 700;
+      /* Тёмный текст — как чернила на карте, не светлый "парящий" */
+      color: rgba(30, 20, 10, 0.7);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      pointer-events: none;
+      display: block;
+      text-align: center;
+      line-height: 1;
+      /* mix-blend-mode: multiply — текст "впечатан" в карту */
+      mix-blend-mode: multiply;
+      paint-order: stroke fill;
+      -webkit-text-stroke: 0.3px rgba(20, 15, 5, 0.4);
+      text-shadow:
+        1px 1px 0 rgba(255, 245, 220, 0.15),
+       -1px -1px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    /* Кнопка показа ID регионов */
+    .region-id-toggle-btn {
+      background: rgba(20,16,10,0.85) !important;
+      color: #d4a853 !important;
+      border: 1px solid #6a4e23 !important;
+      font-weight: bold;
+      font-size: 12px;
+      padding: 4px 8px;
+      cursor: pointer;
+      border-radius: 4px;
+      min-width: 32px;
+      text-align: center;
+    }
+    .region-id-toggle-btn.active { background: #6a4e23 !important; color: #fff !important; }
+
+    /* Метки ID регионов */
+    .region-id-label { background: none !important; border: none !important; }
+    .region-id-label span {
+      font-size: 9px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 3px #000, 0 0 3px #000;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* Подписи морей (DivIcon) */
+    .sea-label { background: none !important; border: none !important; }
+    .sea-label-text {
+      color: rgba(140, 180, 210, 0.45);
+      font-family: 'Cinzel', 'Palatino', 'Georgia', serif;
+      font-style: italic;
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      text-align: center;
+      white-space: pre-line;
+      text-transform: uppercase;
+      line-height: 1.3;
+      pointer-events: none;
+      text-shadow: 0 1px 4px rgba(0,0,20,0.5), 0 0 8px rgba(0,0,40,0.3);
+    }
+
+    /* Виньетка поверх карты */
+    #map-vignette {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 5;
+      background: radial-gradient(ellipse at center,
+        transparent 55%,
+        rgba(15, 8, 3, 0.25) 80%,
+        rgba(10, 5, 2, 0.5) 100%
+      );
+    }
+
+    /* Инфо о выбранном регионе */
+    #region-info {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 280px;
+      background: rgba(17, 11, 4, 0.95);
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+      z-index: 20;
+      backdrop-filter: blur(4px);
+    }
+    #region-info.hidden { display: none; }
+
+    .region-info-header {
+      display: flex;
+      align-items: center;
+      padding: 8px 10px;
+      gap: 8px;
+      background: rgba(40,25,8,0.8);
+      border-bottom: 1px solid var(--border-gold);
+    }
+    .region-info-name {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-gold);
+      flex: 1;
+    }
+    .region-info-nation {
+      font-size: 11px;
+    }
+    .region-info-close {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0 2px;
+    }
+    .region-info-close:hover { color: var(--text-gold); }
+
+    .region-info-body { padding: 10px; }
+    .region-info-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      font-style: italic;
+      line-height: 1.4;
+    }
+
+    .region-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .region-stat {
+      font-size: 11px;
+      color: var(--text-light);
+    }
+
+    .region-production {
+      margin-top: 6px;
+    }
+    .prod-item {
+      display: inline-block;
+      background: var(--bg-section);
+      border: 1px solid var(--border-gold);
+      border-radius: 2px;
+      padding: 2px 5px;
+      font-size: 10px;
+      margin: 2px;
+      color: var(--text-light);
+    }
+
+    .region-buildings {
+      margin-top: 6px;
+    }
+    .building-tag {
+      display: inline-block;
+      background: rgba(100,70,20,0.3);
+      border: 1px solid var(--border-gold);
+      border-radius: 2px;
+      padding: 2px 5px;
+      font-size: 10px;
+      margin: 2px;
+      color: var(--text-dim);
+    }
+
+    /* ══════════════════════════════════════════════════
+       НИЖНЯЯ ОБЛАСТЬ — ЛОГ + ВВОД
+    ══════════════════════════════════════════════════ */
+    #bottom-area {
+      height: var(--footer-h);
+      display: flex;
+      border-top: 2px solid var(--border-gold);
+      flex-shrink: 0;
+      background: var(--bg-panel);
+    }
+
+    #event-log {
+      width: 380px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border-gold);
+      overflow: hidden;
+      padding: 6px 8px;
+    }
+
+    .log-title {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+      border-bottom: 1px solid var(--border-gold);
+      padding-bottom: 3px;
+    }
+
+    #log-entries {
+      overflow-y: auto;
+      max-height: 148px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-gold) transparent;
+    }
+
+    .log-entry {
+      display: flex;
+      align-items: flex-start;
+      gap: 5px;
+      padding: 2px 0;
+      font-size: 11px;
+      line-height: 1.4;
+      border-bottom: 1px solid rgba(107,79,26,0.2);
+    }
+    .log-icon { flex-shrink: 0; font-size: 10px; opacity: 0.8; }
+    .log-text  { color: var(--text-light); }
+
+    .log-turn     .log-text { color: var(--accent); font-weight: bold; }
+    .log-danger   .log-text { color: #ef5350; }
+    .log-warning  .log-text { color: var(--warning); }
+    .log-good     .log-text { color: var(--positive); }
+    .log-economy  .log-text { color: #81d4fa; }
+    .log-military .log-text { color: #ef9a9a; }
+    .log-ai       .log-text { color: #ce93d8; }
+    .log-law      .log-text { color: #ffe082; }
+    .log-character .log-text { color: #a5d6a7; }
+    .log-diplomacy .log-text { color: #80cbc4; }
+
+    /* Область ввода */
+    #input-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 6px 10px;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    #ai-response {
+      flex: 1;
+      overflow-y: auto;
+      font-size: 11px;
+      line-height: 1.5;
+      background: var(--bg-section);
+      border: 1px solid var(--border-gold);
+      border-radius: 2px;
+      padding: 6px 8px;
+      color: var(--text-light);
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-gold) transparent;
+    }
+    #ai-response.hidden { display: none; }
+
+    .ai-thinking {
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    .ai-response-action {
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .action-type-badge {
+      padding: 2px 8px;
+      border-radius: 2px;
+      font-size: 10px;
+      background: var(--bg-section);
+      border: 1px solid var(--border-gold);
+      color: var(--text-gold);
+      flex-shrink: 0;
+    }
+    .action-desc { color: var(--text-light); }
+
+    .ai-effects ul {
+      padding-left: 15px;
+      margin-top: 4px;
+    }
+    .ai-effects li { margin: 2px 0; }
+
+    .vote-required {
+      color: var(--warning);
+      margin-top: 4px;
+      font-size: 11px;
+    }
+    .radicalism { font-size: 11px; margin-top: 4px; }
+
+    .positive { color: var(--positive); }
+    .negative { color: var(--negative); }
+
+    .api-key-prompt {
+      padding: 4px;
+    }
+    .api-key-title { color: var(--text-gold); font-weight: bold; margin-bottom: 4px; }
+    .api-key-desc  { color: var(--text-dim); font-size: 11px; margin-bottom: 6px; }
+    .api-key-input-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .api-key-field {
+      flex: 1;
+      background: var(--bg-deep);
+      border: 1px solid var(--border-gold);
+      color: var(--text-light);
+      padding: 4px 8px;
+      font-family: monospace;
+      font-size: 11px;
+      border-radius: 2px;
+    }
+    .api-key-btn {
+      background: var(--bg-section);
+      border: 1px solid var(--border-gold);
+      color: var(--text-gold);
+      padding: 4px 10px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 11px;
+      border-radius: 2px;
+    }
+    .api-key-hint { font-size: 10px; color: var(--text-dim); }
+    .api-key-hint a { color: var(--text-gold); }
+
+    #input-row {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    #command-input {
+      flex: 1;
+      background: var(--bg-deep);
+      border: 1px solid var(--border-gold);
+      border-radius: 2px;
+      color: var(--text-light);
+      padding: 8px 12px;
+      font-family: 'Georgia', serif;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #command-input::placeholder { color: var(--text-dim); }
+    #command-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 6px rgba(255,215,0,0.2);
+    }
+
+    #send-btn {
+      background: linear-gradient(to bottom, #5a3010, #3a1a08);
+      border: 1px solid var(--border-gold);
+      color: var(--text-gold);
+      padding: 8px 18px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      border-radius: 2px;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    #send-btn:hover:not(:disabled) {
+      background: linear-gradient(to bottom, #7a4018, #5a2a10);
+      color: var(--accent);
+    }
+    #send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ══════════════════════════════════════════════════
+       ПАНЕЛИ — ОБЩИЕ СТИЛИ
+    ══════════════════════════════════════════════════ */
+    .panel-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--text-gold);
+      text-align: center;
+      padding: 6px 0 8px;
+      border-bottom: 1px solid var(--border-gold);
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .panel-section {
+      background: var(--bg-section);
+      border: 1px solid var(--border-gold);
+      border-radius: 2px;
+      padding: 8px;
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--text-gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid rgba(107,79,26,0.4);
+    }
+
+    .section-label {
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 3px;
+      gap: 4px;
+    }
+    .stat-label { font-size: 11px; color: var(--text-dim); flex: 1; }
+    .stat-value { font-size: 11px; color: var(--text-light); font-weight: bold; }
+    .stat-value.gold     { color: var(--accent); }
+    .stat-value.positive { color: var(--positive); }
+    .stat-value.negative { color: var(--negative); }
+
+    .total-row {
+      border-top: 1px solid rgba(107,79,26,0.3);
+      padding-top: 3px;
+      margin-top: 2px;
+    }
+
+    /* Полосы */
+    .bar-container {
+      flex: 1;
+      height: 6px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 0 6px;
+    }
+    .bar-container.small { height: 4px; }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .legitimacy-bar, .happiness-row, .morale-row, .stat-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .legitimacy-fill { background: linear-gradient(to right, #9C27B0, #E040FB); }
+    .happiness-fill  { /* задаётся inline */ }
+    .morale-fill     { background: linear-gradient(to right, #B71C1C, #F44336); }
+    .loyalty-fill    { background: linear-gradient(to right, #1B5E20, #43A047); }
+
+    /* Правитель */
+    .ruler-section { text-align: center; }
+    .ruler-name { font-size: 15px; color: var(--accent); font-weight: bold; margin-bottom: 2px; }
+    .ruler-sub  { font-size: 10px; color: var(--text-dim); margin-bottom: 6px; }
+    .legitimacy-bar { gap: 0; }
+    .legitimacy-bar .stat-label { text-align: left; min-width: 70px; }
+
+    /* Профессии */
+    .professions-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3px;
+      margin-top: 6px;
+    }
+    .prof-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--bg-hover);
+      border-radius: 2px;
+      padding: 3px;
+      cursor: default;
+    }
+    .prof-icon  { font-size: 13px; }
+    .prof-count { font-size: 9px; color: var(--text-dim); }
+
+    /* Отношения */
+    .relation-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+      gap: 4px;
+    }
+    .relation-name  { font-size: 10px; width: 70px; flex-shrink: 0; }
+    .relation-score { font-size: 10px; width: 24px; text-align: right; flex-shrink: 0; }
+    .relation-status { font-size: 10px; }
+
+    /* Законы */
+    .laws-count {
+      background: var(--accent);
+      color: var(--bg-deep);
+      border-radius: 10px;
+      padding: 0 5px;
+      font-size: 10px;
+      margin-left: 4px;
+    }
+    .law-item { font-size: 11px; margin-bottom: 3px; }
+    .law-name { color: var(--text-light); }
+    .law-vote { font-size: 10px; color: var(--text-dim); margin-left: 4px; }
+    .no-data  { font-size: 10px; color: var(--text-dim); font-style: italic; }
+
+    /* ══════════════════════════════════════════════════
+       ПЕРСОНАЖИ
+    ══════════════════════════════════════════════════ */
+    .characters-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .char-card {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      grid-template-rows: auto auto;
+      gap: 2px 6px;
+      background: var(--bg-hover);
+      border: 1px solid var(--border-gold);
+      border-radius: 2px;
+      padding: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .char-card:hover {
+      background: #302010;
+      border-color: var(--accent);
+    }
+
+    .char-portrait {
+      grid-row: 1 / 3;
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+    }
+    .char-info { grid-column: 2; }
+    .char-name { font-size: 12px; color: var(--text-gold); font-weight: bold; }
+    .char-role { font-size: 10px; color: var(--text-dim); }
+    .char-loyalty {
+      font-size: 10px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .char-wants { grid-column: 3; grid-row: 1 / 3; display: flex; align-items: flex-start; }
+    .want-tag {
+      background: rgba(100,70,20,0.3);
+      border: 1px solid var(--border-gold);
+      border-radius: 2px;
+      padding: 1px 4px;
+      font-size: 9px;
+      color: var(--text-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 65px;
+    }
+
+    /* ══════════════════════════════════════════════════
+       ОВЕРЛЕИ
+    ══════════════════════════════════════════════════ */
+    #char-overlay, #voting-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 1200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Детали персонажа */
+    .char-detail-box {
+      background: var(--bg-panel);
+      border: 2px solid var(--border-light);
+      border-radius: 4px;
+      padding: 20px;
+      max-width: 480px;
+      width: 95%;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .char-detail-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .char-detail-portrait { font-size: 40px; }
+    .char-detail-name { font-size: 18px; color: var(--accent); font-weight: bold; }
+    .char-detail-role { font-size: 12px; color: var(--text-dim); }
+
+    .close-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .close-btn:hover { color: var(--text-gold); }
+
+    .char-detail-desc {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-style: italic;
+      margin-bottom: 12px;
+      line-height: 1.5;
+      padding: 8px;
+      background: var(--bg-section);
+      border-left: 3px solid var(--border-gold);
+    }
+
+    .char-traits-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+    .trait-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .trait-name  { width: 100px; font-size: 11px; color: var(--text-dim); }
+    .trait-value { width: 28px; font-size: 11px; color: var(--text-light); text-align: right; }
+
+    .char-detail-section { margin-bottom: 10px; }
+
+    .char-resources {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 11px;
+      color: var(--text-light);
+    }
+
+    .char-wants-list, .char-fears-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .tag {
+      padding: 2px 8px;
+      border-radius: 2px;
+      font-size: 10px;
+    }
+    .tag.want { background: rgba(76,175,80,0.15); border: 1px solid rgba(76,175,80,0.4); color: #a5d6a7; }
+    .tag.fear { background: rgba(244,67,54,0.15); border: 1px solid rgba(244,67,54,0.4); color: #ef9a9a; }
+
+    .char-history { font-size: 11px; }
+    .history-entry {
+      color: var(--text-dim);
+      padding: 2px 0;
+      border-bottom: 1px solid rgba(107,79,26,0.2);
+    }
+
+    /* Голосование */
+    .voting-modal {
+      background: var(--bg-panel);
+      border: 2px solid var(--border-light);
+      border-radius: 4px;
+      padding: 24px;
+      max-width: 500px;
+      width: 95%;
+    }
+    .voting-title {
+      font-size: 18px;
+      color: var(--accent);
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .voting-text {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-bottom: 14px;
+      font-style: italic;
+      line-height: 1.5;
+    }
+    .vote-counts {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    .vote-for     { color: var(--positive); }
+    .vote-against { color: var(--negative); }
+    .vote-abstain { color: var(--text-dim); }
+
+    .vote-speech {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      font-size: 11px;
+      color: var(--text-dim);
+      font-style: italic;
+      margin-bottom: 5px;
+    }
+
+    .vote-result {
+      font-size: 16px;
+      font-weight: bold;
+      margin: 12px 0;
+      padding: 8px;
+      text-align: center;
+      border-radius: 2px;
+    }
+    .vote-result.passed {
+      color: var(--positive);
+      background: rgba(76,175,80,0.1);
+      border: 1px solid var(--positive);
+    }
+    .vote-result.failed {
+      color: var(--negative);
+      background: rgba(244,67,54,0.1);
+      border: 1px solid var(--negative);
+    }
+
+    .vote-senate-note { font-size:11px;color:#88ccff;margin-bottom:8px;padding:4px 8px;background:rgba(100,180,255,0.08);border-radius:3px; }
+    .vote-veto { font-size:12px;color:#FF9800;font-weight:bold;margin:8px 0;padding:5px;background:rgba(255,152,0,0.1);border-radius:3px; }
+
+    .voting-btns { text-align: right; }
+    .voting-btns button {
+      background: var(--bg-section);
+      border: 1px solid var(--border-gold);
+      color: var(--text-gold);
+      padding: 8px 20px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      border-radius: 2px;
+    }
+    .voting-btns button:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* SVG-стили удалены — используется Leaflet */
+
+    /* ══════════════════════════════════════════════════
+       КНОПКА ГЕНЕРАЦИИ ПЕРСОНАЖЕЙ
+    ══════════════════════════════════════════════════ */
+    #generate-chars-btn {
+      width: 100%;
+      background: linear-gradient(to bottom, #3a2508, #221508);
+      border: 1px solid var(--border-gold);
+      color: var(--text-gold);
+      padding: 7px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      border-radius: 2px;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+    }
+    #generate-chars-btn:hover:not(:disabled) {
+      background: linear-gradient(to bottom, #5a3510, #3a2008);
+      border-color: var(--accent);
+    }
+    #generate-chars-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ══════════════════════════════════════════════════
+       TOOLTIP ДЛЯ СИМВОЛОВ НАЦИИ
+    ══════════════════════════════════════════════════ */
+    #nation-legend {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      pointer-events: none;
+    }
+    .nation-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(13,10,5,0.82);
+      padding: 3px 6px;
+      border-radius: 2px;
+      font-size: 10px;
+      color: var(--text-light);
+      border: 1px solid rgba(107,79,26,0.4);
+    }
+    .nation-color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Адаптивность для маленьких экранов */
+    @media (max-width: 1200px) {
+      :root { --panel-w: 220px; }
+    }
+    @media (max-width: 900px) {
+      :root { --panel-w: 190px; }
+      #game-title { font-size: 14px; letter-spacing: 1px; }
+    }
+
+    /* ══════════════════════════════════════════════════
+       ОВЕРЛЕЙ ПРАВИТЕЛЬСТВА
+    ══════════════════════════════════════════════════ */
+    #gov-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.72);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+    }
+    .gov-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-gold);
+      border-radius: 4px;
+      width: min(760px, 96vw);
+      max-height: 88vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+    }
+    .gov-panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-gold);
+      background: rgba(139,69,19,0.15);
+      flex-shrink: 0;
+    }
+    .gov-panel-title { color: var(--accent); font-size: 14px; letter-spacing: 1px; font-weight: bold; }
+    .gov-close-btn {
+      background: none; border: 1px solid var(--border-gold); color: var(--text-gold);
+      width: 22px; height: 22px; border-radius: 2px; cursor: pointer; font-size: 11px;
+      line-height: 1; padding: 0;
+    }
+    .gov-close-btn:hover { background: rgba(212,168,83,0.15); }
+    .gov-panel-body {
+      overflow-y: auto; padding: 12px 14px; flex: 1;
+      scrollbar-width: thin; scrollbar-color: var(--border-gold) transparent;
+    }
+
+    /* Открытие оверлея — кнопка */
+    .gov-open-btn {
+      width: 100%; padding: 5px 8px;
+      background: linear-gradient(to bottom, #3a2508, #251505);
+      border: 1px solid var(--border-gold); border-radius: 2px;
+      color: var(--text-gold); font-size: 11px; cursor: pointer;
+      text-align: left; margin-top: 6px; letter-spacing: 0.5px;
+    }
+    .gov-open-btn:hover { background: linear-gradient(to bottom, #4a3010, #32180a); border-color: var(--accent); }
+
+    /* Секции внутри оверлея */
+    .gov-section {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(107,79,26,0.35);
+      border-radius: 3px; padding: 10px; margin-bottom: 8px;
+    }
+    .gov-section-title {
+      color: var(--text-gold); font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.8px; margin-bottom: 7px; opacity: 0.85;
+    }
+    .gov-section-title.clickable { cursor: pointer; user-select: none; }
+    .gov-section-title.clickable:hover { opacity: 1; }
+    .gov-section.collapsed > *:not(.gov-section-title) { display: none; }
+
+    /* Заголовок правительства */
+    .gov-header { margin-bottom: 10px; }
+    .gov-type-badge {
+      font-size: 16px; color: var(--accent); font-weight: bold;
+      letter-spacing: 1px; margin-bottom: 8px;
+    }
+    .gov-metrics { display: flex; flex-direction: column; gap: 5px; }
+    .gov-metric { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+    .gov-metric.small .bar-container { flex: 1; height: 4px; }
+    .gov-metric-label { color: var(--text-dim); min-width: 90px; }
+    .gov-metric-val   { min-width: 32px; text-align: right; font-weight: bold; }
+
+    /* Баннер перехода */
+    .gov-transition-banner {
+      background: rgba(255,152,0,0.1); border: 1px solid #FF9800;
+      border-radius: 3px; padding: 10px; margin-bottom: 8px;
+    }
+    .transition-title  { color: #FF9800; font-weight: bold; font-size: 12px; }
+    .transition-route  { color: var(--text-light); font-size: 13px; margin: 3px 0; }
+    .transition-meta   { color: var(--text-dim); font-size: 11px; }
+    .transition-warning{ color: #FF9800; font-size: 11px; margin-top: 4px; }
+
+    /* Правитель */
+    .gov-ruler-card, .gov-council-card, .gov-deity-card {
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .gov-ruler-portrait { font-size: 28px; flex-shrink: 0; }
+    .gov-ruler-info { flex: 1; }
+    .gov-ruler-name { color: var(--accent); font-size: 14px; font-weight: bold; }
+    .gov-ruler-role { color: var(--text-dim); font-size: 11px; margin-bottom: 5px; }
+    .gov-council-name, .gov-deity-title { color: var(--accent); font-size: 13px; font-weight: bold; }
+    .gov-council-meta, .gov-council-note, .gov-deity-proxy, .gov-deity-note {
+      color: var(--text-dim); font-size: 11px; margin-top: 3px;
+    }
+    .gov-char-link {
+      background: none; border: 1px solid var(--border-gold); color: var(--text-gold);
+      font-size: 10px; padding: 2px 6px; border-radius: 2px; cursor: pointer; flex-shrink: 0;
+    }
+    .gov-char-link:hover { background: rgba(212,168,83,0.1); }
+
+    /* Ресурс власти */
+    .gov-power-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .bar-container.wide { flex: 1; height: 10px; }
+    .gov-power-val { font-weight: bold; min-width: 45px; text-align: right; }
+    .gov-power-decay { color: var(--text-dim); font-size: 10px; }
+    .gov-power-restore { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+    .gov-power-warning { color: #FF9800; font-size: 11px; margin-top: 5px; }
+
+    /* Институты */
+    .gov-institution {
+      border: 1px solid rgba(107,79,26,0.5); border-radius: 3px;
+      padding: 8px; margin-bottom: 6px;
+      background: rgba(255,255,255,0.02);
+    }
+    .gov-inst-header { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; flex-wrap: wrap; }
+    .gov-inst-name { color: var(--text-light); font-weight: bold; font-size: 12px; }
+    .gov-inst-type { background: rgba(212,168,83,0.15); color: var(--text-gold); font-size: 10px; padding: 1px 5px; border-radius: 2px; }
+    .gov-inst-size { color: var(--text-dim); font-size: 10px; margin-left: auto; }
+    .gov-inst-method { color: var(--text-dim); font-size: 10px; margin-bottom: 4px; }
+    .gov-inst-powers, .gov-inst-limits { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 3px; }
+
+    /* Теги */
+    .gov-tag { background: rgba(255,255,255,0.07); color: var(--text-dim); font-size: 10px; padding: 1px 5px; border-radius: 2px; }
+    .gov-tag.green { background: rgba(76,175,80,0.15); color: #81C784; }
+    .gov-tag.red   { background: rgba(244,67,54,0.15); color: #EF9A9A; }
+
+    /* Фракции */
+    .gov-factions { margin-top: 6px; }
+    .faction-bar { display: flex; height: 10px; border-radius: 2px; overflow: hidden; margin-bottom: 5px; }
+    .faction-bar-seg { height: 100%; transition: width 0.3s; }
+    .faction-legend { display: flex; flex-direction: column; gap: 3px; }
+    .faction-item { display: flex; align-items: center; gap: 5px; font-size: 10px; }
+    .faction-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .faction-name { color: var(--text-light); flex: 1; }
+    .faction-seats{ color: var(--text-dim); min-width: 40px; }
+    .faction-wants{ color: var(--text-dim); font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+
+    /* Выборы, преемственность */
+    .gov-election-row  { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .gov-election-label{ color: var(--text-dim); font-size: 11px; }
+    .gov-election-count{ font-size: 16px; font-weight: bold; }
+    .gov-election-meta, .gov-election-offices { color: var(--text-dim); font-size: 10px; margin-top: 3px; }
+    .gov-heir, .gov-heir-none { font-size: 11px; color: var(--text-light); margin-bottom: 4px; }
+    .gov-heir-none { color: #FF9800; }
+    .gov-claim-types { font-size: 10px; }
+
+    /* Заговоры */
+    .gov-conspiracy-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .gov-sp-row { font-size: 11px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .gov-sp-row.inactive { color: var(--text-dim); }
+    .gov-sp-btn {
+      background: rgba(212,168,83,0.1); border: 1px solid var(--border-gold);
+      color: var(--text-gold); font-size: 10px; padding: 2px 7px; border-radius: 2px; cursor: pointer;
+    }
+    .gov-sp-btn.red { border-color: #f44336; color: #EF9A9A; background: rgba(244,67,54,0.1); }
+    .gov-sp-btn:hover { background: rgba(212,168,83,0.2); }
+
+    /* Обнаруженные заговоры */
+    .gov-detected-conspiracy { border: 1px solid rgba(244,67,54,0.4); border-radius: 4px; padding: 8px; margin-top: 8px; background: rgba(244,67,54,0.05); }
+    .gov-consp-header { font-size: 12px; margin-bottom: 4px; }
+    .gov-consp-stage { font-size: 10px; color: #f44336; margin-left: 6px; padding: 1px 5px; border: 1px solid #f44336; border-radius: 10px; }
+    .gov-consp-desc, .gov-consp-members { font-size: 11px; margin-bottom: 3px; }
+    .gov-consp-actions { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+    .gov-consp-action-btn { background: rgba(244,67,54,0.1); border: 1px solid rgba(244,67,54,0.4); color: #EF9A9A; font-size: 11px; padding: 4px 8px; border-radius: 3px; cursor: pointer; text-align: left; }
+    .gov-consp-action-btn:hover { background: rgba(244,67,54,0.2); }
+
+    /* Конституция */
+    .gov-constitution-grid { display: flex; flex-direction: column; gap: 4px; }
+    .gov-const-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 2px 0; border-bottom: 1px solid rgba(107,79,26,0.15); }
+
+    /* Кастомные механики */
+    .gov-custom-mech { display: flex; flex-direction: column; gap: 2px; padding: 5px; border-bottom: 1px solid rgba(107,79,26,0.2); }
+    .gov-custom-mech:last-child { border-bottom: none; }
+    .gov-mech-name { color: var(--text-gold); font-size: 11px; font-weight: bold; }
+    .gov-mech-desc { color: var(--text-light); font-size: 11px; }
+    .gov-mech-trigger { font-size: 10px; }
+
+    /* История */
+    .gov-hist-list { display: flex; flex-direction: column; gap: 4px; }
+    .gov-hist-item { color: var(--text-dim); font-size: 10px; border-left: 2px solid var(--border-gold); padding-left: 6px; }
+
+    /* Поле реформы */
+    .gov-reform-section {
+      background: rgba(139,69,19,0.08); border: 1px solid var(--border-gold);
+      border-radius: 3px; padding: 10px; margin-top: 6px;
+    }
+    .gov-reform-hint { color: var(--text-dim); font-size: 10px; margin-bottom: 6px; }
+    .gov-reform-row  { display: flex; gap: 6px; }
+    .gov-reform-text {
+      flex: 1; background: rgba(0,0,0,0.4); border: 1px solid var(--border-gold);
+      color: var(--text-light); font-size: 11px; padding: 5px 8px; border-radius: 2px;
+    }
+    .gov-reform-btn {
+      background: linear-gradient(to bottom, #3a2508, #251505);
+      border: 1px solid var(--border-gold); color: var(--accent);
+      font-size: 11px; padding: 5px 10px; border-radius: 2px; cursor: pointer; white-space: nowrap;
+    }
+    .gov-reform-btn:hover { background: linear-gradient(to bottom, #4a3010, #32180a); }
+    .gov-reform-status { font-size: 11px; margin-top: 5px; }
+    .gov-reform-status.positive { color: #4CAF50; }
+    .gov-reform-status.error    { color: #f44336; }
+    .dim { color: var(--text-dim); }
+
+    /* ── КНОПКА ВХОДА В ЗАЛ (для всех типов правления) ─────────── */
+    .hall-entry-btn {
+      display: block; width: 100%; margin-top: 8px;
+      padding: 7px 10px; cursor: pointer; border: none;
+      background: linear-gradient(to bottom, #3a2008, #251505);
+      border: 1px solid var(--border-gold); border-radius: 4px;
+      color: var(--text-gold); font-size: 11px; letter-spacing: 0.5px;
+      transition: opacity 0.2s;
+    }
+    .hall-entry-btn:hover { opacity: 0.85; }
+
+    /* ── ЗАЛА СЕНАТА ─────────────────────────────────────────────── */
+    .senate-hall-btn {
+      display: block; width: 100%; margin-top: 8px;
+      padding: 7px 10px; cursor: pointer; border: none;
+      background: linear-gradient(to bottom, #3a2008, #251505);
+      border: 1px solid var(--border-gold); border-radius: 4px;
+      color: var(--text-gold); font-size: 11px; letter-spacing: 0.5px;
+      transition: opacity 0.2s;
+    }
+    .senate-hall-btn:hover { opacity: 0.85; }
+
+    .senate-hall { margin-top: 8px; }
+    .senate-faction-group { margin-bottom: 10px; }
+    .senate-faction-header {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: bold; margin-bottom: 6px;
+      padding: 3px 6px; border-radius: 3px;
+      color: #fff;
+    }
+    .senate-faction-seats { margin-left: auto; opacity: 0.7; font-weight: normal; }
+    .senate-senators-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 5px;
+    }
+
+    /* ── PARLIAMENT SVG DIAGRAM ───────────────────────────────────── */
+    .parliament-container {
+      padding: 6px 0 2px;
+    }
+    .parliament-header {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .parliament-title {
+      font-size: 11px; font-weight: bold; color: var(--text-light);
+    }
+    .parliament-majority {
+      font-size: 10px; color: var(--text-dim);
+    }
+    .parliament-svg {
+      display: block; width: 100%; max-height: 200px;
+      background: rgba(0,0,0,0.18); border-radius: 6px 6px 0 0;
+      border: 1px solid rgba(255,255,255,0.06); border-bottom: none;
+    }
+    .parl-seat {
+      cursor: pointer;
+      transition: r 0.1s, filter 0.1s;
+    }
+    .parl-seat:hover {
+      filter: brightness(1.35) drop-shadow(0 0 3px currentColor);
+    }
+    .parl-legend {
+      background: rgba(0,0,0,0.15);
+      border: 1px solid rgba(255,255,255,0.06); border-top: none;
+      border-radius: 0 0 6px 6px;
+      padding: 6px 8px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .parl-faction-row {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 11px;
+    }
+    .parl-faction-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .parl-faction-name {
+      flex: 1; color: var(--text-light);
+    }
+    .parl-faction-count {
+      font-weight: bold; color: var(--text-dim);
+      min-width: 16px; text-align: right;
+    }
+    .parl-leader-btn {
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 3px; padding: 2px 7px; cursor: pointer;
+      font-size: 10px; color: var(--text-light);
+      transition: background 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .parl-leader-btn:hover {
+      background: rgba(255,255,255,0.14); border-color: var(--border-gold);
+    }
+    .senator-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 4px; padding: 6px 8px; cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      position: relative;
+    }
+    .senator-card:hover {
+      background: rgba(255,255,255,0.09); border-color: var(--border-gold);
+    }
+    .senator-card-top { display: flex; align-items: center; gap: 5px; margin-bottom: 4px; }
+    .senator-portrait { font-size: 18px; line-height: 1; }
+    .senator-name { font-size: 10px; color: var(--text-light); font-weight: bold; line-height: 1.2; }
+    .senator-disp {
+      position: absolute; top: 4px; right: 5px;
+      font-size: 13px; line-height: 1;
+    }
+    .senator-meta { font-size: 9px; color: var(--text-dim); margin-bottom: 4px; }
+    .senator-loyalty-bar {
+      height: 3px; border-radius: 1px; background: rgba(255,255,255,0.1); overflow: hidden;
+    }
+    .senator-loyalty-fill { height: 100%; border-radius: 1px; transition: width 0.3s; }
+    .senator-ambition { font-size: 9px; color: var(--text-dim); margin-top: 3px; font-style: italic; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+    /* ── МОДАЛ ПЕРЕГОВОРОВ ────────────────────────────────────────── */
+    #senator-negotiate-overlay {
+      position: fixed; inset: 0; z-index: 1100;
+      background: rgba(0,0,0,0.75); display: flex;
+      align-items: center; justify-content: center;
+    }
+    .senator-negotiate-panel {
+      background: #1a1007; border: 1px solid var(--border-gold);
+      border-radius: 6px; width: 480px; max-width: 96vw;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .senator-neg-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px 10px; border-bottom: 1px solid rgba(212,168,83,0.2);
+    }
+    .senator-neg-portrait { font-size: 32px; line-height: 1; }
+    .senator-neg-info { flex: 1; }
+    .senator-neg-name { color: var(--accent); font-size: 14px; font-weight: bold; }
+    .senator-neg-faction { color: var(--text-dim); font-size: 11px; margin-top: 2px; }
+    .senator-neg-close {
+      background: none; border: none; color: var(--text-dim);
+      font-size: 16px; cursor: pointer; padding: 4px 8px;
+    }
+    .senator-neg-close:hover { color: var(--text-light); }
+    .senator-neg-body { padding: 12px 16px; }
+    .senator-neg-desc { font-size: 11px; color: var(--text-dim); font-style: italic; margin-bottom: 10px; }
+    .senator-neg-section { margin-bottom: 10px; }
+    .senator-neg-section-title { font-size: 10px; color: var(--text-gold); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+    .senator-neg-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+    .senator-neg-tag { font-size: 10px; padding: 2px 6px; border-radius: 2px; }
+    .senator-neg-tag.want { background: rgba(76,175,80,0.15); color: #81C784; }
+    .senator-neg-tag.fear { background: rgba(244,67,54,0.15); color: #EF9A9A; }
+    .senator-neg-disp-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .senator-neg-disp-label { font-size: 11px; color: var(--text-dim); }
+    .senator-neg-disp-bar {
+      flex: 1; height: 6px; background: rgba(255,255,255,0.1);
+      border-radius: 3px; overflow: hidden;
+    }
+    .senator-neg-disp-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+    .senator-neg-disp-val { font-size: 11px; color: var(--text-light); min-width: 24px; text-align: right; }
+    .senator-neg-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+    .senator-action-btn {
+      padding: 8px 10px; cursor: pointer; border: 1px solid rgba(212,168,83,0.3);
+      border-radius: 4px; background: rgba(255,255,255,0.03);
+      color: var(--text-light); font-size: 11px; text-align: left;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .senator-action-btn:hover:not(:disabled) { background: rgba(255,255,255,0.08); border-color: var(--border-gold); }
+    .senator-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .senator-action-title { font-weight: bold; display: block; margin-bottom: 2px; }
+    .senator-action-cost { font-size: 9px; color: var(--text-dim); display: block; }
+    .senator-action-chance { font-size: 9px; display: block; margin-top: 2px; }
+    .senator-action-chance.good  { color: #4CAF50; }
+    .senator-action-chance.ok    { color: #FF9800; }
+    .senator-action-chance.risky { color: #f44336; }
+    .senator-neg-result {
+      padding: 8px 10px; border-radius: 4px; font-size: 12px; margin-top: 4px;
+      border-left: 3px solid;
+    }
+    .senator-neg-result.success { background: rgba(76,175,80,0.1); border-color: #4CAF50; color: #A5D6A7; }
+    .senator-neg-result.fail    { background: rgba(244,67,54,0.1); border-color: #f44336; color: #EF9A9A; }
+    .senator-neg-result.partial { background: rgba(255,152,0,0.1); border-color: #FF9800; color: #FFCC80; }
+
+    /* ── СВОБОДНЫЙ ДИАЛОГ ──────────────────────────────────────────── */
+    .dlg-section {
+      margin-top: 14px;
+      border-top: 1px solid rgba(212,168,83,0.2);
+      padding-top: 10px;
+    }
+    .dlg-section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .dlg-section-title {
+      font-size: 10px; color: var(--text-gold);
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .dlg-patience-bar {
+      display: flex; align-items: center; gap: 5px;
+    }
+    .dlg-patience-track {
+      display: inline-block; width: 60px; height: 5px;
+      background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;
+    }
+    .dlg-patience-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+
+    .dlg-history {
+      max-height: 180px; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 6px;
+      margin-bottom: 8px;
+      padding: 6px 0;
+    }
+    .dlg-empty { font-size: 11px; color: var(--text-dim); font-style: italic; padding: 4px 0; }
+
+    .dlg-msg { display: flex; flex-direction: column; gap: 2px; }
+    .dlg-msg-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.7; }
+    .dlg-msg-text  { font-size: 12px; line-height: 1.4; padding: 5px 8px; border-radius: 4px; }
+
+    .dlg-player .dlg-msg-label { color: #FFD700; text-align: right; }
+    .dlg-player .dlg-msg-text  {
+      background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.2);
+      color: var(--text-light); align-self: flex-end; max-width: 85%;
+    }
+    .dlg-char .dlg-msg-label { color: #88ccff; }
+    .dlg-char .dlg-msg-text  {
+      background: rgba(100,150,255,0.07); border: 1px solid rgba(100,150,255,0.2);
+      color: var(--text-light); align-self: flex-start; max-width: 85%;
+    }
+    .dlg-blocked .dlg-msg-text {
+      background: rgba(244,67,54,0.08); border-color: rgba(244,67,54,0.3);
+      color: #EF9A9A;
+    }
+
+    .dlg-input-row { display: flex; gap: 6px; align-items: flex-end; }
+    .dlg-input {
+      flex: 1; background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,168,83,0.3); border-radius: 4px;
+      color: var(--text-light); font-size: 12px;
+      padding: 6px 8px; resize: none; font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .dlg-input:focus { outline: none; border-color: var(--accent); }
+    .dlg-input:disabled { opacity: 0.5; }
+    .dlg-send-btn {
+      background: rgba(212,168,83,0.15); border: 1px solid var(--border-gold);
+      color: var(--accent); border-radius: 4px; padding: 6px 10px;
+      cursor: pointer; font-size: 14px; transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .dlg-send-btn:hover { background: rgba(212,168,83,0.25); }
+
+    .dlg-status { font-size: 10px; color: #aaa; margin-top: 5px; min-height: 14px; }
+    .dlg-thinking { color: #FFD700; animation: dlg-pulse 1s infinite; }
+    .dlg-effects  { color: #81C784; }
+    @keyframes dlg-pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+    /* ── SENATE LAZY MATERIALIZATION ──────────────────────────────── */
+    .senate-block { margin: 0 0 10px; }
+    .senate-mood-bar { font-size: 11px; color: #aaa; font-style: italic; margin-bottom: 8px; padding: 6px 8px; background: rgba(255,255,255,0.04); border-radius: 4px; }
+    .senate-seats-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 6px; gap: 1px; }
+    .senate-faction-bar { height: 100%; transition: width 0.4s; }
+    .senate-faction-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 8px; }
+    .senate-faction-label { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #ccc; }
+    .senate-faction-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .senate-faction-name { flex: 1; }
+    .senate-faction-seats { font-weight: bold; color: #fff; }
+    .senate-faction-loyalty { font-size: 10px; }
+    .senate-stats-row { display: flex; gap: 12px; font-size: 11px; color: #888; margin-bottom: 8px; }
+    .senate-senators-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; }
+    .senate-senators-list.senate-ghosts { opacity: 0.75; }
+    .senate-senator-card { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+    .senate-senator-card:hover { background: rgba(255,255,255,0.09); }
+    .senate-senator-materialized { border-color: rgba(100,180,255,0.2); }
+    .senate-senator-ghost { border-style: dashed; }
+    .senate-senator-leader { border-color: rgba(255,215,0,0.35); background: rgba(255,215,0,0.06); }
+    .senate-senator-leader:hover { background: rgba(255,215,0,0.12); }
+    .senate-leader-badge { font-size: 12px; vertical-align: super; }
+    .senate-senator-portrait { font-size: 20px; flex-shrink: 0; position: relative; }
+    .senate-senator-info { flex: 1; min-width: 0; }
+    .senate-senator-name { font-size: 12px; font-weight: bold; color: #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .senate-senator-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px; }
+    .senate-tag { font-size: 10px; padding: 1px 5px; background: rgba(255,255,255,0.1); border-radius: 3px; color: #ccc; }
+    .senate-tag-dim { opacity: 0.6; }
+    .senate-senator-faction { font-size: 10px; margin-top: 2px; }
+    .senate-senator-loyalty { font-size: 12px; font-weight: bold; flex-shrink: 0; }
+    .senate-faction-leader { font-size: 10px; color: #FFD700; margin-left: 6px; opacity: 0.85; }
+
+    /* ══ ФОРМА СОСТАВЛЕНИЯ ЗАКОНА ════════════════════════════════════ */
+    .senate-law-form {
+      background: linear-gradient(160deg, #0f0c1f 0%, #1a100a 100%);
+      border: 1px solid rgba(180,140,60,0.4);
+      border-radius: 10px;
+      padding: 22px 24px;
+      width: 520px; max-width: 94vw;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .slf-title {
+      font-size: 15px; font-weight: bold; color: #d4a853;
+      margin-bottom: 4px;
+    }
+    .slf-subtitle {
+      font-size: 11px; color: #8a6e3a; margin-bottom: 14px;
+    }
+    .slf-label {
+      display: block; font-size: 11px; color: #b0904a;
+      margin: 10px 0 3px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .slf-input, .slf-textarea, .slf-select {
+      width: 100%; background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(180,140,60,0.3); border-radius: 4px;
+      color: #f0d8a0; font-family: inherit; font-size: 12px;
+      padding: 7px 10px; resize: vertical;
+    }
+    .slf-input:focus, .slf-textarea:focus, .slf-select:focus {
+      outline: none; border-color: rgba(212,168,83,0.6);
+    }
+    .slf-input-error { border-color: #f44336 !important; animation: inputShake 0.4s; }
+    @keyframes inputShake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); } 75% { transform: translateX(6px); }
+    }
+    .slf-select option { background: #1a100a; }
+    .slf-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+    .slf-btn-cancel {
+      padding: 7px 16px; background: rgba(255,255,255,0.06);
+      border: 1px solid #555; border-radius: 4px; color: #888;
+      cursor: pointer; font-size: 12px;
+    }
+    .slf-btn-submit {
+      padding: 7px 18px; background: rgba(212,168,83,0.15);
+      border: 1px solid rgba(212,168,83,0.5); border-radius: 4px;
+      color: #d4a853; cursor: pointer; font-size: 12px; font-weight: bold;
+    }
+    .slf-btn-submit:hover { background: rgba(212,168,83,0.25); }
+
+    /* ══ ЗАЛО ДЕБАТОВ — анимированное голосование ═════════════════════ */
+    .senate-debate-chamber {
+      background: linear-gradient(180deg, #080614 0%, #120809 100%);
+      border: 1px solid rgba(180,140,60,0.45);
+      border-radius: 12px;
+      padding: 20px 24px;
+      width: 640px; max-width: 96vw;
+      max-height: 88vh;
+      display: flex; flex-direction: column; gap: 0;
+    }
+    .debate-chamber-title {
+      font-size: 13px; font-weight: bold; color: #d4a853;
+      text-align: center; letter-spacing: 0.08em; margin-bottom: 8px;
+    }
+    .debate-law-header {
+      background: rgba(0,0,0,0.3); border: 1px solid rgba(180,140,60,0.2);
+      border-radius: 6px; padding: 8px 12px; margin-bottom: 10px;
+    }
+    .debate-law-name {
+      font-size: 13px; font-weight: bold; color: #f0d8a0;
+    }
+    .debate-law-text {
+      font-size: 11px; color: #8a7a5a; margin-top: 4px; line-height: 1.5;
+    }
+    .debate-stage {
+      flex: 1; overflow-y: auto;
+      max-height: 58vh;
+      display: flex; flex-direction: column; gap: 6px;
+      padding-right: 4px;
+    }
+    .debate-stage::-webkit-scrollbar { width: 4px; }
+    .debate-stage::-webkit-scrollbar-thumb { background: rgba(180,140,60,0.3); border-radius: 2px; }
+
+    .debate-phase-label {
+      font-size: 11px; color: #6b5a30; text-align: center;
+      padding: 4px 0; letter-spacing: 0.05em;
+      border-top: 1px solid rgba(180,140,60,0.1);
+      margin: 4px 0 2px;
+    }
+    .debate-resonance-note {
+      font-size: 11px; color: #78b87a;
+      background: rgba(100,180,100,0.07);
+      border-left: 2px solid #4caf50;
+      padding: 4px 8px; border-radius: 0 3px 3px 0;
+      animation: speechSlide 0.35s ease-out both;
+    }
+
+    /* Реплики */
+    .debate-speech-entry {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 7px 10px;
+      border-radius: 6px;
+      animation: speechSlide 0.4s ease-out both;
+    }
+    @keyframes speechSlide {
+      from { opacity: 0; transform: translateX(-16px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .debate-speech-player {
+      background: rgba(212,168,83,0.08);
+      border: 1px solid rgba(212,168,83,0.25);
+    }
+    .debate-speech-for {
+      background: rgba(76,175,80,0.07);
+      border: 1px solid rgba(76,175,80,0.2);
+    }
+    .debate-speech-against {
+      background: rgba(244,67,54,0.07);
+      border: 1px solid rgba(244,67,54,0.2);
+    }
+    .debate-portrait {
+      font-size: 22px; flex-shrink: 0; margin-top: 1px;
+    }
+    .debate-speech-body { flex: 1; min-width: 0; }
+    .debate-speech-name {
+      font-size: 12px; font-weight: bold; color: #d4a853; margin-bottom: 2px;
+    }
+    .debate-speech-faction {
+      font-size: 10px; color: #8a6e3a; font-weight: normal;
+      margin-left: 5px;
+    }
+    .debate-speech-text {
+      font-size: 12px; color: #c8b88a; line-height: 1.5;
+      font-style: italic;
+    }
+    .debate-vote-badge {
+      font-size: 9px; font-weight: bold; padding: 2px 6px;
+      border-radius: 3px; align-self: center; flex-shrink: 0;
+      letter-spacing: 0.05em;
+    }
+    .dv-for    { background: rgba(76,175,80,0.3); color: #81c784; border: 1px solid #4caf50; }
+    .dv-against{ background: rgba(244,67,54,0.3); color: #e57373; border: 1px solid #f44336; }
+
+    /* Счётчики голосов */
+    .debate-vote-counters {
+      display: flex; justify-content: center; gap: 20px;
+      margin: 10px 0 4px;
+      animation: speechSlide 0.4s ease-out both;
+    }
+    .dvc-item {
+      text-align: center; font-size: 11px; color: #8a7a5a;
+      padding: 8px 14px;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(180,140,60,0.15);
+    }
+    .dvc-item b { display: block; font-size: 26px; margin-top: 2px; }
+    .dvc-item-for b     { color: #66bb6a; }
+    .dvc-item-against b { color: #ef5350; }
+    .dvc-item-abstain b { color: #888; }
+
+    /* Вердикт */
+    .debate-verdict {
+      text-align: center; font-size: 18px; font-weight: bold;
+      padding: 14px;
+      border-radius: 8px;
+      margin: 8px 0;
+      animation: verdictAppear 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    }
+    @keyframes verdictAppear {
+      from { opacity: 0; transform: scale(0.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .debate-verdict-pass {
+      color: #81c784;
+      background: rgba(76,175,80,0.12);
+      border: 1px solid rgba(76,175,80,0.4);
+    }
+    .debate-verdict-fail {
+      color: #ef5350;
+      background: rgba(244,67,54,0.12);
+      border: 1px solid rgba(244,67,54,0.4);
+    }
+    .debate-accept-btn {
+      padding: 9px 28px;
+      background: rgba(180,140,60,0.15);
+      border: 1px solid rgba(180,140,60,0.45);
+      border-radius: 5px; color: #d4a853;
+      cursor: pointer; font-size: 12px; font-family: inherit;
+    }
+    .debate-accept-btn:hover { background: rgba(180,140,60,0.28); }
+
+    /* Драматические события в зале Сената */
+    .debate-dramatic-event {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 14px; border-radius: 6px; margin: 6px 0;
+      font-size: 12px; color: #f0d8a0;
+      animation: verdictAppear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    }
+    .dbe-scandal {
+      background: rgba(244,67,54,0.14); border: 1px solid rgba(244,67,54,0.45);
+    }
+    .dbe-walkout {
+      background: rgba(255,152,0,0.12); border: 1px solid rgba(255,152,0,0.4);
+    }
+    .dbe-veto {
+      background: rgba(156,39,176,0.14); border: 1px solid rgba(156,39,176,0.4);
+    }
+    .dde-icon { font-size: 20px; flex-shrink: 0; }
+
+    /* ── ЗАЛ ТИРАНИИ — тронный зал ───────────────────────────────── */
+    .hall-tyranny .senate-faction-header { background: rgba(139,0,0,0.18) !important; border-left-color: #8B0000 !important; }
+    .hall-tyranny .senator-card          { border-color: rgba(139,0,0,0.25); }
+    .hall-tyranny .senator-card:hover    { border-color: #8B0000; }
+    .hall-throne-top {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px; margin-bottom: 10px;
+      background: rgba(139,0,0,0.12); border: 1px solid rgba(139,0,0,0.3);
+      border-radius: 5px;
+    }
+    .hall-throne-portrait { font-size: 36px; }
+    .hall-throne-name { color: #f44336; font-weight: bold; font-size: 13px; }
+    .hall-throne-title { color: var(--text-dim); font-size: 10px; margin-top: 2px; }
+    .hall-throne-power { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+    .hall-throne-power-bar { flex: 1; height: 5px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+    .hall-throne-power-fill { height: 100%; background: #f44336; border-radius: 2px; }
+    .hall-throne-label { font-size: 9px; color: var(--text-dim); }
+    .hall-inner-circle {
+      font-size: 10px; color: var(--text-dim); text-transform: uppercase;
+      letter-spacing: 0.5px; margin-bottom: 6px; margin-top: 4px;
+    }
+
+    /* ── ЗАЛ МОНАРХИИ — королевский двор ────────────────────────── */
+    .hall-monarchy .senator-card         { border-color: rgba(102,0,153,0.25); }
+    .hall-monarchy .senator-card:hover   { border-color: #9C27B0; }
+    .hall-court-rank-badge {
+      display: inline-block; font-size: 9px; padding: 1px 4px;
+      border-radius: 2px; margin-bottom: 3px;
+      background: rgba(156,39,176,0.2); color: #CE93D8;
+    }
+    .hall-rank-1 { background: rgba(212,168,83,0.25) !important; color: var(--text-gold) !important; }
+    .hall-rank-2 { background: rgba(156,39,176,0.2); color: #CE93D8; }
+    .hall-rank-3 { background: rgba(100,100,100,0.2); color: var(--text-dim); }
+
+    /* ── ЗАЛ ОЛИГАРХИИ — торговый совет ─────────────────────────── */
+    .hall-oligarchy .senator-card        { border-color: rgba(0,120,50,0.25); }
+    .hall-oligarchy .senator-card:hover  { border-color: #4CAF50; }
+    .hall-wealth-bar {
+      height: 3px; border-radius: 1px; background: rgba(76,175,80,0.15); overflow: hidden; margin-top: 3px;
+    }
+    .hall-wealth-fill { height: 100%; background: #4CAF50; border-radius: 1px; }
+    .hall-wealth-label { font-size: 9px; color: #81C784; }
+    .hall-council-table {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; padding: 8px;
+      background: rgba(0,80,30,0.08); border: 1px solid rgba(76,175,80,0.15);
+      border-radius: 5px; margin-bottom: 8px;
+    }
+    .hall-influence-ring {
+      width: 100%; height: 8px; border-radius: 4px;
+      background: rgba(255,255,255,0.06); overflow: hidden;
+      display: flex; margin-bottom: 8px;
+    }
+    .hall-influence-seg { height: 100%; transition: width 0.3s; }
+
+    /* ── ЗАЛ ДЕМОКРАТИИ — народное собрание ─────────────────────── */
+    .hall-democracy-groups { display: flex; flex-direction: column; gap: 6px; }
+    .hall-pop-group {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 10px; border-radius: 4px;
+      background: rgba(33,150,243,0.07);
+      border: 1px solid rgba(33,150,243,0.15);
+      cursor: pointer; transition: background 0.15s;
+    }
+    .hall-pop-group:hover { background: rgba(33,150,243,0.13); border-color: #2196F3; }
+    .hall-pop-icon { font-size: 20px; }
+    .hall-pop-info { flex: 1; }
+    .hall-pop-name { font-size: 11px; color: var(--text-light); font-weight: bold; }
+    .hall-pop-size { font-size: 9px; color: var(--text-dim); }
+    .hall-pop-want { font-size: 10px; color: #90CAF9; margin-top: 1px; }
+    .hall-pop-sat-bar { width: 60px; }
+    .hall-pop-sat-outer { height: 5px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+    .hall-pop-sat-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+    .hall-pop-sat-val { font-size: 9px; color: var(--text-dim); text-align: right; margin-top: 1px; }
+
+    /* ── ЗАЛ ПЛЕМЕНИ — совет старейшин ──────────────────────────── */
+    .hall-tribal .senator-card        { border-color: rgba(101,67,33,0.4); }
+    .hall-tribal .senator-card:hover  { border-color: #8D6E63; }
+    .hall-honor-bar { height: 3px; border-radius: 1px; background: rgba(255,165,0,0.15); overflow: hidden; margin-top: 3px; }
+    .hall-honor-fill { height: 100%; background: #FF9800; border-radius: 1px; }
+    .hall-honor-label { font-size: 9px; color: #FFCC80; }
+    .hall-campfire {
+      text-align: center; font-size: 22px; margin-bottom: 6px; letter-spacing: 8px;
+    }
+    .hall-tribal-circle {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 5px;
+      padding: 8px; background: rgba(101,67,33,0.1);
+      border: 1px solid rgba(139,90,43,0.25); border-radius: 5px; margin-bottom: 8px;
+    }
+
+    /* ── ЗАЛ ТЕОКРАТИИ — жреческий синод ────────────────────────── */
+    .hall-theocracy .senator-card       { border-color: rgba(220,200,100,0.25); }
+    .hall-theocracy .senator-card:hover { border-color: #FFD700; }
+    .hall-priest-rank { font-size: 9px; color: #FFD700; margin-bottom: 2px; }
+    .hall-synod-altar {
+      text-align: center; font-size: 20px; letter-spacing: 6px;
+      margin-bottom: 8px; color: #FFD700; opacity: 0.6;
+    }
+
+    /* ── КАСТОМНЫЙ ЗАЛ — строитель ──────────────────────────────── */
+    .custom-hall-builder { padding: 10px; background: rgba(255,255,255,0.03); border-radius: 5px; }
+    .custom-hall-builder-title { color: var(--text-gold); font-size: 11px; font-weight: bold; margin-bottom: 8px; }
+    .custom-hall-field { margin-bottom: 8px; }
+    .custom-hall-label { font-size: 10px; color: var(--text-dim); margin-bottom: 3px; display: block; }
+    .custom-hall-input {
+      width: 100%; padding: 5px 8px; background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,168,83,0.25); border-radius: 3px;
+      color: var(--text-light); font-size: 11px; box-sizing: border-box;
+    }
+    .custom-hall-select {
+      width: 100%; padding: 5px 8px; background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,168,83,0.25); border-radius: 3px;
+      color: var(--text-light); font-size: 11px;
+    }
+    .custom-hall-actors { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; }
+    .custom-hall-actor-row { display: flex; gap: 4px; align-items: center; }
+    .custom-hall-actor-input { flex: 1; }
+    .custom-hall-actor-remove {
+      background: none; border: none; color: #f44336; cursor: pointer; font-size: 13px; padding: 2px 5px;
+    }
+    .custom-hall-add-btn {
+      background: none; border: 1px dashed rgba(212,168,83,0.3);
+      color: var(--text-dim); font-size: 10px; padding: 4px 8px;
+      border-radius: 3px; cursor: pointer; width: 100%;
+    }
+    .custom-hall-add-btn:hover { border-color: var(--border-gold); color: var(--text-gold); }
+    .custom-hall-save-btn {
+      width: 100%; padding: 7px; background: linear-gradient(to bottom, #3a2008, #251505);
+      border: 1px solid var(--border-gold); border-radius: 4px;
+      color: var(--text-gold); font-size: 11px; cursor: pointer; margin-top: 4px;
+    }
+    .custom-hall-save-btn:hover { opacity: 0.85; }
+    .custom-hall-actors-display { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 5px; }
+    .positive { color: #4CAF50; }
+
+    /* ═══════════════════════════════════════════════
+       ЛОГ — ФИЛЬТРЫ
+    ═══════════════════════════════════════════════ */
+    .log-title { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .log-filter-btn {
+      background: transparent; border: 1px solid var(--border-gold);
+      color: var(--text-dim); font-size: 10px; padding: 1px 5px;
+      border-radius: 3px; cursor: pointer; margin-left: 2px;
+    }
+    .log-filter-btn.active { background: var(--border-gold); color: #1a1208; font-weight: bold; }
+    .log-filter-btn:hover  { opacity: 0.8; }
+    .btn-icon { background: transparent; border: none; cursor: pointer; font-size: 14px; margin-left: auto; }
+
+    /* ═══════════════════════════════════════════════
+       ВЫБОР СОБЫТИЯ
+    ═══════════════════════════════════════════════ */
+    #event-choice-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      display: flex; align-items: center; justify-content: center; z-index: 900;
+    }
+    .ec-box {
+      background: var(--bg-panel); border: 2px solid var(--border-gold);
+      border-radius: 8px; padding: 24px; max-width: 420px; width: 90%;
+    }
+    .ec-title { font-size: 18px; font-weight: bold; color: var(--gold); margin-bottom: 8px; }
+    .ec-description { color: var(--text-dim); margin-bottom: 16px; line-height: 1.4; }
+    .ec-choices { display: flex; flex-direction: column; gap: 10px; }
+    .ec-choice-btn {
+      background: rgba(255,215,0,0.08); border: 1px solid var(--border-gold);
+      color: var(--text-main); padding: 10px 14px; border-radius: 5px;
+      cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 3px;
+    }
+    .ec-choice-btn:hover { background: rgba(255,215,0,0.18); }
+    .ec-choice-desc { font-size: 11px; color: var(--text-dim); }
+
+    /* ═══════════════════════════════════════════════
+       ИТОГИ ХОДА
+    ═══════════════════════════════════════════════ */
+    #turn-summary-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center; z-index: 880;
+    }
+    .ts-box {
+      background: var(--bg-panel); border: 2px solid var(--border-gold);
+      border-radius: 8px; padding: 20px; min-width: 280px; max-width: 380px;
+    }
+    .ts-title { font-size: 16px; font-weight: bold; color: var(--gold); margin-bottom: 12px; }
+    .ts-grid { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+    .ts-row { display: flex; justify-content: space-between; font-size: 13px; }
+    .ts-label { color: var(--text-dim); }
+    .ts-val   { font-weight: bold; }
+    .ts-spark-label { font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
+    .ts-sparkline {
+      display: flex; align-items: flex-end; height: 40px; gap: 3px; margin-bottom: 14px;
+    }
+    .spark-bar { flex: 1; min-height: 2px; border-radius: 2px 2px 0 0; }
+    .ts-close-btn {
+      width: 100%; background: rgba(255,215,0,0.1); border: 1px solid var(--border-gold);
+      color: var(--text-main); padding: 7px; border-radius: 4px; cursor: pointer; font-size: 13px;
+    }
+    .ts-close-btn:hover { background: rgba(255,215,0,0.2); }
+    .negative { color: #f44336; }
+
+    /* ═══════════════════════════════════════════════
+       КОНЕЦ ИГРЫ
+    ═══════════════════════════════════════════════ */
+    #endgame-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+      display: flex; align-items: center; justify-content: center; z-index: 1000;
+    }
+    #endgame-overlay.victory { background: rgba(0,0,0,0.82); }
+    #endgame-overlay.defeat  { background: rgba(80,0,0,0.85); }
+    .eg-box {
+      background: var(--bg-panel); border: 2px solid var(--border-gold);
+      border-radius: 10px; padding: 32px; text-align: center; max-width: 420px;
+    }
+    .eg-icon  { font-size: 56px; margin-bottom: 12px; }
+    .eg-title { font-size: 22px; font-weight: bold; color: var(--gold); margin-bottom: 8px; }
+    .eg-desc  { color: var(--text-dim); margin-bottom: 10px; line-height: 1.5; }
+    .eg-turn  { font-size: 12px; color: var(--text-dim); margin-bottom: 20px; }
+    .eg-restart-btn {
+      background: rgba(255,215,0,0.15); border: 1px solid var(--border-gold);
+      color: var(--text-main); padding: 10px 24px; border-radius: 5px; cursor: pointer; font-size: 14px;
+    }
+    .eg-restart-btn:hover { background: rgba(255,215,0,0.25); }
+
+    /* ═══════════════════════════════════════════════
+       ИНИЦИАТИВЫ ПЕРСОНАЖЕЙ
+    ═══════════════════════════════════════════════ */
+    #char-initiatives-panel {
+      position: fixed; right: 16px; bottom: 180px;
+      width: 300px; background: var(--bg-panel);
+      border: 1px solid var(--border-gold); border-radius: 6px;
+      padding: 12px; z-index: 700; max-height: 380px; overflow-y: auto;
+    }
+    .ci-title   { font-size: 13px; font-weight: bold; color: var(--gold); margin-bottom: 8px; }
+    .ci-count   { background: #c0392b; color: #fff; border-radius: 10px; padding: 1px 6px; font-size: 11px; }
+    .ci-item    { background: rgba(255,215,0,0.05); border: 1px solid rgba(255,215,0,0.2); border-radius: 4px; padding: 8px; margin-bottom: 7px; }
+    .ci-header  { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .ci-portrait{ font-size: 18px; }
+    .ci-name    { font-weight: bold; font-size: 12px; flex: 1; }
+    .ci-action-tag { font-size: 10px; color: var(--text-dim); }
+    .ci-message { font-size: 11px; color: var(--text-dim); font-style: italic; margin-bottom: 6px; line-height: 1.4; }
+    .ci-buttons { display: flex; gap: 6px; }
+    .ci-btn     { flex: 1; font-size: 11px; padding: 4px 6px; border-radius: 3px; cursor: pointer;
+                  border: 1px solid var(--border-gold); background: transparent; color: var(--text-main); }
+    .ci-btn.accept { border-color: #4CAF50; }
+    .ci-btn.reject { border-color: #f44336; }
+    .ci-btn:hover  { opacity: 0.8; }
+    #char-initiatives-badge {
+      display: none; background: #c0392b; color: #fff;
+      border-radius: 50%; width: 16px; height: 16px;
+      font-size: 10px; align-items: center; justify-content: center;
+    }
+
+    /* ═══════════════════════════════════════════════
+       ЗАГОВОРЩИКИ ИГРОКА
+    ═══════════════════════════════════════════════ */
+    .gov-consp-row {
+      display: grid; grid-template-columns: 28px 1fr auto auto auto;
+      align-items: center; gap: 6px;
+      padding: 6px 0; border-bottom: 1px solid rgba(255,215,0,0.1);
+    }
+    .gov-consp-portrait { font-size: 18px; }
+    .gov-consp-name     { font-weight: bold; font-size: 13px; }
+    .gov-consp-role     { font-size: 11px; color: var(--text-dim); }
+    .gov-consp-loyalty  { font-size: 11px; }
+    .gov-consp-actions  { display: flex; gap: 4px; }
+    .gov-consp-btn {
+      font-size: 11px; padding: 3px 7px; border-radius: 3px; cursor: pointer;
+      background: rgba(255,215,0,0.08); border: 1px solid var(--border-gold); color: var(--text-main);
+    }
+    .gov-consp-btn.danger { border-color: #c0392b; }
+    .gov-consp-btn:hover  { opacity: 0.8; }
+
+    /* ══════════════════════════════════════
+       МОДАЛ API КЛЮЧА
+    ══════════════════════════════════════ */
+    #api-key-modal {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.90);
+      display: none; align-items: center; justify-content: center;
+    }
+    .akm-box {
+      background: linear-gradient(160deg, #0d0a05 0%, #1c1308 60%, #110e06 100%);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 38px 44px;
+      max-width: 440px; width: 90vw;
+      text-align: center;
+      box-shadow: 0 16px 64px rgba(0,0,0,0.85), 0 0 0 1px rgba(212,168,83,0.08);
+    }
+    .akm-seal {
+      font-size: 50px; margin-bottom: 14px;
+      filter: drop-shadow(0 0 14px rgba(212,168,83,0.45));
+    }
+    .akm-title {
+      font-size: 19px; color: var(--accent);
+      letter-spacing: 2px; margin-bottom: 14px; font-weight: bold;
+    }
+    .akm-desc {
+      font-size: 13px; color: var(--text-dim);
+      line-height: 1.65; margin-bottom: 22px;
+    }
+    .akm-desc strong { color: var(--text-gold); }
+    .akm-input {
+      width: 100%;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid var(--border-gold);
+      border-radius: 4px;
+      color: var(--text-light);
+      font-family: monospace; font-size: 13px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .akm-input:focus { border-color: var(--accent); }
+    .akm-error {
+      color: #f44336; font-size: 12px;
+      margin-bottom: 10px; text-align: left;
+      padding: 4px 6px;
+      background: rgba(244,67,54,0.08);
+      border-radius: 3px;
+      display: none;
+    }
+    .akm-btn {
+      width: 100%;
+      background: linear-gradient(to bottom, #3a2508, #221508);
+      border: 1px solid var(--border-gold);
+      border-radius: 4px;
+      color: var(--accent);
+      font-size: 14px; font-family: inherit;
+      padding: 12px; cursor: pointer;
+      letter-spacing: 1px; margin-bottom: 16px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .akm-btn:hover:not(:disabled) {
+      background: linear-gradient(to bottom, #4a3010, #32180a);
+      border-color: var(--accent);
+    }
+    .akm-btn:disabled { opacity: 0.45; cursor: default; }
+    .akm-footer { font-size: 11px; color: var(--text-dim); }
+    .akm-footer a { color: var(--text-gold); }
+    .akm-change-link {
+      display: inline-block; margin-top: 8px;
+      font-size: 11px; color: var(--text-dim);
+      cursor: pointer; text-decoration: underline;
+    }
+    .akm-change-link:hover { color: var(--text-gold); }
+    @keyframes akShake {
+      0%,100% { transform: translateX(0); }
+      20%     { transform: translateX(-8px); }
+      40%     { transform: translateX(8px); }
+      60%     { transform: translateX(-5px); }
+      80%     { transform: translateX(5px); }
+    }
+
+    #api-key-change-btn {
+      background: transparent;
+      border: 1px solid rgba(107,79,26,0.5);
+      border-radius: 3px;
+      color: var(--text-dim);
+      font-size: 14px;
+      padding: 0 8px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    #api-key-change-btn:hover { color: var(--text-gold); border-color: var(--border-gold); }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <!-- ═══════════════════════════
+         ВЕРХНЯЯ СТРОКА
+    ═══════════════════════════ -->
+    <header id="top-bar">
+      <span id="game-date">301 г. до н.э., Гекатомбеон</span>
+      <span id="game-title">ANCIENT STRATEGY</span>
+      <button id="end-turn-btn">⚔ Следующий ход</button>
+    </header>
+
+    <!-- ═══════════════════════════
+         ОСНОВНАЯ ОБЛАСТЬ
+    ═══════════════════════════ -->
+    <main id="main-area">
+
+      <!-- Левая панель: статистика нации -->
+      <div id="left-panel">
+        <!-- Заполняется из panels.js renderLeftPanel() -->
+        <div style="color:var(--text-dim);font-size:11px;padding:8px;">Загрузка...</div>
+      </div>
+
+      <!-- Центральная панель: карта -->
+      <div id="center-panel">
+        <div id="map-container">
+          <!-- Leaflet монтируется сюда в renderMap() -->
+          <!-- Легенда наций -->
+          <div id="nation-legend">
+            <!-- Заполняется динамически -->
+          </div>
+          <!-- Виньетка поверх карты -->
+          <div id="map-vignette"></div>
+        </div>
+
+        <!-- Инфо о выбранном регионе -->
+        <div id="region-info" class="hidden"></div>
+      </div>
+
+      <!-- Правая панель: двор -->
+      <div id="right-panel">
+        <div class="panel-title">👑 Двор Агафокла</div>
+        <button id="generate-chars-btn" onclick="handleGenerateChars()">
+          ✨ Созвать советников (AI)
+        </button>
+        <div class="characters-list">
+          <div style="color:var(--text-dim);font-size:11px;padding:4px;">Загрузка...</div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ═══════════════════════════
+         НИЖНЯЯ СТРОКА: ЛОГ + ВВОД
+    ═══════════════════════════ -->
+    <footer id="bottom-area">
+      <!-- Лог событий -->
+      <div id="event-log">
+        <div class="log-title">
+          ⚔ Хроники
+          <button class="log-filter-btn active" data-filter="all"     onclick="setLogFilter('all')">Все</button>
+          <button class="log-filter-btn"        data-filter="danger"  onclick="setLogFilter('danger')">⚠</button>
+          <button class="log-filter-btn"        data-filter="economy" onclick="setLogFilter('economy')">💰</button>
+          <button class="log-filter-btn"        data-filter="character" onclick="setLogFilter('character')">👤</button>
+          <button class="log-filter-btn"        data-filter="law"     onclick="setLogFilter('law')">📜</button>
+          <button class="btn-icon" onclick="showTurnSummary()" title="Итоги хода">📋</button>
+        </div>
+        <div id="log-entries"></div>
+      </div>
+
+      <!-- Ввод команд -->
+      <div id="input-area">
+        <div id="ai-response" class="hidden"></div>
+        <div id="input-row">
+          <input
+            type="text"
+            id="command-input"
+            placeholder="Ваш приказ, стратег... (наберите &quot;набрать 500 пехотинцев&quot;, &quot;предложить торговый договор Египту&quot;, &quot;снизить налоги до 10%&quot;...)"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button id="send-btn">⚔ Приказать</button>
+          <button id="api-key-change-btn" title="Сменить API ключ" onclick="changeAPIKey()">🔑</button>
+        </div>
+      </div>
+    </footer>
+
+  </div><!-- #app -->
+
+  <!-- ═══════════════════════════
+       ОВЕРЛЕИ
+  ═══════════════════════════ -->
+  <div id="char-overlay" onclick="if(event.target===this)closeCharacterDetail()"></div>
+  <div id="voting-overlay"></div>
+
+  <!-- Выбор реакции на случайное событие -->
+  <div id="event-choice-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+    <div class="ec-box">
+      <div class="ec-title"></div>
+      <div class="ec-description"></div>
+      <div class="ec-choices"></div>
+    </div>
+  </div>
+
+  <!-- Итоги хода -->
+  <div id="turn-summary-overlay" style="display:none" onclick="if(event.target===this)hideTurnSummary()">
+    <div class="ts-box" id="ts-content"></div>
+  </div>
+
+  <!-- Конец игры (победа / поражение) -->
+  <div id="endgame-overlay" style="display:none">
+    <div class="eg-box">
+      <div class="eg-icon"></div>
+      <div class="eg-title"></div>
+      <div class="eg-desc"></div>
+      <div class="eg-turn"></div>
+      <button class="eg-restart-btn" onclick="location.reload()">🔄 Начать заново</button>
+    </div>
+  </div>
+
+  <!-- Инициативы персонажей (всегда видна если есть ожидающие) -->
+  <div id="char-initiatives-panel" style="display:none"></div>
+
+  <!-- Оверлей правительства -->
+  <div id="gov-overlay" onclick="if(event.target===this)hideGovernmentOverlay()" style="display:none">
+    <div class="gov-panel">
+      <div class="gov-panel-header">
+        <span class="gov-panel-title">🏛 Форма правления</span>
+        <button class="gov-close-btn" onclick="hideGovernmentOverlay()">✕</button>
+      </div>
+      <div id="gov-content" class="gov-panel-body">
+        <!-- заполняется renderGovernmentOverlay() -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Модал: ввод API ключа при первом запуске или смене ключа -->
+  <div id="api-key-modal">
+    <div class="akm-box">
+      <div class="akm-seal">🔑</div>
+      <h2 class="akm-title">API Ключ Anthropic</h2>
+      <p class="akm-desc">
+        Для работы AI-советников, дипломатии и принятия решений<br>
+        необходим ключ Anthropic API.<br>
+        <strong>Ключ будет зашифрован и сохранён на вашем устройстве.</strong>
+      </p>
+      <input type="password" id="akm-input" class="akm-input"
+             placeholder="sk-ant-api03-..."
+             onkeydown="_akmKeyDown(event)" autocomplete="off" spellcheck="false">
+      <div id="akm-error" class="akm-error"></div>
+      <button id="akm-btn" class="akm-btn" onclick="submitAPIKey()">
+        Сохранить и продолжить
+      </button>
+      <div class="akm-footer">
+        Получить ключ: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════
+       СКРИПТЫ (порядок важен!)
+  ═══════════════════════════ -->
+  <script src="config.js"></script>
+  <script src="data/goods.js"></script>
+  <script src="data/map.js"></script>
+  <script src="data/nations.js"></script>
+  <script src="data/regions_data.js"></script>
+  <script src="data/characters.js"></script>
+
+  <!-- Инициализируем GAME_STATE из INITIAL_GAME_STATE -->
+  <script>
+    // GAME_STATE — единственный источник правды
+    const GAME_STATE = JSON.parse(JSON.stringify(INITIAL_GAME_STATE));
+  </script>
+
+  <script src="ui/log.js"></script>
+  <script src="engine/economy.js"></script>
+  <script src="engine/government.js"></script>
+  <script src="engine/dialogue.js"></script>
+  <script src="engine/constitutional.js"></script>
+  <script src="engine/conspiracy.js"></script>
+  <script src="engine/senate.js"></script>
+  <script src="engine/battle.js"></script>
+  <script src="engine/victory.js"></script>
+  <script src="engine/characters_ai.js"></script>
+  <script src="engine/turn.js"></script>
+  <script src="ui/map.js"></script>
+  <script src="ui/panels.js"></script>
+  <script src="ui/government_tab.js"></script>
+  <script src="ai/prompts.js"></script>
+  <script src="ai/parser.js"></script>
+  <script src="ai/claude.js"></script>
+  <script src="ui/apikey.js"></script>
+  <script src="ui/input.js"></script>
+
+  <script>
+    // ──────────────────────────────────────────
+    // СТАРТ ИГРЫ
+    // ──────────────────────────────────────────
+
+    // Инициализируем ввод
+    initInput();
+
+    // Запускаем игру
+    initGame();
+
+    // Инициализируем сенаты (Lazy Materialization)
+    initAllSenates();
+
+    // Заполняем легенду наций
+    renderNationLegend();
+
+    // Загружаем зашифрованный API ключ; если не найден — показываем модал
+    initAPIKey();
+
+    // ──────────────────────────────────────────
+    // ЛЕГЕНДА НАЦИЙ
+    // ──────────────────────────────────────────
+
+    function renderNationLegend() {
+      const legend = document.getElementById('nation-legend');
+      if (!legend) return;
+
+      const mainNations = ['syracuse', 'rome', 'carthage', 'egypt', 'macedon'];
+      legend.innerHTML = mainNations.map(nId => {
+        const nation = GAME_STATE.nations[nId];
+        if (!nation) return '';
+        return `
+          <div class="nation-legend-item">
+            <div class="nation-color-dot" style="background:${nation.color}"></div>
+            <span>${nation.flag_emoji || ''} ${nation.name}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ──────────────────────────────────────────
+    // КНОПКА ГЕНЕРАЦИИ ПЕРСОНАЖЕЙ
+    // ──────────────────────────────────────────
+
+    async function handleGenerateChars() {
+      const btn = document.getElementById('generate-chars-btn');
+      if (!btn) return;
+
+      if (!CONFIG.API_KEY) {
+        showAPIKeyPrompt();
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Генерирую...';
+
+      try {
+        await generateCharactersForNation(GAME_STATE.player_nation, 7);
+        btn.textContent = '✅ Советники явились';
+      } catch (err) {
+        console.error('Ошибка генерации персонажей:', err);
+        addEventLog(`Ошибка генерации персонажей: ${err.message}`, 'warning');
+        btn.disabled = false;
+        btn.textContent = '✨ Созвать советников (AI)';
+      }
+    }
+
+    // ──────────────────────────────────────────
+    // ГЛОБАЛЬНАЯ ФУНКЦИЯ ЗАКРЫТИЯ ОВЕРЛЕЕВ по Escape
+    // ──────────────────────────────────────────
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeCharacterDetail();
+        const votingOverlay = document.getElementById('voting-overlay');
+        if (votingOverlay && votingOverlay.style.display !== 'none') {
+          votingOverlay.style.display = 'none';
+        }
+        closeRegionInfo();
+      }
+    });
+  </script>
+
+</body>
+</html>

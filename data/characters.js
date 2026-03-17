@@ -1,0 +1,776 @@
+// Персонажи двора и сената
+// При старте пустой массив — заполняется через AI или стартовым набором
+
+// Заглушка стартовых персонажей Сиракуз (до генерации через Claude)
+const INITIAL_CHARACTERS_SYRACUSE = [
+  {
+    id: 'CHAR_0001',
+    name: 'Менон из Акрай',
+    age: 58,
+    role: 'senator',
+    nation: 'syracuse',
+    alive: true,
+    health: 72,
+
+    traits: {
+      ambition: 45,
+      caution: 82,
+      loyalty: 28,     // старая знать, ненавидит выскочку-гончара
+      piety: 70,
+      cruelty: 15,
+      greed: 60,
+    },
+
+    wants: ['восстановить_демократию', 'земельные_привилегии'],
+    fears: ['казна_опустеет', 'война_с_карфагеном'],
+
+    resources: {
+      gold: 6200,
+      land: 8,          // обширные поместья в Леонтини
+      followers: 180,   // сенаторы старой закалки
+      army_command: 0,
+    },
+
+    relations: {
+      CHAR_0002: { score: -20, description: 'соперник за влияние' },
+      CHAR_0003: { score: 35, description: 'старый союзник' },
+    },
+
+    history: [
+      { turn: 0, event: 'Начало игры. Недоволен властью тирана.' },
+    ],
+
+    portrait: '👴',
+    description: 'Аристократ старого рода. Презирает Агафокла, но умело скрывает это.',
+    disposition: 28, ambition_goal: 'восстановить_олигархию', court_role: 'советник',
+    senate_faction_id: 'aristocrats',
+  },
+
+  {
+    id: 'CHAR_0002',
+    name: 'Гераклид Молодой',
+    age: 34,
+    role: 'general',
+    nation: 'syracuse',
+    alive: true,
+    health: 95,
+
+    traits: {
+      ambition: 85,
+      caution: 35,
+      loyalty: 72,     // преданный тирану военачальник
+      piety: 30,
+      cruelty: 55,
+      greed: 48,
+    },
+
+    wants: ['победа_в_войне', 'больше_войск', 'слава'],
+    fears: ['поражение', 'потеря_командования'],
+
+    resources: {
+      gold: 1800,
+      land: 1,
+      followers: 420,   // солдаты обожают его
+      army_command: 1200,
+    },
+
+    relations: {
+      CHAR_0001: { score: -20, description: 'враждует с аристократами' },
+      CHAR_0004: { score: 60, description: 'боевой товарищ' },
+    },
+
+    history: [
+      { turn: 0, event: 'Начало игры. Готовится к возможному конфликту с Карфагеном.' },
+    ],
+
+    portrait: '⚔️',
+    description: 'Блестящий молодой стратег. Победил карфагенян в двух битвах. Честолюбив.',
+    disposition: 75, ambition_goal: 'стать_главным_стратегом', court_role: 'полководец',
+    senate_faction_id: 'military',
+  },
+
+  {
+    id: 'CHAR_0003',
+    name: 'Никомед Финикийский',
+    age: 47,
+    role: 'merchant',
+    nation: 'syracuse',
+    alive: true,
+    health: 81,
+
+    traits: {
+      ambition: 58,
+      caution: 68,
+      loyalty: 45,     // лоялен казне, а не правителю
+      piety: 22,
+      cruelty: 10,
+      greed: 90,
+    },
+
+    wants: ['торговые_монополии', 'мир_с_карфагеном', 'снижение_пошлин'],
+    fears: ['война', 'пиратство', 'новые_налоги'],
+
+    resources: {
+      gold: 18500,     // богатейший купец города
+      land: 2,
+      followers: 85,   // торговая гильдия
+      army_command: 0,
+    },
+
+    relations: {
+      CHAR_0001: { score: 35, description: 'деловой партнёр' },
+      CHAR_0002: { score: -15, description: 'война разоряет торговлю' },
+    },
+
+    history: [
+      { turn: 0, event: 'Начало игры. Ищет новые торговые маршруты в Египет.' },
+    ],
+
+    portrait: '💰',
+    description: 'Богатейший торговец Сиракуз, связанный торговыми нитями от Египта до Рима.',
+    disposition: 52, ambition_goal: 'торговая_монополия_с_египтом', court_role: 'казначей',
+    senate_faction_id: 'merchants',
+  },
+
+  {
+    id: 'CHAR_0004',
+    name: 'Эвтихий Жрец',
+    age: 62,
+    role: 'priest',
+    nation: 'syracuse',
+    alive: true,
+    health: 65,
+
+    traits: {
+      ambition: 30,
+      caution: 88,
+      loyalty: 65,
+      piety: 98,
+      cruelty: 5,
+      greed: 20,
+    },
+
+    wants: ['новый_храм_зевса', 'жреческие_привилегии', 'мир'],
+    fears: ['осквернение_богов', 'голод', 'чума'],
+
+    resources: {
+      gold: 3200,
+      land: 3,          // храмовые земли
+      followers: 240,   // паства, жрецы
+      army_command: 0,
+    },
+
+    relations: {
+      CHAR_0002: { score: 60, description: 'освятил его знамёна' },
+      CHAR_0003: { score: -10, description: 'финикиец, не чтит богов' },
+    },
+
+    history: [
+      { turn: 0, event: 'Начало игры. Советует воздержаться от войны — знамения неблагоприятны.' },
+    ],
+
+    portrait: '🏛️',
+    description: 'Главный жрец храма Аполлона. Знает много тайн города. Пользуется любовью народа.',
+    disposition: 60, ambition_goal: 'построить_храм_зевса', court_role: 'верховный_жрец',
+    senate_faction_id: 'demos',
+  },
+
+  {
+    id: 'CHAR_0005',
+    name: 'Феано, дочь Менона',
+    age: 28,
+    role: 'advisor',
+    nation: 'syracuse',
+    alive: true,
+    health: 98,
+
+    traits: {
+      ambition: 70,
+      caution: 55,
+      loyalty: 50,
+      piety: 45,
+      cruelty: 25,
+      greed: 35,
+    },
+
+    wants: ['влияние_при_дворе', 'образование_для_женщин', 'союз_с_египтом'],
+    fears: ['брак_по_принуждению', 'война'],
+
+    resources: {
+      gold: 2100,
+      land: 0,
+      followers: 45,
+      army_command: 0,
+    },
+
+    relations: {
+      CHAR_0001: { score: 80, description: 'отец' },
+      CHAR_0003: { score: 30, description: 'деловые контакты' },
+    },
+
+    history: [
+      { turn: 0, event: 'Начало игры. Недавно вернулась из Александрии, где изучала философию.' },
+    ],
+
+    portrait: '👩',
+    description: 'Образованная дочь сенатора. Понимает политику лучше многих мужчин двора. Дерзка.',
+    disposition: 48, ambition_goal: 'влияние_при_дворе_тирана', court_role: 'советник',
+  },
+];
+
+// ──────────────────────────────────────────────────────────────────────
+// Совет Ста Карфагена — олигархи (6 чел., 4 клана)
+// court_role — роль в совете; court_rank — ранг влияния (1=высший)
+// ──────────────────────────────────────────────────────────────────────
+const INITIAL_COUNCIL_CARTHAGE = [
+  {
+    id: 'CARTH_OLI_001',
+    name: 'Ганнибал Барка',
+    age: 48, role: 'general', nation: 'carthage', alive: true, health: 88,
+    faction_name: 'Клан Баркидов', court_role: 'военный_магистрат', court_rank: 1,
+    disposition: 55, ambition_goal: 'завоевать_сицилию',
+    traits: { ambition: 92, caution: 40, loyalty: 58, piety: 30, cruelty: 65, greed: 45 },
+    wants: ['military_expansion', 'sicily', 'navy_funding'],
+    fears: ['rome', 'peace_treaty', 'loss_of_command'],
+    resources: { gold: 12000, land: 5, followers: 800, army_command: 4000 },
+    relations: { CARTH_OLI_003: { score: -45, description: 'политический враг' }, CARTH_OLI_002: { score: 70, description: 'братский союз' } },
+    history: [{ turn: 0, event: 'Лидер Баркидов. Рвётся к войне с Римом.' }],
+    portrait: '⚔️',
+    description: 'Ястреб Карфагена. Считает, что только война обеспечит гегемонию Пунии в Средиземноморье.',
+  },
+  {
+    id: 'CARTH_OLI_002',
+    name: 'Гасдрубал Красивый',
+    age: 36, role: 'general', nation: 'carthage', alive: true, health: 94,
+    faction_name: 'Клан Баркидов', court_role: 'командующий_армией', court_rank: 2,
+    disposition: 50, ambition_goal: 'стать_суффетом',
+    traits: { ambition: 78, caution: 48, loyalty: 65, piety: 28, cruelty: 42, greed: 38 },
+    wants: ['military_expansion', 'personal_glory'],
+    fears: ['rome', 'political_intrigue'],
+    resources: { gold: 7800, land: 3, followers: 450, army_command: 2500 },
+    relations: { CARTH_OLI_001: { score: 70, description: 'клановый союзник' }, CARTH_OLI_004: { score: -20, description: 'соперник за влияние' } },
+    history: [{ turn: 0, event: 'Молодой командир Баркидов. Харизматичен, опасен.' }],
+    portrait: '🦁',
+    description: 'Харизматичный военный. Войска боготворят его. Рвётся к гражданской власти.',
+  },
+  {
+    id: 'CARTH_OLI_003',
+    name: 'Ганнон Великий',
+    age: 61, role: 'senator', nation: 'carthage', alive: true, health: 72,
+    faction_name: 'Торговый совет', court_role: 'глава_совета', court_rank: 1,
+    disposition: 45, ambition_goal: 'сохранить_торговые_пути',
+    traits: { ambition: 60, caution: 80, loyalty: 55, piety: 50, cruelty: 20, greed: 85 },
+    wants: ['free_trade', 'peace', 'profits'],
+    fears: ['war', 'rome_blockade', 'barcid_dictatorship'],
+    resources: { gold: 38000, land: 12, followers: 320, army_command: 0 },
+    relations: { CARTH_OLI_001: { score: -45, description: 'ненавидит войну Баркидов' }, CARTH_OLI_004: { score: 55, description: 'деловой партнёр' } },
+    history: [{ turn: 0, event: 'Богатейший торговец. Противник военных авантюр.' }],
+    portrait: '⚖️',
+    description: 'Голос торговли и разума в совете. Убеждён, что войны разоряют. Влиятелен и осторожен.',
+  },
+  {
+    id: 'CARTH_OLI_004',
+    name: 'Бодасторет',
+    age: 52, role: 'merchant', nation: 'carthage', alive: true, health: 80,
+    faction_name: 'Торговый совет', court_role: 'купец_гильдии', court_rank: 2,
+    disposition: 55, ambition_goal: 'монополия_на_серебро_испании',
+    traits: { ambition: 70, caution: 62, loyalty: 48, piety: 35, cruelty: 15, greed: 92 },
+    wants: ['free_trade', 'profits', 'silver_mines'],
+    fears: ['port_taxes', 'war', 'piracy'],
+    resources: { gold: 22000, land: 6, followers: 180, army_command: 0 },
+    relations: { CARTH_OLI_003: { score: 55, description: 'компаньон' }, CARTH_OLI_005: { score: 30, description: 'нейтральный сосед' } },
+    history: [{ turn: 0, event: 'Богатый торговец, контролирующий серебряные маршруты.' }],
+    portrait: '💎',
+    description: 'Контролирует торговлю серебром из Испании. Деньги для него важнее принципов.',
+  },
+  {
+    id: 'CARTH_OLI_005',
+    name: 'Малх Жреческий',
+    age: 55, role: 'priest', nation: 'carthage', alive: true, health: 76,
+    faction_name: 'Жреческая коллегия', court_role: 'верховный_жрец_баала', court_rank: 1,
+    disposition: 50, ambition_goal: 'строительство_нового_храма',
+    traits: { ambition: 40, caution: 75, loyalty: 70, piety: 95, cruelty: 30, greed: 25 },
+    wants: ['temple_funds', 'divine_favor', 'ritual_sacrifices'],
+    fears: ['reform', 'secularism', 'greek_gods'],
+    resources: { gold: 9000, land: 8, followers: 400, army_command: 0 },
+    relations: { CARTH_OLI_003: { score: 40, description: 'союзник против военных' }, CARTH_OLI_001: { score: -20, description: 'не одобряет жестокость' } },
+    history: [{ turn: 0, event: 'Толкует волю богов. Его слово — закон для суеверного народа.' }],
+    portrait: '🔥',
+    description: 'Верховный жрец Баала. Народ боится и чтит его. Может освятить войну — или проклясть её.',
+  },
+  {
+    id: 'CARTH_OLI_006',
+    name: 'Суниат бен Хадад',
+    age: 44, role: 'advisor', nation: 'carthage', alive: true, health: 85,
+    faction_name: 'Земельная аристократия', court_role: 'суффет', court_rank: 1,
+    disposition: 58, ambition_goal: 'расширить_африканские_владения',
+    traits: { ambition: 65, caution: 70, loyalty: 60, piety: 55, cruelty: 28, greed: 70 },
+    wants: ['land_rights', 'slave_labor', 'african_expansion'],
+    fears: ['land_reform', 'debt_crisis'],
+    resources: { gold: 14000, land: 24, followers: 250, army_command: 0 },
+    relations: { CARTH_OLI_003: { score: 35, description: 'мирный союзник' }, CARTH_OLI_001: { score: 20, description: 'уважает военную силу' } },
+    history: [{ turn: 0, event: 'Суффет — один из двух исполнительных глав. Консерватор и землевладелец.' }],
+    portrait: '🌾',
+    description: 'Один из двух суффетов. Управляет африканскими провинциями. Заботится о земле, а не о море.',
+  },
+];
+
+// ──────────────────────────────────────────────────────────────────────
+// Царский двор Египта — монархия (5 чел.)
+// court_rank — место при дворе (1 = ближайший к трону)
+// ──────────────────────────────────────────────────────────────────────
+const INITIAL_COURT_EGYPT = [
+  {
+    id: 'EGY_CRT_001',
+    name: 'Агафокл из Александрии',
+    age: 42, role: 'advisor', nation: 'egypt', alive: true, health: 90,
+    court_role: 'диойкет', court_rank: 1,
+    disposition: 65, ambition_goal: 'стать_регентом',
+    traits: { ambition: 82, caution: 58, loyalty: 62, piety: 30, cruelty: 45, greed: 72 },
+    wants: ['royal_favor', 'control_of_treasury', 'eliminate_rivals'],
+    fears: ['loss_of_influence', 'military_coup'],
+    resources: { gold: 15000, land: 10, followers: 280, army_command: 0 },
+    relations: { EGY_CRT_002: { score: -30, description: 'конкурент за влияние на фараона' }, EGY_CRT_004: { score: 40, description: 'союзник через финансы' } },
+    history: [{ turn: 0, event: 'Главный управляющий двора. Контролирует доступ к царю.' }],
+    portrait: '📜',
+    description: 'Диойкет — главный чиновник царства. Знает все тайны казны. Коварен и осторожен.',
+  },
+  {
+    id: 'EGY_CRT_002',
+    name: 'Лаг Птолемейский',
+    age: 38, role: 'general', nation: 'egypt', alive: true, health: 96,
+    court_role: 'стратег_армии', court_rank: 2,
+    disposition: 70, ambition_goal: 'завоевать_сирию',
+    traits: { ambition: 88, caution: 35, loyalty: 75, piety: 38, cruelty: 52, greed: 40 },
+    wants: ['military_command', 'syrian_campaign', 'glory'],
+    fears: ['loss_of_command', 'demotion', 'defeat'],
+    resources: { gold: 5000, land: 4, followers: 520, army_command: 6000 },
+    relations: { EGY_CRT_001: { score: -30, description: 'враг при дворе' }, EGY_CRT_005: { score: 55, description: 'доверяет советам' } },
+    history: [{ turn: 0, event: 'Главнокомандующий. Рвётся воевать с Селевкидами.' }],
+    portrait: '⚔️',
+    description: 'Лучший полководец Египта. Лоялен Птолемею лично. Презирает придворные интриги.',
+  },
+  {
+    id: 'EGY_CRT_003',
+    name: 'Маат-Ра Амун',
+    age: 65, role: 'priest', nation: 'egypt', alive: true, health: 68,
+    court_role: 'верховный_жрец_амона', court_rank: 2,
+    disposition: 48, ambition_goal: 'восстановить_египетские_культы',
+    traits: { ambition: 35, caution: 85, loyalty: 55, piety: 98, cruelty: 8, greed: 18 },
+    wants: ['temple_funds', 'divine_favor', 'egyptian_traditions'],
+    fears: ['hellenization', 'greek_gods', 'sacrilege'],
+    resources: { gold: 22000, land: 18, followers: 800, army_command: 0 },
+    relations: { EGY_CRT_001: { score: -15, description: 'не доверяет греку' }, EGY_CRT_004: { score: 30, description: 'финансовый союзник' } },
+    history: [{ turn: 0, event: 'Верховный жрец Амона. Хранит египетские традиции против эллинизации.' }],
+    portrait: '𓂀',
+    description: 'Голос древних богов Египта. Народ боготворит его. Против греческих реформ Птолемея.',
+  },
+  {
+    id: 'EGY_CRT_004',
+    name: 'Клеомен Навкратийский',
+    age: 50, role: 'merchant', nation: 'egypt', alive: true, health: 78,
+    court_role: 'казначей', court_rank: 3,
+    disposition: 62, ambition_goal: 'монополия_на_зерновую_торговлю',
+    traits: { ambition: 68, caution: 72, loyalty: 52, piety: 25, cruelty: 20, greed: 88 },
+    wants: ['grain_monopoly', 'tax_reform', 'trade_with_athens'],
+    fears: ['war', 'treasury_deficit', 'famine'],
+    resources: { gold: 45000, land: 5, followers: 120, army_command: 0 },
+    relations: { EGY_CRT_001: { score: 40, description: 'деловой партнёр' }, EGY_CRT_003: { score: 30, description: 'мирное сотрудничество' } },
+    history: [{ turn: 0, event: 'Казначей. Контролирует налоги и зерновые запасы.' }],
+    portrait: '🌾',
+    description: 'Главный финансист Египта. Богат сверх меры. Любит деньги больше, чем людей.',
+  },
+  {
+    id: 'EGY_CRT_005',
+    name: 'Береника',
+    age: 32, role: 'advisor', nation: 'egypt', alive: true, health: 95,
+    court_role: 'царский_советник', court_rank: 1,
+    disposition: 72, ambition_goal: 'стать_царицей',
+    traits: { ambition: 75, caution: 60, loyalty: 68, piety: 42, cruelty: 18, greed: 30 },
+    wants: ['royal_favor', 'diplomatic_marriages', 'cultural_influence'],
+    fears: ['loss_of_royal_favor', 'war'],
+    resources: { gold: 8000, land: 2, followers: 190, army_command: 0 },
+    relations: { EGY_CRT_002: { score: 55, description: 'уважает военную силу' }, EGY_CRT_001: { score: -25, description: 'соперник за влияние' } },
+    history: [{ turn: 0, event: 'Умнейший советник при дворе. Птолемей ценит её мнение.' }],
+    portrait: '👸',
+    description: 'Умная и образованная придворная. Влияет на царя тонко и незаметно. Умеет ждать.',
+  },
+];
+
+// ──────────────────────────────────────────────────────────────────────
+// Гетайры Македонии — монархия/военный двор (5 чел.)
+// ──────────────────────────────────────────────────────────────────────
+const INITIAL_HETAIROI_MACEDON = [
+  {
+    id: 'MAC_HTR_001',
+    name: 'Антигон Одноглазый',
+    age: 70, role: 'general', nation: 'macedon', alive: true, health: 62,
+    court_role: 'старший_гетайр', court_rank: 1,
+    disposition: 42, ambition_goal: 'стать_властелином_азии',
+    traits: { ambition: 90, caution: 55, loyalty: 38, piety: 32, cruelty: 68, greed: 60 },
+    wants: ['military_command', 'asian_conquest', 'autonomy'],
+    fears: ['loss_of_power', 'united_diadochi'],
+    resources: { gold: 18000, land: 15, followers: 600, army_command: 8000 },
+    relations: { MAC_HTR_002: { score: -25, description: 'конкурент за власть' }, MAC_HTR_003: { score: 35, description: 'старый сослуживец' } },
+    history: [{ turn: 0, event: 'Старейший из диадохов. Своенравен. Не признаёт над собой власти.' }],
+    portrait: '🦅',
+    description: 'Ветеран Александра. Один глаз, но видит больше всех. Хочет всё — и одного Кассандра не хватит.',
+  },
+  {
+    id: 'MAC_HTR_002',
+    name: 'Лисимах',
+    age: 56, role: 'general', nation: 'macedon', alive: true, health: 82,
+    court_role: 'полководец_фракии', court_rank: 2,
+    disposition: 55, ambition_goal: 'удержать_фракию',
+    traits: { ambition: 75, caution: 60, loyalty: 62, piety: 40, cruelty: 50, greed: 48 },
+    wants: ['military_command', 'thrace_control', 'stable_borders'],
+    fears: ['loss_of_thrace', 'ptolemy_expansion'],
+    resources: { gold: 11000, land: 20, followers: 380, army_command: 5000 },
+    relations: { MAC_HTR_001: { score: -25, description: 'соперник диадох' }, MAC_HTR_004: { score: 45, description: 'союзник в войне' } },
+    history: [{ turn: 0, event: 'Правитель Фракии. Жёсткий и практичный.' }],
+    portrait: '🏔️',
+    description: 'Контролирует Фракию. Хороший солдат, плохой дипломат. Ценит прямоту.',
+  },
+  {
+    id: 'MAC_HTR_003',
+    name: 'Полиперхон',
+    age: 74, role: 'advisor', nation: 'macedon', alive: true, health: 58,
+    court_role: 'регент_эллады', court_rank: 2,
+    disposition: 60, ambition_goal: 'сохранить_наследие_александра',
+    traits: { ambition: 45, caution: 80, loyalty: 72, piety: 60, cruelty: 25, greed: 30 },
+    wants: ['peace', 'macedonian_traditions', 'greek_autonomy'],
+    fears: ['civil_war', 'loss_of_heritage', 'barbarian_invasions'],
+    resources: { gold: 4000, land: 8, followers: 200, army_command: 1500 },
+    relations: { MAC_HTR_001: { score: 35, description: 'старый товарищ' }, MAC_HTR_002: { score: 20, description: 'нейтрально' } },
+    history: [{ turn: 0, event: 'Старейший советник. Помнит Филиппа. Хранит традиции.' }],
+    portrait: '👴',
+    description: 'Старый солдат Филиппа II. Мудрый советник. Устал от войн диадохов.',
+  },
+  {
+    id: 'MAC_HTR_004',
+    name: 'Деметрий Полиоркет',
+    age: 32, role: 'general', nation: 'macedon', alive: true, health: 99,
+    court_role: 'осадный_полководец', court_rank: 2,
+    disposition: 58, ambition_goal: 'взять_любой_город_осадой',
+    traits: { ambition: 95, caution: 22, loyalty: 55, piety: 25, cruelty: 55, greed: 65 },
+    wants: ['military_glory', 'siege_engines', 'conquest'],
+    fears: ['defeat', 'boredom', 'peace'],
+    resources: { gold: 7000, land: 3, followers: 480, army_command: 3000 },
+    relations: { MAC_HTR_001: { score: 65, description: 'сын Антигона — преданность' }, MAC_HTR_002: { score: 45, description: 'союзник в битвах' } },
+    history: [{ turn: 0, event: 'Лучший осадный инженер мира. Взял Родос. Ненасытен.' }],
+    portrait: '🔥',
+    description: 'Молодой гений осадного дела. Безрассуден и блестящ. Живёт войной.',
+  },
+  {
+    id: 'MAC_HTR_005',
+    name: 'Антипатр Младший',
+    age: 40, role: 'advisor', nation: 'macedon', alive: true, health: 85,
+    court_role: 'советник_по_дипломатии', court_rank: 3,
+    disposition: 65, ambition_goal: 'союз_с_египтом',
+    traits: { ambition: 60, caution: 70, loyalty: 68, piety: 50, cruelty: 22, greed: 42 },
+    wants: ['diplomatic_marriages', 'stable_alliances', 'trade'],
+    fears: ['war_on_two_fronts', 'ptolemy_expansion'],
+    resources: { gold: 6000, land: 6, followers: 145, army_command: 0 },
+    relations: { MAC_HTR_003: { score: 55, description: 'уважает мудрость старца' }, MAC_HTR_004: { score: -15, description: 'не одобряет безрассудство' } },
+    history: [{ turn: 0, event: 'Дипломат Кассандра. Предпочитает договоры битвам.' }],
+    portrait: '🕊️',
+    description: 'Единственный в совете, кто предпочитает дипломатию мечу. Умён и терпелив.',
+  },
+];
+
+// ──────────────────────────────────────────────────────────────────────
+// Совет старейшин Нумидии — племенной вождизм (4 чел.)
+// honor (честь) отображается вместо лояльности в зале племени
+// ──────────────────────────────────────────────────────────────────────
+const INITIAL_ELDERS_NUMIDIA = [
+  {
+    id: 'NUM_ELD_001',
+    name: 'Такфаринас',
+    age: 55, role: 'general', nation: 'numidia', alive: true, health: 80,
+    court_role: 'вождь_войны', court_rank: 1,
+    disposition: 60, ambition_goal: 'великий_набег_на_карфаген',
+    honor: 82,
+    traits: { ambition: 85, caution: 30, loyalty: 65, piety: 50, cruelty: 70, greed: 45 },
+    wants: ['raid_carthage', 'more_horses', 'war_glory'],
+    fears: ['permanent_settlement', 'submission_to_carthage', 'dishonor'],
+    resources: { gold: 1200, land: 0, followers: 1200, army_command: 3000 },
+    relations: { NUM_ELD_002: { score: 55, description: 'вместе ходили в набег' }, NUM_ELD_003: { score: -20, description: 'шаман мешает войне' } },
+    history: [{ turn: 0, event: 'Великий вождь войны. Ведёт племя в бой.' }],
+    portrait: '⚔️',
+    description: 'Бесстрашный вождь-воин. Живёт набегами. Уважает только силу и честь в битве.',
+  },
+  {
+    id: 'NUM_ELD_002',
+    name: 'Масинисса Старший',
+    age: 68, role: 'senator', nation: 'numidia', alive: true, health: 70,
+    court_role: 'старейшина_совета', court_rank: 1,
+    disposition: 55, ambition_goal: 'объединить_нумидийские_племена',
+    honor: 91,
+    traits: { ambition: 65, caution: 75, loyalty: 72, piety: 65, cruelty: 30, greed: 25 },
+    wants: ['tribal_unity', 'peaceful_pastures', 'elder_respect'],
+    fears: ['foreign_domination', 'intertribal_war', 'dishonor_of_youth'],
+    resources: { gold: 800, land: 0, followers: 350, army_command: 500 },
+    relations: { NUM_ELD_001: { score: 55, description: 'ценит его смелость' }, NUM_ELD_003: { score: 65, description: 'чтит мудрость духов' } },
+    history: [{ turn: 0, event: 'Старейший вождь. Голос традиции и мудрости.' }],
+    portrait: '🌙',
+    description: 'Мудрейший из старейшин. Помнит времена до Карфагена. Его слово — закон у костра.',
+  },
+  {
+    id: 'NUM_ELD_003',
+    name: 'Юба-шаман',
+    age: 49, role: 'priest', nation: 'numidia', alive: true, health: 78,
+    court_role: 'шаман_племени', court_rank: 2,
+    disposition: 48, ambition_goal: 'получить_знамение_великой_победы',
+    honor: 75,
+    traits: { ambition: 38, caution: 70, loyalty: 60, piety: 98, cruelty: 15, greed: 10 },
+    wants: ['tribal_rituals', 'sacred_grounds', 'spirit_guidance'],
+    fears: ['foreign_gods', 'desecration', 'war_without_omen'],
+    resources: { gold: 200, land: 0, followers: 180, army_command: 0 },
+    relations: { NUM_ELD_002: { score: 65, description: 'духовный союз' }, NUM_ELD_001: { score: -20, description: 'тот не слушает духов' } },
+    history: [{ turn: 0, event: 'Шаман. Говорит с предками. Племя боится его гнева.' }],
+    portrait: '🦅',
+    description: 'Голос духов предков. Без его благословения племя не идёт в поход. Загадочен.',
+  },
+  {
+    id: 'NUM_ELD_004',
+    name: 'Бохус аль-Фарас',
+    age: 41, role: 'general', nation: 'numidia', alive: true, health: 92,
+    court_role: 'повелитель_коней', court_rank: 2,
+    disposition: 62, ambition_goal: 'крупнейший_табун_в_африке',
+    honor: 68,
+    traits: { ambition: 72, caution: 42, loyalty: 68, piety: 40, cruelty: 40, greed: 55 },
+    wants: ['more_horses', 'grazing_lands', 'cavalry_supremacy'],
+    fears: ['loss_of_horses', 'infantry_warfare', 'drought'],
+    resources: { gold: 500, land: 0, followers: 280, army_command: 1800 },
+    relations: { NUM_ELD_001: { score: 60, description: 'братья по оружию' }, NUM_ELD_003: { score: 30, description: 'уважает духовное' } },
+    history: [{ turn: 0, event: 'Лучший кавалерист Африки. Его нумидийская конница непобедима.' }],
+    portrait: '🐎',
+    description: 'Командир нумидийской конницы. Коней любит больше людей. В бою — непредсказуем.',
+  },
+];
+
+// ──────────────────────────────────────────────────────────────────────
+// Стартовые сенаторы Рима (9 чел., 3 фракции)
+// faction_name совпадает с institution.factions[].name
+// disposition — отношение к игроку/правителю (0–100, 50 = нейтрал)
+// ambition_goal — личная цель-амбиция (короткая строка)
+// ──────────────────────────────────────────────────────────────────────
+const INITIAL_SENATORS_ROME = [
+
+  // ── ОПТИМАТЫ (старая аристократия) ────────────────────────────────
+  {
+    id: 'ROME_SEN_001',
+    name: 'Луций Корнелий Сулла',
+    age: 52,
+    role: 'senator',
+    nation: 'rome',
+    alive: true,
+    health: 78,
+    faction_name: 'Оптиматы',
+    disposition: 45,   // слегка подозрителен
+    ambition_goal: 'стать_диктатором',
+    traits: { ambition: 92, caution: 30, loyalty: 40, piety: 35, cruelty: 80, greed: 55 },
+    wants: ['noble_privilege', 'tradition', 'military_supremacy'],
+    fears: ['populism', 'land_reform'],
+    resources: { gold: 14000, land: 12, followers: 380, army_command: 2000 },
+    relations: { ROME_SEN_002: { score: 60, description: 'союзник по фракции' }, ROME_SEN_006: { score: -40, description: 'ненавидит демагогов' } },
+    history: [{ turn: 0, event: 'Возглавляет фракцию оптиматов. Метит на диктатуру.' }],
+    portrait: '🦅',
+    description: 'Холодный и расчётливый патриций. Убеждён, что Рим принадлежит старой знати.',
+  },
+  {
+    id: 'ROME_SEN_002',
+    name: 'Квинт Цецилий Метелл',
+    age: 61,
+    role: 'senator',
+    nation: 'rome',
+    alive: true,
+    health: 68,
+    faction_name: 'Оптиматы',
+    disposition: 50,
+    ambition_goal: 'сохранить_власть_сената',
+    traits: { ambition: 60, caution: 78, loyalty: 65, piety: 72, cruelty: 25, greed: 45 },
+    wants: ['noble_privilege', 'tradition'],
+    fears: ['land_reform', 'populism'],
+    resources: { gold: 9500, land: 15, followers: 210, army_command: 0 },
+    relations: { ROME_SEN_001: { score: 60, description: 'вместе противостоят популярам' } },
+    history: [{ turn: 0, event: 'Начало игры. Держится за привилегии нобилей.' }],
+    portrait: '👴',
+    description: 'Старый патриций, чтящий традиции предков. Не любит перемен. Очень осторожен.',
+  },
+  {
+    id: 'ROME_SEN_003',
+    name: 'Марк Лициний Красс',
+    age: 44,
+    role: 'senator',
+    nation: 'rome',
+    alive: true,
+    health: 90,
+    faction_name: 'Оптиматы',
+    disposition: 55,
+    ambition_goal: 'стать_богатейшим_в_риме',
+    traits: { ambition: 78, caution: 55, loyalty: 42, piety: 20, cruelty: 40, greed: 97 },
+    wants: ['noble_privilege', 'trade_monopoly'],
+    fears: ['treasury_reform', 'conscription_of_clients'],
+    resources: { gold: 42000, land: 20, followers: 500, army_command: 0 },
+    relations: { ROME_SEN_007: { score: 30, description: 'деловые контакты' } },
+    history: [{ turn: 0, event: 'Богатейший человек Рима. Скупает дома и земли.' }],
+    portrait: '💎',
+    description: 'Невероятно богатый сенатор. Убеждён, что деньги решают всё. Продажен, но умело скрывает это.',
+  },
+
+  // ── ПОПУЛЯРЫ (народная фракция) ───────────────────────────────────
+  {
+    id: 'ROME_SEN_004',
+    name: 'Гай Семпроний Гракх',
+    age: 37,
+    role: 'senator',
+    nation: 'rome',
+    alive: true,
+    health: 96,
+    faction_name: 'Популяры',
+    disposition: 48,
+    ambition_goal: 'провести_земельную_реформу',
+    traits: { ambition: 85, caution: 25, loyalty: 70, piety: 45, cruelty: 15, greed: 12 },
+    wants: ['land_reform', 'cheap_grain', 'rights_for_plebs'],
+    fears: ['oligarchy', 'debt_slavery'],
+    resources: { gold: 2400, land: 1, followers: 620, army_command: 0 },
+    relations: { ROME_SEN_001: { score: -55, description: 'идейный враг' }, ROME_SEN_005: { score: 70, description: 'союзник по реформам' } },
+    history: [{ turn: 0, event: 'Пламенный трибун. Воюет за землю для бедных.' }],
+    portrait: '✊',
+    description: 'Молодой и дерзкий народный трибун. Верит в справедливость и презирает знать.',
+  },
+  {
+    id: 'ROME_SEN_005',
+    name: 'Марк Туллий Цицерон',
+    age: 42,
+    role: 'senator',
+    nation: 'rome',
+    alive: true,
+    health: 88,
+    faction_name: 'Популяры',
+    disposition: 52,
+    ambition_goal: 'стать_первым_оратором_рима',
+    traits: { ambition: 75, caution: 65, loyalty: 58, piety: 50, cruelty: 10, greed: 30 },
+    wants: ['cheap_grain', 'rule_of_law', 'rights_for_plebs'],
+    fears: ['tyranny', 'civil_war'],
+    resources: { gold: 4100, land: 3, followers: 290, army_command: 0 },
+    relations: { ROME_SEN_004: { score: 70, description: 'единомышленник' }, ROME_SEN_003: { score: 15, description: 'уважает богатство' } },
+    history: [{ turn: 0, event: 'Оратор и юрист. Стоит между фракциями, склоняясь к народу.' }],
+    portrait: '📜',
+    description: 'Блестящий оратор новой волны. Не знатен по рождению, но завоевал уважение словом.',
+  },
+  {
+    id: 'ROME_SEN_006',
+    name: 'Луций Аппулей Сатурнин',
+    age: 39,
+    role: 'senator',
+    nation: 'rome',
+    alive: true,
+    health: 83,
+    faction_name: 'Популяры',
+    disposition: 38,  // агрессивен, не доверяет власти
+    ambition_goal: 'уничтожить_власть_оптиматов',
+    traits: { ambition: 88, caution: 18, loyalty: 60, piety: 22, cruelty: 50, greed: 20 },
+    wants: ['land_reform', 'cheap_grain'],
+    fears: ['oligarchy', 'conscription'],
+    resources: { gold: 1200, land: 0, followers: 840, army_command: 0 },
+    relations: { ROME_SEN_001: { score: -40, description: 'открытый враг' }, ROME_SEN_004: { score: 65, description: 'радикальный союзник' } },
+    history: [{ turn: 0, event: 'Радикальный популяр. Готов к уличным столкновениям.' }],
+    portrait: '🔥',
+    description: 'Агрессивный демагог. Трибун улиц. Ненавидит оптиматов лично и искренне.',
+  },
+
+  // ── НОВЫЕ ЛЮДИ (новая аристократия, выдвиженцы) ───────────────────
+  {
+    id: 'ROME_SEN_007',
+    name: 'Гай Юлий Цезарь',
+    age: 35,
+    role: 'senator',
+    nation: 'rome',
+    alive: true,
+    health: 99,
+    faction_name: 'Новые люди',
+    disposition: 60,
+    ambition_goal: 'завоевать_галлию',
+    traits: { ambition: 99, caution: 45, loyalty: 50, piety: 38, cruelty: 48, greed: 55 },
+    wants: ['merit_promotion', 'military_command', 'trade'],
+    fears: ['closed_citizenship', 'senate_veto'],
+    resources: { gold: 5800, land: 4, followers: 450, army_command: 500 },
+    relations: { ROME_SEN_003: { score: 30, description: 'союз против оптиматов' }, ROME_SEN_001: { score: -20, description: 'конкурент за первенство' } },
+    history: [{ turn: 0, event: 'Амбициозный аристократ, тянущийся к народу. Прокладывает путь к власти.' }],
+    portrait: '⚡',
+    description: 'Молодой, харизматичный и опасно умный. Играет и с оптиматами, и с популярами.',
+  },
+  {
+    id: 'ROME_SEN_008',
+    name: 'Гней Помпей Великий',
+    age: 40,
+    role: 'senator',
+    nation: 'rome',
+    alive: true,
+    health: 94,
+    faction_name: 'Новые люди',
+    disposition: 58,
+    ambition_goal: 'стать_единственным_полководцем_рима',
+    traits: { ambition: 82, caution: 50, loyalty: 62, piety: 48, cruelty: 35, greed: 42 },
+    wants: ['merit_promotion', 'military_command'],
+    fears: ['closed_citizenship', 'senate_curbs_on_military'],
+    resources: { gold: 8200, land: 6, followers: 310, army_command: 3500 },
+    relations: { ROME_SEN_007: { score: 25, description: 'союзник, но конкурент' }, ROME_SEN_002: { score: 20, description: 'признаёт заслуги' } },
+    history: [{ turn: 0, event: 'Прославленный полководец. Уже имеет прозвище Великий.' }],
+    portrait: '🏆',
+    description: 'Полководец-триумфатор с огромной армией. Уважаем, но завидует Цезарю.',
+  },
+  {
+    id: 'ROME_SEN_009',
+    name: 'Марк Порций Катон',
+    age: 58,
+    role: 'senator',
+    nation: 'rome',
+    alive: true,
+    health: 75,
+    faction_name: 'Новые люди',
+    disposition: 42,
+    ambition_goal: 'уничтожить_карфаген',
+    traits: { ambition: 65, caution: 70, loyalty: 80, piety: 75, cruelty: 28, greed: 10 },
+    wants: ['merit_promotion', 'trade', 'military_expansion'],
+    fears: ['closed_citizenship', 'luxury_and_decadence'],
+    resources: { gold: 3600, land: 5, followers: 175, army_command: 0 },
+    relations: { ROME_SEN_007: { score: -15, description: 'не доверяет харизматикам' }, ROME_SEN_002: { score: 40, description: 'уважает традиции' } },
+    history: [{ turn: 0, event: 'Строгий моралист. Считает, что Карфаген должен быть разрушен.' }],
+    portrait: '⚖️',
+    description: 'Принципиальный и суровый. Всякий раз заканчивает речь словами о Карфагене.',
+  },
+];
+
+// Схема для генерации персонажей через AI
+const CHARACTER_SCHEMA = {
+  id: 'string (CHAR_XXXX)',
+  name: 'string (греческое имя и происхождение)',
+  age: 'number (25-75)',
+  role: 'senator|advisor|general|priest|merchant',
+  nation: 'string',
+  alive: true,
+  health: 'number (50-100)',
+  traits: {
+    ambition: 'number (0-100)',
+    caution: 'number (0-100)',
+    loyalty: 'number (0-100)',
+    piety: 'number (0-100)',
+    cruelty: 'number (0-100)',
+    greed: 'number (0-100)',
+  },
+  wants: 'array of strings (2-3 желания)',
+  fears: 'array of strings (1-2 страха)',
+  resources: {
+    gold: 'number',
+    land: 'number',
+    followers: 'number',
+    army_command: 'number',
+  },
+  relations: 'object {CHAR_ID: {score, description}}',
+  history: 'array [{turn, event}]',
+  portrait: 'emoji',
+  description: 'string (1-2 предложения)',
+};
