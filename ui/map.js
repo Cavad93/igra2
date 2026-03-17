@@ -712,80 +712,47 @@ function _updateNationLabelVisibility() {
   const MIN_FONT    = 8;
 
   for (const d of nationLabelData) {
-    // ── 1. Пиксельные полигоны ──────────────────────────────
-    let totalPxArea  = 0;
-    let largestPxArea = 0;
-    let largestPoly   = null;
+    // ── 1. Пиксельные полигоны + суммарный bbox ВСЕХ регионов ──
+    let totalPxArea = 0;
+    let pxMinX = Infinity, pxMaxX = -Infinity;
+    let pxMinY = Infinity, pxMaxY = -Infinity;
 
     for (const reg of d.regions) {
       const poly = reg.coords.map(c => leafletMap.latLngToContainerPoint([c[0], c[1]]));
-      const area = _pxPolyArea(poly);
-      totalPxArea += area;
-      if (area > largestPxArea) { largestPxArea = area; largestPoly = poly; }
+      totalPxArea += _pxPolyArea(poly);
+      for (const p of poly) {
+        if (p.x < pxMinX) pxMinX = p.x;
+        if (p.x > pxMaxX) pxMaxX = p.x;
+        if (p.y < pxMinY) pxMinY = p.y;
+        if (p.y > pxMaxY) pxMaxY = p.y;
+      }
     }
 
-    // Слишком мал — пропускаем (создаёт эффект зума: крупные видны первыми)
+    // Слишком мала суммарная площадь — пропускаем
+    // (крупные нации достигают порога раньше → появляются при меньшем зуме)
     if (totalPxArea < MIN_PX_AREA) continue;
 
-    // ── 2. Центр метки ──────────────────────────────────────
-    const cPx = leafletMap.latLngToContainerPoint([d.lat, d.lng]);
-
-    // Центр вне видимой области — пропускаем
-    if (cPx.x < -250 || cPx.x > mapSize.x + 250 ||
-        cPx.y < -250 || cPx.y > mapSize.y + 250) continue;
-
-    // Центр должен лежать внутри наибольшего полигона
-    if (largestPoly && !_pointInPolyPx(cPx, largestPoly)) continue;
-
-    // ── 3. Размах территории через центр ────────────────────
-    let hSpan = 0, vSpan = 0;
-    let hCx = cPx.x, vCy = cPx.y; // центры пролётов
-
-    if (largestPoly) {
-      // Горизонтальные пересечения на высоте cPx.y
-      const y = cPx.y;
-      const xi = [];
-      for (let i = 0, j = largestPoly.length - 1; i < largestPoly.length; j = i++) {
-        const a = largestPoly[i], b = largestPoly[j];
-        if ((a.y > y) !== (b.y > y))
-          xi.push(a.x + (y - a.y) * (b.x - a.x) / (b.y - a.y));
-      }
-      xi.sort((a, b) => a - b);
-      let sl = cPx.x, sr = cPx.x;
-      for (let i = 0; i + 1 < xi.length; i += 2) {
-        if (xi[i] <= cPx.x && cPx.x <= xi[i + 1]) { sl = xi[i]; sr = xi[i + 1]; break; }
-      }
-      hSpan = sr - sl;
-      hCx   = (sl + sr) / 2;
-
-      // Вертикальные пересечения на x = cPx.x
-      const x = cPx.x;
-      const yi = [];
-      for (let i = 0, j = largestPoly.length - 1; i < largestPoly.length; j = i++) {
-        const a = largestPoly[i], b = largestPoly[j];
-        if ((a.x > x) !== (b.x > x))
-          yi.push(a.y + (x - a.x) * (b.y - a.y) / (b.x - a.x));
-      }
-      yi.sort((a, b) => a - b);
-      let st = cPx.y, sb = cPx.y;
-      for (let i = 0; i + 1 < yi.length; i += 2) {
-        if (yi[i] <= cPx.y && cPx.y <= yi[i + 1]) { st = yi[i]; sb = yi[i + 1]; break; }
-      }
-      vSpan = sb - st;
-      vCy   = (st + sb) / 2;
-    }
-
+    // ── 2. Размах = полный bbox нации (все регионы) ─────────
+    const hSpan = pxMaxX - pxMinX;
+    const vSpan = pxMaxY - pxMinY;
     if (hSpan < 14 && vSpan < 14) continue;
 
-    // ── 4. Ориентация и целевая длина текста ────────────────
-    // Вертикальный текст если территория заметно выше, чем шире
+    // Центр bbox — середина общего охвата нации
+    const bboxCx = (pxMinX + pxMaxX) / 2;
+    const bboxCy = (pxMinY + pxMaxY) / 2;
+
+    // Отбрасываем если bbox вообще вне экрана
+    if (bboxCx < -300 || bboxCx > mapSize.x + 300 ||
+        bboxCy < -300 || bboxCy > mapSize.y + 300) continue;
+
+    // ── 3. Ориентация и целевая длина текста ────────────────
+    // Вертикальный текст если нация заметно выше, чем шире
     const isVertical = vSpan > hSpan * 1.35;
     const mainSpan   = isVertical ? vSpan : hSpan;
-    // textLength = 78% от размаха: оставляем небольшие поля у границ
+    // 78% от суммарного размаха — небольшие поля у краёв
     const textLen    = Math.max(18, Math.floor(mainSpan * 0.78));
 
-    // ── 5. Подбор размера шрифта ────────────────────────────
-    // Увеличиваем шрифт, пока текст не превысит textLen (без lengthAdjust)
+    // ── 4. Подбор размера шрифта ────────────────────────────
     let fontSize = 7;
     while (fontSize < 68) {
       _labelCtx.font = `700 ${fontSize + 1}px ${FONT_FAM}`;
@@ -795,9 +762,9 @@ function _updateNationLabelVisibility() {
     fontSize = Math.max(MIN_FONT, Math.min(68, fontSize));
     if (fontSize < MIN_FONT) continue;
 
-    // ── 6. Координаты центра метки ──────────────────────────
-    const tx = isVertical ? cPx.x : hCx;
-    const ty = isVertical ? vCy   : cPx.y;
+    // ── 5. Позиция метки — центр общего bbox нации ──────────
+    const tx = bboxCx;
+    const ty = bboxCy;
 
     // ── 7. SVG <text> элемент ───────────────────────────────
     const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
