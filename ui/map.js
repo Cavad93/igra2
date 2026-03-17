@@ -551,8 +551,8 @@ function renderNationBorders() {
 }
 
 // ──────────────────────────────────────────────────────────────
-// ПОДПИСИ НАЗВАНИЙ НАЦИЙ — SVG overlay, Imperator Rome стиль
-// Текст масштабируется под территорию, зум-адаптивный (крупные → мелкие)
+// ПОДПИСИ НАЗВАНИЙ НАЦИЙ — SVG overlay, Pax Historia / Imperator Rome стиль
+// Текст повёрнут по форме территории (PCA), дублируется для островов
 // ──────────────────────────────────────────────────────────────
 
 function _pxPolyArea(pxPoly) {
@@ -576,6 +576,92 @@ function _pointInPolyPx(pt, poly) {
   return inside;
 }
 
+// BFS-кластеризация: разделяет регионы нации на связные группы (остров/материк)
+function _findRegionClusters(regionList) {
+  const idSet = new Set(regionList.map(r => r.regionId));
+  const byId  = {};
+  for (const r of regionList) byId[r.regionId] = r;
+
+  const adj = {};
+  for (const r of regionList) {
+    adj[r.regionId] = [];
+    const mapData = MAP_REGIONS[r.regionId];
+    if (!mapData || !mapData.connections) continue;
+    for (const connId of mapData.connections) {
+      if (idSet.has(connId)) adj[r.regionId].push(connId);
+    }
+  }
+
+  const visited = new Set();
+  const clusters = [];
+  for (const r of regionList) {
+    if (visited.has(r.regionId)) continue;
+    const cluster = [];
+    const queue = [r.regionId];
+    visited.add(r.regionId);
+    while (queue.length) {
+      const id = queue.shift();
+      cluster.push(byId[id]);
+      for (const nbr of (adj[id] || [])) {
+        if (!visited.has(nbr)) { visited.add(nbr); queue.push(nbr); }
+      }
+    }
+    clusters.push(cluster);
+  }
+  return clusters;
+}
+
+// PCA-угол: направление максимального «разброса» точек (в радианах)
+function _pcaAnglePx(points) {
+  const n = points.length;
+  if (n < 3) return 0;
+  let cx = 0, cy = 0;
+  for (const p of points) { cx += p.x; cy += p.y; }
+  cx /= n; cy /= n;
+  let cxx = 0, cxy = 0, cyy = 0;
+  for (const p of points) {
+    const dx = p.x - cx, dy = p.y - cy;
+    cxx += dx * dx; cxy += dx * dy; cyy += dy * dy;
+  }
+  return 0.5 * Math.atan2(2 * cxy, cxx - cyy);
+}
+
+// Проекция: повёрнутый bbox вдоль угла angle
+function _rotatedSpan(points, angle) {
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  let minU = Infinity, maxU = -Infinity, minV = Infinity, maxV = -Infinity;
+  let cx = 0, cy = 0;
+  for (const p of points) { cx += p.x; cy += p.y; }
+  cx /= points.length; cy /= points.length;
+  for (const p of points) {
+    const dx = p.x - cx, dy = p.y - cy;
+    const u = dx * cos + dy * sin;
+    const v = -dx * sin + dy * cos;
+    if (u < minU) minU = u; if (u > maxU) maxU = u;
+    if (v < minV) minV = v; if (v > maxV) maxV = v;
+  }
+  return { width: maxU - minU, height: maxV - minV, cx, cy };
+}
+
+// Визуальный центр кластера через polylabel (на наибольшем регионе кластера)
+function _clusterVisualCenter(cluster) {
+  let bestCenter = null, largestArea = 0;
+  for (const reg of cluster) {
+    if (reg.geoArea > largestArea) {
+      largestArea = reg.geoArea;
+      try {
+        const ring = reg.coords.map(c => [c[1], c[0]]);
+        ring.push(ring[0]);
+        const result = polylabel([ring], 0.005);
+        bestCenter = [result[1], result[0]];
+      } catch (e) {
+        bestCenter = reg.center;
+      }
+    }
+  }
+  return bestCenter || cluster[0].center;
+}
+
 // Создаёт/пересоздаёт SVG overlay для подписей наций
 function _ensureNationSvg() {
   const container = leafletMap.getContainer();
@@ -584,9 +670,6 @@ function _ensureNationSvg() {
   if (_nationSvg) { try { _nationSvg.remove(); } catch (e) {} }
 
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  // SVG прикреплён к контейнеру карты (не к pane).
-  // Во время панорамирования мы копируем CSS transform overlayPane на этот SVG
-  // через _syncNationSvgTransform — текст движется синхронно с картой.
   svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:601;overflow:visible;transition:opacity 0.25s ease;';
 
   svg.innerHTML = `
@@ -609,14 +692,14 @@ function _ensureNationSvg() {
 }
 
 
-// Строит структуры данных (вызывается один раз или при смене хода)
+// Строит структуры данных: один элемент на кластер (связную территорию)
 function renderNationLabels() {
-  // Убираем старые DOM-маркеры если остались
   for (const d of nationLabelData) {
     if (d.marker && leafletMap.hasLayer(d.marker)) leafletMap.removeLayer(d.marker);
   }
   nationLabelData = [];
 
+  // 1. Группируем регионы по нации
   const nations = {};
   for (const [regionId, mapData] of Object.entries(MAP_REGIONS)) {
     if (NON_PLAYABLE_TYPES.has(mapData.mapType) || !mapData.center || !mapData.coords) continue;
@@ -626,7 +709,6 @@ function renderNationLabels() {
     const nation = GAME_STATE.nations[nationId];
     if (!nation) continue;
 
-    // Географическая площадь (Shoelace)
     const coords = mapData.coords;
     let geoArea = 0;
     const nc = coords.length;
@@ -638,61 +720,34 @@ function renderNationLabels() {
 
     if (!nations[nationId]) nations[nationId] = {
       name: (nation.name || nationId).toUpperCase(),
-      regions: [], totalGeoArea: 0, wLat: 0, wLng: 0,
+      regions: [],
     };
-    const nd = nations[nationId];
-    nd.regions.push({ coords, center: mapData.center, geoArea });
-    nd.totalGeoArea += geoArea;
-    nd.wLat += mapData.center[0] * geoArea;
-    nd.wLng += mapData.center[1] * geoArea;
+    nations[nationId].regions.push({ regionId, coords, center: mapData.center, geoArea });
   }
 
+  // 2. Для каждой нации разбиваем на связные кластеры (остров/материк)
   for (const [nationId, nd] of Object.entries(nations)) {
-    if (!nd.totalGeoArea) continue;
-    const lat = nd.wLat / nd.totalGeoArea;
-    const lng = nd.wLng / nd.totalGeoArea;
+    const clusters = _findRegionClusters(nd.regions);
 
-    // Визуальный центр через polylabel (для наибольшего региона)
-    let bestCenter = [lat, lng];
-    let largestArea = 0;
-    for (const reg of nd.regions) {
-      if (reg.geoArea > largestArea) {
-        largestArea = reg.geoArea;
-        try {
-          const ring = reg.coords.map(c => [c[1], c[0]]);
-          ring.push(ring[0]);
-          const result = polylabel([ring], 0.005);
-          bestCenter = [result[1], result[0]];
-        } catch (e) {
-          bestCenter = reg.center || [lat, lng];
-        }
-      }
+    for (const cluster of clusters) {
+      let clusterArea = 0;
+      for (const r of cluster) clusterArea += r.geoArea;
+      if (!clusterArea) continue;
+
+      const center = _clusterVisualCenter(cluster);
+
+      nationLabelData.push({
+        nationId,
+        name:         nd.name,
+        lat:          center[0],
+        lng:          center[1],
+        regions:      cluster,
+        totalGeoArea: clusterArea,
+      });
     }
-
-    // Geo bbox нации
-    let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
-    for (const reg of nd.regions) {
-      for (const c of reg.coords) {
-        if (c[0] < minLat) minLat = c[0];
-        if (c[0] > maxLat) maxLat = c[0];
-        if (c[1] < minLng) minLng = c[1];
-        if (c[1] > maxLng) maxLng = c[1];
-      }
-    }
-
-    nationLabelData.push({
-      nationId,
-      name:         nd.name,
-      lat:          bestCenter[0],
-      lng:          bestCenter[1],
-      regions:      nd.regions,
-      totalGeoArea: nd.totalGeoArea,
-      geoWidth:     maxLng - minLng,
-      geoHeight:    maxLat - minLat,
-    });
   }
 
-  // Крупные нации — первыми (приоритет отрисовки)
+  // Крупные кластеры первыми
   nationLabelData.sort((a, b) => b.totalGeoArea - a.totalGeoArea);
 
   _ensureNationSvg();
@@ -702,75 +757,82 @@ function renderNationLabels() {
 // Пересчитывает подписи в SVG при каждом изменении зума/пана
 function _updateNationLabelVisibility() {
   if (!_nationSvg || !_nationSvgGroup) return;
-
-  // Очищаем старые элементы
   _nationSvgGroup.innerHTML = '';
 
   const mapSize    = leafletMap.getSize();
   const FONT_FAM   = 'Cinzel, Palatino, Georgia, serif';
-  // Кремово-золотистый цвет текста — классика Imperator: Rome / EU4
   const FILL_COLOR = 'rgba(242,218,152,0.96)';
   const STROKE_COL = 'rgba(30,12,2,0.55)';
-  // Минимальная пиксельная площадь нации для показа подписи.
-  // Крупные нации накапливают эту площадь при меньшем зуме → появляются раньше.
   const MIN_PX_AREA = 450;
   const MIN_FONT    = 8;
 
   for (const d of nationLabelData) {
-    // ── 1. Пиксельные полигоны + суммарный bbox ВСЕХ регионов ──
+    // ── 1. Все вершины кластера → пиксели ──
+    const allPts = [];
     let totalPxArea = 0;
-    let pxMinX = Infinity, pxMaxX = -Infinity;
-    let pxMinY = Infinity, pxMaxY = -Infinity;
+    const pxPolys = [];
 
     for (const reg of d.regions) {
       const poly = reg.coords.map(c => leafletMap.latLngToContainerPoint([c[0], c[1]]));
+      pxPolys.push(poly);
       totalPxArea += _pxPolyArea(poly);
-      for (const p of poly) {
-        if (p.x < pxMinX) pxMinX = p.x;
-        if (p.x > pxMaxX) pxMaxX = p.x;
-        if (p.y < pxMinY) pxMinY = p.y;
-        if (p.y > pxMaxY) pxMaxY = p.y;
-      }
+      for (const p of poly) allPts.push(p);
     }
 
-    // Слишком мала суммарная площадь — пропускаем
     if (totalPxArea < MIN_PX_AREA) continue;
 
-    // ── 2. Размах = полный bbox нации (все регионы) ─────────
-    const hSpan = pxMaxX - pxMinX;
-    const vSpan = pxMaxY - pxMinY;
-    if (hSpan < 14 && vSpan < 14) continue;
+    // ── 2. PCA-угол (направление «длинной» оси территории) ──
+    let angle = _pcaAnglePx(allPts);
+    const span = _rotatedSpan(allPts, angle);
 
-    // Центр bbox в layer-координатах
-    const bboxCx = (pxMinX + pxMaxX) / 2;
-    const bboxCy = (pxMinY + pxMaxY) / 2;
+    // Если территория шире вертикально — корректируем чтобы текст шёл вдоль длинной оси
+    if (span.height > span.width) {
+      angle += Math.PI / 2;
+    }
+    // Нормализуем в [-π/2, π/2] чтобы текст не был вверх ногами
+    while (angle >  Math.PI / 2) angle -= Math.PI;
+    while (angle < -Math.PI / 2) angle += Math.PI;
 
-    // Отбрасываем если нация вне видимой области
-    if (bboxCx < -300 || bboxCx > mapSize.x + 300 ||
-        bboxCy < -300 || bboxCy > mapSize.y + 300) continue;
+    const finalSpan = _rotatedSpan(allPts, angle);
+    const mainW = finalSpan.width;
+    const mainH = finalSpan.height;
 
-    // ── 3. Ориентация и целевая длина текста ────────────────
-    // Вертикальный текст если нация заметно выше, чем шире
-    const isVertical = vSpan > hSpan * 1.35;
-    const mainSpan   = isVertical ? vSpan : hSpan;
-    // 78% от суммарного размаха — небольшие поля у краёв
-    const textLen    = Math.max(18, Math.floor(mainSpan * 0.78));
+    if (mainW < 14 && mainH < 14) continue;
 
-    // ── 4. Подбор размера шрифта ────────────────────────────
+    // ── 3. Визуальный центр кластера в пикселях ──
+    const centerPt = leafletMap.latLngToContainerPoint([d.lat, d.lng]);
+    let tx = centerPt.x, ty = centerPt.y;
+
+    // Проверяем что центр попадает на суше — если нет, берём centroid пикселей
+    let onLand = false;
+    for (const poly of pxPolys) {
+      if (_pointInPolyPx(centerPt, poly)) { onLand = true; break; }
+    }
+    if (!onLand) {
+      tx = finalSpan.cx;
+      ty = finalSpan.cy;
+    }
+
+    // Отбрасываем если кластер вне видимой области
+    if (tx < -300 || tx > mapSize.x + 300 ||
+        ty < -300 || ty > mapSize.y + 300) continue;
+
+    // ── 4. Размер шрифта — по ширине вдоль главной оси ──
+    const textLen = Math.max(18, Math.floor(mainW * 0.78));
+
     let fontSize = 7;
     while (fontSize < 68) {
       _labelCtx.font = `700 ${fontSize + 1}px ${FONT_FAM}`;
       if (_labelCtx.measureText(d.name).width > textLen) break;
       fontSize++;
     }
-    fontSize = Math.max(MIN_FONT, Math.min(68, fontSize));
+    // Ограничиваем по высоте (не выше 40% высоты кластера)
+    const maxByH = Math.floor(mainH * 0.40);
+    fontSize = Math.max(MIN_FONT, Math.min(68, fontSize, maxByH));
     if (fontSize < MIN_FONT) continue;
 
-    // ── 5. Позиция метки — центр общего bbox нации ──────────
-    const tx = bboxCx;
-    const ty = bboxCy;
-
-    // ── 7. SVG <text> элемент ───────────────────────────────
+    // ── 5. SVG <text> ──
+    const angleDeg = angle * 180 / Math.PI;
     const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     el.setAttribute('x', tx.toFixed(1));
     el.setAttribute('y', ty.toFixed(1));
@@ -783,14 +845,11 @@ function _updateNationLabelVisibility() {
     el.setAttribute('stroke',           STROKE_COL);
     el.setAttribute('stroke-width',     (fontSize < 16 ? '0.3' : '0.5'));
     el.setAttribute('paint-order',      'stroke fill');
-    // textLength + spacing: буквы не растягиваются, только межбуквенный интервал
-    el.setAttribute('textLength',   textLen);
-    el.setAttribute('lengthAdjust', 'spacing');
-    // Drop-shadow: большие подписи — полный фильтр, маленькие — облегчённый
+    el.setAttribute('letter-spacing',   (fontSize > 14 ? '0.12em' : '0.06em'));
     el.setAttribute('filter', fontSize >= 14 ? 'url(#nlbl-shadow)' : 'url(#nlbl-shadow-sm)');
 
-    if (isVertical) {
-      el.setAttribute('transform', `rotate(-90,${tx.toFixed(1)},${ty.toFixed(1)})`);
+    if (Math.abs(angleDeg) > 0.5) {
+      el.setAttribute('transform', `rotate(${angleDeg.toFixed(1)},${tx.toFixed(1)},${ty.toFixed(1)})`);
     }
 
     el.textContent = d.name;
