@@ -568,23 +568,16 @@ function _pointInPolyPx(pt, poly) {
 
 // Создаёт/пересоздаёт SVG overlay для подписей наций
 function _ensureNationSvg() {
-  if (_nationSvg && leafletMap.getContainer().contains(_nationSvg)) return;
+  const overlayPane = leafletMap.getPanes().overlayPane;
+  if (_nationSvg && overlayPane.contains(_nationSvg)) return;
 
   if (_nationSvg) { try { _nationSvg.remove(); } catch (e) {} }
 
-  const container = leafletMap.getContainer();
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.style.cssText = [
-    'position:absolute', 'top:0', 'left:0',
-    'width:100%', 'height:100%',
-    'pointer-events:none',
-    'z-index:601',
-    'overflow:visible',
-    'transition:opacity 0.25s ease',
-  ].join(';');
+  // SVG внутри overlayPane — Leaflet двигает его вместе с картой через CSS transform,
+  // поэтому во время панорамирования текст остаётся точно над своими провинциями.
+  svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;transition:opacity 0.25s ease;';
 
-  // SVG filter — классический drop-shadow как в стратегических играх:
-  // тёмная тень снизу-справа + едва заметный светлый блик сверху
   svg.innerHTML = `
     <defs>
       <filter id="nlbl-shadow" x="-20%" y="-40%" width="140%" height="180%">
@@ -599,7 +592,7 @@ function _ensureNationSvg() {
     <g id="nlbl-g"></g>
   `;
 
-  container.appendChild(svg);
+  overlayPane.appendChild(svg);
   _nationSvg      = svg;
   _nationSvgGroup = svg.querySelector('#nlbl-g');
 }
@@ -718,7 +711,9 @@ function _updateNationLabelVisibility() {
     let pxMinY = Infinity, pxMaxY = -Infinity;
 
     for (const reg of d.regions) {
-      const poly = reg.coords.map(c => leafletMap.latLngToContainerPoint([c[0], c[1]]));
+      // latLngToLayerPoint — координаты в пространстве overlayPane (не контейнера).
+      // Именно их должен использовать SVG внутри overlayPane.
+      const poly = reg.coords.map(c => leafletMap.latLngToLayerPoint([c[0], c[1]]));
       totalPxArea += _pxPolyArea(poly);
       for (const p of poly) {
         if (p.x < pxMinX) pxMinX = p.x;
@@ -729,7 +724,6 @@ function _updateNationLabelVisibility() {
     }
 
     // Слишком мала суммарная площадь — пропускаем
-    // (крупные нации достигают порога раньше → появляются при меньшем зуме)
     if (totalPxArea < MIN_PX_AREA) continue;
 
     // ── 2. Размах = полный bbox нации (все регионы) ─────────
@@ -737,13 +731,14 @@ function _updateNationLabelVisibility() {
     const vSpan = pxMaxY - pxMinY;
     if (hSpan < 14 && vSpan < 14) continue;
 
-    // Центр bbox — середина общего охвата нации
+    // Центр bbox в layer-координатах
     const bboxCx = (pxMinX + pxMaxX) / 2;
     const bboxCy = (pxMinY + pxMaxY) / 2;
 
-    // Отбрасываем если bbox вообще вне экрана
-    if (bboxCx < -300 || bboxCx > mapSize.x + 300 ||
-        bboxCy < -300 || bboxCy > mapSize.y + 300) continue;
+    // Проверяем видимость через containerPoint (для отсечения по вьюпорту)
+    const cPxCheck = leafletMap.latLngToContainerPoint([d.lat, d.lng]);
+    if (cPxCheck.x < -300 || cPxCheck.x > mapSize.x + 300 ||
+        cPxCheck.y < -300 || cPxCheck.y > mapSize.y + 300) continue;
 
     // ── 3. Ориентация и целевая длина текста ────────────────
     // Вертикальный текст если нация заметно выше, чем шире
