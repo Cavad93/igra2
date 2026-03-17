@@ -208,42 +208,10 @@
     .rt-nation { font-size: 10px; margin-top: 1px; }
     .rt-pop    { font-size: 10px; color: #8a6e3a; margin-top: 2px; }
 
-    /* Подписи названий наций */
-    .nation-name-label {
-      background: none !important; border: none !important; box-shadow: none !important;
-      /* isolation: auto нужен чтобы mix-blend-mode работал сквозь контейнер */
-    }
-    .nation-label-span {
-      font-family: 'Cinzel', 'Palatino Linotype', 'Georgia', serif;
-      font-style: normal;
-      font-weight: 700;
-      /*
-       * Эффект как в Pax Historia / Imperator Rome:
-       * Тёмный текст + mix-blend-mode: multiply = текст "впечатан" в карту.
-       * multiply затемняет пиксели карты под буквами — текст не может
-       * выглядеть "парящим" потому что он буквально является частью
-       * цвета карты, а не отдельным слоем поверх неё.
-       */
-      color: rgba(35, 25, 15, 0.75);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      white-space: nowrap;
-      pointer-events: none;
-      display: block;
-      text-align: center;
-      line-height: 1;
-      /* КЛЮЧЕВОЙ ЭФФЕКТ — multiply вдавливает текст в карту */
-      mix-blend-mode: multiply;
-      /* Тонкая тёмная обводка для читаемости на светлых регионах */
-      paint-order: stroke fill;
-      -webkit-text-stroke: 0.5px rgba(20, 15, 5, 0.3);
-      /* Тиснение: светлый блик снизу (свет сверху) + тёмный край сверху */
-      text-shadow:
-        0px  1px 0px rgba(255, 245, 220, 0.2),
-        0px -1px 0px rgba(0, 0, 0, 0.15);
-      /* Никаких: drop-shadow, box-shadow, background, яркой обводки */
-      background: none;
-    }
+    /* Подписи наций рендерятся через SVG overlay в map.js (Imperator Rome стиль).
+       DOM-маркеры отключены: весь рендеринг через <svg> поверх карты. */
+    .nation-name-label { display: none !important; }
+    .nation-label-span  { display: none !important; }
 
     /* Кнопка показа ID регионов */
     .region-id-toggle-btn {

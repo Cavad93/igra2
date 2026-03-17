@@ -11,8 +11,10 @@ let regionIdMarkers = [];       // маркеры с ID регионов (для
 let showRegionIds = false;      // флаг показа ID регионов
 let nationBorderLayer = null;   // слой толстых границ между нациями
 let nationLabelMarkers = [];    // (устарело) оставлено для совместимости
-let nationLabelData   = [];     // { name, lat, lng, regions, totalGeoArea, marker }
+let nationLabelData   = [];     // { nationId, name, lat, lng, regions, totalGeoArea }
 let _labelTimerId     = null;   // debounce timer для обновления видимости
+let _nationSvg        = null;   // SVG overlay для подписей наций (Imperator Rome стиль)
+let _nationSvgGroup   = null;   // <g> элемент внутри SVG
 const _labelCanvas    = document.createElement('canvas');
 const _labelCtx       = _labelCanvas.getContext('2d');
 
@@ -170,9 +172,11 @@ function initLeafletMap() {
   // Названия наций на карте (динамические, зум-адаптивные)
   renderNationLabels();
 
-  // Пересчёт видимости подписей при изменении вида
-  // zoom — обновляем при каждом изменении дробного зума
-  leafletMap.on('zoomend moveend zoom', scheduleNationLabelUpdate);
+  // Пересчёт подписей при изменении вида
+  // Скрываем SVG во время анимации зума — текст всё равно в неверных координатах
+  leafletMap.on('zoomstart', () => { if (_nationSvg) _nationSvg.style.opacity = '0'; });
+  leafletMap.on('zoomend',   () => { scheduleNationLabelUpdate(); if (_nationSvg) setTimeout(() => { if (_nationSvg) _nationSvg.style.opacity = '1'; }, 90); });
+  leafletMap.on('moveend',   scheduleNationLabelUpdate);
   window.addEventListener('resize', scheduleNationLabelUpdate);
 
   // AWMC overlay отключён: границы провинций теперь из map.json
@@ -537,7 +541,8 @@ function renderNationBorders() {
 }
 
 // ──────────────────────────────────────────────────────────────
-// ПОДПИСИ НАЗВАНИЙ НАЦИЙ — динамические, зум-адаптивные
+// ПОДПИСИ НАЗВАНИЙ НАЦИЙ — SVG overlay, Imperator Rome стиль
+// Текст масштабируется под территорию, зум-адаптивный (крупные → мелкие)
 // ──────────────────────────────────────────────────────────────
 
 function _pxPolyArea(pxPoly) {
@@ -561,24 +566,62 @@ function _pointInPolyPx(pt, poly) {
   return inside;
 }
 
-// Строит структуры данных и создаёт маркеры (вызывается один раз)
+// Создаёт/пересоздаёт SVG overlay для подписей наций
+function _ensureNationSvg() {
+  if (_nationSvg && leafletMap.getContainer().contains(_nationSvg)) return;
+
+  if (_nationSvg) { try { _nationSvg.remove(); } catch (e) {} }
+
+  const container = leafletMap.getContainer();
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.style.cssText = [
+    'position:absolute', 'top:0', 'left:0',
+    'width:100%', 'height:100%',
+    'pointer-events:none',
+    'z-index:601',
+    'overflow:visible',
+    'transition:opacity 0.25s ease',
+  ].join(';');
+
+  // SVG filter — классический drop-shadow как в стратегических играх:
+  // тёмная тень снизу-справа + едва заметный светлый блик сверху
+  svg.innerHTML = `
+    <defs>
+      <filter id="nlbl-shadow" x="-20%" y="-40%" width="140%" height="180%">
+        <feDropShadow dx="1.0" dy="1.5" stdDeviation="1.0"
+          flood-color="#2e1204" flood-opacity="0.85"/>
+      </filter>
+      <filter id="nlbl-shadow-sm" x="-20%" y="-40%" width="140%" height="180%">
+        <feDropShadow dx="0.6" dy="1.0" stdDeviation="0.7"
+          flood-color="#2e1204" flood-opacity="0.80"/>
+      </filter>
+    </defs>
+    <g id="nlbl-g"></g>
+  `;
+
+  container.appendChild(svg);
+  _nationSvg      = svg;
+  _nationSvgGroup = svg.querySelector('#nlbl-g');
+}
+
+// Строит структуры данных (вызывается один раз или при смене хода)
 function renderNationLabels() {
+  // Убираем старые DOM-маркеры если остались
   for (const d of nationLabelData) {
     if (d.marker && leafletMap.hasLayer(d.marker)) leafletMap.removeLayer(d.marker);
   }
   nationLabelData = [];
 
-  // Собираем данные по нациям
   const nations = {};
   for (const [regionId, mapData] of Object.entries(MAP_REGIONS)) {
     if (NON_PLAYABLE_TYPES.has(mapData.mapType) || !mapData.center || !mapData.coords) continue;
-    const gr = GAME_STATE.regions[regionId];
+    const gr       = GAME_STATE.regions[regionId];
     const nationId = gr ? gr.nation : mapData.nation;
     if (!nationId || nationId === 'neutral' || nationId === 'ocean') continue;
     const nation = GAME_STATE.nations[nationId];
     if (!nation) continue;
 
-    // Географическая площадь по Shoelace
+    // Географическая площадь (Shoelace)
     const coords = mapData.coords;
     let geoArea = 0;
     const nc = coords.length;
@@ -599,13 +642,29 @@ function renderNationLabels() {
     nd.wLng += mapData.center[1] * geoArea;
   }
 
-  // Создаём маркеры
   for (const [nationId, nd] of Object.entries(nations)) {
     if (!nd.totalGeoArea) continue;
     const lat = nd.wLat / nd.totalGeoArea;
     const lng = nd.wLng / nd.totalGeoArea;
 
-    // Вычисляем географический bbox нации для определения ориентации
+    // Визуальный центр через polylabel (для наибольшего региона)
+    let bestCenter = [lat, lng];
+    let largestArea = 0;
+    for (const reg of nd.regions) {
+      if (reg.geoArea > largestArea) {
+        largestArea = reg.geoArea;
+        try {
+          const ring = reg.coords.map(c => [c[1], c[0]]);
+          ring.push(ring[0]);
+          const result = polylabel([ring], 0.005);
+          bestCenter = [result[1], result[0]];
+        } catch (e) {
+          bestCenter = reg.center || [lat, lng];
+        }
+      }
+    }
+
+    // Geo bbox нации
     let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
     for (const reg of nd.regions) {
       for (const c of reg.coords) {
@@ -615,185 +674,162 @@ function renderNationLabels() {
         if (c[1] > maxLng) maxLng = c[1];
       }
     }
-    const geoWidth = maxLng - minLng;
-    const geoHeight = maxLat - minLat;
-
-    // Вычисляем визуальный центр через polylabel
-    // Используем наибольший регион для центрирования
-    let bestCenter = [lat, lng];
-    let largestArea = 0;
-    for (const reg of nd.regions) {
-      if (reg.geoArea > largestArea) {
-        largestArea = reg.geoArea;
-        try {
-          // polylabel ожидает [[[lng, lat], ...]]
-          const ring = reg.coords.map(c => [c[1], c[0]]);
-          ring.push(ring[0]); // замыкаем
-          const result = polylabel([ring], 0.005);
-          bestCenter = [result[1], result[0]]; // обратно в [lat, lng]
-        } catch (e) {
-          bestCenter = reg.center || [lat, lng];
-        }
-      }
-    }
-
-    const icon = L.divIcon({
-      className: 'nation-name-label',
-      html: `<span class="nation-label-span">${nd.name}</span>`,
-      iconSize: [420, 120],
-      iconAnchor: [210, 60],
-    });
-    const marker = L.marker(bestCenter, { icon, interactive: false, zIndexOffset: 500 });
-    marker.addTo(leafletMap);
-    const el = marker.getElement();
-    if (el) { el.style.transition = 'opacity 0.35s ease'; el.style.opacity = '0'; el.style.pointerEvents = 'none'; }
 
     nationLabelData.push({
-      nationId, name: nd.name, lat: bestCenter[0], lng: bestCenter[1],
-      regions: nd.regions, totalGeoArea: nd.totalGeoArea, marker,
-      geoWidth, geoHeight,
+      nationId,
+      name:         nd.name,
+      lat:          bestCenter[0],
+      lng:          bestCenter[1],
+      regions:      nd.regions,
+      totalGeoArea: nd.totalGeoArea,
+      geoWidth:     maxLng - minLng,
+      geoHeight:    maxLat - minLat,
     });
   }
-  // Приоритет: крупные нации первыми
+
+  // Крупные нации — первыми (приоритет отрисовки)
   nationLabelData.sort((a, b) => b.totalGeoArea - a.totalGeoArea);
 
-  // Первый рендер
+  _ensureNationSvg();
   _updateNationLabelVisibility();
 }
 
-// Пересчитывает видимость/размер подписей при текущем зуме (debounce 100ms)
+// Пересчитывает подписи в SVG при каждом изменении зума/пана
 function _updateNationLabelVisibility() {
-  for (const d of nationLabelData) {
-    const el = d.marker.getElement();
-    if (!el) continue;
+  if (!_nationSvg || !_nationSvgGroup) return;
 
-    // Суммарная пиксельная площадь и bbox всех регионов нации
-    let totalPxArea = 0;
+  // Очищаем старые элементы
+  _nationSvgGroup.innerHTML = '';
+
+  const mapSize    = leafletMap.getSize();
+  const FONT_FAM   = 'Cinzel, Palatino, Georgia, serif';
+  // Кремово-золотистый цвет текста — классика Imperator: Rome / EU4
+  const FILL_COLOR = 'rgba(242,218,152,0.96)';
+  const STROKE_COL = 'rgba(30,12,2,0.55)';
+  // Минимальная пиксельная площадь нации для показа подписи.
+  // Крупные нации накапливают эту площадь при меньшем зуме → появляются раньше.
+  const MIN_PX_AREA = 450;
+  const MIN_FONT    = 8;
+
+  for (const d of nationLabelData) {
+    // ── 1. Пиксельные полигоны ──────────────────────────────
+    let totalPxArea  = 0;
     let largestPxArea = 0;
-    let largestPoly = null;
-    let pxMinX = Infinity, pxMaxX = -Infinity, pxMinY = Infinity, pxMaxY = -Infinity;
+    let largestPoly   = null;
+
     for (const reg of d.regions) {
       const poly = reg.coords.map(c => leafletMap.latLngToContainerPoint([c[0], c[1]]));
       const area = _pxPolyArea(poly);
       totalPxArea += area;
       if (area > largestPxArea) { largestPxArea = area; largestPoly = poly; }
-      for (const p of poly) {
-        if (p.x < pxMinX) pxMinX = p.x;
-        if (p.x > pxMaxX) pxMaxX = p.x;
-        if (p.y < pxMinY) pxMinY = p.y;
-        if (p.y > pxMaxY) pxMaxY = p.y;
-      }
     }
 
-    // Вычисляем bbox НАИБОЛЬШЕГО полигона (не всей нации!)
-    let lpMinX = Infinity, lpMaxX = -Infinity, lpMinY = Infinity, lpMaxY = -Infinity;
-    if (largestPoly) {
-      for (const p of largestPoly) {
-        if (p.x < lpMinX) lpMinX = p.x;
-        if (p.x > lpMaxX) lpMaxX = p.x;
-        if (p.y < lpMinY) lpMinY = p.y;
-        if (p.y > lpMaxY) lpMaxY = p.y;
-      }
-    }
-    const lpWidth = lpMaxX - lpMinX;
-    const lpHeight = lpMaxY - lpMinY;
+    // Слишком мал — пропускаем (создаёт эффект зума: крупные видны первыми)
+    if (totalPxArea < MIN_PX_AREA) continue;
 
-    // Находим максимальную горизонтальную/вертикальную ширину
-    // через центр метки внутри наибольшего полигона
+    // ── 2. Центр метки ──────────────────────────────────────
     const cPx = leafletMap.latLngToContainerPoint([d.lat, d.lng]);
-    let spanLeft = cPx.x, spanRight = cPx.x;
-    let spanTop = cPx.y, spanBottom = cPx.y;
+
+    // Центр вне видимой области — пропускаем
+    if (cPx.x < -250 || cPx.x > mapSize.x + 250 ||
+        cPx.y < -250 || cPx.y > mapSize.y + 250) continue;
+
+    // Центр должен лежать внутри наибольшего полигона
+    if (largestPoly && !_pointInPolyPx(cPx, largestPoly)) continue;
+
+    // ── 3. Размах территории через центр ────────────────────
+    let hSpan = 0, vSpan = 0;
+    let hCx = cPx.x, vCy = cPx.y; // центры пролётов
+
     if (largestPoly) {
-      // Горизонтальный размах через центр (y = cPx.y)
+      // Горизонтальные пересечения на высоте cPx.y
       const y = cPx.y;
-      const intersectsX = [];
+      const xi = [];
       for (let i = 0, j = largestPoly.length - 1; i < largestPoly.length; j = i++) {
         const a = largestPoly[i], b = largestPoly[j];
-        if ((a.y > y) !== (b.y > y)) {
-          intersectsX.push(a.x + (y - a.y) * (b.x - a.x) / (b.y - a.y));
-        }
+        if ((a.y > y) !== (b.y > y))
+          xi.push(a.x + (y - a.y) * (b.x - a.x) / (b.y - a.y));
       }
-      intersectsX.sort((a, b) => a - b);
-      if (intersectsX.length >= 2) {
-        // Найти пару, содержащую cPx.x
-        for (let i = 0; i < intersectsX.length - 1; i += 2) {
-          if (intersectsX[i] <= cPx.x && cPx.x <= intersectsX[i + 1]) {
-            spanLeft = intersectsX[i];
-            spanRight = intersectsX[i + 1];
-            break;
-          }
-        }
+      xi.sort((a, b) => a - b);
+      let sl = cPx.x, sr = cPx.x;
+      for (let i = 0; i + 1 < xi.length; i += 2) {
+        if (xi[i] <= cPx.x && cPx.x <= xi[i + 1]) { sl = xi[i]; sr = xi[i + 1]; break; }
       }
-      // Вертикальный размах через центр (x = cPx.x)
+      hSpan = sr - sl;
+      hCx   = (sl + sr) / 2;
+
+      // Вертикальные пересечения на x = cPx.x
       const x = cPx.x;
-      const intersectsY = [];
+      const yi = [];
       for (let i = 0, j = largestPoly.length - 1; i < largestPoly.length; j = i++) {
         const a = largestPoly[i], b = largestPoly[j];
-        if ((a.x > x) !== (b.x > x)) {
-          intersectsY.push(a.y + (x - a.x) * (b.y - a.y) / (b.x - a.x));
-        }
+        if ((a.x > x) !== (b.x > x))
+          yi.push(a.y + (x - a.x) * (b.y - a.y) / (b.x - a.x));
       }
-      intersectsY.sort((a, b) => a - b);
-      if (intersectsY.length >= 2) {
-        for (let i = 0; i < intersectsY.length - 1; i += 2) {
-          if (intersectsY[i] <= cPx.y && cPx.y <= intersectsY[i + 1]) {
-            spanTop = intersectsY[i];
-            spanBottom = intersectsY[i + 1];
-            break;
-          }
-        }
+      yi.sort((a, b) => a - b);
+      let st = cPx.y, sb = cPx.y;
+      for (let i = 0; i + 1 < yi.length; i += 2) {
+        if (yi[i] <= cPx.y && cPx.y <= yi[i + 1]) { st = yi[i]; sb = yi[i + 1]; break; }
       }
+      vSpan = sb - st;
+      vCy   = (st + sb) / 2;
     }
-    const hSpan = spanRight - spanLeft;   // горизонтальная ширина через центр
-    const vSpan = spanBottom - spanTop;   // вертикальная высота через центр
 
-    // Определяем нужен ли вертикальный текст (узкий высокий регион)
-    const isVertical = vSpan > hSpan * 1.5;
-    // Максимальная допустимая ширина текста — 80% от размаха через центр
-    const maxTextWidth = (isVertical ? vSpan : hSpan) * 0.80;
+    if (hSpan < 14 && vSpan < 14) continue;
 
-    // Подбираем размер шрифта чтобы текст помещался
-    let fontSize = 8;
-    const fontFamily = 'Cinzel, Palatino, Georgia, serif';
-    while (fontSize < 52) {
-      _labelCtx.font = `700 ${fontSize + 1}px ${fontFamily}`;
-      if (_labelCtx.measureText(d.name).width > maxTextWidth) break;
+    // ── 4. Ориентация и целевая длина текста ────────────────
+    // Вертикальный текст если территория заметно выше, чем шире
+    const isVertical = vSpan > hSpan * 1.35;
+    const mainSpan   = isVertical ? vSpan : hSpan;
+    // textLength = 78% от размаха: оставляем небольшие поля у границ
+    const textLen    = Math.max(18, Math.floor(mainSpan * 0.78));
+
+    // ── 5. Подбор размера шрифта ────────────────────────────
+    // Увеличиваем шрифт, пока текст не превысит textLen (без lengthAdjust)
+    let fontSize = 7;
+    while (fontSize < 68) {
+      _labelCtx.font = `700 ${fontSize + 1}px ${FONT_FAM}`;
+      if (_labelCtx.measureText(d.name).width > textLen) break;
       fontSize++;
     }
-    fontSize = Math.max(9, Math.min(52, fontSize));
+    fontSize = Math.max(MIN_FONT, Math.min(68, fontSize));
+    if (fontSize < MIN_FONT) continue;
 
-    // Финальная проверка — текст не должен быть шире допустимого
-    _labelCtx.font = `700 ${fontSize}px ${fontFamily}`;
-    const textW = _labelCtx.measureText(d.name).width;
-    const textH = fontSize * 1.2;
+    // ── 6. Координаты центра метки ──────────────────────────
+    const tx = isVertical ? cPx.x : hCx;
+    const ty = isVertical ? vCy   : cPx.y;
 
-    // Проверка вместимости
-    const fits = totalPxArea > 500 && maxTextWidth > 30;
+    // ── 7. SVG <text> элемент ───────────────────────────────
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    el.setAttribute('x', tx.toFixed(1));
+    el.setAttribute('y', ty.toFixed(1));
+    el.setAttribute('text-anchor',      'middle');
+    el.setAttribute('dominant-baseline', 'middle');
+    el.setAttribute('font-family',       FONT_FAM);
+    el.setAttribute('font-weight',       '700');
+    el.setAttribute('font-size',         fontSize.toFixed(1));
+    el.setAttribute('fill',             FILL_COLOR);
+    el.setAttribute('stroke',           STROKE_COL);
+    el.setAttribute('stroke-width',     (fontSize < 16 ? '0.3' : '0.5'));
+    el.setAttribute('paint-order',      'stroke fill');
+    // textLength + spacing: буквы не растягиваются, только межбуквенный интервал
+    el.setAttribute('textLength',   textLen);
+    el.setAttribute('lengthAdjust', 'spacing');
+    // Drop-shadow: большие подписи — полный фильтр, маленькие — облегчённый
+    el.setAttribute('filter', fontSize >= 14 ? 'url(#nlbl-shadow)' : 'url(#nlbl-shadow-sm)');
 
-    // Центроид должен лежать внутри наибольшего полигона
-    let centroidOk = true;
-    if (largestPoly) {
-      centroidOk = _pointInPolyPx(cPx, largestPoly);
+    if (isVertical) {
+      el.setAttribute('transform', `rotate(-90,${tx.toFixed(1)},${ty.toFixed(1)})`);
     }
 
-    const span = el.querySelector('.nation-label-span');
-    if (span) {
-      span.style.fontSize = fontSize + 'px';
-      // Вертикальный текст для узких высоких регионов
-      if (isVertical) {
-        span.style.transform = 'rotate(-90deg)';
-        span.style.transformOrigin = 'center center';
-      } else {
-        span.style.transform = 'none';
-      }
-    }
-    el.style.opacity = (fits && centroidOk) ? '1' : '0';
+    el.textContent = d.name;
+    _nationSvgGroup.appendChild(el);
   }
 }
 
 function scheduleNationLabelUpdate() {
   if (_labelTimerId) clearTimeout(_labelTimerId);
-  _labelTimerId = setTimeout(_updateNationLabelVisibility, 100);
+  _labelTimerId = setTimeout(_updateNationLabelVisibility, 80);
 }
 
 // ──────────────────────────────────────────────────────────────
