@@ -448,6 +448,103 @@
     }
 
     /* ══════════════════════════════════════════════════
+       БЛОК РЕЛИГИИ В КАРТОЧКЕ РЕГИОНА
+    ══════════════════════════════════════════════════ */
+    .region-religion-section {
+      margin: 10px 0 6px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(180,150,90,0.15);
+    }
+    .rel-chart-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .rel-donut-mini {
+      position: relative;
+      width: 64px; height: 64px;
+      flex-shrink: 0;
+    }
+    .rel-donut-mini svg {
+      filter: drop-shadow(0 0 3px rgba(0,0,0,0.4));
+    }
+    .rel-donut-mini-icon {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      font-size: 14px;
+      filter: drop-shadow(0 0 2px rgba(0,0,0,0.6));
+    }
+    .rel-chart-right {
+      flex: 1;
+      min-width: 0;
+    }
+    /* Multi-color bar */
+    .rel-multi-bar {
+      display: flex;
+      height: 6px;
+      border-radius: 3px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.04);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+      margin-bottom: 6px;
+    }
+    .rel-bar-seg {
+      height: 100%;
+      transition: opacity 0.2s;
+    }
+    .rel-bar-seg:first-child { border-radius: 3px 0 0 3px; }
+    .rel-bar-seg:last-child  { border-radius: 0 3px 3px 0; }
+    .rel-bar-seg:only-child  { border-radius: 3px; }
+    /* Legend */
+    .rel-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .rel-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 9px;
+    }
+    .rel-legend-name {
+      flex: 1;
+      color: var(--text-light);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 9px;
+    }
+    .rel-legend-pct {
+      color: rgba(180,150,90,0.8);
+      font-weight: 600;
+      min-width: 28px;
+      text-align: right;
+      font-size: 9px;
+    }
+    .rel-official-mark {
+      color: #d4a853;
+      font-size: 8px;
+    }
+    /* Fervor dots */
+    .rel-fervor-bar {
+      display: flex;
+      gap: 1px;
+      margin-left: 2px;
+    }
+    .rel-fervor-dot {
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: rgba(180,150,90,0.15);
+    }
+    .rel-fervor-dot.lit {
+      background: rgba(220,180,80,0.7);
+      box-shadow: 0 0 2px rgba(220,180,80,0.4);
+    }
+
+    /* ══════════════════════════════════════════════════
        ОКНО КУЛЬТУРЫ — Modern Antiquity Redesign
     ══════════════════════════════════════════════════ */
 

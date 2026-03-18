@@ -495,6 +495,110 @@ function renderRegionCultureBlock(regionId, totalPop) {
 }
 
 // ──────────────────────────────────────────────────────────────
+// БЛОК РЕЛИГИИ В ИНФО-ПАНЕЛИ РЕГИОНА
+// ──────────────────────────────────────────────────────────────
+
+function renderRegionReligionBlock(regionId, totalPop) {
+  const rr = GAME_STATE.region_religions?.[regionId];
+  if (!rr || !rr.beliefs || rr.beliefs.length === 0) return '';
+
+  // Нормализуем fervor → доли для диаграммы
+  const totalFervor = rr.beliefs.reduce((s, b) => s + b.fervor, 0) || 1;
+
+  const religions = rr.beliefs
+    .filter(b => b.fervor > 0.01)
+    .sort((a, b) => b.fervor - a.fervor)
+    .map(b => {
+      const def = (typeof RELIGIONS !== 'undefined' && RELIGIONS[b.religion])
+        || GAME_STATE.religions?.[b.religion]
+        || GAME_STATE.syncretic_religions?.[b.religion];
+      const strength = b.fervor / totalFervor;
+      return {
+        id: b.religion,
+        name: def?.name || b.religion,
+        color: def?.color || '#888',
+        icon: def?.icon || '⛪',
+        fervor: b.fervor,
+        strength,
+        pop: Math.round(totalPop * strength),
+        isOfficial: b.religion === rr.official,
+      };
+    });
+
+  if (religions.length === 0) return '';
+
+  // SVG donut (маленький, 64×64)
+  const size = 64, cx = 32, cy = 32, outerR = 30, innerR = 16;
+  let paths = '';
+  let startAngle = -90;
+
+  for (const r of religions) {
+    const sweep = r.strength * 360;
+    if (sweep < 0.5) continue;
+    const endAngle = startAngle + sweep;
+    const largeArc = sweep > 180 ? 1 : 0;
+
+    const rad = (a) => (a * Math.PI) / 180;
+    const s1x = cx + outerR * Math.cos(rad(startAngle));
+    const s1y = cy + outerR * Math.sin(rad(startAngle));
+    const e1x = cx + outerR * Math.cos(rad(endAngle));
+    const e1y = cy + outerR * Math.sin(rad(endAngle));
+    const s2x = cx + innerR * Math.cos(rad(endAngle));
+    const s2y = cy + innerR * Math.sin(rad(endAngle));
+    const e2x = cx + innerR * Math.cos(rad(startAngle));
+    const e2y = cy + innerR * Math.sin(rad(startAngle));
+
+    paths += `<path d="M ${s1x} ${s1y} A ${outerR} ${outerR} 0 ${largeArc} 1 ${e1x} ${e1y}
+       L ${s2x} ${s2y} A ${innerR} ${innerR} 0 ${largeArc} 0 ${e2x} ${e2y} Z"
+       fill="${r.color}" />`;
+    startAngle = endAngle;
+  }
+
+  const donutSvg = `
+    <div class="rel-donut-mini">
+      <svg viewBox="0 0 ${size} ${size}" width="64" height="64">${paths}</svg>
+      <span class="rel-donut-mini-icon">${religions[0].icon}</span>
+    </div>
+  `;
+
+  // Легенда: многоцветная полоса + подписи
+  const barSegs = religions.map(r =>
+    `<div class="rel-bar-seg" style="width:${(r.strength * 100).toFixed(1)}%;background:${r.color}" title="${r.name}: ${(r.strength * 100).toFixed(1)}%"></div>`
+  ).join('');
+
+  const legendItems = religions.map(r => {
+    const pct = (r.strength * 100).toFixed(1);
+    const officialMark = r.isOfficial ? ' <span class="rel-official-mark">★</span>' : '';
+    // Fervor indicator: визуальные точки (1–5)
+    const fervorDots = Math.max(1, Math.min(5, Math.round(r.fervor * 5)));
+    const dotsStr = '<span class="rel-fervor-dot lit"></span>'.repeat(fervorDots)
+      + '<span class="rel-fervor-dot"></span>'.repeat(5 - fervorDots);
+
+    return `
+      <div class="rel-legend-item">
+        <span class="culture-dot" style="background:${r.color}"></span>
+        <span class="rel-legend-name">${r.icon} ${r.name}${officialMark}</span>
+        <span class="rel-legend-pct">${pct}%</span>
+        <div class="rel-fervor-bar" title="Рвение: ${(r.fervor * 100).toFixed(0)}%">${dotsStr}</div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="region-religion-section">
+      <div class="section-label">⛪ Религия населения</div>
+      <div class="rel-chart-container">
+        ${donutSvg}
+        <div class="rel-chart-right">
+          <div class="rel-multi-bar">${barSegs}</div>
+          <div class="rel-legend">${legendItems}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ──────────────────────────────────────────────────────────────
 // ИНФО-ПАНЕЛЬ РЕГИОНА
 // ──────────────────────────────────────────────────────────────
 
@@ -531,6 +635,16 @@ function showRegionInfo(regionId) {
       console.warn('[showRegionInfo] culture block error:', e);
     }
 
+    // ── Блок религии ──
+    let religionHtml = '';
+    try {
+      if (typeof renderRegionReligionBlock === 'function') {
+        religionHtml = renderRegionReligionBlock(regionId, gameData.population || 0);
+      }
+    } catch (e) {
+      console.warn('[showRegionInfo] religion block error:', e);
+    }
+
     panel.innerHTML = `
       <div class="region-info-header" style="border-left: 4px solid ${nationColor}">
         <span class="region-info-name">${mapData.name}</span>
@@ -546,6 +660,7 @@ function showRegionInfo(regionId) {
           <div class="region-stat">🏔 Тип: <strong>${getTerrainName(gameData.terrain)}</strong></div>
         </div>
         ${cultureHtml}
+        ${religionHtml}
         ${productionLines ? `<div class="region-production"><div class="section-label">Производство:</div>${productionLines}</div>` : ''}
         ${buildings ? `<div class="region-buildings"><div class="section-label">Постройки:</div>${buildings}</div>` : ''}
       </div>
