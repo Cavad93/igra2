@@ -640,17 +640,15 @@ function _rotatedSpan(points, angle) {
     if (u < minU) minU = u; if (u > maxU) maxU = u;
     if (v < minV) minV = v; if (v > maxV) maxV = v;
   }
-  return { width: maxU - minU, height: maxV - minV, cx, cy };
+  return { width: maxU - minU, height: maxV - minV, cx, cy, minU, maxU };
 }
 
-// Ширина суши через точку (cx,cy) вдоль направления angle.
-// Возвращает длину сегмента суши, содержащего центр (или ближайшего).
-function _landWidthThrough(cx, cy, angle, pxPolys) {
-  const cos = Math.cos(angle), sin = Math.sin(angle);
-  const allSegments = [];
-
+// Возвращает слитые сегменты суши вдоль луча из (cx,cy) в направлении rayAngle
+function _landSegmentsAt(cx, cy, rayAngle, pxPolys) {
+  const cos = Math.cos(rayAngle), sin = Math.sin(rayAngle);
+  const segs = [];
   for (const poly of pxPolys) {
-    const crossings = [];
+    const xs = [];
     const n = poly.length;
     for (let i = 0, j = n - 1; i < n; j = i++) {
       const ax = poly[j].x - cx, ay = poly[j].y - cy;
@@ -658,39 +656,130 @@ function _landWidthThrough(cx, cy, angle, pxPolys) {
       const va = -ax * sin + ay * cos;
       const vb = -bx * sin + by * cos;
       if (va * vb >= 0) continue;
-      const frac = va / (va - vb);
-      const t = (ax + frac * (bx - ax)) * cos + (ay + frac * (by - ay)) * sin;
-      crossings.push(t);
+      const f = va / (va - vb);
+      xs.push((ax + f * (bx - ax)) * cos + (ay + f * (by - ay)) * sin);
     }
-    if (crossings.length < 2) continue;
-    crossings.sort((a, b) => a - b);
-    for (let k = 0; k < crossings.length - 1; k += 2) {
-      allSegments.push({ a: crossings[k], b: crossings[k + 1] });
-    }
+    if (xs.length < 2) continue;
+    xs.sort((a, b) => a - b);
+    for (let k = 0; k < xs.length - 1; k += 2) segs.push({ a: xs[k], b: xs[k + 1] });
   }
-
-  if (!allSegments.length) return 0;
-
-  // Сливаем перекрывающиеся сегменты
-  allSegments.sort((x, y) => x.a - y.a);
-  const merged = [{ ...allSegments[0] }];
-  for (let i = 1; i < allSegments.length; i++) {
-    const last = merged[merged.length - 1];
-    if (allSegments[i].a <= last.b + 1) {
-      last.b = Math.max(last.b, allSegments[i].b);
-    } else {
-      merged.push({ ...allSegments[i] });
-    }
+  if (!segs.length) return [];
+  segs.sort((x, y) => x.a - y.a);
+  const m = [{ ...segs[0] }];
+  for (let i = 1; i < segs.length; i++) {
+    const last = m[m.length - 1];
+    if (segs[i].a <= last.b + 1) last.b = Math.max(last.b, segs[i].b);
+    else m.push({ ...segs[i] });
   }
+  return m;
+}
 
-  // Сегмент, содержащий t=0 (центральную точку)
-  for (const seg of merged) {
-    if (seg.a <= 0 && seg.b >= 0) return seg.b - seg.a;
-  }
-  // Центр не на суше → ближайший сегмент
+// Ширина суши через точку (обёртка)
+function _landWidthThrough(cx, cy, angle, pxPolys) {
+  const segs = _landSegmentsAt(cx, cy, angle, pxPolys);
+  if (!segs.length) return 0;
+  for (const s of segs) { if (s.a <= 0 && s.b >= 0) return s.b - s.a; }
   let best = 0;
-  for (const seg of merged) if (seg.b - seg.a > best) best = seg.b - seg.a;
+  for (const s of segs) { const w = s.b - s.a; if (w > best) best = w; }
   return best;
+}
+
+// ── Вычисление «хребта» территории (медиальная ось) ──
+// Развёртка перпендикулярных сечений вдоль главной оси, середины сечений → spine
+function _computeSpine(refX, refY, angle, pxPolys, uMin, uMax) {
+  const cosA = Math.cos(angle), sinA = Math.sin(angle);
+  const perpAngle = angle + Math.PI / 2;
+  const perpCos = -sinA, perpSin = cosA;
+
+  const span = uMax - uMin;
+  const NUM = Math.min(28, Math.max(10, Math.round(span / 8)));
+  const step = span / NUM;
+  const raw = [];
+
+  for (let i = 0; i <= NUM; i++) {
+    const t = uMin + i * step;
+    const sx = refX + cosA * t;
+    const sy = refY + sinA * t;
+
+    const segs = _landSegmentsAt(sx, sy, perpAngle, pxPolys);
+    if (!segs.length) continue;
+
+    // Ближайший сегмент к главной оси (t=0 перпендикулярно)
+    let best = segs[0], bestD = Math.abs((segs[0].a + segs[0].b) / 2);
+    for (let k = 1; k < segs.length; k++) {
+      const d = Math.abs((segs[k].a + segs[k].b) / 2);
+      if (d < bestD) { bestD = d; best = segs[k]; }
+    }
+
+    const midV = (best.a + best.b) / 2;
+    raw.push({
+      x: sx + perpCos * midV,
+      y: sy + perpSin * midV,
+      w: best.b - best.a
+    });
+  }
+
+  if (raw.length < 3) return raw;
+
+  // Сглаживание (3 прохода weighted average)
+  for (let pass = 0; pass < 3; pass++) {
+    const prev = raw.map(p => ({ ...p }));
+    for (let i = 1; i < raw.length - 1; i++) {
+      raw[i].x = prev[i-1].x * 0.2 + prev[i].x * 0.6 + prev[i+1].x * 0.2;
+      raw[i].y = prev[i-1].y * 0.2 + prev[i].y * 0.6 + prev[i+1].y * 0.2;
+      raw[i].w = prev[i-1].w * 0.2 + prev[i].w * 0.6 + prev[i+1].w * 0.2;
+    }
+  }
+
+  // Ограничение кривизны: max ~18° между соседними сегментами
+  for (let extra = 0; extra < 4; extra++) {
+    let maxDA = 0;
+    for (let i = 1; i < raw.length - 1; i++) {
+      const a1 = Math.atan2(raw[i].y - raw[i-1].y, raw[i].x - raw[i-1].x);
+      const a2 = Math.atan2(raw[i+1].y - raw[i].y, raw[i+1].x - raw[i].x);
+      let da = a2 - a1;
+      if (da > Math.PI) da -= 2 * Math.PI;
+      if (da < -Math.PI) da += 2 * Math.PI;
+      if (Math.abs(da) > maxDA) maxDA = Math.abs(da);
+    }
+    if (maxDA < 0.32) break; // < 18°
+    const prev = raw.map(p => ({ ...p }));
+    for (let i = 1; i < raw.length - 1; i++) {
+      raw[i].x = prev[i-1].x * 0.25 + prev[i].x * 0.5 + prev[i+1].x * 0.25;
+      raw[i].y = prev[i-1].y * 0.25 + prev[i].y * 0.5 + prev[i+1].y * 0.25;
+    }
+  }
+
+  return raw;
+}
+
+// Catmull-Rom spine → SVG cubic bezier path
+function _spineToSVGPath(pts) {
+  if (pts.length < 2) return '';
+  if (pts.length === 2) {
+    return `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)} L${pts[1].x.toFixed(1)},${pts[1].y.toFixed(1)}`;
+  }
+  let d = `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[Math.min(pts.length - 1, i + 2)];
+    d += ` C${(p1.x + (p2.x - p0.x) / 6).toFixed(1)},${(p1.y + (p2.y - p0.y) / 6).toFixed(1)}`
+       + ` ${(p2.x - (p3.x - p1.x) / 6).toFixed(1)},${(p2.y - (p3.y - p1.y) / 6).toFixed(1)}`
+       + ` ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+  }
+  return d;
+}
+
+// Приблизительная длина пути
+function _approxPathLen(pts) {
+  let len = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const dx = pts[i].x - pts[i-1].x, dy = pts[i].y - pts[i-1].y;
+    len += Math.sqrt(dx * dx + dy * dy);
+  }
+  return len;
 }
 
 // Визуальный центр кластера через polylabel (на наибольшем регионе кластера)
@@ -724,13 +813,25 @@ function _ensureNationSvg() {
 
   svg.innerHTML = `
     <defs>
-      <filter id="nlbl-shadow" x="-20%" y="-40%" width="140%" height="180%">
-        <feDropShadow dx="1.0" dy="1.5" stdDeviation="1.0"
-          flood-color="#2e1204" flood-opacity="0.85"/>
+      <filter id="nlbl-glow" x="-15%" y="-60%" width="130%" height="220%">
+        <feMorphology operator="dilate" radius="1.8" in="SourceAlpha" result="thick"/>
+        <feGaussianBlur in="thick" stdDeviation="2.5" result="blur"/>
+        <feFlood flood-color="#f5e6c8" flood-opacity="0.50" result="gc"/>
+        <feComposite in="gc" in2="blur" operator="in" result="glow"/>
+        <feMerge>
+          <feMergeNode in="glow"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
       </filter>
-      <filter id="nlbl-shadow-sm" x="-20%" y="-40%" width="140%" height="180%">
-        <feDropShadow dx="0.6" dy="1.0" stdDeviation="0.7"
-          flood-color="#2e1204" flood-opacity="0.80"/>
+      <filter id="nlbl-glow-sm" x="-15%" y="-60%" width="130%" height="220%">
+        <feMorphology operator="dilate" radius="1" in="SourceAlpha" result="thick"/>
+        <feGaussianBlur in="thick" stdDeviation="1.5" result="blur"/>
+        <feFlood flood-color="#f5e6c8" flood-opacity="0.40" result="gc"/>
+        <feComposite in="gc" in2="blur" operator="in" result="glow"/>
+        <feMerge>
+          <feMergeNode in="glow"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
       </filter>
     </defs>
     <g id="nlbl-g"></g>
@@ -805,16 +906,20 @@ function renderNationLabels() {
 }
 
 // Пересчитывает подписи в SVG при каждом изменении зума/пана
+// Curved text вдоль медиальной оси территории (Imperator Rome / EU4 стиль)
 function _updateNationLabelVisibility() {
   if (!_nationSvg || !_nationSvgGroup) return;
   _nationSvgGroup.innerHTML = '';
 
-  const mapSize    = leafletMap.getSize();
-  const FONT_FAM   = 'Cinzel, Palatino, Georgia, serif';
-  const FILL_COLOR = 'rgba(242,218,152,0.96)';
-  const STROKE_COL = 'rgba(30,12,2,0.55)';
+  // Очищаем старые spine-пути из defs
+  const defs = _nationSvg.querySelector('defs');
+  for (const el of defs.querySelectorAll('[data-sp]')) el.remove();
+
+  const mapSize  = leafletMap.getSize();
+  const FONT_FAM = 'Cinzel, Palatino, Georgia, serif';
   const MIN_PX_AREA = 450;
-  const MIN_FONT    = 8;
+  const MIN_FONT = 8;
+  let spIdx = 0;
 
   for (const d of nationLabelData) {
     // ── 1. Все вершины кластера → пиксели ──
@@ -833,113 +938,90 @@ function _updateNationLabelVisibility() {
 
     // ── 2. PCA-угол (направление «длинной» оси территории) ──
     let angle = _pcaAnglePx(allPts);
-    const span = _rotatedSpan(allPts, angle);
-
-    if (span.height > span.width) angle += Math.PI / 2;
-    // Нормализуем в [-π/2, π/2]
+    const span0 = _rotatedSpan(allPts, angle);
+    if (span0.height > span0.width) angle += Math.PI / 2;
     while (angle >  Math.PI / 2) angle -= Math.PI;
     while (angle < -Math.PI / 2) angle += Math.PI;
 
-    const finalSpan = _rotatedSpan(allPts, angle);
-    if (finalSpan.width < 14 && finalSpan.height < 14) continue;
+    const rs = _rotatedSpan(allPts, angle);
+    if (rs.width < 14 && rs.height < 14) continue;
 
-    // ── 3. Визуальный центр + поиск оптимального положения ──
-    const centerPt = leafletMap.latLngToContainerPoint([d.lat, d.lng]);
-    let tx = centerPt.x, ty = centerPt.y;
+    // Отбрасываем за экраном
+    if (rs.cx < -300 || rs.cx > mapSize.x + 300 ||
+        rs.cy < -300 || rs.cy > mapSize.y + 300) continue;
 
-    // Проверяем что polylabel-центр на суше
-    let onLand = false;
-    for (const poly of pxPolys) {
-      if (_pointInPolyPx(centerPt, poly)) { onLand = true; break; }
-    }
-    if (!onLand) {
-      // Если нет — ищем точку на суше ближе к centroid
-      tx = finalSpan.cx; ty = finalSpan.cy;
-      for (const poly of pxPolys) {
-        if (_pointInPolyPx({ x: tx, y: ty }, poly)) { onLand = true; break; }
-      }
-      if (!onLand) {
-        // Берём центр наибольшего полигона
-        let maxA = 0;
-        for (const poly of pxPolys) {
-          const a = _pxPolyArea(poly);
-          if (a > maxA) {
-            maxA = a;
-            let sx = 0, sy = 0;
-            for (const p of poly) { sx += p.x; sy += p.y; }
-            tx = sx / poly.length; ty = sy / poly.length;
-          }
-        }
-      }
-    }
+    // ── 3. Вычисляем хребет (медиальную ось) территории ──
+    const spine = _computeSpine(rs.cx, rs.cy, angle, pxPolys, rs.minU, rs.maxU);
+    if (spine.length < 2) continue;
 
-    // Отбрасываем если вне видимой области
-    if (tx < -300 || tx > mapSize.x + 300 ||
-        ty < -300 || ty > mapSize.y + 300) continue;
+    // Направление: слева направо; для вертикальных — сверху вниз
+    const dx = spine[spine.length-1].x - spine[0].x;
+    const dy = spine[spine.length-1].y - spine[0].y;
+    if (Math.abs(dx) >= Math.abs(dy) ? dx < 0 : dy < 0) spine.reverse();
 
-    // ── 4. Сканируем ширину суши вдоль текстовой оси через центр ──
-    // Пробуем несколько параллельных линий и берём лучшую позицию
-    const perpX = -Math.sin(angle), perpY = Math.cos(angle);
-    let bestW = 0, bestTx = tx, bestTy = ty;
+    const pathLen = _approxPathLen(spine);
+    if (pathLen < 20) continue;
 
-    const offsets = [0, -0.15, 0.15, -0.30, 0.30];
-    for (const frac of offsets) {
-      const off = frac * finalSpan.height;
-      const sx = tx + perpX * off;
-      const sy = ty + perpY * off;
-      // Проверяем что точка на суше
-      let isLand = false;
-      for (const poly of pxPolys) {
-        if (_pointInPolyPx({ x: sx, y: sy }, poly)) { isLand = true; break; }
-      }
-      if (!isLand) continue;
-      const w = _landWidthThrough(sx, sy, angle, pxPolys);
-      if (w > bestW) { bestW = w; bestTx = sx; bestTy = sy; }
-    }
+    // ── 4. Размер шрифта ──
+    // По перпендикулярной ширине суши (медиана по центральной части spine)
+    const q = Math.max(1, Math.floor(spine.length * 0.15));
+    const midSpine = spine.slice(q, spine.length - q);
+    const ws = midSpine.map(p => p.w).sort((a, b) => a - b);
+    const medianW = ws[Math.floor(ws.length * 0.35)] || 20;
+    const maxFontH = Math.floor(medianW * 0.55);
 
-    tx = bestTx; ty = bestTy;
-    if (bestW < 14) bestW = finalSpan.width; // fallback
-
-    // Высота суши (перпендикулярно тексту) для ограничения размера шрифта
-    const landH = _landWidthThrough(tx, ty, angle + Math.PI / 2, pxPolys);
-
-    // ── 5. Размер шрифта — по ширине суши ──
-    const textLen = Math.max(18, Math.floor(bestW * 0.82));
-
-    let fontSize = 7;
+    // По длине пути
+    let fontSize = MIN_FONT;
     while (fontSize < 68) {
       _labelCtx.font = `700 ${fontSize + 1}px ${FONT_FAM}`;
-      if (_labelCtx.measureText(d.name).width > textLen) break;
+      if (_labelCtx.measureText(d.name).width > pathLen * 0.85) break;
       fontSize++;
     }
-    // Ограничиваем высотой: не более 55% высоты суши через центр
-    const maxByH = landH > 10 ? Math.floor(landH * 0.55) : 68;
-    fontSize = Math.max(MIN_FONT, Math.min(68, fontSize, maxByH));
+    fontSize = Math.max(MIN_FONT, Math.min(68, fontSize, maxFontH));
     if (fontSize < MIN_FONT) continue;
 
-    // ── 6. SVG <text> ──
-    const angleDeg = angle * 180 / Math.PI;
-    const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    el.setAttribute('x', tx.toFixed(1));
-    el.setAttribute('y', ty.toFixed(1));
-    el.setAttribute('text-anchor',      'middle');
-    el.setAttribute('dominant-baseline', 'middle');
-    el.setAttribute('font-family',       FONT_FAM);
-    el.setAttribute('font-weight',       '700');
-    el.setAttribute('font-size',         fontSize.toFixed(1));
-    el.setAttribute('fill',             FILL_COLOR);
-    el.setAttribute('stroke',           STROKE_COL);
-    el.setAttribute('stroke-width',     (fontSize < 16 ? '0.3' : '0.5'));
-    el.setAttribute('paint-order',      'stroke fill');
-    el.setAttribute('letter-spacing',   (fontSize > 14 ? '0.12em' : '0.06em'));
-    el.setAttribute('filter', fontSize >= 14 ? 'url(#nlbl-shadow)' : 'url(#nlbl-shadow-sm)');
-
-    if (Math.abs(angleDeg) > 0.5) {
-      el.setAttribute('transform', `rotate(${angleDeg.toFixed(1)},${tx.toFixed(1)},${ty.toFixed(1)})`);
+    // ── 5. Динамическая разрядка (letter-spacing) ──
+    _labelCtx.font = `700 ${fontSize}px ${FONT_FAM}`;
+    const baseW = _labelCtx.measureText(d.name).width;
+    const targetW = pathLen * 0.70;
+    let spacing = 0;
+    if (d.name.length > 1 && targetW > baseW) {
+      spacing = (targetW - baseW) / (d.name.length - 1);
     }
+    spacing = Math.min(spacing, fontSize * 0.6); // max 0.6em
+    const spacingEm = spacing / fontSize;
 
-    el.textContent = d.name;
-    _nationSvgGroup.appendChild(el);
+    // ── 6. SVG path (spine) + textPath ──
+    const pid = `np${spIdx++}`;
+    const pathD = _spineToSVGPath(spine);
+
+    const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    pathEl.id = pid;
+    pathEl.setAttribute('d', pathD);
+    pathEl.setAttribute('fill', 'none');
+    pathEl.setAttribute('data-sp', '1');
+    defs.appendChild(pathEl);
+
+    // Текст: тёмно-коричневый, multiply blend, внешнее свечение
+    const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    textEl.setAttribute('font-family', FONT_FAM);
+    textEl.setAttribute('font-weight', '700');
+    textEl.setAttribute('font-size', fontSize.toFixed(1));
+    textEl.setAttribute('fill', 'rgba(50, 28, 8, 0.72)');
+    textEl.setAttribute('letter-spacing', spacingEm > 0.02 ? `${spacingEm.toFixed(3)}em` : '0.06em');
+    textEl.setAttribute('filter', fontSize >= 14 ? 'url(#nlbl-glow)' : 'url(#nlbl-glow-sm)');
+    textEl.setAttribute('dy', `${(fontSize * 0.35).toFixed(1)}`);
+    textEl.style.mixBlendMode = 'multiply';
+
+    const tpEl = document.createElementNS('http://www.w3.org/2000/svg', 'textPath');
+    tpEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `#${pid}`);
+    tpEl.setAttribute('href', `#${pid}`);
+    tpEl.setAttribute('startOffset', '50%');
+    tpEl.setAttribute('text-anchor', 'middle');
+    tpEl.textContent = d.name;
+
+    textEl.appendChild(tpEl);
+    _nationSvgGroup.appendChild(textEl);
   }
 }
 
