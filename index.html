@@ -3208,6 +3208,197 @@
       font-style: italic; line-height: 1.4;
     }
 
+    /* ════════════════════════════════════════════════════════════════
+       ЭКОНОМИЧЕСКИЙ ОБЗОР — economy_tab.js
+       ════════════════════════════════════════════════════════════════ */
+
+    #economy-overlay {
+      position: fixed; top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.82);
+      z-index: 3100;
+      display: flex; align-items: flex-start; justify-content: center;
+      overflow-y: auto; padding: 24px 12px 48px;
+    }
+    #economy-overlay.hidden { display: none; }
+
+    .eco-oi {
+      background: linear-gradient(165deg,#080e0c 0%,#0c1810 55%,#070d08 100%);
+      border: 1px solid rgba(74,159,106,0.28);
+      border-radius: 10px;
+      width: 900px; max-width: 98vw;
+      box-shadow: 0 20px 70px rgba(0,0,0,0.85), 0 0 0 1px rgba(74,159,106,0.06);
+    }
+
+    /* Header */
+    .eco-hdr {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px 12px; border-bottom: 1px solid rgba(74,159,106,.18);
+    }
+    .eco-hdr-ic { font-size: 22px; }
+    .eco-hdr-t  { font-size: 15px; font-family: 'Cinzel',serif; color: #a8d8b0; letter-spacing: .5px; }
+    .eco-hdr-n  { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+
+    /* Hero strip */
+    .eco-hero { display: flex; gap: 0; border-bottom: 1px solid rgba(74,159,106,.12); }
+    .eco-hm   {
+      flex: 1; padding: 10px 16px; text-align: center;
+      border-right: 1px solid rgba(74,159,106,.10);
+    }
+    .eco-hm:last-child { border-right: none; }
+    .eco-hl { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .5px; }
+    .eco-hv { font-size: 16px; font-family: 'Cinzel',serif; color: #a8d8b0; margin: 2px 0; }
+    .eco-hs { font-size: 9px; color: var(--text-dim); }
+
+    /* Tab bar */
+    .eco-tabs {
+      display: flex; gap: 2px; padding: 8px 14px 0; border-bottom: 1px solid rgba(74,159,106,.14);
+    }
+    .eco-tab-btn {
+      background: rgba(255,255,255,.03); border: 1px solid rgba(74,159,106,.18);
+      color: var(--text-dim); border-radius: 5px 5px 0 0; padding: 5px 16px;
+      font-size: 11px; cursor: pointer; transition: all .15s; font-family: inherit;
+      margin-bottom: -1px; position: relative;
+    }
+    .eco-tab-btn:hover  { color: #a8d8b0; border-color: rgba(74,159,106,.4); }
+    .eco-tab-btn.active { background: rgba(74,159,106,.12); border-color: rgba(74,159,106,.45); border-bottom-color: transparent; color: #a8d8b0; }
+    .eco-tab-btn.eco-tab-alert::after {
+      content: '⚠'; font-size: 8px; color: #e05555;
+      position: absolute; top: 2px; right: 3px;
+    }
+
+    .eco-content { padding: 12px 16px 20px; }
+
+    /* Block headers */
+    .eco-block      { }
+    .eco-block-hdr  {
+      font-size: 11px; color: #a8d8b0; letter-spacing: .5px;
+      margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+    }
+    .eco-block-sub  { font-size: 9px; color: var(--text-dim); font-weight: normal; }
+    .eco-block-note { font-size: 9px; color: var(--text-dim); margin-top: 8px; font-style: italic; }
+    .eco-empty      { text-align: center; padding: 20px; font-size: 10px; color: var(--text-dim); font-style: italic; }
+
+    /* Tier legend / pips */
+    .eco-tier-legend { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 9px; color: var(--text-dim); }
+    .eco-tier-pip    { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Block A: table ── */
+    .eco-table-wrap { overflow-x: auto; }
+    .eco-table { width: 100%; border-collapse: collapse; font-size: 10.5px; font-family: sans-serif; }
+    .eco-th {
+      font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .4px;
+      padding: 4px 8px 6px; border-bottom: 1px solid rgba(74,159,106,.2); white-space: nowrap; text-align: left;
+    }
+    .eco-th-num { text-align: right; }
+    .eco-tr:hover td { background: rgba(74,159,106,.05); }
+    .eco-td         { padding: 5px 8px; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: middle; }
+    .eco-td-name    { white-space: nowrap; display: flex; align-items: center; gap: 5px; }
+    .eco-td-num     { text-align: right; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+    .eco-td-price   { min-width: 120px; }
+    .eco-td-spark   { }
+    .eco-td-trend   { white-space: nowrap; }
+    .eco-good-ic    { font-size: 13px; }
+    .eco-good-ic-sm { font-size: 11px; }
+    .eco-price-val  { font-weight: bold; color: #a8d8b0; font-variant-numeric: tabular-nums; }
+    .eco-price-base { font-size: 9px; color: var(--text-dim); }
+    .eco-pb-wrap    { margin-top: 2px; }
+    .eco-pb         { height: 3px; border-radius: 2px; max-width: 200px; min-width: 2px; }
+    .eco-pb-high    { background: #e05555; }
+    .eco-pb-mid     { background: #4a9f6a; }
+    .eco-pb-low     { background: #5b9bd5; }
+    .eco-tr-up      { color: #e05555; font-size: 9px; }
+    .eco-tr-dn      { color: #4a9f6a; font-size: 9px; }
+    .eco-tr-fl      { color: #d4af37; font-size: 9px; }
+    .eco-zone       { font-size: 8.5px; padding: 1px 6px; border-radius: 8px; white-space: nowrap; }
+    .eco-z-def      { background: rgba(224,85,85,.18); color: #e05555; border: 1px solid rgba(224,85,85,.3); }
+    .eco-z-bal      { background: rgba(74,159,106,.15); color: #4a9f6a; border: 1px solid rgba(74,159,106,.3); }
+    .eco-z-sur      { background: rgba(91,155,213,.15); color: #5b9bd5; border: 1px solid rgba(91,155,213,.3); }
+
+    /* ── Block B: income cards ── */
+    .eco-alert-banner {
+      background: rgba(224,85,85,.14); border: 1px solid rgba(224,85,85,.4);
+      border-radius: 5px; padding: 7px 12px; margin-bottom: 10px;
+      font-size: 10px; color: #e07777;
+    }
+    .eco-inc-grid  { display: grid; grid-template-columns: repeat(auto-fill,minmax(190px,1fr)); gap: 8px; }
+    .eco-inc-card  {
+      background: rgba(255,255,255,.03); border: 1px solid rgba(74,159,106,.14);
+      border-radius: 7px; padding: 10px 12px;
+    }
+    .eco-inc-card.eco-inc-alert { border-color: rgba(224,85,85,.45); background: rgba(224,85,85,.05); }
+    .eco-inc-hd    { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .eco-inc-ic    { font-size: 18px; }
+    .eco-inc-nm    { font-size: 11px; color: #a8d8b0; font-weight: 600; }
+    .eco-inc-sz    { font-size: 9px; color: var(--text-dim); }
+    .eco-inc-val   { font-size: 13px; font-family: 'Cinzel',serif; color: #d4af37; margin-bottom: 5px; }
+    .eco-inc-unit  { font-size: 9px; color: var(--text-dim); font-family: sans-serif; }
+    .eco-alert-pip { margin-left: auto; color: #e05555; font-size: 12px; }
+    .eco-wealth-bar-wrap { background: rgba(255,255,255,.08); border-radius: 2px; height: 4px; margin-bottom: 6px; overflow: hidden; }
+    .eco-wealth-bar      { height: 4px; border-radius: 2px; transition: width .3s; }
+    .eco-inc-deltas      { display: flex; flex-direction: column; gap: 2px; }
+    .eco-inc-delta-row   { display: flex; justify-content: space-between; font-size: 9.5px; font-family: sans-serif; }
+    .eco-delta-lbl       { color: var(--text-dim); }
+
+    /* ── Block C: basket ── */
+    .eco-psel            { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+    .eco-psel-btn {
+      background: rgba(255,255,255,.04); border: 1px solid rgba(74,159,106,.2);
+      color: var(--text-dim); border-radius: 14px; padding: 3px 11px;
+      font-size: 10px; cursor: pointer; transition: all .15s; font-family: inherit;
+    }
+    .eco-psel-btn:hover  { color: #a8d8b0; border-color: rgba(74,159,106,.4); }
+    .eco-psel-btn.active { background: rgba(74,159,106,.14); border-color: rgba(74,159,106,.5); color: #a8d8b0; }
+    .eco-bsk-hero { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .eco-bsk-hero-ic   { font-size: 24px; }
+    .eco-bsk-hero-nm   { font-size: 13px; font-family: 'Cinzel',serif; color: #a8d8b0; }
+    .eco-bsk-hero-sub  { font-size: 9px; color: var(--text-dim); margin-top: 1px; }
+    .eco-bsk-hero-cost { margin-left: auto; text-align: right; }
+    .eco-bsk-hero-total{ font-size: 15px; font-family: 'Cinzel',serif; color: #d4af37; }
+    .eco-bsk-hero-lbl  { font-size: 9px; color: var(--text-dim); }
+    .eco-stk-bar-wrap  { margin-bottom: 12px; }
+    .eco-stk-bar       { display: flex; height: 12px; border-radius: 4px; overflow: hidden; background: rgba(255,255,255,.06); }
+    .eco-stk-seg       { min-width: 4px; transition: width .3s; }
+    .eco-stk-legend    { display: flex; gap: 10px; font-size: 9px; color: var(--text-dim); margin-top: 5px; font-family: sans-serif; align-items: center; }
+    .eco-bsk-detail    { display: flex; flex-direction: column; gap: 10px; }
+    .eco-bsk-group     { background: rgba(255,255,255,.025); border-radius: 5px; padding: 8px 10px; }
+    .eco-bsk-grp-hdr   { font-size: 10px; font-weight: bold; letter-spacing: .4px; margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between; }
+    .eco-bsk-grp-sum   { font-size: 9px; color: var(--text-dim); font-weight: normal; }
+    .eco-bsk-row       { display: flex; align-items: center; gap: 6px; font-size: 10px; font-family: sans-serif; padding: 2px 0; }
+    .eco-bsk-nm        { flex: 1; color: rgba(255,255,255,.72); }
+    .eco-bsk-amt       { color: var(--text-dim); font-size: 9px; }
+    .eco-bsk-price     { color: var(--text-dim); font-size: 9px; min-width: 55px; text-align: right; }
+    .eco-bsk-cost      { font-weight: bold; min-width: 45px; text-align: right; font-size: 9.5px; }
+
+    /* ── Block D: balance ── */
+    .eco-bal-list      { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+    .eco-bal-row       {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.025); border-radius: 6px; padding: 8px 10px;
+    }
+    .eco-bal-prof      { display: flex; align-items: center; gap: 6px; min-width: 130px; }
+    .eco-bal-col       { min-width: 80px; }
+    .eco-bal-net       { min-width: 110px; }
+    .eco-bal-sat       { min-width: 80px; }
+    .eco-bal-lbl       { font-size: 8.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .3px; }
+    .eco-bal-val       { font-size: 11px; font-variant-numeric: tabular-nums; margin-top: 1px; font-family: sans-serif; }
+    .eco-sat-bar-wrap  { background: rgba(255,255,255,.08); border-radius: 2px; height: 4px; overflow: hidden; margin-top: 3px; }
+    .eco-sat-bar       { height: 4px; border-radius: 2px; }
+    .eco-treasury-row  {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(74,159,106,.06); border: 1px solid rgba(74,159,106,.2);
+      border-radius: 6px; padding: 8px 10px; margin-top: 4px;
+    }
+    .eco-tr-ic { font-size: 18px; }
+    .eco-tr-nm { min-width: 130px; }
+
+    /* Alert badge on button */
+    .eco-btn-alert { border-color: rgba(224,85,85,.6) !important; }
+    #eco-open-btn.eco-btn-alert { animation: eco-pulse 2s ease-in-out infinite; }
+    @keyframes eco-pulse {
+      0%,100% { box-shadow: none; }
+      50%      { box-shadow: 0 0 8px rgba(224,85,85,.5); }
+    }
+
     /* Semantic colors */
     .good    { color: #81c784 !important; }
     .bad     { color: #ef9a9a !important; }
@@ -3732,6 +3923,9 @@
   <!-- Оверлей структуры населения -->
   <div id="population-overlay" class="hidden"></div>
 
+  <!-- Оверлей экономического обзора -->
+  <div id="economy-overlay" class="hidden"></div>
+
   <!-- Модал: ввод API ключа при первом запуске или смене ключа -->
   <div id="api-key-modal">
     <div class="akm-box">
@@ -3812,6 +4006,7 @@
   <script src="ui/panels.js"></script>
   <script src="ui/government_tab.js"></script>
   <script src="ui/population_tab.js"></script>
+  <script src="ui/economy_tab.js"></script>
   <script src="ai/prompts.js"></script>
   <script src="ai/parser.js"></script>
   <script src="ai/claude.js"></script>

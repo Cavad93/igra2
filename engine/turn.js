@@ -40,6 +40,11 @@ async function processTurn() {
     //            Step5=Рынок, Step6=События
     runEconomyTick();
 
+    // 1.1. Запись истории экономики (для вкладки «Экономический обзор»)
+    if (typeof recordEconomyHistory === 'function') {
+      try { recordEconomyHistory(); } catch (e) { console.warn('[econ_history]', e); }
+    }
+
     // 1.5. Правительство (детерминировано)
     processAllGovernmentTicks();
 
@@ -754,5 +759,6 @@ function renderAll() {
   try { updateDateDisplay(); }            catch (e) { console.error('updateDateDisplay error:', e); }
   try { renderCharInitiativesPanel(); }   catch (e) { console.error('renderCharInitiativesPanel error:', e); }
   try { if (typeof _applyLogFilter === 'function') _applyLogFilter(); } catch (e) {}
-  try { if (typeof refreshPopulationTab === 'function') refreshPopulationTab(); } catch (e) {}
+  try { if (typeof refreshPopulationTab  === 'function') refreshPopulationTab();  } catch (e) {}
+  try { if (typeof refreshEconomyTab    === 'function') refreshEconomyTab();    } catch (e) {}
 }
