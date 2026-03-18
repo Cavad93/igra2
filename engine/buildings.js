@@ -88,11 +88,16 @@ function _calcSlotBaseOutput(slot, region, nation) {
 
   if (workers <= 0) return {};
 
+  // production_eff: 0.0–1.0, снижается при убытках (Stage 4).
+  // При eff=0 здание не производит ничего (приостановлено / закрыто).
+  const eff = slot.production_eff ?? 1.0;
+  if (eff <= 0) return {};
+
   const output = {};
   for (const { good, base_rate } of bDef.production_output) {
     const terrainBonus = _terrainGoodBonus(terrain, good);
     // base_rate: единиц товара на 1000 рабочих в ход
-    const amount = (workers / 1000) * base_rate * fertility * satMod * terrainBonus;
+    const amount = (workers / 1000) * base_rate * fertility * satMod * terrainBonus * eff;
     if (amount > 0.1) output[good] = (output[good] || 0) + amount;
   }
 
@@ -348,9 +353,16 @@ function _completeConstruction(entry, region, regionId) {
     status:       'active',
     level:        1,
     workers,
-    founded_turn: GAME_STATE.turn,
-    revenue:      0,
-    wages_paid:   0,
+    founded_turn:           GAME_STATE.turn,
+    revenue:                0,
+    wages_paid:             0,
+    // ── Stage 4: финансовый журнал и адаптивное поведение ──────────────────
+    production_eff:         1.0,   // 0.0–1.0; снижается при убытках
+    loss_streak:            0,     // тиков подряд в убытке
+    revenue_last:           0,     // выручка за прошлый тик
+    costs_last:             0,     // затраты за прошлый тик
+    profit_last:            0,     // чистая прибыль за прошлый тик
+    construction_cost_cached: bDef.cost || 0,  // стоимость постройки по ценам тика
   });
 
   if (typeof addEventLog === 'function') {
@@ -520,7 +532,265 @@ function distributeWages(nationId) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// 7. УРОВЕНЬ БЕЗРАБОТИЦЫ ПО ПРОФЕССИЯМ
+// 7. ФИНАНСОВЫЙ ЖУРНАЛ ЗДАНИЙ
+//
+// Вызывается ПОСЛЕ distributeWages() каждый тик (для всех наций).
+// Вычисляет per-slot: gross_revenue, input_costs, wages, maintenance,
+// net_profit; обновляет loss_streak.
+//
+// Формула (Stage 4.2):
+//   input_costs   = Σ (actual_output × recipe.input.amount × input_price)
+//   wages         = gross_revenue × bDef.wage_rate
+//   maintenance   = CONFIG.BALANCE.BUILDING_MAINTENANCE × level
+//   net_profit    = gross_revenue − input_costs − wages − maintenance
+// ──────────────────────────────────────────────────────────────
+
+function updateBuildingFinancials(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return;
+
+  const market    = GAME_STATE.market;
+  const maintCost = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
+
+  for (const rid of nation.regions) {
+    const region = GAME_STATE.regions[rid];
+    if (!region?.building_slots?.length) continue;
+
+    for (const slot of region.building_slots) {
+      if (slot.status !== 'active') continue;
+
+      const bDef = BUILDINGS[slot.building_id];
+      if (!bDef) continue;
+
+      const level         = slot.level || 1;
+      const maintenance   = maintCost * level;
+
+      // Выручка и зарплата (через существующую функцию)
+      const gross_revenue = calculateBuildingRevenue(slot, region, nation);
+      const wages         = gross_revenue * (bDef.wage_rate ?? 0);
+
+      // Затраты на входные материалы рецепта (фактически потреблённые)
+      let input_costs = 0;
+      const recipes    = (typeof BUILDING_RECIPES !== 'undefined')
+                         ? (BUILDING_RECIPES[slot.building_id] ?? []) : [];
+      const baseOutput = _calcSlotBaseOutput(slot, region, nation);
+      const ratios     = slot._recipe_ratios ?? {};
+
+      for (const recipe of recipes) {
+        const good      = recipe.output_good;
+        const baseAmt   = baseOutput[good] || 0;
+        const ratio     = Object.prototype.hasOwnProperty.call(ratios, good) ? ratios[good] : 1.0;
+        const actualOut = baseAmt * ratio;
+
+        for (const input of recipe.inputs) {
+          const price = market[input.good]?.price
+                     ?? (typeof GOODS !== 'undefined' ? GOODS[input.good]?.base_price : null)
+                     ?? 10;
+          input_costs += actualOut * input.amount * price;
+        }
+      }
+
+      const net_profit = gross_revenue - input_costs - wages - maintenance;
+
+      // ── Финансовый журнал ─────────────────────────────────────────────
+      slot.revenue_last = Math.round(gross_revenue);
+      slot.costs_last   = Math.round(input_costs + wages + maintenance);
+      slot.profit_last  = Math.round(net_profit);
+
+      // ── loss_streak: ++ при убытке, -- при прибыли (медленнее) ───────
+      if (net_profit < 0) {
+        slot.loss_streak = (slot.loss_streak || 0) + 1;
+      } else {
+        // Восстановление идёт вдвое медленнее (−0.5 streak-единицы за тик)
+        slot._recovery_accum = (slot._recovery_accum || 0) + 1;
+        if (slot._recovery_accum >= 2) {
+          slot.loss_streak    = Math.max(0, (slot.loss_streak || 0) - 1);
+          slot._recovery_accum = 0;
+        }
+      }
+    }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// 8. АДАПТИВНОЕ ПОВЕДЕНИЕ ЗДАНИЙ ПРИ УБЫТКАХ
+//
+// Вызывается ПОСЛЕ updateBuildingFinancials() каждый тик.
+//
+// Пороги по loss_streak:
+//   1–3  : ждём (рынок может восстановиться)
+//   4–8  : сокращаем рабочих на 10%/тик
+//   9–15 : приостанавливаем (production_eff = 0, рабочие остаются)
+//   16+  : закрываем (workers = 0, production_eff = 0)
+//
+// При возврате к прибыли (streak → 0):
+//   eff < 1 → +10% eff/тик
+//   workers < max → +5% workers/тик (восстановление медленнее, чем сокращение)
+// ──────────────────────────────────────────────────────────────
+
+// Вспомогательные функции адаптивного поведения
+
+function _logSlotEvent(slot, bDef, rid, msg, type) {
+  if (typeof addEventLog !== 'function') return;
+  const bName = bDef?.name || slot.building_id;
+  const rName = (typeof MAP_REGIONS !== 'undefined' && MAP_REGIONS[rid]?.name) || rid;
+  addEventLog(`${bName} (${rName}): ${msg}`, type);
+}
+
+// Плавное сокращение рабочих на fraction (0.10 = 10%) от текущего числа.
+// Оставляем минимум 1 в каждой профессии (чтобы не потерять данные о типе занятости).
+function _cutSlotWorkers(slot, fraction) {
+  for (const [prof, count] of Object.entries(slot.workers || {})) {
+    if (count <= 1) continue;
+    const cut = Math.max(1, Math.floor(count * fraction));
+    slot.workers[prof] = Math.max(1, count - cut);
+  }
+}
+
+// Постепенное восстановление рабочих до максимума из bDef.
+function _restoreSlotWorkers(slot, bDef, fraction) {
+  if (!bDef?.worker_profession) return;
+  for (const { profession: prof, count: maxCount } of bDef.worker_profession) {
+    const current = slot.workers?.[prof] ?? 0;
+    if (current >= maxCount) continue;
+    const gain = Math.max(1, Math.floor(maxCount * fraction));
+    if (!slot.workers) slot.workers = {};
+    slot.workers[prof] = Math.min(maxCount, current + gain);
+  }
+}
+
+// Оценивает, будет ли здание прибыльным при текущих рыночных ценах и полной загрузке.
+// Используется для решения о повторном открытии закрытых зданий.
+function _estimateSlotProfitability(slot, bDef, region, nation) {
+  // Создаём временный «идеальный» слот с production_eff=1 и полными рабочими
+  const tempSlot = {
+    ...slot,
+    production_eff: 1.0,
+    workers:        {},
+    _recipe_ratios: {},  // нет данных о входах → ratio = 1
+  };
+  for (const { profession: prof, count } of (bDef?.worker_profession || [])) {
+    tempSlot.workers[prof] = count;
+  }
+
+  const baseOut   = _calcSlotBaseOutput(tempSlot, region, nation);
+  const market    = GAME_STATE.market;
+  const maintCost = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
+
+  let gross = 0;
+  for (const [g, amt] of Object.entries(baseOut)) {
+    gross += amt * (market[g]?.price ?? 10);
+  }
+
+  const wages = gross * (bDef?.wage_rate ?? 0);
+  const maint = maintCost * (slot.level || 1);
+
+  let inputCosts = 0;
+  const recipes = (typeof BUILDING_RECIPES !== 'undefined')
+                  ? (BUILDING_RECIPES[slot.building_id] ?? []) : [];
+  for (const recipe of recipes) {
+    const baseAmt = baseOut[recipe.output_good] || 0;
+    for (const input of recipe.inputs) {
+      const price = market[input.good]?.price
+                 ?? (typeof GOODS !== 'undefined' ? GOODS[input.good]?.base_price : null)
+                 ?? 10;
+      inputCosts += baseAmt * input.amount * price;
+    }
+  }
+
+  return (gross - inputCosts - wages - maint) > 0;
+}
+
+function applyBuildingAdaptiveBehavior(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return;
+
+  const isPlayer = (nationId === GAME_STATE.player_nation);
+
+  for (const rid of nation.regions) {
+    const region = GAME_STATE.regions[rid];
+    if (!region?.building_slots?.length) continue;
+
+    for (const slot of region.building_slots) {
+      if (slot.status !== 'active') continue;
+
+      const bDef   = BUILDINGS[slot.building_id];
+      if (!bDef) continue;
+
+      const streak = slot.loss_streak || 0;
+      const profit = slot.profit_last ?? 0;
+      const eff    = slot.production_eff ?? 1.0;
+      const isClosed = (eff <= 0 && _slotTotalWorkers(slot) === 0);
+
+      // ── Восстановление: прибыльно и streak = 0 ────────────────────────
+      if (streak === 0) {
+        if (eff < 1.0) {
+          slot.production_eff = Math.min(1.0, eff + 0.10);
+          if (slot.production_eff >= 1.0 && isPlayer) {
+            _logSlotEvent(slot, bDef, rid, '▶ производство восстановлено.', 'good');
+          }
+        }
+        _restoreSlotWorkers(slot, bDef, 0.05);  // +5%/тик — медленнее, чем -10%
+        continue;
+      }
+
+      // ── Закрытое здание: проверяем рыночное условие для повторного открытия ─
+      if (isClosed) {
+        if (_estimateSlotProfitability(slot, bDef, region, nation)) {
+          slot.production_eff  = 0.10;  // запускаем с 10% мощности
+          slot.loss_streak     = 8;      // сбрасываем в зону «сокращение», а не «закрытие»
+          slot._recovery_accum = 0;
+          _restoreSlotWorkers(slot, bDef, 0.05);
+          if (isPlayer) _logSlotEvent(slot, bDef, rid, '🔄 начинает повторное открытие (рынок улучшился).', 'info');
+        }
+        continue;
+      }
+
+      // ── Деградация: последовательные пороги ────────────────────────────
+      if (streak <= 3) {
+        // Тик 1–3: ждём, рынок может исправиться
+
+      } else if (streak <= 8) {
+        // Тик 4–8: −10% рабочих/тик
+        _cutSlotWorkers(slot, 0.10);
+        if (isPlayer && streak === 4) {
+          _logSlotEvent(slot, bDef, rid,
+            `📉 убытки ${streak} тик(а) — сокращение рабочих. Прибыль: ${profit} монет.`, 'warning');
+        }
+
+      } else if (streak <= 15) {
+        // Тик 9–15: приостановка (eff=0, рабочие на месте)
+        if (eff > 0) {
+          slot.production_eff = 0;
+          if (isPlayer) {
+            _logSlotEvent(slot, bDef, rid,
+              `⏸ приостановлено (убытки ${streak} тиков). Убыток: ${-profit} монет/тик.`, 'warning');
+          }
+        }
+
+      } else {
+        // Тик 16+: полное закрытие (workers = 0)
+        if (!isClosed) {
+          for (const prof of Object.keys(slot.workers || {})) {
+            slot.workers[prof] = 0;
+          }
+          slot.production_eff = 0;
+          slot.loss_streak    = 16;  // фиксируем streak: теперь растёт только у закрытых
+          if (isPlayer) {
+            _logSlotEvent(slot, bDef, rid,
+              `🚫 закрыто из-за хронических убытков (${streak} тиков).`, 'danger');
+          }
+        }
+      }
+    }
+
+    // Пересчитываем занятость после любых изменений рабочих
+    recalculateRegionEmployment(region);
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// 9. УРОВЕНЬ БЕЗРАБОТИЦЫ ПО ПРОФЕССИЯМ
 // Используется демографическим движком и UI.
 // ──────────────────────────────────────────────────────────────
 

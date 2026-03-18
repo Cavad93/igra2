@@ -886,48 +886,57 @@ function getBuildingTotalWorkers(buildingId) {
 const BUILDING_RECIPES = {
 
   // ── Мастерские ────────────────────────────────────────────────────────────
+  // Калибровка (400 рабочих, rate 35/1000 → 14 инструментов/тик, base_price 35):
+  //   input_costs = 14×(0.30×45 + 0.05×22) = 204  ;  wages = 490×0.28 = 137
+  //   net_profit  = 490 − 204 − 137 − 50 ≈ +99  →  прибыльно при базовых ценах
   workshop: [
     {
       output_good:            'tools',
       inputs: [
-        { good: 'iron',   amount: 2.0 },  // 2 таланта железа + 0.5 воза дерева = 1 набор инструментов
-        { good: 'timber', amount: 0.5 },
+        { good: 'iron',   amount: 0.30 },  // 0.3 таланта железа + дрова → 1 инструмент
+        { good: 'timber', amount: 0.05 },
       ],
       labor_cost_per_worker: 8,
     },
     {
       output_good:            'cloth',
       inputs: [
-        { good: 'wool', amount: 1.5 },    // 1.5 тюка шерсти = 1 тюк ткани
+        { good: 'wool', amount: 0.40 },    // 0.4 тюка шерсти → 1 тюк ткани
       ],
       labor_cost_per_worker: 6,
     },
     {
       output_good:            'pottery',
       inputs: [
-        { good: 'timber', amount: 0.3 },  // дрова для обжига
+        { good: 'timber', amount: 0.10 },  // дрова для обжига
       ],
       labor_cost_per_worker: 4,
     },
   ],
 
   // ── Давильня ──────────────────────────────────────────────────────────────
+  // 200 рабочих, rate 50/1000 → 10 масла/тик, base_price 32:
+  //   input_costs = 10×(0.80×18) = 144  ;  wages = 320×0.30 = 96
+  //   net_profit  = 320 − 144 − 96 − 50 ≈ +30  →  прибыльно
   oil_press: [
     {
       output_good:            'olive_oil',
       inputs: [
-        { good: 'olives', amount: 2.0 },  // 2 амфоры оливок → 1 амфора масла
+        { good: 'olives', amount: 0.80 },  // 0.8 амфоры оливок → 1 амфора масла
       ],
       labor_cost_per_worker: 5,
     },
   ],
 
   // ── Винодельня ────────────────────────────────────────────────────────────
+  // 200 рабочих, rate 80/1000 → 16 вина/тик, base_price 30:
+  //   input_costs = 16×(0.15×7) = 17  ;  wages = 480×0.25 = 120
+  //   net_profit  = 480 − 17 − 120 − 50 ≈ +293  →  прибыльно
   winery: [
     {
       output_good:            'wine',
       inputs: [
-        { good: 'barley', amount: 0.5 },  // ячмень — зерновая основа брожения
+        { good: 'barley', amount: 0.15 },  // ячмень — зерновая основа брожения
       ],
       labor_cost_per_worker: 7,
     },
@@ -938,13 +947,16 @@ const BUILDING_RECIPES = {
     {
       output_good:            'pottery',
       inputs: [
-        { good: 'timber', amount: 0.2 },  // дрова для обжига в гончарных печах
+        { good: 'timber', amount: 0.08 },  // дрова для обжига в гончарных печах
       ],
       labor_cost_per_worker: 4,
     },
   ],
 
   // ── Рудники ───────────────────────────────────────────────────────────────
+  // bronze: 600 рабочих, rate 30/1000 → 18 бронзы/тик, base_price 55:
+  //   input_costs = 18×(0.30×45) = 243  ;  wages = 990×0.10 = 99
+  //   net_profit  = 990 − 243 − 99 − 50 ≈ +598  →  прибыльно
   mine: [
     {
       output_good:            'iron',
@@ -954,7 +966,7 @@ const BUILDING_RECIPES = {
     {
       output_good:            'bronze',
       inputs: [
-        { good: 'iron', amount: 0.5 },    // бронза = медь+олово, упрощение: тратит железо
+        { good: 'iron', amount: 0.30 },    // бронза = медь+олово, упрощение: тратит железо
       ],
       labor_cost_per_worker: 15,
     },

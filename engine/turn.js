@@ -43,6 +43,18 @@ async function processTurn() {
       try { distributeWages(GAME_STATE.player_nation); } catch (e) { console.warn('[wages]', e); }
     }
 
+    // 1.1. Финансы зданий и адаптивное поведение (Stage 4)
+    if (typeof updateBuildingFinancials === 'function') {
+      for (const _nId of Object.keys(GAME_STATE.nations)) {
+        try { updateBuildingFinancials(_nId); } catch (e) { console.warn('[bld_fin]', e); }
+      }
+    }
+    if (typeof applyBuildingAdaptiveBehavior === 'function') {
+      for (const _nId of Object.keys(GAME_STATE.nations)) {
+        try { applyBuildingAdaptiveBehavior(_nId); } catch (e) { console.warn('[bld_adapt]', e); }
+      }
+    }
+
     // 1.5. Правительство (детерминировано)
     processAllGovernmentTicks();
 
