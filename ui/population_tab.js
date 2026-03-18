@@ -309,11 +309,79 @@ function renderModPills(politicalEffects) {
 // ДИАГРАММА ИСТОРИИ НАСЕЛЕНИЯ
 // ─────────────────────────────────────────────────────────────────────────
 
-let _popChartMode = 'stacked'; // 'stacked' | 'lines'
+let _popChartMode = 'stacked'; // 'stacked' | 'lines' | 'demography'
 
 function setPopChartMode(mode) {
   _popChartMode = mode;
   renderPopulationOverlay();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// DONUT-ДИАГРАММА СОСТАВА НАСЕЛЕНИЯ ПО КЛАССАМ
+// ─────────────────────────────────────────────────────────────────────────
+
+function _buildDemographicDonut(classSat) {
+  if (!classSat || typeof SOCIAL_CLASSES === 'undefined') {
+    return '<div class="pop-chart-empty">Нет данных о классах</div>';
+  }
+
+  const entries = Object.entries(classSat)
+    .filter(([cid, d]) => SOCIAL_CLASSES[cid] && d.population >= 100)
+    .sort((a, b) => b[1].population - a[1].population);
+
+  const total = entries.reduce((s, [, d]) => s + d.population, 0);
+  if (total === 0) return '<div class="pop-chart-empty">Нет данных</div>';
+
+  const W = 230, H = 230;
+  const cx = 115, cy = 115, Ro = 95, Ri = 50;
+
+  let angle = -Math.PI / 2;
+  const slices = [];
+  for (const [cid, d] of entries) {
+    const frac = d.population / total;
+    const sweep = frac * 2 * Math.PI;
+    // Outer arc endpoints
+    const x1 = cx + Ro * Math.cos(angle),          y1 = cy + Ro * Math.sin(angle);
+    const x2 = cx + Ro * Math.cos(angle + sweep),  y2 = cy + Ro * Math.sin(angle + sweep);
+    // Inner arc endpoints (reverse order for donut cutout)
+    const xi1 = cx + Ri * Math.cos(angle + sweep), yi1 = cy + Ri * Math.sin(angle + sweep);
+    const xi2 = cx + Ri * Math.cos(angle),         yi2 = cy + Ri * Math.sin(angle);
+    const lg = sweep > Math.PI ? 1 : 0;
+    const path = `M${x1},${y1} A${Ro},${Ro} 0 ${lg} 1 ${x2},${y2} L${xi1},${yi1} A${Ri},${Ri} 0 ${lg} 0 ${xi2},${yi2} Z`;
+    const color = SOCIAL_CLASSES[cid].color || '#888';
+    slices.push({ path, color, cid, frac,
+      name: SOCIAL_CLASSES[cid].name,
+      pop:  d.population,
+      pct:  (frac * 100).toFixed(1) });
+    angle += sweep;
+  }
+
+  const paths = slices.map(s =>
+    `<path d="${s.path}" fill="${s.color}" stroke="#1a1e2e" stroke-width="1.5" opacity="0.92">
+       <title>${s.name}: ${s.pop.toLocaleString()} чел. (${s.pct}%)</title>
+     </path>`
+  ).join('');
+
+  const totalFmt = popFmtNum(total);
+
+  const legend = slices.map(s => `
+    <div class="ddnt-leg-row">
+      <span class="ddnt-leg-swatch" style="background:${s.color}"></span>
+      <span class="ddnt-leg-nm">${s.name}</span>
+      <span class="ddnt-leg-pct">${s.pct}%</span>
+      <span class="ddnt-leg-pop">${popFmtNum(s.pop)}</span>
+    </div>`
+  ).join('');
+
+  return `
+    <div class="ddnt-wrap">
+      <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+        ${paths}
+        <text x="${cx}" y="${cy - 6}" text-anchor="middle" class="ddnt-center-lbl">Всего</text>
+        <text x="${cx}" y="${cy + 14}" text-anchor="middle" class="ddnt-center-val">${totalFmt}</text>
+      </svg>
+      <div class="ddnt-legend">${legend}</div>
+    </div>`;
 }
 
 // Форматирование числа для осей
@@ -653,11 +721,13 @@ function _buildChartLegend(history, sortedIds) {
 
 // ── Главный строитель секции диаграммы ───────────────────────────────────
 
-function buildPopHistorySection(pop, stockpile) {
+function buildPopHistorySection(pop, stockpile, nation) {
   _seedHistory(pop, stockpile);
   const history = pop.history;
 
-  if (history.length < 1) {
+  const isDemography = _popChartMode === 'demography';
+
+  if (history.length < 1 && !isDemography) {
     return `
       <div class="pop-chart-section">
         <div class="pop-sh">
@@ -667,35 +737,57 @@ function buildPopHistorySection(pop, stockpile) {
       </div>`;
   }
 
-  // Классы с ненулевым населением, отсортированные по убыванию
-  const classIds = Object.keys(SOCIAL_CLASSES).filter(cid =>
-    history.some(h => (h.classes?.[cid] || 0) >= 100)
-  );
-  const avgPop   = cid => history.reduce((s, h) => s + (h.classes?.[cid] || 0), 0) / history.length;
-  const sorted   = [...classIds].sort((a, b) => avgPop(b) - avgPop(a));
+  let chartHtml, legend = '';
 
-  const W   = 720, H   = 210;
-  const pad = { top: 20, right: 22, bottom: 40, left: 56 };
-  const cw  = W - pad.left - pad.right;
-  const ch  = H - pad.top - pad.bottom;
-  const n   = history.length;
-  const xOf = i => pad.left + (n > 1 ? (i / (n - 1)) * cw : cw / 2);
+  if (isDemography) {
+    // ── Демографическая вкладка: donut (состав по классам) + график ОПЖ ──
+    let classSat = pop.class_satisfaction;
+    if (!classSat && typeof calculateClassSatisfaction === 'function') {
+      classSat = calculateClassSatisfaction(pop.by_profession, stockpile);
+    }
+    const donutHtml = _buildDemographicDonut(classSat);
+    const demHistory = nation?.demographics?.history || [];
+    const leHtml = _buildLifeExpectancyChart(demHistory);
 
-  let chartHtml;
-  if (_popChartMode === 'stacked') {
-    const rawMax  = Math.max(...history.map(h => h.total));
-    const yMax    = _niceMax(rawMax * 1.08);
-    chartHtml = _buildStackedSVG(history, sorted, W, H, pad, cw, ch, xOf, yMax);
+    chartHtml = `
+      <div class="pdm-wrap">
+        <div class="pdm-col">
+          <div class="pdm-col-hdr">Состав населения по классам</div>
+          ${donutHtml}
+        </div>
+        <div class="pdm-col">
+          <div class="pdm-col-hdr">Динамика продолжительности жизни</div>
+          <div class="age-le-wrap">${leHtml}</div>
+        </div>
+      </div>`;
   } else {
-    const rawInd  = Math.max(...sorted.map(cid =>
-      Math.max(...history.map(h => h.classes?.[cid] || 0))
-    ));
-    const yMaxInd = _niceMax(rawInd * 1.12);
-    chartHtml = _buildLinesSVG(history, sorted, W, H, pad, cw, ch, xOf, yMaxInd);
-  }
+    // Классы с ненулевым населением, отсортированные по убыванию
+    const classIds = Object.keys(SOCIAL_CLASSES).filter(cid =>
+      history.some(h => (h.classes?.[cid] || 0) >= 100)
+    );
+    const avgPop = cid => history.reduce((s, h) => s + (h.classes?.[cid] || 0), 0) / history.length;
+    const sorted = [...classIds].sort((a, b) => avgPop(b) - avgPop(a));
 
-  const legend = _buildChartLegend(history, sorted);
-  const tipId  = _popChartMode === 'stacked' ? 'pop-ctip-s' : 'pop-ctip-l';
+    const W   = 720, H   = 210;
+    const pad = { top: 20, right: 22, bottom: 40, left: 56 };
+    const cw  = W - pad.left - pad.right;
+    const ch  = H - pad.top - pad.bottom;
+    const n   = history.length;
+    const xOf = i => pad.left + (n > 1 ? (i / (n - 1)) * cw : cw / 2);
+
+    if (_popChartMode === 'stacked') {
+      const rawMax = Math.max(...history.map(h => h.total));
+      const yMax   = _niceMax(rawMax * 1.08);
+      chartHtml = _buildStackedSVG(history, sorted, W, H, pad, cw, ch, xOf, yMax);
+    } else {
+      const rawInd  = Math.max(...sorted.map(cid =>
+        Math.max(...history.map(h => h.classes?.[cid] || 0))
+      ));
+      const yMaxInd = _niceMax(rawInd * 1.12);
+      chartHtml = _buildLinesSVG(history, sorted, W, H, pad, cw, ch, xOf, yMaxInd);
+    }
+    legend = _buildChartLegend(history, sorted);
+  }
 
   return `
     <div class="pop-chart-section">
@@ -706,6 +798,8 @@ function buildPopHistorySection(pop, stockpile) {
                   onclick="setPopChartMode('stacked')">Состав</button>
           <button class="pct ${_popChartMode === 'lines' ? 'active' : ''}"
                   onclick="setPopChartMode('lines')">Тренды</button>
+          <button class="pct ${_popChartMode === 'demography' ? 'active' : ''}"
+                  onclick="setPopChartMode('demography')">Демография</button>
         </div>
       </div>
       <div class="pop-chart-wrap" id="pop-chart-wrap">
@@ -1445,7 +1539,7 @@ function renderPopulationOverlay() {
   const pillsHtml = renderModPills(politicalEffects);
 
   // ── Диаграмма истории населения ──
-  const chartHtml = buildPopHistorySection(pop, stockpile);
+  const chartHtml = buildPopHistorySection(pop, stockpile, nation);
 
   // ── Возрастная демография + законы труда ──
   const ageHtml = buildAgeDemographicsSection(nation);
@@ -1505,7 +1599,9 @@ function renderPopulationOverlay() {
   `;
 
   // Инициализируем интерактивность графика после рендера
-  requestAnimationFrame(() => _initChartTooltip(pop.history, _popChartMode));
+  if (_popChartMode !== 'demography') {
+    requestAnimationFrame(() => _initChartTooltip(pop.history, _popChartMode));
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────
