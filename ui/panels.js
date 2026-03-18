@@ -250,128 +250,186 @@ function formatBonusName(key) {
   return names[key] || key;
 }
 
-// ── Окно «Культура» (модальное) ─────────────────────────────────────────────
+// ── Окно «Культура» — Modern Antiquity Redesign ─────────────────────────────
+
+let _cwState = { nationId: null, sort: 'culture', stats: null };
 
 function openCultureWindow(nationId) {
   closeCultureWindow();
+  _cwState.nationId = nationId;
+  _cwState.sort = 'culture';
+  _cwState.stats = getNationCultureStats(nationId);
+
   const overlay = document.createElement('div');
   overlay.className = 'culture-window-overlay';
   overlay.id = 'culture-window-overlay';
   overlay.onclick = function(e) { if (e.target === overlay) closeCultureWindow(); };
-  overlay.innerHTML = renderCultureWindow(nationId);
+  overlay.innerHTML = _buildCultureWindowHtml();
   document.body.appendChild(overlay);
+  _cwBindEvents();
 }
 
 function closeCultureWindow() {
   const el = document.getElementById('culture-window-overlay');
   if (el) el.remove();
+  _cwState.stats = null;
 }
 
-function renderCultureWindow(nationId) {
-  try {
-    const nation = GAME_STATE.nations[nationId];
-    const nationName = nation ? nation.name : nationId;
-    const stats = getNationCultureStats(nationId);
+function _cwSetSort(mode) {
+  _cwState.sort = mode;
+  const overlay = document.getElementById('culture-window-overlay');
+  if (!overlay) return;
+  overlay.innerHTML = _buildCultureWindowHtml();
+  _cwBindEvents();
+}
 
-    // ── Big pie ──
-    let gradientParts = [];
-    let angle = 0;
-    for (const c of stats.cultures) {
-      const slice = (c.percentage / 100) * 360;
-      gradientParts.push(`${c.color} ${angle}deg ${angle + slice}deg`);
-      angle += slice;
+function _cwHighlight(cultureId) {
+  // Highlight legend item
+  document.querySelectorAll('.cw-legend-item').forEach(el => {
+    el.classList.toggle('cw-highlight', el.dataset.culture === cultureId);
+  });
+  // Pulse matching segments, dim others
+  document.querySelectorAll('.cw-region-seg').forEach(el => {
+    if (cultureId) {
+      el.classList.toggle('cw-seg-pulse', el.dataset.culture === cultureId);
+      el.classList.toggle('cw-seg-dim', el.dataset.culture !== cultureId);
+    } else {
+      el.classList.remove('cw-seg-pulse', 'cw-seg-dim');
     }
-    const gradient = gradientParts.length > 0
-      ? `conic-gradient(${gradientParts.join(', ')})`
-      : 'conic-gradient(#555 0deg 360deg)';
-    const mainIcon = stats.cultures.length > 0 ? stats.cultures[0].icon : '🎭';
+  });
+  // Highlight SVG donut segments
+  document.querySelectorAll('.cw-donut-seg').forEach(el => {
+    if (cultureId) {
+      el.style.opacity = el.dataset.culture === cultureId ? '1' : '0.3';
+    } else {
+      el.style.opacity = '1';
+    }
+  });
+}
+
+function _cwBindEvents() {
+  // Legend hover → highlight
+  document.querySelectorAll('.cw-legend-item').forEach(el => {
+    el.addEventListener('mouseenter', () => _cwHighlight(el.dataset.culture));
+    el.addEventListener('mouseleave', () => _cwHighlight(null));
+  });
+  // SVG donut hover → highlight
+  document.querySelectorAll('.cw-donut-seg').forEach(el => {
+    el.addEventListener('mouseenter', () => _cwHighlight(el.dataset.culture));
+    el.addEventListener('mouseleave', () => _cwHighlight(null));
+  });
+  // Sort buttons
+  document.querySelectorAll('.cw-sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => _cwSetSort(btn.dataset.sort));
+  });
+}
+
+function _buildCultureWindowHtml() {
+  try {
+    const stats = _cwState.stats;
+    if (!stats) return '';
+    const nation = GAME_STATE.nations[_cwState.nationId];
+    const nationName = nation ? nation.name : _cwState.nationId;
+
+    // ── SVG Donut chart ──
+    const donutSvg = _buildDonutSvg(stats.cultures);
 
     // ── Legend ──
     const legendHtml = stats.cultures.map(c => `
-      <div class="cw-legend-item">
-        <span class="cw-legend-dot" style="background:${c.color}"></span>
+      <div class="cw-legend-item" data-culture="${c.id}">
+        <span class="cw-legend-dot" style="background:${c.color};color:${c.color}"></span>
         <span class="cw-legend-name">${c.name}</span>
         <span class="cw-legend-pct">${c.percentage.toFixed(1)}%</span>
         <span class="cw-legend-pop">${c.population.toLocaleString()}</span>
       </div>
     `).join('');
 
-    // ── Region bars ──
-    const regionBarsHtml = stats.byRegion.slice(0, 20).map(r => {
+    // ── Traditions ──
+    const traditionsHtml = _buildTraditionsHtml(stats.cultures);
+
+    // ── Sort regions ──
+    let sortedRegions = [...stats.byRegion];
+    const primaryCulture = stats.cultures.length > 0 ? stats.cultures[0].id : null;
+    switch (_cwState.sort) {
+      case 'alpha':
+        sortedRegions.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'population':
+        sortedRegions.sort((a, b) => b.population - a.population);
+        break;
+      case 'culture':
+      default:
+        // Sort by % of dominant culture (descending)
+        sortedRegions.sort((a, b) => {
+          const aPct = a.segments.find(s => s.culture === primaryCulture)?.pct || 0;
+          const bPct = b.segments.find(s => s.culture === primaryCulture)?.pct || 0;
+          return bPct - aPct;
+        });
+        break;
+    }
+
+    // ── Region cards ──
+    const regionCardsHtml = sortedRegions.slice(0, 30).map(r => {
       const segsHtml = r.segments.map(s => {
         const def = CULTURES[s.culture] || GAME_STATE.cultures?.[s.culture];
         const color = def ? def.color : '#888';
+        return `<div class="cw-region-seg" data-culture="${s.culture}" style="width:${s.pct}%;background:${color}"></div>`;
+      }).join('');
+
+      const labelsHtml = r.segments.map(s => {
+        const def = CULTURES[s.culture] || GAME_STATE.cultures?.[s.culture];
+        const color = def ? def.color : '#888';
         const name = def ? def.name : s.culture;
-        const showLabel = s.pct > 15;
-        return `<div class="cw-region-seg" style="width:${s.pct}%;background:${color}">`
-          + (showLabel ? `<span class="cw-region-seg-label">${Math.round(s.pct)}%</span>` : '')
-          + `</div>`;
+        return `<span class="cw-region-culture-label">
+          <span class="cw-region-culture-dot" style="background:${color}"></span>
+          ${name} ${Math.round(s.pct)}%
+        </span>`;
       }).join('');
 
       return `
         <div class="cw-region">
           <div class="cw-region-header">
             <span class="cw-region-name">${r.name}</span>
-            <span class="cw-region-pop">${r.population.toLocaleString()} чел.</span>
+            <span class="cw-region-pop">${r.population.toLocaleString()}</span>
           </div>
           <div class="cw-region-bar">${segsHtml}</div>
+          <div class="cw-region-cultures">${labelsHtml}</div>
         </div>
       `;
     }).join('');
 
-    // ── Traditions (reuse logic from renderCulturePanel) ──
-    const cultureId = stats.cultures.length > 0 ? stats.cultures[0].id : null;
-    let traditionsHtml = '';
-    if (cultureId && cultureId !== '_unknown') {
-      const culture = (GAME_STATE.cultures && GAME_STATE.cultures[cultureId])
-        || (typeof CULTURES !== 'undefined' ? CULTURES[cultureId] : null);
-      if (culture) {
-        const allTrad = typeof ALL_TRADITIONS !== 'undefined' ? ALL_TRADITIONS : {};
-        const catIcons = {
-          military: '⚔️', economic: '💰', social: '👥', religious: '🏛',
-          naval: '⚓', arts: '🎭', diplomatic: '🤝', survival: '🛡',
-        };
-        traditionsHtml = (culture.traditions || []).map(tId => {
-          const t = allTrad[tId];
-          if (!t) return '';
-          const icon = catIcons[t.cat] || '📜';
-          const isLocked = (culture.locked || []).includes(tId);
-          const lockIcon = isLocked ? ' 🔒' : '';
-          const bonusStr = Object.entries(t.bonus || {}).map(([k, v]) => {
-            const sign = v > 0 ? '+' : '';
-            const pct = Math.abs(v) < 1 ? `${sign}${(v * 100).toFixed(0)}%` : `${sign}${v}`;
-            return `<span class="${v > 0 ? 'bonus-positive' : 'bonus-negative'}">${pct} ${formatBonusName(k)}</span>`;
-          }).join(', ');
-          return `
-            <div class="cw-tradition">
-              <span class="cw-tradition-name">${icon} ${t.name}${lockIcon}</span>
-              <div class="cw-tradition-bonus">${bonusStr}</div>
-            </div>
-          `;
-        }).join('');
-      }
-    }
+    const sortBtns = ['culture', 'population', 'alpha'];
+    const sortLabels = { culture: 'Культуре', population: 'Населению', alpha: 'Алфавиту' };
+    const sortBarHtml = `
+      <div class="cw-sort-bar">
+        <span class="cw-sort-label">Сортировка:</span>
+        ${sortBtns.map(s =>
+          `<button class="cw-sort-btn${_cwState.sort === s ? ' active' : ''}" data-sort="${s}">${sortLabels[s]}</button>`
+        ).join('')}
+      </div>
+    `;
 
     return `
       <div class="culture-window">
         <div class="cw-header">
-          <h3>🎭 Культуры — ${nationName}</h3>
+          <div>
+            <div class="cw-header-title">${nationName}</div>
+            <div class="cw-header-sub">Культурный состав · ${stats.cultures.length} ${_cwPlural(stats.cultures.length, 'культура', 'культуры', 'культур')}</div>
+          </div>
           <button class="cw-close" onclick="closeCultureWindow()">✕</button>
         </div>
         <div class="cw-body">
-          <div class="cw-total">Общее население: <strong>${stats.totalPopulation.toLocaleString()}</strong> · Культур: ${stats.cultures.length}</div>
-          <div class="cw-summary">
-            <div class="cw-big-pie" style="background:${gradient}">
-              <div class="cw-big-pie-center">${mainIcon}</div>
+          <div class="cw-left">
+            <div class="cw-donut-wrap">
+              ${donutSvg}
             </div>
             <div class="cw-legend">${legendHtml}</div>
+            ${traditionsHtml}
           </div>
-          <div class="cw-section-title">📊 Распределение по регионам</div>
-          ${regionBarsHtml}
-          ${traditionsHtml ? `
-            <div class="cw-section-title">🏛 Традиции основной культуры</div>
-            <div class="cw-traditions">${traditionsHtml}</div>
-          ` : ''}
+          <div class="cw-right">
+            ${sortBarHtml}
+            ${regionCardsHtml}
+          </div>
         </div>
       </div>
     `;
@@ -380,15 +438,110 @@ function renderCultureWindow(nationId) {
     return `
       <div class="culture-window">
         <div class="cw-header">
-          <h3>🎭 Культуры</h3>
+          <div class="cw-header-title">Культуры</div>
           <button class="cw-close" onclick="closeCultureWindow()">✕</button>
         </div>
-        <div class="cw-body">
+        <div class="cw-body" style="padding:20px">
           <div class="no-data">Ошибка: ${e.message}</div>
         </div>
       </div>
     `;
   }
+}
+
+function _buildDonutSvg(cultures) {
+  const size = 160, cx = 80, cy = 80, outerR = 76, innerR = 40;
+  let paths = '';
+  let startAngle = -90; // start from top
+
+  for (const c of cultures) {
+    const sweep = (c.percentage / 100) * 360;
+    if (sweep < 0.1) continue;
+    const endAngle = startAngle + sweep;
+    const largeArc = sweep > 180 ? 1 : 0;
+
+    const s1 = _polarToCart(cx, cy, outerR, startAngle);
+    const e1 = _polarToCart(cx, cy, outerR, endAngle);
+    const s2 = _polarToCart(cx, cy, innerR, endAngle);
+    const e2 = _polarToCart(cx, cy, innerR, startAngle);
+
+    paths += `<path class="cw-donut-seg" data-culture="${c.id}"
+      d="M ${s1.x} ${s1.y} A ${outerR} ${outerR} 0 ${largeArc} 1 ${e1.x} ${e1.y}
+         L ${s2.x} ${s2.y} A ${innerR} ${innerR} 0 ${largeArc} 0 ${e2.x} ${e2.y} Z"
+      fill="${c.color}" />`;
+    startAngle = endAngle;
+  }
+
+  const totalPop = cultures.reduce((s, c) => s + c.population, 0);
+  const popStr = totalPop >= 1000000
+    ? (totalPop / 1000000).toFixed(1) + 'M'
+    : totalPop >= 1000
+      ? Math.round(totalPop / 1000) + 'K'
+      : totalPop.toLocaleString();
+
+  return `
+    <div class="cw-donut">
+      <svg viewBox="0 0 ${size} ${size}" width="100%" height="100%">${paths}</svg>
+      <div class="cw-donut-center">
+        <span class="cw-donut-pop">${popStr}</span>
+        <span class="cw-donut-label">Население</span>
+      </div>
+    </div>
+  `;
+}
+
+function _polarToCart(cx, cy, r, angleDeg) {
+  const rad = (angleDeg * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function _buildTraditionsHtml(cultures) {
+  const cultureId = cultures.length > 0 ? cultures[0].id : null;
+  if (!cultureId || cultureId === '_unknown') return '';
+
+  const culture = (GAME_STATE.cultures && GAME_STATE.cultures[cultureId])
+    || (typeof CULTURES !== 'undefined' ? CULTURES[cultureId] : null);
+  if (!culture) return '';
+
+  const allTrad = typeof ALL_TRADITIONS !== 'undefined' ? ALL_TRADITIONS : {};
+  const catIcons = {
+    military: '⚔️', economic: '💰', social: '👥', religious: '🏛',
+    naval: '⚓', arts: '🎭', diplomatic: '🤝', survival: '🛡',
+  };
+
+  const items = (culture.traditions || []).map(tId => {
+    const t = allTrad[tId];
+    if (!t) return '';
+    const icon = catIcons[t.cat] || '📜';
+    const isLocked = (culture.locked || []).includes(tId);
+    const lockIcon = isLocked ? ' 🔒' : '';
+    const bonusStr = Object.entries(t.bonus || {}).map(([k, v]) => {
+      const sign = v > 0 ? '+' : '';
+      const pct = Math.abs(v) < 1 ? `${sign}${(v * 100).toFixed(0)}%` : `${sign}${v}`;
+      return `<span class="${v > 0 ? 'bonus-positive' : 'bonus-negative'}">${pct} ${formatBonusName(k)}</span>`;
+    }).join(', ');
+    return `
+      <div class="cw-tradition">
+        <span class="cw-tradition-name">${icon} ${t.name}${lockIcon}</span>
+        <div class="cw-tradition-bonus">${bonusStr}</div>
+      </div>
+    `;
+  }).join('');
+
+  if (!items) return '';
+  return `
+    <div class="cw-traditions-title">Традиции</div>
+    <div class="cw-traditions">${items}</div>
+  `;
+}
+
+function _cwPlural(n, one, few, many) {
+  const abs = Math.abs(n) % 100;
+  const last = abs % 10;
+  if (abs > 10 && abs < 20) return many;
+  if (last > 1 && last < 5) return few;
+  if (last === 1) return one;
+  return many;
 }
 
 function renderRelations(relations) {
