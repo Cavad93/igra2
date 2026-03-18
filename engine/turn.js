@@ -50,7 +50,12 @@ async function processTurn() {
     if (typeof religionTick === 'function') religionTick();
 
     // 2. Население (детерминировано)
-    updatePopulationGrowth();
+    // processDemography обновляет by_profession + total для всех наций
+    if (typeof processDemography === 'function') {
+      processDemography();
+    } else {
+      updatePopulationGrowth(); // fallback
+    }
     updateHappiness();
 
     // 3. Персонажи — старение (детерминировано)

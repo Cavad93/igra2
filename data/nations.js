@@ -165,6 +165,7 @@ const INITIAL_GAME_STATE = {
       },
 
       active_laws: [],
+      buildings: ['port', 'market', 'temple', 'barracks', 'shipyard'],
       characters: [],   // заполняется при генерации
 
       // ── Конфигурация Сената (Lazy Materialization) ──
@@ -365,6 +366,7 @@ const INITIAL_GAME_STATE = {
           effects_per_turn: { 'military.infantry': 50 },
         },
       ],
+      buildings: ['barracks', 'walls', 'market', 'forum', 'road'],
       characters: [],
 
       // AI стратегия
@@ -516,6 +518,7 @@ const INITIAL_GAME_STATE = {
       },
 
       active_laws: [],
+      buildings: ['port', 'shipyard', 'market', 'latifundium', 'walls'],
       characters: [],
       ai_personality: 'merchant',
       ai_priority: 'trade',
@@ -631,6 +634,7 @@ const INITIAL_GAME_STATE = {
       },
 
       active_laws: [],
+      buildings: ['granary', 'latifundium', 'temple', 'irrigation', 'aqueduct'],
       characters: [],
       ai_personality: 'defensive',
       ai_priority: 'economy',
@@ -745,6 +749,7 @@ const INITIAL_GAME_STATE = {
       },
 
       active_laws: [],
+      buildings: ['barracks', 'walls', 'mine', 'road'],
       characters: [],
       ai_personality: 'aggressive',
       ai_priority: 'military',
