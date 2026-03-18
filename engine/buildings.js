@@ -51,8 +51,9 @@ function recalculateRegionEmployment(region) {
 
   for (const slot of (region.building_slots || [])) {
     if (slot.status !== 'active') continue;
+    const level = slot.level || 1;
     for (const [prof, count] of Object.entries(slot.workers || {})) {
-      emp[prof] = (emp[prof] || 0) + count;
+      emp[prof] = (emp[prof] || 0) + count * level;
     }
   }
 }
@@ -81,7 +82,8 @@ function getBuildingOutput(slot, region, nation) {
   const terrain    = region.terrain || region.type || 'plains';
   const fertility  = region.fertility ?? 0.7;
   const satMod     = nation.population._production_mod ?? 1.0;
-  const workers    = _slotTotalWorkers(slot);
+  const level      = slot.level || 1;
+  const workers    = _slotTotalWorkers(slot) * level;
 
   if (workers <= 0) return {};
 
@@ -163,7 +165,22 @@ function _completeConstruction(entry, region, regionId) {
   const bDef = BUILDINGS[entry.building_id];
   if (!bDef) return;
 
-  // Начальное число рабочих = полный лимит здания
+  const rName = (typeof MAP_REGIONS !== 'undefined' && MAP_REGIONS[regionId]?.name) || regionId;
+
+  // ── Улучшение: повышаем уровень существующего слота ──────────────────────
+  if (entry.is_upgrade) {
+    const slot = (region.building_slots || [])
+      .find(s => s.slot_id === entry.target_slot_id);
+    if (slot) {
+      slot.level = entry.to_level;
+    }
+    if (typeof addEventLog === 'function') {
+      addEventLog(`⬆ ${bDef.icon || ''} ${bDef.name} улучшено до уровня ${entry.to_level} в ${rName}!`, 'good');
+    }
+    return;
+  }
+
+  // ── Новое здание ─────────────────────────────────────────────────────────
   const workers = {};
   for (const wp of (bDef.worker_profession || [])) {
     if (wp.count > 0) workers[wp.profession] = wp.count;
@@ -173,6 +190,7 @@ function _completeConstruction(entry, region, regionId) {
     slot_id:      entry.slot_id,
     building_id:  entry.building_id,
     status:       'active',
+    level:        1,
     workers,
     founded_turn: GAME_STATE.turn,
     revenue:      0,
@@ -180,7 +198,6 @@ function _completeConstruction(entry, region, regionId) {
   });
 
   if (typeof addEventLog === 'function') {
-    const rName = (typeof MAP_REGIONS !== 'undefined' && MAP_REGIONS[regionId]?.name) || regionId;
     addEventLog(`🏗 ${bDef.icon || ''} ${bDef.name} завершено в ${rName}!`, 'good');
   }
 }
@@ -273,8 +290,9 @@ function distributeWages(nationId) {
       const revenue   = calculateBuildingRevenue(slot, region, nation);
       const wageRate  = bDef.wage_rate  ?? 0;
       const laborType = bDef.labor_type ?? 'none';
+      const level     = slot.level || 1;
       const wages     = revenue * wageRate;
-      const profit    = revenue - wages - maintCost;
+      const profit    = revenue - wages - maintCost * level;
 
       slot.revenue    = Math.round(revenue);
       slot.wages_paid = Math.round(wages);
@@ -399,17 +417,11 @@ function orderBuildingConstruction(nationId, regionId, buildingId) {
   const bDef = BUILDINGS[buildingId];
   if (!bDef) return { ok: false, reason: 'Здание не определено' };
 
-  // Проверяем ограничения (terrain, unique, slots)
+  // Проверяем ограничения (terrain, tag, slots, уровень)
   const check = (typeof canBuildInRegion === 'function')
     ? canBuildInRegion(buildingId, region)
-    : { ok: true };
+    : { ok: true, is_upgrade: false };
   if (!check.ok) return check;
-
-  // Проверяем, что в очереди нет такого же, если уникальное
-  if (bDef.max_per_region === 1) {
-    const inQueue = (region.construction_queue || []).some(e => e.building_id === buildingId);
-    if (inQueue) return { ok: false, reason: 'Это здание уже строится' };
-  }
 
   // Стоимость — снимаем с казны
   const cost = bDef.cost || 0;
@@ -419,25 +431,42 @@ function orderBuildingConstruction(nationId, regionId, buildingId) {
   nation.economy.treasury -= cost;
 
   // Формируем запись очереди
-  const slot_id = `${regionId}_slot_${Date.now()}`;
+  const queueId = check.is_upgrade
+    ? `${regionId}_upg_${Date.now()}`
+    : `${regionId}_slot_${Date.now()}`;
+
   const entry = {
-    slot_id,
+    slot_id:      queueId,
     building_id:  buildingId,
     turns_left:   bDef.build_turns || 1,
     turns_total:  bDef.build_turns || 1,
     ordered_turn: GAME_STATE.turn,
   };
 
+  if (check.is_upgrade) {
+    entry.is_upgrade     = true;
+    entry.target_slot_id = check.target_slot_id;
+    entry.to_level       = check.to_level;
+  }
+
   region.construction_queue = region.construction_queue || [];
   region.construction_queue.push(entry);
 
   if (typeof addEventLog === 'function') {
     const rName = (typeof MAP_REGIONS !== 'undefined' && MAP_REGIONS[regionId]?.name) || regionId;
-    addEventLog(
-      `📐 Начато строительство ${bDef.icon || ''} ${bDef.name} в ${rName}. `
-      + `Завершение через ${entry.turns_total} ход(а). −${cost} монет.`,
-      'economy',
-    );
+    if (check.is_upgrade) {
+      addEventLog(
+        `📐 Начато улучшение ${bDef.icon || ''} ${bDef.name} до ур. ${check.to_level} в ${rName}. `
+        + `Завершение через ${entry.turns_total} ход(а). −${cost} монет.`,
+        'economy',
+      );
+    } else {
+      addEventLog(
+        `📐 Начато строительство ${bDef.icon || ''} ${bDef.name} в ${rName}. `
+        + `Завершение через ${entry.turns_total} ход(а). −${cost} монет.`,
+        'economy',
+      );
+    }
   }
 
   return { ok: true, slot_id };

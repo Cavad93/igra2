@@ -30,7 +30,8 @@ function renderConstructionTab(regionId) {
 
   const activeSlots = (region.building_slots || []).filter(s => s.status !== 'demolished');
   const queue       = region.construction_queue || [];
-  const usedSlots   = activeSlots.length + queue.length;
+  const newInQueue  = queue.filter(e => !e.is_upgrade);
+  const usedSlots   = activeSlots.length + newInQueue.length;
   const emptyCount  = Math.max(0, maxSlots - usedSlots);
 
   const nation = GAME_STATE.nations[nationId];
@@ -76,18 +77,30 @@ function _rbtActiveCard(slot, regionId, nation, region) {
   const bDef = (typeof BUILDINGS !== 'undefined') ? BUILDINGS[slot.building_id] : null;
   if (!bDef) return '';
 
-  const revenue = slot.revenue ? Math.round(slot.revenue) : 0;
-  const wages   = slot.wages_paid ? Math.round(slot.wages_paid) : 0;
+  const level    = slot.level || 1;
+  const maxLevel = bDef.max_level ?? 1;
+  const revenue  = slot.revenue ? Math.round(slot.revenue) : 0;
+  const wages    = slot.wages_paid ? Math.round(slot.wages_paid) : 0;
 
-  const workerLines = Object.entries(slot.workers || {}).map(([prof, cnt]) =>
-    `<span class="rbt-w-row">${_rbtProfLabel(prof)}: <b>${cnt.toLocaleString()}</b></span>`
-  ).join('');
+  const workerLines = Object.entries(slot.workers || {}).map(([prof, cnt]) => {
+    const effective = cnt * level;
+    return `<span class="rbt-w-row">${_rbtProfLabel(prof)}: <b>${effective.toLocaleString()}</b></span>`;
+  }).join('');
+
+  const upgrading = (region.construction_queue || [])
+    .some(e => e.building_id === slot.building_id && e.is_upgrade);
+
+  const upgBtn = (level < maxLevel && !upgrading)
+    ? `<button class="rbt-btn rbt-btn--upg"
+        onclick="uiOrderConstruction('${regionId}','${slot.building_id}')">▲ Улучшить до ур. ${level + 1}</button>`
+    : (upgrading ? `<span class="rbt-badge rbt-badge--wip">Улучшение…</span>` : '');
 
   return `
     <div class="rbt-card rbt-card--active">
       <div class="rbt-card-head">
         <span class="rbt-icon">${bDef.icon || '🏛'}</span>
         <span class="rbt-bname">${bDef.name}</span>
+        ${level > 1 ? `<span class="rbt-badge rbt-badge--lvl">Ур. ${level}</span>` : ''}
         <span class="rbt-badge rbt-badge--ok">Работает</span>
       </div>
       <div class="rbt-card-body">
@@ -96,6 +109,7 @@ function _rbtActiveCard(slot, regionId, nation, region) {
         ${wages > 0 ? `<div class="rbt-wages">👷 Зарплаты: ${wages} ден</div>` : ''}
       </div>
       <div class="rbt-card-foot">
+        ${upgBtn}
         <button class="rbt-btn rbt-btn--dem"
           onclick="uiDemolishBuilding('${regionId}','${slot.slot_id}')">Снести</button>
       </div>
@@ -113,12 +127,14 @@ function _rbtQueueCard(entry, regionId) {
     : 0;
   const refund = Math.round((bDef.cost || 0) * 0.5);
 
+  const isUpgrade = !!entry.is_upgrade;
+
   return `
     <div class="rbt-card rbt-card--queue">
       <div class="rbt-card-head">
         <span class="rbt-icon">${bDef.icon || '🏗'}</span>
         <span class="rbt-bname">${bDef.name}</span>
-        <span class="rbt-badge rbt-badge--wip">Строится</span>
+        <span class="rbt-badge rbt-badge--wip">${isUpgrade ? `Улучшение до ур. ${entry.to_level}` : 'Строится'}</span>
       </div>
       <div class="rbt-card-body">
         <div class="rbt-prog-wrap"><div class="rbt-prog-bar" style="width:${pct}%"></div></div>
@@ -153,8 +169,20 @@ function _rbtEmptyCard(regionId) {
 // ──────────────────────────────────────────────────────────────
 
 function _rbtBuildingChooser(regionId, region, terrain, nation) {
+  // Скрываем здания, которые уже есть в регионе (для них есть кнопка «Улучшить» на карточке)
+  const builtIds = new Set(
+    (region.building_slots || [])
+      .filter(s => s.status !== 'demolished')
+      .map(s => s.building_id),
+  );
+  const inQueueIds = new Set(
+    (region.construction_queue || [])
+      .filter(e => !e.is_upgrade)
+      .map(e => e.building_id),
+  );
+
   const compatible = (typeof getBuildingsForTerrain === 'function')
-    ? getBuildingsForTerrain(terrain, region)
+    ? getBuildingsForTerrain(terrain, region).filter(b => !builtIds.has(b.id) && !inQueueIds.has(b.id))
     : [];
 
   if (!compatible.length) {

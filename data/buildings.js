@@ -8,6 +8,7 @@
 //   terrain_restriction     [string] | null        — допустимые типы местности (null = все суша)
 //   region_tag_restriction  [string] | null        — регион должен иметь хотя бы один из этих тегов
 //   max_per_region          int | null             — макс. экземпляров в одном регионе
+//   max_level               int                    — максимальный уровень (1 = не улучшаемое)
 //   production_output       [{good, base_rate}]    — товары/ход на 1000 задействованных рабочих
 //
 // Старые поля (backward-compat): profession_growth, capacity_bonus, mobility,
@@ -37,6 +38,7 @@ const BUILDINGS = {
     build_turns:        4,
     terrain_restriction: ['coastal_city'],
     max_per_region:     1,
+    max_level:          1,
 
     production_output: [
       { good: 'fish',        base_rate: 60 },  // +60 рыбы/ход на 1000 моряков
@@ -64,6 +66,7 @@ const BUILDINGS = {
     build_turns:        5,
     terrain_restriction: ['coastal_city'],
     max_per_region:     1,
+    max_level:          1,
 
     production_output: [],   // выход — военные корабли, учитываются отдельно
 
@@ -87,6 +90,7 @@ const BUILDINGS = {
     build_turns:        3,
     terrain_restriction: null,  // строится на любой суше
     max_per_region:     1,
+    max_level:          2,
 
     production_output: [],
 
@@ -117,6 +121,7 @@ const BUILDINGS = {
     build_turns:        5,
     terrain_restriction: null,
     max_per_region:     1,
+    max_level:          1,
 
     production_output: [],
 
@@ -141,6 +146,7 @@ const BUILDINGS = {
     build_turns:        2,
     terrain_restriction: null,
     max_per_region:     1,
+    max_level:          3,
 
     production_output: [],
 
@@ -167,6 +173,7 @@ const BUILDINGS = {
     build_turns:        3,
     terrain_restriction: null,
     max_per_region:     1,
+    max_level:          3,
 
     production_output: [],
 
@@ -190,6 +197,7 @@ const BUILDINGS = {
     build_turns:        8,
     terrain_restriction: null,
     max_per_region:     1,
+    max_level:          1,
 
     production_output: [],
 
@@ -217,6 +225,7 @@ const BUILDINGS = {
     build_turns:        2,
     terrain_restriction: ['plains', 'hills', 'river_valley'],
     max_per_region:     null,   // можно строить несколько
+    max_level:          5,
 
     production_output: [
       { good: 'wheat',  base_rate: 200 },
@@ -242,6 +251,7 @@ const BUILDINGS = {
     build_turns:        2,
     terrain_restriction: ['plains', 'hills', 'mountains'],
     max_per_region:     null,
+    max_level:          4,
 
     production_output: [
       { good: 'wool',    base_rate: 60 },
@@ -265,6 +275,7 @@ const BUILDINGS = {
     build_turns:        2,
     terrain_restriction: null,
     max_per_region:     1,
+    max_level:          1,
 
     production_output: [],
 
@@ -294,6 +305,7 @@ const BUILDINGS = {
     build_turns:        4,
     terrain_restriction: ['plains', 'hills', 'river_valley'],
     max_per_region:     null,
+    max_level:          3,
 
     production_output: [
       { good: 'wheat',  base_rate: 180 },
@@ -321,6 +333,7 @@ const BUILDINGS = {
     build_turns:        6,
     terrain_restriction: ['plains', 'river_valley'],
     max_per_region:     1,
+    max_level:          1,
 
     production_output: [],   // мультипликатор урожая, а не прямой выход
 
@@ -350,6 +363,7 @@ const BUILDINGS = {
     build_turns:        4,
     terrain_restriction: null,
     max_per_region:     1,
+    max_level:          2,
 
     production_output: [],
 
@@ -382,6 +396,7 @@ const BUILDINGS = {
     build_turns:        8,
     terrain_restriction: null,
     max_per_region:     1,
+    max_level:          1,
 
     production_output: [],
 
@@ -414,6 +429,7 @@ const BUILDINGS = {
     build_turns:        3,
     terrain_restriction: null,
     max_per_region:     1,
+    max_level:          1,
 
     production_output: [],
 
@@ -435,6 +451,7 @@ const BUILDINGS = {
     build_turns:         3,
     terrain_restriction: null,
     max_per_region:      1,
+    max_level:          1,
 
     production_output: [],
 
@@ -467,6 +484,7 @@ const BUILDINGS = {
     build_turns:        1,
     terrain_restriction: null,
     max_per_region:     null,
+    max_level:          5,
 
     production_output: [],
 
@@ -499,6 +517,7 @@ const BUILDINGS = {
     build_turns:        4,
     terrain_restriction: null,
     max_per_region:     1,
+    max_level:          2,
 
     production_output: [],
 
@@ -534,6 +553,7 @@ const BUILDINGS = {
     build_turns:        3,
     terrain_restriction: null,
     max_per_region:     null,
+    max_level:          5,
 
     production_output: [
       { good: 'tools',   base_rate: 35 },
@@ -563,6 +583,7 @@ const BUILDINGS = {
     build_turns:        5,
     terrain_restriction: ['mountains', 'hills'],
     max_per_region:     null,
+    max_level:          4,
 
     production_output: [
       { good: 'iron',   base_rate: 80 },
@@ -590,6 +611,7 @@ const BUILDINGS = {
     build_turns:        3,
     terrain_restriction: ['coastal_city'],
     max_per_region:     1,
+    max_level:          3,
 
     production_output: [
       { good: 'salt', base_rate: 120 },
@@ -612,6 +634,7 @@ const BUILDINGS = {
     build_turns:        2,
     terrain_restriction: ['mountains', 'hills'],
     max_per_region:     null,
+    max_level:          4,
 
     production_output: [
       { good: 'timber', base_rate: 90 },
@@ -633,6 +656,7 @@ const BUILDINGS = {
     build_turns:        2,
     terrain_restriction: ['river_valley', 'coastal_city', 'plains'],
     max_per_region:     null,
+    max_level:          5,
 
     production_output: [
       { good: 'pottery', base_rate: 110 },  // увеличено: низкая цена → нужен объём
@@ -655,6 +679,7 @@ const BUILDINGS = {
     build_turns:        2,
     terrain_restriction: ['hills', 'plains', 'coastal_city'],
     max_per_region:     null,
+    max_level:          4,
 
     // Требует оливки на входе
     requires_input: [
@@ -682,6 +707,7 @@ const BUILDINGS = {
     build_turns:        3,
     terrain_restriction: ['hills', 'river_valley'],
     max_per_region:     null,
+    max_level:          5,
 
     production_output: [
       { good: 'wine', base_rate: 80 },
@@ -710,6 +736,7 @@ const BUILDINGS = {
     terrain_restriction:     ['mountains', 'hills'],
     region_tag_restriction:  ['sicily'],
     max_per_region:          null,
+    max_level:          4,
 
     production_output: [
       { good: 'sulfur', base_rate: 80 },
@@ -735,6 +762,7 @@ const BUILDINGS = {
     terrain_restriction:     ['coastal_city'],
     region_tag_restriction:  ['sicily'],
     max_per_region:          1,
+    max_level:          3,
 
     production_output: [
       { good: 'tuna', base_rate: 140 },  // 140 амфор/1000 рыбаков
@@ -758,6 +786,7 @@ const BUILDINGS = {
     terrain_restriction:     ['plains', 'river_valley'],
     region_tag_restriction:  ['sicily'],
     max_per_region:          null,
+    max_level:          5,
 
     production_output: [
       { good: 'wheat',  base_rate: 300 },  // исключительная урожайность
@@ -786,6 +815,7 @@ const BUILDINGS = {
     terrain_restriction:     ['river_valley', 'coastal_city'],
     region_tag_restriction:  ['sicily'],
     max_per_region:          1,
+    max_level:          2,
 
     production_output: [
       { good: 'papyrus', base_rate: 60 },
@@ -858,7 +888,7 @@ function getBuildingsForTerrain(terrain, region = null) {
 }
 
 // Проверка: можно ли построить здание в регионе
-// Возвращает { ok: bool, reason: string | null }
+// Возвращает { ok: bool, reason: string | null, is_upgrade?, to_level?, target_slot_id? }
 function canBuildInRegion(buildingId, region) {
   const b = BUILDINGS[buildingId];
   if (!b) return { ok: false, reason: 'Здание не найдено' };
@@ -881,22 +911,47 @@ function canBuildInRegion(buildingId, region) {
     }
   }
 
-  // Ограничение на уникальность в регионе
-  if (b.max_per_region !== null && b.max_per_region !== undefined) {
-    const existing = (region.building_slots || [])
-      .filter(s => s.building_id === buildingId && s.status !== 'demolished').length;
-    if (existing >= b.max_per_region) {
-      return { ok: false, reason: `Максимум ${b.max_per_region} в одном регионе` };
+  // ── Система уровней ───────────────────────────────────────────────────────
+  // Если здание уже есть в регионе — это улучшение, а не новое строительство.
+  const maxLevel    = b.max_level ?? 1;
+  const existingSlot = (region.building_slots || [])
+    .find(s => s.building_id === buildingId && s.status !== 'demolished');
+
+  if (existingSlot) {
+    const currentLevel = existingSlot.level || 1;
+    if (currentLevel >= maxLevel) {
+      return { ok: false, reason: `Максимальный уровень ${maxLevel} достигнут` };
     }
+    // Улучшение уже стоит в очереди?
+    const upgradeInQueue = (region.construction_queue || [])
+      .some(e => e.building_id === buildingId && e.is_upgrade);
+    if (upgradeInQueue) {
+      return { ok: false, reason: 'Улучшение уже в очереди строительства' };
+    }
+    return {
+      ok:             true,
+      reason:         null,
+      is_upgrade:     true,
+      to_level:       currentLevel + 1,
+      target_slot_id: existingSlot.slot_id,
+    };
   }
 
-  // Свободные слоты
+  // Новое здание — проверяем, нет ли его уже в очереди
+  const newBuildInQueue = (region.construction_queue || [])
+    .some(e => e.building_id === buildingId && !e.is_upgrade);
+  if (newBuildInQueue) {
+    return { ok: false, reason: 'Это здание уже строится' };
+  }
+
+  // Свободные слоты (улучшения в очереди не занимают новый слот)
   const maxSlots = getRegionMaxSlots(terrain);
-  const usedSlots = (region.building_slots || [])
-    .filter(s => s.status !== 'demolished').length;
+  const usedSlots =
+    (region.building_slots || []).filter(s => s.status !== 'demolished').length +
+    (region.construction_queue || []).filter(e => !e.is_upgrade).length;
   if (usedSlots >= maxSlots) {
     return { ok: false, reason: 'Нет свободных строительных слотов' };
   }
 
-  return { ok: true, reason: null };
+  return { ok: true, reason: null, is_upgrade: false };
 }
