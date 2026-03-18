@@ -117,6 +117,12 @@ function renderLeftPanel() {
       </div>
     </div>
 
+    <!-- КУЛЬТУРА -->
+    <div class="panel-section">
+      <div class="section-title">🎭 Культура</div>
+      ${renderCulturePanel(nationId)}
+    </div>
+
     <!-- ДИПЛОМАТИЯ -->
     <div class="panel-section">
       <div class="section-title">🤝 Дипломатия</div>
@@ -151,6 +157,65 @@ function renderProfessions(profs) {
       </div>
     `;
   }).join('');
+}
+
+function renderCulturePanel(nationId) {
+  if (typeof getCultureInfoForUI !== 'function') return '<div class="no-data">Загрузка...</div>';
+
+  const info = getCultureInfoForUI(nationId);
+  if (!info) return '<div class="no-data">Нет данных о культуре</div>';
+
+  const catIcons = {
+    military: '⚔️', economic: '💰', social: '👥', religious: '🏛',
+    naval: '⚓', arts: '🎭', diplomatic: '🤝', survival: '🛡',
+  };
+
+  const traditionsHtml = info.traditions.map(t => {
+    const icon = catIcons[t.cat] || '📜';
+    const lockIcon = t.locked ? ' 🔒' : '';
+    const bonusStr = Object.entries(t.bonus || {}).map(([k, v]) => {
+      const sign = v > 0 ? '+' : '';
+      const pct = Math.abs(v) < 1 ? `${sign}${(v * 100).toFixed(0)}%` : `${sign}${v}`;
+      return `<span class="${v > 0 ? 'bonus-positive' : 'bonus-negative'}">${pct} ${formatBonusName(k)}</span>`;
+    }).join(', ');
+
+    return `
+      <div class="tradition-item" title="${t.desc}">
+        <span class="tradition-icon">${icon}</span>
+        <span class="tradition-name">${t.name}${lockIcon}</span>
+        <div class="tradition-bonus">${bonusStr}</div>
+      </div>
+    `;
+  }).join('');
+
+  const mutYears = Math.ceil(info.nextMutationIn / 12);
+  const mutStatus = info.nextMutationIn <= 0
+    ? '<span class="mutation-ready">Мутация возможна</span>'
+    : `<span class="mutation-cooldown">Следующая через ~${mutYears} лет</span>`;
+
+  return `
+    <div class="culture-name">${info.name} <span class="culture-group">(${info.group})</span></div>
+    <div class="culture-mutation-status">${mutStatus}</div>
+    <div class="traditions-list">${traditionsHtml}</div>
+  `;
+}
+
+function formatBonusName(key) {
+  const names = {
+    military_morale: 'морали', army_discipline: 'дисципл.', army_strength: 'атака',
+    army_upkeep: 'содерж.', garrison_defense: 'гарнизон', army_speed: 'скорость',
+    naval_strength: 'флот', naval_upkeep: 'содерж.флота', naval_morale: 'морали флота',
+    trade_income: 'торговля', tax_income: 'налоги', food_production: 'еда',
+    population_growth: 'рост', happiness: 'счастье', stability: 'стабильн.',
+    building_cost: 'стр-во', diplomacy: 'диплом.', legitimacy: 'легитим.',
+    assimilation_speed: 'ассимил.', production_bonus: 'произв.',
+    cavalry_strength: 'конница', siege_strength: 'осада',
+    army_manpower: 'числ.', loot_bonus: 'добыча', mercenary_cost: 'наёмники',
+    army_loyalty: 'лояльн.', food_stockpile: 'запасы',
+    army_strength_mountains: 'в горах', army_surprise: 'внезапн.',
+    mercenary_quality: 'кач.наёмн.',
+  };
+  return names[key] || key;
 }
 
 function renderRelations(relations) {

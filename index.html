@@ -679,6 +679,25 @@
     .relation-score { font-size: 10px; width: 24px; text-align: right; flex-shrink: 0; }
     .relation-status { font-size: 10px; }
 
+    /* Культура */
+    .culture-name { font-size: 11px; font-weight: bold; margin-bottom: 2px; }
+    .culture-group { font-size: 9px; color: var(--text-dim); font-weight: normal; }
+    .culture-mutation-status { font-size: 9px; margin-bottom: 6px; }
+    .mutation-ready { color: #4CAF50; }
+    .mutation-cooldown { color: var(--text-dim); }
+    .traditions-list { display: flex; flex-direction: column; gap: 3px; }
+    .tradition-item {
+      display: flex; flex-wrap: wrap; align-items: center;
+      gap: 3px; padding: 3px 4px;
+      background: var(--bg-hover); border-radius: 2px;
+      cursor: default;
+    }
+    .tradition-icon { font-size: 11px; flex-shrink: 0; }
+    .tradition-name { font-size: 10px; font-weight: 500; flex-shrink: 0; }
+    .tradition-bonus { font-size: 8px; color: var(--text-dim); width: 100%; }
+    .bonus-positive { color: #4CAF50; }
+    .bonus-negative { color: #f44336; }
+
     /* Законы */
     .laws-count {
       background: var(--accent);
@@ -2222,6 +2241,17 @@
   <script src="data/nations.js"></script>
   <script src="data/regions_data.js"></script>
   <script src="data/characters.js"></script>
+  <script src="data/traditions/traditions_military.js"></script>
+  <script src="data/traditions/traditions_economic.js"></script>
+  <script src="data/traditions/traditions_social.js"></script>
+  <script src="data/traditions/traditions_religious.js"></script>
+  <script src="data/traditions/traditions_naval.js"></script>
+  <script src="data/traditions/traditions_arts.js"></script>
+  <script src="data/traditions/traditions_diplomatic.js"></script>
+  <script src="data/traditions/traditions_survival.js"></script>
+  <script src="data/traditions/traditions_extra.js"></script>
+  <script src="data/traditions/traditions_index.js"></script>
+  <script src="data/cultures.js"></script>
 
   <!-- Инициализируем GAME_STATE из INITIAL_GAME_STATE -->
   <script>
@@ -2239,6 +2269,7 @@
   <script src="engine/battle.js"></script>
   <script src="engine/victory.js"></script>
   <script src="engine/characters_ai.js"></script>
+  <script src="engine/culture.js"></script>
   <script src="engine/turn.js"></script>
   <script src="ui/map.js"></script>
   <script src="ui/panels.js"></script>

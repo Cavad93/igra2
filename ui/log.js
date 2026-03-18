@@ -16,6 +16,7 @@ const LOG_STYLES = {
   good:      { icon: '✨', cls: 'log-good'     },
   ai:        { icon: '🤖', cls: 'log-ai'       },
   law:       { icon: '📜', cls: 'log-law'      },
+  culture:   { icon: '🎭', cls: 'log-culture'  },
 };
 
 // Добавить запись в лог

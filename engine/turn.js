@@ -43,6 +43,9 @@ async function processTurn() {
       await CONSPIRACY_ENGINE.tick(_conspNationId);
     }
 
+    // 1.8. Культура — опыт, мутации, ассимиляция
+    if (typeof cultureTick === 'function') cultureTick();
+
     // 2. Население (детерминировано)
     updatePopulationGrowth();
     updateHappiness();
