@@ -599,7 +599,198 @@ function renderRegionReligionBlock(regionId, totalPop) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// ИНФО-ПАНЕЛЬ РЕГИОНА
+// СОЦИАЛЬНАЯ СТРУКТУРА РЕГИОНА
+// ──────────────────────────────────────────────────────────────
+
+// Пропорции классов по типу местности (нейтральные/чужие регионы)
+const _TERRAIN_CLASS_PROFILES = {
+  coastal_city:  { farmers_class:0.18, craftsmen_class:0.14, citizens:0.12, sailors_class:0.15,
+                   soldiers_class:0.08, slaves_class:0.11, clergy_class:0.05,
+                   freedmen:0.07, aristocrats:0.05, officials:0.05 },
+  plains:        { farmers_class:0.52, craftsmen_class:0.09, citizens:0.04, sailors_class:0.02,
+                   soldiers_class:0.09, slaves_class:0.11, clergy_class:0.04,
+                   freedmen:0.06, aristocrats:0.02, officials:0.01 },
+  hills:         { farmers_class:0.42, craftsmen_class:0.12, citizens:0.05, sailors_class:0.02,
+                   soldiers_class:0.13, slaves_class:0.10, clergy_class:0.04,
+                   freedmen:0.09, aristocrats:0.02, officials:0.01 },
+  mountains:     { farmers_class:0.30, craftsmen_class:0.10, citizens:0.03, sailors_class:0.01,
+                   soldiers_class:0.22, slaves_class:0.09, clergy_class:0.03,
+                   freedmen:0.19, aristocrats:0.02, officials:0.01 },
+  river_valley:  { farmers_class:0.46, craftsmen_class:0.11, citizens:0.07, sailors_class:0.06,
+                   soldiers_class:0.08, slaves_class:0.10, clergy_class:0.04,
+                   freedmen:0.05, aristocrats:0.02, officials:0.01 },
+};
+
+/**
+ * Возвращает объект { classId → population } для заданного региона.
+ * Для провинций игрока масштабирует реальные данные нации,
+ * для остальных — оценивает по типу местности.
+ * @returns {{ classes: {[id]: number}, isReal: boolean }}
+ */
+function _estimateRegionClasses(gameData) {
+  const pop     = gameData.population || 0;
+  const terrain = gameData.terrain || gameData.type || 'plains';
+
+  // ── Регион игрока: масштабируем реальные данные нации ──────────────────
+  if (gameData.nation === GAME_STATE.player_nation) {
+    const nation = GAME_STATE.nations[gameData.nation];
+    const sat    = nation?.population?.class_satisfaction;
+    const total  = nation?.population?.total || 0;
+    if (sat && total > 0) {
+      const classes = {};
+      for (const [cid, d] of Object.entries(sat)) {
+        const v = Math.round(d.population / total * pop);
+        if (v >= 10) classes[cid] = { pop: v, satisfaction: d.satisfaction };
+      }
+      return { classes, isReal: true };
+    }
+  }
+
+  // ── Оценка по типу местности ────────────────────────────────────────────
+  const profile = _TERRAIN_CLASS_PROFILES[terrain] || _TERRAIN_CLASS_PROFILES.plains;
+  const classes = {};
+  for (const [cid, frac] of Object.entries(profile)) {
+    const v = Math.round(frac * pop);
+    if (v >= 10) classes[cid] = { pop: v, satisfaction: null };
+  }
+  return { classes, isReal: false };
+}
+
+/** Маленькая SVG-диаграмма Donut для региона (120×120) */
+function _buildRegionDonutSVG(slices) {
+  if (!slices || slices.length === 0) return '';
+  const cx = 52, cy = 52, r = 40, ir = 24;
+  const total = slices.reduce((s, sl) => s + sl.value, 0);
+  if (total <= 0) return '';
+
+  let paths = '';
+  let angle = -Math.PI / 2; // Start from top
+
+  for (const sl of slices) {
+    const frac  = sl.value / total;
+    const sweep = frac * 2 * Math.PI;
+    const x1    = cx + r * Math.cos(angle);
+    const y1    = cy + r * Math.sin(angle);
+    const x2    = cx + r * Math.cos(angle + sweep);
+    const y2    = cy + r * Math.sin(angle + sweep);
+    const xi1   = cx + ir * Math.cos(angle);
+    const yi1   = cy + ir * Math.sin(angle);
+    const xi2   = cx + ir * Math.cos(angle + sweep);
+    const yi2   = cy + ir * Math.sin(angle + sweep);
+    const large = sweep > Math.PI ? 1 : 0;
+
+    paths += `<path d="M ${xi1.toFixed(1)},${yi1.toFixed(1)}
+                       L ${x1.toFixed(1)},${y1.toFixed(1)}
+                       A ${r},${r} 0 ${large} 1 ${x2.toFixed(1)},${y2.toFixed(1)}
+                       L ${xi2.toFixed(1)},${yi2.toFixed(1)}
+                       A ${ir},${ir} 0 ${large} 0 ${xi1.toFixed(1)},${yi1.toFixed(1)} Z"
+              fill="${sl.color}" opacity="0.9">
+              <title>${sl.label}: ${sl.value.toLocaleString()}</title>
+            </path>`;
+    angle += sweep;
+  }
+
+  return `<svg viewBox="0 0 104 104" width="90" height="90" style="flex-shrink:0">
+    ${paths}
+    <circle cx="${cx}" cy="${cy}" r="${ir - 1}" fill="rgba(14,11,8,.9)"/>
+  </svg>`;
+}
+
+/** Полоска-индикатор удовлетворённости (только для регионов игрока) */
+function _satBar(sat) {
+  if (sat === null || sat === undefined) return '';
+  const col = sat >= 70 ? '#4CAF50' : sat >= 45 ? '#FF9800' : '#f44336';
+  return `<span class="rps-sat" style="--sat:${sat}%;--col:${col}" title="Удовлетворённость: ${sat}%"></span>`;
+}
+
+/** Рендерит секцию «Структура общества» для панели региона */
+function renderRegionSocialStructure(regionId, gameData) {
+  if (!gameData || !gameData.population || gameData.population < 100) return '';
+
+  const { classes, isReal } = _estimateRegionClasses(gameData);
+  const entries = Object.entries(classes)
+    .sort((a, b) => b[1].pop - a[1].pop)
+    .filter(([, d]) => d.pop >= 10);
+
+  if (entries.length === 0) return '';
+
+  const totalClass = entries.reduce((s, [, d]) => s + d.pop, 0);
+
+  // ── Donut slices ──────────────────────────────────────────────
+  const slices = entries.map(([cid, d]) => ({
+    value: d.pop,
+    color: SOCIAL_CLASSES[cid]?.color || '#888',
+    label: SOCIAL_CLASSES[cid]?.name || cid,
+  }));
+
+  const donutSvg = _buildRegionDonutSVG(slices);
+
+  // ── Composition strip ─────────────────────────────────────────
+  const strip = entries.map(([cid, d]) => {
+    const pct = (d.pop / totalClass * 100).toFixed(1);
+    const col = SOCIAL_CLASSES[cid]?.color || '#888';
+    const nm  = SOCIAL_CLASSES[cid]?.name || cid;
+    return `<div style="width:${pct}%;background:${col};height:100%"
+                 title="${nm}: ${d.pop.toLocaleString()} (${pct}%)"></div>`;
+  }).join('');
+
+  // ── Class rows ────────────────────────────────────────────────
+  const maxPop = entries[0][1].pop;
+  const rows = entries.map(([cid, d]) => {
+    const cls    = SOCIAL_CLASSES[cid];
+    if (!cls) return '';
+    const pct    = (d.pop / totalClass * 100).toFixed(0);
+    const barPct = (d.pop / maxPop * 100).toFixed(0);
+    const sat    = _satBar(d.satisfaction);
+    return `
+      <div class="rps-row">
+        <span class="rps-ic" style="color:${cls.color}">${cls.icon || '●'}</span>
+        <span class="rps-nm">${cls.name}</span>
+        <div class="rps-bar-w">
+          <div class="rps-bar-f" style="width:${barPct}%;background:${cls.color}33;
+               border-right:2px solid ${cls.color}88"></div>
+        </div>
+        <span class="rps-cnt">${d.pop >= 1000 ? (d.pop / 1000).toFixed(1) + 'к' : d.pop}</span>
+        <span class="rps-pct">${pct}%</span>
+        ${sat}
+      </div>`;
+  }).join('');
+
+  const note = isReal
+    ? `<div class="rps-note rps-note--real">✦ Реальные данные провинции</div>`
+    : `<div class="rps-note">~ Оценка по типу местности</div>`;
+
+  return `
+    <div class="region-pop-struct">
+      <div class="section-label" style="margin-bottom:8px">👥 Структура общества</div>
+
+      <div class="rps-donut-wrap">
+        ${donutSvg}
+        <div class="rps-legend">
+          ${entries.slice(0, 5).map(([cid, d]) => {
+            const cls = SOCIAL_CLASSES[cid];
+            const pct = (d.pop / totalClass * 100).toFixed(0);
+            return cls ? `<div class="rps-leg-row">
+              <span class="rps-leg-dot" style="background:${cls.color}"></span>
+              <span class="rps-leg-nm">${cls.name}</span>
+              <span class="rps-leg-pct">${pct}%</span>
+            </div>` : '';
+          }).join('')}
+          ${entries.length > 5 ? `<div class="rps-leg-row" style="opacity:.5">
+            <span class="rps-leg-nm">+ещё ${entries.length - 5}</span>
+          </div>` : ''}
+        </div>
+      </div>
+
+      <div class="rps-strip">${strip}</div>
+
+      <div class="rps-rows">${rows}</div>
+
+      ${note}
+    </div>
+  `;
+}
+
 // ──────────────────────────────────────────────────────────────
 
 function showRegionInfo(regionId) {
@@ -645,6 +836,14 @@ function showRegionInfo(regionId) {
       console.warn('[showRegionInfo] religion block error:', e);
     }
 
+    // ── Блок социальной структуры ──
+    let socialStructureHtml = '';
+    try {
+      socialStructureHtml = renderRegionSocialStructure(regionId, gameData);
+    } catch (e) {
+      console.warn('[showRegionInfo] social structure error:', e);
+    }
+
     panel.innerHTML = `
       <div class="region-info-header" style="border-left: 4px solid ${nationColor}">
         <span class="region-info-name">${mapData.name}</span>
@@ -661,6 +860,7 @@ function showRegionInfo(regionId) {
         </div>
         ${cultureHtml}
         ${religionHtml}
+        ${socialStructureHtml}
         ${productionLines ? `<div class="region-production"><div class="section-label">Производство:</div>${productionLines}</div>` : ''}
         ${buildings ? `<div class="region-buildings"><div class="section-label">Постройки:</div>${buildings}</div>` : ''}
       </div>

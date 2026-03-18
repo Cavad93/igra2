@@ -360,6 +360,84 @@
       color: var(--text-dim);
     }
 
+    /* ── Социальная структура региона ── */
+    .region-pop-struct {
+      margin: 8px 0 4px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(107,79,26,.25);
+    }
+
+    /* Donut + legend side by side */
+    .rps-donut-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .rps-legend { flex: 1; }
+    .rps-leg-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 1.5px 0;
+    }
+    .rps-leg-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%; flex-shrink: 0;
+    }
+    .rps-leg-nm  { font-size: 9.5px; color: rgba(255,255,255,.7); flex: 1; }
+    .rps-leg-pct { font-size: 9.5px; color: var(--text-gold); font-weight: bold; }
+
+    /* Composition strip */
+    .rps-strip {
+      display: flex;
+      height: 6px;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 8px;
+      background: rgba(255,255,255,.04);
+    }
+
+    /* Class rows */
+    .rps-rows { display: flex; flex-direction: column; gap: 3px; margin-bottom: 6px; }
+    .rps-row  {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 16px;
+    }
+    .rps-ic   { font-size: 10px; width: 14px; text-align: center; flex-shrink: 0; }
+    .rps-nm   {
+      font-size: 9.5px; color: rgba(255,255,255,.75);
+      width: 78px; flex-shrink: 0; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .rps-bar-w {
+      flex: 1; height: 8px;
+      background: rgba(255,255,255,.04);
+      border-radius: 2px; overflow: hidden; position: relative;
+    }
+    .rps-bar-f {
+      height: 100%; border-radius: 2px;
+      transition: width .3s ease;
+    }
+    .rps-cnt  { font-size: 9px; color: var(--text-light); width: 28px; text-align: right; flex-shrink: 0; }
+    .rps-pct  { font-size: 9px; color: var(--text-dim);   width: 26px; text-align: right; flex-shrink: 0; }
+
+    /* Satisfaction mini bar (только для провинций игрока) */
+    .rps-sat {
+      display: inline-block;
+      width: 22px; height: 5px;
+      background: linear-gradient(to right, var(--col) var(--sat), rgba(255,255,255,.1) var(--sat));
+      border-radius: 3px; flex-shrink: 0;
+    }
+
+    .rps-note {
+      font-size: 9px; color: var(--text-dim);
+      font-style: italic; text-align: right; padding-top: 2px;
+    }
+    .rps-note--real { color: rgba(212,175,55,.5); font-style: normal; }
+
     /* ── Культура региона — круговая диаграмма ── */
     .region-culture-section {
       margin: 10px 0 6px;
