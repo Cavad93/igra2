@@ -5,28 +5,44 @@
 // БАЗОВАЯ ФУНКЦИЯ ВЫЗОВА API
 // ──────────────────────────────────────────────────────────────
 
+// Таймаут API-вызовов: 30 с для коротких запросов (haiku), 60 с для длинных
+const _API_TIMEOUT_MS = 30_000;
+
 async function callClaude(system, user, maxTokens = 1024, model = CONFIG.MODEL_HAIKU) {
   if (!CONFIG.API_KEY) {
     throw new Error('API ключ не установлен');
   }
 
-  const response = await fetch(CONFIG.API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': CONFIG.API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      system,
-      messages: [
-        { role: 'user', content: user },
-      ],
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutMs  = maxTokens > 512 ? 60_000 : _API_TIMEOUT_MS;
+  const timer      = setTimeout(() => controller.abort(), timeoutMs);
+
+  let response;
+  try {
+    response = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': CONFIG.API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: maxTokens,
+        system,
+        messages: [
+          { role: 'user', content: user },
+        ],
+      }),
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error(`API timeout (${timeoutMs / 1000}s)`);
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!response.ok) {
     const errBody = await response.text().catch(() => '');
