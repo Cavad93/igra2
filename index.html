@@ -3834,7 +3834,7 @@
   <!-- Инициализируем GAME_STATE из INITIAL_GAME_STATE -->
   <script>
     // GAME_STATE — единственный источник правды
-    const GAME_STATE = JSON.parse(JSON.stringify(INITIAL_GAME_STATE));
+    var GAME_STATE = JSON.parse(JSON.stringify(INITIAL_GAME_STATE));
   </script>
 
   <script src="ui/log.js"></script>
