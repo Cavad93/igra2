@@ -578,6 +578,60 @@
     }
 
     /* ══════════════════════════════════════════════════
+       ДИПЛОМАТИЯ
+    ══════════════════════════════════════════════════ */
+    .relation-row {
+      margin-bottom: 6px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(139,109,56,0.15);
+    }
+    .relation-row:last-child { border-bottom: none; }
+    .relation-header {
+      display: flex; align-items: center; gap: 4px;
+      margin-bottom: 3px;
+    }
+    .relation-name { font-size: 11px; font-weight: 600; }
+    .relation-score { font-size: 10px; margin-left: auto; font-weight: 700; }
+    .diplo-tag {
+      font-size: 9px; padding: 1px 5px; border-radius: 3px;
+      font-weight: 600;
+    }
+    .diplo-war   { background: rgba(244,67,54,0.3); color: #f44336; }
+    .diplo-ally  { background: rgba(76,175,80,0.3);  color: #4CAF50; }
+    .diplo-trade { background: rgba(255,152,0,0.3);  color: #FF9800; }
+    .diplo-actions {
+      display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap;
+    }
+    .diplo-btn {
+      font-size: 9px; padding: 2px 6px; border-radius: 3px;
+      background: rgba(139,109,56,0.25); border: 1px solid var(--border-gold);
+      color: var(--text-gold); cursor: pointer;
+    }
+    .diplo-btn:hover { background: rgba(139,109,56,0.45); }
+    .diplo-btn-war {
+      background: rgba(244,67,54,0.2); border-color: #f44336; color: #f44336;
+    }
+    .diplo-btn-war:hover { background: rgba(244,67,54,0.4); }
+
+    /* ══════════════════════════════════════════════════
+       АДАПТИВНОСТЬ
+    ══════════════════════════════════════════════════ */
+    @media (max-width: 1024px) {
+      :root { --panel-w: 220px; }
+      .culture-window { width: 420px; }
+    }
+    @media (max-width: 768px) {
+      :root { --panel-w: 0px; --footer-h: 140px; }
+      #left-panel, #right-panel { display: none; }
+      .culture-window { width: 95vw; }
+      #region-info { width: 240px; }
+    }
+    @media (max-width: 480px) {
+      .culture-window { width: 100vw; max-height: 100vh; border-radius: 0; }
+      #region-info { width: 200px; font-size: 10px; }
+    }
+
+    /* ══════════════════════════════════════════════════
        НИЖНЯЯ ОБЛАСТЬ — ЛОГ + ВВОД
     ══════════════════════════════════════════════════ */
     #bottom-area {

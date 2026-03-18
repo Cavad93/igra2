@@ -947,4 +947,19 @@ const INITIAL_GAME_STATE = {
     },
   },
   regions: {},
+
+  // ── Мировой рынок ──
+  // Базовые цены из GOODS, supply/demand обновляются в updateMarketPrices()
+  market: {
+    wheat:  { base: 10,  price: 10,  supply: 1000, demand: 1000 },
+    fish:   { base: 15,  price: 15,  supply: 500,  demand: 500  },
+    olives: { base: 20,  price: 20,  supply: 300,  demand: 300  },
+    wine:   { base: 30,  price: 30,  supply: 200,  demand: 200  },
+    iron:   { base: 45,  price: 45,  supply: 150,  demand: 150  },
+    timber: { base: 22,  price: 22,  supply: 250,  demand: 250  },
+    cloth:  { base: 25,  price: 25,  supply: 200,  demand: 200  },
+    salt:   { base: 18,  price: 18,  supply: 300,  demand: 300  },
+    tools:  { base: 35,  price: 35,  supply: 100,  demand: 100  },
+    slaves: { base: 200, price: 200, supply: 50,   demand: 50   },
+  },
 };

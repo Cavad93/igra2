@@ -394,26 +394,146 @@ function renderCultureWindow(nationId) {
 function renderRelations(relations) {
   if (!relations) return '<div class="no-data">Нет данных</div>';
 
-  return Object.entries(relations).slice(0, 6).map(([nationId, rel]) => {
+  return Object.entries(relations).slice(0, 8).map(([nationId, rel]) => {
     const otherNation = GAME_STATE.nations[nationId];
     if (!otherNation) return '';
 
     const score = rel.score;
-    const bar = Math.max(0, Math.min(100, score + 50));  // -50..50 → 0..100
+    const bar = Math.max(0, Math.min(100, score + 50));
     const color = score > 20 ? '#4CAF50' : score < -20 ? '#f44336' : '#FF9800';
-    const statusIcon = rel.at_war ? '⚔️' : rel.treaties.length > 0 ? '🤝' : '';
+    const treaties = (rel.treaties || []);
+    const hasTrade = treaties.includes('trade');
+    const hasAlliance = treaties.includes('alliance');
+    const atWar = rel.at_war;
+
+    let statusLabel = '';
+    if (atWar) statusLabel = '<span class="diplo-tag diplo-war">Война</span>';
+    else if (hasAlliance) statusLabel = '<span class="diplo-tag diplo-ally">Союз</span>';
+    else if (hasTrade) statusLabel = '<span class="diplo-tag diplo-trade">Торговля</span>';
+
+    // Кнопки действий
+    let actionsHtml = '';
+    if (atWar) {
+      actionsHtml = `<button class="diplo-btn" onclick="proposePeace('${nationId}')">Мир</button>`;
+    } else {
+      const btns = [];
+      if (!hasTrade) btns.push(`<button class="diplo-btn" onclick="proposeTreaty('${nationId}','trade')">Торг. договор</button>`);
+      if (!hasAlliance && score > 10) btns.push(`<button class="diplo-btn" onclick="proposeTreaty('${nationId}','alliance')">Союз</button>`);
+      if (score < 0) btns.push(`<button class="diplo-btn diplo-btn-war" onclick="declareWar('${nationId}')">Война</button>`);
+      actionsHtml = btns.join('');
+    }
 
     return `
       <div class="relation-row">
-        <span class="relation-name" style="color:${otherNation.color}">${otherNation.name}</span>
+        <div class="relation-header">
+          <span class="relation-name" style="color:${otherNation.color}">${otherNation.name}</span>
+          ${statusLabel}
+          <span class="relation-score" style="color:${color}">${score > 0 ? '+' : ''}${score}</span>
+        </div>
         <div class="bar-container small">
           <div class="bar-fill" style="width:${bar}%; background:${color}"></div>
         </div>
-        <span class="relation-score" style="color:${color}">${score > 0 ? '+' : ''}${score}</span>
-        ${statusIcon ? `<span class="relation-status">${statusIcon}</span>` : ''}
+        <div class="diplo-actions">${actionsHtml}</div>
       </div>
     `;
   }).join('');
+}
+
+// ── Дипломатические действия ─────────────────────────────────────────
+
+function proposeTreaty(targetNationId, treatyType) {
+  const player = GAME_STATE.nations[GAME_STATE.player_nation];
+  const target = GAME_STATE.nations[targetNationId];
+  if (!player || !target) return;
+
+  const rel = player.relations?.[targetNationId];
+  if (!rel) return;
+
+  // Шанс принятия зависит от отношений
+  const baseChance = treatyType === 'trade' ? 0.5 : 0.3;
+  const scoreMod = (rel.score + 50) / 100; // 0..1
+  const chance = Math.min(0.95, baseChance + scoreMod * 0.4);
+
+  const accepted = Math.random() < chance;
+  const treatyName = treatyType === 'trade' ? 'торговый договор' : 'союз';
+
+  if (accepted) {
+    if (!rel.treaties.includes(treatyType)) rel.treaties.push(treatyType);
+    // Взаимно
+    _ensureRelation(target, GAME_STATE.player_nation);
+    const targetRel = target.relations[GAME_STATE.player_nation];
+    if (!targetRel.treaties.includes(treatyType)) targetRel.treaties.push(treatyType);
+    // Улучшаем отношения
+    rel.score = Math.min(100, rel.score + 15);
+    targetRel.score = Math.min(100, targetRel.score + 15);
+    addEventLog(`${target.name} приняли предложение: ${treatyName}!`, 'good');
+  } else {
+    rel.score = Math.max(-100, rel.score - 5);
+    addEventLog(`${target.name} отклонили предложение: ${treatyName}.`, 'warning');
+  }
+  renderAll();
+}
+
+function proposePeace(targetNationId) {
+  const player = GAME_STATE.nations[GAME_STATE.player_nation];
+  const target = GAME_STATE.nations[targetNationId];
+  if (!player || !target) return;
+
+  const rel = player.relations?.[targetNationId];
+  if (!rel || !rel.at_war) return;
+
+  // Мир принимается если у противника мало армии или низкая мораль
+  const theirMorale = target.military?.morale ?? 50;
+  const chance = theirMorale < 30 ? 0.8 : theirMorale < 50 ? 0.5 : 0.25;
+  const accepted = Math.random() < chance;
+
+  if (accepted) {
+    rel.at_war = false;
+    rel.score = Math.min(100, rel.score + 20);
+    _ensureRelation(target, GAME_STATE.player_nation);
+    target.relations[GAME_STATE.player_nation].at_war = false;
+    target.relations[GAME_STATE.player_nation].score =
+      Math.min(100, (target.relations[GAME_STATE.player_nation].score ?? 0) + 20);
+    // Убираем из at_war_with
+    player.military.at_war_with = (player.military.at_war_with || []).filter(id => id !== targetNationId);
+    target.military.at_war_with = (target.military.at_war_with || []).filter(id => id !== GAME_STATE.player_nation);
+    addEventLog(`Мир с ${target.name}! Война окончена.`, 'good');
+  } else {
+    addEventLog(`${target.name} отвергли предложение о мире.`, 'warning');
+  }
+  renderAll();
+}
+
+function declareWar(targetNationId) {
+  const player = GAME_STATE.nations[GAME_STATE.player_nation];
+  const target = GAME_STATE.nations[targetNationId];
+  if (!player || !target) return;
+
+  _ensureRelation(player, targetNationId);
+  _ensureRelation(target, GAME_STATE.player_nation);
+
+  player.relations[targetNationId].at_war = true;
+  player.relations[targetNationId].score = Math.max(-100, player.relations[targetNationId].score - 40);
+  target.relations[GAME_STATE.player_nation].at_war = true;
+  target.relations[GAME_STATE.player_nation].score = Math.max(-100, target.relations[GAME_STATE.player_nation].score - 40);
+
+  if (!player.military.at_war_with) player.military.at_war_with = [];
+  if (!player.military.at_war_with.includes(targetNationId)) player.military.at_war_with.push(targetNationId);
+  if (!target.military.at_war_with) target.military.at_war_with = [];
+  if (!target.military.at_war_with.includes(GAME_STATE.player_nation)) target.military.at_war_with.push(GAME_STATE.player_nation);
+
+  addEventLog(`Объявлена война ${target.name}!`, 'danger');
+  // Падение стабильности и счастья
+  player.government.stability = Math.max(0, (player.government.stability ?? 50) - 5);
+  player.population.happiness = Math.max(0, (player.population.happiness ?? 50) - 10);
+  renderAll();
+}
+
+function _ensureRelation(nation, targetId) {
+  if (!nation.relations) nation.relations = {};
+  if (!nation.relations[targetId]) {
+    nation.relations[targetId] = { score: 0, treaties: [], at_war: false };
+  }
 }
 
 function renderLaws(laws) {

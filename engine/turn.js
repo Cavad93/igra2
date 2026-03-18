@@ -250,19 +250,66 @@ async function processAINations() {
 // Детерминированное решение при недоступности AI
 function applyFallbackDecision(nationId) {
   const nation = GAME_STATE.nations[nationId];
+  if (!nation) return;
   const treasury = nation.economy.treasury;
   const military = nation.military;
+  const pop = nation.population;
 
-  if (treasury > 5000 && nation.ai_priority === 'military') {
-    // Рекрутируем пехоту
-    const newInfantry = military.infantry + Math.floor(treasury * 0.01);
-    const cost = Math.floor(treasury * 0.01) * 5;
-    applyDelta(`nations.${nationId}.military.infantry`, newInfantry);
-    applyDelta(`nations.${nationId}.economy.treasury`, treasury - cost);
-  } else if (treasury > 3000) {
-    // Накапливаем запасы (пассивное действие)
-    // Просто ничего не делаем — экономика уже посчитана
+  // Приоритет 1: если мало армии относительно населения — рекрутируем
+  const armyRatio = (military.infantry + military.cavalry * 3) / Math.max(1, pop.total);
+  if (armyRatio < 0.01 && treasury > 2000) {
+    const recruits = Math.min(Math.floor(treasury / 10), Math.floor(pop.total * 0.005));
+    if (recruits > 0) {
+      military.infantry += recruits;
+      nation.economy.treasury -= recruits * CONFIG.BALANCE.INFANTRY_UPKEEP * 5;
+    }
+    return;
   }
+
+  // Приоритет 2: если в войне — усилить армию
+  const atWar = (military.at_war_with || []).length > 0;
+  if (atWar && treasury > 3000) {
+    const recruits = Math.min(Math.floor(treasury * 0.02), 500);
+    military.infantry += recruits;
+    nation.economy.treasury -= recruits * CONFIG.BALANCE.INFANTRY_UPKEEP * 3;
+
+    // Нанять наёмников если есть деньги
+    if (treasury > 5000 && military.mercenaries < 300) {
+      const mercs = Math.min(100, Math.floor((treasury - 3000) / 20));
+      military.mercenaries += mercs;
+      nation.economy.treasury -= mercs * CONFIG.BALANCE.MERCENARY_UPKEEP * 5;
+    }
+    return;
+  }
+
+  // Приоритет 3: дипломатия — попытаться заключить торговый договор
+  if (!atWar && treasury > 1000 && GAME_STATE.turn % 12 === 0) {
+    for (const [otherId, rel] of Object.entries(nation.relations || {})) {
+      if (rel.at_war || (rel.treaties || []).includes('trade')) continue;
+      if (rel.score > -10) {
+        // Предлагаем торговлю
+        const chance = (rel.score + 50) / 100;
+        if (Math.random() < chance * 0.5) {
+          rel.treaties = rel.treaties || [];
+          rel.treaties.push('trade');
+          rel.score = Math.min(100, rel.score + 10);
+          // Взаимно
+          const other = GAME_STATE.nations[otherId];
+          if (other?.relations?.[nationId]) {
+            other.relations[nationId].treaties = other.relations[nationId].treaties || [];
+            if (!other.relations[nationId].treaties.includes('trade')) {
+              other.relations[nationId].treaties.push('trade');
+            }
+            other.relations[nationId].score = Math.min(100, other.relations[nationId].score + 10);
+          }
+          break; // одно действие за ход
+        }
+      }
+    }
+    return;
+  }
+
+  // Приоритет 4: накапливать деньги (ничего не делаем)
 }
 
 // ──────────────────────────────────────────────────────────────
