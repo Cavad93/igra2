@@ -93,11 +93,15 @@ function _calcSlotBaseOutput(slot, region, nation) {
   const eff = slot.production_eff ?? 1.0;
   if (eff <= 0) return {};
 
+  // _pop_eff: 0.7–1.0, зависит от удовлетворённости рабочих (Stage 6).
+  // Устанавливается applyPopSatisfiedToBuildings() перед производством.
+  const popEff = slot._pop_eff ?? 1.0;
+
   const output = {};
   for (const { good, base_rate } of bDef.production_output) {
     const terrainBonus = _terrainGoodBonus(terrain, good);
     // base_rate: единиц товара на 1000 рабочих в ход
-    const amount = (workers / 1000) * base_rate * fertility * satMod * terrainBonus * eff;
+    const amount = (workers / 1000) * base_rate * fertility * satMod * terrainBonus * eff * popEff;
     if (amount > 0.1) output[good] = (output[good] || 0) + amount;
   }
 

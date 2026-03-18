@@ -34,6 +34,14 @@ async function processTurn() {
       try { processBuildingConstruction(); } catch (e) { console.warn('[buildings]', e); }
     }
 
+    // 0.95. Удовлетворённость POP → эффективность зданий (Stage 6)
+    //       Применяет slot._pop_eff ДО calculateProduction этого тика.
+    if (typeof applyPopSatisfiedToBuildings === 'function') {
+      for (const _nId of Object.keys(GAME_STATE.nations)) {
+        try { applyPopSatisfiedToBuildings(_nId); } catch (e) { console.warn('[pops_eff]', e); }
+      }
+    }
+
     // 1. Экономика (детерминировано)
     runEconomyTick();
 

@@ -174,11 +174,19 @@ function calculateProduction() {
 function calculateConsumption(nation) {
   let result;
 
-  // Используем классовую модель если доступны SOCIAL_CLASSES
-  if (typeof calculateTotalConsumptionByClass === 'function') {
+  // Предпочтительный путь: wealth-зависимая корзина потребления (Stage 6)
+  if (typeof calcNationBasketDemand === 'function') {
+    const basketDemand = calcNationBasketDemand(nation);
+    if (basketDemand) result = basketDemand;
+  }
+
+  // Запасной вариант — классовая модель
+  if (!result && typeof calculateTotalConsumptionByClass === 'function') {
     result = calculateTotalConsumptionByClass(nation.population.by_profession);
-  } else {
-    // Запасной вариант — старая плоская модель
+  }
+
+  // Последний резерв — плоская модель
+  if (!result) {
     const pop   = nation.population.total;
     const profs = nation.population.by_profession;
     result = {
@@ -522,29 +530,34 @@ function runEconomyTick() {
   const allProduced = calculateProduction();
 
   // Шаг 2: потребление всех наций
-  const allConsumed = {};
+  const allConsumed      = {};
+  const allActualConsumed = {};   // для updatePopSatisfied (Stage 6)
+
   for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
     allConsumed[nationId] = calculateConsumption(nation);
 
     // Обновляем запасы
     const stockpile = nation.economy.stockpile;
-    const produced = allProduced[nationId] || {};
-    const consumed = allConsumed[nationId];
+    const produced  = allProduced[nationId] || {};
+    const consumed  = allConsumed[nationId];
 
     // Добавляем произведённое в запасы
     for (const [good, amount] of Object.entries(produced)) {
       stockpile[good] = (stockpile[good] || 0) + amount;
     }
 
-    // Вычитаем потреблённое из запасов
+    // Вычитаем потреблённое из запасов; фиксируем реальное потребление для POP
+    const actualConsumed = {};
     for (const [good, amount] of Object.entries(consumed)) {
       const available = stockpile[good] || 0;
-      const deficit = amount - available;
+      const deficit   = amount - available;
+
+      actualConsumed[good] = Math.min(amount, available);   // то, что реально съели
 
       if (deficit > 0 && good === 'wheat') {
         // Голод!
         const famineMortality = Math.min(deficit * CONFIG.BALANCE.FAMINE_MORTALITY, nation.population.total * 0.05);
-        const newPop = nation.population.total - Math.round(famineMortality);
+        const newPop          = nation.population.total - Math.round(famineMortality);
         applyDelta(`nations.${nationId}.population.total`, newPop);
 
         const newHappiness = Math.max(0, nation.population.happiness + CONFIG.BALANCE.HAPPINESS_FROM_FAMINE);
@@ -555,6 +568,25 @@ function runEconomyTick() {
       } else {
         stockpile[good] = Math.max(0, available - amount);
       }
+    }
+    allActualConsumed[nationId] = actualConsumed;
+  }
+
+  // Шаг 2.5: удовлетворённость и богатство POP (Stage 6)
+  if (typeof updatePopSatisfied === 'function') {
+    for (const nationId of Object.keys(GAME_STATE.nations)) {
+      try {
+        updatePopSatisfied(
+          nationId,
+          allConsumed[nationId]       || {},
+          allActualConsumed[nationId] || {},
+        );
+      } catch (e) { console.warn('[pops_sat]', e); }
+    }
+  }
+  if (typeof updatePopWealth === 'function') {
+    for (const nationId of Object.keys(GAME_STATE.nations)) {
+      try { updatePopWealth(nationId); } catch (e) { console.warn('[pops_wealth]', e); }
     }
   }
 
