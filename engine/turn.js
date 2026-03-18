@@ -728,6 +728,22 @@ function initGame() {
       try { initAgeCohorts(nation); } catch (e) { /* ignore */ }
     }
   }
+
+  // ── Инициализация экономических переменных (Bugfix) ───────────────────────
+
+  // Fix #2a: _production_mod используется в _calcSlotBaseOutput на Ход 1,
+  // до того как updateHappiness() его установит. Инициализируем нейтральным значением.
+  for (const nation of Object.values(GAME_STATE.nations)) {
+    if (nation.population._production_mod == null) {
+      nation.population._production_mod = 1.0;
+    }
+  }
+
+  // Fix #4: Гарантируем, что все товары из GOODS присутствуют в GAME_STATE.market.
+  // Нужно при добавлении новых товаров в GOODS без правки INITIAL_GAME_STATE.
+  if (typeof initializeAllMarketEntries === 'function') {
+    initializeAllMarketEntries(GAME_STATE.market);
+  }
 }
 
 // Рендерим всё разом — каждая функция изолирована, чтобы ошибка в одной не ломала остальные

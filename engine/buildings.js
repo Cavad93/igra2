@@ -401,6 +401,11 @@ function _completeConstruction(entry, region, regionId) {
   for (const wp of (bDef.worker_profession || [])) {
     if (wp.count > 0) workers[wp.profession] = wp.count;
   }
+  // Fix #5: здания без рабочих (forum, road и т.д.) — это норма; предупреждаем
+  // только если worker_profession заявлен непустым, но ни одна запись не валидна.
+  if ((bDef.worker_profession?.length ?? 0) > 0 && Object.keys(workers).length === 0) {
+    console.warn(`[buildings] ${entry.building_id}: worker_profession определён, но ни один рабочий не добавлен`);
+  }
 
   region.building_slots.push({
     slot_id:      entry.slot_id,

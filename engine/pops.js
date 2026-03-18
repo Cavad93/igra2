@@ -195,7 +195,7 @@ function updatePopWealth(nationId) {
   const wageBonus = nation.population._wage_bonuses || {};
 
   // Сбросить кеш class-based целей (пересчитываем один раз за вызов)
-  nation._classWealthTargets_cache = null;
+  nation.population._classWealthTargets_cache = null;
 
   for (const [prof, pop] of Object.entries(pops)) {
     const popSize = nation.population.by_profession[prof] || 0;
@@ -228,11 +228,11 @@ function updatePopWealth(nationId) {
     //    Мост между моделью POPs и классовой системой потребления (Этап 8).
     let wealthTarget = score * 100;
     if (typeof getClassBasedWealthTargets === 'function') {
-      if (!nation._classWealthTargets_cache) {
+      if (!nation.population._classWealthTargets_cache) {
         // Вычисляем один раз за updatePopWealth для всей нации
-        nation._classWealthTargets_cache = getClassBasedWealthTargets(nation);
+        nation.population._classWealthTargets_cache = getClassBasedWealthTargets(nation);
       }
-      const classTarget = nation._classWealthTargets_cache[prof];
+      const classTarget = nation.population._classWealthTargets_cache[prof];
       if (classTarget != null) {
         wealthTarget = wealthTarget * 0.70 + classTarget * 0.30;
       }

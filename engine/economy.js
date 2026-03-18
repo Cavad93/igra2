@@ -557,7 +557,11 @@ function runEconomyTick() {
       try { recomputeAllProductionCosts(nationId); } catch (e) { console.warn('[prod_cost]', e); }
     }
   }
-  updateMarketPrices(allProduced, allConsumed);
+  // Передаём ФАКТИЧЕСКИ потреблённые объёмы (не demanded), чтобы мировой склад
+  // и зоны дефицита/баланса/избытка отражали реальные изъятия из stockpile.
+  // allConsumed  = demanded (что хотели)
+  // allActualConsumed = что реально вычтено (min(demanded, available))
+  updateMarketPrices(allProduced, allActualConsumed);
 
   // ════════════════════════════════════════════════════════════
   // ШАГ 6: UI / СОБЫТИЯ
