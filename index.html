@@ -1429,6 +1429,57 @@
       font-family: sans-serif; padding: 1px 0 0 11px;
     }
 
+    /* ── История населения (диаграмма в оверлее) ── */
+    .pop-chart-section {
+      border-top: 1px solid rgba(107,79,26,.18);
+    }
+    .pop-chart-tabs {
+      display: flex; gap: 3px;
+    }
+    .pct {
+      background: rgba(255,255,255,.04); border: 1px solid rgba(212,175,55,.15);
+      color: var(--text-dim); border-radius: 4px; padding: 2px 10px;
+      font-size: 10px; font-family: sans-serif; cursor: pointer;
+      transition: all .15s; letter-spacing: .3px;
+    }
+    .pct:hover  { color: var(--text-light); border-color: rgba(212,175,55,.3); }
+    .pct.active { background: rgba(212,175,55,.12); border-color: rgba(212,175,55,.45); color: var(--text-gold); }
+
+    .pop-chart-wrap {
+      position: relative; padding: 4px 16px 10px;
+    }
+    .pop-chart-svg { display: block; width: 100%; height: auto; }
+    .pop-chart-empty {
+      text-align: center; padding: 28px 0;
+      font-size: 11px; color: var(--text-dim); font-style: italic;
+      font-family: sans-serif;
+    }
+
+    /* Tooltip */
+    .pop-ctip {
+      position: absolute; top: 14px; pointer-events: none;
+      background: rgba(14,11,8,.94); border: 1px solid rgba(212,175,55,.3);
+      border-radius: 6px; padding: 8px 11px; min-width: 155px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.7); z-index: 50;
+      font-family: sans-serif;
+    }
+    .pct-date  { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; }
+    .pct-total { font-size: 13px; font-weight: bold; color: var(--text-gold); margin-bottom: 6px; font-family: 'Cinzel',serif; }
+    .pct-row   { display: flex; align-items: center; gap: 5px; padding: 1.5px 0; }
+    .pct-dot   { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .pct-nm    { font-size: 10px; color: rgba(255,255,255,.65); flex: 1; white-space: nowrap; }
+    .pct-val   { font-size: 10px; font-weight: bold; }
+
+    /* Legend */
+    .pop-chart-legend {
+      display: flex; flex-wrap: wrap; gap: 6px 14px;
+      padding: 4px 16px 12px;
+    }
+    .pcl-item  { display: flex; align-items: center; gap: 4px; }
+    .pcl-dot   { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .pcl-nm    { font-size: 9px; color: var(--text-dim); font-family: sans-serif; }
+    .pcl-val   { font-size: 9px; color: var(--text-light); font-family: sans-serif; font-weight: bold; }
+
     /* Отношения */
     .relation-row {
       display: flex;

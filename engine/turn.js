@@ -58,6 +58,11 @@ async function processTurn() {
     }
     updateHappiness();
 
+    // 2.5. Записываем историю населения (после обновления class_satisfaction)
+    if (typeof recordPopulationHistory === 'function') {
+      try { recordPopulationHistory(); } catch (e) { console.warn('[history]', e); }
+    }
+
     // 3. Персонажи — старение (детерминировано)
     agingCharacters();
     checkCharacterDeaths();

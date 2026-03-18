@@ -617,6 +617,44 @@ const PROF_LABELS = {
   slaves:    'Рабы',
 };
 
+// ─────────────────────────────────────────────────────────────────────────
+// ИСТОРИЯ НАСЕЛЕНИЯ
+// ─────────────────────────────────────────────────────────────────────────
+
+// Вызывается из turn.js ПОСЛЕ updateHappiness() чтобы записать актуальные данные
+function recordPopulationHistory() {
+  const nationId = GAME_STATE.player_nation;
+  const nation   = GAME_STATE.nations[nationId];
+  if (!nation || !nation.population) return;
+
+  const pop  = nation.population;
+  if (!pop.history) pop.history = [];
+
+  const date  = GAME_STATE.date;
+  const year  = Math.abs(date.year);
+  const label = `${year}`;
+
+  // Классовые данные из актуального class_satisfaction
+  const classes = {};
+  const classSat = pop.class_satisfaction;
+  if (classSat) {
+    for (const [cid, d] of Object.entries(classSat)) {
+      classes[cid] = d.population || 0;
+    }
+  }
+
+  pop.history.push({
+    turn:    GAME_STATE.turn || 1,
+    label,
+    total:   pop.total,
+    classes,
+    happiness: pop.happiness || 50,
+  });
+
+  // Храним не более 60 точек (~5 лет игрового времени)
+  if (pop.history.length > 60) pop.history.shift();
+}
+
 function _logDemographyChanges(nationId, oldProfs, newProfs) {
   if (typeof addEventLog !== 'function') return;
 
