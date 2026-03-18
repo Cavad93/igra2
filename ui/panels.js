@@ -68,20 +68,7 @@ function renderLeftPanel() {
     <!-- НАСЕЛЕНИЕ -->
     <div class="panel-section">
       <div class="section-title">👥 Население</div>
-      <div class="stat-row">
-        <span class="stat-label">Всего</span>
-        <span class="stat-value">${Math.round(pop.total).toLocaleString()}</span>
-      </div>
-      <div class="happiness-row">
-        <span class="stat-label">Счастье</span>
-        <div class="bar-container">
-          <div class="bar-fill happiness-fill" style="width:${pop.happiness}%; background:${getHappinessColor(pop.happiness)}"></div>
-        </div>
-        <span class="stat-value">${pop.happiness}%</span>
-      </div>
-      <div class="professions-grid">
-        ${renderProfessions(pop.by_profession)}
-      </div>
+      ${renderPopMiniWidget(pop)}
     </div>
 
     <!-- АРМИЯ -->
@@ -145,6 +132,84 @@ function renderLeftPanel() {
       <div class="section-title">📜 Законы <span class="laws-count">${(nation.active_laws || []).length}</span></div>
       ${renderLaws(nation.active_laws)}
     </div>
+  `;
+}
+
+function renderPopMiniWidget(pop) {
+  const total    = Math.round(pop.total);
+  const hap      = pop.happiness;
+  const hapColor = getHappinessColor(hap);
+  const hapLabel = hap >= 75 ? '😊' : hap >= 55 ? '😐' : hap >= 35 ? '😟' : '😡';
+
+  // Используем class_satisfaction если доступно, иначе профессии
+  const classSat = pop.class_satisfaction;
+
+  if (classSat && typeof SOCIAL_CLASSES !== 'undefined') {
+    const entries = Object.entries(classSat)
+      .filter(([, d]) => d.population >= 10)
+      .sort((a, b) => b[1].population - a[1].population);
+    const totalClassPop = entries.reduce((s, [, d]) => s + d.population, 0);
+
+    // Composition bar
+    const barSegs = entries.map(([cid, d]) => {
+      const cls = SOCIAL_CLASSES[cid];
+      if (!cls) return '';
+      const pct = totalClassPop > 0 ? (d.population / totalClassPop * 100).toFixed(1) : 0;
+      return `<div class="pop-mini-seg" style="width:${pct}%;background:${cls.color}"
+                   title="${cls.name}: ${formatNumber(d.population)}"></div>`;
+    }).join('');
+
+    // Class rows (top 6)
+    const maxPop  = entries[0]?.[1].population || 1;
+    const topRows = entries.slice(0, 6).map(([cid, d]) => {
+      const cls     = SOCIAL_CLASSES[cid];
+      if (!cls) return '';
+      const barPct  = (d.population / maxPop * 100).toFixed(0);
+      const isUnhap = d.satisfaction < 40;
+      const unhapMark = isUnhap ? ' !' : '';
+      return `
+        <div class="pop-mini-row">
+          <span class="pop-mini-dot" style="background:${cls.color}"></span>
+          <span class="pop-mini-name${isUnhap ? ' unhappy' : ''}">${cls.name}${unhapMark}</span>
+          <div class="pop-mini-wrap">
+            <div class="pop-mini-fill" style="width:${barPct}%;background:${cls.color}"></div>
+          </div>
+          <span class="pop-mini-cnt">${formatNumber(d.population)}</span>
+        </div>
+      `;
+    }).join('');
+
+    const hiddenCount = entries.length - 6;
+    const moreHtml = hiddenCount > 0
+      ? `<div class="pop-mini-more">+${hiddenCount} класса</div>`
+      : '';
+
+    return `
+      <div class="pop-mini-top">
+        <span class="pop-mini-total">${total.toLocaleString()}</span>
+        <span class="pop-mini-hap" style="color:${hapColor}">${hapLabel} ${hap}%</span>
+      </div>
+      <div class="pop-mini-bar">${barSegs}</div>
+      <div class="pop-mini-classes">${topRows}${moreHtml}</div>
+    `;
+  }
+
+  // Fallback: профессии
+  const hRow = `
+    <div class="happiness-row">
+      <span class="stat-label">Счастье</span>
+      <div class="bar-container">
+        <div class="bar-fill happiness-fill" style="width:${hap}%;background:${hapColor}"></div>
+      </div>
+      <span class="stat-value">${hap}%</span>
+    </div>`;
+  return `
+    <div class="stat-row">
+      <span class="stat-label">Всего</span>
+      <span class="stat-value">${total.toLocaleString()}</span>
+    </div>
+    ${hRow}
+    <div class="professions-grid">${renderProfessions(pop.by_profession)}</div>
   `;
 }
 
