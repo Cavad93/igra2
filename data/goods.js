@@ -12,6 +12,9 @@ const GOODS = {
     is_food: true,
     is_grain: true,      // считается зерном (основная еда)
     icon: '🌾',
+    market_category: 'food_staple',
+    stockpile_target_turns: 6,   // критичный продукт — нужен большой запас
+    price_elasticity: 1.5,       // цена резко реагирует на дефицит
   },
   barley: {
     name: 'Ячмень',
@@ -23,6 +26,9 @@ const GOODS = {
     is_food: true,
     is_grain: true,      // вторичное зерно, едят низшие классы
     icon: '🌿',
+    market_category: 'food_staple',
+    stockpile_target_turns: 6,
+    price_elasticity: 1.4,
   },
 
   // ── РЫБА И МОРЕПРОДУКТЫ ─────────────────────────────────────────────────
@@ -35,6 +41,9 @@ const GOODS = {
     producers: ['sailors'],
     is_food: true,
     icon: '🐟',
+    market_category: 'food_staple',
+    stockpile_target_turns: 5,
+    price_elasticity: 1.3,
   },
 
   // ── МАСЛО И ФРУКТЫ ──────────────────────────────────────────────────────
@@ -47,6 +56,9 @@ const GOODS = {
     producers: ['farmers'],
     is_food: false,
     icon: '🫒',
+    market_category: 'food_processed',
+    stockpile_target_turns: 4,
+    price_elasticity: 1.1,
   },
   olive_oil: {
     name: 'Оливковое масло',
@@ -57,6 +69,9 @@ const GOODS = {
     producers: ['craftsmen', 'farmers'],
     is_food: false,      // еда + освещение + гигиена
     icon: '🏺',
+    market_category: 'food_processed',
+    stockpile_target_turns: 4,
+    price_elasticity: 1.1,
   },
   honey: {
     name: 'Мёд',
@@ -67,6 +82,9 @@ const GOODS = {
     producers: ['farmers'],
     is_food: false,
     icon: '🍯',
+    market_category: 'food_processed',
+    stockpile_target_turns: 3,
+    price_elasticity: 0.9,
   },
 
   // ── НАПИТКИ ─────────────────────────────────────────────────────────────
@@ -79,6 +97,9 @@ const GOODS = {
     producers: ['craftsmen', 'farmers'],
     is_food: false,
     icon: '🍷',
+    market_category: 'food_processed',
+    stockpile_target_turns: 3,
+    price_elasticity: 1.0,
   },
 
   // ── КОНСЕРВАНТЫ И СПЕЦИИ ────────────────────────────────────────────────
@@ -92,6 +113,9 @@ const GOODS = {
     is_food: false,
     is_essential: true,
     icon: '🧂',
+    market_category: 'trade_hub',
+    stockpile_target_turns: 5,   // соль — консервант, высокий приоритет
+    price_elasticity: 1.4,
   },
 
   // ── МЕТАЛЛЫ ─────────────────────────────────────────────────────────────
@@ -104,6 +128,9 @@ const GOODS = {
     producers: ['craftsmen'],
     is_food: false,
     icon: '⚙️',
+    market_category: 'raw_material',
+    stockpile_target_turns: 4,
+    price_elasticity: 1.0,
   },
   bronze: {
     name: 'Бронза',
@@ -114,6 +141,9 @@ const GOODS = {
     producers: ['craftsmen'],
     is_food: false,
     icon: '🔔',
+    market_category: 'raw_material',
+    stockpile_target_turns: 4,
+    price_elasticity: 0.9,
   },
 
   // ── СТРОИТЕЛЬНОЕ СЫРЬЁ ──────────────────────────────────────────────────
@@ -126,6 +156,9 @@ const GOODS = {
     producers: ['farmers'],
     is_food: false,
     icon: '🪵',
+    market_category: 'raw_material',
+    stockpile_target_turns: 4,
+    price_elasticity: 1.0,
   },
 
   // ── ТЕКСТИЛЬ И СЫРЬЁ ────────────────────────────────────────────────────
@@ -138,6 +171,9 @@ const GOODS = {
     producers: ['farmers'],
     is_food: false,
     icon: '🧶',
+    market_category: 'raw_material',
+    stockpile_target_turns: 4,
+    price_elasticity: 0.9,
   },
   cloth: {
     name: 'Ткань',
@@ -148,6 +184,9 @@ const GOODS = {
     producers: ['craftsmen'],
     is_food: false,
     icon: '🧵',
+    market_category: 'processed_goods',
+    stockpile_target_turns: 3,
+    price_elasticity: 0.9,
   },
   leather: {
     name: 'Кожа',
@@ -158,6 +197,9 @@ const GOODS = {
     producers: ['farmers', 'craftsmen'],
     is_food: false,
     icon: '🥾',
+    market_category: 'raw_material',
+    stockpile_target_turns: 4,
+    price_elasticity: 0.9,
   },
 
   // ── ИНСТРУМЕНТЫ И ПОСУДА ────────────────────────────────────────────────
@@ -170,6 +212,9 @@ const GOODS = {
     producers: ['craftsmen'],
     is_food: false,
     icon: '🔨',
+    market_category: 'processed_goods',
+    stockpile_target_turns: 3,
+    price_elasticity: 0.8,
   },
   pottery: {
     name: 'Керамика',
@@ -180,6 +225,9 @@ const GOODS = {
     producers: ['craftsmen'],
     is_food: false,
     icon: '🏺',
+    market_category: 'processed_goods',
+    stockpile_target_turns: 3,
+    price_elasticity: 0.8,
   },
 
   // ── ПИСЬМЕННЫЕ ПРИНАДЛЕЖНОСТИ ────────────────────────────────────────────
@@ -192,6 +240,9 @@ const GOODS = {
     producers: ['merchants'],   // импортируется из Египта
     is_food: false,
     icon: '📜',
+    market_category: 'processed_goods',
+    stockpile_target_turns: 3,
+    price_elasticity: 0.7,
   },
   wax: {
     name: 'Воск',
@@ -202,6 +253,9 @@ const GOODS = {
     producers: ['farmers'],
     is_food: false,
     icon: '🕯',
+    market_category: 'raw_material',
+    stockpile_target_turns: 3,
+    price_elasticity: 0.8,
   },
 
   // ── ПРЕДМЕТЫ РОСКОШИ ────────────────────────────────────────────────────
@@ -214,6 +268,9 @@ const GOODS = {
     producers: ['merchants'],   // импорт с Востока
     is_food: false,
     icon: '🌿',
+    market_category: 'luxury',
+    stockpile_target_turns: 2,
+    price_elasticity: 0.6,   // спрос рухает при дефиците — не первая необходимость
   },
   purple_dye: {
     name: 'Пурпур',
@@ -224,6 +281,9 @@ const GOODS = {
     producers: ['merchants'],   // финикийский пурпур
     is_food: false,
     icon: '💜',
+    market_category: 'luxury',
+    stockpile_target_turns: 2,
+    price_elasticity: 0.5,
   },
 
   // ── ТОРГОВЫЕ ТОВАРЫ ─────────────────────────────────────────────────────
@@ -237,6 +297,9 @@ const GOODS = {
     producers: ['merchants', 'sailors'],
     is_food: false,
     icon: '🎁',
+    market_category: 'trade_hub',
+    stockpile_target_turns: 3,
+    price_elasticity: 0.8,
   },
 
   // ── СИЦИЛИЙСКИЕ РЕСУРСЫ ─────────────────────────────────────────────────
@@ -252,6 +315,9 @@ const GOODS = {
     is_food: false,
     // Применение: дубление кожи, медицина, фумигация, окраска
     icon: '🟡',
+    market_category: 'raw_material',
+    stockpile_target_turns: 4,
+    price_elasticity: 0.9,
   },
 
   tuna: {
@@ -264,6 +330,9 @@ const GOODS = {
     is_food: true,
     // Ловушки-маттанцы — сицилийский промысел тунца
     icon: '🐟',
+    market_category: 'food_staple',
+    stockpile_target_turns: 5,
+    price_elasticity: 1.3,
   },
 
   // ── РАБОЧАЯ СИЛА ────────────────────────────────────────────────────────
@@ -276,6 +345,9 @@ const GOODS = {
     producers: ['merchants'],
     is_food: false,
     icon: '⛓️',
+    market_category: 'labor',
+    stockpile_target_turns: 2,
+    price_elasticity: 0.7,
   },
 };
 
@@ -337,3 +409,53 @@ const REGION_PRODUCTION_BASE = {
     pottery:   { per: 'craftsmen', rate: 40 },
   },
 };
+
+// ── Вспомогательные функции рынка ────────────────────────────────────────────
+
+/**
+ * Возвращает объект динамического состояния товара по умолчанию.
+ * Используется при инициализации и при добавлении нового товара в рынок.
+ * @param {string} goodId - ключ из GOODS
+ * @returns {Object}
+ */
+function ensureMarketEntry(goodId) {
+  const good = GOODS[goodId];
+  if (!good) return null;
+  const base = good.base_price;
+  return {
+    base:             base,
+    price:            base,
+    supply:           0,
+    demand:           0,
+    price_history:    [],          // последние 24 тика
+    shortage_streak:  0,           // тиков подряд со складом < 50% цели
+    production_cost:  null,        // заполняется движком рецептов (Этап 3)
+    price_floor:      base * 0.5,  // минимальная цена = 50% базы
+  };
+}
+
+/**
+ * Добавляет в GAME_STATE.market все товары из GOODS, которых там ещё нет,
+ * сохраняя существующие записи без изменений.
+ * Вызывается один раз при старте игры.
+ * @param {Object} market - GAME_STATE.market
+ */
+function initializeAllMarketEntries(market) {
+  for (const goodId of Object.keys(GOODS)) {
+    if (!market[goodId]) {
+      market[goodId] = ensureMarketEntry(goodId);
+    }
+  }
+}
+
+/**
+ * Возвращает статические метаданные товара вместе с его текущим рыночным состоянием.
+ * @param {string} goodId
+ * @param {Object} market - GAME_STATE.market
+ * @returns {{ ...GOODS[goodId], market: market[goodId] } | null}
+ */
+function getGoodInfo(goodId, market) {
+  const good = GOODS[goodId];
+  if (!good) return null;
+  return { ...good, id: goodId, market: market[goodId] || null };
+}
