@@ -865,6 +865,166 @@ function getBuildingTotalWorkers(buildingId) {
   return b.worker_profession.reduce((sum, wp) => sum + wp.count, 0);
 }
 
+// ══════════════════════════════════════════════════════════════
+// РЕЦЕПТЫ ПРОИЗВОДСТВА
+//
+// Структура записи:
+//   output_good           — производимый товар (совпадает с ключом в production_output)
+//   inputs[]              — { good, amount } потребляется на 1 единицу выхода
+//   labor_cost_per_worker — золото/тик на 1 единицу выхода (компонент себестоимости)
+//
+// Назначение:
+//   • inputs.amount × market_price → себестоимость сырья
+//   • Σ(input costs) + labor_cost_per_worker = production_cost товара
+//   • production_cost × 0.5 = price_floor (обновляется каждый тик)
+//   • production_ratio = min(available_input / needed) — частичное производство
+//     при нехватке сырья; создаёт каскадный дефицит по цепочке
+//
+// Здания без рецептов (нет входных товаров) — ratio = 1.0 всегда.
+// ══════════════════════════════════════════════════════════════
+
+const BUILDING_RECIPES = {
+
+  // ── Мастерские ────────────────────────────────────────────────────────────
+  workshop: [
+    {
+      output_good:            'tools',
+      inputs: [
+        { good: 'iron',   amount: 2.0 },  // 2 таланта железа + 0.5 воза дерева = 1 набор инструментов
+        { good: 'timber', amount: 0.5 },
+      ],
+      labor_cost_per_worker: 8,
+    },
+    {
+      output_good:            'cloth',
+      inputs: [
+        { good: 'wool', amount: 1.5 },    // 1.5 тюка шерсти = 1 тюк ткани
+      ],
+      labor_cost_per_worker: 6,
+    },
+    {
+      output_good:            'pottery',
+      inputs: [
+        { good: 'timber', amount: 0.3 },  // дрова для обжига
+      ],
+      labor_cost_per_worker: 4,
+    },
+  ],
+
+  // ── Давильня ──────────────────────────────────────────────────────────────
+  oil_press: [
+    {
+      output_good:            'olive_oil',
+      inputs: [
+        { good: 'olives', amount: 2.0 },  // 2 амфоры оливок → 1 амфора масла
+      ],
+      labor_cost_per_worker: 5,
+    },
+  ],
+
+  // ── Винодельня ────────────────────────────────────────────────────────────
+  winery: [
+    {
+      output_good:            'wine',
+      inputs: [
+        { good: 'barley', amount: 0.5 },  // ячмень — зерновая основа брожения
+      ],
+      labor_cost_per_worker: 7,
+    },
+  ],
+
+  // ── Гончарная мастерская ──────────────────────────────────────────────────
+  pottery_workshop: [
+    {
+      output_good:            'pottery',
+      inputs: [
+        { good: 'timber', amount: 0.2 },  // дрова для обжига в гончарных печах
+      ],
+      labor_cost_per_worker: 4,
+    },
+  ],
+
+  // ── Рудники ───────────────────────────────────────────────────────────────
+  mine: [
+    {
+      output_good:            'iron',
+      inputs:                 [],          // прямая добыча руды
+      labor_cost_per_worker: 12,
+    },
+    {
+      output_good:            'bronze',
+      inputs: [
+        { good: 'iron', amount: 0.5 },    // бронза = медь+олово, упрощение: тратит железо
+      ],
+      labor_cost_per_worker: 15,
+    },
+  ],
+
+  // ── Солеварня ─────────────────────────────────────────────────────────────
+  salt_works: [
+    {
+      output_good:            'salt',
+      inputs:                 [],          // выпаривание морской воды
+      labor_cost_per_worker: 6,
+    },
+  ],
+
+  // ── Лесозаготовка ─────────────────────────────────────────────────────────
+  lumber_camp: [
+    {
+      output_good:            'timber',
+      inputs:                 [],
+      labor_cost_per_worker: 4,
+    },
+  ],
+
+  // ── Ферма ─────────────────────────────────────────────────────────────────
+  farm: [
+    { output_good: 'wheat',  inputs: [], labor_cost_per_worker: 3 },
+    { output_good: 'barley', inputs: [], labor_cost_per_worker: 3 },
+  ],
+
+  // ── Пастбище ──────────────────────────────────────────────────────────────
+  ranch: [
+    { output_good: 'wool',    inputs: [], labor_cost_per_worker: 3 },
+    { output_good: 'leather', inputs: [], labor_cost_per_worker: 3 },
+    { output_good: 'honey',   inputs: [], labor_cost_per_worker: 2 },
+  ],
+
+  // ── Латифундия ────────────────────────────────────────────────────────────
+  latifundium: [
+    { output_good: 'wheat',  inputs: [], labor_cost_per_worker: 2 },
+    { output_good: 'olives', inputs: [], labor_cost_per_worker: 2 },
+  ],
+
+  // ── Сицилийская пшеничная латифундия ─────────────────────────────────────
+  grain_estate: [
+    { output_good: 'wheat',  inputs: [], labor_cost_per_worker: 2 },
+    { output_good: 'barley', inputs: [], labor_cost_per_worker: 2 },
+  ],
+
+  // ── Серные рудники ────────────────────────────────────────────────────────
+  sulfur_mine: [
+    { output_good: 'sulfur', inputs: [], labor_cost_per_worker: 10 },
+  ],
+
+  // ── Тоня (ловушка для тунца) ──────────────────────────────────────────────
+  tuna_trap: [
+    { output_good: 'tuna', inputs: [], labor_cost_per_worker: 6 },
+  ],
+
+  // ── Папирусные заросли ────────────────────────────────────────────────────
+  papyrus_bed: [
+    { output_good: 'papyrus', inputs: [], labor_cost_per_worker: 4 },
+  ],
+
+  // ── Порт ──────────────────────────────────────────────────────────────────
+  port: [
+    { output_good: 'fish',        inputs: [], labor_cost_per_worker: 5  },
+    { output_good: 'trade_goods', inputs: [], labor_cost_per_worker: 10 },
+  ],
+};
+
 // Максимум слотов для региона (с учётом его типа местности)
 function getRegionMaxSlots(terrain) {
   return TERRAIN_MAX_SLOTS[terrain] ?? TERRAIN_MAX_SLOTS.default;

@@ -69,11 +69,12 @@ function recalculateAllEmployment(nationId) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// 2. ВЫХОД ЗДАНИЯ (товары за ход)
-// Возвращает { good: amount } для одного активного слота.
+// 2а. БАЗОВЫЙ ВЫХОД ЗДАНИЯ (без учёта рецептов и наличия сырья)
+// Используется как внутренний примитив: processAllRecipes() и
+// getBuildingOutput() вызывают его, чтобы не дублировать логику.
 // ──────────────────────────────────────────────────────────────
 
-function getBuildingOutput(slot, region, nation) {
+function _calcSlotBaseOutput(slot, region, nation) {
   if (!slot || slot.status !== 'active') return {};
 
   const bDef = BUILDINGS[slot.building_id];
@@ -96,6 +97,161 @@ function getBuildingOutput(slot, region, nation) {
   }
 
   return output;
+}
+
+// ──────────────────────────────────────────────────────────────
+// 2б. ВЫХОД ЗДАНИЯ С УЧЁТОМ РЕЦЕПТОВ
+// Возвращает { good: amount } для одного активного слота.
+// Если processAllRecipes() уже отработал в этом тике,
+// slot._recipe_ratios содержит production_ratio для каждого товара
+// и фактический выход масштабируется (частичное производство).
+// ──────────────────────────────────────────────────────────────
+
+function getBuildingOutput(slot, region, nation) {
+  const base   = _calcSlotBaseOutput(slot, region, nation);
+  const ratios = slot._recipe_ratios;
+
+  // Нет рецептов или рецепты ещё не обработаны → полный выход
+  if (!ratios || Object.keys(ratios).length === 0) return base;
+
+  const scaled = {};
+  for (const [good, amount] of Object.entries(base)) {
+    // Если для этого товара есть рецепт — применяем коэффициент,
+    // иначе (товар без рецептурных входов) берём ratio = 1.0
+    const ratio = Object.prototype.hasOwnProperty.call(ratios, good) ? ratios[good] : 1.0;
+    const actual = amount * ratio;
+    if (actual > 0.1) scaled[good] = actual;
+  }
+  return scaled;
+}
+
+// ──────────────────────────────────────────────────────────────
+// 2в. ОБРАБОТКА РЕЦЕПТОВ ДЛЯ ОДНОЙ НАЦИИ
+//
+// Вызывается в начале каждого тика (до calculateProduction).
+// Для каждого активного здания с рецептом:
+//   1. Считает ожидаемый выход (через _calcSlotBaseOutput)
+//   2. Определяет нужное количество входных материалов
+//   3. Вычисляет production_ratio = min(available/needed) по всем входам
+//   4. Потребляет scaled-количество из nation.economy.stockpile
+//   5. Сохраняет ratio в slot._recipe_ratios
+//   6. Считает production_cost (per unit) для каждого товара
+//
+// После обхода всех зданий обновляет GAME_STATE.market[good].production_cost
+// (средневзвешенное по всем активным рецептам, производящим этот товар).
+// ──────────────────────────────────────────────────────────────
+
+function processAllRecipes(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return;
+
+  const stockpile = nation.economy.stockpile;
+  const market    = GAME_STATE.market;
+  const isPlayer  = (nationId === GAME_STATE.player_nation);
+
+  // Аккумулятор себестоимостей: { good: [cost1, cost2, ...] }
+  // Несколько зданий могут производить один товар — берём среднее.
+  const goodCosts = {};
+
+  for (const rid of nation.regions) {
+    const region = GAME_STATE.regions[rid];
+    if (!region?.building_slots?.length) continue;
+
+    for (const slot of region.building_slots) {
+      if (slot.status !== 'active') continue;
+
+      const recipes = (typeof BUILDING_RECIPES !== 'undefined')
+                      ? BUILDING_RECIPES[slot.building_id]
+                      : null;
+
+      if (!recipes?.length) {
+        // Нет рецепта → ratio = 1.0, не трогаем старые _recipe_ratios
+        slot._recipe_ratios = {};
+        continue;
+      }
+
+      // Ожидаемый выход за тик (полный, без учёта дефицита)
+      const baseOutput = _calcSlotBaseOutput(slot, region, nation);
+      const ratios     = {};
+
+      for (const recipe of recipes) {
+        const good           = recipe.output_good;
+        const expectedOutput = baseOutput[good] || 0;
+
+        if (expectedOutput <= 0) {
+          ratios[good] = 0;
+          continue;
+        }
+
+        // ── Расчёт production_ratio ────────────────────────────────────────
+        let ratio = 1.0;
+        for (const input of recipe.inputs) {
+          const needed    = expectedOutput * input.amount;
+          if (needed <= 0) continue;
+          const available = stockpile[input.good] || 0;
+          ratio = Math.min(ratio, available / needed);
+        }
+        ratio = Math.max(0, Math.min(1.0, ratio));
+        ratios[good] = ratio;
+
+        // ── Потребляем входные материалы (scaled) ─────────────────────────
+        const actualOutput = expectedOutput * ratio;
+        for (const input of recipe.inputs) {
+          const consumed = actualOutput * input.amount;
+          if (consumed > 0) {
+            stockpile[input.good] = Math.max(0,
+              (stockpile[input.good] || 0) - consumed
+            );
+          }
+        }
+
+        // ── Предупреждение при существенном дефиците (только игрок) ───────
+        if (isPlayer && ratio < 0.5 && ratio > 0) {
+          const missingInputs = recipe.inputs
+            .filter(inp => (stockpile[inp.good] || 0) < expectedOutput * inp.amount)
+            .map(inp => (typeof GOODS !== 'undefined' ? GOODS[inp.good]?.name : inp.good) || inp.good)
+            .join(', ');
+          if (missingInputs && typeof addEventLog === 'function') {
+            const bName = (typeof BUILDINGS !== 'undefined' ? BUILDINGS[slot.building_id]?.name : null)
+                         || slot.building_id;
+            addEventLog(
+              `⚠ ${bName}: нехватка (${missingInputs}), производство ${good} — ${Math.round(ratio * 100)}%`,
+              'warning'
+            );
+          }
+        }
+
+        // ── Себестоимость: Σ(input.amount × price) + labor_cost ───────────
+        let cost = recipe.labor_cost_per_worker;
+        for (const input of recipe.inputs) {
+          const price = market[input.good]?.price
+                     ?? (typeof GOODS !== 'undefined' ? GOODS[input.good]?.base_price : null)
+                     ?? 10;
+          cost += input.amount * price;
+        }
+        if (!goodCosts[good]) goodCosts[good] = [];
+        goodCosts[good].push(cost);
+      }
+
+      slot._recipe_ratios = ratios;
+    }
+  }
+
+  // ── Обновляем production_cost в мировом рынке ──────────────────────────
+  // Для каждого товара берём среднее по всем активным рецептам нации.
+  // Это немедленно влияет на price_floor при следующем вызове updateMarketPrices.
+  for (const [good, costs] of Object.entries(goodCosts)) {
+    if (!market[good]) continue;
+    const avg = costs.reduce((s, c) => s + c, 0) / costs.length;
+
+    // Берём максимум с предыдущим значением, чтобы не занижать из-за
+    // одной дешёвой нации при нескольких производителях.
+    // Для первого тика (null) просто устанавливаем.
+    const prev = market[good].production_cost;
+    market[good].production_cost = Math.round(
+      (prev == null ? avg : Math.max(prev, avg)) * 10
+    ) / 10;
+  }
 }
 
 // ──────────────────────────────────────────────────────────────

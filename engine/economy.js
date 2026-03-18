@@ -499,6 +499,25 @@ function evaluateCondition(value, condition) {
 // ──────────────────────────────────────────────────────────────
 
 function runEconomyTick() {
+  // Шаг 0.5: Рецепты производства
+  //   • Сброс production_cost (будет пересчитан ниже)
+  //   • Потребляет входные материалы из nation.economy.stockpile
+  //   • Записывает slot._recipe_ratios (коэффициент частичного производства)
+  //   • Обновляет GAME_STATE.market[good].production_cost → price_floor
+  // Вызывается ДО calculateProduction(), чтобы getBuildingOutput() уже
+  // видел готовые ratios и возвращал масштабированный выход.
+
+  // Сбрасываем production_cost перед пересчётом (стала неактуальной из-за сноса зданий)
+  for (const m of Object.values(GAME_STATE.market)) {
+    m.production_cost = null;
+  }
+
+  if (typeof processAllRecipes === 'function') {
+    for (const nationId of Object.keys(GAME_STATE.nations)) {
+      try { processAllRecipes(nationId); } catch (e) { console.warn('[recipes]', e); }
+    }
+  }
+
   // Шаг 1: производство всех наций
   const allProduced = calculateProduction();
 
