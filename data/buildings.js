@@ -89,6 +89,12 @@ const BUILDINGS = {
 
     production_output: [],
 
+    // Рынок улучшает доступность товаров — прямой бонус к счастью классов
+    class_happiness_bonus: {
+      citizens:        5,   // торговцы выигрывают от рынка
+      craftsmen_class: 3,   // ремесленники легче сбывают продукцию
+    },
+
     // legacy
     profession_growth:        { merchants: 0.015, craftsmen: 0.008 },
     needs_satisfaction_bonus: 0.05,
@@ -253,13 +259,18 @@ const BUILDINGS = {
     worker_profession: [
       { profession: 'farmers', count: 50 },
     ],
-    wage_rate:          0.10,
+    wage_rate:          0.20,   // государственные хранители — наёмные работники
     labor_type:         'wage',
     build_turns:        2,
     terrain_restriction: null,
     max_per_region:     1,
 
     production_output: [],
+
+    // Продовольственная безопасность даёт землевладельцам и крестьянам спокойствие
+    class_happiness_bonus: {
+      farmers_class: 3,
+    },
 
     // legacy
     famine_mortality_mod: -0.004,
@@ -277,8 +288,8 @@ const BUILDINGS = {
       { profession: 'farmers', count: 600 },
       { profession: 'slaves',  count: 200 },
     ],
-    wage_rate:          0.25,   // только земледельцы-арендаторы получают 25%
-    labor_type:         'mixed',
+    wage_rate:          0.28,   // арендаторы получают ~28% урожая (рабы — ничего)
+    labor_type:         'tenant',  // аристократ-землевладелец = profit goes to aristocrats
     build_turns:        4,
     terrain_restriction: ['plains', 'hills', 'river_valley'],
     max_per_region:     null,
@@ -341,6 +352,14 @@ const BUILDINGS = {
 
     production_output: [],
 
+    // Храм успокаивает всё население — религиозный бонус к единству
+    class_happiness_bonus: {
+      clergy_class:    8,   // жрецы рады
+      farmers_class:   4,
+      soldiers_class:  3,
+      citizens:        3,
+    },
+
     // legacy
     profession_growth: { clergy: 0.025 },
     mortality_mod:     -0.003,
@@ -364,6 +383,13 @@ const BUILDINGS = {
     max_per_region:     1,
 
     production_output: [],
+
+    // Чистая вода снижает смертность и радует всех горожан
+    class_happiness_bonus: {
+      farmers_class:   4,
+      craftsmen_class: 4,
+      citizens:        4,
+    },
 
     // legacy
     mortality_mod:         -0.006,
@@ -410,6 +436,13 @@ const BUILDINGS = {
     max_per_region:      1,
 
     production_output: [],
+
+    // Форум как центр общественной жизни — прямой бонус гражданским классам
+    class_happiness_bonus: {
+      citizens:        5,
+      merchants:       3,
+      craftsmen_class: 2,
+    },
 
     // legacy
     profession_growth:        { merchants: 0.007 },
@@ -601,7 +634,7 @@ const BUILDINGS = {
     max_per_region:     null,
 
     production_output: [
-      { good: 'pottery', base_rate: 70 },
+      { good: 'pottery', base_rate: 110 },  // увеличено: низкая цена → нужен объём
     ],
   },
 
@@ -616,7 +649,7 @@ const BUILDINGS = {
       { profession: 'farmers', count: 100 },
       { profession: 'slaves',  count: 100 },
     ],
-    wage_rate:          0.20,
+    wage_rate:          0.30,   // фермеры получают хорошую долю от масла
     labor_type:         'mixed',
     build_turns:        2,
     terrain_restriction: ['hills', 'plains', 'coastal_city'],

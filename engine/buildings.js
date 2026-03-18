@@ -215,11 +215,20 @@ function calculateBuildingRevenue(slot, region, nation) {
 // ──────────────────────────────────────────────────────────────
 
 // Ожидаемая зарплата на одного рабочего в ход (денарии).
-// Базовый ориентир: солдат получает 2 д./ход (CONFIG.BALANCE.INFANTRY_UPKEEP).
-// Наёмный рабочий = ~1.5 д./ход (чуть меньше, т.к. натуральное хозяйство).
-// При wage_rate ≈ 0.25 и base_rate ≈ 60–200 ед./1000 рабочих × цена 10–30
-// реальная зарплата обычно 0.5–3 д./рабочего — диапазон близок к ожидаемому.
-const EXPECTED_WAGE_PER_WORKER = 1.5;
+//
+// Калибровка: при типичном здании (400 рабочих, wage_rate 0.25, выручка ~700 ден)
+//   реальная зарплата ≈ 700×0.25 / 400 = 0.44 ден/рабочего.
+//   EXPECTED=0.5 → adequacy ≈ 0.88 → satBonus ≈ −2. Нейтральный результат.
+// При богатом здании (рудник, 200 ремесленников, выручка 3000, ставка 0.10):
+//   wages = 300; только ремесленники (нет рабов): 300/200 = 1.5 ден/рабочего → adequacy 3 → cap +20.
+// При бедном (гончарня 200 рабочих, выручка 290, ставка 0.28):
+//   wages = 81; 81/200 = 0.41 → adequacy 0.82 → satBonus −4. Умеренный минус.
+const EXPECTED_WAGE_PER_WORKER = 0.5;
+
+// Типы труда, для которых зарплатный satisfaction-бонус НЕ применяется.
+// self/none: самозанятые и пустые здания получают удовлетворение иначе.
+// slave:     рабы работают принудительно — зарплата не мотивирует.
+const _WAGE_BONUS_SKIP = new Set(['self', 'none', 'slave']);
 
 // Маппинг профессия → класс-владелец прибыли
 const PROFIT_CLASS = {
@@ -236,14 +245,17 @@ function distributeWages(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
-  // Аккумуляторы satisfaction-бонусов по профессиям
-  const bonusAccum  = {};  // prof → sum of sat bonuses
-  const workerAccum = {};  // prof → total workers with this bonus
+  // Аккумуляторы satisfaction-бонусов по профессиям (wage-satisfaction)
+  const bonusAccum  = {};  // prof → sum(satBonus × count)
+  const workerAccum = {};  // prof → total workers contributing
 
-  // Бонус класса-владельца
+  // Бонус класса-владельца (от чистой прибыли зданий)
   const profitAccum = {};  // classId → total profit
 
-  let totalWagesPaid = 0;
+  // Прямые бонусы к счастью классов (от amenity-зданий: таверна, акведук и т.д.)
+  const classBldBonus = {};  // classId → cumulative bonus
+
+  let totalWagesPaid   = 0;
   let totalMaintenance = 0;
 
   const maintCost = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
@@ -258,11 +270,11 @@ function distributeWages(nationId) {
       const bDef = BUILDINGS[slot.building_id];
       if (!bDef) continue;
 
-      const revenue    = calculateBuildingRevenue(slot, region, nation);
-      const wageRate   = bDef.wage_rate   ?? 0;
-      const laborType  = bDef.labor_type  ?? 'none';
-      const wages      = revenue * wageRate;
-      const profit     = revenue - wages - maintCost;
+      const revenue   = calculateBuildingRevenue(slot, region, nation);
+      const wageRate  = bDef.wage_rate  ?? 0;
+      const laborType = bDef.labor_type ?? 'none';
+      const wages     = revenue * wageRate;
+      const profit    = revenue - wages - maintCost;
 
       slot.revenue    = Math.round(revenue);
       slot.wages_paid = Math.round(wages);
@@ -270,18 +282,24 @@ function distributeWages(nationId) {
       totalMaintenance  += maintCost;
 
       const totalWorkers = _slotTotalWorkers(slot);
+      const hasOutput    = (bDef.production_output?.length ?? 0) > 0;
 
-      // ── Зарплатные бонусы рабочим ──────────────────────────────────────
-      if (wages > 0 && totalWorkers > 0) {
+      // ── Зарплатный satisfaction-бонус рабочим ──────────────────────────
+      // Применяется только если:
+      //   • здание производит что-то на продажу (есть выручка),
+      //   • тип труда предполагает зарплату (не self/none/slave),
+      //   • фактически выплачены деньги.
+      if (hasOutput && wages > 0 && totalWorkers > 0 && !_WAGE_BONUS_SKIP.has(laborType)) {
         for (const [prof, count] of Object.entries(slot.workers)) {
           if (!count) continue;
+          if (prof === 'slaves') continue;  // рабы не получают зарплатного бонуса
 
-          const profShare    = wages * (count / totalWorkers);
+          const profShare     = wages * (count / totalWorkers);
           const expectedTotal = count * EXPECTED_WAGE_PER_WORKER;
-          // wageAdequacy > 1 = хорошие условия, < 1 = плохие
-          const adequacy  = profShare / Math.max(expectedTotal, 1);
-          // satisfaction bonus: от -15 (нет зарплаты) до +20 (щедрая зарплата)
-          const satBonus  = Math.round(Math.max(-15, Math.min(20, (adequacy - 1) * 20)));
+          // adequacy > 1 = хорошие условия, < 1 = плохие
+          const adequacy = profShare / Math.max(expectedTotal, 1);
+          // satBonus: −15 (голодная нищета) … 0 (норма) … +20 (щедро)
+          const satBonus = Math.round(Math.max(-15, Math.min(20, (adequacy - 1) * 20)));
 
           bonusAccum[prof]  = (bonusAccum[prof]  || 0) + satBonus * count;
           workerAccum[prof] = (workerAccum[prof] || 0) + count;
@@ -292,6 +310,12 @@ function distributeWages(nationId) {
       const ownerClass = PROFIT_CLASS[laborType];
       if (ownerClass && profit > 0) {
         profitAccum[ownerClass] = (profitAccum[ownerClass] || 0) + profit;
+      }
+
+      // ── Amenity-бонус: таверна, акведук, храм, форум и т.д. ───────────
+      const bldClassBonus = bDef.class_happiness_bonus || {};
+      for (const [classId, bonus] of Object.entries(bldClassBonus)) {
+        classBldBonus[classId] = (classBldBonus[classId] || 0) + bonus;
       }
     }
   }
@@ -304,14 +328,17 @@ function distributeWages(nationId) {
   }
   nation.population._wage_bonuses = wageBonuses;
 
-  // ── Profit-бонус классу-владельцу ──────────────────────────────────────
-  // Высокая прибыль → небольшой satisfaction-бонус аристократам / гражданам
+  // ── Profit-бонус классам-владельцам ────────────────────────────────────
+  // Каждые 1000 монет чистой прибыли = +1 к satisfaction, максимум +15.
   const profitBonuses = {};
   for (const [classId, totalProfit] of Object.entries(profitAccum)) {
-    // Каждые 5000 монет прибыли = +1 к satisfaction, max +15
-    profitBonuses[classId] = Math.min(15, Math.floor(totalProfit / 5000));
+    profitBonuses[classId] = Math.min(15, Math.floor(totalProfit / 1000));
   }
   nation.population._profit_class_bonuses = profitBonuses;
+
+  // ── Amenity-бонусы зданий (суммарные по нации) ──────────────────────────
+  // Каждый +1 из здания суммируется; итог capped на +25 на класс в updateHappiness.
+  nation.population._class_building_bonuses = classBldBonus;
 
   // ── Экономическая статистика ────────────────────────────────────────────
   nation.economy._building_wages_per_turn       = Math.round(totalWagesPaid);

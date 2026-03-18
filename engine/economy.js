@@ -143,12 +143,13 @@ function calculateProduction() {
         const professionPop = nation.population.by_profession[spec.per] || 0;
         const localWorkers  = professionPop * regionShareRaw;
 
-        // Сколько из local workers уже задействованы в организованных зданиях
+        // Сколько из local workers уже задействованы в организованных зданиях.
+        // employment[prof] — АКТУАЛЬНОЕ число занятых в зданиях ЭТОГО региона.
+        // Вычитаем напрямую из оценочного localWorkers (без повторного умножения на share).
         const employedOfProf = employment[spec.per] || 0;
 
-        // Неорганизованные рабочие = те, кто НЕ занят в building_slots
-        // Пропорционально: из regionShare вычитаем employed данной профессии
-        const freeWorkers = Math.max(0, localWorkers - employedOfProf * regionShareRaw);
+        // Неорганизованные рабочие = свободные от зданий (min 0)
+        const freeWorkers = Math.max(0, localWorkers - employedOfProf);
 
         const terrainMult = multipliers[spec.per] || 1.0;
         const amount = (freeWorkers / 1000) * spec.rate * terrainMult * fertility
@@ -557,6 +558,18 @@ function updateHappiness() {
           ));
           classSat[classId].profit_bonus = bonus; // для UI
         }
+      }
+
+      // Amenity-бонусы зданий (таверна, акведук, храм, форум и т.д.)
+      // Заполняются в distributeWages() для игрока каждый ход; суммируются и capped.
+      const bldBonuses = nation.population._class_building_bonuses || {};
+      for (const [classId, bonus] of Object.entries(bldBonuses)) {
+        if (!bonus || !classSat[classId]) continue;
+        const capped = Math.max(-25, Math.min(25, bonus));
+        classSat[classId].satisfaction = Math.max(0, Math.min(100,
+          classSat[classId].satisfaction + capped,
+        ));
+        classSat[classId].building_bonus = capped; // для UI
       }
 
       // Взвешенное счастье по политическому весу классов
