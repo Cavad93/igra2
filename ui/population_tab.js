@@ -104,7 +104,7 @@ function popSatLabel(sat) {
 // КАРТОЧКА КЛАССА
 // ─────────────────────────────────────────────────────────────────────────
 
-function renderClassCard(classId, classDef, classData, totalPop, stockpile, isExpanded) {
+function renderClassCard(classId, classDef, classData, totalPop, stockpile, isExpanded, classCohorts) {
   const sat    = classData.satisfaction;
   const pop    = classData.population;
   const share  = totalPop > 0 ? (pop / totalPop * 100) : 0;
@@ -197,11 +197,21 @@ function renderClassCard(classId, classDef, classData, totalPop, stockpile, isEx
       </div>
     `;
 
+    // Возрастной состав класса (mini-bar)
+    let ageMiniHtml = '';
+    if (classCohorts) {
+      const laws = typeof _getLaborLaws === 'function'
+        ? _getLaborLaws(GAME_STATE?.nations?.[GAME_STATE?.player_nation])
+        : null;
+      ageMiniHtml = _buildClassAgeMiniBar(classId, classCohorts, laws);
+    }
+
     detHtml = `
       <div class="pop-det">
         <div class="pop-ddesc">${classDef.description}</div>
         ${spillsHtml}
         <div class="pop-ncon">${grpHtml}</div>
+        ${ageMiniHtml}
       </div>
     `;
   }
@@ -795,101 +805,507 @@ function _initChartTooltip(history, mode) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// ВОЗРАСТНАЯ ДЕМОГРАФИЯ — секция пирамиды и законов труда
+// ВОЗРАСТНАЯ ПИРАМИДА — SVG
+// Профессиональная горизонтальная пирамида, слева мужчины, справа женщины.
+// ─────────────────────────────────────────────────────────────────────────
+
+function _buildAgePyramidSVG(dem, laws, totalPop) {
+  const W = 640, H = 198;
+  const cGap = 90;              // зона в центре для подписей возраста
+  const padL = 12, padR = 12;
+  const padT = 26, padB = 24;
+  const sideW = (W - padL - padR - cGap) / 2;  // ширина каждой стороны
+
+  const mwa = laws?.min_work_age   || 12;
+  const et  = laws?.elder_threshold || 55;
+  const cf  = dem.cohort_fractions;
+
+  // Полосы: сверху вниз → пожилые, взрослые, дети (классическая пирамида)
+  const bands = [
+    { id: 'elderly',  frac: cf.elderly,  color: '#ffb74d', label: `${et}+ лет`,           hint: 'Пожилые' },
+    { id: 'adults',   frac: cf.adults,   color: '#81c784', label: `${mwa}–${et} лет`,      hint: 'Взрослые' },
+    { id: 'children', frac: cf.children, color: '#64b5f6', label: `0–${mwa} лет`,          hint: 'Дети' },
+  ];
+
+  const nB   = bands.length;
+  const bGap = 7;
+  const bH   = (H - padT - padB - bGap * (nB - 1)) / nB;
+
+  // Масштаб: максимальная полуфракция (100% = sideW) с 15% запасом
+  const maxHalf  = Math.max(...bands.map(b => b.frac)) / 2;
+  const scaleMax = Math.min(0.35, maxHalf * 1.18);
+  const bwScale  = sideW / scaleMax;
+
+  // Координаты осей
+  const cL   = padL + sideW;           // правый край левой стороны (мужчины)
+  const cR   = padL + sideW + cGap;    // левый край правой стороны (женщины)
+  const cMid = (cL + cR) / 2;
+
+  let s = '';
+
+  // ── Заголовки колонок ──────────────────────────────────────
+  s += `
+    <text x="${(cL / 2 + padL / 2).toFixed(1)}" y="17" text-anchor="middle"
+          font-size="9.5" font-family="sans-serif" fill="rgba(255,255,255,.38)" letter-spacing=".5">
+      ♂ МУЖЧИНЫ
+    </text>
+    <text x="${(cR + (W - padR - cR) / 2).toFixed(1)}" y="17" text-anchor="middle"
+          font-size="9.5" font-family="sans-serif" fill="rgba(255,255,255,.38)" letter-spacing=".5">
+      ♀ ЖЕНЩИНЫ
+    </text>`;
+
+  // ── Вертикальная сетка (5%, 10%, 15%, 20%, 25%) ───────────
+  const gridPcts = [5, 10, 15, 20, 25];
+  for (const pct of gridPcts) {
+    const frac = pct / 100;
+    if (frac > scaleMax * 1.05) break;
+    const xL = (cL - frac * bwScale).toFixed(1);
+    const xR = (cR + frac * bwScale).toFixed(1);
+    const gridTop = padT, gridBot = padT + nB * bH + (nB - 1) * bGap;
+    s += `
+      <line x1="${xL}" y1="${gridTop}" x2="${xL}" y2="${gridBot}"
+            stroke="rgba(255,255,255,.07)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="${xR}" y1="${gridTop}" x2="${xR}" y2="${gridBot}"
+            stroke="rgba(255,255,255,.07)" stroke-width="1" stroke-dasharray="3,4"/>
+      <text x="${xL}" y="${(gridBot + 16).toFixed(1)}" text-anchor="middle"
+            font-size="8" font-family="sans-serif" fill="rgba(255,255,255,.25)">${pct}%</text>
+      <text x="${xR}" y="${(gridBot + 16).toFixed(1)}" text-anchor="middle"
+            font-size="8" font-family="sans-serif" fill="rgba(255,255,255,.25)">${pct}%</text>`;
+  }
+
+  // ── Осевые линии ──────────────────────────────────────────
+  const axTop = padT - 4;
+  const axBot = padT + nB * bH + (nB - 1) * bGap + 4;
+  s += `
+    <line x1="${cL}" y1="${axTop}" x2="${cL}" y2="${axBot}"
+          stroke="rgba(255,255,255,.22)" stroke-width="1"/>
+    <line x1="${cR}" y1="${axTop}" x2="${cR}" y2="${axBot}"
+          stroke="rgba(255,255,255,.22)" stroke-width="1"/>`;
+
+  // ── Полосы ────────────────────────────────────────────────
+  bands.forEach((band, i) => {
+    const y    = padT + i * (bH + bGap);
+    const half = band.frac / 2;
+    const bw   = Math.max(3, half * bwScale);
+    const pct  = Math.round(band.frac * 100);
+    const halfPct = (half * 100).toFixed(1);
+    const midY = (y + bH / 2 + 4).toFixed(1);
+
+    // Градиентные ID уникальны по полосе
+    const gIdM = `apg-m-${band.id}`;
+    const gIdF = `apg-f-${band.id}`;
+
+    // Мужская полоса (влево от cL)
+    s += `
+      <defs>
+        <linearGradient id="${gIdM}" x1="1" y1="0" x2="0" y2="0">
+          <stop offset="0%" stop-color="${band.color}" stop-opacity="0.88"/>
+          <stop offset="100%" stop-color="${band.color}" stop-opacity="0.40"/>
+        </linearGradient>
+        <linearGradient id="${gIdF}" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="${band.color}" stop-opacity="0.72"/>
+          <stop offset="100%" stop-color="${band.color}" stop-opacity="0.40"/>
+        </linearGradient>
+      </defs>
+      <rect x="${(cL - bw).toFixed(1)}" y="${y.toFixed(1)}"
+            width="${bw.toFixed(1)}" height="${bH.toFixed(1)}"
+            fill="url(#${gIdM})" rx="3"/>
+      <rect x="${cR.toFixed(1)}" y="${y.toFixed(1)}"
+            width="${bw.toFixed(1)}" height="${bH.toFixed(1)}"
+            fill="url(#${gIdF})" rx="3"/>`;
+
+    // Процент внутри полосы (если достаточно широкая)
+    if (bw > 32) {
+      s += `
+        <text x="${(cL - bw / 2).toFixed(1)}" y="${midY}" text-anchor="middle"
+              font-size="10" font-weight="bold" fill="rgba(0,0,0,.70)" font-family="sans-serif">
+          ${halfPct}%
+        </text>
+        <text x="${(cR + bw / 2).toFixed(1)}" y="${midY}" text-anchor="middle"
+              font-size="10" font-weight="bold" fill="rgba(0,0,0,.70)" font-family="sans-serif">
+          ${halfPct}%
+        </text>`;
+    }
+
+    // Численность вне полосы
+    const halfN = popFmtNum(Math.round(totalPop * half));
+    s += `
+      <text x="${(cL - bw - 5).toFixed(1)}" y="${midY}" text-anchor="end"
+            font-size="8.5" fill="rgba(255,255,255,.35)" font-family="sans-serif">${halfN}</text>
+      <text x="${(cR + bw + 5).toFixed(1)}" y="${midY}" text-anchor="start"
+            font-size="8.5" fill="rgba(255,255,255,.35)" font-family="sans-serif">${halfN}</text>`;
+
+    // Центральная метка: возраст + доля + численность
+    s += `
+      <text x="${cMid.toFixed(1)}" y="${(y + bH / 2 - 4).toFixed(1)}" text-anchor="middle"
+            font-size="9.5" font-weight="600" fill="rgba(255,255,255,.90)" font-family="sans-serif">
+        ${band.label}
+      </text>
+      <text x="${cMid.toFixed(1)}" y="${(y + bH / 2 + 9).toFixed(1)}" text-anchor="middle"
+            font-size="8.5" fill="${band.color}" font-family="sans-serif" opacity="0.9">
+        ${pct}% · ${popFmtNum(Math.round(totalPop * band.frac))}
+      </text>`;
+  });
+
+  return `
+    <div class="age-pyramid-wrap">
+      <svg viewBox="0 0 ${W} ${H}" class="age-pyramid-svg">${s}</svg>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// КЛЮЧЕВЫЕ ДЕМОГРАФИЧЕСКИЕ МЕТРИКИ (карточки)
+// ─────────────────────────────────────────────────────────────────────────
+
+function _buildDemographicMetricCards(dem) {
+  const e0  = dem.life_expectancy       || '—';
+  const ea  = dem.life_expectancy_adult || '—';
+  const med = dem.median_age            || '—';
+  const u5  = dem.under5_mort           !== undefined ? dem.under5_mort : '—';
+  const cbr = dem.crude_birth_rate      || '—';
+  const cdr = dem.crude_death_rate      || '—';
+  const ng  = dem.natural_growth        !== undefined ? dem.natural_growth : '—';
+  const ngSign = typeof ng === 'number' ? (ng >= 0 ? '+' : '') : '';
+  const ngCls  = typeof ng === 'number' ? (ng > 0 ? 'good' : ng < -2 ? 'bad' : 'warn') : '';
+
+  const BASE_C_MULT = (typeof AGE_PARAMS !== 'undefined') ? AGE_PARAMS.baseline_consumption_mult : 1.80;
+  const dep    = dem.dependency_ratio ?? 0;
+  const cMlt   = dem.consumption_mult ?? 1.0;
+  const lMod   = dem.labor_productivity_mod ?? 1.0;
+  const ew     = Math.round(dem.effective_workforce || 0);
+
+  const depInfo = (typeof dependencyRatioLabel === 'function')
+    ? dependencyRatioLabel(dep) : { text: dep.toFixed(2), cls: 'neutral' };
+  const relCons  = cMlt / BASE_C_MULT;
+  const consDelta = ((relCons - 1) * 100).toFixed(1);
+  const consSign  = relCons >= 1 ? '+' : '';
+  const consCls   = relCons > 1.10 ? 'bad' : relCons > 1.02 ? 'warn' : 'good';
+  const lModSign  = lMod >= 1 ? '+' : '';
+  const lModCls   = lMod < 0.85 ? 'bad' : lMod < 0.97 ? 'warn' : 'good';
+
+  return `
+    <div class="adm-metric-grid">
+      <div class="adm-metric adm-metric--le">
+        <div class="adm-metric-icon">⌛</div>
+        <div class="adm-metric-body">
+          <div class="adm-metric-val">${e0} <span class="adm-metric-unit">лет</span></div>
+          <div class="adm-metric-lbl">Ожидаемая жизнь при рождении</div>
+        </div>
+      </div>
+      <div class="adm-metric adm-metric--lea">
+        <div class="adm-metric-icon">🧑</div>
+        <div class="adm-metric-body">
+          <div class="adm-metric-val">${ea} <span class="adm-metric-unit">лет</span></div>
+          <div class="adm-metric-lbl">Ожидаемая жизнь для взрослых</div>
+        </div>
+      </div>
+      <div class="adm-metric">
+        <div class="adm-metric-icon">📊</div>
+        <div class="adm-metric-body">
+          <div class="adm-metric-val">${med} <span class="adm-metric-unit">лет</span></div>
+          <div class="adm-metric-lbl">Медианный возраст</div>
+        </div>
+      </div>
+      <div class="adm-metric">
+        <div class="adm-metric-icon">🪦</div>
+        <div class="adm-metric-body">
+          <div class="adm-metric-val">${u5}<span class="adm-metric-unit">‰</span></div>
+          <div class="adm-metric-lbl">Детская смертность до 5 лет</div>
+        </div>
+      </div>
+      <div class="adm-metric">
+        <div class="adm-metric-icon">👶</div>
+        <div class="adm-metric-body">
+          <div class="adm-metric-val">${cbr}<span class="adm-metric-unit">‰</span></div>
+          <div class="adm-metric-lbl">Рождаемость (на 1000/год)</div>
+        </div>
+      </div>
+      <div class="adm-metric">
+        <div class="adm-metric-icon">💀</div>
+        <div class="adm-metric-body">
+          <div class="adm-metric-val">${cdr}<span class="adm-metric-unit">‰</span></div>
+          <div class="adm-metric-lbl">Смертность (на 1000/год)</div>
+        </div>
+      </div>
+      <div class="adm-metric">
+        <div class="adm-metric-icon">📈</div>
+        <div class="adm-metric-body">
+          <div class="adm-metric-val ${ngCls}">${ngSign}${ng}<span class="adm-metric-unit">‰</span></div>
+          <div class="adm-metric-lbl">Естественный прирост</div>
+        </div>
+      </div>
+      <div class="adm-metric">
+        <div class="adm-metric-icon">⚒</div>
+        <div class="adm-metric-body">
+          <div class="adm-metric-val">${popFmtNum(ew)}</div>
+          <div class="adm-metric-lbl">Рабочая сила (экв.)</div>
+        </div>
+      </div>
+      <div class="adm-metric">
+        <div class="adm-metric-icon">👨‍👩‍👧</div>
+        <div class="adm-metric-body">
+          <div class="adm-metric-val ${depInfo.cls}">${dep.toFixed(2)} <small class="adm-metric-unit">${depInfo.text}</small></div>
+          <div class="adm-metric-lbl">Коэф. иждивенцев</div>
+        </div>
+      </div>
+      <div class="adm-metric">
+        <div class="adm-metric-icon">🍞</div>
+        <div class="adm-metric-body">
+          <div class="adm-metric-val ${consCls}">${consSign}${consDelta}%</div>
+          <div class="adm-metric-lbl">Нагрузка потребления</div>
+        </div>
+      </div>
+      <div class="adm-metric">
+        <div class="adm-metric-icon">🔨</div>
+        <div class="adm-metric-body">
+          <div class="adm-metric-val ${lModCls}">${lModSign}${((lMod - 1) * 100).toFixed(1)}%</div>
+          <div class="adm-metric-lbl">Трудовая производительность</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// ГРАФИК ПРОДОЛЖИТЕЛЬНОСТИ ЖИЗНИ — SVG с историей показателей
+// ─────────────────────────────────────────────────────────────────────────
+
+function _buildLifeExpectancyChart(demHistory) {
+  if (!demHistory || demHistory.length < 2) {
+    return `<div class="age-le-empty">Совершите несколько ходов — появится график динамики</div>`;
+  }
+
+  const W = 640, H = 155;
+  const pad = { top: 22, right: 52, bottom: 30, left: 46 };
+  const cw  = W - pad.left - pad.right;
+  const ch  = H - pad.top  - pad.bottom;
+  const n   = demHistory.length;
+  const xOf = i => pad.left + (n > 1 ? i / (n - 1) * cw : cw / 2);
+
+  const allE0     = demHistory.map(h => h.e0     || 20);
+  const allEAdult = demHistory.map(h => h.e_adult || 35);
+  const allMed    = demHistory.map(h => h.median_age || 15);
+
+  const yMin = Math.max(0, Math.floor(Math.min(...allE0, ...allMed) / 5) * 5 - 5);
+  const yMax = Math.ceil(Math.max(...allEAdult) / 5) * 5 + 5;
+  const yOf  = v => pad.top + ch * (1 - (v - yMin) / (yMax - yMin));
+
+  let s = '';
+
+  // ── Сетка ──
+  for (let v = yMin; v <= yMax; v += 5) {
+    const y = yOf(v).toFixed(1);
+    s += `
+      <line x1="${pad.left}" y1="${y}" x2="${pad.left + cw}" y2="${y}"
+            stroke="rgba(255,255,255,.07)" stroke-width="1"
+            ${v % 10 === 0 ? '' : 'stroke-dasharray="3,4"'}/>
+      <text x="${(pad.left - 5).toFixed(1)}" y="${(parseFloat(y) + 3.5).toFixed(1)}"
+            text-anchor="end" font-size="8.5" font-family="sans-serif"
+            fill="${v % 10 === 0 ? 'rgba(255,255,255,.32)' : 'rgba(255,255,255,.18)'}">${v}</text>`;
+  }
+
+  // ── X-метки ──
+  const step = Math.max(1, Math.ceil(n / 10));
+  const shownX = new Set();
+  for (let i = 0; i < n; i += step) {
+    shownX.add(i);
+    s += `<text x="${xOf(i).toFixed(1)}" y="${H - 4}" text-anchor="middle"
+                font-size="8" font-family="sans-serif" fill="rgba(255,255,255,.28)">
+            ${demHistory[i].label || ''}
+          </text>`;
+  }
+  if (!shownX.has(n - 1)) {
+    s += `<text x="${xOf(n-1).toFixed(1)}" y="${H - 4}" text-anchor="middle"
+                font-size="8" font-family="sans-serif" fill="rgba(255,255,255,.50)">
+            ${demHistory[n-1].label || ''}
+          </text>`;
+  }
+
+  // ── Оси ──
+  s += `
+    <line x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${pad.top + ch}"
+          stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+    <line x1="${pad.left}" y1="${pad.top + ch}" x2="${pad.left + cw}" y2="${pad.top + ch}"
+          stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+    <text x="${pad.left - 30}" y="${(pad.top + ch / 2).toFixed(1)}" text-anchor="middle"
+          font-size="8.5" fill="rgba(255,255,255,.28)" font-family="sans-serif"
+          transform="rotate(-90 ${pad.left - 30} ${pad.top + ch / 2})">Лет</text>`;
+
+  // ── Вспомогательная функция сглаженного пути ──
+  // Используем уже существующую _smoothPath из population_tab.js
+
+  // ── Заливка под e0 ──
+  const e0pts = demHistory.map((h, i) => [xOf(i), yOf(h.e0 || 20)]);
+  const areaCoords = [
+    ...e0pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`),
+    `${xOf(n-1).toFixed(1)},${(pad.top + ch).toFixed(1)}`,
+    `${xOf(0).toFixed(1)},${(pad.top + ch).toFixed(1)}`,
+  ].join(' ');
+  s += `<polygon points="${areaCoords}" fill="url(#le-area-grad)" opacity="0.6"/>`;
+
+  // ── Линии трёх показателей ──
+  const eAdultPts = demHistory.map((h, i) => [xOf(i), yOf(h.e_adult || 35)]);
+  const medPts    = demHistory.map((h, i) => [xOf(i), yOf(h.median_age || 15)]);
+
+  s += `<path d="${_smoothPath(eAdultPts)}" fill="none" stroke="#81c784" stroke-width="1.8"
+               opacity="0.75" stroke-dasharray="7,3"/>`;
+  s += `<path d="${_smoothPath(medPts)}" fill="none" stroke="#ffb74d" stroke-width="1.6"
+               opacity="0.70" stroke-dasharray="3,4"/>`;
+  s += `<path d="${_smoothPath(e0pts)}" fill="none" stroke="#64b5f6" stroke-width="2.8"
+               opacity="0.92"/>`;
+
+  // ── Точки на последних значениях ──
+  const [lx0, ly0] = e0pts[n-1];
+  const [lxa, lya] = eAdultPts[n-1];
+  const [lxm, lym] = medPts[n-1];
+  const lastE0  = demHistory[n-1].e0        || 0;
+  const lastEA  = demHistory[n-1].e_adult   || 0;
+  const lastMed = demHistory[n-1].median_age || 0;
+
+  s += `<circle cx="${lx0.toFixed(1)}" cy="${ly0.toFixed(1)}" r="4"
+                fill="#64b5f6" stroke="rgba(0,0,0,.5)" stroke-width="1.5"/>`;
+  s += `<circle cx="${lxa.toFixed(1)}" cy="${lya.toFixed(1)}" r="3"
+                fill="#81c784" stroke="rgba(0,0,0,.4)" stroke-width="1"/>`;
+  s += `<circle cx="${lxm.toFixed(1)}" cy="${lym.toFixed(1)}" r="2.5"
+                fill="#ffb74d" stroke="rgba(0,0,0,.4)" stroke-width="1"/>`;
+
+  // Значения у последних точек
+  s += `
+    <text x="${(lx0 + 6).toFixed(1)}" y="${(ly0 + 4).toFixed(1)}" font-size="9.5"
+          font-weight="bold" fill="#64b5f6" font-family="sans-serif">${lastE0.toFixed(1)}</text>
+    <text x="${(lxa + 6).toFixed(1)}" y="${(lya + 4).toFixed(1)}" font-size="9"
+          fill="#81c784" font-family="sans-serif">${lastEA.toFixed(1)}</text>
+    <text x="${(lxm + 6).toFixed(1)}" y="${(lym + 4).toFixed(1)}" font-size="9"
+          fill="#ffb74d" font-family="sans-serif">${lastMed.toFixed(1)}</text>`;
+
+  // ── Легенда ──
+  const legend = `
+    <div class="age-le-legend">
+      <span class="age-le-dot" style="background:#64b5f6;width:16px;height:3px;border-radius:2px;display:inline-block;vertical-align:middle;margin-right:4px"></span>
+      <span>e₀ (при рождении)</span>
+      <span class="age-le-dot" style="background:#81c784;width:16px;height:2px;border-radius:2px;display:inline-block;vertical-align:middle;margin:0 4px 0 10px"></span>
+      <span>e (взрослые)</span>
+      <span class="age-le-dot" style="background:#ffb74d;width:10px;height:2px;border-radius:2px;display:inline-block;vertical-align:middle;margin:0 4px 0 10px"></span>
+      <span>Медианный возраст</span>
+    </div>`;
+
+  return `
+    <svg viewBox="0 0 ${W} ${H}" class="age-le-chart-svg">
+      <defs>
+        <linearGradient id="le-area-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#64b5f6" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="#64b5f6" stop-opacity="0.0"/>
+        </linearGradient>
+      </defs>
+      ${s}
+    </svg>
+    ${legend}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// МИНИ-БАР ВОЗРАСТНОГО СОСТАВА КЛАССА (в развёрнутой карточке)
+// ─────────────────────────────────────────────────────────────────────────
+
+function _buildClassAgeMiniBar(classId, nationCohorts, laws) {
+  if (!nationCohorts || typeof estimateClassAgeCohorts !== 'function') return '';
+
+  const c  = estimateClassAgeCohorts(classId, nationCohorts);
+  const mwa = laws?.min_work_age    || 12;
+  const et  = laws?.elder_threshold || 55;
+
+  const cp = Math.round(c.children * 100);
+  const ap = Math.round(c.adults   * 100);
+  const ep = Math.round(c.elderly  * 100);
+
+  // Отображение средней ожидаемой продолжительности жизни для класса
+  // Упрощённая коррекция: взвешенная сумма с bias-смещением
+  const LIFE_COMMENT = {
+    farmers_class:   'Высокая рождаемость, умеренная смертность',
+    craftsmen_class: 'Городская среда, профессиональные болезни',
+    citizens:        'Привилегированный доступ к питанию и медицине',
+    sailors_class:   'Высокая гибель в море, молодой состав',
+    clergy_class:    'Целибат, почётная старость, минимум детей',
+    soldiers_class:  'Молодой боевой состав, высокие потери',
+    slaves_class:    'Тяжёлый труд, высокая сверхсмертность',
+  };
+  const comment = LIFE_COMMENT[classId] || '';
+
+  return `
+    <div class="cls-age-block">
+      <div class="cls-age-title">Оценочный возрастной состав</div>
+      <div class="cls-age-bar-outer">
+        <div class="cls-age-seg cls-age-seg--child" style="width:${cp}%"
+             title="Дети (0–${mwa} лет): ${cp}%"></div>
+        <div class="cls-age-seg cls-age-seg--adult" style="width:${ap}%"
+             title="Взрослые (${mwa}–${et} лет): ${ap}%"></div>
+        <div class="cls-age-seg cls-age-seg--elder" style="width:${ep}%"
+             title="Пожилые (${et}+): ${ep}%"></div>
+      </div>
+      <div class="cls-age-row">
+        <span class="cls-age-pip cls-age-pip--child"></span>
+        <span class="cls-age-lbl">Дети</span><span class="cls-age-pct">${cp}%</span>
+        <span class="cls-age-pip cls-age-pip--adult"></span>
+        <span class="cls-age-lbl">Взрослые</span><span class="cls-age-pct">${ap}%</span>
+        <span class="cls-age-pip cls-age-pip--elder"></span>
+        <span class="cls-age-lbl">Пожилые</span><span class="cls-age-pct">${ep}%</span>
+      </div>
+      ${comment ? `<div class="cls-age-comment">${comment}</div>` : ''}
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// ВОЗРАСТНАЯ ДЕМОГРАФИЯ — главная секция (пирамида + метрики + LE + законы)
 // ─────────────────────────────────────────────────────────────────────────
 
 function buildAgeDemographicsSection(nation) {
   const dem = nation.demographics;
   if (!dem || !dem.cohort_fractions) return '';
 
-  const cf = dem.cohort_fractions;
-  const childPct  = Math.round((cf.children || 0) * 100);
-  const adultPct  = Math.round((cf.adults   || 0) * 100);
-  const elderPct  = Math.round((cf.elderly  || 0) * 100);
+  const laws      = (typeof _getLaborLaws === 'function') ? _getLaborLaws(nation) : null;
+  const totalPop  = nation.population?.total || 0;
 
-  const cc = dem.cohort_counts || {};
-  const childN = Math.round(cc.children || 0);
-  const adultN = Math.round(cc.adults   || 0);
-  const elderN = Math.round(cc.elderly  || 0);
+  // ── 1. Возрастная пирамида ──────────────────────────────────
+  const pyramidHtml = _buildAgePyramidSVG(dem, laws, totalPop);
 
-  // Горизонтальные бары (100% = весь population)
-  const barHtml = `
-    <div class="adm-bars">
-      <div class="adm-row">
-        <span class="adm-lbl">👶 Дети</span>
-        <div class="adm-bar-wrap">
-          <div class="adm-bar adm-bar--child" style="width:${childPct}%"></div>
-        </div>
-        <span class="adm-val">${childPct}% (${popFmtNum(childN)})</span>
-      </div>
-      <div class="adm-row">
-        <span class="adm-lbl">🧑 Взрослые</span>
-        <div class="adm-bar-wrap">
-          <div class="adm-bar adm-bar--adult" style="width:${adultPct}%"></div>
-        </div>
-        <span class="adm-val">${adultPct}% (${popFmtNum(adultN)})</span>
-      </div>
-      <div class="adm-row">
-        <span class="adm-lbl">👴 Старики</span>
-        <div class="adm-bar-wrap">
-          <div class="adm-bar adm-bar--elder" style="width:${elderPct}%"></div>
-        </div>
-        <span class="adm-val">${elderPct}% (${popFmtNum(elderN)})</span>
-      </div>
-    </div>
-  `;
+  // ── 2. Метрики (карточки) ──────────────────────────────────
+  const metricsHtml = _buildDemographicMetricCards(dem);
 
-  // Ключевые метрики рабочей силы
-  const ew   = Math.round(dem.effective_workforce || 0);
-  const dep  = dem.dependency_ratio ?? 0;
-  const cMlt = dem.consumption_mult  ?? 1.0;
-  const lMod = dem.labor_productivity_mod ?? 1.0;
-  const BASE_C_MULT = (typeof AGE_PARAMS !== 'undefined') ? AGE_PARAMS.baseline_consumption_mult : 1.80;
+  // ── 3. График ожидаемой продолжительности жизни ────────────
+  const leChartHtml = _buildLifeExpectancyChart(dem.history || []);
 
-  const depInfo  = (typeof dependencyRatioLabel === 'function')
-    ? dependencyRatioLabel(dep)
-    : { text: dep.toFixed(2), cls: 'adm-dep--ok' };
-
-  const relCons  = cMlt / BASE_C_MULT;
-  const consSign = relCons >= 1 ? '+' : '';
-  const consDelta = ((relCons - 1) * 100).toFixed(1);
-  const consCls  = relCons > 1.1 ? 'bad' : relCons > 1.02 ? 'dim' : 'good';
-
-  const lModSign = lMod >= 1 ? '+' : '';
-  const lModCls  = lMod < 0.85 ? 'bad' : lMod < 0.97 ? 'dim' : 'good';
-
-  const statsHtml = `
-    <div class="adm-stats">
-      <div class="adm-stat">
-        <span class="adm-stat-lbl">Рабочая сила</span>
-        <span class="adm-stat-val">${popFmtNum(ew)}</span>
-      </div>
-      <div class="adm-stat">
-        <span class="adm-stat-lbl">Иждивенцы</span>
-        <span class="adm-stat-val ${depInfo.cls}">${dep.toFixed(2)} <small>${depInfo.text}</small></span>
-      </div>
-      <div class="adm-stat">
-        <span class="adm-stat-lbl">Нагрузка потребления</span>
-        <span class="adm-stat-val ${consCls}">${consSign}${consDelta}%</span>
-      </div>
-      <div class="adm-stat">
-        <span class="adm-stat-lbl">Труд. производительность</span>
-        <span class="adm-stat-val ${lModCls}">${lModSign}${((lMod - 1) * 100).toFixed(1)}%</span>
-      </div>
-    </div>
-  `;
-
-  // Законы труда
+  // ── 4. Законы труда ────────────────────────────────────────
   const lawsHtml = _buildLaborLawsPanel(nation);
 
   return `
     <div class="adm-section">
       <div class="pop-sh">
-        <span class="pop-st">👥 Возрастная структура и труд</span>
+        <span class="pop-st">📊 Возрастная структура населения</span>
       </div>
-      ${barHtml}
-      ${statsHtml}
-      ${lawsHtml}
+
+      <!-- Пирамида возрастов -->
+      <div class="adm-block">
+        <div class="adm-block-hdr">Половозрастная пирамида</div>
+        ${pyramidHtml}
+      </div>
+
+      <!-- Демографические метрики -->
+      <div class="adm-block">
+        <div class="adm-block-hdr">Ключевые демографические показатели</div>
+        ${metricsHtml}
+      </div>
+
+      <!-- График продолжительности жизни -->
+      <div class="adm-block">
+        <div class="adm-block-hdr">Динамика продолжительности жизни</div>
+        <div class="age-le-wrap">
+          ${leChartHtml}
+        </div>
+      </div>
+
+      <!-- Законы труда -->
+      <div class="adm-block">
+        ${lawsHtml}
+      </div>
+
     </div>
   `;
 }
@@ -1014,12 +1430,15 @@ function renderPopulationOverlay() {
                  title="${nm}: ${popFmtNum(d.population)} (${pct}%)"></div>`;
   }).join('');
 
+  // ── Возрастные когорты нации (для per-class оценки) ──
+  const nationCohorts = nation.demographics?.cohort_fractions || null;
+
   // ── Карточки классов ──
   const cardsHtml = Object.entries(SOCIAL_CLASSES).map(([classId, classDef]) => {
     const data = classSat[classId];
     if (!data || data.population < 10) return '';
     const isExpanded = _popExpandedClass === classId;
-    return renderClassCard(classId, classDef, data, totalClassPop, stockpile, isExpanded);
+    return renderClassCard(classId, classDef, data, totalClassPop, stockpile, isExpanded, nationCohorts);
   }).join('');
 
   // ── Пилюли модификаторов ──

@@ -158,6 +158,9 @@ function updateAgeCohorts(nation) {
 
   // Собираем satisfaction-бонусы от трудовых законов
   collectLaborLawBonuses(nation);
+
+  // Записываем историю демографических показателей
+  recordDemographicHistory(nation);
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -358,4 +361,169 @@ function getActiveLaborLawForGroup(nation, group) {
     l._labor_law && LAWS_LABOR[l.id]?.group === group
   );
   return activeLaw ? LAWS_LABOR[activeLaw.id] : null;
+}
+
+// ──────────────────────────────────────────────────────────────
+// ОЖИДАЕМАЯ ПРОДОЛЖИТЕЛЬНОСТЬ ЖИЗНИ
+//
+// Математическая модель: таблицы смертности из трёх когорт.
+// При дефолтных законах и нормальном питании e0 ≈ 28–32 года —
+// реалистично для Античности (высокая детская смертность даёт
+// низкое e0, но выжившие до 20 лет живут ещё 30–35 лет).
+// ──────────────────────────────────────────────────────────────
+
+function computeLifeExpectancy(nation) {
+  const laws  = _getLaborLaws(nation);
+  const TURNS = _turnsPerYear();
+
+  const foodRatio = _getFoodRatio(nation);
+  const childMortMod = foodRatio >= 1.0 ? 0.80 : (foodRatio >= 0.7 ? 1.00 : 1.80);
+  const adultMortMod = foodRatio >= 1.0 ? 0.90 : (foodRatio >= 0.7 ? 1.00 : 1.40);
+  const healthMod = 1.0
+    - (_nationHasBuilding(nation, 'aqueduct') ? 0.15 : 0)
+    - (_nationHasBuilding(nation, 'temple')   ? 0.05 : 0)
+    - (_nationHasBuilding(nation, 'baths')    ? 0.05 : 0);
+
+  // Скорректированные годовые ставки смертности
+  const cM = Math.max(0.001, AGE_PARAMS.child_mortality_annual * childMortMod * healthMod);
+  const aM = Math.max(0.001, AGE_PARAMS.adult_mortality_annual * adultMortMod * healthMod);
+  const eM = Math.max(0.001, AGE_PARAMS.elder_mortality_annual * healthMod);
+
+  const mwa = laws.min_work_age;                        // граница детства
+  const et  = laws.elder_threshold;                     // граница старости
+  const wy  = Math.max(1, et - mwa);                   // лет взрослой жизни
+
+  // Вероятность пережить каждую фазу
+  const p1 = Math.pow(Math.max(0, 1 - cM), mwa);       // пережить детство
+  const p2 = Math.pow(Math.max(0, 1 - aM), wy);        // пережить взрослость (усл.)
+
+  // Ожидаемые годы в фазе пожилых (среднее время до смерти)
+  const e_elder = 1 / eM;
+
+  // ── Ожидаемая продолжительность жизни при рождении (e0) ──
+  // E[жизнь] = P(умер в детстве)×E[возраст|детство] + P(дожил до взрослости)×...
+  const e0 =
+    (1 - p1) * (mwa / 2) +
+    p1 * (
+      mwa +
+      (1 - p2) * (wy / 2) +
+      p2 * (wy + e_elder)
+    );
+
+  // ── e_adult — ожидаемое долголетие при дожитии до min_work_age ──
+  const e_adult = mwa + (1 - p2) * (wy / 2) + p2 * (wy + e_elder);
+
+  // ── Медианный возраст населения (взвешенное среднее когорт) ──
+  const dem   = nation.demographics;
+  const cf    = dem?.cohort_fractions || { children: 0.36, adults: 0.54, elderly: 0.10 };
+  const medianAge =
+    cf.children * (mwa / 2) +
+    cf.adults   * ((mwa + et) / 2) +
+    cf.elderly  * (et + Math.min(e_elder, 15) / 2);
+
+  // ── Детская смертность до 5 лет (на 1000 рождений) ──
+  const u5years = Math.min(5, mwa);
+  const under5_mort = (1 - Math.pow(Math.max(0, 1 - cM), u5years)) * 1000;
+
+  // ── Грубые коэффициенты рождаемости/смертности (на 1000/год) ──
+  const crude_death_rate =
+    (cf.children * cM + cf.adults * aM + cf.elderly * eM) * 1000;
+  const crude_birth_rate =
+    cf.adults * 0.5 * AGE_PARAMS.birth_rate_annual * 1000;
+
+  // ── Естественный прирост ──
+  const natural_growth = (crude_birth_rate - crude_death_rate).toFixed(1);
+
+  return {
+    e0:               Math.max(1,   Math.round(e0       * 10) / 10),
+    e_adult:          Math.max(mwa, Math.round(e_adult  * 10) / 10),
+    median_age:       Math.max(1,   Math.round(medianAge * 10) / 10),
+    p_survive_child:  Math.round(p1 * 1000) / 10,        // %
+    under5_mort:      Math.round(under5_mort),            // на 1000
+    crude_birth_rate: Math.round(crude_birth_rate * 10) / 10,
+    crude_death_rate: Math.round(crude_death_rate * 10) / 10,
+    natural_growth:   parseFloat(natural_growth),
+    child_mort_rate:  Math.round(cM * 1000 * 10) / 10,   // ‰/год
+    adult_mort_rate:  Math.round(aM * 1000 * 10) / 10,
+    elder_mort_rate:  Math.round(eM * 1000 * 10) / 10,
+    food_ratio:       Math.round(foodRatio * 100),
+  };
+}
+
+// ──────────────────────────────────────────────────────────────
+// ОЦЕНКА ВОЗРАСТНОГО СОСТАВА СОЦИАЛЬНОГО КЛАССА
+//
+// Разные классы имеют разный возрастной профиль из-за условий
+// труда, доступа к пище и медицине, брачных обычаев.
+// Смещения применяются к национальным когортным долям и
+// нормируются в сумму 1.0.
+// ──────────────────────────────────────────────────────────────
+
+function estimateClassAgeCohorts(classId, nationCohorts) {
+  // Множители смещения (child/adult/elder) относительно нации
+  const BIAS = {
+    //                           c      a      e
+    farmers_class:   { c: 1.15, a: 1.00, e: 0.85 }, // высокая рождаемость, умеренная смертность
+    craftsmen_class: { c: 0.85, a: 1.10, e: 1.00 }, // городская среда, меньше детей
+    citizens:        { c: 0.70, a: 0.97, e: 1.55 }, // богатые живут дольше, меньше детей
+    sailors_class:   { c: 0.88, a: 1.28, e: 0.30 }, // молодые мужчины, высокая гибель
+    clergy_class:    { c: 0.38, a: 0.88, e: 2.40 }, // целибат (мало детей), уважаемая старость
+    soldiers_class:  { c: 0.92, a: 1.32, e: 0.22 }, // молодые бойцы, высокая смертность
+    slaves_class:    { c: 0.80, a: 1.08, e: 0.52 }, // тяжёлый труд, мало пожилых
+  };
+
+  const b = BIAS[classId] || { c: 1.0, a: 1.0, e: 1.0 };
+  const raw = {
+    children: Math.max(0.001, nationCohorts.children * b.c),
+    adults:   Math.max(0.001, nationCohorts.adults   * b.a),
+    elderly:  Math.max(0.001, nationCohorts.elderly  * b.e),
+  };
+  const sum = raw.children + raw.adults + raw.elderly;
+  return {
+    children: raw.children / sum,
+    adults:   raw.adults   / sum,
+    elderly:  raw.elderly  / sum,
+  };
+}
+
+// ──────────────────────────────────────────────────────────────
+// ЗАПИСЬ ИСТОРИИ ДЕМОГРАФИЧЕСКИХ ПОКАЗАТЕЛЕЙ (каждый ход)
+// Вызывается из updateAgeCohorts() в конце хода.
+// ──────────────────────────────────────────────────────────────
+
+function recordDemographicHistory(nation) {
+  const dem = nation.demographics;
+  if (!dem) return;
+  if (!dem.history) dem.history = [];
+
+  const le = computeLifeExpectancy(nation);
+
+  // Обновляем текущие показатели в demographics
+  dem.life_expectancy       = le.e0;
+  dem.life_expectancy_adult = le.e_adult;
+  dem.median_age            = le.median_age;
+  dem.under5_mort           = le.under5_mort;
+  dem.crude_birth_rate      = le.crude_birth_rate;
+  dem.crude_death_rate      = le.crude_death_rate;
+  dem.natural_growth        = le.natural_growth;
+
+  const gs = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
+
+  dem.history.push({
+    turn:        gs?.turn || 1,
+    label:       String(Math.abs(gs?.date?.year || 301)),
+    e0:          le.e0,
+    e_adult:     le.e_adult,
+    median_age:  le.median_age,
+    children:    dem.cohort_fractions.children,
+    adults:      dem.cohort_fractions.adults,
+    elderly:     dem.cohort_fractions.elderly,
+    dependency:  dem.dependency_ratio || 0,
+    cbr:         le.crude_birth_rate,
+    cdr:         le.crude_death_rate,
+    ng:          le.natural_growth,
+  });
+
+  // Храним не более 120 точек (~10 лет игрового времени)
+  if (dem.history.length > 120) dem.history.shift();
 }
