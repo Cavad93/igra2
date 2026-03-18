@@ -6,9 +6,8 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 // ─── Состояние оверлея ────────────────────────────────────────────────────
-let _ecoTab      = 'A';
-let _ecoOpenCats = { 'Провизия': true, 'Промышленность': true, 'Роскошь': false };
-let _ecoSelProf  = null;
+let _ecoTab     = 'A';
+let _ecoSelProf = null;
 
 // ─── Дизайн-токены ────────────────────────────────────────────────────────
 const _C = {
@@ -447,7 +446,7 @@ function _eRender() {
 
   const { eco, name, alert } = _eLoadPop();
   const marketData = _eLoadMarket();
-  const tab = _eTab;
+  const tab = _ecoTab;
 
   const TABS = [
     { id: 'A', label: '📊 Биржа'   },
@@ -466,7 +465,7 @@ function _eRender() {
   const content =
     tab === 'A' ? _eRenderA(marketData) :
     tab === 'B' ? _eRenderB() :
-    tab === 'C' ? _eRenderC(_eSelProf) :
+    tab === 'C' ? _eRenderC(_ecoSelProf) :
                   _eRenderD();
 
   el.innerHTML = `
@@ -498,7 +497,7 @@ function _eRender() {
 
 // ─── Обработчики событий (вызываются из inline onclick) ───────────────────
 function _eSetTab(t) {
-  _eTab = t;
+  _ecoTab = t;
   _eRender();
 }
 function _eToggleCat(cat) {
@@ -506,7 +505,7 @@ function _eToggleCat(cat) {
   _eRender();
 }
 function _eSelectProf(p) {
-  _eSelProf = p;
+  _ecoSelProf = p;
   _eRender();
 }
 function _eBackdropClick(e) {
