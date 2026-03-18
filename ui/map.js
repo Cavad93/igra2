@@ -521,7 +521,12 @@ function showRegionInfo(regionId) {
   ).join('');
 
   // ── Блок культуры ──
-  const cultureHtml = renderRegionCultureBlock(regionId, gameData.population || 0);
+  let cultureHtml = '';
+  try {
+    cultureHtml = renderRegionCultureBlock(regionId, gameData.population || 0);
+  } catch (e) {
+    console.warn('[showRegionInfo] Ошибка культуры:', e);
+  }
 
   panel.innerHTML = `
     <div class="region-info-header" style="border-left: 4px solid ${nationColor}">
