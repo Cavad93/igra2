@@ -1031,45 +1031,53 @@ const INITIAL_GAME_STATE = {
   regions: {},
 
   // ── Мировой рынок ──
-  // Базовые цены из GOODS, supply/demand обновляются в updateMarketPrices()
+  // Структура записи (Этап 1–2):
+  //   base            — базовая цена (константа из GOODS)
+  //   price           — текущая рыночная цена (обновляется updateMarketPrices)
+  //   supply/demand   — суммарные за тик (агрегируются в updateMarketPrices)
+  //   world_stockpile — накопленный мировой запас; null = инициализируется в первый тик
+  //   shortage_streak — тиков подряд в зоне дефицита (для экспоненты)
+  //   price_history   — массив последних 24 цен (для графиков)
+  //   production_cost — себестоимость рецептов (Этап 3, пока null)
+  //   price_floor     — нижняя граница = max(production_cost*0.5, base*0.5)
   market: {
     // ── Зерновые ──
-    wheat:       { base: 10,  price: 10,  supply: 1000, demand: 1000, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 5     },
-    barley:      { base: 7,   price: 7,   supply: 600,  demand: 600,  price_history: [], shortage_streak: 0, production_cost: null, price_floor: 3.5   },
+    wheat:       { base: 10,  price: 10,  supply: 1000, demand: 1000, world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 5     },
+    barley:      { base: 7,   price: 7,   supply: 600,  demand: 600,  world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 3.5   },
     // ── Морепродукты ──
-    fish:        { base: 15,  price: 15,  supply: 500,  demand: 500,  price_history: [], shortage_streak: 0, production_cost: null, price_floor: 7.5   },
-    tuna:        { base: 22,  price: 22,  supply: 80,   demand: 80,   price_history: [], shortage_streak: 0, production_cost: null, price_floor: 11    },
+    fish:        { base: 15,  price: 15,  supply: 500,  demand: 500,  world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 7.5   },
+    tuna:        { base: 22,  price: 22,  supply: 80,   demand: 80,   world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 11    },
     // ── Масло и фрукты ──
-    olives:      { base: 18,  price: 18,  supply: 300,  demand: 300,  price_history: [], shortage_streak: 0, production_cost: null, price_floor: 9     },
-    olive_oil:   { base: 32,  price: 32,  supply: 200,  demand: 200,  price_history: [], shortage_streak: 0, production_cost: null, price_floor: 16    },
-    honey:       { base: 45,  price: 45,  supply: 80,   demand: 80,   price_history: [], shortage_streak: 0, production_cost: null, price_floor: 22.5  },
+    olives:      { base: 18,  price: 18,  supply: 300,  demand: 300,  world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 9     },
+    olive_oil:   { base: 32,  price: 32,  supply: 200,  demand: 200,  world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 16    },
+    honey:       { base: 45,  price: 45,  supply: 80,   demand: 80,   world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 22.5  },
     // ── Напитки ──
-    wine:        { base: 30,  price: 30,  supply: 250,  demand: 250,  price_history: [], shortage_streak: 0, production_cost: null, price_floor: 15    },
+    wine:        { base: 30,  price: 30,  supply: 250,  demand: 250,  world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 15    },
     // ── Консерванты ──
-    salt:        { base: 18,  price: 18,  supply: 300,  demand: 300,  price_history: [], shortage_streak: 0, production_cost: null, price_floor: 9     },
+    salt:        { base: 18,  price: 18,  supply: 300,  demand: 300,  world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 9     },
     // ── Металлы ──
-    iron:        { base: 45,  price: 45,  supply: 150,  demand: 150,  price_history: [], shortage_streak: 0, production_cost: null, price_floor: 22.5  },
-    bronze:      { base: 55,  price: 55,  supply: 80,   demand: 80,   price_history: [], shortage_streak: 0, production_cost: null, price_floor: 27.5  },
+    iron:        { base: 45,  price: 45,  supply: 150,  demand: 150,  world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 22.5  },
+    bronze:      { base: 55,  price: 55,  supply: 80,   demand: 80,   world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 27.5  },
     // ── Дерево ──
-    timber:      { base: 22,  price: 22,  supply: 250,  demand: 250,  price_history: [], shortage_streak: 0, production_cost: null, price_floor: 11    },
+    timber:      { base: 22,  price: 22,  supply: 250,  demand: 250,  world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 11    },
     // ── Текстиль ──
-    wool:        { base: 20,  price: 20,  supply: 180,  demand: 180,  price_history: [], shortage_streak: 0, production_cost: null, price_floor: 10    },
-    cloth:       { base: 28,  price: 28,  supply: 200,  demand: 200,  price_history: [], shortage_streak: 0, production_cost: null, price_floor: 14    },
-    leather:     { base: 28,  price: 28,  supply: 120,  demand: 120,  price_history: [], shortage_streak: 0, production_cost: null, price_floor: 14    },
+    wool:        { base: 20,  price: 20,  supply: 180,  demand: 180,  world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 10    },
+    cloth:       { base: 28,  price: 28,  supply: 200,  demand: 200,  world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 14    },
+    leather:     { base: 28,  price: 28,  supply: 120,  demand: 120,  world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 14    },
     // ── Инструменты ──
-    tools:       { base: 35,  price: 35,  supply: 100,  demand: 100,  price_history: [], shortage_streak: 0, production_cost: null, price_floor: 17.5  },
-    pottery:     { base: 15,  price: 15,  supply: 300,  demand: 300,  price_history: [], shortage_streak: 0, production_cost: null, price_floor: 7.5   },
+    tools:       { base: 35,  price: 35,  supply: 100,  demand: 100,  world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 17.5  },
+    pottery:     { base: 15,  price: 15,  supply: 300,  demand: 300,  world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 7.5   },
     // ── Письменность ──
-    papyrus:     { base: 38,  price: 38,  supply: 60,   demand: 60,   price_history: [], shortage_streak: 0, production_cost: null, price_floor: 19    },
-    wax:         { base: 25,  price: 25,  supply: 80,   demand: 80,   price_history: [], shortage_streak: 0, production_cost: null, price_floor: 12.5  },
+    papyrus:     { base: 38,  price: 38,  supply: 60,   demand: 60,   world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 19    },
+    wax:         { base: 25,  price: 25,  supply: 80,   demand: 80,   world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 12.5  },
     // ── Роскошь ──
-    incense:     { base: 85,  price: 85,  supply: 30,   demand: 30,   price_history: [], shortage_streak: 0, production_cost: null, price_floor: 42.5  },
-    purple_dye:  { base: 320, price: 320, supply: 5,    demand: 5,    price_history: [], shortage_streak: 0, production_cost: null, price_floor: 160   },
+    incense:     { base: 85,  price: 85,  supply: 30,   demand: 30,   world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 42.5  },
+    purple_dye:  { base: 320, price: 320, supply: 5,    demand: 5,    world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 160   },
     // ── Торговля ──
-    trade_goods: { base: 25,  price: 25,  supply: 150,  demand: 150,  price_history: [], shortage_streak: 0, production_cost: null, price_floor: 12.5  },
+    trade_goods: { base: 25,  price: 25,  supply: 150,  demand: 150,  world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 12.5  },
     // ── Сицилийское сырьё ──
-    sulfur:      { base: 40,  price: 40,  supply: 40,   demand: 40,   price_history: [], shortage_streak: 0, production_cost: null, price_floor: 20    },
+    sulfur:      { base: 40,  price: 40,  supply: 40,   demand: 40,   world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 20    },
     // ── Рабочая сила ──
-    slaves:      { base: 200, price: 200, supply: 50,   demand: 50,   price_history: [], shortage_streak: 0, production_cost: null, price_floor: 100   },
+    slaves:      { base: 200, price: 200, supply: 50,   demand: 50,   world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 100   },
   },
 };

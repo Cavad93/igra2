@@ -202,42 +202,116 @@ function calculateConsumption(nation) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// ШАГ 3: ОБНОВЛЕНИЕ РЫНОЧНЫХ ЦЕН
+// ШАГ 3: ОБНОВЛЕНИЕ РЫНОЧНЫХ ЦЕН — трёхзонная модель
+//
+// Три режима в зависимости от мирового склада (world stockpile):
+//
+//   ДЕФИЦИТ  stockpile < 0.5 * target
+//     → price_delta = base * exp(shortage_streak * 0.15)   экспоненциальный рост
+//
+//   БАЛАНС   0.5 * target ≤ stockpile ≤ 2.0 * target
+//     → price_delta = (demand − supply) / supply * 0.05 * price   ±5% / тик
+//
+//   ИЗБЫТОК  stockpile > 2.0 * target
+//     → price_delta = −base * 0.03 * surplus_ratio         плавное снижение
+//
+// Ограничители:
+//   raw_new  = clamp(price + delta,  price_floor,  base * 10)
+//   new_price = lerp(price, raw_new, 0.3)   — сглаживание, рынок «плывёт»
+//
+// Склад:
+//   stockpile += supply − demand  ;  stockpile = max(0, stockpile)
+//   shortage_streak++ если stockpile < 0.5 * target, иначе max(0, streak − 1)
 // ──────────────────────────────────────────────────────────────
 
+const _MARKET_SMOOTHING  = 0.30;   // скорость сглаживания (30% за тик)
+const _BALANCE_SENS      = 0.05;   // чувствительность зоны баланса (±5% / тик)
+const _SURPLUS_RATE      = 0.03;   // скорость снижения цены в зоне избытка
+const _DEFICIT_INTENSITY = 0.10;   // базовый множитель дельты в зоне дефицита
+
 function updateMarketPrices(totalProduced, totalConsumed) {
-  // Собираем суммарные мировые supply и demand
+  // ── 1. Агрегируем мировые supply / demand ────────────────────────────────
   const worldSupply = {};
   const worldDemand = {};
 
-  for (const [nationId, goods] of Object.entries(totalProduced)) {
+  for (const goods of Object.values(totalProduced)) {
     for (const [good, amount] of Object.entries(goods)) {
       worldSupply[good] = (worldSupply[good] || 0) + amount;
     }
   }
-
-  for (const [nationId, consumed] of Object.entries(totalConsumed)) {
+  for (const consumed of Object.values(totalConsumed)) {
     for (const [good, amount] of Object.entries(consumed)) {
       worldDemand[good] = (worldDemand[good] || 0) + amount;
     }
   }
 
-  // Обновляем цены со сглаживанием
+  // ── 2. Трёхзонная ценовая логика ─────────────────────────────────────────
   for (const [good, market] of Object.entries(GAME_STATE.market)) {
-    const supply = worldSupply[good] || market.supply || 1;
+    const supply = worldSupply[good] || 0;
     const demand = worldDemand[good] || market.demand || 1;
 
-    const targetPrice = market.base * (demand / Math.max(supply, 1));
-    const smoothing = CONFIG.BALANCE.PRICE_SMOOTHING;
+    // Сохраняем агрегаты для совместимости со старым кодом
+    market.supply = supply;
+    market.demand = demand;
 
-    // Сглаживаем изменение цены: 30% двигаемся к целевой цене
-    const newPrice = market.price + (targetPrice - market.price) * smoothing;
-    // Цена не может упасть ниже 20% от базовой или вырасти выше 500%
-    const clampedPrice = Math.max(market.base * 0.2, Math.min(market.base * 5, newPrice));
+    // Метаданные из GOODS (elasticity, stockpile_target_turns)
+    const goodDef        = typeof GOODS !== 'undefined' ? GOODS[good] : null;
+    const targetTurns    = goodDef?.stockpile_target_turns ?? 4;
+    const elasticity     = goodDef?.price_elasticity      ?? 1.0;
+    const base           = market.base;
 
-    GAME_STATE.market[good].supply = supply;
-    GAME_STATE.market[good].demand = demand;
-    GAME_STATE.market[good].price  = Math.round(clampedPrice * 10) / 10;
+    // Инициализация мирового склада при первом тике
+    if (market.world_stockpile == null) {
+      market.world_stockpile = demand * targetTurns; // начинаем «в норме»
+    }
+
+    // ── 2a. Обновляем мировой склад ──────────────────────────────────────
+    market.world_stockpile = Math.max(0, market.world_stockpile + supply - demand);
+    const stockpileTarget = Math.max(1, demand * targetTurns);
+
+    // ── 2b. Нижняя граница цены ──────────────────────────────────────────
+    const floor   = (market.production_cost != null)
+                    ? market.production_cost * 0.5
+                    : base * 0.5;
+    const ceiling = base * 10;
+    market.price_floor = floor;  // обновляем для UI / этапа 3
+
+    // ── 2c. Зона и дельта ────────────────────────────────────────────────
+    let price_delta   = 0;
+    const streak      = market.shortage_streak || 0;
+    const stockpile   = market.world_stockpile;
+
+    if (stockpile < 0.5 * stockpileTarget) {
+      // ЗОНА ДЕФИЦИТА — экспоненциальный рост
+      const shortage_mult = Math.exp(streak * 0.15);
+      price_delta = base * shortage_mult * _DEFICIT_INTENSITY * elasticity;
+      market.shortage_streak = streak + 1;
+
+    } else if (stockpile <= 2.0 * stockpileTarget) {
+      // ЗОНА БАЛАНСА — плавные колебания ±5% / тик
+      const safeSupply = Math.max(supply, 1);
+      price_delta = (demand - safeSupply) / safeSupply * _BALANCE_SENS
+                  * market.price * elasticity;
+      market.shortage_streak = Math.max(0, streak - 1);
+
+    } else {
+      // ЗОНА ИЗБЫТКА — медленное снижение
+      const surplus_ratio = Math.min(stockpile / stockpileTarget - 2.0, 3.0);
+      price_delta = -base * _SURPLUS_RATE * surplus_ratio * elasticity;
+      market.shortage_streak = Math.max(0, streak - 1);
+    }
+
+    // ── 2d. Ограничители + сглаживание ──────────────────────────────────
+    const rawNew    = market.price + price_delta;
+    const clamped   = Math.max(floor, Math.min(ceiling, rawNew));
+    const newPrice  = market.price + (clamped - market.price) * _MARKET_SMOOTHING;
+
+    market.price = Math.round(newPrice * 10) / 10;
+
+    // ── 2e. История цен (последние 24 тика) ──────────────────────────────
+    if (!Array.isArray(market.price_history)) market.price_history = [];
+    market.price_history.push(market.price);
+    if (market.price_history.length > 24) market.price_history.shift();
   }
 }
 

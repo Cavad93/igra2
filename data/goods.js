@@ -427,6 +427,7 @@ function ensureMarketEntry(goodId) {
     price:            base,
     supply:           0,
     demand:           0,
+    world_stockpile:  null,        // инициализируется в первый тик (demand * targetTurns)
     price_history:    [],          // последние 24 тика
     shortage_streak:  0,           // тиков подряд со складом < 50% цели
     production_cost:  null,        // заполняется движком рецептов (Этап 3)
