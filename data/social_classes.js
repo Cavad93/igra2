@@ -24,7 +24,7 @@ const CLASS_FROM_PROFESSION = {
 // ─────────────────────────────────────────────────────────────────────────
 // СОЦИАЛЬНЫЕ КЛАССЫ
 //
-// needs[товар].per_100  — единиц товара на 100 чел. в месяц
+// needs[товар].per_100  — единиц товара на 100 чел. в ГОД (делится на 12 для месячного потребления)
 // needs[товар].priority — 'basic' | 'standard' | 'luxury'
 //   basic   → невыполнение: -20 счастья, рост смертности
 //   standard→ невыполнение: -8 счастья
@@ -334,12 +334,15 @@ function calculateClassPopulations(by_profession) {
 // ПОТРЕБЛЕНИЕ КЛАССА ЗА ХОД
 // Возвращает { good: amount } для одного класса заданного размера
 // ─────────────────────────────────────────────────────────────────────────
+// CONSUMPTION_TURNS: per_100 задан как годовая норма, делим на 12 для ежемесячного потребления
+const CONSUMPTION_TURNS = 12;
+
 function calculateClassNeeds(classId, classPopulation) {
   const classDef = SOCIAL_CLASSES[classId];
   if (!classDef) return {};
   const needs = {};
   for (const [good, spec] of Object.entries(classDef.needs)) {
-    needs[good] = (classPopulation / 100) * spec.per_100;
+    needs[good] = (classPopulation / 100) * spec.per_100 / CONSUMPTION_TURNS;
   }
   return needs;
 }
@@ -379,7 +382,8 @@ function calculateClassSatisfaction(by_profession, stockpile) {
     let luxuryCount = 0, luxuryMet = 0;
 
     for (const [good, spec] of Object.entries(needs)) {
-      const needed = (pop / 100) * spec.per_100;
+      // needed = месячная норма потребления класса; satisfaction = запас / месячная_норма
+      const needed = (pop / 100) * spec.per_100 / CONSUMPTION_TURNS;
       const available = stockpile[good] || 0;
       const ratio = needed > 0 ? Math.min(1, available / needed) : 1;
 
