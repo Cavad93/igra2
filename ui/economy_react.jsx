@@ -123,13 +123,40 @@ function loadMarketData() {
   }
 }
 
+// Начальные значения богатства (зеркало POP_INITIAL_WEALTH из engine/pops.js)
+const POP_WEALTH_DEFAULTS = {
+  farmers:   15,
+  craftsmen: 45,
+  merchants: 65,
+  sailors:   38,
+  clergy:    55,
+  soldiers:  35,
+  slaves:     5,
+};
+
 function loadPopData() {
   try {
     const nation = window.GAME_STATE?.nations?.[window.GAME_STATE?.player_nation];
-    if (!nation) return { pops: {}, byP: {}, hist: [], eco: {}, alert: false };
+    if (!nation) return { pops: {}, byP: {}, hist: [], eco: {}, alert: false, name: '' };
+
+    const byP  = nation.population?.by_profession || {};
+    const raw  = nation.population?.pops          || {};
+
+    // Если pops ещё не инициализированы движком (до первого хода),
+    // создаём заглушки на основе by_profession + начальных весов богатства.
+    const pops = {};
+    for (const prof of Object.keys(byP)) {
+      if ((byP[prof] || 0) < 10) continue;
+      pops[prof] = raw[prof] || {
+        income_last: 0,
+        wealth:      POP_WEALTH_DEFAULTS[prof] ?? 25,
+        satisfied:   0.75,
+      };
+    }
+
     return {
-      pops:  nation.population?.pops           || {},
-      byP:   nation.population?.by_profession  || {},
+      pops,
+      byP,
       hist:  nation.economy?.econ_history      || [],
       eco:   nation.economy                    || {},
       alert: !!nation.economy?._income_alert,
@@ -696,8 +723,9 @@ const TIER_CFG = {
 function BlockC() {
   const { pops, byP } = loadPopData();
 
+  // pops уже содержит только профессии с byP >= 10 (loadPopData гарантирует)
   const availProfs = Object.keys(PROF_DISPLAY).filter(p =>
-    pops[p] && (byP[p] || 0) >= 10 && p !== 'slaves'
+    (byP[p] || 0) >= 10 && p !== 'slaves'
   );
 
   const [selProf, setSelProf] = useState(null);
@@ -1033,11 +1061,15 @@ function BlockD() {
         </div>
         <div>
           <div style={{ fontSize: '8.5px', color: C.ivoryFade, textTransform: 'uppercase', letterSpacing: '0.3px' }}>Доходы</div>
-          <div style={{ fontSize: '12px', color: C.green, fontFamily: 'sans-serif', marginTop: '1px' }}>+{fmt(eco.income_per_turn || 0)}</div>
+          <div style={{ fontSize: '12px', color: C.green, fontFamily: 'sans-serif', marginTop: '1px' }}>
+            {(eco.income_per_turn > 0 ? '+' : '') + fmt(eco.income_per_turn || 0)}
+          </div>
         </div>
         <div>
           <div style={{ fontSize: '8.5px', color: C.ivoryFade, textTransform: 'uppercase', letterSpacing: '0.3px' }}>Расходы</div>
-          <div style={{ fontSize: '12px', color: C.red, fontFamily: 'sans-serif', marginTop: '1px' }}>-{fmt(eco.expense_per_turn || 0)}</div>
+          <div style={{ fontSize: '12px', color: C.red, fontFamily: 'sans-serif', marginTop: '1px' }}>
+            {(eco.expense_per_turn > 0 ? '-' : '') + fmt(eco.expense_per_turn || 0)}
+          </div>
         </div>
         <div>
           <div style={{ fontSize: '8.5px', color: C.ivoryFade, textTransform: 'uppercase', letterSpacing: '0.3px' }}>Баланс / тик</div>
@@ -1057,8 +1089,8 @@ function BlockD() {
 function HeroStrip({ eco }) {
   const metrics = [
     { label: 'Казна',        value: fmt(eco?.treasury || 0),                        unit: 'золото',  color: C.gold    },
-    { label: 'Доход / тик',  value: `+${fmt(eco?.income_per_turn || 0)}`,            unit: '',        color: C.green   },
-    { label: 'Расход / тик', value: `-${fmt(eco?.expense_per_turn || 0)}`,           unit: '',        color: C.red     },
+    { label: 'Доход / тик',  value: (eco?.income_per_turn  > 0 ? '+' : '') + fmt(eco?.income_per_turn  || 0), unit: '', color: C.green  },
+    { label: 'Расход / тик', value: (eco?.expense_per_turn > 0 ? '-' : '') + fmt(eco?.expense_per_turn || 0), unit: '', color: C.red    },
     { label: 'Налог',        value: `${((eco?.tax_rate || 0) * 100).toFixed(0)}%`,  unit: '',        color: C.copper  },
   ];
 
