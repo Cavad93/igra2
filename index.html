@@ -11,10 +11,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
 
-  <!-- ── React 18 + Babel Standalone (Экономический обзор) ── -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
 
   <style>
     /* ══════════════════════════════════════════════════
@@ -3866,7 +3863,7 @@
   <script src="ui/economy_tab.js"></script>
   <!-- economy_react.jsx загружается последним: React+Babel уже доступны,
        все игровые globals (GAME_STATE, GOODS, getConsumptionBasket) готовы -->
-  <script type="text/babel" src="ui/economy_react.jsx"></script>
+  <script src="ui/economy_react.jsx"></script>
   <script src="ai/prompts.js"></script>
   <script src="ai/parser.js"></script>
   <script src="ai/claude.js"></script>
