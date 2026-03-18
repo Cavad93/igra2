@@ -46,6 +46,9 @@ async function processTurn() {
     // 1.8. Культура — опыт, мутации, ассимиляция
     if (typeof cultureTick === 'function') cultureTick();
 
+    // 1.9. Религия — распространение, синкретизм, кризисы
+    if (typeof religionTick === 'function') religionTick();
+
     // 2. Население (детерминировано)
     updatePopulationGrowth();
     updateHappiness();
@@ -668,6 +671,10 @@ function initGame() {
   // Инициализируем культуры (до рендера!)
   if (typeof initCultures === 'function') initCultures();
   if (typeof initRegionCultures === 'function') initRegionCultures();
+
+  // Инициализируем религии
+  if (typeof initReligions === 'function') initReligions();
+  if (typeof initRegionReligions === 'function') initRegionReligions();
 
   // Попытка загрузки сохранения
   const hasSave = loadGame();

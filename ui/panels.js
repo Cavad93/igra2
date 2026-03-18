@@ -124,6 +124,13 @@ function renderLeftPanel() {
       <button class="cw-btn-open" onclick="openCultureWindow('${nationId}')">📊 Подробнее о культурах</button>
     </div>
 
+    <!-- РЕЛИГИЯ -->
+    <div class="panel-section">
+      <div class="section-title">⛪ Религия</div>
+      ${typeof renderReligionPanel === 'function' ? renderReligionPanel(nationId) : '<div class="no-data">Нет данных</div>'}
+      <button class="cw-btn-open" onclick="openReligionWindow('${nationId}')">⛪ Подробнее о религиях</button>
+    </div>
+
     <!-- ДИПЛОМАТИЯ -->
     <div class="panel-section">
       <div class="section-title">🤝 Дипломатия</div>
@@ -229,6 +236,45 @@ function renderCulturePanel(nationId) {
   } catch (e) {
     console.warn('[renderCulturePanel] Error:', e);
     return '<div class="no-data">Ошибка отображения культуры</div>';
+  }
+}
+
+function renderReligionPanel(nationId) {
+  try {
+    if (typeof getNationReligionStats !== 'function') return '<div class="no-data">Религия не загружена</div>';
+    const stats = getNationReligionStats(nationId);
+    if (!stats || stats.religions.length === 0) return '<div class="no-data">Нет данных о религии</div>';
+
+    const top3 = stats.religions.slice(0, 3);
+    const html = top3.map(r => {
+      const barWidth = Math.max(2, r.percentage);
+      return `
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:11px;">
+          <span style="min-width:18px">${r.icon}</span>
+          <span style="color:#e8dcc8;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</span>
+          <span style="color:rgba(180,150,90,0.7);min-width:36px;text-align:right">${r.percentage.toFixed(0)}%</span>
+        </div>
+        <div style="height:4px;border-radius:2px;background:rgba(255,255,255,0.04);margin-bottom:6px;overflow:hidden">
+          <div style="height:100%;width:${barWidth}%;background:${r.color};border-radius:2px"></div>
+        </div>
+      `;
+    }).join('');
+
+    const policy = GAME_STATE.religion_policy?.[nationId] || {};
+    let policyStr = '';
+    if (policy.patronage) {
+      const def = typeof _getReligionDefForUI === 'function' ? _getReligionDefForUI(policy.patronage) : null;
+      policyStr += `<div style="font-size:9px;color:rgba(180,150,90,0.5);margin-top:4px">🏛 Покровительство: ${def?.name || policy.patronage}</div>`;
+    }
+    if (policy.persecution) {
+      const def = typeof _getReligionDefForUI === 'function' ? _getReligionDefForUI(policy.persecution) : null;
+      policyStr += `<div style="font-size:9px;color:rgba(200,60,60,0.7);margin-top:2px">⚔ Гонения: ${def?.name || policy.persecution}</div>`;
+    }
+
+    return `<div style="margin-top:4px">${html}${policyStr}</div>`;
+  } catch (e) {
+    console.warn('[renderReligionPanel] Error:', e);
+    return '<div class="no-data">Ошибка отображения религии</div>';
   }
 }
 
@@ -542,6 +588,287 @@ function _cwPlural(n, one, few, many) {
   if (last > 1 && last < 5) return few;
   if (last === 1) return one;
   return many;
+}
+
+// ── Окно «Религия» — Modern Antiquity Design ────────────────────────────────
+
+let _rwState = { nationId: null, sort: 'fervor', stats: null };
+
+function openReligionWindow(nationId) {
+  closeReligionWindow();
+  _rwState.nationId = nationId;
+  _rwState.sort = 'fervor';
+  _rwState.stats = typeof getNationReligionStats === 'function'
+    ? getNationReligionStats(nationId) : null;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'culture-window-overlay';
+  overlay.id = 'religion-window-overlay';
+  overlay.onclick = function(e) { if (e.target === overlay) closeReligionWindow(); };
+  overlay.innerHTML = _buildReligionWindowHtml();
+  document.body.appendChild(overlay);
+  _rwBindEvents();
+}
+
+function closeReligionWindow() {
+  const el = document.getElementById('religion-window-overlay');
+  if (el) el.remove();
+  _rwState.stats = null;
+}
+
+function _rwSetSort(mode) {
+  _rwState.sort = mode;
+  const overlay = document.getElementById('religion-window-overlay');
+  if (!overlay) return;
+  overlay.innerHTML = _buildReligionWindowHtml();
+  _rwBindEvents();
+}
+
+function _rwHighlight(religionId) {
+  document.querySelectorAll('.rw-legend-item').forEach(el => {
+    el.classList.toggle('cw-highlight', el.dataset.religion === religionId);
+  });
+  document.querySelectorAll('.rw-region-seg').forEach(el => {
+    if (religionId) {
+      el.classList.toggle('cw-seg-pulse', el.dataset.religion === religionId);
+      el.classList.toggle('cw-seg-dim', el.dataset.religion !== religionId);
+    } else {
+      el.classList.remove('cw-seg-pulse', 'cw-seg-dim');
+    }
+  });
+  document.querySelectorAll('.rw-donut-seg').forEach(el => {
+    if (religionId) {
+      el.style.opacity = el.dataset.religion === religionId ? '1' : '0.3';
+    } else {
+      el.style.opacity = '1';
+    }
+  });
+}
+
+function _rwBindEvents() {
+  document.querySelectorAll('.rw-legend-item').forEach(el => {
+    el.addEventListener('mouseenter', () => _rwHighlight(el.dataset.religion));
+    el.addEventListener('mouseleave', () => _rwHighlight(null));
+  });
+  document.querySelectorAll('.rw-donut-seg').forEach(el => {
+    el.addEventListener('mouseenter', () => _rwHighlight(el.dataset.religion));
+    el.addEventListener('mouseleave', () => _rwHighlight(null));
+  });
+  document.querySelectorAll('.rw-sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => _rwSetSort(btn.dataset.sort));
+  });
+  // Policy buttons
+  document.querySelectorAll('.rw-policy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const action = btn.dataset.action;
+      const relId = btn.dataset.religion;
+      if (action === 'patronage') setReligionPatronage(_rwState.nationId, relId);
+      else if (action === 'persecute') setReligionPersecution(_rwState.nationId, relId);
+      else if (action === 'clear-patronage') setReligionPatronage(_rwState.nationId, null);
+      else if (action === 'clear-persecution') setReligionPersecution(_rwState.nationId, null);
+      // Refresh
+      _rwState.stats = getNationReligionStats(_rwState.nationId);
+      const overlay = document.getElementById('religion-window-overlay');
+      if (overlay) { overlay.innerHTML = _buildReligionWindowHtml(); _rwBindEvents(); }
+    });
+  });
+}
+
+function _buildReligionWindowHtml() {
+  try {
+    const stats = _rwState.stats;
+    if (!stats) return '';
+    const nation = GAME_STATE.nations[_rwState.nationId];
+    const nationName = nation ? nation.name : _rwState.nationId;
+    const policy = GAME_STATE.religion_policy?.[_rwState.nationId] || {};
+
+    // Donut SVG
+    const donutSvg = _buildReligionDonut(stats.religions);
+
+    // Legend
+    const legendHtml = stats.religions.map(r => `
+      <div class="rw-legend-item cw-legend-item" data-religion="${r.id}">
+        <span class="cw-legend-dot" style="background:${r.color};color:${r.color}"></span>
+        <span class="cw-legend-name">${r.icon} ${r.name}</span>
+        <span class="cw-legend-pct">${r.percentage.toFixed(1)}%</span>
+      </div>
+    `).join('');
+
+    // Policy panel
+    const patronageRel = policy.patronage ? _getReligionDefForUI(policy.patronage) : null;
+    const persecutionRel = policy.persecution ? _getReligionDefForUI(policy.persecution) : null;
+    const isPlayer = _rwState.nationId === GAME_STATE.player_nation;
+
+    let policyHtml = '';
+    if (isPlayer) {
+      policyHtml = `
+        <div class="rw-policy-section">
+          <div class="cw-traditions-title">Политика</div>
+          <div class="rw-policy-row">
+            <span class="rw-policy-label">Покровительство:</span>
+            ${patronageRel
+              ? `<span class="rw-policy-value">${patronageRel.icon} ${patronageRel.name} <button class="rw-policy-btn rw-policy-clear" data-action="clear-patronage">✕</button></span>`
+              : '<span class="rw-policy-value rw-policy-none">нет</span>'}
+          </div>
+          <div class="rw-policy-row">
+            <span class="rw-policy-label">Гонения:</span>
+            ${persecutionRel
+              ? `<span class="rw-policy-value rw-policy-danger">${persecutionRel.icon} ${persecutionRel.name} <button class="rw-policy-btn rw-policy-clear" data-action="clear-persecution">✕</button></span>`
+              : '<span class="rw-policy-value rw-policy-none">нет</span>'}
+          </div>
+          <div class="rw-policy-actions">
+            ${stats.religions.slice(0, 6).map(r => `
+              <div class="rw-policy-action-row">
+                <span style="color:${r.color}">${r.icon}</span>
+                <span class="rw-policy-action-name">${r.name}</span>
+                <button class="rw-policy-btn rw-policy-patron${policy.patronage === r.id ? ' active' : ''}" data-action="patronage" data-religion="${r.id}" title="Покровительство (${RELIGION_CONFIG.PATRONAGE_COST_PER_TURN} монет/ход)">🏛</button>
+                <button class="rw-policy-btn rw-policy-persc${policy.persecution === r.id ? ' active' : ''}" data-action="persecute" data-religion="${r.id}" title="Гонения (-${RELIGION_CONFIG.PERSECUTION_HAPPINESS_COST} счастья/год)">⚔</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Sort regions
+    let sortedRegions = [...stats.byRegion];
+    switch (_rwState.sort) {
+      case 'alpha':
+        sortedRegions.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'population':
+        sortedRegions.sort((a, b) => b.population - a.population);
+        break;
+      case 'fervor':
+      default:
+        // Sort by fervor of dominant religion
+        sortedRegions.sort((a, b) => {
+          const aMax = a.segments[0]?.fervor || 0;
+          const bMax = b.segments[0]?.fervor || 0;
+          return bMax - aMax;
+        });
+        break;
+    }
+
+    // Region cards
+    const regionCardsHtml = sortedRegions.slice(0, 30).map(r => {
+      const segsHtml = r.segments.map(s =>
+        `<div class="rw-region-seg cw-region-seg" data-religion="${s.religion}" style="width:${s.pct}%;background:${s.color}"></div>`
+      ).join('');
+
+      const labelsHtml = r.segments.map(s =>
+        `<span class="cw-region-culture-label">
+          <span class="cw-region-culture-dot" style="background:${s.color}"></span>
+          ${s.name} ${Math.round(s.pct)}%
+        </span>`
+      ).join('');
+
+      const officialIcon = r.official ? (_getReligionDefForUI(r.official)?.icon || '') : '';
+
+      return `
+        <div class="cw-region">
+          <div class="cw-region-header">
+            <span class="cw-region-name">${officialIcon} ${r.name}</span>
+            <span class="cw-region-pop">${r.population.toLocaleString()}</span>
+          </div>
+          <div class="cw-region-bar">${segsHtml}</div>
+          <div class="cw-region-cultures">${labelsHtml}</div>
+        </div>
+      `;
+    }).join('');
+
+    const sortBtns = ['fervor', 'population', 'alpha'];
+    const sortLabels = { fervor: 'Рвению', population: 'Населению', alpha: 'Алфавиту' };
+    const sortBarHtml = `
+      <div class="cw-sort-bar">
+        <span class="cw-sort-label">Сортировка:</span>
+        ${sortBtns.map(s =>
+          `<button class="cw-sort-btn rw-sort-btn${_rwState.sort === s ? ' active' : ''}" data-sort="${s}">${sortLabels[s]}</button>`
+        ).join('')}
+      </div>
+    `;
+
+    return `
+      <div class="culture-window rw-window">
+        <div class="cw-header">
+          <div>
+            <div class="cw-header-title">${nationName}</div>
+            <div class="cw-header-sub">Религиозный состав · ${stats.religions.length} ${_cwPlural(stats.religions.length, 'религия', 'религии', 'религий')}</div>
+          </div>
+          <button class="cw-close" onclick="closeReligionWindow()">✕</button>
+        </div>
+        <div class="cw-body">
+          <div class="cw-left">
+            <div class="cw-donut-wrap">
+              ${donutSvg}
+            </div>
+            <div class="cw-legend">${legendHtml}</div>
+            ${policyHtml}
+          </div>
+          <div class="cw-right">
+            ${sortBarHtml}
+            ${regionCardsHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    console.error('[renderReligionWindow] Error:', e);
+    return `
+      <div class="culture-window">
+        <div class="cw-header">
+          <div class="cw-header-title">Религия</div>
+          <button class="cw-close" onclick="closeReligionWindow()">✕</button>
+        </div>
+        <div class="cw-body" style="padding:20px">
+          <div class="no-data">Ошибка: ${e.message}</div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+function _buildReligionDonut(religions) {
+  const size = 160, cx = 80, cy = 80, outerR = 76, innerR = 40;
+  let paths = '';
+  let startAngle = -90;
+  const totalPct = religions.reduce((s, r) => s + r.percentage, 0) || 1;
+
+  for (const r of religions) {
+    const sweep = (r.percentage / totalPct) * 360;
+    if (sweep < 0.1) continue;
+    const endAngle = startAngle + sweep;
+    const largeArc = sweep > 180 ? 1 : 0;
+    const s1 = _polarToCart(cx, cy, outerR, startAngle);
+    const e1 = _polarToCart(cx, cy, outerR, endAngle);
+    const s2 = _polarToCart(cx, cy, innerR, endAngle);
+    const e2 = _polarToCart(cx, cy, innerR, startAngle);
+
+    paths += `<path class="rw-donut-seg cw-donut-seg" data-religion="${r.id}"
+      d="M ${s1.x} ${s1.y} A ${outerR} ${outerR} 0 ${largeArc} 1 ${e1.x} ${e1.y}
+         L ${s2.x} ${s2.y} A ${innerR} ${innerR} 0 ${largeArc} 0 ${e2.x} ${e2.y} Z"
+      fill="${r.color}" />`;
+    startAngle = endAngle;
+  }
+
+  const mainIcon = religions.length > 0 ? religions[0].icon : '⛪';
+
+  return `
+    <div class="cw-donut">
+      <svg viewBox="0 0 ${size} ${size}" width="100%" height="100%">${paths}</svg>
+      <div class="cw-donut-center">
+        <span class="cw-donut-pop" style="font-size:24px">${mainIcon}</span>
+        <span class="cw-donut-label">Религия</span>
+      </div>
+    </div>
+  `;
+}
+
+function _getReligionDefForUI(id) {
+  if (typeof RELIGIONS !== 'undefined' && RELIGIONS[id]) return RELIGIONS[id];
+  if (GAME_STATE.religions?.[id]) return GAME_STATE.religions[id];
+  if (GAME_STATE.syncretic_religions?.[id]) return GAME_STATE.syncretic_religions[id];
+  return null;
 }
 
 function renderRelations(relations) {

@@ -129,6 +129,35 @@ function processGovernmentTick(nationId) {
     }
   }
 
+  // 10.5. Религиозное влияние на легитимность и стабильность
+  if (typeof getReligionBonus === 'function') {
+    const relLegitimacy = getReligionBonus(nationId, 'legitimacy');
+    const relStability  = getReligionBonus(nationId, 'stability');
+    if (relLegitimacy) {
+      gov.legitimacy = Math.min(100, Math.max(0, (gov.legitimacy || 50) + relLegitimacy * 0.1));
+    }
+    if (relStability) {
+      gov.stability = Math.min(100, Math.max(0, (gov.stability || 50) + relStability));
+    }
+
+    // Бонус легитимности: правитель разделяет религию большинства столицы
+    const capitalRegion = nation.regions?.[0];
+    if (capitalRegion) {
+      const rr = GAME_STATE.region_religions?.[capitalRegion];
+      if (rr) {
+        const officialBelief = rr.beliefs?.find(b => b.religion === rr.official);
+        if (officialBelief && officialBelief.fervor > 0.5) {
+          gov.legitimacy = Math.min(100, (gov.legitimacy || 50) + 0.1);
+        } else if (!officialBelief || officialBelief.fervor < 0.2) {
+          gov.legitimacy = Math.max(0, (gov.legitimacy || 50) - 0.15);
+          if (isPlayer && GAME_STATE.turn % 12 === 0) {
+            addEventLog('⚠️ Народ не разделяет веру власти. Легитимность падает.', 'religion');
+          }
+        }
+      }
+    }
+  }
+
   // 11. Народные восстания при критически низком счастье
   checkPopularRevolt(nationId, isPlayer);
 }
