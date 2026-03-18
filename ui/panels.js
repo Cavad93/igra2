@@ -141,8 +141,14 @@ function renderPopMiniWidget(pop) {
   const hapColor = getHappinessColor(hap);
   const hapLabel = hap >= 75 ? '😊' : hap >= 55 ? '😐' : hap >= 35 ? '😟' : '😡';
 
-  // Используем class_satisfaction если доступно, иначе профессии
-  const classSat = pop.class_satisfaction;
+  // Используем class_satisfaction если доступно, иначе считаем на лету
+  let classSat = pop.class_satisfaction;
+  if (!classSat && typeof calculateClassSatisfaction === 'function' && pop.by_profession) {
+    const nationId  = GAME_STATE?.player_nation;
+    const stockpile = GAME_STATE?.nations?.[nationId]?.economy?.stockpile || {};
+    classSat = calculateClassSatisfaction(pop.by_profession, stockpile);
+    pop.class_satisfaction = classSat; // кэшируем
+  }
 
   if (classSat && typeof SOCIAL_CLASSES !== 'undefined') {
     const entries = Object.entries(classSat)
