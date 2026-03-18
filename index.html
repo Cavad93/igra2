@@ -3168,6 +3168,258 @@
       font-size: 10px; font-family: sans-serif;
       min-width: 28px; text-align: right; font-weight: bold; flex-shrink: 0;
     }
+
+    /* ══════════════════════════════════════════════════════════
+       ВКЛАДКИ ПАНЕЛИ РЕГИОНА
+    ══════════════════════════════════════════════════════════ */
+    .ri-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-gold);
+      background: rgba(30,18,6,0.85);
+    }
+    .ri-tab {
+      flex: 1;
+      background: none;
+      border: none;
+      border-right: 1px solid rgba(107,79,26,.3);
+      color: var(--text-dim);
+      font-size: 11px;
+      padding: 6px 4px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .15s, color .15s;
+    }
+    .ri-tab:last-child { border-right: none; }
+    .ri-tab:hover { background: rgba(107,79,26,.2); color: var(--text-light); }
+    .ri-tab--active {
+      color: var(--text-gold);
+      background: rgba(107,79,26,.25);
+      border-bottom: 2px solid var(--text-gold);
+    }
+    .region-tab-build { padding: 0; }
+    .region-tab-build.hidden,
+    .region-info-body.hidden { display: none; }
+
+    /* ── Строительная вкладка ── */
+    .rbt-wrap { padding: 8px; }
+
+    .rbt-hdr {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(107,79,26,.25);
+    }
+    .rbt-slots-lbl { font-size: 11px; color: var(--text-dim); }
+    .rbt-slots-val { font-size: 12px; color: var(--text-gold); font-weight: bold; }
+    .rbt-terrain-tag {
+      margin-left: auto;
+      font-size: 9.5px;
+      color: var(--text-dim);
+      background: rgba(107,79,26,.15);
+      border: 1px solid rgba(107,79,26,.3);
+      border-radius: 2px;
+      padding: 1px 5px;
+    }
+
+    /* Grid of slot cards */
+    .rbt-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+
+    /* Base card */
+    .rbt-card {
+      border: 1px solid rgba(107,79,26,.4);
+      border-radius: 3px;
+      background: rgba(20,12,4,.6);
+      font-size: 10px;
+      overflow: hidden;
+    }
+
+    /* Active building */
+    .rbt-card--active { border-color: rgba(107,79,26,.7); }
+    .rbt-card-head {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 6px;
+      background: rgba(50,30,8,.7);
+      border-bottom: 1px solid rgba(107,79,26,.3);
+    }
+    .rbt-icon { font-size: 13px; flex-shrink: 0; }
+    .rbt-bname { font-size: 10px; color: var(--text-light); flex: 1; line-height: 1.2; }
+    .rbt-badge {
+      font-size: 8px;
+      padding: 1px 4px;
+      border-radius: 2px;
+      flex-shrink: 0;
+      font-weight: bold;
+    }
+    .rbt-badge--ok  { background: rgba(56,142,60,.4);  color: #81c784; border: 1px solid rgba(56,142,60,.5); }
+    .rbt-badge--wip { background: rgba(245,124,0,.3);  color: #ffb74d; border: 1px solid rgba(245,124,0,.4); }
+
+    .rbt-card-body { padding: 5px 6px; }
+    .rbt-wrows { display: flex; flex-direction: column; gap: 1px; margin-bottom: 4px; }
+    .rbt-w-row { color: var(--text-dim); font-size: 9.5px; }
+    .rbt-w-row b { color: var(--text-light); }
+    .rbt-rev   { color: #c8e6c9; font-size: 9.5px; }
+    .rbt-wages { color: var(--text-dim); font-size: 9px; }
+    .rbt-dim   { color: var(--text-dim); font-size: 9px; font-style: italic; }
+
+    .rbt-card-foot {
+      padding: 4px 6px;
+      border-top: 1px solid rgba(107,79,26,.2);
+    }
+
+    /* Construction queue card */
+    .rbt-card--queue { border-color: rgba(245,124,0,.4); }
+    .rbt-prog-wrap {
+      height: 5px;
+      background: rgba(255,255,255,.1);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+    .rbt-prog-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #ff8f00, #ffca28);
+      border-radius: 3px;
+      transition: width .3s;
+    }
+    .rbt-turns-left { font-size: 9.5px; color: var(--text-dim); }
+    .rbt-turns-left b { color: #ffb74d; }
+
+    /* Empty slot card */
+    .rbt-card--empty {
+      border-style: dashed;
+      border-color: rgba(107,79,26,.35);
+      cursor: pointer;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .15s, border-color .15s;
+    }
+    .rbt-card--empty:hover {
+      background: rgba(107,79,26,.15);
+      border-color: var(--border-gold);
+    }
+    .rbt-empty-inner { text-align: center; }
+    .rbt-plus  { display: block; font-size: 18px; color: var(--text-gold); line-height: 1; }
+    .rbt-empty-lbl { display: block; font-size: 9.5px; color: var(--text-dim); margin-top: 2px; }
+
+    /* Non-player / no data */
+    .rbt-foreign {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 20px 12px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 11px;
+    }
+    .rbt-foreign-icon { font-size: 20px; }
+    .rbt-empty { padding: 16px; color: var(--text-dim); font-size: 11px; text-align: center; }
+
+    /* Action buttons */
+    .rbt-btn {
+      background: none;
+      border: 1px solid rgba(107,79,26,.5);
+      border-radius: 2px;
+      color: var(--text-dim);
+      font-size: 9px;
+      padding: 2px 6px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .15s;
+      width: 100%;
+    }
+    .rbt-btn:hover { color: var(--text-light); border-color: var(--border-gold); }
+    .rbt-btn--dem    { border-color: rgba(198,40,40,.4); color: #ef9a9a; }
+    .rbt-btn--dem:hover { background: rgba(198,40,40,.2); border-color: #ef9a9a; }
+    .rbt-btn--cancel { border-color: rgba(245,124,0,.4); color: #ffb74d; }
+    .rbt-btn--cancel:hover { background: rgba(245,124,0,.15); }
+
+    /* ── Building Chooser ── */
+    .rbt-chooser {
+      border: 1px solid rgba(107,79,26,.5);
+      border-radius: 3px;
+      background: rgba(10,6,2,.9);
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    .rbt-chooser.hidden { display: none; }
+
+    .rbt-ch-hdr {
+      display: flex;
+      align-items: center;
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(107,79,26,.4);
+      background: rgba(40,24,6,.8);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .rbt-ch-title  { font-size: 11px; color: var(--text-gold); flex: 1; }
+    .rbt-ch-close  {
+      background: none; border: none; color: var(--text-dim);
+      cursor: pointer; font-size: 13px; padding: 0 2px;
+    }
+    .rbt-ch-close:hover { color: var(--text-gold); }
+    .rbt-ch-treasury {
+      font-size: 9.5px; color: #c8e6c9;
+      padding: 4px 8px;
+      border-bottom: 1px solid rgba(107,79,26,.2);
+      background: rgba(30,18,6,.7);
+    }
+
+    .rbt-ch-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    /* Building card in chooser */
+    .rbt-bcard {
+      padding: 7px 8px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(107,79,26,.2);
+      transition: background .12s;
+    }
+    .rbt-bcard:last-child { border-bottom: none; }
+    .rbt-bcard:hover:not(.rbt-bcard--dis) { background: rgba(107,79,26,.2); }
+    .rbt-bcard--dis { opacity: .45; cursor: not-allowed; }
+
+    .rbt-bc-head {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 3px;
+    }
+    .rbt-bc-icon { font-size: 13px; flex-shrink: 0; }
+    .rbt-bc-name { font-size: 10.5px; color: var(--text-light); flex: 1; }
+    .rbt-bc-cost { font-size: 10px; color: #c8e6c9; font-weight: bold; flex-shrink: 0; }
+    .rbt-bc-cost--poor { color: #ef9a9a; }
+
+    .rbt-bc-body { display: flex; flex-wrap: wrap; gap: 3px 8px; }
+    .rbt-bc-wkr, .rbt-bc-turns, .rbt-bc-prod {
+      font-size: 9px; color: var(--text-dim);
+    }
+    .rbt-bc-reason {
+      font-size: 9px; color: #ef9a9a;
+      width: 100%;
+    }
+    .rbt-err {
+      font-size: 9.5px; color: #ef9a9a;
+      padding: 4px 8px;
+      background: rgba(198,40,40,.15);
+      border-bottom: 1px solid rgba(198,40,40,.3);
+    }
   </style>
 </head>
 <body>
@@ -3364,6 +3616,7 @@
   </script>
 
   <script src="ui/log.js"></script>
+  <script src="engine/buildings.js"></script>
   <script src="engine/economy.js"></script>
   <script src="engine/demography.js"></script>
   <script src="engine/government.js"></script>
@@ -3378,6 +3631,7 @@
   <script src="engine/religion.js"></script>
   <script src="engine/turn.js"></script>
   <script src="ui/map.js"></script>
+  <script src="ui/region_build_tab.js"></script>
   <script src="ui/panels.js"></script>
   <script src="ui/government_tab.js"></script>
   <script src="ui/population_tab.js"></script>

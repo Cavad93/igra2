@@ -793,21 +793,34 @@ function renderRegionSocialStructure(regionId, gameData) {
 
 // ──────────────────────────────────────────────────────────────
 
+// Активная вкладка панели региона: 'info' | 'build'
+let _activeRegionTab = 'info';
+
+function switchRegionTab(tab) {
+  _activeRegionTab = tab;
+  const infoPane  = document.getElementById('region-tab-info');
+  const buildPane = document.getElementById('region-tab-build');
+  if (infoPane)  infoPane.classList.toggle('hidden', tab !== 'info');
+  if (buildPane) buildPane.classList.toggle('hidden', tab !== 'build');
+  document.querySelectorAll('.ri-tab').forEach(b =>
+    b.classList.toggle('ri-tab--active', b.dataset.tab === tab)
+  );
+}
+
 function showRegionInfo(regionId) {
-  console.log('[showRegionInfo] regionId:', regionId);
   const panel = document.getElementById('region-info');
   if (!panel) { console.warn('[showRegionInfo] panel not found'); return; }
 
-  const mapData = MAP_REGIONS[regionId];
+  const mapData  = MAP_REGIONS[regionId];
   const gameData = GAME_STATE.regions[regionId];
-  console.log('[showRegionInfo] mapData:', !!mapData, 'gameData:', !!gameData);
   if (!mapData || !gameData) return;
 
   try {
-    const nationId = gameData.nation;
-    const nation = GAME_STATE.nations[nationId];
+    const nationId    = gameData.nation;
+    const nation      = GAME_STATE.nations[nationId];
     const nationName  = nation ? nation.name  : 'Независимые';
     const nationColor = nation ? nation.color : '#A8A898';
+    const isPlayer    = nationId === GAME_STATE.player_nation;
 
     const productionLines = Object.entries(gameData.production || {}).map(([good, amount]) => {
       const g = GOODS[good];
@@ -820,29 +833,29 @@ function showRegionInfo(regionId) {
 
     // ── Блок культуры ──
     let cultureHtml = '';
-    try {
-      cultureHtml = renderRegionCultureBlock(regionId, gameData.population || 0);
-    } catch (e) {
-      console.warn('[showRegionInfo] culture block error:', e);
-    }
+    try { cultureHtml = renderRegionCultureBlock(regionId, gameData.population || 0); }
+    catch (e) { console.warn('[showRegionInfo] culture block error:', e); }
 
     // ── Блок религии ──
     let religionHtml = '';
     try {
-      if (typeof renderRegionReligionBlock === 'function') {
+      if (typeof renderRegionReligionBlock === 'function')
         religionHtml = renderRegionReligionBlock(regionId, gameData.population || 0);
-      }
-    } catch (e) {
-      console.warn('[showRegionInfo] religion block error:', e);
-    }
+    } catch (e) { console.warn('[showRegionInfo] religion block error:', e); }
 
     // ── Блок социальной структуры ──
     let socialStructureHtml = '';
+    try { socialStructureHtml = renderRegionSocialStructure(regionId, gameData); }
+    catch (e) { console.warn('[showRegionInfo] social structure error:', e); }
+
+    // ── Вкладка строительства ──
+    let buildTabHtml = '';
     try {
-      socialStructureHtml = renderRegionSocialStructure(regionId, gameData);
-    } catch (e) {
-      console.warn('[showRegionInfo] social structure error:', e);
-    }
+      if (typeof renderConstructionTab === 'function')
+        buildTabHtml = renderConstructionTab(regionId);
+    } catch (e) { console.warn('[showRegionInfo] build tab error:', e); }
+
+    const curTab = _activeRegionTab;
 
     panel.innerHTML = `
       <div class="region-info-header" style="border-left: 4px solid ${nationColor}">
@@ -850,7 +863,13 @@ function showRegionInfo(regionId) {
         <span class="region-info-nation" style="color:${nationColor}">${nationName}</span>
         <button class="region-info-close" onclick="closeRegionInfo()">✕</button>
       </div>
-      <div class="region-info-body">
+      <div class="ri-tabs">
+        <button class="ri-tab${curTab === 'info'  ? ' ri-tab--active' : ''}" data-tab="info"
+          onclick="switchRegionTab('info')">Информация</button>
+        <button class="ri-tab${curTab === 'build' ? ' ri-tab--active' : ''}" data-tab="build"
+          onclick="switchRegionTab('build')">${isPlayer ? '🏗 Строительство' : 'Строительство'}</button>
+      </div>
+      <div id="region-tab-info" class="region-info-body${curTab !== 'info' ? ' hidden' : ''}">
         <div class="region-info-desc">${mapData.description}</div>
         <div class="region-stats">
           <div class="region-stat">👥 Нас.: <strong>${(gameData.population || 0).toLocaleString()}</strong></div>
@@ -863,6 +882,9 @@ function showRegionInfo(regionId) {
         ${socialStructureHtml}
         ${productionLines ? `<div class="region-production"><div class="section-label">Производство:</div>${productionLines}</div>` : ''}
         ${buildings ? `<div class="region-buildings"><div class="section-label">Постройки:</div>${buildings}</div>` : ''}
+      </div>
+      <div id="region-tab-build" class="region-tab-build${curTab !== 'build' ? ' hidden' : ''}">
+        ${buildTabHtml}
       </div>
     `;
   } catch (e) {
