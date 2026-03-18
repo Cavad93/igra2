@@ -39,6 +39,9 @@ function renderLeftPanel() {
       <button class="gov-open-btn" onclick="showGovernmentOverlay()">
         🏛 Управление государством ▸
       </button>
+      <button class="gov-open-btn" style="margin-top:4px" onclick="showPopulationOverlay()">
+        👥 Структура общества ▸
+      </button>
     </div>
 
     <!-- КАЗНА -->

@@ -124,8 +124,10 @@ function calculateProduction() {
         const localWorkers = professionPop * regionShareRaw;
         const terrainMult = multipliers[spec.per] || 1.0;
 
+        // Модификатор от удовлетворённости классов (если есть)
+        const classMod = nation.population._production_mod ?? 1;
         const amount = (localWorkers / 1000) * spec.rate * terrainMult * fertility
-                     * bldBonuses.production_mult;
+                     * bldBonuses.production_mult * classMod;
 
         produced[nationId][good] = (produced[nationId][good] || 0) + amount;
       }
@@ -136,18 +138,23 @@ function calculateProduction() {
 }
 
 // ──────────────────────────────────────────────────────────────
-// ШАГ 2: ПОТРЕБЛЕНИЕ
+// ШАГ 2: ПОТРЕБЛЕНИЕ (классовая модель)
 // ──────────────────────────────────────────────────────────────
 
 function calculateConsumption(nation) {
-  const pop = nation.population.total;
-  const profs = nation.population.by_profession;
+  // Используем классовую модель если доступны SOCIAL_CLASSES
+  if (typeof calculateTotalConsumptionByClass === 'function') {
+    return calculateTotalConsumptionByClass(nation.population.by_profession);
+  }
 
+  // Запасной вариант — старая плоская модель
+  const pop   = nation.population.total;
+  const profs = nation.population.by_profession;
   return {
-    wheat:  pop * CONFIG.BALANCE.FOOD_PER_PERSON,
-    salt:   pop * CONFIG.BALANCE.SALT_PER_PERSON,
-    cloth:  pop * CONFIG.BALANCE.CLOTH_PER_PERSON,
-    tools:  (profs.craftsmen || 0) * CONFIG.BALANCE.TOOLS_PER_CRAFTSMAN,
+    wheat: pop * CONFIG.BALANCE.FOOD_PER_PERSON,
+    salt:  pop * CONFIG.BALANCE.SALT_PER_PERSON,
+    cloth: pop * CONFIG.BALANCE.CLOTH_PER_PERSON,
+    tools: (profs.craftsmen || 0) * CONFIG.BALANCE.TOOLS_PER_CRAFTSMAN,
   };
 }
 
@@ -459,31 +466,85 @@ function updatePopulationGrowth() {
 }
 
 // ──────────────────────────────────────────────────────────────
-// СЧАСТЬЕ НАСЕЛЕНИЯ
+// СЧАСТЬЕ НАСЕЛЕНИЯ (с учётом классовой удовлетворённости)
 // ──────────────────────────────────────────────────────────────
 
 function updateHappiness() {
   for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
-    let happiness = nation.population.happiness;
     const economy = nation.economy;
 
-    // Войны делают людей несчастными
+    // ── Классовая удовлетворённость ─────────────────────────
+    let happiness = 50; // базовое
+    if (typeof calculateClassSatisfaction === 'function') {
+      const classSat = calculateClassSatisfaction(
+        nation.population.by_profession,
+        economy.stockpile,
+      );
+      // Сохраняем в состояние для UI
+      nation.population.class_satisfaction = classSat;
+
+      // Взвешенное счастье по политическому весу классов
+      if (typeof calculateWeightedHappiness === 'function') {
+        happiness = calculateWeightedHappiness(classSat);
+      }
+
+      // Политические эффекты
+      if (typeof calculatePoliticalEffects === 'function') {
+        const fx = calculatePoliticalEffects(classSat);
+        nation.population._political_effects = fx;
+
+        // Применяем модификаторы производства
+        if (fx.production_mod !== 0) {
+          nation.population._production_mod = 1 + Math.max(-0.4, Math.min(0.3, fx.production_mod));
+        } else {
+          nation.population._production_mod = 1;
+        }
+
+        // Военные эффекты
+        if (fx.military_loyalty_mod !== 0) {
+          const newLoyalty = Math.max(0, Math.min(100,
+            nation.military.loyalty + fx.military_loyalty_mod,
+          ));
+          applyDelta(`nations.${nationId}.military.loyalty`, newLoyalty);
+        }
+        if (fx.military_morale_mod !== 0) {
+          const newMorale = Math.max(0, Math.min(100,
+            nation.military.morale + fx.military_morale_mod * 0.2, // сглаживание
+          ));
+          applyDelta(`nations.${nationId}.military.morale`, newMorale);
+        }
+
+        // Легитимность
+        if (fx.legitimacy_mod !== 0) {
+          const newLeg = Math.max(0, Math.min(100,
+            nation.government.legitimacy + fx.legitimacy_mod,
+          ));
+          applyDelta(`nations.${nationId}.government.legitimacy`, newLeg);
+        }
+      }
+    } else {
+      // Запасной вариант — старая логика
+      happiness = nation.population.happiness;
+    }
+
+    // ── Внешние факторы ─────────────────────────────────────
     if ((nation.military.at_war_with || []).length > 0) {
       happiness += CONFIG.BALANCE.HAPPINESS_FROM_WAR;
     }
-
-    // Налоги выше базовых снижают счастье
     if (economy.tax_rate > 0.15) {
       happiness -= Math.round((economy.tax_rate - 0.15) * 100);
     }
-
-    // Казна в минусе — нет общественных услуг
     if (economy.treasury < 0) {
       happiness -= 3;
     }
 
-    // Ограничиваем диапазон
-    happiness = Math.max(0, Math.min(100, happiness));
+    // Бонус зданий уже применён в updateTreasury
+    const bldBonus = getBuildingBonuses(nationId);
+    if (bldBonus.happiness_bonus > 0) {
+      happiness += Math.round(bldBonus.happiness_bonus * 0.5);
+    }
+
+    happiness = Math.max(0, Math.min(100, Math.round(happiness)));
     applyDelta(`nations.${nationId}.population.happiness`, happiness);
   }
 }

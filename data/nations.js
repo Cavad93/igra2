@@ -107,15 +107,37 @@ const INITIAL_GAME_STATE = {
 
         // рыночные запасы нации (в амфорах/бушелях)
         stockpile: {
-          wheat:  18000,
-          fish:    4500,
-          olives:  3200,
-          wine:    2800,
-          iron:    1200,
-          timber:  2500,
-          cloth:   1800,
-          salt:     900,
-          tools:    600,
+          // Зерно
+          wheat:      18000,
+          barley:      4000,
+          // Рыба
+          fish:        4500,
+          // Масло
+          olives:      3200,
+          olive_oil:    800,
+          honey:        200,
+          // Напитки
+          wine:        2800,
+          // Консерванты
+          salt:         900,
+          // Металлы
+          iron:        1200,
+          bronze:       300,
+          // Дерево
+          timber:      2500,
+          // Текстиль
+          wool:         800,
+          cloth:       1800,
+          leather:      500,
+          // Инструменты
+          tools:        600,
+          pottery:      900,
+          // Письменность
+          papyrus:      150,
+          wax:          100,
+          // Роскошь
+          incense:       50,
+          purple_dye:    10,
         },
 
         trade_routes: [],
@@ -289,12 +311,26 @@ const INITIAL_GAME_STATE = {
         tax_rate: 0.10,
 
         stockpile: {
-          wheat:  85000,
-          fish:    8000,
-          iron:    8000,
-          timber: 12000,
-          cloth:   6000,
-          salt:    4000,
+          wheat:     85000,
+          barley:    18000,
+          fish:       8000,
+          olives:     4000,
+          olive_oil:  1500,
+          wine:       5000,
+          salt:       4000,
+          iron:       8000,
+          bronze:     1200,
+          timber:    12000,
+          wool:       2000,
+          cloth:      6000,
+          leather:    2000,
+          tools:      1500,
+          pottery:    2000,
+          papyrus:     400,
+          wax:         300,
+          honey:       300,
+          incense:     100,
+          purple_dye:   20,
         },
 
         trade_routes: ['carthage', 'greek_states'],
@@ -433,13 +469,26 @@ const INITIAL_GAME_STATE = {
         tax_rate: 0.14,
 
         stockpile: {
-          wheat:  120000,
-          fish:    15000,
-          iron:    12000,
-          timber:  18000,
-          cloth:   14000,
-          salt:     8000,
-          wine:    10000,
+          wheat:     120000,
+          barley:     25000,
+          fish:       15000,
+          olives:      6000,
+          olive_oil:   2500,
+          honey:        400,
+          wine:       10000,
+          salt:        8000,
+          iron:       12000,
+          bronze:      2000,
+          timber:     18000,
+          wool:        3000,
+          cloth:      14000,
+          leather:     3500,
+          tools:       2000,
+          pottery:     3000,
+          papyrus:      600,
+          wax:          400,
+          incense:      200,
+          purple_dye:    60,
         },
 
         trade_routes: ['egypt', 'greek_states', 'rome'],
@@ -535,13 +584,26 @@ const INITIAL_GAME_STATE = {
         tax_rate: 0.18,   // тяжёлое налогообложение
 
         stockpile: {
-          wheat:  800000,
-          fish:    25000,
-          iron:    15000,
-          timber:  20000,
-          cloth:   30000,
-          salt:    12000,
-          wine:    18000,
+          wheat:     800000,
+          barley:    200000,
+          fish:       25000,
+          olives:     15000,
+          olive_oil:  10000,
+          honey:       2000,
+          wine:       18000,
+          salt:       12000,
+          iron:       15000,
+          bronze:      3000,
+          timber:     20000,
+          wool:        8000,
+          cloth:      30000,
+          leather:     5000,
+          tools:       3000,
+          pottery:     8000,
+          papyrus:     5000,   // Египет — крупнейший производитель папируса
+          wax:         1000,
+          incense:      500,
+          purple_dye:   100,
         },
 
         trade_routes: ['carthage', 'pergamon', 'syracuse'],
@@ -637,10 +699,25 @@ const INITIAL_GAME_STATE = {
         tax_rate: 0.13,
 
         stockpile: {
-          wheat:   95000,
-          iron:    18000,
-          timber:  22000,
-          cloth:    8000,
+          wheat:    95000,
+          barley:   20000,
+          fish:      3000,
+          olive_oil: 2000,
+          wine:      6000,
+          salt:      4000,
+          iron:     18000,
+          bronze:    3000,
+          timber:   22000,
+          wool:      3500,
+          cloth:     8000,
+          leather:   4000,
+          tools:     2000,
+          pottery:   2500,
+          papyrus:    300,
+          wax:        200,
+          honey:      300,
+          incense:     80,
+          purple_dye:  15,
         },
 
         trade_routes: ['egypt', 'greek_states'],
@@ -951,15 +1028,38 @@ const INITIAL_GAME_STATE = {
   // ── Мировой рынок ──
   // Базовые цены из GOODS, supply/demand обновляются в updateMarketPrices()
   market: {
-    wheat:  { base: 10,  price: 10,  supply: 1000, demand: 1000 },
-    fish:   { base: 15,  price: 15,  supply: 500,  demand: 500  },
-    olives: { base: 20,  price: 20,  supply: 300,  demand: 300  },
-    wine:   { base: 30,  price: 30,  supply: 200,  demand: 200  },
-    iron:   { base: 45,  price: 45,  supply: 150,  demand: 150  },
-    timber: { base: 22,  price: 22,  supply: 250,  demand: 250  },
-    cloth:  { base: 25,  price: 25,  supply: 200,  demand: 200  },
-    salt:   { base: 18,  price: 18,  supply: 300,  demand: 300  },
-    tools:  { base: 35,  price: 35,  supply: 100,  demand: 100  },
-    slaves: { base: 200, price: 200, supply: 50,   demand: 50   },
+    // ── Зерновые ──
+    wheat:       { base: 10,  price: 10,  supply: 1000, demand: 1000 },
+    barley:      { base: 7,   price: 7,   supply: 600,  demand: 600  },
+    // ── Морепродукты ──
+    fish:        { base: 15,  price: 15,  supply: 500,  demand: 500  },
+    // ── Масло и фрукты ──
+    olives:      { base: 18,  price: 18,  supply: 300,  demand: 300  },
+    olive_oil:   { base: 32,  price: 32,  supply: 200,  demand: 200  },
+    honey:       { base: 45,  price: 45,  supply: 80,   demand: 80   },
+    // ── Напитки ──
+    wine:        { base: 30,  price: 30,  supply: 250,  demand: 250  },
+    // ── Консерванты ──
+    salt:        { base: 18,  price: 18,  supply: 300,  demand: 300  },
+    // ── Металлы ──
+    iron:        { base: 45,  price: 45,  supply: 150,  demand: 150  },
+    bronze:      { base: 55,  price: 55,  supply: 80,   demand: 80   },
+    // ── Дерево ──
+    timber:      { base: 22,  price: 22,  supply: 250,  demand: 250  },
+    // ── Текстиль ──
+    wool:        { base: 20,  price: 20,  supply: 180,  demand: 180  },
+    cloth:       { base: 28,  price: 28,  supply: 200,  demand: 200  },
+    leather:     { base: 28,  price: 28,  supply: 120,  demand: 120  },
+    // ── Инструменты ──
+    tools:       { base: 35,  price: 35,  supply: 100,  demand: 100  },
+    pottery:     { base: 15,  price: 15,  supply: 300,  demand: 300  },
+    // ── Письменность ──
+    papyrus:     { base: 38,  price: 38,  supply: 60,   demand: 60   },
+    wax:         { base: 25,  price: 25,  supply: 80,   demand: 80   },
+    // ── Роскошь ──
+    incense:     { base: 85,  price: 85,  supply: 30,   demand: 30   },
+    purple_dye:  { base: 320, price: 320, supply: 5,    demand: 5    },
+    // ── Рабочая сила ──
+    slaves:      { base: 200, price: 200, supply: 50,   demand: 50   },
   },
 };
