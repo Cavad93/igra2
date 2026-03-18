@@ -844,6 +844,9 @@ function _buildReligionWindowHtml() {
       </div>
     `;
 
+    // Dogma section — каноны и доктрины доминирующей религии
+    const dogmaHtml = _buildDogmaHtml(stats);
+
     return `
       <div class="culture-window rw-window">
         <div class="cw-header">
@@ -862,6 +865,7 @@ function _buildReligionWindowHtml() {
             ${policyHtml}
           </div>
           <div class="cw-right">
+            ${dogmaHtml}
             ${sortBarHtml}
             ${regionCardsHtml}
           </div>
@@ -882,6 +886,105 @@ function _buildReligionWindowHtml() {
       </div>
     `;
   }
+}
+
+function _buildDogmaHtml(stats) {
+  // Берём доминирующую религию нации
+  const dominantRel = stats.religions[0];
+  if (!dominantRel) return '';
+
+  const dogmaInfo = typeof getDogmaInfoForUI === 'function'
+    ? getDogmaInfoForUI(dominantRel.id) : null;
+  if (!dogmaInfo) return '';
+
+  const relDef = typeof _getReligionDefForUI === 'function'
+    ? _getReligionDefForUI(dominantRel.id) : null;
+
+  // ── Каноны ──
+  const canonsHtml = dogmaInfo.canons.map(c => {
+    const bonusEntries = Object.entries(c.bonus || {});
+    const bonusHtml = bonusEntries.map(([k, v]) => {
+      const sign = v > 0 ? '+' : '';
+      const cls = v > 0 ? 'rw-bonus-pos' : 'rw-bonus-neg';
+      const label = _dogmaBonusLabel(k);
+      const display = _dogmaBonusFormat(k, v);
+      return `<span class="${cls}" title="${label}">${sign}${display}</span>`;
+    }).join(' ');
+
+    return `
+      <div class="rw-canon-card">
+        <div class="rw-canon-header">
+          <span class="rw-canon-cat">${c.categoryIcon} ${c.categoryName}</span>
+          ${c.locked ? '<span class="rw-canon-lock" title="Заблокированный канон">🔒</span>' : ''}
+        </div>
+        <div class="rw-canon-name">${c.name}</div>
+        <div class="rw-canon-desc">${c.desc}</div>
+        <div class="rw-canon-bonus">${bonusHtml}</div>
+      </div>
+    `;
+  }).join('');
+
+  // ── Доктрины ──
+  const doctrinesHtml = Object.entries(dogmaInfo.doctrines).map(([axisId, d]) => {
+    const bonusEntries = Object.entries(d.bonus || {});
+    const bonusHtml = bonusEntries.map(([k, v]) => {
+      const sign = v > 0 ? '+' : '';
+      const cls = v > 0 ? 'rw-bonus-pos' : 'rw-bonus-neg';
+      const label = _dogmaBonusLabel(k);
+      const display = _dogmaBonusFormat(k, v);
+      return `<span class="${cls}" title="${label}">${sign}${display}</span>`;
+    }).join(' ');
+
+    return `
+      <div class="rw-doctrine-row">
+        <div class="rw-doctrine-header">
+          <span class="rw-doctrine-icon">${d.icon}</span>
+          <span class="rw-doctrine-name">${d.name}</span>
+          <span class="rw-doctrine-level">${d.levelName}</span>
+        </div>
+        <div class="rw-doctrine-bar-wrap">
+          <span class="rw-doctrine-edge">${d.low_icon} ${d.low_name}</span>
+          <div class="rw-doctrine-bar">
+            <div class="rw-doctrine-fill" style="width:${d.value}%"></div>
+            <div class="rw-doctrine-marker" style="left:${d.value}%"></div>
+          </div>
+          <span class="rw-doctrine-edge">${d.high_name} ${d.high_icon}</span>
+        </div>
+        <div class="rw-doctrine-bonus">${bonusHtml || '<span class="rw-doctrine-neutral">нет эффекта</span>'}</div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="rw-dogma-section">
+      <div class="cw-traditions-title">${dominantRel.icon} Догмы: ${dominantRel.name}</div>
+      <div class="rw-canons-title">Каноны</div>
+      <div class="rw-canons-grid">${canonsHtml}</div>
+      <div class="rw-canons-title" style="margin-top:8px">Доктрины</div>
+      ${doctrinesHtml}
+    </div>
+  `;
+}
+
+function _dogmaBonusLabel(key) {
+  const labels = {
+    stability: 'Стабильность', legitimacy: 'Легитимность', happiness: 'Счастье',
+    military_morale: 'Мораль армии', army_strength: 'Сила армии',
+    garrison_defense: 'Защита гарнизона', diplomacy: 'Дипломатия',
+    trade_income: 'Доход торговли', food_production: 'Производство пищи',
+    population_growth: 'Рост населения', assimilation_speed: 'Ассимиляция',
+    naval_strength: 'Морская сила',
+  };
+  return labels[key] || key;
+}
+
+function _dogmaBonusFormat(key, val) {
+  // Процентные бонусы
+  const pctKeys = ['military_morale', 'army_strength', 'garrison_defense', 'trade_income',
+    'food_production', 'assimilation_speed', 'naval_strength', 'stability'];
+  if (pctKeys.includes(key)) return (val * 100).toFixed(0) + '%';
+  if (key === 'population_growth') return (val * 1000).toFixed(1) + '‰';
+  return val.toFixed(0);
 }
 
 function _buildReligionDonut(religions) {

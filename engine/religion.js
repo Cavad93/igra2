@@ -34,6 +34,24 @@ function initReligions() {
 
   GAME_STATE.syncretic_religions = GAME_STATE.syncretic_religions || {};
   GAME_STATE._religion_coexist = GAME_STATE._religion_coexist || {};
+
+  // Инициализация догм
+  _initDogmas();
+}
+
+function _initDogmas() {
+  if (GAME_STATE.religion_dogmas) return; // уже есть (из сохранения)
+  if (typeof RELIGION_DOGMAS === 'undefined') return;
+
+  GAME_STATE.religion_dogmas = {};
+  for (const [relId, dogma] of Object.entries(RELIGION_DOGMAS)) {
+    GAME_STATE.religion_dogmas[relId] = {
+      canons: [...dogma.canons],
+      locked_canon: dogma.locked_canon,
+      doctrines: { ...dogma.doctrines },
+      last_canon_mutation_turn: 0,
+    };
+  }
 }
 
 function initRegionReligions() {
@@ -86,6 +104,7 @@ function _inferReligionFromCulture(regionId) {
 function religionTick() {
   initReligions();
   initRegionReligions();
+  _initDogmas(); // гарантируем наличие догм (для старых сохранений)
 
   // Гарантируем инициализацию religion_policy для всех наций
   if (!GAME_STATE.religion_policy) GAME_STATE.religion_policy = {};
@@ -110,6 +129,10 @@ function religionTick() {
       _processReligionEvents(nationId);
     }
     _checkSyncretism();
+
+    // Догмы: дрифт доктрин + мутации канонов
+    _processDogmaDrift();
+    _processCanonMutations();
 
     // Каждые 10 лет — кризисы
     if (turn % RELIGION_CONFIG.CRISIS_CHECK_INTERVAL === 0 && turn > 0) {
@@ -749,6 +772,327 @@ function _blendColors(colorA, colorB) {
   } catch {
     return '#AA77CC';
   }
+}
+
+// ── ДОГМЫ: ДРИФТ ДОКТРИН ────────────────────────────────────────────────
+
+function _processDogmaDrift() {
+  if (!GAME_STATE.religion_dogmas) return;
+  if (typeof DOCTRINE_AXES === 'undefined') return;
+
+  for (const [relId, dogma] of Object.entries(GAME_STATE.religion_dogmas)) {
+    // Находим нацию, где эта религия доминирует
+    const nationId = _findNationForReligion(relId);
+    if (!nationId) continue;
+
+    const nation = GAME_STATE.nations[nationId];
+    if (!nation) continue;
+
+    const atWar = (nation.military?.at_war_with || []).length > 0;
+    const happiness = nation.population?.happiness || 50;
+    const stability = nation.government?.stability || 50;
+    const treasury = nation.economy?.treasury || 0;
+    const tradeRoutes = (nation.economy?.trade_routes || []).length;
+    const rel = _getReligionDef(relId);
+    const inst = rel?.institutionalization || 0;
+
+    // ── Толерантность ──
+    let dTolerance = 0;
+    if (atWar) dTolerance -= 2;                          // война → фанатизм
+    if (tradeRoutes > 2) dTolerance += 1;                // торговля → открытость
+    if (tradeRoutes > 5) dTolerance += 1;
+    if (happiness > 65) dTolerance += 0.5;               // счастье → открытость
+    if (happiness < 30) dTolerance -= 1;                 // несчастье → фанатизм
+    if (stability < 30) dTolerance -= 1;                 // нестабильность → фанатизм
+
+    // ── Организованность ──
+    let dHierarchy = 0;
+    if (inst > 60) dHierarchy += 1;                      // институционализация → иерархия
+    if (inst > 80) dHierarchy += 1;
+    if (inst < 25) dHierarchy -= 1;                      // анимизм → народная вера
+    if (stability > 65) dHierarchy += 0.5;               // стабильность → порядок
+    if (atWar) dHierarchy += 0.5;                        // война → централизация
+    if (happiness < 25) dHierarchy -= 1;                 // бунт → против иерархии
+
+    // ── Аскетизм (выше = роскошнее) ──
+    let dAsceticism = 0;
+    if (treasury > 5000) dAsceticism += 2;               // богатство → роскошь
+    if (treasury > 2000) dAsceticism += 1;
+    if (treasury < 500) dAsceticism -= 1;                // бедность → аскеза
+    if (happiness < 30) dAsceticism -= 2;                // страдание → аскеза
+    if (happiness > 70) dAsceticism += 1;                // довольство → роскошь
+    if (atWar) dAsceticism -= 1;                         // война → аскеза
+
+    // Инерция: притяжение к 50
+    const inertia = typeof DOGMA_CONFIG !== 'undefined' ? DOGMA_CONFIG.DOCTRINE_INERTIA : 0.3;
+    const maxDrift = typeof DOGMA_CONFIG !== 'undefined' ? DOGMA_CONFIG.DOCTRINE_DRIFT_MAX : 3;
+
+    dTolerance += (50 - dogma.doctrines.tolerance) * inertia * 0.02;
+    dHierarchy += (50 - dogma.doctrines.hierarchy) * inertia * 0.02;
+    dAsceticism += (50 - dogma.doctrines.asceticism) * inertia * 0.02;
+
+    // Ограничиваем и применяем
+    dogma.doctrines.tolerance = _clamp(dogma.doctrines.tolerance + _clamp(dTolerance, -maxDrift, maxDrift), 0, 100);
+    dogma.doctrines.hierarchy = _clamp(dogma.doctrines.hierarchy + _clamp(dHierarchy, -maxDrift, maxDrift), 0, 100);
+    dogma.doctrines.asceticism = _clamp(dogma.doctrines.asceticism + _clamp(dAsceticism, -maxDrift, maxDrift), 0, 100);
+  }
+}
+
+// ── ДОГМЫ: МУТАЦИИ КАНОНОВ ──────────────────────────────────────────────
+
+function _processCanonMutations() {
+  if (!GAME_STATE.religion_dogmas) return;
+  if (typeof CANONS === 'undefined') return;
+
+  const turn = GAME_STATE.turn || 0;
+  const cooldown = typeof DOGMA_CONFIG !== 'undefined' ? DOGMA_CONFIG.CANON_MUTATION_COOLDOWN : 600;
+  const threshold = typeof DOGMA_CONFIG !== 'undefined' ? DOGMA_CONFIG.CANON_MUTATION_THRESHOLD : 0.6;
+
+  for (const [relId, dogma] of Object.entries(GAME_STATE.religion_dogmas)) {
+    // Кулдаун
+    if (turn - (dogma.last_canon_mutation_turn || 0) < cooldown) continue;
+
+    const nationId = _findNationForReligion(relId);
+    if (!nationId) continue;
+    const nation = GAME_STATE.nations[nationId];
+    if (!nation) continue;
+
+    const rel = _getReligionDef(relId);
+    if (!rel) continue;
+
+    const atWar = (nation.military?.at_war_with || []).length > 0;
+    const happiness = nation.population?.happiness || 50;
+    const inst = rel.institutionalization || 0;
+    const peaceTurns = nation._peace_turns || 0;
+
+    let bestMutation = null;
+    let bestScore = 0;
+    let bestCanonIdx = -1;
+
+    // Проверяем каждый не-заблокированный канон
+    for (let i = 0; i < dogma.canons.length; i++) {
+      if (i === dogma.locked_canon) continue;
+
+      const canonId = dogma.canons[i];
+      const canon = CANONS[canonId];
+      if (!canon?.mut) continue;
+
+      for (const mut of canon.mut) {
+        if (!CANONS[mut.to]) continue;
+        // Проверяем, что target — той же категории
+        if (CANONS[mut.to].category !== canon.category) continue;
+
+        const score = _evaluateCanonMutation(mut.need, {
+          inst, atWar, happiness, peaceTurns,
+          group: rel.group, doctrines: dogma.doctrines,
+        });
+
+        const finalScore = score * (mut.w || 1.0);
+        if (finalScore > bestScore && finalScore >= threshold) {
+          bestScore = finalScore;
+          bestMutation = mut;
+          bestCanonIdx = i;
+        }
+      }
+    }
+
+    // Применяем лучшую мутацию (с элементом случайности)
+    if (bestMutation && Math.random() < bestScore * 0.5) {
+      const oldCanon = CANONS[dogma.canons[bestCanonIdx]];
+      const newCanon = CANONS[bestMutation.to];
+
+      dogma.canons[bestCanonIdx] = bestMutation.to;
+      dogma.last_canon_mutation_turn = turn;
+
+      const relDef = _getReligionDef(relId);
+      const relName = relDef?.name || relId;
+      const catDef = typeof CANON_CATEGORIES !== 'undefined' ? CANON_CATEGORIES[newCanon.category] : null;
+      const catName = catDef?.name || newCanon.category;
+
+      addEventLog(
+        `📜 ${relName}: догма «${oldCanon.name}» сменилась на «${newCanon.name}» (${catName}).`,
+        'religion'
+      );
+    }
+  }
+}
+
+function _evaluateCanonMutation(need, ctx) {
+  if (!need) return 1.0;
+  let score = 1.0;
+
+  if (need.inst_min != null && ctx.inst < need.inst_min) return 0;
+  if (need.inst_max != null && ctx.inst > need.inst_max) return 0;
+  if (need.war === true && !ctx.atWar) return 0;
+  if (need.peace != null && ctx.peaceTurns < need.peace) return 0;
+  if (need.happiness_min != null && ctx.happiness < need.happiness_min) return 0;
+  if (need.happiness_max != null && ctx.happiness > need.happiness_max) return 0;
+  if (need.group && ctx.group !== need.group) return 0;
+
+  // Проверяем доктрины
+  for (const key of ['tolerance', 'hierarchy', 'asceticism']) {
+    const dKey = `doctrine_${key}_min`;
+    const dKeyMax = `doctrine_${key}_max`;
+    if (need[dKey] != null && (ctx.doctrines?.[key] || 50) < need[dKey]) return 0;
+    if (need[dKeyMax] != null && (ctx.doctrines?.[key] || 50) > need[dKeyMax]) return 0;
+  }
+
+  // Бонус за «перевыполнение» условий
+  if (need.inst_min != null) score += (ctx.inst - need.inst_min) * 0.005;
+  if (need.peace != null && ctx.peaceTurns > need.peace) score += 0.1;
+
+  return _clamp(score, 0, 2);
+}
+
+function _findNationForReligion(relId) {
+  // Находим нацию, где данная религия доминирует
+  for (const nationId of Object.keys(GAME_STATE.nations || {})) {
+    const dominant = _getNationDominantReligion(nationId);
+    if (dominant === relId) return nationId;
+  }
+  return null;
+}
+
+// ── ДОГМЫ: БОНУСЫ К НАЦИИ ──────────────────────────────────────────────
+
+function getDogmaBonus(nationId, bonusType) {
+  if (!GAME_STATE.religion_dogmas) return 0;
+  if (typeof CANONS === 'undefined' || typeof DOCTRINE_AXES === 'undefined') return 0;
+
+  const dominant = _getNationDominantReligion(nationId);
+  if (!dominant) return 0;
+
+  const dogma = GAME_STATE.religion_dogmas[dominant];
+  if (!dogma) return 0;
+
+  let total = 0;
+
+  // Бонусы от канонов
+  for (const canonId of dogma.canons) {
+    const canon = CANONS[canonId];
+    if (canon?.bonus?.[bonusType]) {
+      total += canon.bonus[bonusType];
+    }
+  }
+
+  // Бонусы от доктрин
+  for (const [axisId, axisDef] of Object.entries(DOCTRINE_AXES)) {
+    const val = dogma.doctrines[axisId];
+    if (val == null) continue;
+
+    for (const bp of (axisDef.breakpoints || [])) {
+      const match = bp.compare === 'lte' ? (val <= bp.threshold) : (val >= bp.threshold);
+      if (match && bp.bonus?.[bonusType]) {
+        total += bp.bonus[bonusType];
+      }
+    }
+  }
+
+  return total;
+}
+
+function getAllDogmaBonuses(nationId) {
+  if (!GAME_STATE.religion_dogmas) return {};
+  if (typeof CANONS === 'undefined' || typeof DOCTRINE_AXES === 'undefined') return {};
+
+  const dominant = _getNationDominantReligion(nationId);
+  if (!dominant) return {};
+
+  const dogma = GAME_STATE.religion_dogmas[dominant];
+  if (!dogma) return {};
+
+  const bonuses = {};
+
+  // Канонные бонусы
+  for (const canonId of dogma.canons) {
+    const canon = CANONS[canonId];
+    if (!canon?.bonus) continue;
+    for (const [key, val] of Object.entries(canon.bonus)) {
+      bonuses[key] = (bonuses[key] || 0) + val;
+    }
+  }
+
+  // Доктринные бонусы
+  for (const [axisId, axisDef] of Object.entries(DOCTRINE_AXES)) {
+    const val = dogma.doctrines[axisId];
+    if (val == null) continue;
+
+    for (const bp of (axisDef.breakpoints || [])) {
+      const match = bp.compare === 'lte' ? (val <= bp.threshold) : (val >= bp.threshold);
+      if (match && bp.bonus) {
+        for (const [key, bval] of Object.entries(bp.bonus)) {
+          bonuses[key] = (bonuses[key] || 0) + bval;
+        }
+      }
+    }
+  }
+
+  return bonuses;
+}
+
+// ── ДОГМЫ: UI ДАННЫЕ ────────────────────────────────────────────────────
+
+function getDogmaInfoForUI(religionId) {
+  if (!GAME_STATE.religion_dogmas) return null;
+  if (typeof CANONS === 'undefined' || typeof DOCTRINE_AXES === 'undefined') return null;
+  if (typeof CANON_CATEGORIES === 'undefined') return null;
+
+  const dogma = GAME_STATE.religion_dogmas[religionId];
+  if (!dogma) return null;
+
+  const canonsInfo = dogma.canons.map((canonId, idx) => {
+    const canon = CANONS[canonId];
+    if (!canon) return null;
+    const cat = CANON_CATEGORIES[canon.category];
+    return {
+      id: canonId,
+      name: canon.name,
+      desc: canon.desc,
+      category: canon.category,
+      categoryName: cat?.name || canon.category,
+      categoryIcon: cat?.icon || '?',
+      bonus: canon.bonus || {},
+      locked: idx === dogma.locked_canon,
+      hasMutations: (canon.mut || []).length > 0,
+    };
+  }).filter(Boolean);
+
+  const doctrinesInfo = {};
+  for (const [axisId, axisDef] of Object.entries(DOCTRINE_AXES)) {
+    const val = dogma.doctrines[axisId] || 50;
+    // Определяем текущий уровень
+    let levelName = '';
+    if (val <= 25) levelName = axisDef.low_name;
+    else if (val <= 40) levelName = 'Склонность к ' + axisDef.low_name.toLowerCase();
+    else if (val >= 75) levelName = axisDef.high_name;
+    else if (val >= 60) levelName = 'Склонность к ' + axisDef.high_name.toLowerCase();
+    else levelName = 'Умеренность';
+
+    // Собираем активные бонусы
+    const activeBonuses = {};
+    for (const bp of (axisDef.breakpoints || [])) {
+      const match = bp.compare === 'lte' ? (val <= bp.threshold) : (val >= bp.threshold);
+      if (match && bp.bonus) {
+        for (const [key, bval] of Object.entries(bp.bonus)) {
+          activeBonuses[key] = (activeBonuses[key] || 0) + bval;
+        }
+      }
+    }
+
+    doctrinesInfo[axisId] = {
+      name: axisDef.name,
+      icon: axisDef.icon,
+      value: Math.round(val),
+      low_name: axisDef.low_name,
+      high_name: axisDef.high_name,
+      low_icon: axisDef.low_icon,
+      high_icon: axisDef.high_icon,
+      levelName,
+      bonus: activeBonuses,
+    };
+  }
+
+  return { canons: canonsInfo, doctrines: doctrinesInfo };
 }
 
 // ── API для интерфейса управления политикой ──────────────────────────────
