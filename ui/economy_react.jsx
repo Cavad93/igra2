@@ -1277,7 +1277,7 @@ function EconomyOverlay({ onClose }) {
 let _econReactRoot = null;
 let _econRootEl    = null;
 
-function showEconomyOverlay() {
+function _showEconomyOverlay() {
   const el = document.getElementById('economy-overlay');
   if (!el) return;
   el.classList.remove('hidden');
@@ -1287,16 +1287,16 @@ function showEconomyOverlay() {
     _econReactRoot = ReactDOM.createRoot(el);
   }
   _econReactRoot.render(
-    React.createElement(EconomyOverlay, { onClose: hideEconomyOverlay })
+    React.createElement(EconomyOverlay, { onClose: _hideEconomyOverlay })
   );
 }
 
-function hideEconomyOverlay() {
+function _hideEconomyOverlay() {
   const el = document.getElementById('economy-overlay');
   if (el) el.classList.add('hidden');
 }
 
-function refreshEconomyTab() {
+function _refreshEconomyTab() {
   const el = document.getElementById('economy-overlay');
 
   // Update alert badge on the trigger button
@@ -1306,6 +1306,11 @@ function refreshEconomyTab() {
 
   if (!el || el.classList.contains('hidden') || !_econReactRoot) return;
   _econReactRoot.render(
-    React.createElement(EconomyOverlay, { onClose: hideEconomyOverlay })
+    React.createElement(EconomyOverlay, { onClose: _hideEconomyOverlay })
   );
 }
+
+// Expose to global scope (needed because Babel strict-mode scopes functions locally)
+window.showEconomyOverlay  = _showEconomyOverlay;
+window.hideEconomyOverlay  = _hideEconomyOverlay;
+window.refreshEconomyTab   = _refreshEconomyTab;
