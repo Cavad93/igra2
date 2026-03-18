@@ -264,6 +264,57 @@ function processAllRecipes(nationId) {
 }
 
 // ──────────────────────────────────────────────────────────────
+// 2б. ПЕРЕСЧЁТ СЕБЕСТОИМОСТИ (Шаг 5 тика, Stage 7)
+//
+// Чистое чтение — НЕ трогает stockpile, НЕ обновляет recipe_ratios.
+// Пересчитывает market[good].production_cost по текущим рыночным ценам.
+// Вызывается в Шаге 5 (РЫНОК) после зарплат, чтобы price_floor
+// отражал актуальные издержки перед updateMarketPrices().
+// ──────────────────────────────────────────────────────────────
+
+function recomputeAllProductionCosts(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return;
+
+  const market    = GAME_STATE.market;
+  const recipes   = (typeof BUILDING_RECIPES !== 'undefined') ? BUILDING_RECIPES : {};
+  const goodCosts = {};
+
+  for (const rid of nation.regions) {
+    const region = GAME_STATE.regions[rid];
+    if (!region?.building_slots?.length) continue;
+
+    for (const slot of region.building_slots) {
+      if (slot.status !== 'active') continue;
+
+      for (const recipe of (recipes[slot.building_id] || [])) {
+        const good = recipe.output_good;
+        let cost   = recipe.labor_cost_per_worker;
+
+        for (const input of (recipe.inputs || [])) {
+          const price = market[input.good]?.price
+            ?? (typeof GOODS !== 'undefined' ? GOODS[input.good]?.base_price : null)
+            ?? 10;
+          cost += input.amount * price;
+        }
+
+        if (!goodCosts[good]) goodCosts[good] = [];
+        goodCosts[good].push(cost);
+      }
+    }
+  }
+
+  for (const [good, costs] of Object.entries(goodCosts)) {
+    if (!market[good]) continue;
+    const avg  = costs.reduce((s, c) => s + c, 0) / costs.length;
+    const prev = market[good].production_cost;
+    market[good].production_cost = Math.round(
+      (prev == null ? avg : Math.max(prev, avg)) * 10
+    ) / 10;
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
 // 3. ПРОИЗВОДСТВО ВСЕХ ЗДАНИЙ НАЦИИ
 // Суммирует выход по всем активным слотам всех регионов.
 // Возвращает { good: totalAmount } — добавляется к общей выработке.

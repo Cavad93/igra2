@@ -502,86 +502,129 @@ function evaluateCondition(value, condition) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// ГЛАВНАЯ ФУНКЦИЯ ЭКОНОМИЧЕСКОГО ХОДА
-// Вызывается из turn.js
+// ГЛАВНАЯ ФУНКЦИЯ ЭКОНОМИЧЕСКОГО ХОДА — Stage 7
+//
+// Порядок шагов (критичен для корректности):
+//   0. POP → здания (slot._pop_eff) — прошлотиковая satisfied
+//   1. ПРОИЗВОДСТВО — рецепты, actual_output, stockpile+=produced
+//   2. ПОТРЕБЛЕНИЕ — корзина страт, stockpile-=consumed, satisfied
+//   3. ФИНАНСЫ ЗДАНИЙ — revenue/costs/profit, loss_streak, адаптация
+//   4. ЗАРПЛАТЫ → ДОХОДЫ — wages → _wage_bonuses, wealth страт
+//   5. РЫНОК — production_cost, price_floor, алгоритм цен, price_history
+//   6. СОБЫТИЯ — treasury, trade, законы, триггеры дефицита/банкротства
 // ──────────────────────────────────────────────────────────────
 
 function runEconomyTick() {
-  // Шаг 0.5: Рецепты производства
-  //   • Сброс production_cost (будет пересчитан ниже)
-  //   • Потребляет входные материалы из nation.economy.stockpile
-  //   • Записывает slot._recipe_ratios (коэффициент частичного производства)
-  //   • Обновляет GAME_STATE.market[good].production_cost → price_floor
-  // Вызывается ДО calculateProduction(), чтобы getBuildingOutput() уже
-  // видел готовые ratios и возвращал масштабированный выход.
 
-  // Сбрасываем production_cost перед пересчётом (стала неактуальной из-за сноса зданий)
-  for (const m of Object.values(GAME_STATE.market)) {
-    m.production_cost = null;
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 0: POP-эффективность зданий (прошлотиковая satisfied → _pop_eff)
+  // Устанавливает slot._pop_eff до calculateProduction этого тика.
+  // ════════════════════════════════════════════════════════════
+  if (typeof applyPopSatisfiedToBuildings === 'function') {
+    for (const _nId of Object.keys(GAME_STATE.nations)) {
+      try { applyPopSatisfiedToBuildings(_nId); } catch (e) { console.warn('[pops_eff]', e); }
+    }
   }
 
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 1: ПРОИЗВОДСТВО
+  //   1a. Рецепты — проверка ресурсов, production_ratio, вычет входных
+  //   1b. Actual output с учётом production_eff × _pop_eff × recipe_ratios
+  //   1c. Зачисление произведённого в stockpile
+  // ════════════════════════════════════════════════════════════
+
+  // 1a. Сброс production_cost + пересчёт ratios/cost/inputs через рецепты
+  for (const m of Object.values(GAME_STATE.market)) { m.production_cost = null; }
   if (typeof processAllRecipes === 'function') {
     for (const nationId of Object.keys(GAME_STATE.nations)) {
       try { processAllRecipes(nationId); } catch (e) { console.warn('[recipes]', e); }
     }
   }
 
-  // Шаг 1: производство всех наций
+  // 1b. Вычислить actual output (использует slot._pop_eff и _recipe_ratios)
   const allProduced = calculateProduction();
 
-  // Шаг 2: потребление всех наций
-  const allConsumed      = {};
-  const allActualConsumed = {};   // для updatePopSatisfied (Stage 6)
-
+  // 1c. Зачислить произведённое в stockpile каждой нации
   for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
-    allConsumed[nationId] = calculateConsumption(nation);
-
-    // Обновляем запасы
     const stockpile = nation.economy.stockpile;
-    const produced  = allProduced[nationId] || {};
-    const consumed  = allConsumed[nationId];
-
-    // Добавляем произведённое в запасы
-    for (const [good, amount] of Object.entries(produced)) {
+    for (const [good, amount] of Object.entries(allProduced[nationId] || {})) {
       stockpile[good] = (stockpile[good] || 0) + amount;
     }
+  }
 
-    // Вычитаем потреблённое из запасов; фиксируем реальное потребление для POP
-    const actualConsumed = {};
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 2: ПОТРЕБЛЕНИЕ POPs
+  //   2a. Корзина потребления каждой страты (wealth-зависимая)
+  //   2b. Вычесть из stockpile; зафиксировать actual vs demanded
+  //   2c. Обновить pop.satisfied = actual / demanded
+  // ════════════════════════════════════════════════════════════
+
+  const allConsumed       = {};
+  const allActualConsumed = {};
+
+  for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
+    allConsumed[nationId] = calculateConsumption(nation);   // wealth-basket (Stage 6) или flat
+
+    const consumed  = allConsumed[nationId];
+    const stockpile = nation.economy.stockpile;
+    const actual    = {};
+
     for (const [good, amount] of Object.entries(consumed)) {
       const available = stockpile[good] || 0;
+      actual[good]    = Math.min(amount, available);
       const deficit   = amount - available;
-
-      actualConsumed[good] = Math.min(amount, available);   // то, что реально съели
 
       if (deficit > 0 && good === 'wheat') {
         // Голод!
-        const famineMortality = Math.min(deficit * CONFIG.BALANCE.FAMINE_MORTALITY, nation.population.total * 0.05);
-        const newPop          = nation.population.total - Math.round(famineMortality);
-        applyDelta(`nations.${nationId}.population.total`, newPop);
-
+        const famineMortality = Math.min(
+          deficit * CONFIG.BALANCE.FAMINE_MORTALITY,
+          nation.population.total * 0.05,
+        );
+        const newPop       = nation.population.total - Math.round(famineMortality);
         const newHappiness = Math.max(0, nation.population.happiness + CONFIG.BALANCE.HAPPINESS_FROM_FAMINE);
+        applyDelta(`nations.${nationId}.population.total`, newPop);
         applyDelta(`nations.${nationId}.population.happiness`, newHappiness);
-
-        addEventLog(`${nation.name}: ГОЛОД! Не хватает ${Math.round(deficit)} бушелей зерна. Погибло ${Math.round(famineMortality)} человек.`, 'danger');
+        addEventLog(
+          `${nation.name}: ГОЛОД! Не хватает ${Math.round(deficit)} бушелей зерна. Погибло ${Math.round(famineMortality)} человек.`,
+          'danger',
+        );
         stockpile.wheat = 0;
       } else {
         stockpile[good] = Math.max(0, available - amount);
       }
     }
-    allActualConsumed[nationId] = actualConsumed;
+    allActualConsumed[nationId] = actual;
+
+    // 2c. Обновить satisfied сразу по нации
+    if (typeof updatePopSatisfied === 'function') {
+      try { updatePopSatisfied(nationId, consumed, actual); } catch (e) { console.warn('[pops_sat]', e); }
+    }
   }
 
-  // Шаг 2.5: удовлетворённость и богатство POP (Stage 6)
-  if (typeof updatePopSatisfied === 'function') {
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 3: ФИНАНСЫ ЗДАНИЙ
+  //   3a. revenue / costs / profit / loss_streak
+  //   3b. Адаптивное поведение: сокращение рабочих, приостановка, закрытие
+  // ════════════════════════════════════════════════════════════
+  if (typeof updateBuildingFinancials === 'function') {
     for (const nationId of Object.keys(GAME_STATE.nations)) {
-      try {
-        updatePopSatisfied(
-          nationId,
-          allConsumed[nationId]       || {},
-          allActualConsumed[nationId] || {},
-        );
-      } catch (e) { console.warn('[pops_sat]', e); }
+      try { updateBuildingFinancials(nationId); } catch (e) { console.warn('[bld_fin]', e); }
+    }
+  }
+  if (typeof applyBuildingAdaptiveBehavior === 'function') {
+    for (const nationId of Object.keys(GAME_STATE.nations)) {
+      try { applyBuildingAdaptiveBehavior(nationId); } catch (e) { console.warn('[bld_adapt]', e); }
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 4: ЗАРПЛАТЫ → ДОХОДЫ POPs
+  //   4a. Распределить wages → обновить _wage_bonuses (и profit-бонусы)
+  //   4b. Обновить pop.wealth на основе incomeAdequacy + priceRatio
+  // ════════════════════════════════════════════════════════════
+  if (typeof distributeWages === 'function') {
+    for (const nationId of Object.keys(GAME_STATE.nations)) {
+      try { distributeWages(nationId); } catch (e) { console.warn('[wages]', e); }
     }
   }
   if (typeof updatePopWealth === 'function') {
@@ -590,10 +633,27 @@ function runEconomyTick() {
     }
   }
 
-  // Шаг 3: рыночные цены
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 5: РЫНОК
+  //   5a. Сброс production_cost → чистый пересчёт по текущим ценам
+  //   5b. Обновить price_floor = production_cost × 0.5
+  //   5c. Алгоритм трёх зон (дефицит/баланс/избыток), Этап 2
+  //   5d. Запись в price_history (выполняется внутри updateMarketPrices)
+  // ════════════════════════════════════════════════════════════
+  for (const m of Object.values(GAME_STATE.market)) { m.production_cost = null; }
+  if (typeof recomputeAllProductionCosts === 'function') {
+    for (const nationId of Object.keys(GAME_STATE.nations)) {
+      try { recomputeAllProductionCosts(nationId); } catch (e) { console.warn('[prod_cost]', e); }
+    }
+  }
   updateMarketPrices(allProduced, allConsumed);
 
-  // Шаги 4-5: торговля и казна для каждой нации
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 6: UI / СОБЫТИЯ
+  //   6a. Торговля и казна
+  //   6b. Применение активных законов
+  //   6c. Триггеры событий: затяжной дефицит, банкротство
+  // ════════════════════════════════════════════════════════════
   for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
     const tradeProfit = processTrade(nationId);
     const { income, expense, delta } = updateTreasury(
@@ -602,17 +662,46 @@ function runEconomyTick() {
       allConsumed[nationId],
       tradeProfit,
     );
-
-    // Только для игрока показываем детали
     if (nationId === GAME_STATE.player_nation && Math.abs(delta) > 10) {
       const sign = delta >= 0 ? '+' : '';
-      addEventLog(`Казна: ${sign}${Math.round(delta)} монет (доход ${Math.round(income)}, расход ${Math.round(expense)})`, 'economy');
+      addEventLog(
+        `Казна: ${sign}${Math.round(delta)} монет (доход ${Math.round(income)}, расход ${Math.round(expense)})`,
+        'economy',
+      );
+    }
+  }
+  for (const nationId of Object.keys(GAME_STATE.nations)) {
+    applyActiveLaws(nationId);
+  }
+  _checkEconomicEventTriggers();
+}
+
+// ──────────────────────────────────────────────────────────────
+// ТРИГГЕРЫ ЭКОНОМИЧЕСКИХ СОБЫТИЙ (Шаг 6, Stage 7)
+//   • Затяжной дефицит: shortage_streak кратен 5 → предупреждение
+//   • Банкротство казны: treasury < 0 → тревога
+// ──────────────────────────────────────────────────────────────
+
+function _checkEconomicEventTriggers() {
+  // Дефицит товаров (логируем каждые 5 тиков дефицита)
+  for (const [good, market] of Object.entries(GAME_STATE.market)) {
+    const streak = market.shortage_streak || 0;
+    if (streak > 0 && streak % 5 === 0) {
+      const goodName = (typeof GOODS !== 'undefined' ? GOODS[good]?.name : null) || good;
+      addEventLog(
+        `⚠ Затяжной дефицит: ${goodName} (${streak} тиков подряд). Цена: ${Math.round(market.price)}`,
+        'economy',
+      );
     }
   }
 
-  // Шаг 6: применяем законы
-  for (const nationId of Object.keys(GAME_STATE.nations)) {
-    applyActiveLaws(nationId);
+  // Банкротство казны игрока
+  const playerNation = GAME_STATE.nations[GAME_STATE.player_nation];
+  if (playerNation && playerNation.economy.treasury < 0) {
+    addEventLog(
+      `⚠ Казна отрицательна (${Math.round(playerNation.economy.treasury)} монет). Риск банкротства!`,
+      'danger',
+    );
   }
 }
 

@@ -34,34 +34,11 @@ async function processTurn() {
       try { processBuildingConstruction(); } catch (e) { console.warn('[buildings]', e); }
     }
 
-    // 0.95. Удовлетворённость POP → эффективность зданий (Stage 6)
-    //       Применяет slot._pop_eff ДО calculateProduction этого тика.
-    if (typeof applyPopSatisfiedToBuildings === 'function') {
-      for (const _nId of Object.keys(GAME_STATE.nations)) {
-        try { applyPopSatisfiedToBuildings(_nId); } catch (e) { console.warn('[pops_eff]', e); }
-      }
-    }
-
     // 1. Экономика (детерминировано)
+    //    Внутри: Step0=POP→eff, Step1=Производство, Step2=Потребление,
+    //            Step3=Финансы зданий, Step4=Зарплаты→Богатство,
+    //            Step5=Рынок, Step6=События
     runEconomyTick();
-
-    // 1.05. Зарплаты из зданий — после экономики, перед демографией
-    //       Обновляет _wage_bonuses и _building_maintenance_per_turn для игрока.
-    if (typeof distributeWages === 'function') {
-      try { distributeWages(GAME_STATE.player_nation); } catch (e) { console.warn('[wages]', e); }
-    }
-
-    // 1.1. Финансы зданий и адаптивное поведение (Stage 4)
-    if (typeof updateBuildingFinancials === 'function') {
-      for (const _nId of Object.keys(GAME_STATE.nations)) {
-        try { updateBuildingFinancials(_nId); } catch (e) { console.warn('[bld_fin]', e); }
-      }
-    }
-    if (typeof applyBuildingAdaptiveBehavior === 'function') {
-      for (const _nId of Object.keys(GAME_STATE.nations)) {
-        try { applyBuildingAdaptiveBehavior(_nId); } catch (e) { console.warn('[bld_adapt]', e); }
-      }
-    }
 
     // 1.5. Правительство (детерминировано)
     processAllGovernmentTicks();
