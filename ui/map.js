@@ -403,6 +403,98 @@ function onRegionHover(e, regionId, entering, color, isPlayerRegion) {
 }
 
 // ──────────────────────────────────────────────────────────────
+// КУЛЬТУРА РЕГИОНА — диаграмма
+// ──────────────────────────────────────────────────────────────
+
+function renderRegionCultureBlock(regionId, totalPop) {
+  // Пробуем сначала динамический стейт, потом статику
+  const rc = (GAME_STATE.region_cultures && GAME_STATE.region_cultures[regionId])
+    || (typeof REGION_CULTURES !== 'undefined' && REGION_CULTURES[regionId]);
+  if (!rc) return '';
+
+  // Собираем все культуры с их долями
+  const cultures = [];
+  const primaryDef = (typeof CULTURES !== 'undefined' && CULTURES[rc.primary])
+    || (GAME_STATE.cultures && GAME_STATE.cultures[rc.primary]);
+
+  // Считаем долю меньшинств
+  let minorityTotal = 0;
+  for (const m of (rc.minorities || [])) {
+    minorityTotal += m.strength;
+  }
+  const primaryStrength = Math.max(0.01, 1 - minorityTotal);
+
+  cultures.push({
+    id: rc.primary,
+    name: primaryDef?.name || rc.primary,
+    color: primaryDef?.color || '#888',
+    icon: primaryDef?.icon || '👥',
+    image: primaryDef?.image || '',
+    strength: primaryStrength,
+    pop: Math.round(totalPop * primaryStrength),
+  });
+
+  for (const m of (rc.minorities || [])) {
+    const def = (typeof CULTURES !== 'undefined' && CULTURES[m.culture])
+      || (GAME_STATE.cultures && GAME_STATE.cultures[m.culture]);
+    cultures.push({
+      id: m.culture,
+      name: def?.name || m.culture,
+      color: def?.color || '#666',
+      icon: def?.icon || '👥',
+      image: def?.image || '',
+      strength: m.strength,
+      pop: Math.round(totalPop * m.strength),
+    });
+  }
+
+  // Строим CSS conic-gradient для круговой диаграммы
+  let angle = 0;
+  const stops = [];
+  for (const c of cultures) {
+    const deg = c.strength * 360;
+    stops.push(`${c.color} ${angle}deg ${angle + deg}deg`);
+    angle += deg;
+  }
+  const gradient = `conic-gradient(${stops.join(', ')})`;
+
+  // Легенда
+  const legendItems = cultures.map(c => {
+    const pct = (c.strength * 100).toFixed(1);
+    const imgTag = c.image
+      ? `<img src="${c.image}" class="culture-legend-img" alt="${c.name}" onerror="this.style.display='none'">`
+      : '';
+    return `
+      <div class="culture-legend-item">
+        ${imgTag}
+        <div class="culture-legend-info">
+          <div class="culture-legend-name">
+            <span class="culture-dot" style="background:${c.color}"></span>
+            ${c.icon} ${c.name}
+          </div>
+          <div class="culture-legend-stats">
+            <span class="culture-pct">${pct}%</span>
+            <span class="culture-pop">${c.pop.toLocaleString()} чел.</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="region-culture-section">
+      <div class="section-label">🎭 Культура населения</div>
+      <div class="culture-chart-container">
+        <div class="culture-pie" style="background: ${gradient}">
+          <div class="culture-pie-center">${cultures[0].icon}</div>
+        </div>
+        <div class="culture-legend">${legendItems}</div>
+      </div>
+    </div>
+  `;
+}
+
+// ──────────────────────────────────────────────────────────────
 // ИНФО-ПАНЕЛЬ РЕГИОНА
 // ──────────────────────────────────────────────────────────────
 
@@ -428,6 +520,9 @@ function showRegionInfo(regionId) {
     `<span class="building-tag">🏛 ${b.replace(/_/g, ' ')}</span>`
   ).join('');
 
+  // ── Блок культуры ──
+  const cultureHtml = renderRegionCultureBlock(regionId, gameData.population || 0);
+
   panel.innerHTML = `
     <div class="region-info-header" style="border-left: 4px solid ${nationColor}">
       <span class="region-info-name">${mapData.name}</span>
@@ -442,6 +537,7 @@ function showRegionInfo(regionId) {
         <div class="region-stat">⚔️ Гарнизон: <strong>${(gameData.garrison || 0).toLocaleString()}</strong></div>
         <div class="region-stat">🏔 Тип: <strong>${getTerrainName(gameData.terrain)}</strong></div>
       </div>
+      ${cultureHtml}
       ${productionLines ? `<div class="region-production"><div class="section-label">Производство:</div>${productionLines}</div>` : ''}
       ${buildings ? `<div class="region-buildings"><div class="section-label">Постройки:</div>${buildings}</div>` : ''}
     </div>
