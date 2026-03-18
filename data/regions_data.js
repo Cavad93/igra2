@@ -3812,4 +3812,74 @@
   R['r4146']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.5,buildings:[],production:{"iron": 1200, "timber": 600},garrison:100};
   R['r4147']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r4148']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.7,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // ИНИЦИАЛИЗАЦИЯ ПОЛЕЙ СТРОИТЕЛЬНОГО МЕХАНИЗМА
+  //
+  // Добавляет к каждому региону поля, необходимые для системы зданий:
+  //
+  //   building_slots      — массив занятых/строящихся строительных слотов
+  //   construction_queue  — очередь строительства (ходы до завершения)
+  //   employment          — сколько рабочих каждой профессии занято в зданиях
+  //
+  // Вызывается один раз при загрузке карты. При сохранении/загрузке игры
+  // эти поля восстанавливаются из save-файла и блок пропускается (idempotent).
+  // ══════════════════════════════════════════════════════════════════════════
+  ;(function _initRegionBuildingFields() {
+    const professions = ['farmers','craftsmen','merchants','sailors','clergy','soldiers','slaves'];
+
+    for (const [, r] of Object.entries(INITIAL_GAME_STATE.regions)) {
+
+      // ── building_slots: [] ─────────────────────────────────────────────
+      // Каждый элемент описывает одно здание в регионе:
+      //
+      //   {
+      //     slot_id:      string   — уникальный идентификатор ('r42_slot_0')
+      //     building_id:  string   — ключ из BUILDINGS
+      //     status:       string   — 'active' | 'under_construction' | 'demolished'
+      //     workers:      object   — { profession: count } — рабочие, фактически занятые
+      //     founded_turn: number   — ход постройки
+      //     revenue:      number   — выручка за последний ход (денарии)
+      //     wages_paid:   number   — зарплатный фонд за последний ход
+      //   }
+      //
+      if (!r.building_slots) {
+        r.building_slots = [];
+      }
+
+      // ── construction_queue: [] ─────────────────────────────────────────
+      // Каждый элемент — здание, находящееся в процессе строительства:
+      //
+      //   {
+      //     slot_id:        string — будущий slot_id (уже зарезервирован)
+      //     building_id:    string — ключ из BUILDINGS
+      //     turns_left:     number — сколько ходов до завершения
+      //     turns_total:    number — полное время строительства
+      //     ordered_turn:   number — когда выдан приказ
+      //   }
+      //
+      if (!r.construction_queue) {
+        r.construction_queue = [];
+      }
+
+      // ── employment: {} ─────────────────────────────────────────────────
+      // Суммарное число рабочих каждой профессии, занятых в зданиях региона.
+      // Пересчитывается каждый ход на основе building_slots.
+      // Используется для расчёта безработицы и удовлетворённости классов.
+      //
+      //   { farmers: 0, craftsmen: 0, merchants: 0, ... }
+      //
+      if (!r.employment) {
+        r.employment = {};
+        for (const p of professions) r.employment[p] = 0;
+      } else {
+        // Гарантируем наличие всех профессий (для старых save-файлов)
+        for (const p of professions) {
+          if (r.employment[p] === undefined) r.employment[p] = 0;
+        }
+      }
+    }
+  })();
+
 })();
+
