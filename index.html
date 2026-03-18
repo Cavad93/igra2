@@ -3534,12 +3534,30 @@
     }
     .rbt-bc-icon { font-size: 13px; flex-shrink: 0; }
     .rbt-bc-name { font-size: 10.5px; color: var(--text-light); flex: 1; }
-    .rbt-bc-cost { font-size: 10px; color: #c8e6c9; font-weight: bold; flex-shrink: 0; }
-    .rbt-bc-cost--poor { color: #ef9a9a; }
+    /* Стоимость: три уровня доступности */
+    .rbt-bc-cost              { font-size: 10px; font-weight: bold; flex-shrink: 0; }
+    .rbt-bc-cost--green       { color: #a5d6a7; }   /* комфортно: казна > cost×1.5 */
+    .rbt-bc-cost--yellow      { color: #fff176; }   /* рискованно: казна > cost */
+    .rbt-bc-cost--red         { color: #ef9a9a; }   /* нельзя: казна < cost */
+
+    /* Карточка: цветная левая полоса по уровню доступности */
+    .rbt-bcard--green  { border-left: 3px solid #4caf50; }
+    .rbt-bcard--yellow { border-left: 3px solid #fdd835; }
+    .rbt-bcard--red    { border-left: 3px solid #e53935; }
 
     .rbt-bc-body { display: flex; flex-wrap: wrap; gap: 3px 8px; }
     .rbt-bc-wkr, .rbt-bc-turns, .rbt-bc-prod {
       font-size: 9px; color: var(--text-dim);
+    }
+    /* Разбивка материалов строительства */
+    .rbt-bc-mats {
+      width: 100%; display: flex; flex-wrap: wrap; gap: 3px 6px;
+      margin-top: 1px;
+    }
+    .rbt-bc-mat {
+      font-size: 8.5px; color: var(--text-dim);
+      background: rgba(255,255,255,.04);
+      border-radius: 3px; padding: 1px 4px;
     }
     .rbt-bc-reason {
       font-size: 9px; color: #ef9a9a;

@@ -192,12 +192,33 @@ function _rbtBuildingChooser(regionId, region, terrain, nation) {
   const treasury = nation?.economy?.treasury || 0;
 
   const bCards = compatible.map(b => {
-    const check     = (typeof canBuildInRegion === 'function')
+    const check   = (typeof canBuildInRegion === 'function')
       ? canBuildInRegion(b.id, region)
       : { ok: true, reason: null };
-    const canAfford = treasury >= (b.cost || 0);
+    const dynCost = (typeof calcConstructionCost === 'function')
+      ? calcConstructionCost(b.id)
+      : (b.cost || 0);
+
+    // Три порога доступности
+    let affordTier; // 'green' | 'yellow' | 'red'
+    if (treasury >= dynCost * 1.5) affordTier = 'green';
+    else if (treasury >= dynCost)  affordTier = 'yellow';
+    else                            affordTier = 'red';
+
+    const canAfford = (affordTier !== 'red');
     const disabled  = !check.ok || !canAfford;
-    const reason    = !check.ok ? check.reason : (!canAfford ? `Нужно ${b.cost} монет` : null);
+    const reason    = !check.ok
+      ? check.reason
+      : (!canAfford ? `Нужно ${dynCost.toLocaleString()} монет` : null);
+
+    // Разбивка по материалам
+    const mats = b.construction_materials || {};
+    const matLines = Object.entries(mats).map(([good, amt]) => {
+      const g     = (typeof GOODS !== 'undefined') ? GOODS[good] : null;
+      const price = GAME_STATE?.market?.[good]?.price ?? g?.base_price ?? 0;
+      const total = Math.round(amt * price);
+      return `<span class="rbt-bc-mat">${g ? g.icon : '📦'}${amt}×${Math.round(price)}=${total}</span>`;
+    }).join('');
 
     const totalWorkers = (b.worker_profession || []).reduce((s, wp) => s + wp.count, 0);
     const prodItems    = (b.production_output || []).map(p => {
@@ -206,17 +227,18 @@ function _rbtBuildingChooser(regionId, region, terrain, nation) {
     }).join(', ');
 
     return `
-      <div class="rbt-bcard${disabled ? ' rbt-bcard--dis' : ''}"
+      <div class="rbt-bcard rbt-bcard--${affordTier}${disabled ? ' rbt-bcard--dis' : ''}"
         ${disabled ? `title="${reason || ''}"` : `onclick="uiOrderConstruction('${regionId}','${b.id}')"`}>
         <div class="rbt-bc-head">
           <span class="rbt-bc-icon">${b.icon || '🏛'}</span>
           <span class="rbt-bc-name">${b.name}</span>
-          <span class="rbt-bc-cost${canAfford ? '' : ' rbt-bc-cost--poor'}">💰${(b.cost || 0).toLocaleString()}</span>
+          <span class="rbt-bc-cost rbt-bc-cost--${affordTier}">💰${dynCost.toLocaleString()}</span>
         </div>
         <div class="rbt-bc-body">
           ${totalWorkers > 0 ? `<div class="rbt-bc-wkr">👷 ${totalWorkers.toLocaleString()} рабочих</div>` : ''}
           ${b.build_turns ? `<div class="rbt-bc-turns">⏳ ${b.build_turns} хода</div>` : ''}
           ${prodItems ? `<div class="rbt-bc-prod">${prodItems}</div>` : ''}
+          ${matLines ? `<div class="rbt-bc-mats">${matLines}</div>` : ''}
           ${reason ? `<div class="rbt-bc-reason">${reason}</div>` : ''}
         </div>
       </div>

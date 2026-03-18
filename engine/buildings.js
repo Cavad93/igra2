@@ -827,6 +827,30 @@ function getUnemploymentRates(nation) {
 }
 
 // ──────────────────────────────────────────────────────────────
+// 8. ДИНАМИЧЕСКАЯ СТОИМОСТЬ СТРОИТЕЛЬСТВА (Этап 5)
+//
+// calcConstructionCost(buildingId) — пересчитывается каждый раз
+// из текущих рыночных цен; НЕ кэшируется в GAME_STATE.
+//
+//   cost = Σ(material.amount × market.price) + construction_labor
+//
+// Если market.price недоступен, используется base_price из GOODS.
+// ──────────────────────────────────────────────────────────────
+
+function calcConstructionCost(buildingId) {
+  const bDef = BUILDINGS[buildingId];
+  if (!bDef) return 0;
+  const mats = bDef.construction_materials || {};
+  let matCost = 0;
+  for (const [good, amount] of Object.entries(mats)) {
+    const price = GAME_STATE.market?.[good]?.price
+      ?? (typeof GOODS !== 'undefined' ? (GOODS[good]?.base_price ?? 0) : 0);
+    matCost += amount * price;
+  }
+  return Math.round(matCost + (bDef.construction_labor ?? bDef.cost ?? 0));
+}
+
+// ──────────────────────────────────────────────────────────────
 // 8. ПУБЛИЧНОЕ API — добавить здание в очередь строительства
 //
 // Возвращает { ok, reason, slot_id } или { ok: false, reason }
@@ -849,8 +873,8 @@ function orderBuildingConstruction(nationId, regionId, buildingId) {
     : { ok: true, is_upgrade: false };
   if (!check.ok) return check;
 
-  // Стоимость — снимаем с казны
-  const cost = bDef.cost || 0;
+  // Стоимость — динамическая (текущие цены материалов)
+  const cost = calcConstructionCost(buildingId);
   if (nation.economy.treasury < cost) {
     return { ok: false, reason: `Нужно ${cost} монет, в казне ${Math.round(nation.economy.treasury)}` };
   }

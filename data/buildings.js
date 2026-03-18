@@ -28,6 +28,9 @@ const BUILDINGS = {
     description: 'Торговый порт. Обеспечивает работой моряков и торговцев, даёт рыбу и торговые товары.',
     cost:        800,
     category:    'infrastructure',
+    // timber×10(220) + iron×5(225) + tools×3(105) = 550; labor=250 → ~800
+    construction_materials: { timber: 10, iron: 5, tools: 3 },
+    construction_labor:     250,
 
     worker_profession: [
       { profession: 'sailors',   count: 250 },
@@ -56,6 +59,9 @@ const BUILDINGS = {
     description: 'Верфь для кораблей. Ремесленники строят суда, моряки их обслуживают.',
     cost:        1200,
     category:    'infrastructure',
+    // timber×20(440) + iron×10(450) + tools×5(175) = 1065; labor=135 → ~1200
+    construction_materials: { timber: 20, iron: 10, tools: 5 },
+    construction_labor:     135,
 
     worker_profession: [
       { profession: 'craftsmen', count: 300 },
@@ -81,6 +87,9 @@ const BUILDINGS = {
     description: 'Городской рынок. Торговцы работают за комиссию, улучшают доступность товаров.',
     cost:        600,
     category:    'infrastructure',
+    // timber×8(176) + tools×4(140) = 316; labor=284 → ~600
+    construction_materials: { timber: 8, tools: 4 },
+    construction_labor:     284,
 
     worker_profession: [
       { profession: 'merchants', count: 200 },
@@ -112,6 +121,9 @@ const BUILDINGS = {
     description: 'Мощёные дороги. Государственные рабочие содержат трассу, ускоряя торговлю.',
     cost:        1000,
     category:    'infrastructure',
+    // timber×8(176) + iron×8(360) + tools×6(210) = 746; labor=254 → ~1000
+    construction_materials: { timber: 8, iron: 8, tools: 6 },
+    construction_labor:     254,
 
     worker_profession: [
       { profession: 'craftsmen', count: 50 },  // техобслуживание
@@ -137,6 +149,9 @@ const BUILDINGS = {
     description: 'Закрытый склад. Увеличивает ёмкость хранилища, снижает порчу товаров.',
     cost:        450,
     category:    'infrastructure',
+    // timber×10(220) + tools×3(105) = 325; labor=125 → ~450
+    construction_materials: { timber: 10, tools: 3 },
+    construction_labor:     125,
 
     worker_profession: [
       { profession: 'merchants', count: 100 },
@@ -164,6 +179,9 @@ const BUILDINGS = {
     description: 'Военные казармы. Солдаты обучаются и квартируют здесь.',
     cost:        700,
     category:    'military',
+    // timber×10(220) + iron×5(225) + tools×4(140) = 585; labor=115 → ~700
+    construction_materials: { timber: 10, iron: 5, tools: 4 },
+    construction_labor:     115,
 
     worker_profession: [
       { profession: 'soldiers', count: 500 },
@@ -188,6 +206,9 @@ const BUILDINGS = {
     description: 'Укрепления города. Гарнизон несёт дежурство, защищая жителей.',
     cost:        1500,
     category:    'military',
+    // timber×5(110) + iron×15(675) + tools×10(350) = 1135; labor=365 → ~1500
+    construction_materials: { timber: 5, iron: 15, tools: 10 },
+    construction_labor:     365,
 
     worker_profession: [
       { profession: 'soldiers', count: 100 },  // стражники
@@ -216,6 +237,9 @@ const BUILDINGS = {
     description: 'Семейная ферма. Арендаторы-земледельцы отдают часть урожая владельцу.',
     cost:        400,
     category:    'agriculture',
+    // timber×6(132) + tools×3(105) = 237; labor=163 → ~400
+    construction_materials: { timber: 6, tools: 3 },
+    construction_labor:     163,
 
     worker_profession: [
       { profession: 'farmers', count: 500 },
@@ -242,6 +266,9 @@ const BUILDINGS = {
     description: 'Скотоводческое хозяйство. Даёт шерсть, кожу и мёд.',
     cost:        300,
     category:    'agriculture',
+    // timber×5(110) + tools×2(70) = 180; labor=120 → ~300
+    construction_materials: { timber: 5, tools: 2 },
+    construction_labor:     120,
 
     worker_profession: [
       { profession: 'farmers', count: 300 },
@@ -266,6 +293,9 @@ const BUILDINGS = {
     description: 'Государственный запас зерна. Охранники и управляющие — на жаловании.',
     cost:        500,
     category:    'agriculture',
+    // timber×8(176) + tools×4(140) = 316; labor=184 → ~500
+    construction_materials: { timber: 8, tools: 4 },
+    construction_labor:     184,
 
     worker_profession: [
       { profession: 'farmers', count: 50 },
@@ -295,6 +325,9 @@ const BUILDINGS = {
     description: 'Крупное поместье. Земледельцы — издольщики, рабы — без оплаты.',
     cost:        900,
     category:    'agriculture',
+    // timber×12(264) + iron×5(225) + tools×6(210) = 699; labor=201 → ~900
+    construction_materials: { timber: 12, iron: 5, tools: 6 },
+    construction_labor:     201,
 
     worker_profession: [
       { profession: 'farmers', count: 600 },
@@ -324,6 +357,9 @@ const BUILDINGS = {
     description: 'Система орошения. Требует постоянного обслуживания земледельцами.',
     cost:        1100,
     category:    'agriculture',
+    // timber×10(220) + iron×10(450) + tools×8(280) = 950; labor=150 → ~1100
+    construction_materials: { timber: 10, iron: 10, tools: 8 },
+    construction_labor:     150,
 
     worker_profession: [
       { profession: 'farmers', count: 100 },
@@ -354,6 +390,9 @@ const BUILDINGS = {
     description: 'Религиозный центр. Жрецы живут на пожертвования, лечат и молятся.',
     cost:        800,
     category:    'culture',
+    // timber×12(264) + tools×6(210) = 474; labor=326 → ~800
+    construction_materials: { timber: 12, tools: 6 },
+    construction_labor:     326,
 
     worker_profession: [
       { profession: 'clergy', count: 150 },
@@ -387,6 +426,9 @@ const BUILDINGS = {
     description: 'Водопровод. Обслуживается государственными ремесленниками.',
     cost:        2000,
     category:    'culture',
+    // timber×8(176) + iron×20(900) + tools×15(525) = 1601; labor=399 → ~2000
+    construction_materials: { timber: 8, iron: 20, tools: 15 },
+    construction_labor:     399,
 
     worker_profession: [
       { profession: 'craftsmen', count: 100 },
@@ -420,6 +462,9 @@ const BUILDINGS = {
     description: 'Образование. Жрецы-учителя работают за пожертвования.',
     cost:        700,
     category:    'culture',
+    // timber×10(220) + tools×5(175) = 395; labor=305 → ~700
+    construction_materials: { timber: 10, tools: 5 },
+    construction_labor:     305,
 
     worker_profession: [
       { profession: 'clergy', count: 80 },
@@ -444,6 +489,9 @@ const BUILDINGS = {
     description: 'Общественная площадь. Рабочих не требует, центр городской жизни.',
     cost:        600,
     category:    'culture',
+    // timber×8(176) + tools×4(140) = 316; labor=284 → ~600
+    construction_materials: { timber: 8, tools: 4 },
+    construction_labor:     284,
 
     worker_profession:   [],
     wage_rate:           0.00,
@@ -475,6 +523,9 @@ const BUILDINGS = {
     description: 'Трактир. Хозяева и слуги работают на себя, потребляют вино и рыбу.',
     cost:        250,
     category:    'culture',
+    // timber×5(110) + tools×2(70) = 180; labor=70 → ~250
+    construction_materials: { timber: 5, tools: 2 },
+    construction_labor:     70,
 
     worker_profession: [
       { profession: 'craftsmen', count: 50 },
@@ -508,6 +559,9 @@ const BUILDINGS = {
     description: 'Общественные бани. Рабы топят печи, горожане здоровеют.',
     cost:        700,
     category:    'culture',
+    // timber×6(132) + iron×4(180) + tools×3(105) = 417; labor=283 → ~700
+    construction_materials: { timber: 6, iron: 4, tools: 3 },
+    construction_labor:     283,
 
     worker_profession: [
       { profession: 'slaves', count: 80 },
@@ -544,6 +598,9 @@ const BUILDINGS = {
     description: 'Ремесленные мастерские. Ремесленники получают наёмную плату.',
     cost:        650,
     category:    'production',
+    // timber×8(176) + iron×4(180) + tools×4(140) = 496; labor=154 → ~650
+    construction_materials: { timber: 8, iron: 4, tools: 4 },
+    construction_labor:     154,
 
     worker_profession: [
       { profession: 'craftsmen', count: 400 },
@@ -573,6 +630,9 @@ const BUILDINGS = {
     description: 'Добыча руды. Ремесленники надзирают, рабы добывают.',
     cost:        850,
     category:    'production',
+    // timber×12(264) + iron×6(270) + tools×6(210) = 744; labor=106 → ~850
+    construction_materials: { timber: 12, iron: 6, tools: 6 },
+    construction_labor:     106,
 
     worker_profession: [
       { profession: 'craftsmen', count: 200 },
@@ -601,6 +661,9 @@ const BUILDINGS = {
     description: 'Морские соляные промыслы. Ремесленники варят соль, рабы таскают мешки.',
     cost:        600,
     category:    'production',
+    // timber×6(132) + tools×4(140) = 272; labor=328 → ~600
+    construction_materials: { timber: 6, tools: 4 },
+    construction_labor:     328,
 
     worker_profession: [
       { profession: 'craftsmen', count: 200 },
@@ -624,6 +687,9 @@ const BUILDINGS = {
     description: 'Лесоповал. Земледельцы рубят лес на продажу.',
     cost:        350,
     category:    'production',
+    // timber×4(88) + iron×2(90) + tools×3(105) = 283; labor=67 → ~350
+    construction_materials: { timber: 4, iron: 2, tools: 3 },
+    construction_labor:     67,
 
     worker_profession: [
       { profession: 'farmers', count: 300 },
@@ -647,6 +713,9 @@ const BUILDINGS = {
     description: 'Производство посуды. Ремесленники работают за наёмную плату.',
     cost:        400,
     category:    'production',
+    // timber×7(154) + tools×4(140) = 294; labor=106 → ~400
+    construction_materials: { timber: 7, tools: 4 },
+    construction_labor:     106,
 
     worker_profession: [
       { profession: 'craftsmen', count: 200 },
@@ -669,6 +738,9 @@ const BUILDINGS = {
     description: 'Прессование оливок. Земледельцы и рабы производят масло.',
     cost:        350,
     category:    'production',
+    // timber×6(132) + tools×3(105) = 237; labor=113 → ~350
+    construction_materials: { timber: 6, tools: 3 },
+    construction_labor:     113,
 
     worker_profession: [
       { profession: 'farmers', count: 100 },
@@ -697,6 +769,9 @@ const BUILDINGS = {
     description: 'Производство вина. Ремесленники и земледельцы давят виноград.',
     cost:        450,
     category:    'production',
+    // timber×8(176) + tools×3(105) = 281; labor=169 → ~450
+    construction_materials: { timber: 8, tools: 3 },
+    construction_labor:     169,
 
     worker_profession: [
       { profession: 'craftsmen', count: 150 },
@@ -725,6 +800,9 @@ const BUILDINGS = {
     description: 'Подземные залежи серы у подножий Этны. Рабы и ремесленники добывают зелёный камень — основу дубильного и аптечного ремесла.',
     cost:        700,
     category:    'production',
+    // timber×10(220) + iron×5(225) + tools×4(140) = 585; labor=115 → ~700
+    construction_materials: { timber: 10, iron: 5, tools: 4 },
+    construction_labor:     115,
 
     worker_profession: [
       { profession: 'craftsmen', count: 100 },
@@ -751,6 +829,9 @@ const BUILDINGS = {
     description: 'Лабиринт сетей для сезонной охоты на тунца. Сицилийские рыбаки ежегодно устраивают mattanza — ритуальный загон рыбы.',
     cost:        500,
     category:    'production',
+    // timber×8(176) + tools×4(140) = 316; labor=184 → ~500
+    construction_materials: { timber: 8, tools: 4 },
+    construction_labor:     184,
 
     worker_profession: [
       { profession: 'sailors',   count: 200 },
@@ -775,6 +856,9 @@ const BUILDINGS = {
     description: 'Обширное поместье на плодороднейших равнинах Леонтин и Акраганта. Сицилийская пшеница кормила весь греческий мир. Арендаторы и рабы работают на владельца.',
     cost:        1200,
     category:    'agriculture',
+    // timber×15(330) + iron×5(225) + tools×8(280) = 835; labor=365 → ~1200
+    construction_materials: { timber: 15, iron: 5, tools: 8 },
+    construction_labor:     365,
 
     worker_profession: [
       { profession: 'farmers', count: 900 },
@@ -804,6 +888,9 @@ const BUILDINGS = {
     description: 'Заросли папируса вдоль реки Киана у Сиракуз — единственное место в Европе, где растёт нильский папирус. Ценнейшее писчее сырьё.',
     cost:        400,
     category:    'production',
+    // timber×5(110) + tools×3(105) = 215; labor=185 → ~400
+    construction_materials: { timber: 5, tools: 3 },
+    construction_labor:     185,
 
     worker_profession: [
       { profession: 'farmers', count: 80 },
