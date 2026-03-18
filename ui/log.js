@@ -32,6 +32,7 @@ function addEventLog(message, type = 'info') {
 
   // Добавляем в GAME_STATE для сохранения
   if (GAME_STATE) {
+    if (!GAME_STATE.events_log) GAME_STATE.events_log = [];
     GAME_STATE.events_log.unshift(entry);
     // Обрезаем старые записи
     if (GAME_STATE.events_log.length > LOG_MAX_ENTRIES) {
@@ -48,6 +49,7 @@ function renderLog() {
   const container = document.getElementById('log-entries');
   if (!container || !GAME_STATE) return;
 
+  if (!GAME_STATE.events_log) GAME_STATE.events_log = [];
   const entries = GAME_STATE.events_log.slice(0, LOG_DISPLAY);
 
   container.innerHTML = entries.map(entry => {

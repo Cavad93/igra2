@@ -5,6 +5,7 @@ const INITIAL_GAME_STATE = {
   date: { year: -301, month: 1 },
   player_nation: 'syracuse',
   turn: 1,
+  events_log: [],
 
   nations: {
 
