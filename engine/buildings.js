@@ -558,6 +558,22 @@ function distributeWages(nationId) {
       for (const [classId, bonus] of Object.entries(bldClassBonus)) {
         classBldBonus[classId] = (classBldBonus[classId] || 0) + bonus;
       }
+
+      // ── Производственный cost-сигнал (Этап 8) ──────────────────────────
+      // Если рыночная цена главного товара здания ниже production_cost,
+      // здание структурно убыточно — флаг _below_cost ускоряет адаптацию
+      // (в applyBuildingAdaptiveBehavior: нет льготного периода 1–3 тика).
+      const bldRecipes = (typeof BUILDING_RECIPES !== 'undefined')
+                         ? (BUILDING_RECIPES[slot.building_id] ?? []) : [];
+      let isBelowCost = false;
+      for (const recipe of bldRecipes) {
+        const mkt = GAME_STATE.market[recipe.output_good];
+        if (mkt?.production_cost != null && mkt.price < mkt.production_cost * 0.95) {
+          isBelowCost = true;
+          break;
+        }
+      }
+      slot._below_cost = isBelowCost;
     }
   }
 
@@ -802,8 +818,11 @@ function applyBuildingAdaptiveBehavior(nationId) {
       }
 
       // ── Деградация: последовательные пороги ────────────────────────────
-      if (streak <= 3) {
-        // Тик 1–3: ждём, рынок может исправиться
+      // Если здание продаёт ниже себестоимости (_below_cost), льготный период
+      // сокращается с 3 до 1 тика — структурный убыток не «переживётся» рынком.
+      const gracePeriod = slot._below_cost ? 1 : 3;
+      if (streak <= gracePeriod) {
+        // Ждём (рынок может исправиться)
 
       } else if (streak <= 8) {
         // Тик 4–8: −10% рабочих/тик

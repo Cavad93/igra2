@@ -460,3 +460,45 @@ function getGoodInfo(goodId, market) {
   if (!good) return null;
   return { ...good, id: goodId, market: market[goodId] || null };
 }
+
+// ══════════════════════════════════════════════════════════════
+// Этап 8: Связь товаров с производящими зданиями
+//
+// produced_by[goodId] — массив building_id, чьи production_output
+// включают этот товар. Позволяет навигировать «от товара к зданию»
+// без перебора всего BUILDINGS. Заполняется один раз при загрузке.
+//
+// Товары без produced_by (wax, incense, purple_dye, slaves) добываются
+// только неорганизованным трудом или импортируются.
+// ══════════════════════════════════════════════════════════════
+(function _addProducedBy() {
+  const MAP = {
+    wheat:       ['farm', 'latifundium', 'grain_estate'],
+    barley:      ['farm', 'grain_estate'],
+    fish:        ['port'],
+    olives:      ['latifundium'],
+    olive_oil:   ['oil_press'],
+    honey:       ['ranch'],
+    wine:        ['winery'],
+    salt:        ['salt_works'],
+    iron:        ['mine'],
+    bronze:      ['mine'],
+    timber:      ['lumber_camp'],
+    wool:        ['ranch'],
+    cloth:       ['workshop'],
+    leather:     ['ranch'],
+    tools:       ['workshop'],
+    pottery:     ['workshop', 'pottery_workshop'],
+    papyrus:     ['papyrus_bed'],
+    trade_goods: ['port'],
+    sulfur:      ['sulfur_mine'],
+    tuna:        ['tuna_trap'],
+    // не производятся зданиями: wax, incense, purple_dye, slaves
+  };
+  for (const [goodId, bldIds] of Object.entries(MAP)) {
+    if (GOODS[goodId]) GOODS[goodId].produced_by = bldIds;
+  }
+  for (const goodId of Object.keys(GOODS)) {
+    if (!GOODS[goodId].produced_by) GOODS[goodId].produced_by = [];
+  }
+})();

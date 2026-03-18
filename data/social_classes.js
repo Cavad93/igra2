@@ -477,3 +477,57 @@ function calculateWeightedHappiness(classSatisfaction) {
 
   return totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 50;
 }
+
+// ══════════════════════════════════════════════════════════════
+// МОСТ: Классовая удовлетворённость → Целевое богатство POPs (Этап 8)
+//
+// Связывает класс-ориентированную систему потребления (SOCIAL_CLASSES)
+// с моделью богатства по профессиям (pops.js).
+//
+// Для каждой профессии вычисляет wealth_target (0–100) на основе того,
+// каким классам она принадлежит (CLASS_FROM_PROFESSION) и насколько
+// эти классы удовлетворены своим потреблением.
+//
+// Используется в updatePopWealth() как дополнительный сигнал (30% веса)
+// помимо зарплатного incomeAdequacy (70% веса).
+//
+// Формула:
+//   classWealthBase = wealth_level × 20   (0–100 по шкале класса)
+//   wealthTarget    = Σ(classWealthBase × classSat × classWeight) / Σweight
+// ══════════════════════════════════════════════════════════════
+
+function getClassBasedWealthTargets(nation) {
+  if (!nation?.population?.by_profession || !nation?.economy?.stockpile) return {};
+
+  // Вычисляем удовлетворённость классов по текущему складу
+  const classSat = calculateClassSatisfaction(
+    nation.population.by_profession,
+    nation.economy.stockpile,
+  );
+
+  // Аккумуляторы: для каждой профессии собираем взвешенное среднее
+  const accum = {};  // prof → { wSum: number, wTotal: number }
+
+  for (const [classId, classProfs] of Object.entries(CLASS_FROM_PROFESSION)) {
+    const cls = SOCIAL_CLASSES[classId];
+    if (!cls) continue;
+
+    // Насколько класс доволен (0–1) и какое «базовое богатство» он олицетворяет
+    const sat             = (classSat[classId]?.satisfaction ?? 50) / 100;
+    const classWealthBase = cls.wealth_level * 20;  // wealth_level 0–5 → 0–100
+    const wealthTarget    = classWealthBase * sat;
+
+    for (const [prof, weight] of Object.entries(classProfs)) {
+      if (!accum[prof]) accum[prof] = { wSum: 0, wTotal: 0 };
+      accum[prof].wSum   += wealthTarget * weight;
+      accum[prof].wTotal += weight;
+    }
+  }
+
+  // Итоговые целевые значения богатства по профессиям
+  const result = {};
+  for (const [prof, { wSum, wTotal }] of Object.entries(accum)) {
+    result[prof] = wTotal > 0 ? Math.min(100, Math.round(wSum / wTotal)) : 25;
+  }
+  return result;
+}

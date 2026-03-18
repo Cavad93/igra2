@@ -194,6 +194,9 @@ function updatePopWealth(nationId) {
   const pops      = nation.population.pops;
   const wageBonus = nation.population._wage_bonuses || {};
 
+  // Сбросить кеш class-based целей (пересчитываем один раз за вызов)
+  nation._classWealthTargets_cache = null;
+
   for (const [prof, pop] of Object.entries(pops)) {
     const popSize = nation.population.by_profession[prof] || 0;
     if (popSize === 0) continue;
@@ -220,8 +223,21 @@ function updatePopWealth(nationId) {
                 + satisfiedScore * 0.5;
 
     // 4. Богатство медленно стремится к цели
-    const wealthTarget = score * 100;
-    const delta        = (wealthTarget - pop.wealth) / POP_WEALTH_INERTIA;
+    //    Основной сигнал: incomeAdequacy + satisfied (70%)
+    //    Дополнительный: class-based wealth target из social_classes.js (30%)
+    //    Мост между моделью POPs и классовой системой потребления (Этап 8).
+    let wealthTarget = score * 100;
+    if (typeof getClassBasedWealthTargets === 'function') {
+      if (!nation._classWealthTargets_cache) {
+        // Вычисляем один раз за updatePopWealth для всей нации
+        nation._classWealthTargets_cache = getClassBasedWealthTargets(nation);
+      }
+      const classTarget = nation._classWealthTargets_cache[prof];
+      if (classTarget != null) {
+        wealthTarget = wealthTarget * 0.70 + classTarget * 0.30;
+      }
+    }
+    const delta = (wealthTarget - pop.wealth) / POP_WEALTH_INERTIA;
     pop.wealth         = Math.max(0, Math.min(100, pop.wealth + delta));
 
     // 5. income_last (приблизительный доход группы за тик)
