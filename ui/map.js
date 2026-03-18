@@ -506,47 +506,61 @@ function showRegionInfo(regionId) {
   const gameData = GAME_STATE.regions[regionId];
   if (!mapData || !gameData) return;
 
-  const nationId = gameData.nation;
-  const nation = GAME_STATE.nations[nationId];
-  const nationName  = nation ? nation.name  : 'Независимые';
-  const nationColor = nation ? nation.color : '#A8A898';
-
-  const productionLines = Object.entries(gameData.production || {}).map(([good, amount]) => {
-    const g = GOODS[good];
-    return `<span class="prod-item">${g ? g.icon : '📦'} ${g ? g.name : good}: ${Math.round(amount).toLocaleString()}</span>`;
-  }).join('');
-
-  const buildings = (gameData.buildings || []).map(b =>
-    `<span class="building-tag">🏛 ${b.replace(/_/g, ' ')}</span>`
-  ).join('');
-
-  // ── Блок культуры ──
-  let cultureHtml = '';
   try {
-    cultureHtml = renderRegionCultureBlock(regionId, gameData.population || 0);
-  } catch (e) {
-    console.warn('[showRegionInfo] Ошибка культуры:', e);
-  }
+    const nationId = gameData.nation;
+    const nation = GAME_STATE.nations[nationId];
+    const nationName  = nation ? nation.name  : 'Независимые';
+    const nationColor = nation ? nation.color : '#A8A898';
 
-  panel.innerHTML = `
-    <div class="region-info-header" style="border-left: 4px solid ${nationColor}">
-      <span class="region-info-name">${mapData.name}</span>
-      <span class="region-info-nation" style="color:${nationColor}">${nationName}</span>
-      <button class="region-info-close" onclick="closeRegionInfo()">✕</button>
-    </div>
-    <div class="region-info-body">
-      <div class="region-info-desc">${mapData.description}</div>
-      <div class="region-stats">
-        <div class="region-stat">👥 Нас.: <strong>${(gameData.population || 0).toLocaleString()}</strong></div>
-        <div class="region-stat">🌿 Плодородие: <strong>${Math.round((gameData.fertility || 0) * 100)}%</strong></div>
-        <div class="region-stat">⚔️ Гарнизон: <strong>${(gameData.garrison || 0).toLocaleString()}</strong></div>
-        <div class="region-stat">🏔 Тип: <strong>${getTerrainName(gameData.terrain)}</strong></div>
+    const productionLines = Object.entries(gameData.production || {}).map(([good, amount]) => {
+      const g = GOODS[good];
+      return `<span class="prod-item">${g ? g.icon : '📦'} ${g ? g.name : good}: ${Math.round(amount).toLocaleString()}</span>`;
+    }).join('');
+
+    const buildings = (gameData.buildings || []).map(b =>
+      `<span class="building-tag">🏛 ${b.replace(/_/g, ' ')}</span>`
+    ).join('');
+
+    // ── Блок культуры ──
+    let cultureHtml = '';
+    try {
+      cultureHtml = renderRegionCultureBlock(regionId, gameData.population || 0);
+    } catch (e) {
+      console.warn('[showRegionInfo] culture block error:', e);
+    }
+
+    panel.innerHTML = `
+      <div class="region-info-header" style="border-left: 4px solid ${nationColor}">
+        <span class="region-info-name">${mapData.name}</span>
+        <span class="region-info-nation" style="color:${nationColor}">${nationName}</span>
+        <button class="region-info-close" onclick="closeRegionInfo()">✕</button>
       </div>
-      ${cultureHtml}
-      ${productionLines ? `<div class="region-production"><div class="section-label">Производство:</div>${productionLines}</div>` : ''}
-      ${buildings ? `<div class="region-buildings"><div class="section-label">Постройки:</div>${buildings}</div>` : ''}
-    </div>
-  `;
+      <div class="region-info-body">
+        <div class="region-info-desc">${mapData.description}</div>
+        <div class="region-stats">
+          <div class="region-stat">👥 Нас.: <strong>${(gameData.population || 0).toLocaleString()}</strong></div>
+          <div class="region-stat">🌿 Плодородие: <strong>${Math.round((gameData.fertility || 0) * 100)}%</strong></div>
+          <div class="region-stat">⚔️ Гарнизон: <strong>${(gameData.garrison || 0).toLocaleString()}</strong></div>
+          <div class="region-stat">🏔 Тип: <strong>${getTerrainName(gameData.terrain)}</strong></div>
+        </div>
+        ${cultureHtml}
+        ${productionLines ? `<div class="region-production"><div class="section-label">Производство:</div>${productionLines}</div>` : ''}
+        ${buildings ? `<div class="region-buildings"><div class="section-label">Постройки:</div>${buildings}</div>` : ''}
+      </div>
+    `;
+  } catch (e) {
+    console.error('[showRegionInfo] Error:', e);
+    panel.innerHTML = `
+      <div class="region-info-header">
+        <span class="region-info-name">${mapData.name}</span>
+        <button class="region-info-close" onclick="closeRegionInfo()">✕</button>
+      </div>
+      <div class="region-info-body">
+        <div class="region-stat">👥 Нас.: <strong>${(gameData.population || 0).toLocaleString()}</strong></div>
+        <div class="region-stat" style="color:#f44336">Ошибка: ${e.message}</div>
+      </div>
+    `;
+  }
 
   panel.classList.remove('hidden');
 }

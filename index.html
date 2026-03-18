@@ -2375,12 +2375,8 @@
     // Инициализируем ввод
     initInput();
 
-    // Запускаем игру
+    // Запускаем игру (внутри initGame вызывается initCultures/initRegionCultures)
     initGame();
-
-    // Инициализируем культуры
-    if (typeof initCultures === 'function') initCultures();
-    if (typeof initRegionCultures === 'function') initRegionCultures();
 
     // Инициализируем сенаты (Lazy Materialization)
     initAllSenates();

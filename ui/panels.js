@@ -160,44 +160,75 @@ function renderProfessions(profs) {
 }
 
 function renderCulturePanel(nationId) {
-  if (typeof getCultureInfoForUI !== 'function') return '<div class="no-data">Загрузка...</div>';
+  try {
+    // Определяем культуру нации напрямую из данных
+    const nation = GAME_STATE.nations[nationId];
+    if (!nation || !nation.regions || nation.regions.length === 0) {
+      return '<div class="no-data">Нет данных о культуре</div>';
+    }
 
-  const info = getCultureInfoForUI(nationId);
-  if (!info) return '<div class="no-data">Нет данных о культуре</div>';
+    // Ищем основную культуру по регионам
+    const regionCultures = GAME_STATE.region_cultures
+      || (typeof REGION_CULTURES !== 'undefined' ? REGION_CULTURES : null);
+    if (!regionCultures) return '<div class="no-data">Нет данных о культуре</div>';
 
-  const catIcons = {
-    military: '⚔️', economic: '💰', social: '👥', religious: '🏛',
-    naval: '⚓', arts: '🎭', diplomatic: '🤝', survival: '🛡',
-  };
+    // Считаем какая культура в большинстве регионов
+    const counts = {};
+    for (const rid of nation.regions) {
+      const rc = regionCultures[rid];
+      if (rc) counts[rc.primary] = (counts[rc.primary] || 0) + 1;
+    }
+    let cultureId = null, bestCount = 0;
+    for (const [cId, cnt] of Object.entries(counts)) {
+      if (cnt > bestCount) { cultureId = cId; bestCount = cnt; }
+    }
+    if (!cultureId) return '<div class="no-data">Нет данных о культуре</div>';
 
-  const traditionsHtml = info.traditions.map(t => {
-    const icon = catIcons[t.cat] || '📜';
-    const lockIcon = t.locked ? ' 🔒' : '';
-    const bonusStr = Object.entries(t.bonus || {}).map(([k, v]) => {
-      const sign = v > 0 ? '+' : '';
-      const pct = Math.abs(v) < 1 ? `${sign}${(v * 100).toFixed(0)}%` : `${sign}${v}`;
-      return `<span class="${v > 0 ? 'bonus-positive' : 'bonus-negative'}">${pct} ${formatBonusName(k)}</span>`;
-    }).join(', ');
+    // Получаем данные культуры (из GAME_STATE или из статического CULTURES)
+    const culture = (GAME_STATE.cultures && GAME_STATE.cultures[cultureId])
+      || (typeof CULTURES !== 'undefined' ? CULTURES[cultureId] : null);
+    if (!culture) return '<div class="no-data">Нет данных о культуре</div>';
+
+    // Получаем справочник традиций
+    const allTrad = typeof ALL_TRADITIONS !== 'undefined' ? ALL_TRADITIONS : {};
+
+    const catIcons = {
+      military: '⚔️', economic: '💰', social: '👥', religious: '🏛',
+      naval: '⚓', arts: '🎭', diplomatic: '🤝', survival: '🛡',
+    };
+
+    const traditionsHtml = (culture.traditions || []).map(tId => {
+      const t = allTrad[tId];
+      if (!t) return `<div class="tradition-item"><span class="tradition-name">${tId}</span></div>`;
+      const icon = catIcons[t.cat] || '📜';
+      const isLocked = (culture.locked || []).includes(tId);
+      const lockIcon = isLocked ? ' 🔒' : '';
+      const bonusStr = Object.entries(t.bonus || {}).map(([k, v]) => {
+        const sign = v > 0 ? '+' : '';
+        const pct = Math.abs(v) < 1 ? `${sign}${(v * 100).toFixed(0)}%` : `${sign}${v}`;
+        return `<span class="${v > 0 ? 'bonus-positive' : 'bonus-negative'}">${pct} ${formatBonusName(k)}</span>`;
+      }).join(', ');
+
+      return `
+        <div class="tradition-item" title="${t.desc}">
+          <span class="tradition-icon">${icon}</span>
+          <span class="tradition-name">${t.name}${lockIcon}</span>
+          <div class="tradition-bonus">${bonusStr}</div>
+        </div>
+      `;
+    }).join('');
+
+    const groupName = (typeof CULTURE_GROUPS !== 'undefined' && CULTURE_GROUPS[culture.group])
+      ? CULTURE_GROUPS[culture.group].name : (culture.group || '');
 
     return `
-      <div class="tradition-item" title="${t.desc}">
-        <span class="tradition-icon">${icon}</span>
-        <span class="tradition-name">${t.name}${lockIcon}</span>
-        <div class="tradition-bonus">${bonusStr}</div>
-      </div>
+      <div class="culture-name">${culture.name} <span class="culture-group">(${groupName})</span></div>
+      <div class="traditions-list">${traditionsHtml}</div>
     `;
-  }).join('');
-
-  const mutYears = Math.ceil(info.nextMutationIn / 12);
-  const mutStatus = info.nextMutationIn <= 0
-    ? '<span class="mutation-ready">Мутация возможна</span>'
-    : `<span class="mutation-cooldown">Следующая через ~${mutYears} лет</span>`;
-
-  return `
-    <div class="culture-name">${info.name} <span class="culture-group">(${info.group})</span></div>
-    <div class="culture-mutation-status">${mutStatus}</div>
-    <div class="traditions-list">${traditionsHtml}</div>
-  `;
+  } catch (e) {
+    console.warn('[renderCulturePanel] Error:', e);
+    return '<div class="no-data">Ошибка отображения культуры</div>';
+  }
 }
 
 function formatBonusName(key) {

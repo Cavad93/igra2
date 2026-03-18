@@ -619,30 +619,38 @@ function cultureTick() {
 // ── ИНИЦИАЛИЗАЦИЯ ─────────────────────────────────────────────────────────────
 
 function initCultures() {
+  if (typeof CULTURES === 'undefined') { console.warn('[culture] CULTURES not defined'); return; }
+  if (typeof GAME_STATE === 'undefined') { console.warn('[culture] GAME_STATE not defined'); return; }
   GAME_STATE.cultures = {};
   for (const [id, def] of Object.entries(CULTURES)) {
-    if (id === 'REGION_CULTURES') continue;  // пропускаем карту
+    if (!def.traditions) continue;  // пропускаем нe-культуры
     GAME_STATE.cultures[id] = {
       id: id,
       name: def.name,
       group: def.group,
       traditions: [...def.traditions],
-      locked: [...def.locked],
-      experience: { ...def.experience },
+      locked: [...(def.locked || [])],
+      experience: { ...(def.experience || {}) },
       last_mutation_turn: def.last_mutation_turn || 0,
     };
   }
+  console.log('[culture] initCultures: loaded', Object.keys(GAME_STATE.cultures).length, 'cultures');
 }
 
 function initRegionCultures() {
+  if (typeof REGION_CULTURES === 'undefined') { console.warn('[culture] REGION_CULTURES not defined'); return; }
+  if (typeof GAME_STATE === 'undefined') { console.warn('[culture] GAME_STATE not defined'); return; }
   GAME_STATE.region_cultures = {};
   for (const [regionId, def] of Object.entries(REGION_CULTURES)) {
     GAME_STATE.region_cultures[regionId] = {
       primary: def.primary,
-      minorities: def.minorities.map(m => ({ ...m })),
+      minorities: (def.minorities || []).map(m => ({ ...m })),
     };
   }
+  console.log('[culture] initRegionCultures: loaded', Object.keys(GAME_STATE.region_cultures).length, 'regions');
 }
+
+// Инициализация вызывается из initGame() в engine/turn.js
 
 // ── Экспорт для UI ────────────────────────────────────────────────────────────
 
