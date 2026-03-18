@@ -16,29 +16,77 @@ function extractJSON(raw) {
   const fenceMatch = s.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (fenceMatch) s = fenceMatch[1];
 
-  // 2. Ищем первый { или [ и соответствующий закрывающий символ
+  // 2. Ищем первый { или [
   const firstBrace   = s.indexOf('{');
   const firstBracket = s.indexOf('[');
-  let start, open, close;
 
   if (firstBrace === -1 && firstBracket === -1) throw new Error('JSON не найден в ответе AI');
 
+  let start, close;
   if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
-    start = firstBrace; open = '{'; close = '}';
+    start = firstBrace; close = '}';
   } else {
-    start = firstBracket; open = '['; close = ']';
+    start = firstBracket; close = ']';
   }
 
-  // Ищем последний соответствующий закрывающий символ
   const end = s.lastIndexOf(close);
   if (end <= start) throw new Error('Незакрытый JSON в ответе AI');
 
-  let candidate = s.slice(start, end + 1);
+  let c = s.slice(start, end + 1);
 
-  // 3. Убираем хвостовые запятые (,} и ,])
-  candidate = candidate.replace(/,\s*([\]}])/g, '$1');
+  // 3. Убираем JS-комментарии вне строк (// ... и /* ... */)
+  //    Простой state-machine: пропускаем символы внутри строк
+  c = _stripJSONComments(c);
 
-  return JSON.parse(candidate);
+  // 4. Убираем хвостовые запятые (,} и ,])
+  c = c.replace(/,\s*([\]}])/g, '$1');
+
+  // 5. Первая попытка
+  try { return JSON.parse(c); } catch (_) {}
+
+  // 6. Запасная попытка: обрезаем до последнего валидного объекта/массива
+  //    (на случай обрыва в конце)
+  for (let i = c.length - 1; i > start; i--) {
+    if (c[i] === '}' || c[i] === ']') {
+      const trimmed = c.slice(0, i + 1).replace(/,\s*([\]}])/g, '$1');
+      try { return JSON.parse(trimmed); } catch (_) {}
+    }
+  }
+
+  throw new Error('Не удалось разобрать JSON из ответа AI');
+}
+
+/** Удаляет // и /* */ комментарии из JSON-подобной строки, не трогая строковые литералы */
+function _stripJSONComments(str) {
+  let out = '';
+  let i = 0;
+  while (i < str.length) {
+    // Строковый литерал
+    if (str[i] === '"') {
+      out += '"';
+      i++;
+      while (i < str.length) {
+        if (str[i] === '\\') { out += str[i] + (str[i + 1] ?? ''); i += 2; continue; }
+        if (str[i] === '"')  { out += '"'; i++; break; }
+        out += str[i++];
+      }
+      continue;
+    }
+    // Однострочный комментарий
+    if (str[i] === '/' && str[i + 1] === '/') {
+      while (i < str.length && str[i] !== '\n') i++;
+      continue;
+    }
+    // Многострочный комментарий
+    if (str[i] === '/' && str[i + 1] === '*') {
+      i += 2;
+      while (i < str.length && !(str[i] === '*' && str[i + 1] === '/')) i++;
+      i += 2;
+      continue;
+    }
+    out += str[i++];
+  }
+  return out;
 }
 
 // ──────────────────────────────────────────────────────────────
