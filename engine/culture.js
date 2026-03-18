@@ -652,6 +652,79 @@ function initRegionCultures() {
 
 // Инициализация вызывается из initGame() в engine/turn.js
 
+// ── Статистика культур нации (для окна «Культура») ───────────────────────────
+
+function getNationCultureStats(nationId) {
+  const culturePopMap = {};   // cultureId → totalPopulation
+  const byRegion = [];
+
+  const nationRegions = Object.entries(GAME_STATE.regions)
+    .filter(([, rd]) => rd.nation === nationId);
+
+  let totalPop = 0;
+
+  for (const [regionId, rd] of nationRegions) {
+    const pop = rd.population || 0;
+    totalPop += pop;
+
+    const rc = (GAME_STATE.region_cultures || {})[regionId];
+    const segments = [];
+
+    if (rc) {
+      const minoritySum = (rc.minorities || [])
+        .reduce((s, m) => s + (m.strength || 0), 0);
+      const primaryPct = Math.max(0, 1 - minoritySum);
+
+      // primary
+      if (rc.primary) {
+        culturePopMap[rc.primary] = (culturePopMap[rc.primary] || 0) + pop * primaryPct;
+        segments.push({ culture: rc.primary, pct: primaryPct * 100 });
+      }
+
+      // minorities
+      for (const m of (rc.minorities || [])) {
+        if (m.culture && m.strength > 0) {
+          culturePopMap[m.culture] = (culturePopMap[m.culture] || 0) + pop * m.strength;
+          segments.push({ culture: m.culture, pct: m.strength * 100 });
+        }
+      }
+    } else {
+      // no culture data — count as "unknown"
+      culturePopMap['_unknown'] = (culturePopMap['_unknown'] || 0) + pop;
+      segments.push({ culture: '_unknown', pct: 100 });
+    }
+
+    const mapData = MAP_REGIONS[regionId];
+    byRegion.push({
+      regionId,
+      name: mapData ? mapData.name : regionId,
+      population: pop,
+      segments: segments.sort((a, b) => b.pct - a.pct),
+    });
+  }
+
+  // sort regions by population desc
+  byRegion.sort((a, b) => b.population - a.population);
+
+  // build cultures array
+  const cultures = Object.entries(culturePopMap)
+    .map(([id, pop]) => {
+      const def = CULTURES[id] || GAME_STATE.cultures?.[id];
+      return {
+        id,
+        name: def ? def.name : (id === '_unknown' ? 'Неизвестная' : id),
+        color: def ? def.color : '#888',
+        icon: def ? def.icon : '❓',
+        group: def ? (CULTURE_GROUPS[def.group]?.name || def.group) : '',
+        population: Math.round(pop),
+        percentage: totalPop > 0 ? (pop / totalPop) * 100 : 0,
+      };
+    })
+    .sort((a, b) => b.population - a.population);
+
+  return { totalPopulation: totalPop, cultures, byRegion };
+}
+
 // ── Экспорт для UI ────────────────────────────────────────────────────────────
 
 function getCultureInfoForUI(nationId) {

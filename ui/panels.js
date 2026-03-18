@@ -121,6 +121,7 @@ function renderLeftPanel() {
     <div class="panel-section">
       <div class="section-title">🎭 Культура</div>
       ${renderCulturePanel(nationId)}
+      <button class="cw-btn-open" onclick="openCultureWindow('${nationId}')">📊 Подробнее о культурах</button>
     </div>
 
     <!-- ДИПЛОМАТИЯ -->
@@ -247,6 +248,147 @@ function formatBonusName(key) {
     mercenary_quality: 'кач.наёмн.',
   };
   return names[key] || key;
+}
+
+// ── Окно «Культура» (модальное) ─────────────────────────────────────────────
+
+function openCultureWindow(nationId) {
+  closeCultureWindow();
+  const overlay = document.createElement('div');
+  overlay.className = 'culture-window-overlay';
+  overlay.id = 'culture-window-overlay';
+  overlay.onclick = function(e) { if (e.target === overlay) closeCultureWindow(); };
+  overlay.innerHTML = renderCultureWindow(nationId);
+  document.body.appendChild(overlay);
+}
+
+function closeCultureWindow() {
+  const el = document.getElementById('culture-window-overlay');
+  if (el) el.remove();
+}
+
+function renderCultureWindow(nationId) {
+  try {
+    const nation = GAME_STATE.nations[nationId];
+    const nationName = nation ? nation.name : nationId;
+    const stats = getNationCultureStats(nationId);
+
+    // ── Big pie ──
+    let gradientParts = [];
+    let angle = 0;
+    for (const c of stats.cultures) {
+      const slice = (c.percentage / 100) * 360;
+      gradientParts.push(`${c.color} ${angle}deg ${angle + slice}deg`);
+      angle += slice;
+    }
+    const gradient = gradientParts.length > 0
+      ? `conic-gradient(${gradientParts.join(', ')})`
+      : 'conic-gradient(#555 0deg 360deg)';
+    const mainIcon = stats.cultures.length > 0 ? stats.cultures[0].icon : '🎭';
+
+    // ── Legend ──
+    const legendHtml = stats.cultures.map(c => `
+      <div class="cw-legend-item">
+        <span class="cw-legend-dot" style="background:${c.color}"></span>
+        <span class="cw-legend-name">${c.name}</span>
+        <span class="cw-legend-pct">${c.percentage.toFixed(1)}%</span>
+        <span class="cw-legend-pop">${c.population.toLocaleString()}</span>
+      </div>
+    `).join('');
+
+    // ── Region bars ──
+    const regionBarsHtml = stats.byRegion.slice(0, 20).map(r => {
+      const segsHtml = r.segments.map(s => {
+        const def = CULTURES[s.culture] || GAME_STATE.cultures?.[s.culture];
+        const color = def ? def.color : '#888';
+        const name = def ? def.name : s.culture;
+        const showLabel = s.pct > 15;
+        return `<div class="cw-region-seg" style="width:${s.pct}%;background:${color}">`
+          + (showLabel ? `<span class="cw-region-seg-label">${Math.round(s.pct)}%</span>` : '')
+          + `</div>`;
+      }).join('');
+
+      return `
+        <div class="cw-region">
+          <div class="cw-region-header">
+            <span class="cw-region-name">${r.name}</span>
+            <span class="cw-region-pop">${r.population.toLocaleString()} чел.</span>
+          </div>
+          <div class="cw-region-bar">${segsHtml}</div>
+        </div>
+      `;
+    }).join('');
+
+    // ── Traditions (reuse logic from renderCulturePanel) ──
+    const cultureId = stats.cultures.length > 0 ? stats.cultures[0].id : null;
+    let traditionsHtml = '';
+    if (cultureId && cultureId !== '_unknown') {
+      const culture = (GAME_STATE.cultures && GAME_STATE.cultures[cultureId])
+        || (typeof CULTURES !== 'undefined' ? CULTURES[cultureId] : null);
+      if (culture) {
+        const allTrad = typeof ALL_TRADITIONS !== 'undefined' ? ALL_TRADITIONS : {};
+        const catIcons = {
+          military: '⚔️', economic: '💰', social: '👥', religious: '🏛',
+          naval: '⚓', arts: '🎭', diplomatic: '🤝', survival: '🛡',
+        };
+        traditionsHtml = (culture.traditions || []).map(tId => {
+          const t = allTrad[tId];
+          if (!t) return '';
+          const icon = catIcons[t.cat] || '📜';
+          const isLocked = (culture.locked || []).includes(tId);
+          const lockIcon = isLocked ? ' 🔒' : '';
+          const bonusStr = Object.entries(t.bonus || {}).map(([k, v]) => {
+            const sign = v > 0 ? '+' : '';
+            const pct = Math.abs(v) < 1 ? `${sign}${(v * 100).toFixed(0)}%` : `${sign}${v}`;
+            return `<span class="${v > 0 ? 'bonus-positive' : 'bonus-negative'}">${pct} ${formatBonusName(k)}</span>`;
+          }).join(', ');
+          return `
+            <div class="cw-tradition">
+              <span class="cw-tradition-name">${icon} ${t.name}${lockIcon}</span>
+              <div class="cw-tradition-bonus">${bonusStr}</div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    return `
+      <div class="culture-window">
+        <div class="cw-header">
+          <h3>🎭 Культуры — ${nationName}</h3>
+          <button class="cw-close" onclick="closeCultureWindow()">✕</button>
+        </div>
+        <div class="cw-body">
+          <div class="cw-total">Общее население: <strong>${stats.totalPopulation.toLocaleString()}</strong> · Культур: ${stats.cultures.length}</div>
+          <div class="cw-summary">
+            <div class="cw-big-pie" style="background:${gradient}">
+              <div class="cw-big-pie-center">${mainIcon}</div>
+            </div>
+            <div class="cw-legend">${legendHtml}</div>
+          </div>
+          <div class="cw-section-title">📊 Распределение по регионам</div>
+          ${regionBarsHtml}
+          ${traditionsHtml ? `
+            <div class="cw-section-title">🏛 Традиции основной культуры</div>
+            <div class="cw-traditions">${traditionsHtml}</div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    console.error('[renderCultureWindow] Error:', e);
+    return `
+      <div class="culture-window">
+        <div class="cw-header">
+          <h3>🎭 Культуры</h3>
+          <button class="cw-close" onclick="closeCultureWindow()">✕</button>
+        </div>
+        <div class="cw-body">
+          <div class="no-data">Ошибка: ${e.message}</div>
+        </div>
+      </div>
+    `;
+  }
 }
 
 function renderRelations(relations) {
