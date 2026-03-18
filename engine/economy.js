@@ -92,6 +92,12 @@ function getBuildingBonuses(nationId) {
 
 // ──────────────────────────────────────────────────────────────
 // ШАГ 1: ПРОИЗВОДСТВО
+// Гибридная модель:
+//   A) Организованное — суммируется из building_slots регионов игрока.
+//   B) Неорганизованное — базовое REGION_PRODUCTION_BASE для рабочих,
+//      не занятых в зданиях (эффективность 65% от организованного).
+//
+// Для AI-наций применяется только схема B (у них нет building_slots).
 // ──────────────────────────────────────────────────────────────
 
 function calculateProduction() {
@@ -101,35 +107,56 @@ function calculateProduction() {
     produced[nationId] = {};
     const bldBonuses = getBuildingBonuses(nationId);
 
+    // ── A) Производство из зданий (только для наций с building_slots) ──────
+    if (typeof calculateAllBuildingProduction === 'function') {
+      const bldProd = calculateAllBuildingProduction(nationId);
+      for (const [good, amount] of Object.entries(bldProd)) {
+        produced[nationId][good] = (produced[nationId][good] || 0) + amount;
+      }
+    }
+
+    // ── B) Неорганизованное производство ────────────────────────────────────
+    // Рабочие, не занятые в зданиях, работают на себя с пониженной отдачей.
+    // SUBSISTENCE_FACTOR = 0.65: неорганизованные менее эффективны, чем здания.
+    const SUBSISTENCE_FACTOR = 0.65;
+
     for (const regionId of nation.regions) {
-      const region = GAME_STATE.regions[regionId];
-      const mapData = MAP_REGIONS[regionId];
-      if (!region || !mapData) continue;
+      const region  = GAME_STATE.regions[regionId];
+      if (!region) continue;
 
-      const terrain = region.terrain || 'plains';
-      const multipliers = CONFIG.BALANCE.TERRAIN_MULTIPLIERS[terrain] || CONFIG.BALANCE.TERRAIN_MULTIPLIERS.plains;
-      const fertility = region.fertility || 0.7;
+      const terrain      = region.terrain || 'plains';
+      const multipliers  = CONFIG.BALANCE.TERRAIN_MULTIPLIERS?.[terrain]
+                        || CONFIG.BALANCE.TERRAIN_MULTIPLIERS?.plains || {};
+      const fertility    = region.fertility || 0.7;
+      const classMod     = nation.population._production_mod ?? 1;
 
-      // Получаем население региона и распределение профессий
-      // Пропорционально раскидываем общее население нации по регионам
-      const nationPop = nation.population.total;
-      const regionShareRaw = region.population / nationPop;
+      // Доля региона в общем населении нации
+      const nationPop       = nation.population.total;
+      const regionShareRaw  = nationPop > 0 ? region.population / nationPop : 0;
 
-      // Производство по типу региона
+      // Занятость в зданиях этого региона
+      const employment  = region.employment || {};
+
       const regionProduction = REGION_PRODUCTION_BASE[terrain] || {};
 
       for (const [good, spec] of Object.entries(regionProduction)) {
         const professionPop = nation.population.by_profession[spec.per] || 0;
-        // Используем долю региона для оценки занятых в нём
-        const localWorkers = professionPop * regionShareRaw;
+        const localWorkers  = professionPop * regionShareRaw;
+
+        // Сколько из local workers уже задействованы в организованных зданиях
+        const employedOfProf = employment[spec.per] || 0;
+
+        // Неорганизованные рабочие = те, кто НЕ занят в building_slots
+        // Пропорционально: из regionShare вычитаем employed данной профессии
+        const freeWorkers = Math.max(0, localWorkers - employedOfProf * regionShareRaw);
+
         const terrainMult = multipliers[spec.per] || 1.0;
+        const amount = (freeWorkers / 1000) * spec.rate * terrainMult * fertility
+                     * bldBonuses.production_mult * classMod * SUBSISTENCE_FACTOR;
 
-        // Модификатор от удовлетворённости классов (если есть)
-        const classMod = nation.population._production_mod ?? 1;
-        const amount = (localWorkers / 1000) * spec.rate * terrainMult * fertility
-                     * bldBonuses.production_mult * classMod;
-
-        produced[nationId][good] = (produced[nationId][good] || 0) + amount;
+        if (amount > 0) {
+          produced[nationId][good] = (produced[nationId][good] || 0) + amount;
+        }
       }
     }
   }
@@ -277,18 +304,31 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
 
   // РАСХОДЫ
   // Армия
-  const militaryCost = (military.infantry   * CONFIG.BALANCE.INFANTRY_UPKEEP)
-                     + (military.cavalry    * CONFIG.BALANCE.CAVALRY_UPKEEP)
-                     + (military.ships      * CONFIG.BALANCE.SHIP_UPKEEP)
+  const militaryCost = (military.infantry    * CONFIG.BALANCE.INFANTRY_UPKEEP)
+                     + (military.cavalry     * CONFIG.BALANCE.CAVALRY_UPKEEP)
+                     + (military.ships       * CONFIG.BALANCE.SHIP_UPKEEP)
                      + (military.mercenaries * CONFIG.BALANCE.MERCENARY_UPKEEP);
 
-  // Здания
+  // Здания — legacy-список (nation.buildings) + новые building_slots
   let buildingsCost = 0;
   for (const regionId of nation.regions) {
     const region = GAME_STATE.regions[regionId];
-    if (region && region.buildings) {
+    if (!region) continue;
+    // Legacy: nation.buildings — плоский список
+    if (region.buildings?.length) {
       buildingsCost += region.buildings.length * CONFIG.BALANCE.BUILDING_MAINTENANCE;
     }
+    // Новые: building_slots — уже включены в distributeWages(), здесь не дублируем.
+    // Вычитаем только то, что НЕ учтено через distributeWages (вызывается отдельно).
+    // Поэтому building_slots maintenance учитываем только для НЕ-игрока.
+    if (nationId !== GAME_STATE.player_nation) {
+      const activeSlots = (region.building_slots || []).filter(s => s.status === 'active').length;
+      buildingsCost += activeSlots * CONFIG.BALANCE.BUILDING_MAINTENANCE;
+    }
+  }
+  // Для игрока maintenance зданий из building_slots уже вычтена в distributeWages()
+  if (nationId === GAME_STATE.player_nation) {
+    buildingsCost += economy._building_maintenance_per_turn || 0;
   }
 
   // Рабы
@@ -482,6 +522,42 @@ function updateHappiness() {
       );
       // Сохраняем в состояние для UI
       nation.population.class_satisfaction = classSat;
+
+      // ── Зарплатные бонусы к satisfaction классов ─────────────────────
+      // Заполняются в distributeWages() для игрока каждый ход.
+      const wageBonuses   = nation.population._wage_bonuses   || {};
+      const profitBonuses = nation.population._profit_class_bonuses || {};
+
+      // Маппинг профессия → класс (совпадает с PROF_TO_CLASS в demography.js)
+      const _P2C = {
+        farmers:   'farmers_class',
+        craftsmen: 'craftsmen_class',
+        merchants: 'citizens',
+        sailors:   'sailors_class',
+        clergy:    'clergy_class',
+        soldiers:  'soldiers_class',
+        slaves:    'slaves_class',
+      };
+
+      for (const [prof, bonus] of Object.entries(wageBonuses)) {
+        const classId = _P2C[prof];
+        if (classId && classSat[classId]) {
+          classSat[classId].satisfaction = Math.max(0, Math.min(100,
+            classSat[classId].satisfaction + bonus,
+          ));
+          classSat[classId].wage_bonus = bonus; // для UI
+        }
+      }
+
+      // Profit-бонус классам-владельцам
+      for (const [classId, bonus] of Object.entries(profitBonuses)) {
+        if (bonus && classSat[classId]) {
+          classSat[classId].satisfaction = Math.max(0, Math.min(100,
+            classSat[classId].satisfaction + bonus,
+          ));
+          classSat[classId].profit_bonus = bonus; // для UI
+        }
+      }
 
       // Взвешенное счастье по политическому весу классов
       if (typeof calculateWeightedHappiness === 'function') {

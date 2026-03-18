@@ -262,6 +262,45 @@ function _calcWarMod(nation) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// 6а. МОДИФИКАТОР ЗАНЯТОСТИ / БЕЗРАБОТИЦЫ
+//
+// Логика:
+//   • При высокой занятости (>80%) профессия растёт: сигнал «здесь есть работа»
+//   • При умеренной занятости (50–80%) нейтрально или небольшой плюс
+//   • Безработица >50% — профессия убывает (люди уходят, не рожают детей)
+//
+// Кроме роста, функция обновляет:
+//   nation.population._unemployment_rates — для UI и economy
+// ─────────────────────────────────────────────────────────────────────────
+
+function _calcUnemploymentMod(nation) {
+  // Функция доступна только если движок зданий загружен
+  if (typeof getUnemploymentRates !== 'function') return {};
+
+  const rates = getUnemploymentRates(nation);
+
+  // Кэшируем для UI и других модулей
+  nation.population._unemployment_rates = rates;
+
+  const profMod = {};
+  for (const [prof, info] of Object.entries(rates)) {
+    const empRate = info.rate; // 0 = всё безработные, 1 = все заняты
+
+    if (empRate >= 0.80) {
+      profMod[prof] = +0.003;   // почти полная занятость → приток
+    } else if (empRate >= 0.50) {
+      profMod[prof] = +0.001;   // нормально
+    } else if (empRate >= 0.25) {
+      profMod[prof] = -0.002;   // умеренная безработица
+    } else {
+      profMod[prof] = -0.005;   // высокая безработица → упадок
+    }
+  }
+
+  return profMod;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // 6. ГЕОГРАФИЧЕСКИЙ МОДИФИКАТОР (по типам регионов нации)
 // ─────────────────────────────────────────────────────────────────────────
 
@@ -510,6 +549,7 @@ function _processDemographyForNation(nationId, nation) {
   const warMod     = _calcWarMod(nation);
   const geoMod     = _calcGeoMod(nation);
   const capFactor  = _calcCapacityFactor(nation);
+  const unempMod   = _calcUnemploymentMod(nation);  // ← занятость от зданий
 
   // Классовая удовлетворённость (уже посчитана в updateHappiness предыдущего хода)
   const classSat = pop.class_satisfaction || {};
@@ -550,6 +590,9 @@ function _processDemographyForNation(nationId, nation) {
     if (classId && classSat[classId]) {
       rate += _satToGrowthMod(classSat[classId].satisfaction);
     }
+
+    // Занятость от зданий (+0.003 при полной занятости, до -0.005 при безработице)
+    if (unempMod[prof]) rate += unempMod[prof];
 
     // Ёмкость замедляет рост ближе к пределу
     // (но не применяем к убыли — она всегда работает)

@@ -29,8 +29,19 @@ async function processTurn() {
     const date = GAME_STATE.date;
     addEventLog(`── Ход ${GAME_STATE.turn}: ${MONTH_NAMES[date.month]} ${Math.abs(date.year)} г. до н.э. ──`, 'turn');
 
+    // 0.9. Строительство зданий — продвигаем очередь, завершаем готовые
+    if (typeof processBuildingConstruction === 'function') {
+      try { processBuildingConstruction(); } catch (e) { console.warn('[buildings]', e); }
+    }
+
     // 1. Экономика (детерминировано)
     runEconomyTick();
+
+    // 1.05. Зарплаты из зданий — после экономики, перед демографией
+    //       Обновляет _wage_bonuses и _building_maintenance_per_turn для игрока.
+    if (typeof distributeWages === 'function') {
+      try { distributeWages(GAME_STATE.player_nation); } catch (e) { console.warn('[wages]', e); }
+    }
 
     // 1.5. Правительство (детерминировано)
     processAllGovernmentTicks();
