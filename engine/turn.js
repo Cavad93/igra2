@@ -67,6 +67,12 @@ async function processTurn() {
     } else {
       updatePopulationGrowth(); // fallback
     }
+
+    // 2.2. Возрастная демография — когорты, рабочая сила, законы труда
+    if (typeof processAgeDemographics === 'function') {
+      try { processAgeDemographics(); } catch (e) { console.warn('[age_demographics]', e); }
+    }
+
     updateHappiness();
 
     // 2.5. Записываем историю населения (после обновления class_satisfaction)
@@ -717,6 +723,13 @@ function initGame() {
   // Инициализируем сенаты для новой игры (при загрузке сенаты восстанавливаются из сохранения)
   if (!hasSave && typeof initAllSenates === 'function') {
     initAllSenates();
+  }
+
+  // Инициализируем возрастную демографию (lazy init для всех наций)
+  if (typeof initAgeCohorts === 'function') {
+    for (const nation of Object.values(GAME_STATE.nations)) {
+      try { initAgeCohorts(nation); } catch (e) { /* ignore */ }
+    }
   }
 }
 

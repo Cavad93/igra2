@@ -152,8 +152,10 @@ function calculateProduction() {
         const freeWorkers = Math.max(0, localWorkers - employedOfProf);
 
         const terrainMult = multipliers[spec.per] || 1.0;
+        const dem      = nation.demographics;
+        const laborMod = dem?.labor_productivity_mod ?? 1.0;
         const amount = (freeWorkers / 1000) * spec.rate * terrainMult * fertility
-                     * bldBonuses.production_mult * classMod * SUBSISTENCE_FACTOR;
+                     * bldBonuses.production_mult * classMod * SUBSISTENCE_FACTOR * laborMod;
 
         if (amount > 0) {
           produced[nationId][good] = (produced[nationId][good] || 0) + amount;
@@ -170,20 +172,33 @@ function calculateProduction() {
 // ──────────────────────────────────────────────────────────────
 
 function calculateConsumption(nation) {
+  let result;
+
   // Используем классовую модель если доступны SOCIAL_CLASSES
   if (typeof calculateTotalConsumptionByClass === 'function') {
-    return calculateTotalConsumptionByClass(nation.population.by_profession);
+    result = calculateTotalConsumptionByClass(nation.population.by_profession);
+  } else {
+    // Запасной вариант — старая плоская модель
+    const pop   = nation.population.total;
+    const profs = nation.population.by_profession;
+    result = {
+      wheat: pop * CONFIG.BALANCE.FOOD_PER_PERSON,
+      salt:  pop * CONFIG.BALANCE.SALT_PER_PERSON,
+      cloth: pop * CONFIG.BALANCE.CLOTH_PER_PERSON,
+      tools: (profs.craftsmen || 0) * CONFIG.BALANCE.TOOLS_PER_CRAFTSMAN,
+    };
   }
 
-  // Запасной вариант — старая плоская модель
-  const pop   = nation.population.total;
-  const profs = nation.population.by_profession;
-  return {
-    wheat: pop * CONFIG.BALANCE.FOOD_PER_PERSON,
-    salt:  pop * CONFIG.BALANCE.SALT_PER_PERSON,
-    cloth: pop * CONFIG.BALANCE.CLOTH_PER_PERSON,
-    tools: (profs.craftsmen || 0) * CONFIG.BALANCE.TOOLS_PER_CRAFTSMAN,
-  };
+  // Модификатор возрастной структуры (иждивенцы увеличивают нагрузку)
+  const dem = nation.demographics;
+  if (dem && dem.consumption_mult > 0 && typeof AGE_PARAMS !== 'undefined') {
+    const relMult = dem.consumption_mult / AGE_PARAMS.baseline_consumption_mult;
+    if (Math.abs(relMult - 1.0) > 0.001) {
+      for (const good of Object.keys(result)) result[good] *= relMult;
+    }
+  }
+
+  return result;
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -570,6 +585,18 @@ function updateHappiness() {
           classSat[classId].satisfaction + capped,
         ));
         classSat[classId].building_bonus = capped; // для UI
+      }
+
+      // Бонусы/штрафы законов о труде + бремя иждивенцев
+      // Заполняются в collectLaborLawBonuses() из age_demographics.js каждый ход.
+      const laborLawBonuses = nation.population._labor_law_bonuses || {};
+      for (const [classId, bonus] of Object.entries(laborLawBonuses)) {
+        if (!bonus || !classSat[classId]) continue;
+        const capped = Math.max(-20, Math.min(15, bonus));
+        classSat[classId].satisfaction = Math.max(0, Math.min(100,
+          classSat[classId].satisfaction + capped,
+        ));
+        classSat[classId].labor_law_bonus = capped; // для UI
       }
 
       // Взвешенное счастье по политическому весу классов

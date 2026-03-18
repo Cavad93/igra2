@@ -795,6 +795,174 @@ function _initChartTooltip(history, mode) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// ВОЗРАСТНАЯ ДЕМОГРАФИЯ — секция пирамиды и законов труда
+// ─────────────────────────────────────────────────────────────────────────
+
+function buildAgeDemographicsSection(nation) {
+  const dem = nation.demographics;
+  if (!dem || !dem.cohort_fractions) return '';
+
+  const cf = dem.cohort_fractions;
+  const childPct  = Math.round((cf.children || 0) * 100);
+  const adultPct  = Math.round((cf.adults   || 0) * 100);
+  const elderPct  = Math.round((cf.elderly  || 0) * 100);
+
+  const cc = dem.cohort_counts || {};
+  const childN = Math.round(cc.children || 0);
+  const adultN = Math.round(cc.adults   || 0);
+  const elderN = Math.round(cc.elderly  || 0);
+
+  // Горизонтальные бары (100% = весь population)
+  const barHtml = `
+    <div class="adm-bars">
+      <div class="adm-row">
+        <span class="adm-lbl">👶 Дети</span>
+        <div class="adm-bar-wrap">
+          <div class="adm-bar adm-bar--child" style="width:${childPct}%"></div>
+        </div>
+        <span class="adm-val">${childPct}% (${popFmtNum(childN)})</span>
+      </div>
+      <div class="adm-row">
+        <span class="adm-lbl">🧑 Взрослые</span>
+        <div class="adm-bar-wrap">
+          <div class="adm-bar adm-bar--adult" style="width:${adultPct}%"></div>
+        </div>
+        <span class="adm-val">${adultPct}% (${popFmtNum(adultN)})</span>
+      </div>
+      <div class="adm-row">
+        <span class="adm-lbl">👴 Старики</span>
+        <div class="adm-bar-wrap">
+          <div class="adm-bar adm-bar--elder" style="width:${elderPct}%"></div>
+        </div>
+        <span class="adm-val">${elderPct}% (${popFmtNum(elderN)})</span>
+      </div>
+    </div>
+  `;
+
+  // Ключевые метрики рабочей силы
+  const ew   = Math.round(dem.effective_workforce || 0);
+  const dep  = dem.dependency_ratio ?? 0;
+  const cMlt = dem.consumption_mult  ?? 1.0;
+  const lMod = dem.labor_productivity_mod ?? 1.0;
+  const BASE_C_MULT = (typeof AGE_PARAMS !== 'undefined') ? AGE_PARAMS.baseline_consumption_mult : 1.80;
+
+  const depInfo  = (typeof dependencyRatioLabel === 'function')
+    ? dependencyRatioLabel(dep)
+    : { text: dep.toFixed(2), cls: 'adm-dep--ok' };
+
+  const relCons  = cMlt / BASE_C_MULT;
+  const consSign = relCons >= 1 ? '+' : '';
+  const consDelta = ((relCons - 1) * 100).toFixed(1);
+  const consCls  = relCons > 1.1 ? 'bad' : relCons > 1.02 ? 'dim' : 'good';
+
+  const lModSign = lMod >= 1 ? '+' : '';
+  const lModCls  = lMod < 0.85 ? 'bad' : lMod < 0.97 ? 'dim' : 'good';
+
+  const statsHtml = `
+    <div class="adm-stats">
+      <div class="adm-stat">
+        <span class="adm-stat-lbl">Рабочая сила</span>
+        <span class="adm-stat-val">${popFmtNum(ew)}</span>
+      </div>
+      <div class="adm-stat">
+        <span class="adm-stat-lbl">Иждивенцы</span>
+        <span class="adm-stat-val ${depInfo.cls}">${dep.toFixed(2)} <small>${depInfo.text}</small></span>
+      </div>
+      <div class="adm-stat">
+        <span class="adm-stat-lbl">Нагрузка потребления</span>
+        <span class="adm-stat-val ${consCls}">${consSign}${consDelta}%</span>
+      </div>
+      <div class="adm-stat">
+        <span class="adm-stat-lbl">Труд. производительность</span>
+        <span class="adm-stat-val ${lModCls}">${lModSign}${((lMod - 1) * 100).toFixed(1)}%</span>
+      </div>
+    </div>
+  `;
+
+  // Законы труда
+  const lawsHtml = _buildLaborLawsPanel(nation);
+
+  return `
+    <div class="adm-section">
+      <div class="pop-sh">
+        <span class="pop-st">👥 Возрастная структура и труд</span>
+      </div>
+      ${barHtml}
+      ${statsHtml}
+      ${lawsHtml}
+    </div>
+  `;
+}
+
+function _buildLaborLawsPanel(nation) {
+  if (typeof LABOR_LAW_GROUPS === 'undefined' || typeof LAWS_LABOR === 'undefined') return '';
+
+  const lawsHtml = LABOR_LAW_GROUPS.map(group => {
+    const activeLaw = (typeof getActiveLaborLawForGroup === 'function')
+      ? getActiveLaborLawForGroup(nation, group.id)
+      : null;
+    const activeId  = activeLaw ? Object.keys(LAWS_LABOR).find(k => LAWS_LABOR[k] === activeLaw) : null;
+
+    // Найти законы этой группы
+    const groupLaws = Object.entries(LAWS_LABOR).filter(([, v]) => v.group === group.id);
+    if (!groupLaws.length) return '';
+
+    const btns = groupLaws.map(([id, law]) => {
+      const isActive = id === activeId;
+      return `
+        <button class="adm-law-btn${isActive ? ' active' : ''}"
+                onclick="uiToggleLaborLaw('${id}')"
+                title="${law.description || ''}">
+          ${law.name}
+        </button>
+      `;
+    }).join('');
+
+    return `
+      <div class="adm-law-group">
+        <div class="adm-law-grp-hdr">${group.icon} ${group.name}</div>
+        <div class="adm-law-btns">${btns}</div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="adm-laws">
+      <div class="adm-laws-hdr">⚖ Законы о труде</div>
+      ${lawsHtml}
+    </div>
+  `;
+}
+
+function uiToggleLaborLaw(lawId) {
+  const nation = GAME_STATE.nations[GAME_STATE.player_nation];
+  if (!nation || typeof LAWS_LABOR === 'undefined') return;
+
+  const law = LAWS_LABOR[lawId];
+  if (!law) return;
+
+  // Найти активный закон этой группы
+  const activeId = (typeof getActiveLaborLawForGroup === 'function')
+    ? Object.keys(LAWS_LABOR).find(k => {
+        const v = LAWS_LABOR[k];
+        return v.group === law.group && getActiveLaborLawForGroup(nation, law.group) === v;
+      })
+    : null;
+
+  if (activeId === lawId) {
+    // Уже активен — не переключаем (должен быть активен хоть один)
+    return;
+  }
+
+  if (typeof applyLaborLaw === 'function') {
+    applyLaborLaw(nation, lawId);
+  }
+
+  // Перерисовать только оверлей (не весь UI)
+  renderPopulationOverlay();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // ГЛАВНАЯ ФУНКЦИЯ РЕНДЕРА
 // ─────────────────────────────────────────────────────────────────────────
 
@@ -860,6 +1028,9 @@ function renderPopulationOverlay() {
   // ── Диаграмма истории населения ──
   const chartHtml = buildPopHistorySection(pop, stockpile);
 
+  // ── Возрастная демография + законы труда ──
+  const ageHtml = buildAgeDemographicsSection(nation);
+
   overlay.innerHTML = `
     <div class="pop-oi">
 
@@ -898,6 +1069,9 @@ function renderPopulationOverlay() {
 
       <!-- Population history chart -->
       ${chartHtml}
+
+      <!-- Age demographics + labor laws -->
+      ${ageHtml}
 
       <!-- Classes section -->
       <div class="pop-sh">

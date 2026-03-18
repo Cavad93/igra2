@@ -3069,6 +3069,64 @@
       gap: 8px; padding: 0 16px 20px;
     }
 
+    /* ── Age Demographics Section ── */
+    .adm-section {
+      margin: 0 16px 8px;
+      background: rgba(28,22,16,.60);
+      border: 1px solid rgba(212,175,55,.14);
+      border-radius: 8px;
+      padding: 10px 12px 12px;
+    }
+    .adm-bars { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+    .adm-row  { display: flex; align-items: center; gap: 8px; }
+    .adm-lbl  { width: 90px; font-size: 10px; color: var(--text-dim); flex-shrink: 0; }
+    .adm-bar-wrap {
+      flex: 1; height: 10px; background: rgba(255,255,255,.06);
+      border-radius: 5px; overflow: hidden;
+    }
+    .adm-bar { height: 100%; border-radius: 5px; transition: width .4s; }
+    .adm-bar--child { background: linear-gradient(90deg, #64b5f6, #42a5f5); }
+    .adm-bar--adult { background: linear-gradient(90deg, #81c784, #66bb6a); }
+    .adm-bar--elder { background: linear-gradient(90deg, #ffb74d, #ffa726); }
+    .adm-val  { width: 90px; font-size: 9.5px; color: var(--text-dim); text-align: right; flex-shrink: 0; }
+
+    .adm-stats {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      background: rgba(0,0,0,.2); border-radius: 6px;
+      padding: 8px 10px; margin-bottom: 10px;
+    }
+    .adm-stat      { flex: 1 1 120px; display: flex; flex-direction: column; gap: 1px; }
+    .adm-stat-lbl  { font-size: 9px; color: var(--text-dim); letter-spacing: .3px; }
+    .adm-stat-val  { font-size: 12px; color: var(--text-light); font-weight: 600; }
+    .adm-stat-val small { font-size: 9px; font-weight: normal; color: var(--text-dim); }
+    .adm-dep--ok   { color: #81c784 !important; }
+    .adm-dep--warn { color: #ffb74d !important; }
+    .adm-dep--bad  { color: #ef9a9a !important; }
+
+    .adm-laws       { margin-top: 8px; }
+    .adm-laws-hdr   { font-size: 10px; color: var(--text-gold); letter-spacing: .5px; margin-bottom: 8px; }
+    .adm-law-group  { margin-bottom: 8px; }
+    .adm-law-grp-hdr {
+      font-size: 9.5px; color: var(--text-dim); letter-spacing: .3px;
+      margin-bottom: 4px; font-style: italic;
+    }
+    .adm-law-btns   { display: flex; flex-wrap: wrap; gap: 4px; }
+    .adm-law-btn {
+      padding: 3px 9px; font-size: 9.5px;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.12);
+      border-radius: 12px; color: var(--text-dim); cursor: pointer;
+      transition: all .18s; font-family: inherit;
+    }
+    .adm-law-btn:hover    { background: rgba(212,175,55,.15); border-color: rgba(212,175,55,.4); color: var(--text-light); }
+    .adm-law-btn.active   { background: rgba(212,175,55,.22); border-color: #d4a853; color: var(--text-gold); font-weight: 600; }
+
+    /* Semantic colors reused in adm stats */
+    .good    { color: #81c784 !important; }
+    .bad     { color: #ef9a9a !important; }
+    .dim     { color: var(--text-dim) !important; }
+    .neutral { color: var(--text-dim) !important; }
+    .warn    { color: #ffb74d !important; }
+
     /* ── Class card ── */
     .pop-card {
       background: rgba(28,22,16,.72);
@@ -3592,6 +3650,7 @@
   <script src="config.js"></script>
   <script src="data/goods.js"></script>
   <script src="data/buildings.js"></script>
+  <script src="data/laws_labor.js"></script>
   <script src="data/social_classes.js"></script>
   <script src="data/map.js"></script>
   <script src="data/nations.js"></script>
@@ -3622,6 +3681,7 @@
   <script src="engine/buildings.js"></script>
   <script src="engine/economy.js"></script>
   <script src="engine/demography.js"></script>
+  <script src="engine/age_demographics.js"></script>
   <script src="engine/government.js"></script>
   <script src="engine/dialogue.js"></script>
   <script src="engine/constitutional.js"></script>

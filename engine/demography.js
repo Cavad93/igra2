@@ -594,6 +594,13 @@ function _processDemographyForNation(nationId, nation) {
     // Занятость от зданий (+0.003 при полной занятости, до -0.005 при безработице)
     if (unempMod[prof]) rate += unempMod[prof];
 
+    // Бремя иждивенцев: высокое соотношение → небольшой штраф роста (меньше детей оставляют)
+    const _dem = nation.demographics;
+    if (_dem && _dem.dependency_ratio > 1.5) {
+      const depPenalty = Math.min(0.004, (_dem.dependency_ratio - 1.5) * 0.003);
+      rate -= depPenalty;
+    }
+
     // Ёмкость замедляет рост ближе к пределу
     // (но не применяем к убыли — она всегда работает)
     if (rate > 0) rate *= capFactor;
