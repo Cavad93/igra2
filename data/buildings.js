@@ -1,13 +1,14 @@
 // Определения зданий — демографические, экономические и производственные эффекты
 //
 // Новые поля (Этап 1):
-//   worker_profession  [{profession, count}]  — кто и сколько работает в здании
-//   wage_rate          0.0–0.35               — доля выручки, уходящая рабочим
-//   labor_type         'wage'|'tenant'|'slave'|'mixed'|'self'|'state'|'none'
-//   build_turns        int                    — сколько ходов строится
-//   terrain_restriction  [string] | null      — допустимые типы местности (null = все суша)
-//   max_per_region     int | null             — макс. экземпляров в одном регионе
-//   production_output  [{good, base_rate}]    — товары/ход на 1000 задействованных рабочих
+//   worker_profession       [{profession, count}]  — кто и сколько работает в здании
+//   wage_rate               0.0–0.35               — доля выручки, уходящая рабочим
+//   labor_type              'wage'|'tenant'|'slave'|'mixed'|'self'|'state'|'none'
+//   build_turns             int                    — сколько ходов строится
+//   terrain_restriction     [string] | null        — допустимые типы местности (null = все суша)
+//   region_tag_restriction  [string] | null        — регион должен иметь хотя бы один из этих тегов
+//   max_per_region          int | null             — макс. экземпляров в одном регионе
+//   production_output       [{good, base_rate}]    — товары/ход на 1000 задействованных рабочих
 //
 // Старые поля (backward-compat): profession_growth, capacity_bonus, mobility,
 // mortality_mod, all_growth_mod, famine_mortality_mod, famine_protection,
@@ -687,6 +688,110 @@ const BUILDINGS = {
     ],
   },
 
+  // ══════════════════════════════════════════════════════════════
+  // СИЦИЛИЙСКИЕ (УНИКАЛЬНЫЕ ПРОВИНЦИАЛЬНЫЕ)
+  // region_tag_restriction: ['sicily'] — строятся только в регионах Сицилии
+  // ══════════════════════════════════════════════════════════════
+
+  sulfur_mine: {
+    name:        'Серные рудники',
+    icon:        '🟡',
+    description: 'Подземные залежи серы у подножий Этны. Рабы и ремесленники добывают зелёный камень — основу дубильного и аптечного ремесла.',
+    cost:        700,
+    category:    'production',
+
+    worker_profession: [
+      { profession: 'craftsmen', count: 100 },
+      { profession: 'slaves',    count: 200 },
+    ],
+    wage_rate:               0.10,   // только надзиратели-ремесленники оплачиваются
+    labor_type:              'mixed',
+    build_turns:             4,
+    terrain_restriction:     ['mountains', 'hills'],
+    region_tag_restriction:  ['sicily'],
+    max_per_region:          null,
+
+    production_output: [
+      { good: 'sulfur', base_rate: 80 },
+    ],
+
+    slave_mortality_mod: 0.006,  // опасная добыча
+  },
+
+  tuna_trap: {
+    name:        'Тоня (ловушка для тунца)',
+    icon:        '🐟',
+    description: 'Лабиринт сетей для сезонной охоты на тунца. Сицилийские рыбаки ежегодно устраивают mattanza — ритуальный загон рыбы.',
+    cost:        500,
+    category:    'production',
+
+    worker_profession: [
+      { profession: 'sailors',   count: 200 },
+      { profession: 'craftsmen', count: 30 },
+    ],
+    wage_rate:               0.28,
+    labor_type:              'wage',
+    build_turns:             3,
+    terrain_restriction:     ['coastal_city'],
+    region_tag_restriction:  ['sicily'],
+    max_per_region:          1,
+
+    production_output: [
+      { good: 'tuna', base_rate: 140 },  // 140 амфор/1000 рыбаков
+    ],
+  },
+
+  grain_estate: {
+    name:        'Сицилийская пшеничная латифундия',
+    icon:        '🌾',
+    description: 'Обширное поместье на плодороднейших равнинах Леонтин и Акраганта. Сицилийская пшеница кормила весь греческий мир. Арендаторы и рабы работают на владельца.',
+    cost:        1200,
+    category:    'agriculture',
+
+    worker_profession: [
+      { profession: 'farmers', count: 900 },
+      { profession: 'slaves',  count: 300 },
+    ],
+    wage_rate:               0.28,   // аренда на сицилийских условиях
+    labor_type:              'tenant',
+    build_turns:             5,
+    terrain_restriction:     ['plains', 'river_valley'],
+    region_tag_restriction:  ['sicily'],
+    max_per_region:          null,
+
+    production_output: [
+      { good: 'wheat',  base_rate: 300 },  // исключительная урожайность
+      { good: 'barley', base_rate: 110 },
+    ],
+
+    class_happiness_bonus: {
+      farmers_class: 2,   // земледельцы ценят stabile landholding
+    },
+  },
+
+  papyrus_bed: {
+    name:        'Папирусные заросли',
+    icon:        '📜',
+    description: 'Заросли папируса вдоль реки Киана у Сиракуз — единственное место в Европе, где растёт нильский папирус. Ценнейшее писчее сырьё.',
+    cost:        400,
+    category:    'production',
+
+    worker_profession: [
+      { profession: 'farmers', count: 80 },
+      { profession: 'slaves',  count: 40 },
+    ],
+    wage_rate:               0.22,
+    labor_type:              'mixed',
+    build_turns:             3,
+    terrain_restriction:     ['river_valley', 'coastal_city'],
+    region_tag_restriction:  ['sicily'],
+    max_per_region:          1,
+
+    production_output: [
+      { good: 'papyrus', base_rate: 60 },
+    ],
+  },
+
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -735,10 +840,20 @@ function getRegionMaxSlots(terrain) {
   return TERRAIN_MAX_SLOTS[terrain] ?? TERRAIN_MAX_SLOTS.default;
 }
 
-// Список зданий, совместимых с местностью
-function getBuildingsForTerrain(terrain) {
+// Список зданий, совместимых с местностью и (опционально) тегами региона.
+// region — объект региона (необязательно), нужен для фильтрации по region_tag_restriction.
+// Здания с region_tag_restriction показываются только в регионах с подходящими тегами.
+function getBuildingsForTerrain(terrain, region = null) {
+  const regionTags = region?.tags || [];
   return Object.entries(BUILDINGS)
-    .filter(([, b]) => !b.terrain_restriction || b.terrain_restriction.includes(terrain))
+    .filter(([, b]) => {
+      if (b.terrain_restriction && !b.terrain_restriction.includes(terrain)) return false;
+      if (b.region_tag_restriction) {
+        // Скрываем провинциальные здания в регионах без нужного тега
+        if (!b.region_tag_restriction.some(t => regionTags.includes(t))) return false;
+      }
+      return true;
+    })
     .map(([id, b]) => ({ id, ...b }));
 }
 
@@ -753,6 +868,17 @@ function canBuildInRegion(buildingId, region) {
   // Ограничение по местности
   if (b.terrain_restriction && !b.terrain_restriction.includes(terrain)) {
     return { ok: false, reason: `Не подходит для типа местности «${terrain}»` };
+  }
+
+  // Ограничение по тегу региона (например, только Сицилия)
+  if (b.region_tag_restriction) {
+    const regionTags = region.tags || [];
+    const hasRequiredTag = b.region_tag_restriction.some(t => regionTags.includes(t));
+    if (!hasRequiredTag) {
+      const tagNames = { sicily: 'Сицилия' };
+      const readable = b.region_tag_restriction.map(t => tagNames[t] || t).join(', ');
+      return { ok: false, reason: `Строится только в провинции: ${readable}` };
+    }
   }
 
   // Ограничение на уникальность в регионе

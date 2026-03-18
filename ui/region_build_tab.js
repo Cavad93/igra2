@@ -154,7 +154,7 @@ function _rbtEmptyCard(regionId) {
 
 function _rbtBuildingChooser(regionId, region, terrain, nation) {
   const compatible = (typeof getBuildingsForTerrain === 'function')
-    ? getBuildingsForTerrain(terrain)
+    ? getBuildingsForTerrain(terrain, region)
     : [];
 
   if (!compatible.length) {

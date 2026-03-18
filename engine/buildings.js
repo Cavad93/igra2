@@ -29,10 +29,10 @@ function _slotTotalWorkers(slot) {
 function _terrainGoodBonus(terrain, good) {
   const TABLE = {
     plains:       { wheat: 1.15, barley: 1.10, wool:   1.10 },
-    hills:        { wine:  1.20, olive_oil: 1.15, iron: 1.10 },
-    river_valley: { wheat: 1.25, barley: 1.15, cloth: 1.15, pottery: 1.10 },
-    mountains:    { iron:  1.20, bronze: 1.15, timber: 1.10 },
-    coastal_city: { fish:  1.20, salt:   1.20, trade_goods: 1.15 },
+    hills:        { wine:  1.20, olive_oil: 1.15, iron: 1.10, sulfur: 1.15 },
+    river_valley: { wheat: 1.25, barley: 1.15, cloth: 1.15, pottery: 1.10, papyrus: 1.20 },
+    mountains:    { iron:  1.20, bronze: 1.15, timber: 1.10, sulfur: 1.30 },  // Этна — богатейшие залежи
+    coastal_city: { fish:  1.20, salt:   1.20, trade_goods: 1.15, tuna: 1.25 },
   };
   return TABLE[terrain]?.[good] ?? 1.0;
 }
