@@ -38,7 +38,7 @@ async function processTurn() {
     //    Внутри: Step0=POP→eff, Step1=Производство, Step2=Потребление,
     //            Step3=Финансы зданий, Step4=Зарплаты→Богатство,
     //            Step5=Рынок, Step6=События
-    runEconomyTick();
+    try { runEconomyTick(); } catch (e) { console.error('[economy]', e); }
 
     // 1.1. Запись истории экономики (для вкладки «Экономический обзор»)
     if (typeof recordEconomyHistory === 'function') {
@@ -46,36 +46,42 @@ async function processTurn() {
     }
 
     // 1.5. Правительство (детерминировано)
-    processAllGovernmentTicks();
+    try { processAllGovernmentTicks(); } catch (e) { console.error('[government]', e); }
 
     // 1.6. Конституционный движок — тирания, гражданская война
-    CONSTITUTIONAL_ENGINE.tick(GAME_STATE.player_nation);
+    try { CONSTITUTIONAL_ENGINE.tick(GAME_STATE.player_nation); } catch (e) { console.error('[constitutional]', e); }
 
     // 1.7. Движок заговоров — инкубация, вербовка, Час Икс (для всех наций)
     for (const _conspNationId of Object.keys(GAME_STATE.nations)) {
-      await CONSPIRACY_ENGINE.tick(_conspNationId);
+      try { await CONSPIRACY_ENGINE.tick(_conspNationId); } catch (e) { console.warn('[conspiracy]', _conspNationId, e); }
     }
 
     // 1.8. Культура — опыт, мутации, ассимиляция
-    if (typeof cultureTick === 'function') cultureTick();
+    if (typeof cultureTick === 'function') {
+      try { cultureTick(); } catch (e) { console.warn('[culture]', e); }
+    }
 
     // 1.9. Религия — распространение, синкретизм, кризисы
-    if (typeof religionTick === 'function') religionTick();
+    if (typeof religionTick === 'function') {
+      try { religionTick(); } catch (e) { console.warn('[religion]', e); }
+    }
 
     // 2. Население (детерминировано)
     // processDemography обновляет by_profession + total для всех наций
-    if (typeof processDemography === 'function') {
-      processDemography();
-    } else {
-      updatePopulationGrowth(); // fallback
-    }
+    try {
+      if (typeof processDemography === 'function') {
+        processDemography();
+      } else {
+        updatePopulationGrowth(); // fallback
+      }
+    } catch (e) { console.error('[demography]', e); }
 
     // 2.2. Возрастная демография — когорты, рабочая сила, законы труда
     if (typeof processAgeDemographics === 'function') {
       try { processAgeDemographics(); } catch (e) { console.warn('[age_demographics]', e); }
     }
 
-    updateHappiness();
+    try { updateHappiness(); } catch (e) { console.error('[happiness]', e); }
 
     // 2.5. Записываем историю населения (после обновления class_satisfaction)
     if (typeof recordPopulationHistory === 'function') {
@@ -83,42 +89,44 @@ async function processTurn() {
     }
 
     // 3. Персонажи — старение (детерминировано)
-    agingCharacters();
-    checkCharacterDeaths();
-    maybeSpawnCharacter();
+    try { agingCharacters(); }     catch (e) { console.warn('[aging]', e); }
+    try { checkCharacterDeaths(); } catch (e) { console.warn('[deaths]', e); }
+    try { maybeSpawnCharacter(); }  catch (e) { console.warn('[spawn]', e); }
 
     // 3.5–3.6. Диалоговый движок — сжимаем горячую память для ВСЕХ наций
     for (const nId of Object.keys(GAME_STATE.nations ?? {})) {
-      // nation.characters (советники, генералы, жрецы, купцы...)
-      await DIALOGUE_ENGINE.tick(nId);
-      // Сенаторы и члены советов (хранятся вне nation.characters)
-      const _mgr = getSenateManager(nId);
-      if (_mgr) {
-        for (const sen of (_mgr.senators ?? [])) {
-          if (sen.dialogue?.hot_memory?.length) await DIALOGUE_ENGINE.compressDirect(sen);
+      try {
+        // nation.characters (советники, генералы, жрецы, купцы...)
+        await DIALOGUE_ENGINE.tick(nId);
+        // Сенаторы и члены советов (хранятся вне nation.characters)
+        const _mgr = getSenateManager(nId);
+        if (_mgr) {
+          for (const sen of (_mgr.senators ?? [])) {
+            if (sen.dialogue?.hot_memory?.length) await DIALOGUE_ENGINE.compressDirect(sen);
+          }
         }
-      }
+      } catch (e) { console.warn('[dialogue]', nId, e); }
     }
 
     // 4. AI нации — решения (Claude, параллельно)
-    await processAINations();
+    try { await processAINations(); } catch (e) { console.warn('[ai_nations]', e); }
 
     // 5. Случайные события (10% шанс)
     if (Math.random() < CONFIG.RANDOM_EVENT_CHANCE) {
-      triggerRandomEvent();
+      try { triggerRandomEvent(); } catch (e) { console.warn('[random_event]', e); }
     }
 
     // 5.5. Автономное поведение персонажей (fire-and-forget)
     processCharacterAutonomy(GAME_STATE.player_nation).catch(console.warn);
 
     // 5.6. Условия победы / поражения
-    checkVictoryConditions();
+    try { checkVictoryConditions(); } catch (e) { console.warn('[victory]', e); }
 
     // 6. Обновляем дату
     advanceDate();
 
     // 6.5. Итоги хода
-    _recordTurnSummary();
+    try { _recordTurnSummary(); } catch (e) { console.warn('[summary]', e); }
 
     // 7. Автосохранение
     saveGame();
@@ -129,6 +137,9 @@ async function processTurn() {
   } catch (err) {
     console.error('Ошибка в processTurn:', err);
     addEventLog('Ошибка при обработке хода. Проверьте консоль.', 'danger');
+    // Гарантируем продвижение хода даже при критической ошибке
+    try { advanceDate(); } catch (_) {}
+    try { renderAll(); }   catch (_) {}
   } finally {
     IS_PROCESSING_TURN = false;
     if (btn) {
