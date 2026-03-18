@@ -172,73 +172,40 @@ ${existingCharacters.map(c => c.name).join(', ')}
   // ──────────────────────────────────────────────────────────
   parseGovernment: (playerInput, currentGov, charsSummary) => ({
     system: `Ты — парсер системы правления для исторической стратегии 301 BC.
-Получаешь описание изменений в правительстве и возвращаешь ТОЛЬКО JSON дельту изменений.
-Никакого текста кроме JSON. Никаких пояснений. Никакого markdown.
+Получаешь описание изменений и возвращаешь ТОЛЬКО JSON дельту — только изменяемые поля.
+НИКАКОГО текста вне JSON. Никаких пояснений. Никакого markdown. Никаких комментариев.
 
-ТЕКУЩИЕ ТИПЫ ПРАВЛЕНИЯ: republic, monarchy, tyranny, oligarchy, tribal, theocracy, custom
+ТИПЫ: republic, monarchy, tyranny, oligarchy, tribal, theocracy, custom
 РЕСУРСЫ ВЛАСТИ: fear, legitimacy, prestige, divine_mandate, wealth, military_loyalty
-МЕТОДЫ РЕШЕНИЙ: majority_vote, unanimous, weighted_by_wealth, single_person, lottery
+МЕТОДЫ ГОЛОСОВАНИЯ: majority_vote, unanimous, weighted_by_wealth, single_person, lottery
 
-СХЕМА ДЕЛЬТЫ (возвращай только изменяемые поля):
+СХЕМА (включай ТОЛЬКО нужные поля):
 {
-  "type": "republic|monarchy|tyranny|...",
-  "custom_name": "название если custom",
-  "legitimacy": 0-100,
-  "stability": 0-100,
-  "ruler": {
-    "type": "person|council|deity_proxy",
-    "name": "имя",
-    "character_ids": ["CHAR_XXXX"],
-    "personal_power": 0-100
-  },
-  "power_resource": {
-    "type": "fear|legitimacy|prestige|...",
-    "current": 0-100
-  },
+  "type": "republic",
+  "legitimacy": 55,
+  "stability": 45,
+  "ruler": {"type": "council", "name": "Сенат", "personal_power": 30},
+  "power_resource": {"type": "legitimacy", "current": 55},
   "institutions": [
-    {
-      "id": "уникальный_id",
-      "name": "название",
-      "type": "legislative|executive|military|judicial|religious",
-      "decision_method": "majority_vote|...",
-      "powers": ["список полномочий"],
-      "limitations": ["ограничения"],
-      "factions": [
-        {"id": "f1", "name": "название", "seats": 100, "wants": ["want1"], "color": "#4CAF50"}
-      ]
-    }
+    {"id": "senate", "name": "Сенат", "type": "legislative", "decision_method": "majority_vote", "powers": ["законодательство"], "limitations": ["нет вето тирана"]}
   ],
-  "elections": {
-    "enabled": true,
-    "frequency_turns": 12,
-    "next_election": 8
-  },
-  "succession": {
-    "tracked": true,
-    "heir_character_id": null,
-    "crisis_if_no_heir": true
-  },
-  "conspiracies": {
-    "base_chance": 0.15,
-    "secret_police": {"enabled": false, "cost": 200}
-  },
-  "custom_mechanics": [
-    {"id": "mechanic_id", "name": "название", "description": "описание", "active": true}
-  ],
+  "elections": {"enabled": true, "frequency_turns": 12, "next_election": 12},
+  "succession": {"tracked": false},
   "_instant_change": false
-}`,
+}
 
-    user: `ЗАПРОС ИГРОКА: "${playerInput}"
+ПРАВИЛА:
+- institutions: НЕ включай factions — только id, name, type, decision_method, powers (макс 2), limitations (макс 2)
+- Для смены типа правления меняй type, ruler, power_resource, elections, institutions
+- Для мелкой реформы меняй только 1-2 поля`,
 
-ТЕКУЩЕЕ ПРАВИТЕЛЬСТВО:
-${JSON.stringify(currentGov, null, 2)}
+    user: `ЗАПРОС: "${playerInput}"
 
-ПЕРСОНАЖИ ДВОРА:
-${JSON.stringify(charsSummary, null, 2)}
+ТЕКУЩЕЕ ПРАВИТЕЛЬСТВО: тип=${currentGov.type}, легитимность=${currentGov.legitimacy}, стабильность=${currentGov.stability ?? 50}, правитель=${currentGov.ruler?.name ?? '?'}
 
-Верни JSON дельту изменений (только те поля, которые нужно изменить).
-Если игрок меняет тип правления — установи _instant_change: false (нужен переходный период).
-Если это мелкая реформа — меняй только нужные поля.`,
+ПЕРСОНАЖИ: ${charsSummary.map(c => `${c.name}(${c.role})`).join(', ')}
+
+Верни минимальную JSON дельту.`,
   }),
 
   // ──────────────────────────────────────────────────────────

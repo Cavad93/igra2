@@ -551,7 +551,7 @@ async function parseGovernmentDescription(playerInput) {
 
   let raw;
   try {
-    raw = await callClaude(system, user, 1200, CONFIG.MODEL_SONNET);
+    raw = await callClaude(system, user, 2000, CONFIG.MODEL_SONNET);
   } catch (err) {
     console.warn('parseGovernmentDescription API error:', err);
     throw new Error('Не удалось связаться с AI. Проверьте API ключ.');
