@@ -116,12 +116,12 @@ function renderGovHeader(gov) {
         <div class="gov-metric">
           <span class="gov-metric-label">Легитимность</span>
           <div class="bar-container"><div class="bar-fill" style="width:${gov.legitimacy}%;background:${legColor}"></div></div>
-          <span class="gov-metric-val" style="color:${legColor}">${gov.legitimacy}%</span>
+          <span class="gov-metric-val" style="color:${legColor}">${+gov.legitimacy.toFixed(2)}%</span>
         </div>
         <div class="gov-metric">
           <span class="gov-metric-label">Стабильность</span>
           <div class="bar-container"><div class="bar-fill" style="width:${gov.stability ?? 50}%;background:${stabColor}"></div></div>
-          <span class="gov-metric-val" style="color:${stabColor}">${gov.stability ?? 50}%</span>
+          <span class="gov-metric-val" style="color:${stabColor}">${+(gov.stability ?? 50).toFixed(2)}%</span>
         </div>
       </div>
     </div>
