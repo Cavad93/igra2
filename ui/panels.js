@@ -601,27 +601,112 @@ function openReligionWindow(nationId) {
   _rwState.stats = typeof getNationReligionStats === 'function'
     ? getNationReligionStats(nationId) : null;
 
+  // Гарантируем инициализацию religion_policy
+  _rwEnsurePolicy(nationId);
+
   const overlay = document.createElement('div');
   overlay.className = 'culture-window-overlay';
   overlay.id = 'religion-window-overlay';
-  overlay.onclick = function(e) { if (e.target === overlay) closeReligionWindow(); };
+
+  // Делегирование событий — один обработчик на overlay, не теряется при innerHTML
+  overlay.addEventListener('click', _rwDelegatedClick);
+  overlay.addEventListener('mouseover', _rwDelegatedHover);
+  overlay.addEventListener('mouseout', _rwDelegatedHoverOut);
+
   overlay.innerHTML = _buildReligionWindowHtml();
   document.body.appendChild(overlay);
-  _rwBindEvents();
+}
+
+function _rwEnsurePolicy(nationId) {
+  if (!GAME_STATE.religion_policy) GAME_STATE.religion_policy = {};
+  if (!GAME_STATE.religion_policy[nationId]) {
+    GAME_STATE.religion_policy[nationId] = { patronage: null, persecution: null };
+  }
 }
 
 function closeReligionWindow() {
   const el = document.getElementById('religion-window-overlay');
-  if (el) el.remove();
+  if (el) {
+    el.removeEventListener('click', _rwDelegatedClick);
+    el.removeEventListener('mouseover', _rwDelegatedHover);
+    el.removeEventListener('mouseout', _rwDelegatedHoverOut);
+    el.remove();
+  }
   _rwState.stats = null;
 }
 
-function _rwSetSort(mode) {
-  _rwState.sort = mode;
+function _rwRefresh() {
+  _rwState.stats = typeof getNationReligionStats === 'function'
+    ? getNationReligionStats(_rwState.nationId) : null;
   const overlay = document.getElementById('religion-window-overlay');
-  if (!overlay) return;
-  overlay.innerHTML = _buildReligionWindowHtml();
-  _rwBindEvents();
+  if (overlay) overlay.innerHTML = _buildReligionWindowHtml();
+}
+
+// ── Делегирование кликов ─────────────────────────────────────────────────
+
+function _rwDelegatedClick(e) {
+  // Закрытие по клику на оверлей (фон)
+  if (e.target === e.currentTarget) { closeReligionWindow(); return; }
+
+  // Кнопка закрытия
+  const closeBtn = e.target.closest('.cw-close');
+  if (closeBtn) { closeReligionWindow(); return; }
+
+  // Кнопки сортировки
+  const sortBtn = e.target.closest('.rw-sort-btn');
+  if (sortBtn) {
+    _rwState.sort = sortBtn.dataset.sort;
+    _rwRefresh();
+    return;
+  }
+
+  // Кнопки политики (покровительство / гонения / очистка)
+  const policyBtn = e.target.closest('[data-action]');
+  if (policyBtn) {
+    e.stopPropagation();
+    const action = policyBtn.dataset.action;
+    const relId = policyBtn.dataset.religion || null;
+    const nationId = _rwState.nationId;
+
+    _rwEnsurePolicy(nationId);
+    const policy = GAME_STATE.religion_policy[nationId];
+
+    try {
+      if (action === 'patronage') {
+        // Toggle: если уже покровительствуем этой же — отменяем
+        const newVal = (policy.patronage === relId) ? null : relId;
+        setReligionPatronage(nationId, newVal);
+      } else if (action === 'persecute') {
+        const newVal = (policy.persecution === relId) ? null : relId;
+        setReligionPersecution(nationId, newVal);
+      } else if (action === 'clear-patronage') {
+        setReligionPatronage(nationId, null);
+      } else if (action === 'clear-persecution') {
+        setReligionPersecution(nationId, null);
+      }
+    } catch (err) {
+      console.error('[Religion policy] Error:', err);
+    }
+
+    _rwRefresh();
+    return;
+  }
+}
+
+// ── Делегирование hover ──────────────────────────────────────────────────
+
+function _rwDelegatedHover(e) {
+  const legendItem = e.target.closest('.rw-legend-item');
+  if (legendItem) { _rwHighlight(legendItem.dataset.religion); return; }
+
+  const donutSeg = e.target.closest('.rw-donut-seg');
+  if (donutSeg) { _rwHighlight(donutSeg.dataset.religion); return; }
+}
+
+function _rwDelegatedHoverOut(e) {
+  const legendItem = e.target.closest('.rw-legend-item');
+  const donutSeg = e.target.closest('.rw-donut-seg');
+  if (legendItem || donutSeg) { _rwHighlight(null); }
 }
 
 function _rwHighlight(religionId) {
@@ -642,35 +727,6 @@ function _rwHighlight(religionId) {
     } else {
       el.style.opacity = '1';
     }
-  });
-}
-
-function _rwBindEvents() {
-  document.querySelectorAll('.rw-legend-item').forEach(el => {
-    el.addEventListener('mouseenter', () => _rwHighlight(el.dataset.religion));
-    el.addEventListener('mouseleave', () => _rwHighlight(null));
-  });
-  document.querySelectorAll('.rw-donut-seg').forEach(el => {
-    el.addEventListener('mouseenter', () => _rwHighlight(el.dataset.religion));
-    el.addEventListener('mouseleave', () => _rwHighlight(null));
-  });
-  document.querySelectorAll('.rw-sort-btn').forEach(btn => {
-    btn.addEventListener('click', () => _rwSetSort(btn.dataset.sort));
-  });
-  // Policy buttons
-  document.querySelectorAll('.rw-policy-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const action = btn.dataset.action;
-      const relId = btn.dataset.religion;
-      if (action === 'patronage') setReligionPatronage(_rwState.nationId, relId);
-      else if (action === 'persecute') setReligionPersecution(_rwState.nationId, relId);
-      else if (action === 'clear-patronage') setReligionPatronage(_rwState.nationId, null);
-      else if (action === 'clear-persecution') setReligionPersecution(_rwState.nationId, null);
-      // Refresh
-      _rwState.stats = getNationReligionStats(_rwState.nationId);
-      const overlay = document.getElementById('religion-window-overlay');
-      if (overlay) { overlay.innerHTML = _buildReligionWindowHtml(); _rwBindEvents(); }
-    });
   });
 }
 
@@ -795,7 +851,7 @@ function _buildReligionWindowHtml() {
             <div class="cw-header-title">${nationName}</div>
             <div class="cw-header-sub">Религиозный состав · ${stats.religions.length} ${_cwPlural(stats.religions.length, 'религия', 'религии', 'религий')}</div>
           </div>
-          <button class="cw-close" onclick="closeReligionWindow()">✕</button>
+          <button class="cw-close">✕</button>
         </div>
         <div class="cw-body">
           <div class="cw-left">
@@ -818,7 +874,7 @@ function _buildReligionWindowHtml() {
       <div class="culture-window">
         <div class="cw-header">
           <div class="cw-header-title">Религия</div>
-          <button class="cw-close" onclick="closeReligionWindow()">✕</button>
+          <button class="cw-close">✕</button>
         </div>
         <div class="cw-body" style="padding:20px">
           <div class="no-data">Ошибка: ${e.message}</div>

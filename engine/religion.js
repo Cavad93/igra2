@@ -87,6 +87,14 @@ function religionTick() {
   initReligions();
   initRegionReligions();
 
+  // Гарантируем инициализацию religion_policy для всех наций
+  if (!GAME_STATE.religion_policy) GAME_STATE.religion_policy = {};
+  for (const nationId of Object.keys(GAME_STATE.nations)) {
+    if (!GAME_STATE.religion_policy[nationId]) {
+      GAME_STATE.religion_policy[nationId] = { patronage: null, persecution: null };
+    }
+  }
+
   const turn = GAME_STATE.turn || 0;
 
   // Каждый ход
