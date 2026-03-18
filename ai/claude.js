@@ -2,6 +2,46 @@
 // Каждый вызов получает полный снимок нужной части GameState
 
 // ──────────────────────────────────────────────────────────────
+// УТИЛИТА: НАДЁЖНЫЙ ПАРСИНГ JSON ИЗ ОТВЕТА МОДЕЛИ
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Извлекает и парсит первый JSON-объект или массив из строки ответа модели.
+ * Устойчив к markdown-обёрткам (```json...```) и хвостовым запятым.
+ */
+function extractJSON(raw) {
+  let s = raw ?? '';
+
+  // 1. Убираем markdown-блок кода, если есть
+  const fenceMatch = s.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenceMatch) s = fenceMatch[1];
+
+  // 2. Ищем первый { или [ и соответствующий закрывающий символ
+  const firstBrace   = s.indexOf('{');
+  const firstBracket = s.indexOf('[');
+  let start, open, close;
+
+  if (firstBrace === -1 && firstBracket === -1) throw new Error('JSON не найден в ответе AI');
+
+  if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+    start = firstBrace; open = '{'; close = '}';
+  } else {
+    start = firstBracket; open = '['; close = ']';
+  }
+
+  // Ищем последний соответствующий закрывающий символ
+  const end = s.lastIndexOf(close);
+  if (end <= start) throw new Error('Незакрытый JSON в ответе AI');
+
+  let candidate = s.slice(start, end + 1);
+
+  // 3. Убираем хвостовые запятые (,} и ,])
+  candidate = candidate.replace(/,\s*([\]}])/g, '$1');
+
+  return JSON.parse(candidate);
+}
+
+// ──────────────────────────────────────────────────────────────
 // БАЗОВАЯ ФУНКЦИЯ ВЫЗОВА API
 // ──────────────────────────────────────────────────────────────
 
@@ -401,9 +441,7 @@ async function generateConspiracyManifestViaLLM(ctx) {
   try {
     const { system, user } = PROMPTS.conspiracyManifest(ctx);
     const raw = await callClaude(system, user, 350, CONFIG.MODEL_HAIKU);
-    const match = raw.match(/\{[\s\S]*\}/);
-    if (!match) return null;
-    return JSON.parse(match[0]);
+    return extractJSON(raw);
   } catch (err) {
     console.warn('conspiracyManifest LLM error:', err.message);
     // Детерминированный fallback
@@ -442,10 +480,7 @@ async function materializeSenatorViaLLM(senator, context, reason) {
   const { system, user } = PROMPTS.materializeSenator(senator, context, reason);
   const raw = await callClaude(system, user, 250, CONFIG.MODEL_HAIKU);
 
-  const match = raw.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('materializeSenator: no JSON in response');
-
-  const data = JSON.parse(match[0]);
+  const data = extractJSON(raw);
   if (!data.name || !Array.isArray(data.traits)) throw new Error('materializeSenator: missing fields');
 
   data.influence = Math.max(10, Math.min(100, Number(data.influence) || 50));
@@ -475,13 +510,11 @@ async function parseGovernmentDescription(playerInput) {
   }
 
   // Извлекаем JSON из ответа
-  const jsonMatch = raw.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('AI не вернул корректный JSON');
-
   try {
-    return JSON.parse(jsonMatch[0]);
-  } catch {
-    throw new Error('Ошибка разбора ответа AI');
+    return extractJSON(raw);
+  } catch (e) {
+    console.warn('parseGovernmentDescription parse error. Raw response:', raw);
+    throw new Error(`Ошибка разбора ответа AI: ${e.message}`);
   }
 }
 
@@ -508,11 +541,9 @@ async function getGovernmentChangeReactions(fromType, toType) {
     }));
   }
 
-  const jsonMatch = raw.match(/\[[\s\S]*\]/);
-  if (!jsonMatch) return [];
-
+  let reactions;
   try {
-    const reactions = JSON.parse(jsonMatch[0]);
+    reactions = extractJSON(raw);
     // Применяем loyalty_delta
     for (const r of reactions) {
       const char = characters.find(c => c.id === r.character_id);
@@ -577,11 +608,9 @@ async function simulateInstitutionVote(proposalText, institutionId, calculatedEf
     return { ...voteResult, key_speeches: [], amendments_proposed: [], unexpected_events: [] };
   }
 
-  const jsonMatch = raw.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) return { ...voteResult, key_speeches: [], amendments_proposed: [], unexpected_events: [] };
-
+  let claudeResult;
   try {
-    const claudeResult = JSON.parse(jsonMatch[0]);
+    claudeResult = extractJSON(raw);
     // Код'овые голоса — приоритет над Claude для чисел
     return {
       ...voteResult,
@@ -606,9 +635,7 @@ async function generateSenateDebateViaLLM(law, speakers, playerSpeech, senateCtx
   try {
     const { system, user } = PROMPTS.senateDebate(law, speakers, playerSpeech, senateCtx ?? {});
     const raw = await callClaude(system, user, 900, CONFIG.MODEL_HAIKU);
-    const match = raw.match(/\{[\s\S]*\}/);
-    if (!match) return null;
-    const parsed = JSON.parse(match[0]);
+    const parsed = extractJSON(raw);
     // Базовая валидация
     if (!Array.isArray(parsed.speaker_lines)) return null;
     return parsed;
@@ -632,9 +659,7 @@ async function analyzeLawEffectsViaLLM(law, nationId) {
     const arch = nation?.senate_config?.state_architecture ?? null;
     const { system, user } = PROMPTS.analyzeLawEffects(law, nation, arch);
     const raw = await callClaude(system, user, 600, CONFIG.MODEL_HAIKU);
-    const match = raw.match(/\{[\s\S]*\}/);
-    if (!match) return null;
-    const parsed = JSON.parse(match[0]);
+    const parsed = extractJSON(raw);
     if (!Array.isArray(parsed.changes)) return null;
     return parsed;
   } catch (err) {
