@@ -499,11 +499,13 @@ function renderRegionCultureBlock(regionId, totalPop) {
 // ──────────────────────────────────────────────────────────────
 
 function showRegionInfo(regionId) {
+  console.log('[showRegionInfo] regionId:', regionId);
   const panel = document.getElementById('region-info');
-  if (!panel) return;
+  if (!panel) { console.warn('[showRegionInfo] panel not found'); return; }
 
   const mapData = MAP_REGIONS[regionId];
   const gameData = GAME_STATE.regions[regionId];
+  console.log('[showRegionInfo] mapData:', !!mapData, 'gameData:', !!gameData);
   if (!mapData || !gameData) return;
 
   try {
