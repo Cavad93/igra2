@@ -329,11 +329,14 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   const bldBonuses = getBuildingBonuses(nationId);
 
   // ── УРОВНИ ФИНАНСИРОВАНИЯ РАСХОДОВ (0.5..1.5) ──────────────
-  const expLevels = economy.expense_levels || {};
-  const armyLvl   = Math.max(0.5, Math.min(1.5, expLevels.army      ?? 1.0));
-  const navyLvl   = Math.max(0.5, Math.min(1.5, expLevels.navy      ?? 1.0));
-  const courtLvl  = Math.max(0.5, Math.min(1.5, expLevels.court     ?? 1.0));
-  const stabilLvl = Math.max(0.5, Math.min(1.5, expLevels.stability ?? 1.0));
+  const expLevels    = economy.expense_levels || {};
+  const armyLvl      = Math.max(0.5, Math.min(1.5, expLevels.army       ?? 1.0));
+  const navyLvl      = Math.max(0.5, Math.min(1.5, expLevels.navy       ?? 1.0));
+  const courtLvl     = Math.max(0.5, Math.min(1.5, expLevels.court      ?? 1.0));
+  const stabilLvl    = Math.max(0.5, Math.min(1.5, expLevels.stability  ?? 1.0));
+  const fortressLvl  = Math.max(0.5, Math.min(1.5, expLevels.fortresses ?? 1.0));
+  const buildingsLvl = Math.max(0.5, Math.min(1.5, expLevels.buildings  ?? 1.0));
+  const slavesLvl    = Math.max(0.5, Math.min(1.5, expLevels.slaves     ?? 1.0));
 
   // ── ДОХОДЫ: НАЛОГИ ─────────────────────────────────────────
   // Единая механика для всех наций: tax_rates_by_class × wealth_level.
@@ -384,9 +387,10 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     );
   }
 
-  // Флот влияет на торговую прибыль пропорционально уровню финансирования
+  // Флот влияет на торговую прибыль; здания — на портовые пошлины
   const effTradeProfit = Math.round(tradeProfit * navyLvl);
-  const totalIncome = taxIncomeTotal + portDuties + effTradeProfit;
+  const effPortDuties  = Math.round(portDuties  * buildingsLvl);
+  const totalIncome = taxIncomeTotal + effPortDuties + effTradeProfit;
 
   // ── РАСХОДЫ: АРМИЯ ─────────────────────────────────────────
   const expArmyInfantry    = (military.infantry    || 0) * CONFIG.BALANCE.INFANTRY_UPKEEP;
@@ -447,17 +451,20 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   const expSlaves = (prof.slaves || 0) * CONFIG.BALANCE.SLAVE_UPKEEP;
 
   // ── ПРИМЕНЯЕМ УРОВНИ ФИНАНСИРОВАНИЯ ────────────────────────
-  const effArmyInf     = Math.round(expArmyInfantry    * armyLvl);
-  const effArmyCav     = Math.round(expArmyCavalry     * armyLvl);
-  const effArmyMerc    = Math.round(expArmyMercenaries * armyLvl);
-  const effNavyExp     = Math.round(expNavy             * navyLvl);
-  const effCourtExp    = Math.round(expCourt            * courtLvl);
-  const effAdvisorsExp = Math.round(expAdvisors         * courtLvl);
-  const effStabExp     = Math.round(expStability        * stabilLvl);
+  const effArmyInf      = Math.round(expArmyInfantry    * armyLvl);
+  const effArmyCav      = Math.round(expArmyCavalry     * armyLvl);
+  const effArmyMerc     = Math.round(expArmyMercenaries * armyLvl);
+  const effNavyExp      = Math.round(expNavy             * navyLvl);
+  const effCourtExp     = Math.round(expCourt            * courtLvl);
+  const effAdvisorsExp  = Math.round(expAdvisors         * courtLvl);
+  const effStabExp      = Math.round(expStability        * stabilLvl);
+  const effFortresses   = Math.round(expFortresses       * fortressLvl);
+  const effBuildings    = Math.round(expBuildings        * buildingsLvl);
+  const effSlaves       = Math.round(expSlaves           * slavesLvl);
 
   const totalExpense = effArmyInf + effArmyCav + effArmyMerc
                      + effNavyExp + effCourtExp + effAdvisorsExp + effStabExp
-                     + expFortresses + expBuildings + expSlaves;
+                     + effFortresses + effBuildings + effSlaves;
 
   // ── ОБНОВЛЯЕМ КАЗНУ ────────────────────────────────────────
   const delta = totalIncome - totalExpense;
@@ -503,6 +510,23 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     applyDelta(`nations.${nationId}.government.legitimacy`,
       Math.max(0, Math.min(100, (gov?.legitimacy ?? 50) + legDelta)));
   }
+  // Крепости: содержание гарнизона влияет на стабильность
+  economy._fortress_defense_mult = fortressLvl;
+  if (expFortresses > 0 && Math.abs(fortressLvl - 1.0) > 0.01) {
+    const stabDelta = parseFloat(((fortressLvl - 1.0) * 2.0).toFixed(2));
+    const currentStab = nation.government?.stability ?? 50;
+    if (stabDelta > 0 || currentStab > 0) {
+      applyDelta(`nations.${nationId}.government.stability`,
+        Math.max(0, Math.min(100, parseFloat((currentStab + stabDelta).toFixed(2)))));
+    }
+  }
+  // Рабы: условия содержания влияют на счастье населения
+  economy._slave_condition = slavesLvl;
+  if ((prof.slaves || 0) > 0 && Math.abs(slavesLvl - 1.0) > 0.01) {
+    const happDelta = parseFloat(((slavesLvl - 1.0) * 8).toFixed(1));
+    applyDelta(`nations.${nationId}.population.happiness`,
+      Math.max(0, Math.min(100, (nation.population.happiness ?? 50) + happDelta)));
+  }
 
   // ── КЭШ РАЗБИВКИ ДЛЯ UI ────────────────────────────────────
   applyDelta(`nations.${nationId}.economy._income_breakdown`, {
@@ -511,28 +535,34 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     tax_commoners:   taxByClass.commoners,
     tax_soldiers:    taxByClass.soldiers,
     trade_profit:    Math.round(effTradeProfit),
-    port_duties:     portDuties,
+    port_duties:     Math.round(effPortDuties),
     total:           Math.round(totalIncome),
   });
   applyDelta(`nations.${nationId}.economy._expense_breakdown`, {
-    army_infantry:    effArmyInf,
-    army_cavalry:     effArmyCav,
-    army_mercenaries: effArmyMerc,
-    army_base:        Math.round(expArmyInfantry + expArmyCavalry + expArmyMercenaries),
-    army_level:       armyLvl,
-    navy:             effNavyExp,
-    navy_base:        expNavy,
-    navy_level:       navyLvl,
-    court:            effCourtExp,
-    advisors:         effAdvisorsExp,
-    court_base:       expCourt + expAdvisors,
-    court_level:      courtLvl,
-    stability:        effStabExp,
-    stability_base:   expStability,
-    stability_level:  stabilLvl,
-    fortresses:       expFortresses,
-    buildings:        expBuildings,
-    slaves:           expSlaves,
+    army_infantry:     effArmyInf,
+    army_cavalry:      effArmyCav,
+    army_mercenaries:  effArmyMerc,
+    army_base:         Math.round(expArmyInfantry + expArmyCavalry + expArmyMercenaries),
+    army_level:        armyLvl,
+    navy:              effNavyExp,
+    navy_base:         expNavy,
+    navy_level:        navyLvl,
+    court:             effCourtExp,
+    advisors:          effAdvisorsExp,
+    court_base:        expCourt + expAdvisors,
+    court_level:       courtLvl,
+    stability:         effStabExp,
+    stability_base:    expStability,
+    stability_level:   stabilLvl,
+    fortresses:        effFortresses,
+    fortresses_base:   expFortresses,
+    fortresses_level:  fortressLvl,
+    buildings:         effBuildings,
+    buildings_base:    expBuildings,
+    buildings_level:   buildingsLvl,
+    slaves:            effSlaves,
+    slaves_base:       expSlaves,
+    slaves_level:      slavesLvl,
     total:            totalExpense,
   });
 

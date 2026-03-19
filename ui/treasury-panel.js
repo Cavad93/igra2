@@ -25,10 +25,13 @@ function showTreasuryOverlay() {
 
   const lvls = nation.economy.expense_levels || {};
   _tpExpLevels = {
-    army:      lvls.army      ?? 1.0,
-    navy:      lvls.navy      ?? 1.0,
-    court:     lvls.court     ?? 1.0,
-    stability: lvls.stability ?? 1.0,
+    army:       lvls.army       ?? 1.0,
+    navy:       lvls.navy       ?? 1.0,
+    court:      lvls.court      ?? 1.0,
+    stability:  lvls.stability  ?? 1.0,
+    fortresses: lvls.fortresses ?? 1.0,
+    buildings:  lvls.buildings  ?? 1.0,
+    slaves:     lvls.slaves     ?? 1.0,
   };
   _tpDirty = false;
 
@@ -267,6 +270,12 @@ function _tpExpSliderRow(category, icon, name, effectsFn) {
   } else if (category === 'stability') {
     const stab = gov?.stability ?? 50;
     baseCost = exp.stability_base ?? Math.round(200 * (1 - stab / 100));
+  } else if (category === 'fortresses') {
+    baseCost = exp.fortresses_base ?? exp.fortresses ?? 0;
+  } else if (category === 'buildings') {
+    baseCost = exp.buildings_base ?? (nation.economy._building_maintenance_per_turn || 0);
+  } else if (category === 'slaves') {
+    baseCost = exp.slaves_base ?? (prof.slaves || 0) * (B.SLAVE_UPKEEP || 1);
   } else {
     baseCost = 0;
   }
@@ -313,42 +322,31 @@ function _tpExpSliderRow(category, icon, name, effectsFn) {
 
 // Колонка расходов с интерактивными слайдерами
 function _tpRenderExpenses() {
-  const nation = GAME_STATE.nations[GAME_STATE.player_nation];
-  const eco    = nation.economy;
-  const exp    = eco._expense_breakdown || {};
-  const prof   = nation.population.by_profession || {};
-  const B      = CONFIG?.BALANCE || {};
+  const exp  = GAME_STATE.nations[GAME_STATE.player_nation].economy._expense_breakdown || {};
+  const lvls = _tpExpLevels ?? {};
 
-  // Фиксированные расходы (без слайдеров)
-  const fortresses = exp.fortresses || 0;
-  const buildings  = exp.buildings ?? (eco._building_maintenance_per_turn || 0);
-  const slaves     = exp.slaves ?? (prof.slaves || 0) * (B.SLAVE_UPKEEP || 1);
-
-  // Контролируемые расходы: считаем из preview-уровней
-  const armyLvl   = _tpExpLevels?.army      ?? 1.0;
-  const navyLvl   = _tpExpLevels?.navy      ?? 1.0;
-  const courtLvl  = _tpExpLevels?.court     ?? 1.0;
-  const stabilLvl = _tpExpLevels?.stability ?? 1.0;
+  // Вычисляем эффективные расходы из preview-уровней и базовых значений
+  function effOf(cat, base) { return Math.round(base * (lvls[cat] ?? 1.0)); }
 
   const armyBase   = exp.army_base     ?? (exp.army_infantry ?? 0) + (exp.army_cavalry ?? 0) + (exp.army_mercenaries ?? 0);
-  const navyBase   = exp.navy_base     ?? (exp.navy  ?? 0);
-  const courtBase  = exp.court_base    ?? (exp.court ?? 0) + (exp.advisors ?? 0);
+  const navyBase   = exp.navy_base     ?? (exp.navy      ?? 0);
+  const courtBase  = exp.court_base    ?? (exp.court     ?? 0) + (exp.advisors  ?? 0);
   const stabilBase = exp.stability_base ?? (exp.stability ?? 0);
+  const fortBase   = exp.fortresses_base ?? (exp.fortresses ?? 0);
+  const bldBase    = exp.buildings_base  ?? (exp.buildings  ?? 0);
+  const slavBase   = exp.slaves_base     ?? (exp.slaves     ?? 0);
 
-  const effArmy   = Math.round(armyBase   * armyLvl);
-  const effNavy   = Math.round(navyBase   * navyLvl);
-  const effCourt  = Math.round(courtBase  * courtLvl);
-  const effStabil = Math.round(stabilBase * stabilLvl);
+  const totalAll = effOf('army', armyBase) + effOf('navy', navyBase)
+    + effOf('court', courtBase) + effOf('stability', stabilBase)
+    + effOf('fortresses', fortBase) + effOf('buildings', bldBase)
+    + effOf('slaves', slavBase);
 
-  const totalFixed    = fortresses + buildings + slaves;
-  const totalControl  = effArmy + effNavy + effCourt + effStabil;
-  const total         = totalControl + totalFixed;
+  const sign = v => v >= 0 ? '+' : '';
 
   const armySlider = _tpExpSliderRow('army', '⚔️', 'Армия', (lvl) => {
     if (Math.abs(lvl - 1.0) < 0.01) return '';
     const m = parseFloat(((lvl - 1.0) * 15).toFixed(1));
-    const l = parseFloat(((lvl - 1.0) * 8).toFixed(1));
-    const sign = v => v >= 0 ? '+' : '';
+    const l = parseFloat(((lvl - 1.0) *  8).toFixed(1));
     return `${m >= 0 ? '✓' : '⚠'} Боевой дух: ${sign(m)}${m}/ход, Лояльность: ${sign(l)}${l}/ход`;
   });
 
@@ -360,7 +358,7 @@ function _tpRenderExpenses() {
   const courtSlider = _tpExpSliderRow('court', '🏰', 'Двор и советники', (lvl) => {
     if (Math.abs(lvl - 1.0) < 0.01) return '';
     const d = parseFloat(((lvl - 1.0) * 2).toFixed(1));
-    return `${d >= 0 ? '✓' : '⚠'} Легитимность: ${d >= 0 ? '+' : ''}${d}/ход`;
+    return `${d >= 0 ? '✓' : '⚠'} Легитимность: ${sign(d)}${d}/ход`;
   });
 
   const stabilSlider = _tpExpSliderRow('stability', '⚖️', 'Порядок и стабильность', (lvl) => {
@@ -368,34 +366,52 @@ function _tpRenderExpenses() {
     return `${lvl >= 1.0 ? '✓' : '⚠'} Восстановление стабильности ×${lvl.toFixed(2)}/ход`;
   });
 
-  const fixedRows = [
-    { label: '🏯 Крепости', val: fortresses },
-    { label: '🏛 Здания',   val: buildings },
-    { label: '⛓ Рабы',     val: Math.round(slaves) },
-  ].filter(r => r.val > 0);
+  const fortSlider = _tpExpSliderRow('fortresses', '🏯', 'Крепости', (lvl) => {
+    if (Math.abs(lvl - 1.0) < 0.01) return '';
+    const d = parseFloat(((lvl - 1.0) * 2.0).toFixed(1));
+    return `${d >= 0 ? '✓' : '⚠'} Оборонный потенциал ×${lvl.toFixed(2)}, Стабильность: ${sign(d)}${d}/ход`;
+  });
+
+  const bldSlider = _tpExpSliderRow('buildings', '🏛', 'Здания', (lvl) => {
+    if (Math.abs(lvl - 1.0) < 0.01) return '';
+    return `${lvl >= 1.0 ? '✓' : '⚠'} Портовые пошлины ×${lvl.toFixed(2)}`;
+  });
+
+  const slaveSlider = _tpExpSliderRow('slaves', '⛓', 'Рабы', (lvl) => {
+    if (Math.abs(lvl - 1.0) < 0.01) return '';
+    const h = parseFloat(((lvl - 1.0) * 8).toFixed(1));
+    return `${h >= 0 ? '✓' : '⚠'} Счастье населения: ${sign(h)}${h}/ход`;
+  });
 
   return `
     <div class="tp-col-title">📉 РАСХОДЫ</div>
 
     <div class="tp-subsection">
-      <div class="tp-sub-label">Управляемые расходы &mdash; ${totalControl.toLocaleString()} ₴</div>
+      <div class="tp-sub-label">Армия и флот</div>
       ${armySlider}
       ${navySlider}
+    </div>
+
+    <div class="tp-divider"></div>
+
+    <div class="tp-subsection">
+      <div class="tp-sub-label">Управление</div>
       ${courtSlider}
       ${stabilSlider}
     </div>
 
     <div class="tp-divider"></div>
 
-    ${fixedRows.map(r => `
-      <div class="tp-row-item">
-        <span class="tp-item-label">${r.label}</span>
-        <span class="tp-item-value tp-val-neg">${r.val.toLocaleString()} ₴</span>
-      </div>`).join('')}
+    <div class="tp-subsection">
+      <div class="tp-sub-label">Инфраструктура</div>
+      ${fortSlider}
+      ${bldSlider}
+      ${slaveSlider}
+    </div>
 
     <div class="tp-row-total">
       <span class="tp-item-label">Итого расходов</span>
-      <span class="tp-item-value tp-val-neg">${total.toLocaleString()} ₴</span>
+      <span class="tp-item-value tp-val-neg">${totalAll.toLocaleString()} ₴</span>
     </div>`;
 }
 
