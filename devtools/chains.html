@@ -173,6 +173,86 @@
     /* bottleneck row highlight */
     tr.has-bottleneck td { border-left: 3px solid #9a5000; }
 
+    /* ── Inline editable inputs ─────────────────────────────────────── */
+    .amt-inp, .labor-inp {
+      width: 52px;
+      background: transparent;
+      border: none;
+      border-bottom: 1px dashed #444c56;
+      color: #c9d1d9;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      padding: 1px 2px;
+      outline: none;
+      -moz-appearance: textfield;
+    }
+    .amt-inp::-webkit-outer-spin-button,
+    .amt-inp::-webkit-inner-spin-button,
+    .labor-inp::-webkit-outer-spin-button,
+    .labor-inp::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .amt-inp:focus, .labor-inp:focus { border-bottom-color: #388bfd; }
+    .amt-inp.mod   { border-bottom-color: #f78166; color: #f78166; }
+    .labor-inp.mod { border-bottom-color: #f78166; color: #f78166; }
+    .mod-dot { color: #f78166; font-size: 8px; vertical-align: super; margin-left: 1px; }
+
+    /* ── Export modal ───────────────────────────────────────────────── */
+    #export-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.65);
+      z-index: 100;
+    }
+    #export-panel {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      z-index: 101;
+      width: min(700px, 93vw);
+      max-height: 82vh;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #export-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 11px 16px;
+      border-bottom: 1px solid #30363d;
+    }
+    #export-head h2 { font-size: 14px; font-weight: 600; }
+    #export-summary {
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #8b949e;
+      border-bottom: 1px solid #21262d;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    #export-summary strong { color: #c9d1d9; }
+    #export-json {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      color: #7ee787;
+      background: #0d1117;
+      margin: 0;
+      white-space: pre;
+    }
+    #export-foot {
+      display: flex;
+      gap: 8px;
+      padding: 10px 16px;
+      border-top: 1px solid #30363d;
+    }
+    .copy-ok { color: #7ee787 !important; }
+
     /* notice */
     #load-error {
       display: none;
@@ -237,12 +317,29 @@
           <th>Входы</th>
           <th>Цена&nbsp;выхода</th>
           <th>Стоимость&nbsp;входов</th>
+          <th>Труд&nbsp;⚒</th>
           <th>Рентабельность</th>
           <th>Категория</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
     </table>
+  </div>
+
+  <!-- EXPORT MODAL -->
+  <div id="export-overlay" class="hidden" onclick="closeExport()"></div>
+  <div id="export-panel"   class="hidden">
+    <div id="export-head">
+      <h2>⬇ Экспорт изменений</h2>
+      <button class="btn" onclick="closeExport()">✕ Закрыть</button>
+    </div>
+    <div id="export-summary"></div>
+    <pre id="export-json"></pre>
+    <div id="export-foot">
+      <button class="btn btn-export" onclick="downloadPatch()">⬇ Скачать .json</button>
+      <button class="btn" id="btn-copy" onclick="copyPatch()">📋 Копировать</button>
+      <button class="btn" onclick="closeExport()">Закрыть</button>
+    </div>
   </div>
 
   <!-- GRAPH VIEW (этап 3) -->
@@ -390,12 +487,19 @@ function renderTable() {
     } else {
       inpHtml = `<div class="inp-list">` +
         row.inputs.map(inp => {
-          const IG  = goodData(inp.good);
+          const IG   = goodData(inp.good);
           const isBN = bnGoods.has(inp.good);
           const tip  = isBN ? ` title="⚠ Узкое место — нужен в ${usage[inp.good]} цепочках"` : '';
+          const pKey = `${row.bld}|${row.output}|${inp.good}`;
+          const isMod = patches[pKey] !== undefined;
           return `<span class="inp-chip${isBN ? ' bottleneck' : ''}"${tip}>
             ${IG.icon || '📦'} ${IG.name || inp.good}
-            <strong>×${inp.amount}</strong>
+            ×<input class="amt-inp${isMod ? ' mod' : ''}" type="number"
+              value="${inp.amount}" min="0" step="0.01"
+              data-key="${pKey}" data-orig="${inp.orig}"
+              onchange="onAmtChange(this)"
+              onclick="event.stopPropagation()"
+            >${isMod ? '<span class="mod-dot">●</span>' : ''}
           </span>`;
         }).join('') +
       `</div>`;
@@ -405,7 +509,7 @@ function renderTable() {
     const pc  = profitClass(row.profitPct);
     const arrow = row.profitPct >= 0 ? '▲' : '▼';
 
-    return `<tr${hasBottleneck ? ' class="has-bottleneck"' : ''}>
+    return `<tr${hasBottleneck ? ' class="has-bottleneck"' : ''} data-row="${row.bld}|${row.output}">
       <td>
         <div class="good-cell">
           <span class="good-icon">${row.outIcon}</span>
@@ -419,8 +523,9 @@ function renderTable() {
       <td>${terrainHtml(row.terrain)}</td>
       <td>${inpHtml}</td>
       <td class="px-out">${row.outPrice} 💰</td>
-      <td class="px-in">${row.inCost.toFixed(1)} 💰 <span style="color:#8b949e;font-size:11px">(+${row.labor}⚒)</span></td>
-      <td id="profit-${row.bld}-${row.output}">
+      <td id="cell-incost-${row.bld}-${row.output}" class="px-in">${row.inCost.toFixed(1)} 💰</td>
+      <td id="cell-labor-${row.bld}-${row.output}">${laborCell(row)}</td>
+      <td id="cell-profit-${row.bld}-${row.output}">
         <span class="profit ${pc}">${arrow} ${row.profitPct}%</span>
       </td>
       <td>${catPill(row.outCat)}</td>
@@ -434,6 +539,115 @@ function renderTable() {
   document.getElementById('s-bottlenecks').textContent = bnCount;
   document.getElementById('s-filter').textContent      =
     currentFilter !== 'all' ? `Показано ${rows.length} из ${allRows.length}` : '';
+}
+
+// ── Labor cell helper ─────────────────────────────────────────────────
+function laborCell(row) {
+  const lKey  = `${row.bld}|${row.output}`;
+  const orig  = (BUILDING_RECIPES[row.bld] || []).find(r => r.output_good === row.output)?.labor_cost_per_worker ?? 0;
+  const isMod = patchLabor[lKey] !== undefined;
+  return `<input class="labor-inp${isMod ? ' mod' : ''}" type="number"
+    value="${row.labor}" min="0" step="1"
+    data-key="${lKey}" data-orig="${orig}"
+    onchange="onLaborChange(this)"
+    onclick="event.stopPropagation()"
+  >⚒${isMod ? '<span class="mod-dot">●</span>' : ''}`;
+}
+
+// ── Inline editing: input amounts ────────────────────────────────────
+function onAmtChange(input) {
+  const key  = input.dataset.key;
+  const orig = parseFloat(input.dataset.orig);
+  const val  = parseFloat(input.value);
+  if (isNaN(val) || val < 0) { input.value = orig; return; }
+
+  if (Math.abs(val - orig) > 0.0001) {
+    patches[key] = val;
+    input.classList.add('mod');
+    // dot indicator: insert if not already there
+    if (!input.nextElementSibling || !input.nextElementSibling.classList.contains('mod-dot')) {
+      const dot = document.createElement('span');
+      dot.className = 'mod-dot'; dot.textContent = '●';
+      input.after(dot);
+    }
+  } else {
+    delete patches[key];
+    input.classList.remove('mod');
+    const dot = input.nextElementSibling;
+    if (dot && dot.classList.contains('mod-dot')) dot.remove();
+  }
+
+  const [bld, output] = key.split('|');
+  recalcRow(bld, output);
+  updateChangeCount();
+}
+
+// ── Inline editing: labor cost ────────────────────────────────────────
+function onLaborChange(input) {
+  const key  = input.dataset.key;
+  const orig = parseFloat(input.dataset.orig);
+  const val  = parseFloat(input.value);
+  if (isNaN(val) || val < 0) { input.value = orig; return; }
+
+  if (Math.abs(val - orig) > 0.0001) {
+    patchLabor[key] = val;
+    input.classList.add('mod');
+    if (!input.nextElementSibling || !input.nextElementSibling.classList.contains('mod-dot')) {
+      const dot = document.createElement('span');
+      dot.className = 'mod-dot'; dot.textContent = '●';
+      // insert after the ⚒ text node
+      input.parentElement.appendChild(dot);
+    }
+  } else {
+    delete patchLabor[key];
+    input.classList.remove('mod');
+    const dot = input.parentElement.querySelector('.mod-dot');
+    if (dot) dot.remove();
+  }
+
+  const [bld, output] = key.split('|');
+  recalcRow(bld, output);
+  updateChangeCount();
+}
+
+// Пересчитывает только ячейки стоимости и рентабельности без ре-рендера
+function recalcRow(bld, output) {
+  const origRecipe = (BUILDING_RECIPES[bld] || []).find(r => r.output_good === output);
+  if (!origRecipe) return;
+
+  const G        = goodData(output);
+  const outPrice = G.base_price || 0;
+
+  const laborKey = `${bld}|${output}`;
+  const labor    = patchLabor[laborKey] !== undefined ? patchLabor[laborKey] : origRecipe.labor_cost_per_worker;
+
+  const inCost = origRecipe.inputs.reduce((s, inp) => {
+    const k   = `${bld}|${output}|${inp.good}`;
+    const amt = patches[k] !== undefined ? patches[k] : inp.amount;
+    return s + (goodData(inp.good).base_price || 0) * amt;
+  }, 0);
+
+  const profitPct = outPrice ? Math.round((outPrice - inCost - labor) / outPrice * 100) : 0;
+  const pc        = profitClass(profitPct);
+  const arrow     = profitPct >= 0 ? '▲' : '▼';
+
+  const cellIn = document.getElementById(`cell-incost-${bld}-${output}`);
+  if (cellIn) cellIn.textContent = `${inCost.toFixed(1)} 💰`;
+
+  const cellPr = document.getElementById(`cell-profit-${bld}-${output}`);
+  if (cellPr) cellPr.innerHTML = `<span class="profit ${pc}">${arrow} ${profitPct}%</span>`;
+
+  // обновляем отображение значения труда в инпуте (значение уже в patchLabor)
+  const cellLb = document.getElementById(`cell-labor-${bld}-${output}`);
+  if (cellLb) {
+    const inp = cellLb.querySelector('input');
+    if (inp) inp.value = labor;
+  }
+}
+
+function updateChangeCount() {
+  const n = Object.keys(patches).length + Object.keys(patchLabor).length;
+  document.getElementById('s-changes').textContent = n;
 }
 
 // ── View switch ──────────────────────────────────────────────────────
@@ -459,17 +673,103 @@ function setFilter(btn) {
   if (currentView === 'table') renderTable();
 }
 
-// ── Export / Reset (заглушки — полная реализация в Этапе 2) ──────────
-function exportPatch() {
-  const total = Object.keys(patches).length + Object.keys(patchLabor).length;
-  if (total === 0) { alert('Нет изменений для экспорта.\nРедактирование будет добавлено на Этапе 2.'); return; }
-  alert(`Экспорт ${total} изменений — реализуется на Этапе 2.`);
+// ── Export ────────────────────────────────────────────────────────────
+function buildPatchObject() {
+  // Собираем только те здания, у которых есть изменения
+  const changedBlds = new Set([
+    ...Object.keys(patches).map(k => k.split('|')[0]),
+    ...Object.keys(patchLabor).map(k => k.split('|')[0]),
+  ]);
+
+  const result = {};
+  changedBlds.forEach(bld => {
+    result[bld] = (BUILDING_RECIPES[bld] || []).map(recipe => {
+      const laborKey = `${bld}|${recipe.output_good}`;
+      const inputs   = recipe.inputs.map(inp => {
+        const k   = `${bld}|${recipe.output_good}|${inp.good}`;
+        return { good: inp.good, amount: patches[k] !== undefined ? patches[k] : inp.amount };
+      });
+      return {
+        output_good:            recipe.output_good,
+        inputs,
+        labor_cost_per_worker:  patchLabor[laborKey] !== undefined
+                                  ? patchLabor[laborKey]
+                                  : recipe.labor_cost_per_worker,
+      };
+    });
+  });
+  return result;
 }
+
+function exportPatch() {
+  const nAmt   = Object.keys(patches).length;
+  const nLabor = Object.keys(patchLabor).length;
+  if (nAmt + nLabor === 0) {
+    alert('Нет изменений для экспорта.\nОтредактируйте коэффициенты или стоимость труда в таблице.');
+    return;
+  }
+
+  const patchObj = buildPatchObject();
+  const meta = {
+    _meta: {
+      exported:      new Date().toISOString(),
+      amt_changes:   nAmt,
+      labor_changes: nLabor,
+      changed_blds:  Object.keys(patchObj),
+    },
+    BUILDING_RECIPES: patchObj,
+  };
+  const json = JSON.stringify(meta, null, 2);
+
+  // Заполняем модал
+  document.getElementById('export-summary').innerHTML =
+    `<span>Зданий изменено: <strong>${Object.keys(patchObj).length}</strong></span>
+     <span>Коэффициентов: <strong>${nAmt}</strong></span>
+     <span>Труд: <strong>${nLabor}</strong></span>`;
+  document.getElementById('export-json').textContent = json;
+  document.getElementById('export-overlay').classList.remove('hidden');
+  document.getElementById('export-panel').classList.remove('hidden');
+
+  // сохраняем json для download/copy
+  document.getElementById('export-panel').dataset.json = json;
+}
+
+function closeExport() {
+  document.getElementById('export-overlay').classList.add('hidden');
+  document.getElementById('export-panel').classList.add('hidden');
+}
+
+function downloadPatch() {
+  const json = document.getElementById('export-panel').dataset.json;
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), {
+    href: url, download: `chain_patch_${Date.now()}.json`,
+  });
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function copyPatch() {
+  const json = document.getElementById('export-panel').dataset.json;
+  navigator.clipboard.writeText(json).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = '✓ Скопировано';
+    btn.classList.add('copy-ok');
+    setTimeout(() => { btn.textContent = '📋 Копировать'; btn.classList.remove('copy-ok'); }, 2000);
+  });
+}
+
+// ── Reset ─────────────────────────────────────────────────────────────
 function resetPatches() {
-  patches   = {};
+  if (Object.keys(patches).length + Object.keys(patchLabor).length === 0) return;
+  if (!confirm('Сбросить все изменения?')) return;
+  patches    = {};
   patchLabor = {};
-  document.getElementById('s-changes').textContent = '0';
-  renderTable();
+  renderTable(); // полный ре-рендер — все инпуты вернутся к оригинальным значениям
+  updateChangeCount();
 }
 
 // ── Check data loaded ─────────────────────────────────────────────────
