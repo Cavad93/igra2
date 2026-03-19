@@ -106,6 +106,19 @@ const INITIAL_GAME_STATE = {
         expense_per_turn: 0,
         tax_rate: 0.12,
 
+        // Налоговые ставки по слоям общества (только для игрока)
+        // AI-нации используют единый tax_rate выше
+        tax_rates_by_class: {
+          aristocrats: 0.15,   // аристократы + чиновники
+          clergy:      0.08,   // жречество
+          commoners:   0.10,   // граждане + ремесленники + земледельцы + моряки
+          soldiers:    0.05,   // солдаты + вольноотпущенники
+        },
+
+        // Кэш разбивки для UI (пересчитывается движком каждый ход)
+        _income_breakdown: {},
+        _expense_breakdown: {},
+
         // рыночные запасы нации (в амфорах/бушелях)
         stockpile: {
           // Зерно (запас ~6 мес при текущем производстве)
@@ -311,6 +324,9 @@ const INITIAL_GAME_STATE = {
         income_per_turn: 0,
         expense_per_turn: 0,
         tax_rate: 0.10,
+        tax_rates_by_class: { aristocrats: 0.12, clergy: 0.07, commoners: 0.09, soldiers: 0.04 },
+        _income_breakdown: {},
+        _expense_breakdown: {},
 
         stockpile: {
           wheat:     85000,
@@ -470,6 +486,9 @@ const INITIAL_GAME_STATE = {
         income_per_turn: 0,
         expense_per_turn: 0,
         tax_rate: 0.14,
+        tax_rates_by_class: { aristocrats: 0.18, clergy: 0.10, commoners: 0.12, soldiers: 0.06 },
+        _income_breakdown: {},
+        _expense_breakdown: {},
 
         stockpile: {
           wheat:     120000,
@@ -586,6 +605,9 @@ const INITIAL_GAME_STATE = {
         income_per_turn: 0,
         expense_per_turn: 0,
         tax_rate: 0.18,   // тяжёлое налогообложение
+        tax_rates_by_class: { aristocrats: 0.22, clergy: 0.12, commoners: 0.16, soldiers: 0.08 },
+        _income_breakdown: {},
+        _expense_breakdown: {},
 
         stockpile: {
           wheat:     800000,
@@ -702,6 +724,9 @@ const INITIAL_GAME_STATE = {
         income_per_turn: 0,
         expense_per_turn: 0,
         tax_rate: 0.13,
+        tax_rates_by_class: { aristocrats: 0.16, clergy: 0.09, commoners: 0.11, soldiers: 0.06 },
+        _income_breakdown: {},
+        _expense_breakdown: {},
 
         stockpile: {
           wheat:    95000,

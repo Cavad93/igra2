@@ -2,6 +2,25 @@
 // Порядок вызова строго определён в turn.js
 
 // ──────────────────────────────────────────────────────────────
+// КОНСТАНТЫ: налогооблагаемое богатство на человека
+// Используется для разбивки налогов по слоям общества.
+// Единица = 1 золотой потенциального дохода с человека.
+// ──────────────────────────────────────────────────────────────
+const TAX_WEALTH_PER_PERSON = {
+  merchants:  8,    // аристократы/чиновники — богатейший слой
+  clergy:     4,    // жречество
+  craftsmen:  2.5,  // ремесленники
+  sailors:    2,    // моряки
+  soldiers:   2,    // солдаты
+  farmers:    1.5,  // земледельцы
+  slaves:     0,    // рабы — не платят налоги
+};
+
+// Калибровочный множитель: wealth_units → золото
+// Подобран так, чтобы итоговый налог (rate=0.12, syracuse) был близок к формуле tax_rate×production
+const TAX_CALIBRATION = 0.5;
+
+// ──────────────────────────────────────────────────────────────
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // ──────────────────────────────────────────────────────────────
 
@@ -278,74 +297,139 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   const nation = GAME_STATE.nations[nationId];
   const economy = nation.economy;
   const military = nation.military;
-  const pop = nation.population.total;
+  const prof = nation.population.by_profession;
 
-  // ДОХОДЫ
-  // Налоги = tax_rate × стоимость производства
-  let productionValue = 0;
-  for (const [good, amount] of Object.entries(produced)) {
-    const price = GAME_STATE.market[good] ? GAME_STATE.market[good].price : 10;
-    productionValue += amount * price;
-  }
-  const taxIncome = Math.round(productionValue * economy.tax_rate);
-
-  // Бонусы зданий
+  // ── БОНУСЫ ЗДАНИЙ ──────────────────────────────────────────
   const bldBonuses = getBuildingBonuses(nationId);
 
-  // Налоги с бонусом зданий
-  const taxIncomeWithBonus = taxIncome * bldBonuses.tax_mult;
+  // ── ДОХОДЫ: НАЛОГИ ─────────────────────────────────────────
+  // Вычисляем богатство каждой группы (wealth_units = population × gold_per_person)
+  const wealthUnits = {
+    aristocrats: (prof.merchants  || 0) * TAX_WEALTH_PER_PERSON.merchants,
+    clergy:      (prof.clergy     || 0) * TAX_WEALTH_PER_PERSON.clergy,
+    commoners:   (prof.farmers    || 0) * TAX_WEALTH_PER_PERSON.farmers
+               + (prof.craftsmen  || 0) * TAX_WEALTH_PER_PERSON.craftsmen
+               + (prof.sailors    || 0) * TAX_WEALTH_PER_PERSON.sailors,
+    soldiers:    (prof.soldiers   || 0) * TAX_WEALTH_PER_PERSON.soldiers,
+  };
+  const totalWealthUnits = wealthUnits.aristocrats + wealthUnits.clergy
+                         + wealthUnits.commoners   + wealthUnits.soldiers;
 
-  // Портовые пошлины (прибрежные города) + бонус портовых зданий
+  let taxByClass;
+  let taxIncomeTotal;
+
+  if (economy.tax_rates_by_class && totalWealthUnits > 0) {
+    // ── Игрок: используем персональные ставки по слоям ──
+    const r = economy.tax_rates_by_class;
+    taxByClass = {
+      aristocrats: Math.round(wealthUnits.aristocrats * r.aristocrats * TAX_CALIBRATION * bldBonuses.tax_mult),
+      clergy:      Math.round(wealthUnits.clergy      * r.clergy      * TAX_CALIBRATION * bldBonuses.tax_mult),
+      commoners:   Math.round(wealthUnits.commoners   * r.commoners   * TAX_CALIBRATION * bldBonuses.tax_mult),
+      soldiers:    Math.round(wealthUnits.soldiers    * r.soldiers    * TAX_CALIBRATION * bldBonuses.tax_mult),
+    };
+    taxIncomeTotal = taxByClass.aristocrats + taxByClass.clergy
+                   + taxByClass.commoners   + taxByClass.soldiers;
+  } else {
+    // ── AI-нации: единая ставка tax_rate × стоимость производства ──
+    let productionValue = 0;
+    for (const [good, amount] of Object.entries(produced)) {
+      const price = GAME_STATE.market[good] ? GAME_STATE.market[good].price : 10;
+      productionValue += amount * price;
+    }
+    taxIncomeTotal = Math.round(productionValue * economy.tax_rate * bldBonuses.tax_mult);
+
+    // Для отчётности: пропорциональное распределение по группам
+    if (totalWealthUnits > 0) {
+      taxByClass = {
+        aristocrats: Math.round(taxIncomeTotal * wealthUnits.aristocrats / totalWealthUnits),
+        clergy:      Math.round(taxIncomeTotal * wealthUnits.clergy      / totalWealthUnits),
+        commoners:   Math.round(taxIncomeTotal * wealthUnits.commoners   / totalWealthUnits),
+        soldiers:    Math.round(taxIncomeTotal * wealthUnits.soldiers    / totalWealthUnits),
+      };
+    } else {
+      taxByClass = { aristocrats: 0, clergy: 0, commoners: 0, soldiers: 0 };
+    }
+  }
+
+  // ── ДОХОДЫ: ПОРТОВЫЕ ПОШЛИНЫ ───────────────────────────────
   const coastalRegions = nation.regions.filter(rId => {
     const r = GAME_STATE.regions[rId];
     return r && (r.terrain === 'coastal_city');
   }).length;
-  const portDuties = coastalRegions * 120 + bldBonuses.port_bonus;
+  const portDuties = Math.round(coastalRegions * 120 + bldBonuses.port_bonus);
 
-  // Счастье от зданий (акведуки, храмы, ипподромы)
+  // ── СЧАСТЬЕ ОТ ЗДАНИЙ ──────────────────────────────────────
   if (bldBonuses.happiness_bonus > 0) {
     nation.population.happiness = Math.min(100,
       (nation.population.happiness ?? 50) + bldBonuses.happiness_bonus * 0.1
     );
   }
 
-  const totalIncome = taxIncomeWithBonus + portDuties + tradeProfit;
+  const totalIncome = taxIncomeTotal + portDuties + tradeProfit;
 
-  // РАСХОДЫ
-  // Армия
-  const militaryCost = (military.infantry    * CONFIG.BALANCE.INFANTRY_UPKEEP)
-                     + (military.cavalry     * CONFIG.BALANCE.CAVALRY_UPKEEP)
-                     + (military.ships       * CONFIG.BALANCE.SHIP_UPKEEP)
-                     + (military.mercenaries * CONFIG.BALANCE.MERCENARY_UPKEEP);
+  // ── РАСХОДЫ: АРМИЯ ─────────────────────────────────────────
+  const expArmyInfantry    = (military.infantry    || 0) * CONFIG.BALANCE.INFANTRY_UPKEEP;
+  const expArmyCavalry     = (military.cavalry     || 0) * CONFIG.BALANCE.CAVALRY_UPKEEP;
+  const expArmyMercenaries = (military.mercenaries || 0) * CONFIG.BALANCE.MERCENARY_UPKEEP;
+  const expNavy            = (military.ships       || 0) * CONFIG.BALANCE.SHIP_UPKEEP;
 
-  // Здания — legacy-список (nation.buildings) + новые building_slots
-  let buildingsCost = 0;
+  // ── РАСХОДЫ: ДВОР И СОВЕТНИКИ ──────────────────────────────
+  // Двор: все живые персонажи (базовое содержание)
+  const aliveChars = (nation.characters || []).filter(c => c.alive !== false);
+  const expCourt = aliveChars.length * 15;
+  // Советники: персонажи с ролью 'advisor' (дополнительное содержание)
+  const advisorCount = aliveChars.filter(c => c.role === 'advisor').length;
+  const expAdvisors = advisorCount * 50;
+
+  // ── РАСХОДЫ: СТАБИЛЬНОСТЬ ──────────────────────────────────
+  // Нестабильность требует затрат: чем ниже стабильность — тем дороже
+  const stability = nation.government?.stability ?? 50;
+  const expStability = Math.round(Math.max(0, (80 - stability)) * 4);
+
+  // ── РАСХОДЫ: КРЕПОСТИ ──────────────────────────────────────
+  // Считаем 'walls' в nation.buildings (legacy) и building_slots с типом 'walls'
+  const legacyWalls = (nation.buildings || []).filter(b => b === 'walls').length;
+  let slotWalls = 0;
   for (const regionId of nation.regions) {
     const region = GAME_STATE.regions[regionId];
     if (!region) continue;
-    // Legacy: nation.buildings — плоский список
+    slotWalls += (region.building_slots || []).filter(
+      s => s.status === 'active' && (s.type === 'walls' || s.type === 'fortress')
+    ).length;
+  }
+  const expFortresses = (legacyWalls + slotWalls) * 80;
+
+  // ── РАСХОДЫ: ЗДАНИЯ ────────────────────────────────────────
+  // Обычные здания (без стен — они уже учтены выше)
+  let expBuildings = 0;
+  for (const regionId of nation.regions) {
+    const region = GAME_STATE.regions[regionId];
+    if (!region) continue;
+    // Legacy: плоский список (не стены — они в expFortresses)
     if (region.buildings?.length) {
-      buildingsCost += region.buildings.length * CONFIG.BALANCE.BUILDING_MAINTENANCE;
+      const nonWalls = region.buildings.filter(b => b !== 'walls').length;
+      expBuildings += nonWalls * CONFIG.BALANCE.BUILDING_MAINTENANCE;
     }
-    // Новые: building_slots — уже включены в distributeWages(), здесь не дублируем.
-    // Вычитаем только то, что НЕ учтено через distributeWages (вызывается отдельно).
-    // Поэтому building_slots maintenance учитываем только для НЕ-игрока.
+    // Новые building_slots — только для AI (игрок учтён в distributeWages)
     if (nationId !== GAME_STATE.player_nation) {
-      const activeSlots = (region.building_slots || []).filter(s => s.status === 'active').length;
-      buildingsCost += activeSlots * CONFIG.BALANCE.BUILDING_MAINTENANCE;
+      const activeNonWall = (region.building_slots || []).filter(
+        s => s.status === 'active' && s.type !== 'walls' && s.type !== 'fortress'
+      ).length;
+      expBuildings += activeNonWall * CONFIG.BALANCE.BUILDING_MAINTENANCE;
     }
   }
-  // Для игрока maintenance зданий из building_slots уже вычтена в distributeWages()
   if (nationId === GAME_STATE.player_nation) {
-    buildingsCost += economy._building_maintenance_per_turn || 0;
+    expBuildings += economy._building_maintenance_per_turn || 0;
   }
 
-  // Рабы
-  const slavesCost = (nation.population.by_profession.slaves || 0) * CONFIG.BALANCE.SLAVE_UPKEEP;
+  // ── РАСХОДЫ: РАБЫ ──────────────────────────────────────────
+  const expSlaves = (prof.slaves || 0) * CONFIG.BALANCE.SLAVE_UPKEEP;
 
-  const totalExpense = militaryCost + buildingsCost + slavesCost;
+  const totalExpense = expArmyInfantry + expArmyCavalry + expArmyMercenaries
+                     + expNavy + expCourt + expAdvisors + expStability
+                     + expFortresses + expBuildings + expSlaves;
 
-  // ОБНОВЛЯЕМ КАЗНУ
+  // ── ОБНОВЛЯЕМ КАЗНУ ────────────────────────────────────────
   const delta = totalIncome - totalExpense;
   const newTreasury = economy.treasury + delta;
 
@@ -353,7 +437,29 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   applyDelta(`nations.${nationId}.economy.income_per_turn`, Math.round(totalIncome));
   applyDelta(`nations.${nationId}.economy.expense_per_turn`, Math.round(totalExpense));
 
-  // Если казна пуста — армия теряет лояльность
+  // ── КЭШ РАЗБИВКИ ДЛЯ UI ────────────────────────────────────
+  applyDelta(`nations.${nationId}.economy._income_breakdown`, {
+    tax_aristocrats: taxByClass.aristocrats,
+    tax_clergy:      taxByClass.clergy,
+    tax_commoners:   taxByClass.commoners,
+    tax_soldiers:    taxByClass.soldiers,
+    trade:           Math.round(tradeProfit),
+    port_duties:     portDuties,
+  });
+  applyDelta(`nations.${nationId}.economy._expense_breakdown`, {
+    army_infantry:    expArmyInfantry,
+    army_cavalry:     expArmyCavalry,
+    army_mercenaries: expArmyMercenaries,
+    navy:             expNavy,
+    court:            expCourt,
+    advisors:         expAdvisors,
+    stability:        expStability,
+    fortresses:       expFortresses,
+    buildings:        expBuildings,
+    slaves:           expSlaves,
+  });
+
+  // ── БАНКРОТСТВО ────────────────────────────────────────────
   if (newTreasury < 0) {
     const newLoyalty = Math.max(0, military.loyalty - 5);
     applyDelta(`nations.${nationId}.military.loyalty`, newLoyalty);
