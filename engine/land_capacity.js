@@ -1,0 +1,243 @@
+// engine/land_capacity.js
+// Динамическая формула земельной ёмкости региона
+// Вызывается каждый ход после processDemography(), перед runEconomyTick()
+
+// ── БИОМНЫЕ КОЭФФИЦИЕНТЫ ─────────────────────────────────────────────────────
+const BIOME_LAND_PARAMS = {
+
+  // Города плотные, строят вверх, земля дорогая
+  // Помпеи, Карфаген, Афины — 150-300 чел/га в черте города
+  mediterranean_coast: {
+    unsuitable_pct: 0.15,  // мало непригодной земли (рельеф слабый)
+    ha_per_person:  0.07,  // 0.01 город + 0.06 периферия (море заменяет часть)
+    reserve_pct:    0.05,  // мало леса (прибрежная зона)
+  },
+
+  // Деревни рассредоточены, у каждой семьи двор и огород
+  // Типичная сицилийская деревня: 80-120 чел/га
+  mediterranean_hills: {
+    unsuitable_pct: 0.30,  // холмы, скалы, крутые склоны
+    ha_per_person:  0.11,  // 0.01 дом + 0.10 двор/огород/скот
+    reserve_pct:    0.10,  // лес для дров и пастбища
+  },
+
+  // Плотные поселения вдоль берега, остальная земля — ценная пашня
+  // Нильские деревни: 200-400 чел/га
+  river_valley: {
+    unsuitable_pct: 0.10,  // только пойменные болота
+    ha_per_person:  0.08,  // плотнее чем холмы — земля слишком ценна
+    reserve_pct:    0.05,  // пастбища минимальны — всё под пашню
+  },
+
+  // Богатейшая почва — каждый га на счету, поселения компактны
+  volcanic: {
+    unsuitable_pct: 0.20,  // лавовые поля, крутые склоны конуса
+    ha_per_person:  0.09,  // компактнее чем холмы — земля очень ценна
+    reserve_pct:    0.08,  // немного леса на склонах
+  },
+
+  // Поселения вокруг воды, остальное — малопригодная земля
+  // Нумидийские деревни очень рассредоточены
+  semi_arid: {
+    unsuitable_pct: 0.40,  // много непригодного — сухие склоны, каменистые равнины
+    ha_per_person:  0.15,  // больше места (скот, выпас, доступ к воде)
+    reserve_pct:    0.12,  // пастбища важны — основа хозяйства
+  },
+
+  // Полукочевой образ жизни. Постоянных поселений мало.
+  steppe: {
+    unsuitable_pct: 0.20,  // овраги, солончаки
+    ha_per_person:  0.50,  // каждый человек «держит» большую территорию
+    reserve_pct:    0.40,  // пастбища — главный ресурс степи
+  },
+
+  // Галлия, Германия — деревни в лесных прогалинах
+  temperate_forest: {
+    unsuitable_pct: 0.20,  // болота, реки, непроходимые чащи
+    ha_per_person:  0.13,  // просторнее — земля менее ценна
+    reserve_pct:    0.25,  // лес — основной ресурс, его берегут
+  },
+
+  // Деревни в узких долинах. Пашня — буквально каждый клочок
+  alpine: {
+    unsuitable_pct: 0.65,  // большая часть непригодна (скалы, ледники)
+    ha_per_person:  0.20,  // поселения на склонах, много места под двор
+    reserve_pct:    0.15,  // альпийские пастбища (летние)
+  },
+
+  // Левант, Финикия — плотные города-государства
+  subtropical: {
+    unsuitable_pct: 0.25,
+    ha_per_person:  0.10,
+    reserve_pct:    0.08,
+  },
+
+  // Оазисная модель — поселения крошечные, земля ограничена ирригацией
+  desert: {
+    unsuitable_pct: 0.85,  // почти всё непригодно
+    ha_per_person:  0.05,  // очень компактные оазисные города
+    reserve_pct:    0.05,  // финиковые рощи
+  },
+
+  // Нубия, Эфиопия — скотоводческо-земледельческая модель
+  savanna: {
+    unsuitable_pct: 0.25,
+    ha_per_person:  0.20,  // скот требует большого выпаса
+    reserve_pct:    0.20,  // пастбища
+  },
+
+  arctic: {
+    unsuitable_pct: 0.80,
+    ha_per_person:  0.30,
+    reserve_pct:    0.10,
+  },
+
+  tropical: {
+    unsuitable_pct: 0.30,
+    ha_per_person:  0.15,
+    reserve_pct:    0.20,
+  },
+};
+
+// ── ПЛОЩАДИ ЗДАНИЙ (га) ──────────────────────────────────────────────────────
+// Ключи соответствуют building_id из data/buildings.js
+// Источники: Cato "De Agri Cultura", Columella "Res Rustica", Roman survey data
+const BUILDING_FOOTPRINT_HA = {
+  // Сельскохозяйственные
+  farm:             5,    // 2-8 га, среднее 5 (Cato: минимальный надел семьи)
+  grain_estate:    75,    // 25-125 га, среднее 75 (как villa из ТЗ)
+  latifundium:    300,    // 125-500 га (Варрон: latifundia > 125 га)
+  ranch:           30,    // пастбищное хозяйство
+  irrigation:       4,    // ирригационная система + каналы
+
+  // Инфраструктура
+  granary:          2,    // амбар + площадка
+  warehouse:        2,    // склад
+  market:           3,    // агора/форум + прилегающее
+  road:             1,    // участок дороги через регион
+  aqueduct:         4,    // трасса акведука
+  port:             8,    // причалы + склады + подъездные пути
+  shipyard:        10,    // верфь + доки + стапели
+
+  // Военные
+  barracks:         5,    // казармы + плац
+  walls:           15,    // стены + охранная зона
+
+  // Производственные
+  mine:            10,    // шахта + отвалы породы
+  sulfur_mine:     10,
+  salt_works:       6,
+  lumber_camp:      5,
+  workshop:         2,
+  pottery_workshop: 2,
+  oil_press:        2,
+  winery:           3,
+  tuna_trap:        4,    // тунцовые ловушки вдоль берега
+  papyrus_bed:      6,    // плантация папируса
+
+  // Культурные / городские
+  temple:           3,    // temple + temenos (священная зона)
+  forum:            4,
+  school:           2,
+  baths:            3,
+  tavern:           1,
+};
+
+// ── ОСНОВНАЯ ФУНКЦИЯ ─────────────────────────────────────────────────────────
+/**
+ * Вычисляет земельную ёмкость региона.
+ * @param {object} region   — объект региона из GAME_STATE.regions
+ * @param {string} regionId — ключ региона, например "r246"
+ * @returns {object} полный расчёт земельного баланса
+ */
+function calcRegionLandCapacity(region, regionId) {
+
+  // Определяем биом: из объекта региона или из REGION_BIOMES
+  const numId  = String(regionId).replace('r', '');
+  const biome  = region.biome
+              ?? (typeof REGION_BIOMES !== 'undefined' ? REGION_BIOMES[numId] : null)
+              ?? 'mediterranean_hills';
+
+  const params = BIOME_LAND_PARAMS[biome]
+              ?? BIOME_LAND_PARAMS['mediterranean_hills'];
+
+  // Площадь: region.area_ha если есть, иначе из REGION_AREAS (км² → га)
+  const total = region.area_ha
+             ?? (typeof REGION_AREAS !== 'undefined'
+                 ? (REGION_AREAS[numId] ?? 0) * 100
+                 : 0);
+
+  if (total === 0) {
+    return {
+      total_ha: 0, unsuitable_ha: 0, settlement_ha: 0, reserve_ha: 0,
+      max_arable_ha: 0, arable_ha: 0, buildings_ha: 0, free_ha: 0,
+      exploitation: 1.0, warnings: ['НЕТ ДАННЫХ: area_ha = 0'], can_build: {},
+    };
+  }
+
+  const pop = region.population ?? 0;
+
+  // ── A: Непригодная земля (константа биома) ───────────────────────────────
+  const unsuitable_ha = Math.round(total * params.unsuitable_pct);
+
+  // ── B: Земля под поселения (ДИНАМИЧЕСКАЯ — меняется с населением) ────────
+  const settlement_ha = Math.round(pop * params.ha_per_person);
+
+  // ── C: Обязательный резерв леса и пастбищ (константа биома) ─────────────
+  const reserve_ha = Math.round(total * params.reserve_pct);
+
+  // ── D: Теоретический максимум пашни (без учёта населения) ───────────────
+  const max_arable_ha = total - unsuitable_ha - reserve_ha;
+
+  // ── E: Фактически доступная пашня (с учётом населения) ──────────────────
+  const arable_ha = Math.max(0, max_arable_ha - settlement_ha);
+
+  // ── F: Занято зданиями ───────────────────────────────────────────────────
+  const buildings_ha = (region.buildings ?? []).reduce((sum, b) => {
+    const id = b.building_id ?? b.type ?? '';
+    return sum + (BUILDING_FOOTPRINT_HA[id] ?? 0) * (b.level ?? 1);
+  }, 0);
+
+  // ── G: Свободно для строительства ───────────────────────────────────────
+  const free_ha = Math.max(0, arable_ha - buildings_ha);
+
+  // ── H: Степень освоения (0.0 — пусто, 1.0 — полностью застроено) ────────
+  const exploitation = arable_ha > 0
+    ? Math.min(1.0, buildings_ha / arable_ha)
+    : 1.0;
+
+  // ── I: Предупреждения ────────────────────────────────────────────────────
+  const warnings = [];
+  if (settlement_ha > max_arable_ha * 0.5) {
+    warnings.push('ПЕРЕНАСЕЛЕНИЕ: население занимает более 50% пашни');
+  }
+  if (free_ha < max_arable_ha * 0.05) {
+    warnings.push('ЗЕМЛЯ ЗАКАНЧИВАЕТСЯ: осталось менее 5% свободной пашни');
+  }
+  if (settlement_ha > max_arable_ha) {
+    warnings.push('КРИЗИС: население вытеснило всю пашню — голод неизбежен');
+  }
+
+  return {
+    total_ha:     total,
+    unsuitable_ha,              // константа биома
+    settlement_ha,              // ДИНАМИЧЕСКАЯ — ключевая переменная
+    reserve_ha,                 // константа биома
+    max_arable_ha,              // теоретический максимум без населения
+    arable_ha,                  // фактически доступная пашня
+    buildings_ha,               // занято зданиями
+    free_ha,                    // СВОБОДНО ДЛЯ СТРОИТЕЛЬСТВА
+    exploitation,               // коэффициент освоения 0.0-1.0
+    warnings,
+    biome,                      // для отладки
+
+    // Сколько ещё можно построить
+    can_build: {
+      farm:        Math.floor(free_ha / BUILDING_FOOTPRINT_HA.farm),
+      grain_estate:Math.floor(free_ha / BUILDING_FOOTPRINT_HA.grain_estate),
+      latifundium: Math.floor(free_ha / BUILDING_FOOTPRINT_HA.latifundium),
+      mine:        Math.floor(free_ha / BUILDING_FOOTPRINT_HA.mine),
+      granary:     Math.floor(free_ha / BUILDING_FOOTPRINT_HA.granary),
+    },
+  };
+}
