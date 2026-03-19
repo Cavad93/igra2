@@ -3158,6 +3158,86 @@
       opacity: 0.35; cursor: default;
     }
 
+    /* ── Баланс: крупный с подсветкой ── */
+    .tp-balance-val {
+      font-size: 17px; font-weight: bold; letter-spacing: 0.3px;
+    }
+    .tp-bal-pos {
+      color: #e8c55a;
+      text-shadow: 0 0 14px rgba(212,168,83,0.75), 0 0 5px rgba(212,168,83,0.5);
+    }
+    .tp-bal-neg {
+      color: #f55;
+      text-shadow: 0 0 14px rgba(244,67,54,0.7), 0 0 5px rgba(244,67,54,0.45);
+      animation: tp-pulse-neg 1.8s ease-in-out infinite;
+    }
+    @keyframes tp-pulse-neg {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.75; }
+    }
+
+    /* ── Footer с советником ── */
+    .tp-footer-top {
+      display: flex; gap: 8px; align-items: stretch;
+    }
+    .tp-advisor-btn {
+      flex-shrink: 0;
+      padding: 9px 14px;
+      background: linear-gradient(to bottom, #2a200a, #1a1406);
+      border: 1px solid rgba(212,168,83,0.45);
+      color: var(--text-gold); font-size: 12px; cursor: pointer;
+      letter-spacing: 0.3px; white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .tp-advisor-btn:hover { background: linear-gradient(to bottom, #3a300a, #2a200a); }
+    .tp-advisor-panel {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: rgba(10,8,4,0.7);
+      border: 1px solid rgba(212,168,83,0.2);
+      border-left: 2px solid rgba(212,168,83,0.5);
+    }
+    .tp-advisor-panel.tp-hidden { display: none; }
+    .tp-adv-line {
+      font-size: 11px; color: var(--text-light);
+      margin-bottom: 5px; line-height: 1.45;
+    }
+    .tp-adv-line:last-child { margin-bottom: 0; }
+    .tp-adv-line b { color: var(--text-gold); }
+
+    /* ── График динамики баланса ── */
+    .tp-chart-section {
+      flex-shrink: 0;
+      padding: 8px 14px 10px;
+      border-top: 1px solid rgba(107,79,26,0.35);
+      background: rgba(0,0,0,0.35);
+    }
+    .tp-chart-label {
+      font-size: 10px; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 0.8px;
+      margin-bottom: 5px; display: flex; gap: 10px; align-items: center;
+    }
+    .tp-chart-legend-reform {
+      font-size: 10px; color: rgba(212,168,83,0.7);
+      font-style: italic; text-transform: none; letter-spacing: 0;
+    }
+    .tp-chart-svg {
+      width: 100%; height: 70px; display: block;
+      overflow: visible;
+    }
+    .tp-chart-axis {
+      display: flex; justify-content: space-between;
+      font-size: 9px; color: var(--text-dim);
+      margin-top: 2px; padding: 0 2px;
+    }
+    .tp-chart-zero-lbl { color: rgba(255,255,255,0.2); }
+    .tp-chart-empty {
+      font-size: 10px; color: var(--text-dim);
+      text-align: center; padding: 12px 0;
+      font-style: italic;
+    }
+    .tp-hidden { display: none !important; }
+
     /* Внутренний контейнер */
     .pop-oi {
       background: linear-gradient(165deg,#0e0b08 0%,#1a1208 60%,#0d0a05 100%);

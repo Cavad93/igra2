@@ -135,6 +135,13 @@ function applyTreasuryRates() {
     }
   }
 
+  // Записываем событие реформы для графика
+  const turnNow = GAME_STATE.turn || 0;
+  const ecoRef  = GAME_STATE.nations[nationId].economy;
+  if (!Array.isArray(ecoRef._reform_events)) ecoRef._reform_events = [];
+  ecoRef._reform_events.push({ turn: turnNow });
+  if (ecoRef._reform_events.length > 24) ecoRef._reform_events.shift();
+
   _tpDirty = false;
   _tpRender();
 }
@@ -415,6 +422,145 @@ function _tpRenderExpenses() {
     </div>`;
 }
 
+// ── График динамики баланса ───────────────────────────────────
+function _tpRenderChart() {
+  const eco     = GAME_STATE.nations[GAME_STATE.player_nation]?.economy || {};
+  const history = eco._balance_history || [];
+  if (history.length < 2) {
+    return `<div class="tp-chart-empty">Накопите минимум 2 хода для отображения графика</div>`;
+  }
+
+  const W = 780, H = 70, padX = 12, padY = 6;
+  const nets   = history.map(h => h.net);
+  const maxVal = Math.max(...nets, 1);
+  const minVal = Math.min(...nets, -1);
+  const range  = maxVal - minVal;
+
+  const toX = i  => padX + (i / (history.length - 1)) * (W - 2 * padX);
+  const toY = v  => padY + (1 - (v - minVal) / range) * (H - 2 * padY);
+  const zeroY = toY(0);
+
+  const pts    = history.map((h, i) => `${toX(i).toFixed(1)},${toY(h.net).toFixed(1)}`);
+  const lineD  = `M ${pts[0]} ` + pts.slice(1).map(p => `L ${p}`).join(' ');
+  const lastX  = toX(history.length - 1).toFixed(1);
+  const firstX = toX(0).toFixed(1);
+  const areaD  = `${lineD} L ${lastX},${zeroY.toFixed(1)} L ${firstX},${zeroY.toFixed(1)} Z`;
+
+  // Вертикальные линии реформ
+  const reforms    = eco._reform_events || [];
+  const minTurn    = history[0].turn;
+  const maxTurn    = history[history.length - 1].turn;
+  const reformSvg  = reforms
+    .filter(r => r.turn >= minTurn && r.turn <= maxTurn)
+    .map(r => {
+      const idx = history.findIndex(h => h.turn >= r.turn);
+      if (idx < 0) return '';
+      const rx = toX(idx).toFixed(1);
+      return `<line x1="${rx}" y1="${padY}" x2="${rx}" y2="${H - padY}"
+        stroke="rgba(212,168,83,0.65)" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="${rx}" y="${padY + 8}" text-anchor="middle"
+          font-size="7" fill="rgba(212,168,83,0.85)">✦</text>`;
+    }).join('');
+
+  const lastNet  = nets[nets.length - 1];
+  const lastNY   = toY(lastNet).toFixed(1);
+  const dotColor = lastNet >= 0 ? '#d4a853' : '#f44336';
+
+  return `
+    <div class="tp-chart-label">📊 Динамика баланса
+      ${reforms.length ? '<span class="tp-chart-legend-reform">✦ — реформа налогов</span>' : ''}
+    </div>
+    <svg class="tp-chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <defs>
+        <clipPath id="tpc-above"><rect x="0" y="0" width="${W}" height="${zeroY.toFixed(1)}"/></clipPath>
+        <clipPath id="tpc-below"><rect x="0" y="${zeroY.toFixed(1)}" width="${W}" height="${H}"/></clipPath>
+      </defs>
+      <line x1="${padX}" y1="${zeroY.toFixed(1)}" x2="${W - padX}" y2="${zeroY.toFixed(1)}"
+        stroke="rgba(255,255,255,0.12)" stroke-width="0.8"/>
+      <path d="${areaD}" fill="rgba(76,175,80,0.22)" clip-path="url(#tpc-above)"/>
+      <path d="${areaD}" fill="rgba(160,20,20,0.35)"  clip-path="url(#tpc-below)"/>
+      <path d="${lineD}" fill="none" stroke="rgba(212,168,83,0.9)" stroke-width="1.5" stroke-linejoin="round"/>
+      ${reformSvg}
+      <circle cx="${lastX}" cy="${lastNY}" r="3" fill="${dotColor}"/>
+    </svg>
+    <div class="tp-chart-axis">
+      <span>Ход ${minTurn}</span>
+      <span class="tp-chart-zero-lbl">— 0 —</span>
+      <span>Ход ${maxTurn}</span>
+    </div>`;
+}
+
+// ── Текст советника ───────────────────────────────────────────
+function _tpAdvisorText() {
+  const nation  = GAME_STATE.nations[GAME_STATE.player_nation];
+  const eco     = nation.economy;
+  const mil     = nation.military;
+  const gov     = nation.government;
+  const exp     = eco._expense_breakdown || {};
+  const totalExp = Math.max(exp.total || eco.expense_per_turn || 1, 1);
+  const balance  = (eco.income_per_turn || 0) - (eco.expense_per_turn || 0);
+  const treasury = eco.treasury || 0;
+
+  const lines = [];
+
+  // Крупнейшая статья расходов
+  const cats = {
+    'Армию':        (exp.army_infantry || 0) + (exp.army_cavalry || 0) + (exp.army_mercenaries || 0),
+    'Флот':         exp.navy        || 0,
+    'Двор':         (exp.court || 0) + (exp.advisors || 0),
+    'Стабильность': exp.stability   || 0,
+    'Крепости':     exp.fortresses  || 0,
+    'Здания':       exp.buildings   || 0,
+    'Рабов':        exp.slaves      || 0,
+  };
+  const [topName, topVal] = Object.entries(cats).sort(([,a],[,b]) => b - a)[0];
+  const topPct = Math.round(topVal / totalExp * 100);
+  if (topPct >= 25) lines.push(`Расходы на ${topName} составляют <b>${topPct}%</b> бюджета — доминирующая статья.`);
+
+  // Состояние казны
+  if (balance < 0) {
+    const turns = treasury > 0 ? Math.ceil(treasury / Math.abs(balance)) : 0;
+    lines.push(`Дефицит <b>${Math.abs(balance).toLocaleString()} ₴/ход</b>.` +
+      (turns > 0 ? ` Без изменений казна опустеет через <b>~${turns} ходов</b>.` : ' Казна уже пуста!'));
+  } else {
+    lines.push(`Профицит <b>${balance.toLocaleString()} ₴/ход</b> — казна пополняется.`);
+  }
+
+  // Высокие налоги
+  const taxRates  = eco.tax_rates_by_class || {};
+  const taxNames  = { aristocrats: 'знать', clergy: 'жречество', commoners: 'народ', soldiers: 'воинов' };
+  const highTaxes = Object.entries(taxRates).filter(([,r]) => r > 0.22).map(([g]) => taxNames[g] || g);
+  if (highTaxes.length) lines.push(`Налоги на ${highTaxes.join(', ')} превышают безопасный порог — возможны волнения.`);
+
+  // Боевой дух
+  if ((mil?.morale ?? 100) < 40) lines.push('Боевой дух армии критически низок. Повысьте финансирование или сократите войска.');
+
+  // Легитимность
+  if ((gov?.legitimacy ?? 100) < 30) lines.push('Легитимность власти под угрозой. Увеличьте содержание двора.');
+
+  // Условия рабов
+  if ((eco._slave_condition ?? 1.0) < 0.75) lines.push('Недофинансирование содержания рабов провоцирует социальное напряжение.');
+
+  // Крепости
+  if ((eco._fortress_defense_mult ?? 1.0) < 0.75) lines.push('Запущенные укрепления снижают безопасность границ и стабильность.');
+
+  if (!lines.length) lines.push('Финансовое положение стабильно. Серьёзных угроз не обнаружено.');
+
+  return lines.map(l => `<div class="tp-adv-line">▸ ${l}</div>`).join('');
+}
+
+// ── Переключение панели советника ────────────────────────────
+function _tpToggleAdvisor() {
+  const panel = document.getElementById('tp-advisor-panel');
+  if (!panel) return;
+  if (panel.classList.contains('tp-hidden')) {
+    panel.innerHTML = _tpAdvisorText();
+    panel.classList.remove('tp-hidden');
+  } else {
+    panel.classList.add('tp-hidden');
+  }
+}
+
 // Главная функция — полная перерисовка
 function _tpRender() {
   const el = document.getElementById('treasury-overlay');
@@ -444,8 +590,8 @@ function _tpRender() {
           <span class="tp-treasury-val">
             ${Math.round(eco.treasury).toLocaleString()} ₴ в хранилище
           </span>
-          <span class="tp-balance-val" style="color:${balColor}">
-            Баланс: ${balSign}${balance.toLocaleString()}/ход
+          <span class="tp-balance-val ${balance >= 0 ? 'tp-bal-pos' : 'tp-bal-neg'}">
+            ${balSign}${balance.toLocaleString()} ₴/ход
           </span>
         </div>
         <button class="tp-close" onclick="hideTreasuryOverlay()">✕</button>
@@ -461,11 +607,21 @@ function _tpRender() {
       </div>
 
       <div class="tp-footer">
-        <button id="tp-apply-btn" class="tp-apply-btn"
-                ${_tpDirty ? '' : 'disabled'}
-                onclick="applyTreasuryRates()">
-          ✓ Применить изменения
-        </button>
+        <div class="tp-footer-top">
+          <button class="tp-advisor-btn" onclick="_tpToggleAdvisor()">
+            📜 Советник
+          </button>
+          <button id="tp-apply-btn" class="tp-apply-btn"
+                  ${_tpDirty ? '' : 'disabled'}
+                  onclick="applyTreasuryRates()">
+            ✓ Применить изменения
+          </button>
+        </div>
+        <div id="tp-advisor-panel" class="tp-advisor-panel tp-hidden"></div>
+      </div>
+
+      <div class="tp-chart-section">
+        ${_tpRenderChart()}
       </div>
 
     </div>`;

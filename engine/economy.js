@@ -577,6 +577,23 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
 }
 
 // ──────────────────────────────────────────────────────────────
+// ШАГ 5b: ЗАПИСЬ ИСТОРИИ БАЛАНСА (вызывается из turn.js)
+// ──────────────────────────────────────────────────────────────
+
+function recordEconomyHistory() {
+  const nationId = GAME_STATE.player_nation;
+  const nation   = GAME_STATE.nations?.[nationId];
+  if (!nation) return;
+  const eco  = nation.economy;
+  const turn = GAME_STATE.turn || 0;
+  const income  = eco.income_per_turn  || 0;
+  const expense = eco.expense_per_turn || 0;
+  if (!Array.isArray(eco._balance_history)) eco._balance_history = [];
+  eco._balance_history.push({ turn, income, expense, net: income - expense });
+  if (eco._balance_history.length > 24) eco._balance_history.shift();
+}
+
+// ──────────────────────────────────────────────────────────────
 // ШАГ 6: ПРИМЕНЕНИЕ ЗАКОНОВ
 // ──────────────────────────────────────────────────────────────
 
