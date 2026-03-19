@@ -75,9 +75,24 @@ function _tpOnSlider(group, rawVal) {
 // ── Применить ставки к GAME_STATE ─────────────────────────────
 function applyTreasuryRates() {
   if (!_tpPreview) return;
-  const eco = GAME_STATE.nations[GAME_STATE.player_nation].economy;
-  if (!eco.tax_rates_by_class) eco.tax_rates_by_class = {};
-  Object.assign(eco.tax_rates_by_class, _tpPreview);
+  const nationId = GAME_STATE.player_nation;
+  const eco      = GAME_STATE.nations[nationId].economy;
+
+  // Инициализировать объект, если он ещё не создан (страховка)
+  if (!eco.tax_rates_by_class) {
+    applyDelta(`nations.${nationId}.economy.tax_rates_by_class`, {});
+  }
+
+  // Записываем каждую изменённую ставку через applyDelta —
+  // это гарантирует корректную дельта-цепочку и попадание
+  // в следующий saveGame() (автоматически вызывается после хода)
+  for (const [group, rate] of Object.entries(_tpPreview)) {
+    const current = eco.tax_rates_by_class?.[group];
+    if (current !== rate) {
+      applyDelta(`nations.${nationId}.economy.tax_rates_by_class.${group}`, rate);
+    }
+  }
+
   _tpDirty = false;
   _tpRender(); // полная перерисовка — кнопка Apply уходит в неактивное состояние
 }

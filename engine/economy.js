@@ -924,7 +924,10 @@ function updateHappiness() {
     if ((nation.military.at_war_with || []).length > 0) {
       happiness += CONFIG.BALANCE.HAPPINESS_FROM_WAR;
     }
-    if (economy.tax_rate > 0.15) {
+    // Штраф от высоких налогов — только для AI (без tax_rates_by_class).
+    // Для игрока эквивалентный штраф уже применяется через satisfaction классов
+    // в блоке «Штраф от высоких налогов (2c)» выше.
+    if (!economy.tax_rates_by_class && economy.tax_rate > 0.15) {
       happiness -= Math.round((economy.tax_rate - 0.15) * 100);
     }
     if (economy.treasury < 0) {
