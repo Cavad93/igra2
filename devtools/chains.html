@@ -254,6 +254,72 @@
     }
     .copy-ok { color: #7ee787 !important; }
 
+    /* ── Biomes view ────────────────────────────────────────────────── */
+    #view-biomes {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+      align-content: start;
+    }
+    .biome-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .biome-card:hover {
+      border-color: #58a6ff;
+      box-shadow: 0 0 0 1px #58a6ff22;
+    }
+    .biome-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid #30363d;
+    }
+    .biome-color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .biome-icon { font-size: 20px; flex-shrink: 0; }
+    .biome-name { font-size: 13px; font-weight: 600; color: #e6edf3; }
+    .biome-count {
+      margin-left: auto;
+      font-size: 11px;
+      color: #8b949e;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 1px 8px;
+    }
+    .biome-card-body { padding: 10px 14px; }
+    .biome-desc {
+      font-size: 11px;
+      color: #8b949e;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+    .biome-props {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .biome-prop {
+      font-size: 10px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 2px 7px;
+      color: #c9d1d9;
+    }
+    .biome-prop.move-fast  { border-color: #3fb950; color: #3fb950; }
+    .biome-prop.move-slow  { border-color: #f78166; color: #f78166; }
+    .biome-prop.move-mid   { border-color: #d29922; color: #d29922; }
+
     /* ── Graph view ─────────────────────────────────────────────────── */
     #graph-toolbar {
       background: #161b22;
@@ -325,8 +391,9 @@
   <h1>⚙ Цепочки производства</h1>
   <div class="sep"></div>
 
-  <button class="btn active" id="btn-table" onclick="switchView('table')">📋 Таблица</button>
-  <button class="btn"        id="btn-graph" onclick="switchView('graph')">🕸 Граф</button>
+  <button class="btn active" id="btn-table"  onclick="switchView('table')">📋 Таблица</button>
+  <button class="btn"        id="btn-graph"  onclick="switchView('graph')">🕸 Граф</button>
+  <button class="btn"        id="btn-biomes" onclick="switchView('biomes')">🌍 Биомы</button>
 
   <div class="sep"></div>
   <span class="label">Фильтр:</span>
@@ -392,6 +459,9 @@
     </div>
   </div>
 
+  <!-- BIOMES VIEW -->
+  <div id="view-biomes" class="view hidden"></div>
+
   <!-- GRAPH VIEW (этап 3) -->
   <div id="view-graph" class="view hidden" style="padding:0; display:flex; flex-direction:column;">
     <!-- toolbar графа -->
@@ -432,6 +502,7 @@
 <script src="../data/goods.js"></script>
 <script src="../data/recipes.js"></script>
 <script src="../data/buildings.js"></script>
+<script src="../data/biomes.js"></script>
 <script src="../config.js"></script>
 
 <!-- ── App ───────────────────────────────────────────────────────────── -->
@@ -723,15 +794,72 @@ function switchView(v) {
   currentView = v;
   document.getElementById('view-table').classList.toggle('hidden', v !== 'table');
   document.getElementById('view-graph').classList.toggle('hidden', v !== 'graph');
+  document.getElementById('view-biomes').classList.toggle('hidden', v !== 'biomes');
   document.getElementById('btn-table').classList.toggle('active', v === 'table');
   document.getElementById('btn-graph').classList.toggle('active', v === 'graph');
+  document.getElementById('btn-biomes').classList.toggle('active', v === 'biomes');
 
   const url = new URL(location.href);
   url.searchParams.set('view', v);
   history.replaceState({}, '', url);
 
-  if (v === 'table') renderTable();
-  if (v === 'graph') requestAnimationFrame(initGraph);
+  if (v === 'table')  renderTable();
+  if (v === 'graph')  requestAnimationFrame(initGraph);
+  if (v === 'biomes') renderBiomes();
+}
+
+// ── Biomes view ──────────────────────────────────────────────────────
+function renderBiomes() {
+  const container = document.getElementById('view-biomes');
+  if (!container || typeof BIOME_META === 'undefined') return;
+
+  const BIOME_ORDER = [
+    'mediterranean_coast', 'mediterranean_hills', 'river_valley',
+    'subtropical',         'semi_arid',           'desert',
+    'steppe',              'temperate_forest',     'alpine',
+    'savanna',             'tropical',             'volcanic',
+    'arctic',
+  ];
+
+  // Count regions per biome from REGION_BIOMES
+  const counts = {};
+  if (typeof REGION_BIOMES !== 'undefined') {
+    for (const bid of Object.values(REGION_BIOMES))
+      counts[bid] = (counts[bid] || 0) + 1;
+  }
+
+  function moveCls(cost) {
+    if (cost <= 1.0) return 'move-fast';
+    if (cost >= 1.8) return 'move-slow';
+    return 'move-mid';
+  }
+
+  container.innerHTML = BIOME_ORDER.map(bid => {
+    const b = BIOME_META[bid];
+    if (!b) return '';
+    const count = counts[bid] || 0;
+    const bonuses = Object.entries(b.production_bonus)
+      .map(([k, v]) => `${k} ×${v}`)
+      .join(', ');
+    return `
+      <div class="biome-card">
+        <div class="biome-card-header">
+          <span class="biome-color-dot" style="background:${b.color}"></span>
+          <span class="biome-icon">${b.icon}</span>
+          <span class="biome-name">${b.name}</span>
+          <span class="biome-count">${count} регионов</span>
+        </div>
+        <div class="biome-card-body">
+          <div class="biome-desc">${b.description}</div>
+          <div class="biome-props">
+            <span class="biome-prop ${moveCls(b.movement_cost)}">🚶 ×${b.movement_cost} движение</span>
+            ${Object.entries(b.production_bonus).map(([k, v]) =>
+              `<span class="biome-prop">+${k}: ×${v}</span>`
+            ).join('')}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
 }
 
 // ── Filter switch ─────────────────────────────────────────────────────
