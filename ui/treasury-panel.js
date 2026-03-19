@@ -70,6 +70,13 @@ function _tpOnSlider(group, rawVal) {
   // Частичная перерисовка: только колонка доходов
   const col = document.getElementById('tp-income-col');
   if (col) col.innerHTML = _tpRenderIncome();
+  // Активировать кнопку — она живёт в footer, не перерисовывается
+  const btn = document.getElementById('tp-apply-btn');
+  if (btn) {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor  = 'pointer';
+  }
 }
 
 // ── Применить ставки к GAME_STATE ─────────────────────────────
@@ -142,7 +149,13 @@ function _tpSlider(group) {
           <input type="range" class="tp-slider"
             min="0" max="30" step="0.5" value="${pct}"
             style="--tp-pos:${pos}%; --tp-color:${color}"
-            oninput="_tpOnSlider('${group}', this.value); this.nextElementSibling.textContent = parseFloat(this.value).toFixed(1)+'%'; this.style.setProperty('--tp-pos', this.value/30*100+'%'); this.style.setProperty('--tp-color', _tpRateColor(this.value/100))"
+            oninput="
+              _tpOnSlider('${group}', this.value);
+              var lbl = this.closest('.tp-slider-wrap').querySelector('.tp-pct');
+              if (lbl) { lbl.textContent = parseFloat(this.value).toFixed(1)+'%'; lbl.style.color = _tpRateColor(this.value/100); }
+              this.style.setProperty('--tp-pos', this.value/30*100+'%');
+              this.style.setProperty('--tp-color', _tpRateColor(this.value/100));
+            "
           />
         </div>
         <span class="tp-pct" style="color:${color}">${pct}%</span>
@@ -159,8 +172,6 @@ function _tpRenderIncome() {
   const portDuties   = inc.port_duties  || 0;
   const tradeProfit  = inc.trade_profit || 0;
   const totalPreview = taxTotal + portDuties + tradeProfit;
-
-  const applyDisabled = _tpDirty ? '' : 'disabled style="opacity:0.4;cursor:default"';
 
   return `
     <div class="tp-col-title">📈 ДОХОДЫ</div>
@@ -184,12 +195,7 @@ function _tpRenderIncome() {
     <div class="tp-row-total">
       <span class="tp-item-label">Итого доходов</span>
       <span class="tp-item-value tp-val-pos">${totalPreview.toLocaleString()} ₴</span>
-    </div>
-
-    <button id="tp-apply-btn" class="tp-apply-btn" ${applyDisabled}
-            onclick="applyTreasuryRates()">
-      ✓ Применить ставки
-    </button>`;
+    </div>`;
 }
 
 // Колонка расходов
@@ -304,6 +310,14 @@ function _tpRender() {
         <div class="tp-col tp-col-right">
           ${_tpRenderExpenses()}
         </div>
+      </div>
+
+      <div class="tp-footer">
+        <button id="tp-apply-btn" class="tp-apply-btn"
+                ${_tpDirty ? '' : 'disabled'}
+                onclick="applyTreasuryRates()">
+          ✓ Применить изменения
+        </button>
       </div>
 
     </div>`;

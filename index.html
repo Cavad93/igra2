@@ -3126,18 +3126,29 @@
     /* Блок налогов */
     .tp-subsection { margin-bottom: 8px; }
 
+    /* Footer панели с кнопкой */
+    .tp-footer {
+      flex-shrink: 0;
+      padding: 10px 14px;
+      border-top: 1px solid var(--border-gold);
+      background: linear-gradient(to bottom, #14100a, #0d0a05);
+    }
+
     /* Кнопка применить */
     .tp-apply-btn {
-      display: block; width: 100%; margin-top: 12px;
-      padding: 7px 0;
+      display: block; width: 100%;
+      padding: 9px 0;
       background: linear-gradient(to bottom, #2a4a1a, #1a3010);
       border: 1px solid #4caf50; color: #4caf50;
-      font-size: 12px; font-weight: bold; cursor: pointer;
+      font-size: 13px; font-weight: bold; cursor: pointer;
       letter-spacing: 0.5px;
-      transition: background 0.15s;
+      transition: background 0.15s, opacity 0.15s;
     }
     .tp-apply-btn:not([disabled]):hover {
       background: linear-gradient(to bottom, #3a6a2a, #2a4a1a);
+    }
+    .tp-apply-btn[disabled] {
+      opacity: 0.35; cursor: default;
     }
 
     /* Внутренний контейнер */
