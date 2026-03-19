@@ -45,6 +45,9 @@ function renderLeftPanel() {
       <button class="gov-open-btn" id="eco-open-btn" style="margin-top:4px" onclick="showEconomyOverlay()">
         💹 Экономический обзор ▸
       </button>
+      <button class="gov-open-btn" style="margin-top:4px" onclick="showTreasuryOverlay()">
+        💰 Казна и налоги ▸
+      </button>
     </div>
 
     <!-- КАЗНА -->
