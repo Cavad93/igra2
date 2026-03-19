@@ -2,23 +2,49 @@
 // Порядок вызова строго определён в turn.js
 
 // ──────────────────────────────────────────────────────────────
-// КОНСТАНТЫ: налогооблагаемое богатство на человека
-// Используется для разбивки налогов по слоям общества.
-// Единица = 1 золотой потенциального дохода с человека.
+// НАЛОГОВЫЕ ГРУППЫ → классы общества (из social_classes.js)
+//
+// Каждая группа содержит список class_id из SOCIAL_CLASSES.
+// Налоговая база группы = Σ(class_population × SOCIAL_CLASSES[class].wealth_level)
 // ──────────────────────────────────────────────────────────────
-const TAX_WEALTH_PER_PERSON = {
-  merchants:  8,    // аристократы/чиновники — богатейший слой
-  clergy:     4,    // жречество
-  craftsmen:  2.5,  // ремесленники
-  sailors:    2,    // моряки
-  soldiers:   2,    // солдаты
-  farmers:    1.5,  // земледельцы
-  slaves:     0,    // рабы — не платят налоги
+const TAX_GROUP_CLASSES = {
+  aristocrats: ['aristocrats', 'officials'],                            // аристократы + чиновники
+  clergy:      ['clergy_class'],                                        // жречество
+  commoners:   ['citizens', 'craftsmen_class', 'farmers_class', 'sailors_class'], // граждане + прочие
+  soldiers:    ['soldiers_class', 'freedmen'],                          // солдаты + вольноотпущенники
 };
 
-// Калибровочный множитель: wealth_units → золото
-// Подобран так, чтобы итоговый налог (rate=0.12, syracuse) был близок к формуле tax_rate×production
+// Калибровочный множитель: (pop × wealth_level) → золото/ход
+// wealth_level=5, pop=19000, rate=0.15, calibration=0.5 → ~7125 зол. с аристократов Сиракуз
 const TAX_CALIBRATION = 0.5;
+
+// ──────────────────────────────────────────────────────────────
+// ВЫЧИСЛЕНИЕ НАЛОГОВЫХ БАЗ ПО ГРУППАМ
+// Использует CLASS_FROM_PROFESSION + SOCIAL_CLASSES из social_classes.js
+// Возвращает { aristocrats, clergy, commoners, soldiers } — суммарные
+// pop×wealth_level единицы для каждой налоговой группы.
+// ──────────────────────────────────────────────────────────────
+function computeTaxGroupBases(by_profession) {
+  // Вычисляем население каждого социального класса из профессий
+  let classPops = {};
+  if (typeof calculateClassPopulations === 'function') {
+    classPops = calculateClassPopulations(by_profession);
+  }
+
+  const bases = { aristocrats: 0, clergy: 0, commoners: 0, soldiers: 0 };
+
+  for (const [group, classIds] of Object.entries(TAX_GROUP_CLASSES)) {
+    for (const classId of classIds) {
+      const pop = classPops[classId] || 0;
+      const wealthLevel = (typeof SOCIAL_CLASSES !== 'undefined')
+        ? (SOCIAL_CLASSES[classId]?.wealth_level ?? 0)
+        : 0;
+      bases[group] += pop * wealthLevel;
+    }
+  }
+
+  return bases;
+}
 
 // ──────────────────────────────────────────────────────────────
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
@@ -303,34 +329,29 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   const bldBonuses = getBuildingBonuses(nationId);
 
   // ── ДОХОДЫ: НАЛОГИ ─────────────────────────────────────────
-  // Вычисляем богатство каждой группы (wealth_units = population × gold_per_person)
-  const wealthUnits = {
-    aristocrats: (prof.merchants  || 0) * TAX_WEALTH_PER_PERSON.merchants,
-    clergy:      (prof.clergy     || 0) * TAX_WEALTH_PER_PERSON.clergy,
-    commoners:   (prof.farmers    || 0) * TAX_WEALTH_PER_PERSON.farmers
-               + (prof.craftsmen  || 0) * TAX_WEALTH_PER_PERSON.craftsmen
-               + (prof.sailors    || 0) * TAX_WEALTH_PER_PERSON.sailors,
-    soldiers:    (prof.soldiers   || 0) * TAX_WEALTH_PER_PERSON.soldiers,
-  };
-  const totalWealthUnits = wealthUnits.aristocrats + wealthUnits.clergy
-                         + wealthUnits.commoners   + wealthUnits.soldiers;
+  // taxBase[group] = Σ(class_pop × wealth_level) по классам группы
+  // Использует CLASS_FROM_PROFESSION + SOCIAL_CLASSES.wealth_level
+  const taxBases = computeTaxGroupBases(prof);
+  const totalTaxBase = taxBases.aristocrats + taxBases.clergy
+                     + taxBases.commoners   + taxBases.soldiers;
 
   let taxByClass;
   let taxIncomeTotal;
 
-  if (economy.tax_rates_by_class && totalWealthUnits > 0) {
-    // ── Игрок: используем персональные ставки по слоям ──
+  if (economy.tax_rates_by_class && totalTaxBase > 0) {
+    // ── Нации с персональными ставками (игрок + детальные AI) ──
+    // tax_class = Σ(pop × wealth_level) × rate × calibration × building_bonus
     const r = economy.tax_rates_by_class;
     taxByClass = {
-      aristocrats: Math.round(wealthUnits.aristocrats * r.aristocrats * TAX_CALIBRATION * bldBonuses.tax_mult),
-      clergy:      Math.round(wealthUnits.clergy      * r.clergy      * TAX_CALIBRATION * bldBonuses.tax_mult),
-      commoners:   Math.round(wealthUnits.commoners   * r.commoners   * TAX_CALIBRATION * bldBonuses.tax_mult),
-      soldiers:    Math.round(wealthUnits.soldiers    * r.soldiers    * TAX_CALIBRATION * bldBonuses.tax_mult),
+      aristocrats: Math.round(taxBases.aristocrats * r.aristocrats * TAX_CALIBRATION * bldBonuses.tax_mult),
+      clergy:      Math.round(taxBases.clergy      * r.clergy      * TAX_CALIBRATION * bldBonuses.tax_mult),
+      commoners:   Math.round(taxBases.commoners   * r.commoners   * TAX_CALIBRATION * bldBonuses.tax_mult),
+      soldiers:    Math.round(taxBases.soldiers    * r.soldiers    * TAX_CALIBRATION * bldBonuses.tax_mult),
     };
     taxIncomeTotal = taxByClass.aristocrats + taxByClass.clergy
                    + taxByClass.commoners   + taxByClass.soldiers;
   } else {
-    // ── AI-нации: единая ставка tax_rate × стоимость производства ──
+    // ── AI-нации (без tax_rates_by_class): единая ставка × стоимость производства ──
     let productionValue = 0;
     for (const [good, amount] of Object.entries(produced)) {
       const price = GAME_STATE.market[good] ? GAME_STATE.market[good].price : 10;
@@ -338,13 +359,13 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     }
     taxIncomeTotal = Math.round(productionValue * economy.tax_rate * bldBonuses.tax_mult);
 
-    // Для отчётности: пропорциональное распределение по группам
-    if (totalWealthUnits > 0) {
+    // Для разбивки в отчёте: пропорциональное распределение по налоговым базам
+    if (totalTaxBase > 0) {
       taxByClass = {
-        aristocrats: Math.round(taxIncomeTotal * wealthUnits.aristocrats / totalWealthUnits),
-        clergy:      Math.round(taxIncomeTotal * wealthUnits.clergy      / totalWealthUnits),
-        commoners:   Math.round(taxIncomeTotal * wealthUnits.commoners   / totalWealthUnits),
-        soldiers:    Math.round(taxIncomeTotal * wealthUnits.soldiers    / totalWealthUnits),
+        aristocrats: Math.round(taxIncomeTotal * taxBases.aristocrats / totalTaxBase),
+        clergy:      Math.round(taxIncomeTotal * taxBases.clergy      / totalTaxBase),
+        commoners:   Math.round(taxIncomeTotal * taxBases.commoners   / totalTaxBase),
+        soldiers:    Math.round(taxIncomeTotal * taxBases.soldiers    / totalTaxBase),
       };
     } else {
       taxByClass = { aristocrats: 0, clergy: 0, commoners: 0, soldiers: 0 };
@@ -382,9 +403,9 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   const expAdvisors = advisorCount * 50;
 
   // ── РАСХОДЫ: СТАБИЛЬНОСТЬ ──────────────────────────────────
-  // Нестабильность требует затрат: чем ниже стабильность — тем дороже
+  // 200 × (1 - stability/100): при 100% → 0, при 50% → 100, при 0% → 200
   const stability = nation.government?.stability ?? 50;
-  const expStability = Math.round(Math.max(0, (80 - stability)) * 4);
+  const expStability = Math.round(200 * (1 - stability / 100));
 
   // ── РАСХОДЫ: КРЕПОСТИ ──────────────────────────────────────
   // Считаем 'walls' в nation.buildings (legacy) и building_slots с типом 'walls'
@@ -832,6 +853,27 @@ function updateHappiness() {
           classSat[classId].satisfaction + capped,
         ));
         classSat[classId].labor_law_bonus = capped; // для UI
+      }
+
+      // ── Штраф от высоких налогов (2c) ─────────────────────
+      // Ставка > 20% снижает удовлетворённость затронутых классов.
+      // Для каждой налоговой группы вычисляем penalty и применяем
+      // ко всем классам группы (через TAX_GROUP_CLASSES).
+      // Формула: penalty = (rate - 0.20) × 200, макс 40 очков.
+      const taxRates = economy.tax_rates_by_class;
+      if (taxRates) {
+        for (const [group, classIds] of Object.entries(TAX_GROUP_CLASSES)) {
+          const rate = taxRates[group] ?? 0;
+          if (rate <= 0.20) continue;
+          const penalty = -Math.min(40, Math.round((rate - 0.20) * 200));
+          for (const classId of classIds) {
+            if (!classSat[classId]) continue;
+            classSat[classId].satisfaction = Math.max(0, Math.min(100,
+              classSat[classId].satisfaction + penalty,
+            ));
+            classSat[classId].tax_burden = penalty; // для UI
+          }
+        }
       }
 
       // Взвешенное счастье по политическому весу классов
