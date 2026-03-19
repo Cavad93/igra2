@@ -494,6 +494,7 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     fortresses:       expFortresses,
     buildings:        expBuildings,
     slaves:           expSlaves,
+    total:            totalExpense,
   });
 
   // ── БАНКРОТСТВО ────────────────────────────────────────────

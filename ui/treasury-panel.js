@@ -193,26 +193,58 @@ function _tpRenderIncome() {
 }
 
 // Колонка расходов
+// Вычисляет расходы из _expense_breakdown (если заполнен движком),
+// иначе — напрямую из сырых данных нации (при первом открытии до хода).
 function _tpRenderExpenses() {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
-  const exp    = nation.economy._expense_breakdown || {};
+  const eco    = nation.economy;
+  const exp    = eco._expense_breakdown || {};
+  const mil    = nation.military;
+  const gov    = nation.government;
+  const prof   = nation.population.by_profession || {};
+  const B      = CONFIG?.BALANCE || {};
 
-  const army = (exp.army_infantry || 0) + (exp.army_cavalry || 0) + (exp.army_mercenaries || 0);
+  // Армия: берём из breakdown или вычисляем по тем же формулам что в updateTreasury
+  const armyInf  = exp.army_infantry    ?? (mil.infantry    || 0) * (B.INFANTRY_UPKEEP  || 2);
+  const armyCav  = exp.army_cavalry     ?? (mil.cavalry     || 0) * (B.CAVALRY_UPKEEP   || 5);
+  const armyMerc = exp.army_mercenaries ?? (mil.mercenaries || 0) * (B.MERCENARY_UPKEEP || 4);
+  const army     = armyInf + armyCav + armyMerc;
+
+  // Флот
+  const navy = exp.navy ?? (mil.ships || 0) * (B.SHIP_UPKEEP || 10);
+
+  // Двор и советники
+  const aliveChars = (nation.characters || []).filter(c => c.alive !== false);
+  const court    = exp.court    ?? aliveChars.length * 15;
+  const advisors = exp.advisors ?? aliveChars.filter(c => c.role === 'advisor').length * 50;
+
+  // Стабильность: 200 × (1 − stability/100)
+  const stab     = gov?.stability ?? 50;
+  const stability = exp.stability ?? Math.round(200 * (1 - stab / 100));
+
+  // Крепости: из breakdown (сложно пересчитать без зданий)
+  const fortresses = exp.fortresses || 0;
+
+  // Здания
+  const buildings = exp.buildings ?? (eco._building_maintenance_per_turn || 0);
+
+  // Рабы
+  const slaves = exp.slaves ?? (prof.slaves || 0) * (B.SLAVE_UPKEEP || 1);
 
   const rows = [
-    { label: '⚔️ Армия',        val: army },
-    { label: '⛵ Флот',          val: exp.navy       || 0 },
-    { label: '🏰 Двор',         val: exp.court      || 0 },
-    { label: '⚖️ Стабильность', val: exp.stability  || 0 },
-    { label: '📜 Советники',    val: exp.advisors   || 0 },
-    { label: '🏯 Крепости',     val: exp.fortresses || 0 },
-    { label: '🏛 Здания',       val: exp.buildings  || 0 },
-    { label: '⛓ Рабы',         val: exp.slaves     || 0 },
+    { label: '⚔️ Армия',        val: Math.round(army) },
+    { label: '⛵ Флот',          val: Math.round(navy) },
+    { label: '🏰 Двор',         val: Math.round(court) },
+    { label: '⚖️ Стабильность', val: Math.round(stability) },
+    { label: '📜 Советники',    val: Math.round(advisors) },
+    { label: '🏯 Крепости',     val: Math.round(fortresses) },
+    { label: '🏛 Здания',       val: Math.round(buildings) },
+    { label: '⛓ Рабы',         val: Math.round(slaves) },
   ].filter(r => r.val > 0);
 
-  const total = exp.total
-    || rows.reduce((s, r) => s + r.val, 0)
-    || (nation.economy.expense_per_turn || 0);
+  const total = rows.reduce((s, r) => s + r.val, 0)
+    || exp.total
+    || (eco.expense_per_turn || 0);
 
   return `
     <div class="tp-col-title">📉 РАСХОДЫ</div>
