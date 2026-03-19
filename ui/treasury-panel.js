@@ -2,8 +2,9 @@
 // Показывает доходы/расходы, слайдеры налогов с предпросмотром.
 
 // ── Состояние предпросмотра ───────────────────────────────────
-let _tpPreview = null;   // { aristocrats, clergy, commoners, soldiers } — ставки 0..0.30
-let _tpDirty   = false;  // Есть ли несохранённые изменения
+let _tpPreview   = null;  // { aristocrats, clergy, commoners, soldiers } — ставки 0..0.30
+let _tpExpLevels = null;  // { army, navy, court, stability } — 0.5..1.5
+let _tpDirty     = false; // Есть ли несохранённые изменения
 
 // ── Названия и иконки налоговых групп ────────────────────────
 const _TP_GROUPS = {
@@ -21,7 +22,15 @@ function showTreasuryOverlay() {
   const cur = nation.economy.tax_rates_by_class
     || { aristocrats: 0.12, clergy: 0.10, commoners: 0.10, soldiers: 0.05 };
   _tpPreview = { ...cur };
-  _tpDirty   = false;
+
+  const lvls = nation.economy.expense_levels || {};
+  _tpExpLevels = {
+    army:      lvls.army      ?? 1.0,
+    navy:      lvls.navy      ?? 1.0,
+    court:     lvls.court     ?? 1.0,
+    stability: lvls.stability ?? 1.0,
+  };
+  _tpDirty = false;
 
   const el = document.getElementById('treasury-overlay');
   if (el) { el.classList.remove('hidden'); _tpRender(); }
@@ -30,8 +39,9 @@ function showTreasuryOverlay() {
 // ── Закрыть панель ────────────────────────────────────────────
 function hideTreasuryOverlay() {
   document.getElementById('treasury-overlay')?.classList.add('hidden');
-  _tpPreview = null;
-  _tpDirty   = false;
+  _tpPreview   = null;
+  _tpExpLevels = null;
+  _tpDirty     = false;
 }
 
 // ── Рассчитать доход от группы при заданной ставке ───────────
@@ -63,7 +73,21 @@ function _tpPenalty(rate) {
   return rate <= 0.20 ? 0 : -Math.min(40, Math.round((rate - 0.20) * 200));
 }
 
-// ── Обработчик слайдера ───────────────────────────────────────
+// ── Обработчик слайдера расходов ─────────────────────────────
+function _tpOnExpSlider(category, rawVal) {
+  _tpExpLevels[category] = parseFloat(rawVal) / 100;
+  _tpDirty = true;
+  const col = document.getElementById('tp-expense-col');
+  if (col) col.innerHTML = _tpRenderExpenses();
+  const btn = document.getElementById('tp-apply-btn');
+  if (btn) {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor  = 'pointer';
+  }
+}
+
+// ── Обработчик слайдера налогов ───────────────────────────────
 function _tpOnSlider(group, rawVal) {
   _tpPreview[group] = parseFloat(rawVal) / 100;
   _tpDirty = true;
@@ -79,20 +103,16 @@ function _tpOnSlider(group, rawVal) {
   }
 }
 
-// ── Применить ставки к GAME_STATE ─────────────────────────────
+// ── Применить ставки и уровни расходов к GAME_STATE ──────────
 function applyTreasuryRates() {
   if (!_tpPreview) return;
   const nationId = GAME_STATE.player_nation;
   const eco      = GAME_STATE.nations[nationId].economy;
 
-  // Инициализировать объект, если он ещё не создан (страховка)
   if (!eco.tax_rates_by_class) {
     applyDelta(`nations.${nationId}.economy.tax_rates_by_class`, {});
   }
 
-  // Записываем каждую изменённую ставку через applyDelta —
-  // это гарантирует корректную дельта-цепочку и попадание
-  // в следующий saveGame() (автоматически вызывается после хода)
   for (const [group, rate] of Object.entries(_tpPreview)) {
     const current = eco.tax_rates_by_class?.[group];
     if (current !== rate) {
@@ -100,8 +120,20 @@ function applyTreasuryRates() {
     }
   }
 
+  if (_tpExpLevels) {
+    if (!eco.expense_levels) {
+      applyDelta(`nations.${nationId}.economy.expense_levels`, {});
+    }
+    for (const [cat, level] of Object.entries(_tpExpLevels)) {
+      const current = eco.expense_levels?.[cat];
+      if (current !== level) {
+        applyDelta(`nations.${nationId}.economy.expense_levels.${cat}`, level);
+      }
+    }
+  }
+
   _tpDirty = false;
-  _tpRender(); // полная перерисовка — кнопка Apply уходит в неактивное состояние
+  _tpRender();
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -198,64 +230,164 @@ function _tpRenderIncome() {
     </div>`;
 }
 
-// Колонка расходов
-// Вычисляет расходы из _expense_breakdown (если заполнен движком),
-// иначе — напрямую из сырых данных нации (при первом открытии до хода).
+// ── Цвет уровня расходов ─────────────────────────────────────
+function _tpLevelColor(level) {
+  if (level < 0.75) return 'var(--negative)';
+  if (level > 1.25) return 'var(--warning)';
+  return 'var(--positive)';
+}
+
+// ── Слайдер категории расходов ────────────────────────────────
+function _tpExpSliderRow(category, icon, name, effectsFn) {
+  const nation   = GAME_STATE.nations[GAME_STATE.player_nation];
+  const exp      = nation.economy._expense_breakdown || {};
+  const mil      = nation.military;
+  const gov      = nation.government;
+  const prof     = nation.population.by_profession || {};
+  const B        = CONFIG?.BALANCE || {};
+
+  const level    = _tpExpLevels?.[category] ?? 1.0;
+  const pct      = Math.round(level * 100);
+  const color    = _tpLevelColor(level);
+
+  // База расходов: берём из breakdown или вычисляем из сырых данных
+  let baseCost;
+  if (category === 'army') {
+    const base = exp.army_base
+      ?? ((mil.infantry || 0) * (B.INFANTRY_UPKEEP || 2)
+        + (mil.cavalry  || 0) * (B.CAVALRY_UPKEEP  || 5)
+        + (mil.mercenaries || 0) * (B.MERCENARY_UPKEEP || 4));
+    baseCost = base;
+  } else if (category === 'navy') {
+    baseCost = exp.navy_base ?? (mil.ships || 0) * (B.SHIP_UPKEEP || 10);
+  } else if (category === 'court') {
+    const aliveChars = (nation.characters || []).filter(c => c.alive !== false);
+    baseCost = exp.court_base
+      ?? (aliveChars.length * 15 + aliveChars.filter(c => c.role === 'advisor').length * 50);
+  } else if (category === 'stability') {
+    const stab = gov?.stability ?? 50;
+    baseCost = exp.stability_base ?? Math.round(200 * (1 - stab / 100));
+  } else {
+    baseCost = 0;
+  }
+
+  const effCost  = Math.round(baseCost * level);
+  const baseMark = level !== 1.0
+    ? `<span class="tp-delta" style="color:${color}">(база: ${baseCost.toLocaleString()})</span>`
+    : '';
+
+  // Позиция ручки: slider 50..150, нейтраль 100 → pos = (pct-50)/100*100
+  const pos = Math.round((pct - 50));
+  const effectText = effectsFn(level);
+
+  return `
+    <div class="tp-tax-row">
+      <div class="tp-tax-head">
+        <span class="tp-tax-name">${icon} ${name}</span>
+        <div class="tp-tax-right">
+          ${baseMark}
+          <span class="tp-tax-income" style="color:${color}">${effCost.toLocaleString()} ₴</span>
+        </div>
+      </div>
+      <div class="tp-slider-wrap">
+        <div class="tp-slider-track">
+          <input type="range" class="tp-slider tp-exp-slider"
+            min="50" max="150" step="5" value="${pct}"
+            style="--tp-pos:${pos}%; --tp-color:${color}"
+            oninput="
+              _tpOnExpSlider('${category}', this.value);
+              var lbl = this.closest('.tp-slider-wrap').querySelector('.tp-pct');
+              var lvl = this.value / 100;
+              var clr = lvl < 0.75 ? 'var(--negative)' : lvl > 1.25 ? 'var(--warning)' : 'var(--positive)';
+              if (lbl) { lbl.textContent = this.value + '%'; lbl.style.color = clr; }
+              this.style.setProperty('--tp-pos', (this.value - 50) + '%');
+              this.style.setProperty('--tp-color', clr);
+            "
+          />
+        </div>
+        <span class="tp-pct" style="color:${color}">${pct}%</span>
+      </div>
+      ${effectText ? `<div class="tp-penalty">${effectText}</div>` : ''}
+    </div>`;
+}
+
+// Колонка расходов с интерактивными слайдерами
 function _tpRenderExpenses() {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const eco    = nation.economy;
   const exp    = eco._expense_breakdown || {};
-  const mil    = nation.military;
-  const gov    = nation.government;
   const prof   = nation.population.by_profession || {};
   const B      = CONFIG?.BALANCE || {};
 
-  // Армия: берём из breakdown или вычисляем по тем же формулам что в updateTreasury
-  const armyInf  = exp.army_infantry    ?? (mil.infantry    || 0) * (B.INFANTRY_UPKEEP  || 2);
-  const armyCav  = exp.army_cavalry     ?? (mil.cavalry     || 0) * (B.CAVALRY_UPKEEP   || 5);
-  const armyMerc = exp.army_mercenaries ?? (mil.mercenaries || 0) * (B.MERCENARY_UPKEEP || 4);
-  const army     = armyInf + armyCav + armyMerc;
-
-  // Флот
-  const navy = exp.navy ?? (mil.ships || 0) * (B.SHIP_UPKEEP || 10);
-
-  // Двор и советники
-  const aliveChars = (nation.characters || []).filter(c => c.alive !== false);
-  const court    = exp.court    ?? aliveChars.length * 15;
-  const advisors = exp.advisors ?? aliveChars.filter(c => c.role === 'advisor').length * 50;
-
-  // Стабильность: 200 × (1 − stability/100)
-  const stab     = gov?.stability ?? 50;
-  const stability = exp.stability ?? Math.round(200 * (1 - stab / 100));
-
-  // Крепости: из breakdown (сложно пересчитать без зданий)
+  // Фиксированные расходы (без слайдеров)
   const fortresses = exp.fortresses || 0;
+  const buildings  = exp.buildings ?? (eco._building_maintenance_per_turn || 0);
+  const slaves     = exp.slaves ?? (prof.slaves || 0) * (B.SLAVE_UPKEEP || 1);
 
-  // Здания
-  const buildings = exp.buildings ?? (eco._building_maintenance_per_turn || 0);
+  // Контролируемые расходы: считаем из preview-уровней
+  const armyLvl   = _tpExpLevels?.army      ?? 1.0;
+  const navyLvl   = _tpExpLevels?.navy      ?? 1.0;
+  const courtLvl  = _tpExpLevels?.court     ?? 1.0;
+  const stabilLvl = _tpExpLevels?.stability ?? 1.0;
 
-  // Рабы
-  const slaves = exp.slaves ?? (prof.slaves || 0) * (B.SLAVE_UPKEEP || 1);
+  const armyBase   = exp.army_base     ?? (exp.army_infantry ?? 0) + (exp.army_cavalry ?? 0) + (exp.army_mercenaries ?? 0);
+  const navyBase   = exp.navy_base     ?? (exp.navy  ?? 0);
+  const courtBase  = exp.court_base    ?? (exp.court ?? 0) + (exp.advisors ?? 0);
+  const stabilBase = exp.stability_base ?? (exp.stability ?? 0);
 
-  const rows = [
-    { label: '⚔️ Армия',        val: Math.round(army) },
-    { label: '⛵ Флот',          val: Math.round(navy) },
-    { label: '🏰 Двор',         val: Math.round(court) },
-    { label: '⚖️ Стабильность', val: Math.round(stability) },
-    { label: '📜 Советники',    val: Math.round(advisors) },
-    { label: '🏯 Крепости',     val: Math.round(fortresses) },
-    { label: '🏛 Здания',       val: Math.round(buildings) },
-    { label: '⛓ Рабы',         val: Math.round(slaves) },
+  const effArmy   = Math.round(armyBase   * armyLvl);
+  const effNavy   = Math.round(navyBase   * navyLvl);
+  const effCourt  = Math.round(courtBase  * courtLvl);
+  const effStabil = Math.round(stabilBase * stabilLvl);
+
+  const totalFixed    = fortresses + buildings + slaves;
+  const totalControl  = effArmy + effNavy + effCourt + effStabil;
+  const total         = totalControl + totalFixed;
+
+  const armySlider = _tpExpSliderRow('army', '⚔️', 'Армия', (lvl) => {
+    if (Math.abs(lvl - 1.0) < 0.01) return '';
+    const m = parseFloat(((lvl - 1.0) * 15).toFixed(1));
+    const l = parseFloat(((lvl - 1.0) * 8).toFixed(1));
+    const sign = v => v >= 0 ? '+' : '';
+    return `${m >= 0 ? '✓' : '⚠'} Боевой дух: ${sign(m)}${m}/ход, Лояльность: ${sign(l)}${l}/ход`;
+  });
+
+  const navySlider = _tpExpSliderRow('navy', '⛵', 'Флот', (lvl) => {
+    if (Math.abs(lvl - 1.0) < 0.01) return '';
+    return `${lvl >= 1.0 ? '✓' : '⚠'} Торговые доходы ×${lvl.toFixed(2)}`;
+  });
+
+  const courtSlider = _tpExpSliderRow('court', '🏰', 'Двор и советники', (lvl) => {
+    if (Math.abs(lvl - 1.0) < 0.01) return '';
+    const d = parseFloat(((lvl - 1.0) * 2).toFixed(1));
+    return `${d >= 0 ? '✓' : '⚠'} Легитимность: ${d >= 0 ? '+' : ''}${d}/ход`;
+  });
+
+  const stabilSlider = _tpExpSliderRow('stability', '⚖️', 'Порядок и стабильность', (lvl) => {
+    if (Math.abs(lvl - 1.0) < 0.01) return '';
+    return `${lvl >= 1.0 ? '✓' : '⚠'} Восстановление стабильности ×${lvl.toFixed(2)}/ход`;
+  });
+
+  const fixedRows = [
+    { label: '🏯 Крепости', val: fortresses },
+    { label: '🏛 Здания',   val: buildings },
+    { label: '⛓ Рабы',     val: Math.round(slaves) },
   ].filter(r => r.val > 0);
-
-  const total = rows.reduce((s, r) => s + r.val, 0)
-    || exp.total
-    || (eco.expense_per_turn || 0);
 
   return `
     <div class="tp-col-title">📉 РАСХОДЫ</div>
 
-    ${rows.map(r => `
+    <div class="tp-subsection">
+      <div class="tp-sub-label">Управляемые расходы &mdash; ${totalControl.toLocaleString()} ₴</div>
+      ${armySlider}
+      ${navySlider}
+      ${courtSlider}
+      ${stabilSlider}
+    </div>
+
+    <div class="tp-divider"></div>
+
+    ${fixedRows.map(r => `
       <div class="tp-row-item">
         <span class="tp-item-label">${r.label}</span>
         <span class="tp-item-value tp-val-neg">${r.val.toLocaleString()} ₴</span>
@@ -307,7 +439,7 @@ function _tpRender() {
         <div id="tp-income-col" class="tp-col tp-col-left">
           ${_tpRenderIncome()}
         </div>
-        <div class="tp-col tp-col-right">
+        <div id="tp-expense-col" class="tp-col tp-col-right">
           ${_tpRenderExpenses()}
         </div>
       </div>

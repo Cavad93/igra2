@@ -328,6 +328,13 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   // ── БОНУСЫ ЗДАНИЙ ──────────────────────────────────────────
   const bldBonuses = getBuildingBonuses(nationId);
 
+  // ── УРОВНИ ФИНАНСИРОВАНИЯ РАСХОДОВ (0.5..1.5) ──────────────
+  const expLevels = economy.expense_levels || {};
+  const armyLvl   = Math.max(0.5, Math.min(1.5, expLevels.army      ?? 1.0));
+  const navyLvl   = Math.max(0.5, Math.min(1.5, expLevels.navy      ?? 1.0));
+  const courtLvl  = Math.max(0.5, Math.min(1.5, expLevels.court     ?? 1.0));
+  const stabilLvl = Math.max(0.5, Math.min(1.5, expLevels.stability ?? 1.0));
+
   // ── ДОХОДЫ: НАЛОГИ ─────────────────────────────────────────
   // Единая механика для всех наций: tax_rates_by_class × wealth_level.
   // Если нация не имеет явных ставок — инициализируем из единого tax_rate
@@ -377,7 +384,9 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     );
   }
 
-  const totalIncome = taxIncomeTotal + portDuties + tradeProfit;
+  // Флот влияет на торговую прибыль пропорционально уровню финансирования
+  const effTradeProfit = Math.round(tradeProfit * navyLvl);
+  const totalIncome = taxIncomeTotal + portDuties + effTradeProfit;
 
   // ── РАСХОДЫ: АРМИЯ ─────────────────────────────────────────
   const expArmyInfantry    = (military.infantry    || 0) * CONFIG.BALANCE.INFANTRY_UPKEEP;
@@ -437,8 +446,17 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   // ── РАСХОДЫ: РАБЫ ──────────────────────────────────────────
   const expSlaves = (prof.slaves || 0) * CONFIG.BALANCE.SLAVE_UPKEEP;
 
-  const totalExpense = expArmyInfantry + expArmyCavalry + expArmyMercenaries
-                     + expNavy + expCourt + expAdvisors + expStability
+  // ── ПРИМЕНЯЕМ УРОВНИ ФИНАНСИРОВАНИЯ ────────────────────────
+  const effArmyInf     = Math.round(expArmyInfantry    * armyLvl);
+  const effArmyCav     = Math.round(expArmyCavalry     * armyLvl);
+  const effArmyMerc    = Math.round(expArmyMercenaries * armyLvl);
+  const effNavyExp     = Math.round(expNavy             * navyLvl);
+  const effCourtExp    = Math.round(expCourt            * courtLvl);
+  const effAdvisorsExp = Math.round(expAdvisors         * courtLvl);
+  const effStabExp     = Math.round(expStability        * stabilLvl);
+
+  const totalExpense = effArmyInf + effArmyCav + effArmyMerc
+                     + effNavyExp + effCourtExp + effAdvisorsExp + effStabExp
                      + expFortresses + expBuildings + expSlaves;
 
   // ── ОБНОВЛЯЕМ КАЗНУ ────────────────────────────────────────
@@ -450,28 +468,40 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   applyDelta(`nations.${nationId}.economy.expense_per_turn`, Math.round(totalExpense));
 
   // ── ВОССТАНОВЛЕНИЕ СТАБИЛЬНОСТИ ────────────────────────────
-  // expStability = рекомендуемые расходы на поддержание порядка.
-  // При профицитном бюджете → полное финансирование → +1.5/ход.
-  // При дефиците → коэффициент финансирования снижается → медленнее.
-  // Логика: если государство не может оплатить стабилизацию → стагнация.
+  // stabilLvl масштабирует скорость восстановления (× уровень финансирования).
+  // fundingRatio убывает при дефиците (у эффективных расходов на стабильность).
   if (expStability > 0) {
     const currentStab = nation.government?.stability ?? 50;
     if (currentStab < 100) {
-      // fundingRatio: 1.0 при нулевом/положительном балансе;
-      // убывает до 0 когда дефицит равен стоимости стабилизации
       const fundingRatio = delta >= 0
         ? 1.0
-        : Math.max(0, 1 + delta / expStability);
-      const stabRecovery = parseFloat((1.5 * fundingRatio).toFixed(2));
+        : Math.max(0, 1 + delta / Math.max(1, effStabExp));
+      const stabRecovery = parseFloat((1.5 * fundingRatio * stabilLvl).toFixed(2));
       if (stabRecovery > 0) {
         applyDelta(
           `nations.${nationId}.government.stability`,
           Math.min(100, parseFloat((currentStab + stabRecovery).toFixed(2))),
         );
       }
-      // Сохраняем коэффициент финансирования для UI
       economy._stability_funding_ratio = parseFloat(fundingRatio.toFixed(2));
     }
+  }
+
+  // ── ЭФФЕКТЫ УРОВНЕЙ ФИНАНСИРОВАНИЯ ─────────────────────────
+  const totalArmy = (military.infantry || 0) + (military.cavalry || 0) + (military.mercenaries || 0);
+  if (totalArmy > 0 && Math.abs(armyLvl - 1.0) > 0.01) {
+    const moraleDelta  = parseFloat(((armyLvl - 1.0) * 15).toFixed(1));
+    const loyaltyDelta = parseFloat(((armyLvl - 1.0) *  8).toFixed(1));
+    applyDelta(`nations.${nationId}.military.morale`,
+      Math.max(0, Math.min(100, (military.morale ?? 50) + moraleDelta)));
+    applyDelta(`nations.${nationId}.military.loyalty`,
+      Math.max(0, Math.min(100, (military.loyalty ?? 50) + loyaltyDelta)));
+  }
+  if (Math.abs(courtLvl - 1.0) > 0.01) {
+    const legDelta = parseFloat(((courtLvl - 1.0) * 2).toFixed(1));
+    const gov = nation.government;
+    applyDelta(`nations.${nationId}.government.legitimacy`,
+      Math.max(0, Math.min(100, (gov?.legitimacy ?? 50) + legDelta)));
   }
 
   // ── КЭШ РАЗБИВКИ ДЛЯ UI ────────────────────────────────────
@@ -480,17 +510,26 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     tax_clergy:      taxByClass.clergy,
     tax_commoners:   taxByClass.commoners,
     tax_soldiers:    taxByClass.soldiers,
-    trade:           Math.round(tradeProfit),
+    trade_profit:    Math.round(effTradeProfit),
     port_duties:     portDuties,
+    total:           Math.round(totalIncome),
   });
   applyDelta(`nations.${nationId}.economy._expense_breakdown`, {
-    army_infantry:    expArmyInfantry,
-    army_cavalry:     expArmyCavalry,
-    army_mercenaries: expArmyMercenaries,
-    navy:             expNavy,
-    court:            expCourt,
-    advisors:         expAdvisors,
-    stability:        expStability,
+    army_infantry:    effArmyInf,
+    army_cavalry:     effArmyCav,
+    army_mercenaries: effArmyMerc,
+    army_base:        Math.round(expArmyInfantry + expArmyCavalry + expArmyMercenaries),
+    army_level:       armyLvl,
+    navy:             effNavyExp,
+    navy_base:        expNavy,
+    navy_level:       navyLvl,
+    court:            effCourtExp,
+    advisors:         effAdvisorsExp,
+    court_base:       expCourt + expAdvisors,
+    court_level:      courtLvl,
+    stability:        effStabExp,
+    stability_base:   expStability,
+    stability_level:  stabilLvl,
     fortresses:       expFortresses,
     buildings:        expBuildings,
     slaves:           expSlaves,

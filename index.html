@@ -3097,8 +3097,15 @@
       min-width: 36px; text-align: right;
     }
     .tp-penalty {
-      font-size: 10px; color: var(--negative);
+      font-size: 10px; color: var(--muted, #999);
       margin-top: 4px; padding-left: 2px;
+    }
+    /* Слайдер расходов: красн(50–75%) / зел(75–125%) / жёлт(125–150%) */
+    .tp-exp-slider {
+      background: linear-gradient(to right,
+        #f44336 0%, #f44336 25%,
+        #4caf50 25%, #4caf50 75%,
+        #ff9800 75%, #ff9800 100%);
     }
 
     /* Строки доходов/расходов */
