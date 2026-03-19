@@ -877,6 +877,11 @@ function showRegionInfo(regionId) {
           <div class="region-stat">⚔️ Гарнизон: <strong>${(gameData.garrison || 0).toLocaleString()}</strong></div>
           <div class="region-stat">🏔 Тип: <strong>${getTerrainName(gameData.terrain)}</strong></div>
         </div>
+        ${(() => {
+          const biome = typeof getRegionBiome === 'function' ? getRegionBiome(regionId) : null;
+          if (!biome) return '';
+          return `<div><span class="region-biome-badge" style="background:${biome.color}22; border-color:${biome.color}55" title="${biome.description}">${biome.icon} ${biome.name}</span></div>`;
+        })()}
         ${cultureHtml}
         ${religionHtml}
         ${socialStructureHtml}
