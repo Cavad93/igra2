@@ -83,6 +83,15 @@ async function processTurn() {
 
     try { updateHappiness(); } catch (e) { console.error('[happiness]', e); }
 
+    // 2.4. Земельная ёмкость — пересчёт ПОСЛЕ населения, ПЕРЕД производством
+    if (typeof calcRegionLandCapacity === 'function') {
+      try {
+        for (const [regionId, region] of Object.entries(GAME_STATE.regions)) {
+          region.land = calcRegionLandCapacity(region, regionId);
+        }
+      } catch (e) { console.warn('[land_capacity]', e); }
+    }
+
     // 2.5. Записываем историю населения (после обновления class_satisfaction)
     if (typeof recordPopulationHistory === 'function') {
       try { recordPopulationHistory(); } catch (e) { console.warn('[history]', e); }
