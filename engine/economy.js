@@ -449,6 +449,31 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   applyDelta(`nations.${nationId}.economy.income_per_turn`, Math.round(totalIncome));
   applyDelta(`nations.${nationId}.economy.expense_per_turn`, Math.round(totalExpense));
 
+  // ── ВОССТАНОВЛЕНИЕ СТАБИЛЬНОСТИ ────────────────────────────
+  // expStability = рекомендуемые расходы на поддержание порядка.
+  // При профицитном бюджете → полное финансирование → +1.5/ход.
+  // При дефиците → коэффициент финансирования снижается → медленнее.
+  // Логика: если государство не может оплатить стабилизацию → стагнация.
+  if (expStability > 0) {
+    const currentStab = nation.government?.stability ?? 50;
+    if (currentStab < 100) {
+      // fundingRatio: 1.0 при нулевом/положительном балансе;
+      // убывает до 0 когда дефицит равен стоимости стабилизации
+      const fundingRatio = delta >= 0
+        ? 1.0
+        : Math.max(0, 1 + delta / expStability);
+      const stabRecovery = parseFloat((1.5 * fundingRatio).toFixed(2));
+      if (stabRecovery > 0) {
+        applyDelta(
+          `nations.${nationId}.government.stability`,
+          Math.min(100, parseFloat((currentStab + stabRecovery).toFixed(2))),
+        );
+      }
+      // Сохраняем коэффициент финансирования для UI
+      economy._stability_funding_ratio = parseFloat(fundingRatio.toFixed(2));
+    }
+  }
+
   // ── КЭШ РАЗБИВКИ ДЛЯ UI ────────────────────────────────────
   applyDelta(`nations.${nationId}.economy._income_breakdown`, {
     tax_aristocrats: taxByClass.aristocrats,
@@ -783,9 +808,6 @@ function updateHappiness() {
         nation.population.by_profession,
         economy.stockpile,
       );
-      // Сохраняем в состояние для UI
-      nation.population.class_satisfaction = classSat;
-
       // ── Зарплатные бонусы к satisfaction классов ─────────────────────
       // Заполняются в distributeWages() для игрока каждый ход.
       const wageBonuses   = nation.population._wage_bonuses   || {};
@@ -848,8 +870,6 @@ function updateHappiness() {
 
       // ── Штраф от высоких налогов (2c) ─────────────────────
       // Ставка > 20% снижает удовлетворённость затронутых классов.
-      // Для каждой налоговой группы вычисляем penalty и применяем
-      // ко всем классам группы (через TAX_GROUP_CLASSES).
       // Формула: penalty = (rate - 0.20) × 200, макс 40 очков.
       const taxRates = economy.tax_rates_by_class;
       if (taxRates) {
@@ -866,6 +886,10 @@ function updateHappiness() {
           }
         }
       }
+
+      // Сохраняем в состояние для UI — ПОСЛЕ всех модификаторов (налоги, зарплаты,
+      // здания, законы), чтобы UI отражал полную картину удовлетворённости.
+      nation.population.class_satisfaction = classSat;
 
       // Взвешенное счастье по политическому весу классов
       if (typeof calculateWeightedHappiness === 'function') {
@@ -885,9 +909,10 @@ function updateHappiness() {
         }
 
         // Военные эффекты
+        // loyalty_mod сглаживается ×0.3 как morale — не допускаем резких скачков
         if (fx.military_loyalty_mod !== 0) {
           const newLoyalty = Math.max(0, Math.min(100,
-            nation.military.loyalty + fx.military_loyalty_mod,
+            nation.military.loyalty + fx.military_loyalty_mod * 0.3,
           ));
           applyDelta(`nations.${nationId}.military.loyalty`, newLoyalty);
         }
