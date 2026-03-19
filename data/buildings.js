@@ -1159,6 +1159,14 @@ function canBuildInRegion(buildingId, region) {
     if (upgradeInQueue) {
       return { ok: false, reason: 'Улучшение уже в очереди строительства' };
     }
+    // Земельная проверка для улучшения: нужен ровно 1 дополнительный уровень
+    const upgradeFootprint = b.footprint_ha ?? 0;
+    if (upgradeFootprint > 0) {
+      const freeHa = region.land?.free_ha ?? Infinity;
+      if (upgradeFootprint > freeHa) {
+        return { ok: false, reason: `Нужно ${upgradeFootprint} га, свободно ${Math.round(freeHa)} га` };
+      }
+    }
     return {
       ok:             true,
       reason:         null,
@@ -1182,6 +1190,15 @@ function canBuildInRegion(buildingId, region) {
     (region.construction_queue || []).filter(e => !e.is_upgrade).length;
   if (usedSlots >= maxSlots) {
     return { ok: false, reason: 'Нет свободных строительных слотов' };
+  }
+
+  // Земельная проверка для нового здания
+  const newFootprint = b.footprint_ha ?? 0;
+  if (newFootprint > 0) {
+    const freeHa = region.land?.free_ha ?? Infinity;
+    if (newFootprint > freeHa) {
+      return { ok: false, reason: `Нужно ${newFootprint} га, свободно ${Math.round(freeHa)} га` };
+    }
   }
 
   return { ok: true, reason: null, is_upgrade: false };
