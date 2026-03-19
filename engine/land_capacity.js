@@ -99,49 +99,15 @@ const BIOME_LAND_PARAMS = {
   },
 };
 
-// ── ПЛОЩАДИ ЗДАНИЙ (га) ──────────────────────────────────────────────────────
-// Ключи соответствуют building_id из data/buildings.js
-// Источники: Cato "De Agri Cultura", Columella "Res Rustica", Roman survey data
-const BUILDING_FOOTPRINT_HA = {
-  // Сельскохозяйственные
-  farm:             5,    // 2-8 га, среднее 5 (Cato: минимальный надел семьи)
-  grain_estate:    75,    // 25-125 га, среднее 75 (как villa из ТЗ)
-  latifundium:    300,    // 125-500 га (Варрон: latifundia > 125 га)
-  ranch:           30,    // пастбищное хозяйство
-  irrigation:       4,    // ирригационная система + каналы
-
-  // Инфраструктура
-  granary:          2,    // амбар + площадка
-  warehouse:        2,    // склад
-  market:           3,    // агора/форум + прилегающее
-  road:             1,    // участок дороги через регион
-  aqueduct:         4,    // трасса акведука
-  port:             8,    // причалы + склады + подъездные пути
-  shipyard:        10,    // верфь + доки + стапели
-
-  // Военные
-  barracks:         5,    // казармы + плац
-  walls:           15,    // стены + охранная зона
-
-  // Производственные
-  mine:            10,    // шахта + отвалы породы
-  sulfur_mine:     10,
-  salt_works:       6,
-  lumber_camp:      5,
-  workshop:         2,
-  pottery_workshop: 2,
-  oil_press:        2,
-  winery:           3,
-  tuna_trap:        4,    // тунцовые ловушки вдоль берега
-  papyrus_bed:      6,    // плантация папируса
-
-  // Культурные / городские
-  temple:           3,    // temple + temenos (священная зона)
-  forum:            4,
-  school:           2,
-  baths:            3,
-  tavern:           1,
-};
+// ── ПЛОЩАДИ ЗДАНИЙ ───────────────────────────────────────────────────────────
+// Площадь каждого здания теперь хранится в data/buildings.js как footprint_ha.
+// Вспомогательная функция читает её оттуда — дублирования нет.
+function getBuildingFootprint(buildingId) {
+  if (typeof BUILDINGS !== 'undefined' && BUILDINGS[buildingId]) {
+    return BUILDINGS[buildingId].footprint_ha ?? 0;
+  }
+  return 0;
+}
 
 // ── ОСНОВНАЯ ФУНКЦИЯ ─────────────────────────────────────────────────────────
 /**
@@ -193,10 +159,12 @@ function calcRegionLandCapacity(region, regionId) {
   const arable_ha = Math.max(0, max_arable_ha - settlement_ha);
 
   // ── F: Занято зданиями ───────────────────────────────────────────────────
-  const buildings_ha = (region.buildings ?? []).reduce((sum, b) => {
-    const id = b.building_id ?? b.type ?? '';
-    return sum + (BUILDING_FOOTPRINT_HA[id] ?? 0) * (b.level ?? 1);
-  }, 0);
+  // Читаем footprint_ha из BUILDINGS[id] — единственный источник истины.
+  const buildings_ha = (region.building_slots ?? [])
+    .filter(s => s.status !== 'demolished')
+    .reduce((sum, s) => {
+      return sum + getBuildingFootprint(s.building_id) * (s.level ?? 1);
+    }, 0);
 
   // ── G: Свободно для строительства ───────────────────────────────────────
   const free_ha = Math.max(0, arable_ha - buildings_ha);
@@ -231,13 +199,13 @@ function calcRegionLandCapacity(region, regionId) {
     warnings,
     biome,                      // для отладки
 
-    // Сколько ещё можно построить
-    can_build: {
-      farm:        Math.floor(free_ha / BUILDING_FOOTPRINT_HA.farm),
-      grain_estate:Math.floor(free_ha / BUILDING_FOOTPRINT_HA.grain_estate),
-      latifundium: Math.floor(free_ha / BUILDING_FOOTPRINT_HA.latifundium),
-      mine:        Math.floor(free_ha / BUILDING_FOOTPRINT_HA.mine),
-      granary:     Math.floor(free_ha / BUILDING_FOOTPRINT_HA.granary),
-    },
+    // Сколько единиц каждого здания ещё можно построить (уровней)
+    can_build: Object.fromEntries(
+      ['wheat_family_farm', 'wheat_villa', 'wheat_latifundium',
+       'farm', 'latifundium', 'mine', 'granary']
+        .map(id => [id, free_ha > 0
+          ? Math.floor(free_ha / (getBuildingFootprint(id) || Infinity))
+          : 0])
+    ),
   };
 }

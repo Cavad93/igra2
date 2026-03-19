@@ -28,6 +28,7 @@ const BUILDINGS = {
     description: 'Торговый порт. Обеспечивает работой моряков и торговцев, даёт рыбу и торговые товары.',
     cost:        800,
     category:    'infrastructure',
+    footprint_ha: 8,   // причалы, склады, акватория
     // timber×10(220) + iron×5(225) + tools×3(105) = 550; labor=250 → ~800
     construction_materials: { timber: 10, iron: 5, tools: 3 },
     construction_labor:     250,
@@ -59,6 +60,7 @@ const BUILDINGS = {
     description: 'Верфь для кораблей. Ремесленники строят суда, моряки их обслуживают.',
     cost:        1200,
     category:    'infrastructure',
+    footprint_ha: 12,  // стапели, мастерские, береговая полоса
     // timber×20(440) + iron×10(450) + tools×5(175) = 1065; labor=135 → ~1200
     construction_materials: { timber: 20, iron: 10, tools: 5 },
     construction_labor:     135,
@@ -87,6 +89,7 @@ const BUILDINGS = {
     description: 'Городской рынок. Торговцы работают за комиссию, улучшают доступность товаров.',
     cost:        600,
     category:    'infrastructure',
+    footprint_ha: 2,   // городская площадь с лавками
     // timber×8(176) + tools×4(140) = 316; labor=284 → ~600
     construction_materials: { timber: 8, tools: 4 },
     construction_labor:     284,
@@ -121,6 +124,7 @@ const BUILDINGS = {
     description: 'Мощёные дороги. Государственные рабочие содержат трассу, ускоряя торговлю.',
     cost:        1000,
     category:    'infrastructure',
+    footprint_ha: 1,   // линейная инфраструктура, минимальный отвод земли
     // timber×8(176) + iron×8(360) + tools×6(210) = 746; labor=254 → ~1000
     construction_materials: { timber: 8, iron: 8, tools: 6 },
     construction_labor:     254,
@@ -149,6 +153,7 @@ const BUILDINGS = {
     description: 'Закрытый склад. Увеличивает ёмкость хранилища, снижает порчу товаров.',
     cost:        450,
     category:    'infrastructure',
+    footprint_ha: 3,   // складские помещения и двор
     // timber×10(220) + tools×3(105) = 325; labor=125 → ~450
     construction_materials: { timber: 10, tools: 3 },
     construction_labor:     125,
@@ -179,6 +184,7 @@ const BUILDINGS = {
     description: 'Военные казармы. Солдаты обучаются и квартируют здесь.',
     cost:        700,
     category:    'military',
+    footprint_ha: 6,   // казармы, плац, конюшни
     // timber×10(220) + iron×5(225) + tools×4(140) = 585; labor=115 → ~700
     construction_materials: { timber: 10, iron: 5, tools: 4 },
     construction_labor:     115,
@@ -206,6 +212,7 @@ const BUILDINGS = {
     description: 'Укрепления города. Гарнизон несёт дежурство, защищая жителей.',
     cost:        1500,
     category:    'military',
+    footprint_ha: 5,   // периметр стен и эспланада
     // timber×5(110) + iron×15(675) + tools×10(350) = 1135; labor=365 → ~1500
     construction_materials: { timber: 5, iron: 15, tools: 10 },
     construction_labor:     365,
@@ -237,6 +244,7 @@ const BUILDINGS = {
     description: 'Семейная ферма. Арендаторы-земледельцы отдают часть урожая владельцу.',
     cost:        400,
     category:    'agriculture',
+    footprint_ha: 100,  // legacy: одна ферма-слот = условный надел ~100 га
     // timber×6(132) + tools×3(105) = 237; labor=163 → ~400
     construction_materials: { timber: 6, tools: 3 },
     construction_labor:     163,
@@ -266,6 +274,7 @@ const BUILDINGS = {
     description: 'Скотоводческое хозяйство. Даёт шерсть, кожу и мёд.',
     cost:        300,
     category:    'agriculture',
+    footprint_ha: 200,  // выгоны и луга для скота
     // timber×5(110) + tools×2(70) = 180; labor=120 → ~300
     construction_materials: { timber: 5, tools: 2 },
     construction_labor:     120,
@@ -293,6 +302,7 @@ const BUILDINGS = {
     description: 'Государственный запас зерна. Охранники и управляющие — на жаловании.',
     cost:        500,
     category:    'agriculture',
+    footprint_ha: 2,   // амбары и двор
     // timber×8(176) + tools×4(140) = 316; labor=184 → ~500
     construction_materials: { timber: 8, tools: 4 },
     construction_labor:     184,
@@ -325,6 +335,7 @@ const BUILDINGS = {
     description: 'Крупное поместье. Земледельцы — издольщики, рабы — без оплаты.',
     cost:        900,
     category:    'agriculture',
+    footprint_ha: 500,  // legacy: крупное поместье с полями и угодьями
     // timber×12(264) + iron×5(225) + tools×6(210) = 699; labor=201 → ~900
     construction_materials: { timber: 12, iron: 5, tools: 6 },
     construction_labor:     201,
@@ -357,6 +368,7 @@ const BUILDINGS = {
     description: 'Система орошения. Требует постоянного обслуживания земледельцами.',
     cost:        1100,
     category:    'agriculture',
+    footprint_ha: 30,  // сеть каналов и водозаборов
     // timber×10(220) + iron×10(450) + tools×8(280) = 950; labor=150 → ~1100
     construction_materials: { timber: 10, iron: 10, tools: 8 },
     construction_labor:     150,
@@ -390,6 +402,7 @@ const BUILDINGS = {
     description: 'Религиозный центр. Жрецы живут на пожертвования, лечат и молятся.',
     cost:        800,
     category:    'culture',
+    footprint_ha: 2,   // теменос, постройки, священная роща
     // timber×12(264) + tools×6(210) = 474; labor=326 → ~800
     construction_materials: { timber: 12, tools: 6 },
     construction_labor:     326,
@@ -426,6 +439,7 @@ const BUILDINGS = {
     description: 'Водопровод. Обслуживается государственными ремесленниками.',
     cost:        2000,
     category:    'culture',
+    footprint_ha: 4,   // трасса акведука и водонапорные башни
     // timber×8(176) + iron×20(900) + tools×15(525) = 1601; labor=399 → ~2000
     construction_materials: { timber: 8, iron: 20, tools: 15 },
     construction_labor:     399,
@@ -462,6 +476,7 @@ const BUILDINGS = {
     description: 'Образование. Жрецы-учителя работают за пожертвования.',
     cost:        700,
     category:    'culture',
+    footprint_ha: 1,   // здание и двор для упражнений
     // timber×10(220) + tools×5(175) = 395; labor=305 → ~700
     construction_materials: { timber: 10, tools: 5 },
     construction_labor:     305,
@@ -489,6 +504,7 @@ const BUILDINGS = {
     description: 'Общественная площадь. Рабочих не требует, центр городской жизни.',
     cost:        600,
     category:    'culture',
+    footprint_ha: 2,   // площадь с портиками и трибунами
     // timber×8(176) + tools×4(140) = 316; labor=284 → ~600
     construction_materials: { timber: 8, tools: 4 },
     construction_labor:     284,
@@ -523,6 +539,7 @@ const BUILDINGS = {
     description: 'Трактир. Хозяева и слуги работают на себя, потребляют вино и рыбу.',
     cost:        250,
     category:    'culture',
+    footprint_ha: 1,   // здание с двором
     // timber×5(110) + tools×2(70) = 180; labor=70 → ~250
     construction_materials: { timber: 5, tools: 2 },
     construction_labor:     70,
@@ -559,6 +576,7 @@ const BUILDINGS = {
     description: 'Общественные бани. Рабы топят печи, горожане здоровеют.',
     cost:        700,
     category:    'culture',
+    footprint_ha: 2,   // здание с бассейнами и садиком
     // timber×6(132) + iron×4(180) + tools×3(105) = 417; labor=283 → ~700
     construction_materials: { timber: 6, iron: 4, tools: 3 },
     construction_labor:     283,
@@ -598,6 +616,7 @@ const BUILDINGS = {
     description: 'Ремесленные мастерские. Ремесленники получают наёмную плату.',
     cost:        650,
     category:    'production',
+    footprint_ha: 3,   // цеха и склад материалов
     // timber×8(176) + iron×4(180) + tools×4(140) = 496; labor=154 → ~650
     construction_materials: { timber: 8, iron: 4, tools: 4 },
     construction_labor:     154,
@@ -630,6 +649,7 @@ const BUILDINGS = {
     description: 'Добыча руды. Ремесленники надзирают, рабы добывают.',
     cost:        850,
     category:    'production',
+    footprint_ha: 20,  // карьер, отвалы, обогатительный двор
     // timber×12(264) + iron×6(270) + tools×6(210) = 744; labor=106 → ~850
     construction_materials: { timber: 12, iron: 6, tools: 6 },
     construction_labor:     106,
@@ -661,6 +681,7 @@ const BUILDINGS = {
     description: 'Морские соляные промыслы. Ремесленники варят соль, рабы таскают мешки.',
     cost:        600,
     category:    'production',
+    footprint_ha: 15,  // соляные выпарные бассейны
     // timber×6(132) + tools×4(140) = 272; labor=328 → ~600
     construction_materials: { timber: 6, tools: 4 },
     construction_labor:     328,
@@ -687,6 +708,7 @@ const BUILDINGS = {
     description: 'Лесоповал. Земледельцы рубят лес на продажу.',
     cost:        350,
     category:    'production',
+    footprint_ha: 150, // делянка леса под вырубку
     // timber×4(88) + iron×2(90) + tools×3(105) = 283; labor=67 → ~350
     construction_materials: { timber: 4, iron: 2, tools: 3 },
     construction_labor:     67,
@@ -713,6 +735,7 @@ const BUILDINGS = {
     description: 'Производство посуды. Ремесленники работают за наёмную плату.',
     cost:        400,
     category:    'production',
+    footprint_ha: 2,   // мастерская с обжиговыми печами
     // timber×7(154) + tools×4(140) = 294; labor=106 → ~400
     construction_materials: { timber: 7, tools: 4 },
     construction_labor:     106,
@@ -738,6 +761,7 @@ const BUILDINGS = {
     description: 'Прессование оливок. Земледельцы и рабы производят масло.',
     cost:        350,
     category:    'production',
+    footprint_ha: 4,   // давильня и сборный двор
     // timber×6(132) + tools×3(105) = 237; labor=113 → ~350
     construction_materials: { timber: 6, tools: 3 },
     construction_labor:     113,
@@ -769,6 +793,7 @@ const BUILDINGS = {
     description: 'Производство вина. Ремесленники и земледельцы давят виноград.',
     cost:        450,
     category:    'production',
+    footprint_ha: 10,  // погреба, давильня, небольшой виноградник
     // timber×8(176) + tools×3(105) = 281; labor=169 → ~450
     construction_materials: { timber: 8, tools: 3 },
     construction_labor:     169,
@@ -790,6 +815,115 @@ const BUILDINGS = {
   },
 
   // ══════════════════════════════════════════════════════════════
+  // ПШЕНИЧНОЕ ПРОИЗВОДСТВО — три масштаба
+  // Слот = тип хозяйства, уровень = количество единиц.
+  // footprint_ha и workers_per_unit — на 1 единицу (level=1).
+  // Эффективность на га растёт с масштабом: ферма < вилла < латифундия.
+  //
+  // Производство считается по формуле: (workers/1000) × base_rate × level
+  // base_rate намеренно высокий — компенсирует малое кол-во рабочих на единицу.
+  // ══════════════════════════════════════════════════════════════
+
+  wheat_family_farm: {
+    name:        'Семейная ферма',
+    icon:        '🌾',
+    description: 'Небольшой семейный надел. Быстро строится, мало рабочих. ' +
+                 'Низкая эффективность на гектар, но доступна с первых ходов.',
+    cost:        100,
+    category:    'agriculture',
+    footprint_ha: 5,           // га на 1 ферму (уровень)
+    workers_per_unit: 5,       // человек на 1 ферму — для подсказок UI
+    // timber×2(44) + tools×1(35) = 79; labor=21 → ~100
+    construction_materials: { timber: 2, tools: 1 },
+    construction_labor:     21,
+
+    worker_profession: [
+      { profession: 'farmers', count: 5 },  // 5 чел./ферму
+    ],
+    wage_rate:          0.35,  // арендаторы оставляют себе 35% урожая
+    labor_type:         'tenant',
+    build_turns:        1,
+    terrain_restriction: ['plains', 'hills', 'river_valley'],
+    max_per_region:     null,
+    max_level:          20,    // до 20 ферм на регион
+
+    production_output: [
+      // base_rate высокий: (5/1000)×2000 = 10 пшеницы/ход/ферму → 2 пш/га
+      { good: 'wheat', base_rate: 2000 },
+    ],
+
+    // legacy
+    profession_growth: { farmers: 0.003 },
+  },
+
+  wheat_villa: {
+    name:        'Средняя вилла',
+    icon:        '🏡',
+    description: 'Товарное хозяйство среднего размера. Дороже фермы, но ' +
+                 'эффективнее на гектар. Требует больше рабочих рук.',
+    cost:        600,
+    category:    'agriculture',
+    footprint_ha: 75,          // га на 1 виллу
+    workers_per_unit: 15,      // человек на 1 виллу
+    // timber×6(132) + iron×2(90) + tools×3(105) = 327; labor=273 → ~600
+    construction_materials: { timber: 6, iron: 2, tools: 3 },
+    construction_labor:     273,
+
+    worker_profession: [
+      { profession: 'farmers', count: 15 },  // 15 чел./виллу
+    ],
+    wage_rate:          0.30,
+    labor_type:         'tenant',
+    build_turns:        3,
+    terrain_restriction: ['plains', 'hills', 'river_valley'],
+    max_per_region:     null,
+    max_level:          10,
+
+    production_output: [
+      // (15/1000)×13000 ≈ 195 пш/ход/виллу → ~2.6 пш/га (лучше фермы)
+      { good: 'wheat', base_rate: 13000 },
+    ],
+
+    // legacy
+    profession_growth: { farmers: 0.005 },
+  },
+
+  wheat_latifundium: {
+    name:        'Латифундия (пшеница)',
+    icon:        '🌿',
+    description: 'Крупное поместье с отлаженным производством. Максимальная ' +
+                 'отдача с гектара. Требует 200 рабочих на единицу.',
+    cost:        2500,
+    category:    'agriculture',
+    footprint_ha: 300,         // га на 1 латифундию
+    workers_per_unit: 200,     // человек на 1 латифундию
+    // timber×15(330) + iron×8(360) + tools×8(280) = 970; labor=530 → ~2500 с наценкой
+    construction_materials: { timber: 15, iron: 8, tools: 8 },
+    construction_labor:     530,
+
+    worker_profession: [
+      { profession: 'farmers', count: 100 },
+      { profession: 'slaves',  count: 100 },
+    ],
+    wage_rate:          0.25,  // арендаторы; рабы без оплаты
+    labor_type:         'tenant',
+    build_turns:        6,
+    terrain_restriction: ['plains', 'river_valley'],
+    max_per_region:     null,
+    max_level:          5,
+
+    production_output: [
+      // (200/1000)×6000 = 1200 пш/ход/латифундию → 4 пш/га (максимум)
+      { good: 'wheat',  base_rate: 6000 },
+      { good: 'barley', base_rate: 1500 },  // побочный продукт
+    ],
+
+    // legacy
+    profession_growth:  { farmers: 0.006, slaves: 0.015 },
+    slave_mortality_mod: 0.003,
+  },
+
+  // ══════════════════════════════════════════════════════════════
   // СИЦИЛИЙСКИЕ (УНИКАЛЬНЫЕ ПРОВИНЦИАЛЬНЫЕ)
   // region_tag_restriction: ['sicily'] — строятся только в регионах Сицилии
   // ══════════════════════════════════════════════════════════════
@@ -800,6 +934,7 @@ const BUILDINGS = {
     description: 'Подземные залежи серы у подножий Этны. Рабы и ремесленники добывают зелёный камень — основу дубильного и аптечного ремесла.',
     cost:        700,
     category:    'production',
+    footprint_ha: 15,  // шахты, отвалы, производственный двор
     // timber×10(220) + iron×5(225) + tools×4(140) = 585; labor=115 → ~700
     construction_materials: { timber: 10, iron: 5, tools: 4 },
     construction_labor:     115,
@@ -829,6 +964,7 @@ const BUILDINGS = {
     description: 'Лабиринт сетей для сезонной охоты на тунца. Сицилийские рыбаки ежегодно устраивают mattanza — ритуальный загон рыбы.',
     cost:        500,
     category:    'production',
+    footprint_ha: 3,   // береговые постройки и причал
     // timber×8(176) + tools×4(140) = 316; labor=184 → ~500
     construction_materials: { timber: 8, tools: 4 },
     construction_labor:     184,
@@ -856,6 +992,7 @@ const BUILDINGS = {
     description: 'Обширное поместье на плодороднейших равнинах Леонтин и Акраганта. Сицилийская пшеница кормила весь греческий мир. Арендаторы и рабы работают на владельца.',
     cost:        1200,
     category:    'agriculture',
+    footprint_ha: 800,  // обширные сицилийские поля
     // timber×15(330) + iron×5(225) + tools×8(280) = 835; labor=365 → ~1200
     construction_materials: { timber: 15, iron: 5, tools: 8 },
     construction_labor:     365,
@@ -888,6 +1025,7 @@ const BUILDINGS = {
     description: 'Заросли папируса вдоль реки Киана у Сиракуз — единственное место в Европе, где растёт нильский папирус. Ценнейшее писчее сырьё.',
     cost:        400,
     category:    'production',
+    footprint_ha: 8,   // прибрежные заросли вдоль Кианы
     // timber×5(110) + tools×3(105) = 215; labor=185 → ~400
     construction_materials: { timber: 5, tools: 3 },
     construction_labor:     185,
