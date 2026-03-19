@@ -17,7 +17,11 @@ function renderLeftPanel() {
   const pop      = nation.population;
   const gov      = nation.government;
 
-  const delta = economy.income_per_turn - economy.expense_per_turn;
+  // _income_breakdown.total и _expense_breakdown.total — актуальные значения
+  // из последнего хода или живого пересчёта; income_per_turn — запасной вариант
+  const dispIncome  = Math.round(economy._income_breakdown?.total  ?? economy.income_per_turn  ?? 0);
+  const dispExpense = Math.round(economy._expense_breakdown?.total ?? economy.expense_per_turn ?? 0);
+  const delta = dispIncome - dispExpense;
   const deltaStr = delta >= 0 ? `+${Math.round(delta)}` : `${Math.round(delta)}`;
   const deltaClass = delta >= 0 ? 'positive' : 'negative';
 
@@ -59,11 +63,11 @@ function renderLeftPanel() {
       </div>
       <div class="stat-row">
         <span class="stat-label">Доход/ход</span>
-        <span class="stat-value positive">+${Math.round(economy.income_per_turn)}</span>
+        <span class="stat-value positive">+${dispIncome.toLocaleString()}</span>
       </div>
       <div class="stat-row">
         <span class="stat-label">Расход/ход</span>
-        <span class="stat-value negative">-${Math.round(economy.expense_per_turn)}</span>
+        <span class="stat-value negative">-${dispExpense.toLocaleString()}</span>
       </div>
       <div class="stat-row total-row">
         <span class="stat-label">Баланс</span>

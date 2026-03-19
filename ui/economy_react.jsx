@@ -9,6 +9,32 @@
 let _ecoTab     = 'A';
 let _ecoSelProf = null;
 
+// ─── Хелперы: синхронизация с казной ──────────────────────────────────────
+
+// Актуальный доход: из _income_breakdown (живой расчёт движка) или income_per_turn
+function _eActualIncome(eco) {
+  return Math.round(eco._income_breakdown?.total ?? eco.income_per_turn ?? 0);
+}
+// Актуальный расход: из _expense_breakdown или expense_per_turn
+function _eActualExpense(eco) {
+  return Math.round(eco._expense_breakdown?.total ?? eco.expense_per_turn ?? 0);
+}
+// Эффективная средневзвешенная ставка из tax_rates_by_class.
+// Весовая функция — taxBase[group] (pop × wealth_level), как в движке.
+function _eEffectiveTaxRate(eco, byProfession) {
+  const rates = eco?.tax_rates_by_class;
+  if (rates && typeof computeTaxGroupBases === 'function') {
+    const bases     = computeTaxGroupBases(byProfession || {});
+    const totalBase = Object.values(bases).reduce((s, v) => s + v, 0);
+    if (totalBase > 0) {
+      const weighted = Object.entries(rates)
+        .reduce((s, [g, r]) => s + (bases[g] || 0) * r, 0);
+      return weighted / totalBase;
+    }
+  }
+  return eco?.tax_rate || 0;
+}
+
 // ─── Дизайн-токены ────────────────────────────────────────────────────────
 const _C = {
   bgMain:    'rgba(15,23,15,0.96)',
@@ -359,7 +385,9 @@ function _eRenderC(selProf) {
 // ─── Блок D: Баланс кошелька ──────────────────────────────────────────────
 function _eRenderD() {
   const { pops, byP, hist, eco } = _eLoadPop();
-  const delta = (eco.income_per_turn || 0) - (eco.expense_per_turn || 0);
+  const actualInc = _eActualIncome(eco);
+  const actualExp = _eActualExpense(eco);
+  const delta = actualInc - actualExp;
   const dCol  = delta >= 0 ? _C.green : _C.red;
 
   const rows = Object.keys(_E_PROF_DISP).map(prof => {
@@ -416,19 +444,23 @@ function _eRenderD() {
           <div style="font-size:9px;color:${_C.ivoryFade}">${_efmt(eco.treasury || 0)} gold</div>
         </div>
       </div>
-      <div><div style="font-size:8.5px;color:${_C.ivoryFade};text-transform:uppercase;letter-spacing:.3px">Доходы</div><div style="font-size:12px;color:${_C.green};font-family:sans-serif;margin-top:1px">${(eco.income_per_turn > 0 ? '+' : '') + _efmt(eco.income_per_turn || 0)}</div></div>
-      <div><div style="font-size:8.5px;color:${_C.ivoryFade};text-transform:uppercase;letter-spacing:.3px">Расходы</div><div style="font-size:12px;color:${_C.red};font-family:sans-serif;margin-top:1px">${(eco.expense_per_turn > 0 ? '-' : '') + _efmt(eco.expense_per_turn || 0)}</div></div>
+      <div><div style="font-size:8.5px;color:${_C.ivoryFade};text-transform:uppercase;letter-spacing:.3px">Доходы</div><div style="font-size:12px;color:${_C.green};font-family:sans-serif;margin-top:1px">${(actualInc > 0 ? '+' : '') + _efmt(actualInc)}</div></div>
+      <div><div style="font-size:8.5px;color:${_C.ivoryFade};text-transform:uppercase;letter-spacing:.3px">Расходы</div><div style="font-size:12px;color:${_C.red};font-family:sans-serif;margin-top:1px">${(actualExp > 0 ? '-' : '') + _efmt(actualExp)}</div></div>
       <div><div style="font-size:8.5px;color:${_C.ivoryFade};text-transform:uppercase;letter-spacing:.3px">Баланс / тик</div><div style="font-size:14px;font-family:'Cinzel',serif;color:${dCol};font-weight:700;margin-top:1px">${delta >= 0 ? '+' : ''}${_efmt(delta)}</div></div>
     </div>`;
 }
 
 // ─── Hero Strip ───────────────────────────────────────────────────────────
 function _eHeroStrip(eco) {
+  const byP         = GAME_STATE?.nations?.[GAME_STATE?.player_nation]?.population?.by_profession || {};
+  const actualInc   = _eActualIncome(eco);
+  const actualExp   = _eActualExpense(eco);
+  const effectiveR  = _eEffectiveTaxRate(eco, byP);
   const metrics = [
-    { label: 'Казна',        value: _efmt(eco?.treasury || 0),                                                  unit: 'золото', color: _C.gold   },
-    { label: 'Доход / тик',  value: (eco?.income_per_turn  > 0 ? '+' : '') + _efmt(eco?.income_per_turn  || 0), unit: '',       color: _C.green  },
-    { label: 'Расход / тик', value: (eco?.expense_per_turn > 0 ? '-' : '') + _efmt(eco?.expense_per_turn || 0), unit: '',       color: _C.red    },
-    { label: 'Налог',        value: ((eco?.tax_rate || 0) * 100).toFixed(0) + '%',                              unit: '',       color: _C.copper },
+    { label: 'Казна',        value: _efmt(eco?.treasury || 0),                              unit: 'золото', color: _C.gold   },
+    { label: 'Доход / тик',  value: (actualInc  > 0 ? '+' : '') + _efmt(actualInc),         unit: '',       color: _C.green  },
+    { label: 'Расход / тик', value: (actualExp  > 0 ? '-' : '') + _efmt(actualExp),          unit: '',       color: _C.red    },
+    { label: 'Ср. налог',    value: (effectiveR * 100).toFixed(1) + '%',                     unit: '',       color: _C.copper },
   ];
   return `<div style="display:flex;border-bottom:1px solid ${_C.border}">` +
     metrics.map((m, i) => `
