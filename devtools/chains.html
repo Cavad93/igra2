@@ -253,6 +253,55 @@
     }
     .copy-ok { color: #7ee787 !important; }
 
+    /* ── Graph view ─────────────────────────────────────────────────── */
+    #graph-toolbar {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .g-check { display:flex; align-items:center; gap:5px; font-size:12px; cursor:pointer; user-select:none; }
+    .g-dot   { display:inline-block; width:10px; height:10px; border-radius:50%; }
+
+    #graph-svg {
+      flex: 1;
+      background: #0d1117;
+      cursor: grab;
+      display: block;
+    }
+    #graph-svg.panning { cursor: grabbing; }
+
+    /* nodes */
+    .g-node { cursor: pointer; }
+    .g-node circle { transition: r .15s; }
+    .g-node:hover circle { r: 22; }
+    .g-node text { pointer-events: none; font-family: system-ui, sans-serif; }
+
+    /* edges */
+    .g-edge { pointer-events: none; }
+
+    /* sidebar */
+    #graph-sidebar {
+      width: 240px;
+      min-width: 240px;
+      background: #161b22;
+      border-left: 1px solid #30363d;
+      overflow-y: auto;
+      font-size: 13px;
+    }
+    #sidebar-content { padding: 14px; }
+    .sb-title  { font-size: 15px; font-weight: 700; margin-bottom: 12px; display:flex; align-items:center; gap:7px; }
+    .sb-section{ margin-bottom: 12px; }
+    .sb-head   { font-size: 10px; text-transform: uppercase; color: #8b949e; letter-spacing:.5px; margin-bottom:5px; }
+    .sb-row    { display:flex; justify-content:space-between; padding: 3px 0; border-bottom:1px solid #21262d; font-size:12px; }
+    .sb-row span:last-child { color:#c9d1d9; font-weight:600; }
+    .sb-chip   { display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:8px;
+                 background:#21262d; font-size:11px; margin:2px; }
+
     /* notice */
     #load-error {
       display: none;
@@ -343,9 +392,27 @@
   </div>
 
   <!-- GRAPH VIEW (этап 3) -->
-  <div id="view-graph" class="view hidden" style="padding:0">
-    <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8b949e;font-size:14px">
-      🕸 Граф связей будет реализован на Этапе 3
+  <div id="view-graph" class="view hidden" style="padding:0; display:flex; flex-direction:column;">
+    <!-- toolbar графа -->
+    <div id="graph-toolbar">
+      <span class="label">Категории:</span>
+      <label class="g-check"><input type="checkbox" data-cat="food"      checked onchange="filterGraphCat()"> <span class="g-dot" style="background:#4caf50"></span> Еда</label>
+      <label class="g-check"><input type="checkbox" data-cat="material"  checked onchange="filterGraphCat()"> <span class="g-dot" style="background:#ff9800"></span> Материалы</label>
+      <label class="g-check"><input type="checkbox" data-cat="luxury"    checked onchange="filterGraphCat()"> <span class="g-dot" style="background:#9c27b0"></span> Роскошь</label>
+      <label class="g-check"><input type="checkbox" data-cat="essential" checked onchange="filterGraphCat()"> <span class="g-dot" style="background:#2196f3"></span> Необходимое</label>
+      <div class="sep"></div>
+      <button class="btn" onclick="resetGraphView()">⊙ Сбросить вид</button>
+      <button class="btn" id="btn-sim" onclick="toggleSim()">⏸ Пауза</button>
+    </div>
+    <!-- основная область: svg + боковая панель -->
+    <div style="flex:1; display:flex; overflow:hidden;">
+      <svg id="graph-svg"></svg>
+      <div id="graph-sidebar">
+        <div id="sidebar-empty" style="color:#8b949e;font-size:13px;padding:20px 14px;">
+          Кликните на узел, чтобы увидеть детали цепочки
+        </div>
+        <div id="sidebar-content" class="hidden"></div>
+      </div>
     </div>
   </div>
 
@@ -663,6 +730,7 @@ function switchView(v) {
   history.replaceState({}, '', url);
 
   if (v === 'table') renderTable();
+  if (v === 'graph') requestAnimationFrame(initGraph);
 }
 
 // ── Filter switch ─────────────────────────────────────────────────────
@@ -770,6 +838,567 @@ function resetPatches() {
   patchLabor = {};
   renderTable(); // полный ре-рендер — все инпуты вернутся к оригинальным значениям
   updateChangeCount();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ЭТАП 3 — ГРАФ СВЯЗЕЙ
+// ══════════════════════════════════════════════════════════════════════
+
+const CAT_COLOR = {
+  food:      '#4caf50',
+  material:  '#ff9800',
+  luxury:    '#9c27b0',
+  essential: '#2196f3',
+};
+
+// ── Graph state ──────────────────────────────────────────────────────
+let gNodes      = [];   // { id, name, icon, cat, x, y, vx, vy, r, depth, visible }
+let gEdges      = [];   // { src, tgt, bld, bldName, amount }
+let gNodeMap    = {};   // id → node
+let simRunning  = false;
+let simFrame    = null;
+let graphInited = false;
+
+// pan/zoom
+let vp = { x: 0, y: 0, scale: 1 };
+
+// drag
+let dragNode  = null;
+let panStart  = null;
+
+// selected
+let selNodeId = null;
+
+// ── Build graph data ──────────────────────────────────────────────────
+function buildGraphData() {
+  gNodes   = [];
+  gEdges   = [];
+  gNodeMap = {};
+
+  // Nodes = all goods
+  Object.entries(GOODS).forEach(([id, g]) => {
+    const node = {
+      id, name: g.name || id, icon: g.icon || '📦',
+      cat: g.category || 'material',
+      x: 0, y: 0, vx: 0, vy: 0, r: 18,
+      depth: -1, visible: true,
+    };
+    gNodes.push(node);
+    gNodeMap[id] = node;
+  });
+
+  // Edges = recipe inputs → outputs
+  Object.entries(BUILDING_RECIPES).forEach(([bld, rs]) => {
+    const B = bldData(bld);
+    rs.forEach(r => {
+      r.inputs.forEach(inp => {
+        if (gNodeMap[inp.good] && gNodeMap[r.output_good]) {
+          gEdges.push({
+            src: inp.good, tgt: r.output_good,
+            bld, bldName: B.name || bld, bldIcon: B.icon || '🏗',
+            amount: inp.amount,
+          });
+        }
+      });
+    });
+  });
+
+  // Вычисляем глубину (BFS от «сырьевых» узлов — у которых нет входящих рёбер)
+  const inDeg = {};
+  gNodes.forEach(n => { inDeg[n.id] = 0; });
+  gEdges.forEach(e => { inDeg[e.tgt] = (inDeg[e.tgt] || 0) + 1; });
+
+  const queue = gNodes.filter(n => inDeg[n.id] === 0).map(n => n.id);
+  queue.forEach(id => { gNodeMap[id].depth = 0; });
+  let head = 0;
+  while (head < queue.length) {
+    const id = queue[head++];
+    gEdges.filter(e => e.src === id).forEach(e => {
+      if (gNodeMap[e.tgt].depth === -1) {
+        gNodeMap[e.tgt].depth = gNodeMap[id].depth + 1;
+        queue.push(e.tgt);
+      }
+    });
+  }
+  // изолированным узлам даём depth=0
+  gNodes.forEach(n => { if (n.depth === -1) n.depth = 0; });
+}
+
+// ── Hierarchical initial layout ───────────────────────────────────────
+function layoutHierarchical(W, H) {
+  const maxD = Math.max(...gNodes.map(n => n.depth));
+  const cols  = {};
+  gNodes.forEach(n => { (cols[n.depth] = cols[n.depth] || []).push(n); });
+
+  const colCount = maxD + 1;
+  Object.entries(cols).forEach(([d, nodes]) => {
+    const xi = 80 + (parseInt(d) / Math.max(colCount - 1, 1)) * (W - 160);
+    nodes.forEach((n, i) => {
+      n.x = xi + (Math.random() - .5) * 30;
+      n.y = 60 + ((i + .5) / nodes.length) * (H - 120);
+      n.vx = 0; n.vy = 0;
+    });
+  });
+}
+
+// ── SVG rendering ─────────────────────────────────────────────────────
+function svgEl(tag, attrs = {}) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+  return el;
+}
+
+function renderGraphSVG() {
+  const svg = document.getElementById('graph-svg');
+  svg.innerHTML = '';
+
+  const W = svg.clientWidth  || 900;
+  const H = svg.clientHeight || 600;
+
+  // defs: arrowhead markers
+  const defs = svgEl('defs');
+  ['default', 'hi'].forEach(type => {
+    const m = svgEl('marker', {
+      id: `arr-${type}`, markerWidth: 8, markerHeight: 6,
+      refX: 8, refY: 3, orient: 'auto',
+    });
+    const poly = svgEl('polygon', {
+      points: '0 0, 8 3, 0 6',
+      fill: type === 'hi' ? '#f78166' : '#444c56',
+    });
+    m.appendChild(poly); defs.appendChild(m);
+  });
+  svg.appendChild(defs);
+
+  // root group (pan+zoom)
+  const root = svgEl('g', { id: 'g-root' });
+  svg.appendChild(root);
+
+  // edges group
+  const eGrp = svgEl('g', { id: 'g-edges' });
+  root.appendChild(eGrp);
+  gEdges.forEach((e, i) => {
+    const line = svgEl('line', {
+      class: 'g-edge', 'data-i': i,
+      stroke: '#444c56', 'stroke-width': 1.5, 'stroke-opacity': .6,
+      'marker-end': 'url(#arr-default)',
+    });
+    eGrp.appendChild(line);
+  });
+
+  // nodes group
+  const nGrp = svgEl('g', { id: 'g-nodes' });
+  root.appendChild(nGrp);
+  gNodes.forEach(n => {
+    const g = svgEl('g', { class: 'g-node', 'data-id': n.id });
+    g.addEventListener('click', e => { e.stopPropagation(); selectNode(n.id); });
+    g.addEventListener('mousedown', onNodeMouseDown);
+
+    const circle = svgEl('circle', {
+      r: n.r, fill: CAT_COLOR[n.cat] || '#607d8b',
+      'fill-opacity': .85, stroke: '#fff', 'stroke-width': 1.5,
+    });
+    const icon = svgEl('text', {
+      'text-anchor': 'middle', 'dominant-baseline': 'central',
+      'font-size': 14, 'pointer-events': 'none',
+    });
+    icon.textContent = n.icon;
+    const label = svgEl('text', {
+      'text-anchor': 'middle', 'font-size': 10, fill: '#8b949e',
+      'pointer-events': 'none',
+    });
+    label.textContent = n.name;
+
+    g.appendChild(circle); g.appendChild(icon); g.appendChild(label);
+    nGrp.appendChild(g);
+  });
+
+  // click on SVG background → deselect
+  svg.addEventListener('click', () => selectNode(null));
+
+  updateGraphPositions();
+  applyViewport();
+}
+
+// ── Update positions (called every sim tick) ──────────────────────────
+function updateGraphPositions() {
+  const nGrp = document.getElementById('g-nodes');
+  const eGrp = document.getElementById('g-edges');
+  if (!nGrp || !eGrp) return;
+
+  gNodes.forEach(n => {
+    const g = nGrp.querySelector(`[data-id="${n.id}"]`);
+    if (!g) return;
+    const [circle, icon, label] = g.children;
+    circle.setAttribute('cx', n.x); circle.setAttribute('cy', n.y);
+    icon.setAttribute('x', n.x);   icon.setAttribute('y', n.y);
+    label.setAttribute('x', n.x);  label.setAttribute('y', n.y + n.r + 11);
+    g.style.display = n.visible ? '' : 'none';
+  });
+
+  gEdges.forEach((e, i) => {
+    const line = eGrp.querySelector(`[data-i="${i}"]`);
+    if (!line) return;
+    const src = gNodeMap[e.src], tgt = gNodeMap[e.tgt];
+    if (!src || !tgt) return;
+
+    const dx = tgt.x - src.x, dy = tgt.y - src.y;
+    const len = Math.sqrt(dx*dx + dy*dy) || 1;
+    const sx = src.x + dx/len * (src.r + 2);
+    const sy = src.y + dy/len * (src.r + 2);
+    const tx = tgt.x - dx/len * (tgt.r + 9);
+    const ty = tgt.y - dy/len * (tgt.r + 9);
+
+    line.setAttribute('x1', sx); line.setAttribute('y1', sy);
+    line.setAttribute('x2', tx); line.setAttribute('y2', ty);
+
+    const bothVisible = src.visible && tgt.visible;
+    line.style.display = bothVisible ? '' : 'none';
+  });
+}
+
+// ── Viewport (pan + zoom) ─────────────────────────────────────────────
+function applyViewport() {
+  const root = document.getElementById('g-root');
+  if (root) root.setAttribute('transform',
+    `translate(${vp.x},${vp.y}) scale(${vp.scale})`);
+}
+
+function resetGraphView() {
+  const svg = document.getElementById('graph-svg');
+  const W   = svg.clientWidth  || 900;
+  const H   = svg.clientHeight || 600;
+  vp = { x: W/2, y: H/2, scale: 1 };
+  // center all nodes around 0,0 then offset
+  const mx = gNodes.reduce((s,n) => s + n.x, 0) / gNodes.length;
+  const my = gNodes.reduce((s,n) => s + n.y, 0) / gNodes.length;
+  gNodes.forEach(n => { n.x -= mx; n.y -= my; });
+  updateGraphPositions();
+  applyViewport();
+}
+
+// ── Mouse events ──────────────────────────────────────────────────────
+function setupGraphEvents() {
+  const svg = document.getElementById('graph-svg');
+
+  // колесо → зум
+  svg.addEventListener('wheel', e => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.12 : 0.9;
+    // зумим относительно позиции курсора
+    const rect = svg.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    vp.x = mx + (vp.x - mx) * factor;
+    vp.y = my + (vp.y - my) * factor;
+    vp.scale = Math.max(0.2, Math.min(5, vp.scale * factor));
+    applyViewport();
+  }, { passive: false });
+
+  // mousedown на SVG (не на узле) → старт пана
+  svg.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    if (e.target.closest('.g-node')) return;  // обрабатывается в onNodeMouseDown
+    panStart = { mx: e.clientX, my: e.clientY, vx: vp.x, vy: vp.y };
+    svg.classList.add('panning');
+  });
+
+  window.addEventListener('mousemove', e => {
+    if (panStart) {
+      vp.x = panStart.vx + (e.clientX - panStart.mx);
+      vp.y = panStart.vy + (e.clientY - panStart.my);
+      applyViewport();
+    }
+    if (dragNode) {
+      // переводим экранные координаты в координаты графа
+      const svg = document.getElementById('graph-svg');
+      const rect = svg.getBoundingClientRect();
+      dragNode.x = (e.clientX - rect.left - vp.x) / vp.scale;
+      dragNode.y = (e.clientY - rect.top  - vp.y) / vp.scale;
+      dragNode.vx = 0; dragNode.vy = 0;
+      updateGraphPositions();
+    }
+  });
+
+  window.addEventListener('mouseup', () => {
+    panStart = null;
+    dragNode = null;
+    const svg = document.getElementById('graph-svg');
+    if (svg) svg.classList.remove('panning');
+  });
+}
+
+function onNodeMouseDown(e) {
+  if (e.button !== 0) return;
+  e.stopPropagation();
+  dragNode = gNodeMap[e.currentTarget.dataset.id];
+}
+
+// ── Select node → подсветка цепочки + боковая панель ─────────────────
+function selectNode(id) {
+  selNodeId = id;
+
+  const nGrp = document.getElementById('g-nodes');
+  const eGrp = document.getElementById('g-edges');
+  if (!nGrp || !eGrp) return;
+
+  if (!id) {
+    // снять подсветку
+    nGrp.querySelectorAll('.g-node circle').forEach(c => {
+      c.setAttribute('fill-opacity', .85);
+      c.setAttribute('stroke', '#fff');
+      c.setAttribute('stroke-width', 1.5);
+    });
+    eGrp.querySelectorAll('.g-edge').forEach(l => {
+      l.setAttribute('stroke', '#444c56');
+      l.setAttribute('stroke-opacity', .6);
+      l.setAttribute('stroke-width', 1.5);
+      l.setAttribute('marker-end', 'url(#arr-default)');
+    });
+    document.getElementById('sidebar-empty').classList.remove('hidden');
+    document.getElementById('sidebar-content').classList.add('hidden');
+    return;
+  }
+
+  // находим всю цепочку (upstream + downstream)
+  const upstream   = new Set();
+  const downstream = new Set();
+  const upEdges    = new Set();
+  const downEdges  = new Set();
+
+  gEdges.forEach((e, i) => {
+    if (e.tgt === id) { upstream.add(e.src);   upEdges.add(i); }
+    if (e.src === id) { downstream.add(e.tgt); downEdges.add(i); }
+  });
+
+  // подсветка узлов
+  nGrp.querySelectorAll('.g-node').forEach(g => {
+    const nid = g.dataset.id;
+    const circle = g.querySelector('circle');
+    if (nid === id) {
+      circle.setAttribute('fill-opacity', 1);
+      circle.setAttribute('stroke', '#f78166');
+      circle.setAttribute('stroke-width', 3);
+    } else if (upstream.has(nid) || downstream.has(nid)) {
+      circle.setAttribute('fill-opacity', .95);
+      circle.setAttribute('stroke', '#ffa657');
+      circle.setAttribute('stroke-width', 2);
+    } else {
+      circle.setAttribute('fill-opacity', .2);
+      circle.setAttribute('stroke', '#444c56');
+      circle.setAttribute('stroke-width', 1);
+    }
+  });
+
+  // подсветка рёбер
+  eGrp.querySelectorAll('.g-edge').forEach(l => {
+    const i = parseInt(l.dataset.i);
+    if (upEdges.has(i) || downEdges.has(i)) {
+      l.setAttribute('stroke', '#f78166');
+      l.setAttribute('stroke-opacity', 1);
+      l.setAttribute('stroke-width', 2.5);
+      l.setAttribute('marker-end', 'url(#arr-hi)');
+    } else {
+      l.setAttribute('stroke', '#30363d');
+      l.setAttribute('stroke-opacity', .25);
+      l.setAttribute('stroke-width', 1);
+      l.setAttribute('marker-end', 'url(#arr-default)');
+    }
+  });
+
+  renderSidebar(id, upstream, downstream);
+}
+
+// ── Боковая панель ────────────────────────────────────────────────────
+function renderSidebar(id, upstream, downstream) {
+  const G    = goodData(id);
+  const node = gNodeMap[id];
+
+  // Здания, которые производят этот товар
+  const producers = Object.entries(BUILDING_RECIPES)
+    .flatMap(([bld, rs]) => rs.filter(r => r.output_good === id).map(r => ({
+      bld, bldName: bldData(bld).name || bld, bldIcon: bldData(bld).icon || '🏗',
+      inputs: r.inputs, labor: r.labor_cost_per_worker,
+    })));
+
+  // Здания, где товар используется как вход
+  const consumers = Object.entries(BUILDING_RECIPES)
+    .flatMap(([bld, rs]) => rs
+      .filter(r => r.inputs.some(i => i.good === id))
+      .map(r => {
+        const inp = r.inputs.find(i => i.good === id);
+        return {
+          bld, bldName: bldData(bld).name || bld, bldIcon: bldData(bld).icon || '🏗',
+          output: r.output_good, amount: inp.amount,
+        };
+      }));
+
+  const html = `
+    <div class="sb-title">${node?.icon || ''} ${G.name || id}</div>
+
+    <div class="sb-section">
+      <div class="sb-head">Параметры товара</div>
+      <div class="sb-row"><span>Категория</span>   <span>${G.category || '—'}</span></div>
+      <div class="sb-row"><span>Базовая цена</span><span>${G.base_price || 0} 💰</span></div>
+      <div class="sb-row"><span>Единица</span>     <span>${G.unit || '—'}</span></div>
+    </div>
+
+    ${producers.length ? `
+    <div class="sb-section">
+      <div class="sb-head">Производится (${producers.length})</div>
+      ${producers.map(p => `
+        <div style="padding:4px 0; border-bottom:1px solid #21262d;">
+          <div style="font-size:12px;font-weight:600;">${p.bldIcon} ${p.bldName}</div>
+          ${p.inputs.length
+            ? `<div style="margin-top:3px;">${p.inputs.map(i =>
+                `<span class="sb-chip">${goodData(i.good).icon||'📦'} ${goodData(i.good).name||i.good} ×${i.amount}</span>`
+              ).join('')}</div>`
+            : `<div style="font-size:11px;color:#8b949e;margin-top:2px;">— добыча/сырьё —</div>`}
+          <div style="font-size:11px;color:#8b949e;margin-top:2px;">Труд: ${p.labor} ⚒</div>
+        </div>`).join('')}
+    </div>` : ''}
+
+    ${consumers.length ? `
+    <div class="sb-section">
+      <div class="sb-head">Используется как вход (${consumers.length})</div>
+      ${consumers.map(c => `
+        <div class="sb-row">
+          <span>${c.bldIcon} ${c.bldName}</span>
+          <span>${goodData(c.output).icon||'📦'} ×${c.amount}</span>
+        </div>`).join('')}
+    </div>` : ''}
+
+    ${upstream.size ? `
+    <div class="sb-section">
+      <div class="sb-head">Цепочка вверх (${upstream.size})</div>
+      <div>${[...upstream].map(uid =>
+        `<span class="sb-chip">${gNodeMap[uid]?.icon||''} ${goodData(uid).name||uid}</span>`
+      ).join('')}</div>
+    </div>` : ''}
+
+    ${downstream.size ? `
+    <div class="sb-section">
+      <div class="sb-head">Цепочка вниз (${downstream.size})</div>
+      <div>${[...downstream].map(did =>
+        `<span class="sb-chip">${gNodeMap[did]?.icon||''} ${goodData(did).name||did}</span>`
+      ).join('')}</div>
+    </div>` : ''}
+  `;
+
+  document.getElementById('sidebar-empty').classList.add('hidden');
+  const sc = document.getElementById('sidebar-content');
+  sc.innerHTML = html;
+  sc.classList.remove('hidden');
+}
+
+// ── Фильтр категорий в графе ──────────────────────────────────────────
+function filterGraphCat() {
+  const active = new Set(
+    [...document.querySelectorAll('#graph-toolbar input[data-cat]:checked')]
+      .map(cb => cb.dataset.cat)
+  );
+  gNodes.forEach(n => { n.visible = active.has(n.cat); });
+  updateGraphPositions();
+}
+
+// ── Force-directed simulation ─────────────────────────────────────────
+const SIM = {
+  repulsion:  3500,   // сила отталкивания между всеми узлами
+  spring:     0.012,  // жёсткость пружин по рёбрам
+  restLen:    160,    // «естественная» длина пружины (пикселей)
+  gravity:    0.0004, // притяжение к центру
+  damping:    0.82,   // затухание скорости
+  maxV:       6,      // максимальная скорость
+};
+
+function simStep() {
+  const vis = gNodes.filter(n => n.visible);
+
+  // ── Отталкивание (Barnes-Hut упрощение: O(n²) для n<50, иначе только ближайшие) ──
+  for (let i = 0; i < vis.length; i++) {
+    for (let j = i + 1; j < vis.length; j++) {
+      const a = vis[i], b = vis[j];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist2 = dx*dx + dy*dy || 1;
+      const dist  = Math.sqrt(dist2);
+      const force = SIM.repulsion / dist2;
+      const fx = dx / dist * force;
+      const fy = dy / dist * force;
+      a.vx -= fx; a.vy -= fy;
+      b.vx += fx; b.vy += fy;
+    }
+  }
+
+  // ── Пружины по рёбрам ──
+  gEdges.forEach(e => {
+    const s = gNodeMap[e.src], t = gNodeMap[e.tgt];
+    if (!s || !t || !s.visible || !t.visible) return;
+    const dx = t.x - s.x, dy = t.y - s.y;
+    const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+    const stretch = dist - SIM.restLen;
+    const force   = SIM.spring * stretch;
+    const fx = dx / dist * force;
+    const fy = dy / dist * force;
+    s.vx += fx; s.vy += fy;
+    t.vx -= fx; t.vy -= fy;
+  });
+
+  // ── Гравитация к центру (0,0 в координатах графа) ──
+  vis.forEach(n => {
+    n.vx += -n.x * SIM.gravity;
+    n.vy += -n.y * SIM.gravity;
+  });
+
+  // ── Затухание + применение скорости ──
+  vis.forEach(n => {
+    if (n === dragNode) return;   // перетаскиваемый узел не двигать симулятором
+    n.vx *= SIM.damping;
+    n.vy *= SIM.damping;
+    const speed = Math.sqrt(n.vx*n.vx + n.vy*n.vy);
+    if (speed > SIM.maxV) { n.vx = n.vx/speed*SIM.maxV; n.vy = n.vy/speed*SIM.maxV; }
+    n.x += n.vx;
+    n.y += n.vy;
+  });
+
+  updateGraphPositions();
+  if (simRunning) simFrame = requestAnimationFrame(simStep);
+}
+
+function startSim() {
+  if (simRunning) return;
+  simRunning = true;
+  document.getElementById('btn-sim').textContent = '⏸ Пауза';
+  simFrame = requestAnimationFrame(simStep);
+}
+
+function stopSim() {
+  simRunning = false;
+  if (simFrame) { cancelAnimationFrame(simFrame); simFrame = null; }
+  document.getElementById('btn-sim').textContent = '▶ Старт';
+}
+
+function toggleSim() {
+  simRunning ? stopSim() : startSim();
+}
+
+// ── Entry point ───────────────────────────────────────────────────────
+function initGraph() {
+  if (!graphInited) {
+    buildGraphData();
+    graphInited = true;
+  }
+
+  const svg = document.getElementById('graph-svg');
+  const W   = svg.clientWidth  || 900;
+  const H   = svg.clientHeight || 600;
+
+  layoutHierarchical(W, H);
+  // смещаем в центр viewport
+  vp = { x: 0, y: 0, scale: 1 };
+
+  renderGraphSVG();
+  setupGraphEvents();
+  startSim();
 }
 
 // ── Check data loaded ─────────────────────────────────────────────────
