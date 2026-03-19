@@ -8,6 +8,13 @@
     "trade": 1.3,
     "fish": 1.5
   },
+  "agriculture": {
+    "suitability":  0.70,
+    "arable":       0.40,
+    "wheat_share":  0.45,
+    "yield_kg":     1000,
+    "stability":    "средняя"
+  },
   "movement_cost": 1.0,
   "region_count": 481,
   "regions": [

@@ -8,6 +8,13 @@
     "wine": 1.4,
     "olives": 1.4
   },
+  "agriculture": {
+    "suitability":  0.60,
+    "arable":       0.55,
+    "wheat_share":  0.50,
+    "yield_kg":     800,
+    "stability":    "средняя"
+  },
   "movement_cost": 1.2,
   "region_count": 219,
   "regions": [

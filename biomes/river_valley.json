@@ -8,6 +8,13 @@
     "grain": 1.6,
     "population": 1.2
   },
+  "agriculture": {
+    "suitability":  0.95,
+    "arable":       0.75,
+    "wheat_share":  0.55,
+    "yield_kg":     1350,
+    "stability":    "высокая"
+  },
   "movement_cost": 0.9,
   "region_count": 253,
   "regions": [

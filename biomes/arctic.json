@@ -8,6 +8,13 @@
     "furs": 1.5,
     "food": 0.3
   },
+  "agriculture": {
+    "suitability":  0.00,
+    "arable":       0.00,
+    "wheat_share":  0.00,
+    "yield_kg":     0,
+    "stability":    "нет"
+  },
   "movement_cost": 2.0,
   "region_count": 35,
   "regions": [

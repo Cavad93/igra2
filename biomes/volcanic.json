@@ -8,6 +8,13 @@
     "minerals": 1.3,
     "sulfur": 1.6
   },
+  "agriculture": {
+    "suitability":  0.85,
+    "arable":       0.50,
+    "wheat_share":  0.40,
+    "yield_kg":     1500,
+    "stability":    "высокая"
+  },
   "movement_cost": 1.6,
   "region_count": 5,
   "regions": [

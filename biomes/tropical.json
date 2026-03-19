@@ -8,6 +8,13 @@
     "lumber": 1.3,
     "food": 0.9
   },
+  "agriculture": {
+    "suitability":  0.20,
+    "arable":       0.20,
+    "wheat_share":  0.15,
+    "yield_kg":     250,
+    "stability":    "низкая"
+  },
   "movement_cost": 1.7,
   "region_count": 224,
   "regions": [

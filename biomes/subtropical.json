@@ -8,6 +8,13 @@
     "trade": 1.2,
     "dates": 1.4
   },
+  "agriculture": {
+    "suitability":  0.45,
+    "arable":       0.45,
+    "wheat_share":  0.30,
+    "yield_kg":     600,
+    "stability":    "низкая"
+  },
   "movement_cost": 1.1,
   "region_count": 124,
   "regions": [

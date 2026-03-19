@@ -8,6 +8,13 @@
     "livestock": 1.1,
     "food": 0.6
   },
+  "agriculture": {
+    "suitability":  0.10,
+    "arable":       0.08,
+    "wheat_share":  0.20,
+    "yield_kg":     200,
+    "stability":    "оч.низкая"
+  },
   "movement_cost": 2.5,
   "region_count": 466,
   "regions": [
