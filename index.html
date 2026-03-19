@@ -3875,6 +3875,61 @@
       border-bottom: 1px solid rgba(198,40,40,.3);
     }
 
+    /* ── Земельная полоса ── */
+    .rbt-land {
+      margin-bottom: 6px;
+      padding: 5px 6px;
+      background: rgba(0,0,0,.2);
+      border: 1px solid rgba(107,79,26,.3);
+      border-radius: 3px;
+    }
+    .rbt-land--nodata {
+      font-size: 9px; color: var(--text-dim); font-style: italic;
+    }
+    .rbt-land-track {
+      height: 6px;
+      background: rgba(255,255,255,.08);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+    .rbt-land-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width .3s ease;
+    }
+    .rbt-land-fill--green  { background: linear-gradient(90deg, #2e7d32, #4caf50); }
+    .rbt-land-fill--yellow { background: linear-gradient(90deg, #f57f17, #fdd835); }
+    .rbt-land-fill--red    { background: linear-gradient(90deg, #b71c1c, #e53935); }
+
+    .rbt-land-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .rbt-land-stat {
+      font-size: 9px; color: var(--text-dim);
+    }
+    .rbt-land-stat b { color: var(--text-light); }
+
+    .rbt-land-free          { font-size: 9px; font-weight: bold; }
+    .rbt-land-free--green   { color: #81c784; }
+    .rbt-land-free--yellow  { color: #fff176; }
+    .rbt-land-free--red     { color: #ef9a9a; }
+    .rbt-land-free b        { color: inherit; }
+
+    .rbt-land-hints {
+      display: block;
+      margin-top: 3px;
+      font-size: 8.5px;
+      color: var(--text-dim);
+    }
+
+    /* Земельная строка в карточке chooser */
+    .rbt-bc-land        { font-size: 9px; color: var(--text-dim); width: 100%; }
+    .rbt-bc-land--ok    { color: #81c784; }
+    .rbt-bc-land--bad   { color: #ef9a9a; font-weight: bold; }
+
     /* ════════════════════════════════════════════════════════════════
        ЭКОНОМИЧЕСКИЙ ОБЗОР (React) — анимации и глобальные стили
        ════════════════════════════════════════════════════════════════ */

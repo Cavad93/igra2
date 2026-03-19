@@ -57,6 +57,7 @@ function renderConstructionTab(regionId) {
 
   return `
     <div class="rbt-wrap">
+      ${_rbtLandBar(region)}
       <div class="rbt-hdr">
         <span class="rbt-slots-lbl">Слоты:</span>
         <span class="rbt-slots-val">${usedSlots}/${maxSlots}</span>
@@ -64,6 +65,61 @@ function renderConstructionTab(regionId) {
       </div>
       <div class="rbt-grid">${cards}</div>
       ${chooserHtml}
+    </div>
+  `;
+}
+
+// ──────────────────────────────────────────────────────────────
+// ЗЕМЕЛЬНАЯ ПОЛОСА
+// ──────────────────────────────────────────────────────────────
+
+function _rbtLandBar(region) {
+  const land = region.land;
+  if (!land || !land.arable_ha) {
+    return '<div class="rbt-land rbt-land--nodata">📐 Земельные данные недоступны</div>';
+  }
+
+  const used  = land.buildings_ha  || 0;
+  const total = land.arable_ha;
+  const free  = land.free_ha       || 0;
+  const pct   = Math.min(100, Math.round(used / total * 100));
+
+  // Цвет полосы по степени заполнения
+  const tier = pct >= 90 ? 'red' : pct >= 70 ? 'yellow' : 'green';
+
+  // Подсказки: сколько единиц каждого пшеничного типа ещё влезет
+  const hints = [];
+  if (typeof BUILDINGS !== 'undefined') {
+    const pairs = [
+      ['wheat_family_farm',  '🌾ф'],
+      ['wheat_villa',        '🏡в'],
+      ['wheat_latifundium',  '🌿л'],
+    ];
+    for (const [id, label] of pairs) {
+      const fp = BUILDINGS[id]?.footprint_ha;
+      if (fp && free >= fp) {
+        hints.push(`${label}×${Math.floor(free / fp)}`);
+      }
+    }
+  }
+  const hintsHtml = hints.length
+    ? `<span class="rbt-land-hints">${hints.join(' · ')}</span>`
+    : '';
+
+  return `
+    <div class="rbt-land">
+      <div class="rbt-land-track">
+        <div class="rbt-land-fill rbt-land-fill--${tier}" style="width:${pct}%"></div>
+      </div>
+      <div class="rbt-land-row">
+        <span class="rbt-land-stat">
+          <b>${used.toLocaleString()}</b> га занято из <b>${total.toLocaleString()}</b> га
+        </span>
+        <span class="rbt-land-free rbt-land-free--${tier}">
+          свободно <b>${free.toLocaleString()}</b> га
+        </span>
+      </div>
+      ${hintsHtml}
     </div>
   `;
 }
@@ -226,6 +282,22 @@ function _rbtBuildingChooser(regionId, region, terrain, nation) {
       return `${g ? g.icon : '📦'} ${g ? g.name : p.good}`;
     }).join(', ');
 
+    // Земельная строка
+    const footprint = b.footprint_ha ?? 0;
+    const freeHa    = region.land?.free_ha ?? null;
+    let landHtml = '';
+    if (footprint > 0) {
+      if (freeHa === null) {
+        landHtml = `<div class="rbt-bc-land">📐 ${footprint} га</div>`;
+      } else {
+        const landOk  = freeHa >= footprint;
+        const tierCls = landOk ? 'ok' : 'bad';
+        const sign    = landOk ? '✓' : '✗';
+        landHtml = `<div class="rbt-bc-land rbt-bc-land--${tierCls}">` +
+          `📐 ${footprint} га · свободно ${Math.round(freeHa).toLocaleString()} га ${sign}</div>`;
+      }
+    }
+
     return `
       <div class="rbt-bcard rbt-bcard--${affordTier}${disabled ? ' rbt-bcard--dis' : ''}"
         ${disabled ? `title="${reason || ''}"` : `onclick="uiOrderConstruction('${regionId}','${b.id}')"`}>
@@ -238,6 +310,7 @@ function _rbtBuildingChooser(regionId, region, terrain, nation) {
           ${totalWorkers > 0 ? `<div class="rbt-bc-wkr">👷 ${totalWorkers.toLocaleString()} рабочих</div>` : ''}
           ${b.build_turns ? `<div class="rbt-bc-turns">⏳ ${b.build_turns} хода</div>` : ''}
           ${prodItems ? `<div class="rbt-bc-prod">${prodItems}</div>` : ''}
+          ${landHtml}
           ${matLines ? `<div class="rbt-bc-mats">${matLines}</div>` : ''}
           ${reason ? `<div class="rbt-bc-reason">${reason}</div>` : ''}
         </div>
