@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DevTools — Производственные цепочки</title>
+  <style>
+    /* ── Base ──────────────────────────────────────────────────────── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Toolbar ────────────────────────────────────────────────────── */
+    #toolbar {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    #toolbar h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f78166;
+      letter-spacing: .3px;
+      margin-right: 4px;
+    }
+    .sep { width: 1px; height: 22px; background: #30363d; }
+    .label { font-size: 11px; color: #8b949e; }
+
+    .btn {
+      padding: 4px 11px;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      background: #21262d;
+      color: #c9d1d9;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .btn:hover  { background: #30363d; }
+    .btn.active { background: #388bfd; border-color: #388bfd; color: #fff; }
+    .btn-export { background: #1a7f37; border-color: #1a7f37; color: #fff; }
+    .btn-export:hover { background: #146c2e; }
+    .btn-reset  { color: #f78166; }
+
+    /* ── Stats bar ──────────────────────────────────────────────────── */
+    #stats {
+      background: #161b22;
+      border-top: 1px solid #30363d;
+      padding: 3px 16px;
+      font-size: 11px;
+      color: #8b949e;
+      display: flex;
+      gap: 20px;
+      flex-shrink: 0;
+    }
+    #stats em { color: #c9d1d9; font-style: normal; }
+
+    /* ── Content area ───────────────────────────────────────────────── */
+    #content { flex: 1; overflow: hidden; position: relative; }
+
+    /* ── Views ──────────────────────────────────────────────────────── */
+    .view { position: absolute; inset: 0; overflow-y: auto; padding: 16px; }
+    .view.hidden { display: none; }
+
+    /* ── Table ──────────────────────────────────────────────────────── */
+    .chain-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .chain-table th {
+      background: #161b22;
+      position: sticky;
+      top: -16px;          /* compensate for .view padding */
+      z-index: 5;
+      padding: 7px 10px;
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #8b949e;
+      border-bottom: 2px solid #21262d;
+      letter-spacing: .4px;
+    }
+    .chain-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #21262d;
+      vertical-align: middle;
+    }
+    .chain-table tr:hover td { background: rgba(56,139,253,.05); }
+
+    /* cells */
+    .good-cell     { display: flex; align-items: center; gap: 7px; }
+    .good-icon     { font-size: 19px; line-height: 1; }
+    .good-name     { font-weight: 600; }
+    .good-sub      { font-size: 11px; color: #8b949e; }
+
+    .bld-cell      { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+
+    /* terrain badges */
+    .tbadge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-size: 11px;
+      background: #1c2a3a;
+      color: #79c0ff;
+      margin: 1px;
+      white-space: nowrap;
+    }
+    .tbadge.any { background: #1a2d1a; color: #7ee787; }
+
+    /* inputs */
+    .inp-list  { display: flex; flex-wrap: wrap; gap: 4px; }
+    .inp-chip  {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: #21262d;
+      font-size: 12px;
+      border: 1px solid transparent;
+    }
+    .inp-chip.bottleneck { background: #3a2500; border-color: #9a5000; color: #ffa657; }
+
+    /* prices */
+    .px-out { color: #7ee787; font-weight: 700; }
+    .px-in  { color: #ffa657; }
+
+    /* profitability */
+    .profit              { font-weight: 700; font-size: 13px; }
+    .profit.hi           { color: #3fb950; }
+    .profit.mid          { color: #d29922; }
+    .profit.lo           { color: #f85149; }
+
+    /* raw badge */
+    .raw-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 10px;
+      background: #1a2d1a;
+      color: #7ee787;
+      font-size: 11px;
+    }
+
+    /* category pill */
+    .cat-pill {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 8px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+    .cat-food     { background: #1a2d1a; color: #7ee787; }
+    .cat-material { background: #1c2a3a; color: #79c0ff; }
+    .cat-luxury   { background: #2d1a3a; color: #d2a8ff; }
+    .cat-essential{ background: #3a2500; color: #ffa657; }
+
+    /* bottleneck row highlight */
+    tr.has-bottleneck td { border-left: 3px solid #9a5000; }
+
+    /* notice */
+    #load-error {
+      display: none;
+      padding: 20px;
+      background: #3a1a1a;
+      border: 1px solid #f85149;
+      border-radius: 8px;
+      margin: 20px;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    #load-error h2 { color: #f85149; margin-bottom: 8px; }
+    #load-error code { background: #21262d; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Toolbar ─────────────────────────────────────────────────────── -->
+<div id="toolbar">
+  <h1>⚙ Цепочки производства</h1>
+  <div class="sep"></div>
+
+  <button class="btn active" id="btn-table" onclick="switchView('table')">📋 Таблица</button>
+  <button class="btn"        id="btn-graph" onclick="switchView('graph')">🕸 Граф</button>
+
+  <div class="sep"></div>
+  <span class="label">Фильтр:</span>
+  <button class="btn active" data-f="all"       onclick="setFilter(this)">Все</button>
+  <button class="btn"        data-f="raw"        onclick="setFilter(this)">Сырьё</button>
+  <button class="btn"        data-f="processed"  onclick="setFilter(this)">Переработка</button>
+  <button class="btn"        data-f="food"       onclick="setFilter(this)">Еда</button>
+  <button class="btn"        data-f="material"   onclick="setFilter(this)">Материалы</button>
+  <button class="btn"        data-f="luxury"     onclick="setFilter(this)">Роскошь</button>
+
+  <div class="sep"></div>
+  <button class="btn btn-export" onclick="exportPatch()">⬇ Экспорт изменений</button>
+  <button class="btn btn-reset"  onclick="resetPatches()">↺ Сброс</button>
+</div>
+
+<!-- ── Content ─────────────────────────────────────────────────────── -->
+<div id="content">
+
+  <!-- load error shown if data files are missing -->
+  <div id="load-error">
+    <h2>⚠ Не удалось загрузить данные игры</h2>
+    <p>Страница должна быть открыта через локальный HTTP-сервер, а не напрямую через <code>file://</code>.<br>
+    Запустите из корня проекта:</p>
+    <pre style="margin:8px 0;background:#21262d;padding:8px;border-radius:6px;font-size:12px">
+  python3 -m http.server 8080
+  # затем откройте http://localhost:8080/devtools/chains.html</pre>
+    <p>Или используйте Live Server (VS Code) / любой статический сервер.</p>
+  </div>
+
+  <!-- TABLE VIEW -->
+  <div id="view-table" class="view">
+    <table class="chain-table">
+      <thead>
+        <tr>
+          <th>Товар (выход)</th>
+          <th>Здание</th>
+          <th>Местность</th>
+          <th>Входы</th>
+          <th>Цена&nbsp;выхода</th>
+          <th>Стоимость&nbsp;входов</th>
+          <th>Рентабельность</th>
+          <th>Категория</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- GRAPH VIEW (этап 3) -->
+  <div id="view-graph" class="view hidden" style="padding:0">
+    <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8b949e;font-size:14px">
+      🕸 Граф связей будет реализован на Этапе 3
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Stats bar ────────────────────────────────────────────────────── -->
+<div id="stats">
+  <span>Цепочек: <em id="s-chains">—</em></span>
+  <span>Товаров: <em id="s-goods">—</em></span>
+  <span>Узких мест: <em id="s-bottlenecks">—</em></span>
+  <span>Изменений: <em id="s-changes">0</em></span>
+  <span id="s-filter"></span>
+</div>
+
+<!-- ── Data files ────────────────────────────────────────────────────── -->
+<script src="../data/goods.js"></script>
+<script src="../data/recipes.js"></script>
+<script src="../data/buildings.js"></script>
+<script src="../config.js"></script>
+
+<!-- ── App ───────────────────────────────────────────────────────────── -->
+<script>
+'use strict';
+
+// ── Terrain labels ────────────────────────────────────────────────────
+const TERRAIN = {
+  plains:       '🌾 Равнины',
+  hills:        '⛰ Холмы',
+  mountains:    '🏔 Горы',
+  river_valley: '🌊 Речная долина',
+  coastal_city: '⚓ Побережье',
+};
+
+// ── State ─────────────────────────────────────────────────────────────
+let currentView   = 'table';
+let currentFilter = 'all';
+let patches       = {};   // 'building|output|inputGood' → newAmount
+let patchLabor    = {};   // 'building|output'           → newLaborCost
+
+// ── Helpers ───────────────────────────────────────────────────────────
+function goodData(id)     { return (typeof GOODS !== 'undefined' && GOODS[id]) || {}; }
+function bldData(id)      { return (typeof BUILDINGS !== 'undefined' && BUILDINGS[id]) || {}; }
+function recipes(bld)     { return (typeof BUILDING_RECIPES !== 'undefined' && BUILDING_RECIPES[bld]) || []; }
+
+function terrainHtml(restriction) {
+  if (!restriction) return '<span class="tbadge any">🗺 Любая</span>';
+  return restriction.map(t => `<span class="tbadge">${TERRAIN[t] || t}</span>`).join('');
+}
+
+function catPill(cat) {
+  const label = { food: 'Еда', material: 'Материалы', luxury: 'Роскошь', essential: 'Необходимое' };
+  return `<span class="cat-pill cat-${cat}">${label[cat] || cat}</span>`;
+}
+
+function profitClass(pct) {
+  return pct >= 40 ? 'hi' : pct >= 10 ? 'mid' : 'lo';
+}
+
+// ── Build row data ─────────────────────────────────────────────────────
+function inputUsageCounts() {
+  const c = {};
+  if (typeof BUILDING_RECIPES === 'undefined') return c;
+  Object.values(BUILDING_RECIPES).forEach(rs => {
+    rs.forEach(r => r.inputs.forEach(inp => { c[inp.good] = (c[inp.good] || 0) + 1; }));
+  });
+  return c;
+}
+
+function buildRows() {
+  if (typeof BUILDING_RECIPES === 'undefined') return [];
+  const usage = inputUsageCounts();
+  const rows  = [];
+
+  Object.entries(BUILDING_RECIPES).forEach(([bld, rs]) => {
+    const B = bldData(bld);
+    rs.forEach(recipe => {
+      const G = goodData(recipe.output_good);
+
+      // apply patches
+      const inputs = recipe.inputs.map(inp => {
+        const key = `${bld}|${recipe.output_good}|${inp.good}`;
+        return { good: inp.good, amount: patches[key] !== undefined ? patches[key] : inp.amount, orig: inp.amount };
+      });
+      const laborKey = `${bld}|${recipe.output_good}`;
+      const labor    = patchLabor[laborKey] !== undefined ? patchLabor[laborKey] : recipe.labor_cost_per_worker;
+
+      const outPrice  = G.base_price || 0;
+      const inCost    = inputs.reduce((s, i) => s + (goodData(i.good).base_price || 0) * i.amount, 0);
+      const profitPct = outPrice ? Math.round((outPrice - inCost - labor) / outPrice * 100) : 0;
+
+      rows.push({
+        bld, bldName: B.name || bld, bldIcon: B.icon || '🏗',
+        terrain: B.terrain_restriction,
+        output: recipe.output_good,
+        outName: G.name || recipe.output_good,
+        outIcon: G.icon || '📦',
+        outCat:  G.category || 'material',
+        outPrice, inCost, profitPct,
+        inputs, labor,
+        isRaw: recipe.inputs.length === 0,
+        usage,
+      });
+    });
+  });
+
+  return rows;
+}
+
+// ── Filter ────────────────────────────────────────────────────────────
+function applyFilter(rows) {
+  const f = currentFilter;
+  if (f === 'all')       return rows;
+  if (f === 'raw')       return rows.filter(r => r.isRaw);
+  if (f === 'processed') return rows.filter(r => !r.isRaw);
+  if (f === 'food')      return rows.filter(r => r.outCat === 'food');
+  if (f === 'material')  return rows.filter(r => r.outCat === 'material');
+  if (f === 'luxury')    return rows.filter(r => r.outCat === 'luxury');
+  return rows;
+}
+
+// ── Render table ─────────────────────────────────────────────────────
+function renderTable() {
+  const allRows  = buildRows();
+  const rows     = applyFilter(allRows);
+  const usage    = inputUsageCounts();
+  const bnThresh = 3;
+  const bnGoods  = new Set(Object.entries(usage).filter(([,c]) => c >= bnThresh).map(([k]) => k));
+
+  const tbody = document.getElementById('tbody');
+  if (!tbody) return;
+
+  tbody.innerHTML = rows.map(row => {
+    const hasBottleneck = row.inputs.some(i => bnGoods.has(i.good));
+
+    // ── inputs cell ──
+    let inpHtml;
+    if (row.isRaw) {
+      inpHtml = '<span class="raw-badge">— сырьё / добыча —</span>';
+    } else {
+      inpHtml = `<div class="inp-list">` +
+        row.inputs.map(inp => {
+          const IG  = goodData(inp.good);
+          const isBN = bnGoods.has(inp.good);
+          const tip  = isBN ? ` title="⚠ Узкое место — нужен в ${usage[inp.good]} цепочках"` : '';
+          return `<span class="inp-chip${isBN ? ' bottleneck' : ''}"${tip}>
+            ${IG.icon || '📦'} ${IG.name || inp.good}
+            <strong>×${inp.amount}</strong>
+          </span>`;
+        }).join('') +
+      `</div>`;
+    }
+
+    // ── profitability ──
+    const pc  = profitClass(row.profitPct);
+    const arrow = row.profitPct >= 0 ? '▲' : '▼';
+
+    return `<tr${hasBottleneck ? ' class="has-bottleneck"' : ''}>
+      <td>
+        <div class="good-cell">
+          <span class="good-icon">${row.outIcon}</span>
+          <span>
+            <div class="good-name">${row.outName}</div>
+            <div class="good-sub">${row.output}</div>
+          </span>
+        </div>
+      </td>
+      <td><div class="bld-cell">${row.bldIcon} ${row.bldName}</div></td>
+      <td>${terrainHtml(row.terrain)}</td>
+      <td>${inpHtml}</td>
+      <td class="px-out">${row.outPrice} 💰</td>
+      <td class="px-in">${row.inCost.toFixed(1)} 💰 <span style="color:#8b949e;font-size:11px">(+${row.labor}⚒)</span></td>
+      <td id="profit-${row.bld}-${row.output}">
+        <span class="profit ${pc}">${arrow} ${row.profitPct}%</span>
+      </td>
+      <td>${catPill(row.outCat)}</td>
+    </tr>`;
+  }).join('');
+
+  // ── stats ──
+  const bnCount = Object.entries(usage).filter(([,c]) => c >= bnThresh).length;
+  document.getElementById('s-chains').textContent      = rows.length;
+  document.getElementById('s-goods').textContent       = typeof GOODS !== 'undefined' ? Object.keys(GOODS).length : '—';
+  document.getElementById('s-bottlenecks').textContent = bnCount;
+  document.getElementById('s-filter').textContent      =
+    currentFilter !== 'all' ? `Показано ${rows.length} из ${allRows.length}` : '';
+}
+
+// ── View switch ──────────────────────────────────────────────────────
+function switchView(v) {
+  currentView = v;
+  document.getElementById('view-table').classList.toggle('hidden', v !== 'table');
+  document.getElementById('view-graph').classList.toggle('hidden', v !== 'graph');
+  document.getElementById('btn-table').classList.toggle('active', v === 'table');
+  document.getElementById('btn-graph').classList.toggle('active', v === 'graph');
+
+  const url = new URL(location.href);
+  url.searchParams.set('view', v);
+  history.replaceState({}, '', url);
+
+  if (v === 'table') renderTable();
+}
+
+// ── Filter switch ─────────────────────────────────────────────────────
+function setFilter(btn) {
+  currentFilter = btn.dataset.f;
+  document.querySelectorAll('[data-f]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (currentView === 'table') renderTable();
+}
+
+// ── Export / Reset (заглушки — полная реализация в Этапе 2) ──────────
+function exportPatch() {
+  const total = Object.keys(patches).length + Object.keys(patchLabor).length;
+  if (total === 0) { alert('Нет изменений для экспорта.\nРедактирование будет добавлено на Этапе 2.'); return; }
+  alert(`Экспорт ${total} изменений — реализуется на Этапе 2.`);
+}
+function resetPatches() {
+  patches   = {};
+  patchLabor = {};
+  document.getElementById('s-changes').textContent = '0';
+  renderTable();
+}
+
+// ── Check data loaded ─────────────────────────────────────────────────
+function checkDataLoaded() {
+  if (typeof GOODS === 'undefined' || typeof BUILDING_RECIPES === 'undefined' || typeof BUILDINGS === 'undefined') {
+    document.getElementById('load-error').style.display = 'block';
+    document.getElementById('view-table').style.display = 'none';
+    return false;
+  }
+  return true;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  if (!checkDataLoaded()) return;
+
+  const params = new URLSearchParams(location.search);
+  const v = params.get('view') || 'table';
+  switchView(v);
+});
+</script>
+</body>
+</html>
