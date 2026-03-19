@@ -319,6 +319,48 @@
     .biome-prop.move-fast  { border-color: #3fb950; color: #3fb950; }
     .biome-prop.move-slow  { border-color: #f78166; color: #f78166; }
     .biome-prop.move-mid   { border-color: #d29922; color: #d29922; }
+    .biome-agro {
+      margin-top: 10px;
+      border-top: 1px solid #30363d;
+      padding-top: 8px;
+    }
+    .biome-agro-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #8b949e;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+    .biome-agro-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: #c9d1d9;
+      margin-bottom: 6px;
+    }
+    .biome-agro-bar-wrap {
+      flex: 1;
+      height: 6px;
+      background: #21262d;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .biome-agro-bar {
+      display: block;
+      height: 100%;
+      border-radius: 3px;
+      transition: width .3s;
+    }
+    .biome-agro-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      row-gap: 3px;
+      font-size: 11px;
+    }
+    .biome-agro-label { color: #8b949e; }
+    .biome-agro-val   { color: #c9d1d9; text-align: right; }
 
     /* ── Graph view ─────────────────────────────────────────────────── */
     #graph-toolbar {
@@ -838,9 +880,11 @@ function renderBiomes() {
     const b = BIOME_META[bid];
     if (!b) return '';
     const count = counts[bid] || 0;
-    const bonuses = Object.entries(b.production_bonus)
-      .map(([k, v]) => `${k} ×${v}`)
-      .join(', ');
+    const ag = b.agriculture || {};
+    const stabilityColor = {
+      'высокая': '#3fb950', 'средняя': '#d29922',
+      'низкая': '#f78166', 'оч.низкая': '#f78166', 'нет': '#8b949e'
+    }[ag.stability] || '#8b949e';
     return `
       <div class="biome-card">
         <div class="biome-card-header">
@@ -852,11 +896,28 @@ function renderBiomes() {
         <div class="biome-card-body">
           <div class="biome-desc">${b.description}</div>
           <div class="biome-props">
-            <span class="biome-prop ${moveCls(b.movement_cost)}">🚶 ×${b.movement_cost} движение</span>
+            <span class="biome-prop ${moveCls(b.movement_cost)}">🚶 ×${b.movement_cost}</span>
             ${Object.entries(b.production_bonus).map(([k, v]) =>
               `<span class="biome-prop">+${k}: ×${v}</span>`
             ).join('')}
           </div>
+          ${ag.suitability !== undefined ? `
+          <div class="biome-agro">
+            <div class="biome-agro-title">🌾 Сельское хозяйство</div>
+            <div class="biome-agro-row">
+              <span>Пригодность</span>
+              <span class="biome-agro-bar-wrap">
+                <span class="biome-agro-bar" style="width:${ag.suitability * 100}%;background:${stabilityColor}"></span>
+              </span>
+              <span>${(ag.suitability * 100).toFixed(0)}%</span>
+            </div>
+            <div class="biome-agro-grid">
+              <span class="biome-agro-label">Пашня</span><span class="biome-agro-val">${(ag.arable * 100).toFixed(0)}%</span>
+              <span class="biome-agro-label">Пшеница</span><span class="biome-agro-val">${(ag.wheat_share * 100).toFixed(0)}%</span>
+              <span class="biome-agro-label">Урожай</span><span class="biome-agro-val">${ag.yield_kg} кг/га</span>
+              <span class="biome-agro-label">Стабильность</span><span class="biome-agro-val" style="color:${stabilityColor}">${ag.stability}</span>
+            </div>
+          </div>` : ''}
         </div>
       </div>`;
   }).join('');

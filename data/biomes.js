@@ -13,7 +13,8 @@ const BIOME_META = {
       "livestock": 1.1,
       "food": 0.6
     },
-    "movement_cost": 2.5
+    "movement_cost": 2.5,
+    "agriculture": { "suitability": 0.10, "arable": 0.08, "wheat_share": 0.20, "yield_kg": 200, "stability": "оч.низкая" }
   },
   "arctic": {
     "id": "arctic",
@@ -26,7 +27,8 @@ const BIOME_META = {
       "furs": 1.5,
       "food": 0.3
     },
-    "movement_cost": 2.0
+    "movement_cost": 2.0,
+    "agriculture": { "suitability": 0.00, "arable": 0.00, "wheat_share": 0.00, "yield_kg": 0, "stability": "нет" }
   },
   "desert": {
     "id": "desert",
@@ -38,7 +40,8 @@ const BIOME_META = {
       "trade": 0.8,
       "food": 0.4
     },
-    "movement_cost": 1.8
+    "movement_cost": 1.8,
+    "agriculture": { "suitability": 0.02, "arable": 0.02, "wheat_share": 0.00, "yield_kg": 0, "stability": "нет" }
   },
   "mediterranean_coast": {
     "id": "mediterranean_coast",
@@ -51,7 +54,8 @@ const BIOME_META = {
       "trade": 1.3,
       "fish": 1.5
     },
-    "movement_cost": 1.0
+    "movement_cost": 1.0,
+    "agriculture": { "suitability": 0.70, "arable": 0.40, "wheat_share": 0.45, "yield_kg": 1000, "stability": "средняя" }
   },
   "mediterranean_hills": {
     "id": "mediterranean_hills",
@@ -64,7 +68,8 @@ const BIOME_META = {
       "wine": 1.4,
       "olives": 1.4
     },
-    "movement_cost": 1.2
+    "movement_cost": 1.2,
+    "agriculture": { "suitability": 0.60, "arable": 0.55, "wheat_share": 0.50, "yield_kg": 800, "stability": "средняя" }
   },
   "river_valley": {
     "id": "river_valley",
@@ -77,7 +82,8 @@ const BIOME_META = {
       "grain": 1.6,
       "population": 1.2
     },
-    "movement_cost": 0.9
+    "movement_cost": 0.9,
+    "agriculture": { "suitability": 0.95, "arable": 0.75, "wheat_share": 0.55, "yield_kg": 1350, "stability": "высокая" }
   },
   "savanna": {
     "id": "savanna",
@@ -90,7 +96,8 @@ const BIOME_META = {
       "livestock": 1.1,
       "food": 0.8
     },
-    "movement_cost": 1.3
+    "movement_cost": 1.3,
+    "agriculture": { "suitability": 0.15, "arable": 0.15, "wheat_share": 0.10, "yield_kg": 150, "stability": "низкая" }
   },
   "semi_arid": {
     "id": "semi_arid",
@@ -103,7 +110,8 @@ const BIOME_META = {
       "food": 0.7,
       "trade": 0.9
     },
-    "movement_cost": 1.4
+    "movement_cost": 1.4,
+    "agriculture": { "suitability": 0.35, "arable": 0.25, "wheat_share": 0.30, "yield_kg": 450, "stability": "низкая" }
   },
   "steppe": {
     "id": "steppe",
@@ -116,7 +124,8 @@ const BIOME_META = {
       "livestock": 1.3,
       "food": 0.7
     },
-    "movement_cost": 0.9
+    "movement_cost": 0.9,
+    "agriculture": { "suitability": 0.40, "arable": 0.35, "wheat_share": 0.40, "yield_kg": 500, "stability": "оч.низкая" }
   },
   "subtropical": {
     "id": "subtropical",
@@ -129,7 +138,8 @@ const BIOME_META = {
       "trade": 1.2,
       "dates": 1.4
     },
-    "movement_cost": 1.1
+    "movement_cost": 1.1,
+    "agriculture": { "suitability": 0.45, "arable": 0.45, "wheat_share": 0.30, "yield_kg": 600, "stability": "низкая" }
   },
   "temperate_forest": {
     "id": "temperate_forest",
@@ -142,7 +152,8 @@ const BIOME_META = {
       "hunting": 1.3,
       "food": 0.9
     },
-    "movement_cost": 1.5
+    "movement_cost": 1.5,
+    "agriculture": { "suitability": 0.50, "arable": 0.40, "wheat_share": 0.35, "yield_kg": 650, "stability": "средняя" }
   },
   "tropical": {
     "id": "tropical",
@@ -150,6 +161,7 @@ const BIOME_META = {
     "description": "Экваториальная Африка, южная Индия, Юго-Восточная Азия — влажные джунгли",
     "color": "#1A7A3A",
     "icon": "🌿",
+    "agriculture": { "suitability": 0.20, "arable": 0.20, "wheat_share": 0.15, "yield_kg": 250, "stability": "низкая" },
     "production_bonus": {
       "exotic_goods": 1.6,
       "lumber": 1.3,
