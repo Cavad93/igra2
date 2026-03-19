@@ -329,48 +329,39 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   const bldBonuses = getBuildingBonuses(nationId);
 
   // ── ДОХОДЫ: НАЛОГИ ─────────────────────────────────────────
+  // Единая механика для всех наций: tax_rates_by_class × wealth_level.
+  // Если нация не имеет явных ставок — инициализируем из единого tax_rate
+  // с исторически правдоподобным распределением по слоям.
+  if (!economy.tax_rates_by_class) {
+    const r = economy.tax_rate || 0.10;
+    economy.tax_rates_by_class = {
+      aristocrats: Math.min(0.30, parseFloat((r * 1.5).toFixed(2))),
+      clergy:      Math.min(0.30, parseFloat((r * 0.7).toFixed(2))),
+      commoners:   Math.min(0.30, parseFloat((r * 1.0).toFixed(2))),
+      soldiers:    Math.min(0.30, parseFloat((r * 0.4).toFixed(2))),
+    };
+  }
+
   // taxBase[group] = Σ(class_pop × wealth_level) по классам группы
-  // Использует CLASS_FROM_PROFESSION + SOCIAL_CLASSES.wealth_level
   const taxBases = computeTaxGroupBases(prof);
   const totalTaxBase = taxBases.aristocrats + taxBases.clergy
                      + taxBases.commoners   + taxBases.soldiers;
 
+  // tax_class = taxBase[group] × rate × TAX_CALIBRATION × building_bonus
+  const r = economy.tax_rates_by_class;
   let taxByClass;
-  let taxIncomeTotal;
-
-  if (economy.tax_rates_by_class && totalTaxBase > 0) {
-    // ── Нации с персональными ставками (игрок + детальные AI) ──
-    // tax_class = Σ(pop × wealth_level) × rate × calibration × building_bonus
-    const r = economy.tax_rates_by_class;
+  if (totalTaxBase > 0) {
     taxByClass = {
       aristocrats: Math.round(taxBases.aristocrats * r.aristocrats * TAX_CALIBRATION * bldBonuses.tax_mult),
       clergy:      Math.round(taxBases.clergy      * r.clergy      * TAX_CALIBRATION * bldBonuses.tax_mult),
       commoners:   Math.round(taxBases.commoners   * r.commoners   * TAX_CALIBRATION * bldBonuses.tax_mult),
       soldiers:    Math.round(taxBases.soldiers    * r.soldiers    * TAX_CALIBRATION * bldBonuses.tax_mult),
     };
-    taxIncomeTotal = taxByClass.aristocrats + taxByClass.clergy
-                   + taxByClass.commoners   + taxByClass.soldiers;
   } else {
-    // ── AI-нации (без tax_rates_by_class): единая ставка × стоимость производства ──
-    let productionValue = 0;
-    for (const [good, amount] of Object.entries(produced)) {
-      const price = GAME_STATE.market[good] ? GAME_STATE.market[good].price : 10;
-      productionValue += amount * price;
-    }
-    taxIncomeTotal = Math.round(productionValue * economy.tax_rate * bldBonuses.tax_mult);
-
-    // Для разбивки в отчёте: пропорциональное распределение по налоговым базам
-    if (totalTaxBase > 0) {
-      taxByClass = {
-        aristocrats: Math.round(taxIncomeTotal * taxBases.aristocrats / totalTaxBase),
-        clergy:      Math.round(taxIncomeTotal * taxBases.clergy      / totalTaxBase),
-        commoners:   Math.round(taxIncomeTotal * taxBases.commoners   / totalTaxBase),
-        soldiers:    Math.round(taxIncomeTotal * taxBases.soldiers    / totalTaxBase),
-      };
-    } else {
-      taxByClass = { aristocrats: 0, clergy: 0, commoners: 0, soldiers: 0 };
-    }
+    taxByClass = { aristocrats: 0, clergy: 0, commoners: 0, soldiers: 0 };
   }
+  const taxIncomeTotal = taxByClass.aristocrats + taxByClass.clergy
+                       + taxByClass.commoners   + taxByClass.soldiers;
 
   // ── ДОХОДЫ: ПОРТОВЫЕ ПОШЛИНЫ ───────────────────────────────
   const coastalRegions = nation.regions.filter(rId => {
@@ -924,12 +915,9 @@ function updateHappiness() {
     if ((nation.military.at_war_with || []).length > 0) {
       happiness += CONFIG.BALANCE.HAPPINESS_FROM_WAR;
     }
-    // Штраф от высоких налогов — только для AI (без tax_rates_by_class).
-    // Для игрока эквивалентный штраф уже применяется через satisfaction классов
-    // в блоке «Штраф от высоких налогов (2c)» выше.
-    if (!economy.tax_rates_by_class && economy.tax_rate > 0.15) {
-      happiness -= Math.round((economy.tax_rate - 0.15) * 100);
-    }
+    // Штраф от налоговой нагрузки учитывается через satisfaction классов (2c):
+    // _tpPenalty применяется в блоке «Штраф от высоких налогов» выше.
+    // Все нации теперь используют tax_rates_by_class → этот путь не нужен.
     if (economy.treasury < 0) {
       happiness -= 3;
     }
