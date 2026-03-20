@@ -771,7 +771,13 @@ const BUILDINGS = {
     cost:        100,
     category:    'agriculture',
     footprint_ha: 5,           // га на 1 ферму (уровень)
-    workers_per_unit: 5,       // человек на 1 ферму — для подсказок UI
+    workers_per_unit: 5,       // 5 фермеров на 1 ферму
+
+    // ── Масштабный коэффициент урожайности (эффективность на га) ──────────────
+    // efficiency_mult × (workers/1000) × base_rate = итоговый выход
+    // Базовый уровень: 5 чел × (2000/1000) × 1.0 = 10 ед./ход → 2 ед./га
+    efficiency_mult: 1.0,
+
     // timber×2(44) + tools×1(35) = 79; labor=21 → ~100
     construction_materials: { timber: 2, tools: 1 },
     construction_labor:     21,
@@ -782,12 +788,15 @@ const BUILDINGS = {
     wage_rate:          0.35,  // арендаторы оставляют себе 35% урожая
     labor_type:         'tenant',
     build_turns:        1,
-    terrain_restriction: ['plains', 'hills', 'river_valley'],
+    terrain_restriction: ['plains', 'hills', 'river_valley',
+                          'mediterranean_coast', 'mediterranean_hills',
+                          'river_valley', 'steppe', 'temperate_forest'],
     max_per_region:     null,
     max_level:          20,    // до 20 ферм на регион
 
     production_output: [
-      // base_rate высокий: (5/1000)×2000 = 10 пшеницы/ход/ферму → 2 пш/га
+      // base_rate = канонический выход на 1000 рабочих (без efficiency_mult)
+      // (5/1000)×2000×1.0 = 10 пш/ход → 2 пш/га
       { good: 'wheat', base_rate: 2000 },
     ],
 
@@ -799,11 +808,16 @@ const BUILDINGS = {
     name:        'Средняя вилла',
     icon:        '🏡',
     description: 'Товарное хозяйство среднего размера. Дороже фермы, но ' +
-                 'эффективнее на гектар. Требует больше рабочих рук.',
+                 'эффективнее на гектар благодаря лучшей организации труда.',
     cost:        600,
     category:    'agriculture',
     footprint_ha: 75,          // га на 1 виллу
-    workers_per_unit: 15,      // человек на 1 виллу
+    workers_per_unit: 15,      // 15 фермеров на 1 виллу
+
+    // ── Масштабный коэффициент ────────────────────────────────────────────────
+    // (15/1000)×10000×1.3 = 195 пш/ход → 2.6 пш/га (×1.3 vs ферма)
+    efficiency_mult: 1.3,
+
     // timber×6(132) + iron×2(90) + tools×3(105) = 327; labor=273 → ~600
     construction_materials: { timber: 6, iron: 2, tools: 3 },
     construction_labor:     273,
@@ -814,13 +828,15 @@ const BUILDINGS = {
     wage_rate:          0.30,
     labor_type:         'tenant',
     build_turns:        3,
-    terrain_restriction: ['plains', 'hills', 'river_valley'],
+    terrain_restriction: ['plains', 'hills', 'river_valley',
+                          'mediterranean_coast', 'mediterranean_hills',
+                          'steppe', 'temperate_forest'],
     max_per_region:     null,
     max_level:          10,
 
     production_output: [
-      // (15/1000)×13000 ≈ 195 пш/ход/виллу → ~2.6 пш/га (лучше фермы)
-      { good: 'wheat', base_rate: 13000 },
+      // (15/1000)×10000×1.3 = 195 пш/ход/виллу → 2.6 пш/га
+      { good: 'wheat', base_rate: 10000 },
     ],
 
     // legacy
@@ -831,11 +847,17 @@ const BUILDINGS = {
     name:        'Латифундия (пшеница)',
     icon:        '🌿',
     description: 'Крупное поместье с отлаженным производством. Максимальная ' +
-                 'отдача с гектара. Требует 200 рабочих на единицу.',
+                 'отдача с гектара. 100 свободных фермеров + 100 рабов; ' +
+                 'при отмене рабства или нехватке рабов — все 200 становятся фермерами.',
     cost:        2500,
     category:    'agriculture',
     footprint_ha: 300,         // га на 1 латифундию
-    workers_per_unit: 200,     // человек на 1 латифундию
+    workers_per_unit: 200,     // 100 фермеров + 100 рабов (или 200 фермеров)
+
+    // ── Масштабный коэффициент ────────────────────────────────────────────────
+    // (200/1000)×3000×1.8 = 1080 пш/ход → 3.6 пш/га (×1.8 vs ферма)
+    efficiency_mult: 1.8,
+
     // timber×15(330) + iron×8(360) + tools×8(280) = 970; labor=530 → ~2500 с наценкой
     construction_materials: { timber: 15, iron: 8, tools: 8 },
     construction_labor:     530,
@@ -844,17 +866,23 @@ const BUILDINGS = {
       { profession: 'farmers', count: 100 },
       { profession: 'slaves',  count: 100 },
     ],
-    wage_rate:          0.25,  // арендаторы; рабы без оплаты
+    // Замена рабов: если nation.population.by_profession.slaves === 0,
+    // движок заменяет слот рабов фермерами (slave_fallback_profession).
+    slave_fallback_profession: 'farmers',
+
+    wage_rate:          0.25,  // фермеры-арендаторы; рабы без оплаты
     labor_type:         'tenant',
     build_turns:        6,
-    terrain_restriction: ['plains', 'river_valley'],
+    terrain_restriction: ['plains', 'river_valley',
+                          'mediterranean_coast', 'mediterranean_hills'],
     max_per_region:     null,
     max_level:          5,
 
     production_output: [
-      // (200/1000)×6000 = 1200 пш/ход/латифундию → 4 пш/га (максимум)
-      { good: 'wheat',  base_rate: 6000 },
-      { good: 'barley', base_rate: 1500 },  // побочный продукт
+      // (200/1000)×3000×1.8 = 1080 пш/ход → 3.6 пш/га
+      { good: 'wheat',  base_rate: 3000 },
+      // побочный ячмень: (200/1000)×834×1.8 ≈ 300 ячм/ход → 1 ячм/га
+      { good: 'barley', base_rate: 834 },
     ],
 
     // legacy

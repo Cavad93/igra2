@@ -24,15 +24,35 @@ function _slotTotalWorkers(slot) {
   return Object.values(slot.workers).reduce((s, v) => s + v, 0);
 }
 
-// Terrain-бонус для конкретного товара: некоторые локации лучше подходят
-// для определённых типов производства.
+// Бонус к производству товара по типу местности или биому региона.
+// Сначала проверяет region.biome (13 биомов), затем region.terrain (5 старых типов).
+// Используется в _calcSlotBaseOutput как terrainBonus.
 function _terrainGoodBonus(terrain, good) {
   const TABLE = {
+    // ── Старые типы местности (backward-compat) ───────────────────────────
     plains:       { wheat: 1.15, barley: 1.10, wool:   1.10 },
     hills:        { wine:  1.20, olive_oil: 1.15, iron: 1.10, sulfur: 1.15 },
-    river_valley: { wheat: 1.25, barley: 1.15, cloth: 1.15, pottery: 1.10, papyrus: 1.20 },
-    mountains:    { iron:  1.20, bronze: 1.15, timber: 1.10, sulfur: 1.30 },  // Этна — богатейшие залежи
+    mountains:    { iron:  1.20, bronze: 1.15, timber: 1.10, sulfur: 1.30 },
     coastal_city: { fish:  1.20, salt:   1.20, trade_goods: 1.15, tuna: 1.25 },
+
+    // ── 13 биомов (region.biome) ──────────────────────────────────────────
+    // Бонусы пшеницы выведены из BIOME_META.agriculture.yield_kg
+    // (нормализация: mediterranean_hills = 1.00 как базовый уровень)
+    //
+    // biome              yield_kg  wheat  barley  wine   olive  iron   timber fish  trade  salt
+    river_valley:       { wheat: 1.40, barley: 1.30, cloth: 1.15, pottery: 1.10, papyrus: 1.20 },
+    mediterranean_coast:{ wheat: 1.15, barley: 1.10, fish: 1.30, salt: 1.20, trade_goods: 1.25, tuna: 1.20 },
+    mediterranean_hills:{ wheat: 1.00, barley: 1.00, wine: 1.35, olive_oil: 1.30 },
+    steppe:             { wheat: 0.85, barley: 0.90, wool: 1.20, leather: 1.10 },
+    temperate_forest:   { wheat: 0.80, barley: 0.85, timber: 1.30, wool: 1.10 },
+    volcanic:           { wheat: 1.05, barley: 1.00, sulfur: 1.40, wine: 1.15 },
+    subtropical:        { wheat: 0.70, barley: 0.75, fish: 1.10, trade_goods: 1.10 },
+    semi_arid:          { wheat: 0.45, barley: 0.55, salt: 1.15 },
+    savanna:            { wheat: 0.30, barley: 0.35, ivory: 1.50 },
+    alpine:             { wheat: 0.20, barley: 0.25, iron: 1.15, timber: 1.20 },
+    arctic:             { wheat: 0.05, barley: 0.05, fish: 1.20, furs: 1.50 },
+    desert:             { wheat: 0.05, barley: 0.10, salt: 1.10, trade_goods: 0.80 },
+    tropical:           { wheat: 0.15, barley: 0.20, fish: 1.15 },
   };
   return TABLE[terrain]?.[good] ?? 1.0;
 }
@@ -74,34 +94,57 @@ function recalculateAllEmployment(nationId) {
 // getBuildingOutput() вызывают его, чтобы не дублировать логику.
 // ──────────────────────────────────────────────────────────────
 
+// Возвращает эффективное число рабочих слота с учётом slave_fallback_profession:
+// если nation.population.by_profession.slaves === 0, рабские слоты → farmers.
+function _getEffectiveWorkers(slot, bDef, nation) {
+  const w = { ...(slot.workers || {}) };
+  const fallback = bDef?.slave_fallback_profession;
+  if (fallback && (w.slaves ?? 0) > 0) {
+    const slavePop = nation?.population?.by_profession?.slaves ?? 0;
+    if (slavePop === 0) {
+      // Рабов нет в нации → весь слот занимают фермеры
+      w[fallback] = (w[fallback] || 0) + w.slaves;
+      w.slaves = 0;
+    }
+  }
+  return w;
+}
+
 function _calcSlotBaseOutput(slot, region, nation) {
   if (!slot || slot.status !== 'active') return {};
 
   const bDef = BUILDINGS[slot.building_id];
   if (!bDef || !bDef.production_output?.length) return {};
 
-  const terrain    = region.terrain || region.type || 'plains';
+  // Биом имеет приоритет над старым terrain-типом для бонусов к урожаю
+  const terrain    = region.biome || region.terrain || region.type || 'plains';
   const fertility  = region.fertility ?? 0.7;
   const satMod     = nation.population._production_mod ?? 1.0;
   const level      = slot.level || 1;
-  const workers    = _slotTotalWorkers(slot) * level;
+
+  // Учитываем замену рабов фермерами при нехватке рабов в нации
+  const effectiveWorkers = _getEffectiveWorkers(slot, bDef, nation);
+  const workers = Object.values(effectiveWorkers).reduce((s, v) => s + v, 0) * level;
 
   if (workers <= 0) return {};
 
   // production_eff: 0.0–1.0, снижается при убытках (Stage 4).
-  // При eff=0 здание не производит ничего (приостановлено / закрыто).
   const eff = slot.production_eff ?? 1.0;
   if (eff <= 0) return {};
 
   // _pop_eff: 0.7–1.0, зависит от удовлетворённости рабочих (Stage 6).
-  // Устанавливается applyPopSatisfiedToBuildings() перед производством.
   const popEff = slot._pop_eff ?? 1.0;
+
+  // efficiency_mult: масштабный коэффициент урожайности на га (1.0 / 1.3 / 1.8).
+  // Задаётся в определении здания; отсутствие поля = 1.0 (не влияет).
+  const effMult = bDef.efficiency_mult ?? 1.0;
 
   const output = {};
   for (const { good, base_rate } of bDef.production_output) {
     const terrainBonus = _terrainGoodBonus(terrain, good);
-    // base_rate: единиц товара на 1000 рабочих в ход
-    const amount = (workers / 1000) * base_rate * fertility * satMod * terrainBonus * eff * popEff;
+    // base_rate: канонический выход на 1000 рабочих (без масштабного коэф.)
+    // effMult: умножитель эффективности за счёт масштаба хозяйства
+    const amount = (workers / 1000) * base_rate * effMult * fertility * satMod * terrainBonus * eff * popEff;
     if (amount > 0.1) output[good] = (output[good] || 0) + amount;
   }
 
@@ -724,14 +767,29 @@ function _cutSlotWorkers(slot, fraction) {
 }
 
 // Постепенное восстановление рабочих до максимума из bDef.
-function _restoreSlotWorkers(slot, bDef, fraction) {
+// Если задан slave_fallback_profession и рабов нет в нации → восстанавливаем
+// фермеров вместо рабов (не пытаемся нанять несуществующих рабов).
+function _restoreSlotWorkers(slot, bDef, fraction, nation) {
   if (!bDef?.worker_profession) return;
+  const slavePop      = nation?.population?.by_profession?.slaves ?? 0;
+  const fallbackProf  = bDef.slave_fallback_profession;
+
   for (const { profession: prof, count: maxCount } of bDef.worker_profession) {
-    const current = slot.workers?.[prof] ?? 0;
-    if (current >= maxCount) continue;
+    // Если рабов нет в нации и этот слот — рабский, восстанавливаем fallback-профессию
+    const effectiveProf = (prof === 'slaves' && slavePop === 0 && fallbackProf)
+      ? fallbackProf
+      : prof;
+
+    const current = slot.workers?.[effectiveProf] ?? 0;
+    // Для оригинального слота рабов: если переключились на fallback, maxCount тот же
+    const effectiveMax = (effectiveProf !== prof)
+      ? maxCount + (slot.workers?.[effectiveProf] ?? 0)
+      : maxCount;
+
+    if (current >= effectiveMax) continue;
     const gain = Math.max(1, Math.floor(maxCount * fraction));
     if (!slot.workers) slot.workers = {};
-    slot.workers[prof] = Math.min(maxCount, current + gain);
+    slot.workers[effectiveProf] = Math.min(effectiveMax, current + gain);
   }
 }
 
@@ -806,7 +864,7 @@ function applyBuildingAdaptiveBehavior(nationId) {
             _logSlotEvent(slot, bDef, rid, '▶ производство восстановлено.', 'good');
           }
         }
-        _restoreSlotWorkers(slot, bDef, 0.05);  // +5%/тик — медленнее, чем -10%
+        _restoreSlotWorkers(slot, bDef, 0.05, nation);  // +5%/тик — медленнее, чем -10%
         continue;
       }
 
@@ -816,7 +874,7 @@ function applyBuildingAdaptiveBehavior(nationId) {
           slot.production_eff  = 0.10;  // запускаем с 10% мощности
           slot.loss_streak     = 8;      // сбрасываем в зону «сокращение», а не «закрытие»
           slot._recovery_accum = 0;
-          _restoreSlotWorkers(slot, bDef, 0.05);
+          _restoreSlotWorkers(slot, bDef, 0.05, nation);
           if (isPlayer) _logSlotEvent(slot, bDef, rid, '🔄 начинает повторное открытие (рынок улучшился).', 'info');
         }
         continue;
