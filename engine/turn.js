@@ -34,12 +34,30 @@ async function processTurn() {
       try { processBuildingConstruction(); } catch (e) { console.warn('[buildings]', e); }
     }
 
+    // 0.95. Провинциальный контроль — пересчёт area_control + influence_bonus
+    //       + effective_control ДО расчёта экономики (провинциальный рынок
+    //       зависит от контроля, поэтому обновляем после военного шага).
+    if (typeof calculateProvinceControl === 'function') {
+      try { calculateProvinceControl(); } catch (e) { console.warn('[province_control]', e); }
+    }
+
     // 1. Экономика (детерминировано)
-    //    Внутри: Step0=POP→eff, Step0.5а=КапЗакупка(инструм/скот),
-    //            Step0.5б=ЗакупкаРабов, Step1=Производство, Step2=Потребление,
-    //            Step3=Финансы зданий, Step4а=Зарплаты, Step4б=КлассовыйДоход,
-    //            Step4в=БогатствоPOP, Step5=Рынок, Step5б=АвтономноеСтроительство,
-    //            Step5в=БанкротствоКлассов, Step6=Торговля/Казна/События
+    //    Внутри:
+    //      0    applyPopSatisfiedToBuildings   (satisfied прошлого тика → _pop_eff)
+    //      0.5  computeWorldMarketQuotas       (квоты мирового рынка)
+    //           procureCapitalInputs           (закупка инструментов/скота)
+    //      0.6  procureSlaves                  (закупка рабов для латифундий)
+    //      1    processAllRecipes + calculateProduction + routeProduction
+    //      1.5  buildProvinceMarket + updateRegionalMarketPrices
+    //      2    calculateConsumption
+    //      3    updateBuildingFinancials
+    //      4а   distributeWages
+    //      4б   distributeClassIncome
+    //      4в   updatePopWealth
+    //      5    updateMarketPrices (world)
+    //      5б   processAutonomousBuilding
+    //      5в   checkClassBankruptcy
+    //      6    processTrade + updateTreasury + события
     try { runEconomyTick(); } catch (e) { console.error('[economy]', e); }
 
     // 1.1. Запись истории экономики (для вкладки «Экономический обзор»)

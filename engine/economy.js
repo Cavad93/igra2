@@ -826,23 +826,33 @@ function evaluateCondition(value, condition) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// ГЛАВНАЯ ФУНКЦИЯ ЭКОНОМИЧЕСКОГО ХОДА — Stage 7
+// ГЛАВНАЯ ФУНКЦИЯ ЭКОНОМИЧЕСКОГО ХОДА
 //
-// Порядок шагов (критичен для корректности):
-//   0. POP → здания (slot._pop_eff) — прошлотиковая satisfied
-//   1. ПРОИЗВОДСТВО — рецепты, actual_output, stockpile+=produced
-//   2. ПОТРЕБЛЕНИЕ — корзина страт, stockpile-=consumed, satisfied
-//   3. ФИНАНСЫ ЗДАНИЙ — revenue/costs/profit, loss_streak, адаптация
-//   4. ЗАРПЛАТЫ → ДОХОДЫ — wages → _wage_bonuses, wealth страт
-//   5. РЫНОК — production_cost, price_floor, алгоритм цен, price_history
-//   6. СОБЫТИЯ — treasury, trade, законы, триггеры дефицита/банкротства
+// Канонический порядок шагов (см. turn.js шаг 1):
+//   0    POP → здания (_pop_eff)
+//   0.5  computeWorldMarketQuotas → procureCapitalInputs
+//   0.6  procureSlaves
+//   1    processAllRecipes + calculateProduction + routeProduction
+//   1.5  buildProvinceMarket + updateRegionalMarketPrices
+//   2    calculateConsumption + updatePopSatisfied
+//   3    updateBuildingFinancials + applyBuildingAdaptiveBehavior
+//   4а   distributeWages
+//   4б   distributeClassIncome
+//   4в   updatePopWealth
+//   5    recomputeAllProductionCosts + updateMarketPrices
+//   5б   processAutonomousBuilding
+//   5в   checkClassBankruptcy
+//   6    processTrade + updateTreasury + applyActiveLaws + события
+//
+// updateProvinceControl (calculateProvinceControl) вызывается СНАРУЖИ
+// в turn.js шаг 0.95 — до runEconomyTick.
 // ──────────────────────────────────────────────────────────────
 
 function runEconomyTick() {
 
   // ════════════════════════════════════════════════════════════
-  // ШАГ 0: POP-эффективность зданий (прошлотиковая satisfied → _pop_eff)
-  // Устанавливает slot._pop_eff до calculateProduction этого тика.
+  // ШАГ 0: POP-эффективность зданий
+  // прошлотиковая satisfied → slot._pop_eff
   // ════════════════════════════════════════════════════════════
   if (typeof applyPopSatisfiedToBuildings === 'function') {
     for (const _nId of Object.keys(GAME_STATE.nations)) {
@@ -851,22 +861,26 @@ function runEconomyTick() {
   }
 
   // ════════════════════════════════════════════════════════════
-  // ШАГ 0.5: КАПИТАЛЬНЫЕ РЕСУРСЫ ФЕРМ
-  //   0.5а. Квоты мирового рынка — делим world_stockpile на число
-  //         наций с морским доступом (computeWorldMarketQuotas).
-  //   0.5б. Амортизация + закупка инструментов/скота → slot._capital_ratio
-  //         (нехватка уменьшит выход при расчёте производства)
-  //   0.5в. Закупка рабов для латифундий → nation.population.by_profession.slaves
+  // ШАГ 0.5: КВОТЫ + КАПИТАЛЬНЫЕ РЕСУРСЫ ФЕРМ
+  //   Квоты мирового рынка (world_stockpile / число покупателей).
+  //   Амортизация + четырёхуровневая закупка инструментов/скота:
+  //     local → province → national → world.
+  //   Устанавливает slot._capital_ratio (влияет на выход в шаге 1).
   // ════════════════════════════════════════════════════════════
   if (typeof computeWorldMarketQuotas === 'function') {
     try { computeWorldMarketQuotas(); } catch (e) { console.warn('[world_quotas]', e); }
   }
-
   if (typeof procureCapitalInputs === 'function') {
     for (const nationId of Object.keys(GAME_STATE.nations)) {
       try { procureCapitalInputs(nationId); } catch (e) { console.warn('[capital_inputs]', e); }
     }
   }
+
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 0.6: ЗАКУПКА РАБОВ
+  //   Покупает рабов с мирового рынка для латифундий.
+  //   → nation.population.by_profession.slaves
+  // ════════════════════════════════════════════════════════════
   if (typeof procureSlaves === 'function') {
     for (const nationId of Object.keys(GAME_STATE.nations)) {
       try { procureSlaves(nationId); } catch (e) { console.warn('[procure_slaves]', e); }
@@ -875,13 +889,10 @@ function runEconomyTick() {
 
   // ════════════════════════════════════════════════════════════
   // ШАГ 1: ПРОИЗВОДСТВО
-  //   1a. Рецепты — проверка ресурсов, production_ratio, вычет входных
-  //   1b. Actual output с учётом production_eff × _pop_eff × recipe_ratios × _capital_ratio
-  //   1c. Роутинг: → region.local_stockpile (буфер 3 тика) → overflow → nation.stockpile
-  //   1.5. Пересчёт региональных цен на основе локального баланса
+  //   1a. Рецепты — production_ratio, production_cost, вычет входных
+  //   1b. actual output = base × _pop_eff × recipe_ratio × _capital_ratio
+  //   1c. Роутинг: → region.local_stockpile (3 тика) → overflow → nation.stockpile
   // ════════════════════════════════════════════════════════════
-
-  // 1a. Сброс production_cost + пересчёт ratios/cost/inputs через рецепты
   for (const m of Object.values(GAME_STATE.market)) { m.production_cost = null; }
   if (typeof processAllRecipes === 'function') {
     for (const nationId of Object.keys(GAME_STATE.nations)) {
@@ -889,26 +900,20 @@ function runEconomyTick() {
     }
   }
 
-  // 1b. Вычислить actual output (использует slot._pop_eff и _recipe_ratios)
   const allProduced = calculateProduction();
 
-  // 1c. Маршрутизировать произведённое:
-  //     здания/неорганизованное → region.local_stockpile → overflow → nation.economy.stockpile
   for (const nationId of Object.keys(GAME_STATE.nations)) {
     try { routeProductionToLocalStockpiles(nationId, allProduced); } catch (e) { console.warn('[route_prod]', e); }
   }
 
   // ════════════════════════════════════════════════════════════
-  // ШАГ 1.5: РЫНОЧНЫЕ ЦЕНЫ РЕГИОНОВ И ПРОВИНЦИЙ
-  //   1.5а. updateProvinceControl — пересчёт контроля/влияния по провинциям
-  //   1.5б. buildProvinceMarket  — агрегирует local_stockpile → prov.market
-  //         (транспортная надбавка +15%, −5% при дорогах)
-  //   1.5в. updateRegionalMarketPrices — region.local_market[good].price
-  //         (±15–20% от мировой цены по балансу местного запаса)
+  // ШАГ 1.5: ПРОВИНЦИАЛЬНЫЙ И РЕГИОНАЛЬНЫЙ РЫНОК
+  //   buildProvinceMarket — агрегирует local_stockpile → prov.market
+  //     (транспортная надбавка +15%, −5% при дорогах;
+  //      доступ ограничен по effective_control через getProvinceMarketAccess)
+  //   updateRegionalMarketPrices — region.local_market[good].price
+  //     (±15–20% от мировой цены по балансу local_stockpile)
   // ════════════════════════════════════════════════════════════
-  if (typeof updateProvinceControl === 'function') {
-    try { updateProvinceControl(); } catch (e) { console.warn('[province_control]', e); }
-  }
   if (typeof buildProvinceMarket === 'function') {
     try { buildProvinceMarket(); } catch (e) { console.warn('[province_market]', e); }
   }
