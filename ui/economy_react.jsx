@@ -640,31 +640,47 @@ function _eRenderM_Region() {
   }).join('');
 
   // right: local market for selected region
+  // Show ALL market goods (not just those in local_stockpile), so goods like wheat
+  // are always visible — showing 0 when the region doesn't produce them.
   let goodsHtml;
-  const stockEntries = Object.entries(selReg?.stocks || {}).filter(([g]) => GOODS?.[g]);
-  if (!stockEntries.length) {
+  const mktGoods = typeof GOODS !== 'undefined'
+    ? Object.keys(GOODS).filter(g => g !== 'slaves' && window.GAME_STATE?.market?.[g])
+    : [];
+  if (!mktGoods.length) {
     goodsHtml = `<div style="padding:20px;text-align:center;color:${_C.ivoryFade};font-size:11px;font-style:italic">Нет локальных данных. Запустите ход для инициализации.</div>`;
   } else {
+    // Sort: goods with local production first, then by name
+    const sorted = [...mktGoods].sort((a, b) => {
+      const pa = (selReg?.prod?.[a] || 0) + (selReg?.stocks?.[a] || 0);
+      const pb = (selReg?.prod?.[b] || 0) + (selReg?.stocks?.[b] || 0);
+      if (pa > 0 && pb === 0) return -1;
+      if (pb > 0 && pa === 0) return  1;
+      return (GOODS[a]?.name || a).localeCompare(GOODS[b]?.name || b, 'ru');
+    });
     const header = `<div style="display:grid;grid-template-columns:1fr 80px 80px 80px 75px;align-items:center;gap:6px;padding:5px 10px;font-size:8.5px;text-transform:uppercase;letter-spacing:.4px;color:${_C.ivoryFade};border-bottom:1px solid ${_C.border}">
       <span>Товар</span><span style="text-align:right">Цена лок.</span><span style="text-align:right">Запас лок.</span><span style="text-align:right">Произв./тик</span><span style="text-align:right">Δ от мирового</span>
     </div>`;
-    const rows = stockEntries.map(([gId, stock]) => {
+    const rows = sorted.map(gId => {
       const def      = GOODS[gId];
+      const stock    = selReg?.stocks?.[gId] || 0;
+      const prod     = selReg?.prod?.[gId]   || 0;
       const worldPrc = window.GAME_STATE?.market?.[gId]?.price ?? def?.base_price ?? 0;
-      const locPrc   = selReg.locMkt[gId]?.price ?? worldPrc;
-      const prod     = selReg.prod[gId]  ?? 0;
+      const locPrc   = selReg?.locMkt?.[gId]?.price ?? worldPrc;
       const diff     = worldPrc > 0 ? ((locPrc - worldPrc) / worldPrc * 100) : 0;
       const diffCol  = diff > 5 ? _C.red : diff < -5 ? _C.green : _C.ivoryDim;
       const prodCol  = prod > 0 ? _C.green : _C.ivoryFade;
-      return `<div style="display:grid;grid-template-columns:1fr 80px 80px 80px 75px;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.04)">
+      const noLocal  = stock === 0 && prod === 0;
+      const rowBg    = noLocal ? 'transparent' : _C.bgGhost;
+      const nameCol  = noLocal ? _C.ivoryFade : _C.ivory;
+      return `<div style="display:grid;grid-template-columns:1fr 80px 80px 80px 75px;align-items:center;gap:6px;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.03);background:${rowBg}">
         <div style="display:flex;align-items:center;gap:7px">
-          <span style="font-size:15px">${def.icon || '📦'}</span>
-          <span style="font-size:11px;color:${_C.ivory}">${def.name || gId}</span>
+          <span style="font-size:15px;opacity:${noLocal ? 0.4 : 1}">${def.icon || '📦'}</span>
+          <span style="font-size:11px;color:${nameCol}">${def.name || gId}</span>
         </div>
-        <div style="text-align:right;font-size:12px;font-family:'Cinzel',serif;color:${_C.gold}">${locPrc.toFixed(1)}</div>
-        <div style="text-align:right;font-size:10.5px;color:${_C.ivory}">${_efmt(stock)}</div>
-        <div style="text-align:right;font-size:10px;color:${prodCol}">${prod > 0 ? '+' : ''}${_efmt(prod)}</div>
-        <div style="text-align:right;font-size:10px;color:${diffCol};font-weight:600">${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%</div>
+        <div style="text-align:right;font-size:11.5px;font-family:'Cinzel',serif;color:${noLocal ? _C.ivoryFade : _C.gold}">${noLocal ? '—' : locPrc.toFixed(1)}</div>
+        <div style="text-align:right;font-size:10.5px;color:${noLocal ? _C.ivoryFade : _C.ivory}">${noLocal ? '—' : _efmt(stock)}</div>
+        <div style="text-align:right;font-size:10px;color:${prodCol}">${prod > 0 ? '+' + _efmt(prod) : (noLocal ? '—' : '0')}</div>
+        <div style="text-align:right;font-size:10px;color:${noLocal ? _C.ivoryFade : diffCol};font-weight:${noLocal ? 400 : 600}">${noLocal ? '—' : (diff >= 0 ? '+' : '') + diff.toFixed(1) + '%'}</div>
       </div>`;
     }).join('');
     goodsHtml = `${header}<div>${rows}</div>`;
