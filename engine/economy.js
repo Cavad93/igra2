@@ -768,6 +768,20 @@ function runEconomyTick() {
       try { distributeWages(nationId); } catch (e) { console.warn('[wages]', e); }
     }
   }
+
+  // ── 4б. КЛАССОВАЯ ЭКОНОМИКА ───────────────────────────────────────────────
+  // Читает slot.revenue_last / wages_paid / profit_last (готовы после шагов 3–4).
+  // Маршрутизирует:
+  //   nation-owned зерновые здания  → treasury
+  //   class-owned зерновые здания   → class_capital[owner]
+  //   арендная зарплата фермеров    → class_capital.farmers_class
+  //   военная зарплата солдат       → treasury → class_capital.soldiers_class
+  if (typeof distributeClassIncome === 'function') {
+    for (const nationId of Object.keys(GAME_STATE.nations)) {
+      try { distributeClassIncome(nationId); } catch (e) { console.warn('[class_income]', e); }
+    }
+  }
+
   if (typeof updatePopWealth === 'function') {
     for (const nationId of Object.keys(GAME_STATE.nations)) {
       try { updatePopWealth(nationId); } catch (e) { console.warn('[pops_wealth]', e); }

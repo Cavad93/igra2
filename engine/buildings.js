@@ -659,6 +659,130 @@ function distributeWages(nationId) {
   nation.economy._building_maintenance_per_turn = Math.round(totalMaintenance);
 }
 
+// ══════════════════════════════════════════════════════════════
+// 6б. КЛАССОВАЯ ЭКОНОМИКА — distributeClassIncome(nationId)
+//
+// Маршрутизирует прибыль зданий в системе классовой собственности.
+//
+// Читает slot.revenue_last / slot.wages_paid / slot.profit_last
+// (заполняются в updateBuildingFinancials + distributeWages на шагах 3–4).
+//
+// Обрабатывает ТОЛЬКО здания с bDef.autonomous_builder (пшеничные):
+//   wheat_family_farm, wheat_villa, wheat_latifundium.
+//
+// ПОТОКИ ПРИБЫЛИ:
+//   slot.owner === 'nation':
+//     profit_last > 0  → economy.treasury  (прямой доход казны)
+//
+//   slot.owner === 'farmers_class':
+//     wages_paid + profit_last  → class_capital.farmers_class
+//     (самозанятые: трудовая + земельная части дохода)
+//
+//   slot.owner === 'aristocrats' / 'soldiers_class':
+//     profit_last > 0  → class_capital[owner]
+//     wages_paid       → class_capital.farmers_class (арендаторы-земледельцы)
+//
+// ВОЕННАЯ ЗАРПЛАТА:
+//   soldiersPop × SOLDIER_SALARY (из config.js) → treasury → soldiers_class
+//
+// ПРИМЕЧАНИЕ по maintenance: profit_last уже включает вычет обслуживания.
+//   updateTreasury вычитает его повторно через _building_maintenance_per_turn
+//   (~50 ден./здание/тик — допустимая погрешность для текущей версии).
+//
+// ВЫЗОВ: после distributeWages() в ШАГ 4 runEconomyTick().
+// ══════════════════════════════════════════════════════════════
+function distributeClassIncome(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return;
+
+  const economy = nation.economy;
+
+  // Lazy init — гарантируем поля для загруженных сохранений (без class_capital)
+  if (!economy.class_capital) {
+    economy.class_capital = { aristocrats: 0, soldiers_class: 0, farmers_class: 0 };
+  }
+  if (!economy.class_income_per_capita) {
+    economy.class_income_per_capita = { aristocrats: 0, soldiers_class: 0, farmers_class: 0 };
+  }
+  const cc = economy.class_capital;
+
+  // Накопители дохода за этот тик — нужны для per-capita (только UI)
+  const incomeTick = { aristocrats: 0, soldiers_class: 0, farmers_class: 0 };
+
+  // ── Доходы зданий ──────────────────────────────────────────────────────────
+  for (const rid of nation.regions) {
+    const region = GAME_STATE.regions[rid];
+    if (!region?.building_slots?.length) continue;
+
+    for (const slot of region.building_slots) {
+      if (slot.status !== 'active') continue;
+
+      const bDef = BUILDINGS[slot.building_id];
+      // Только здания классовой экономики (autonomous_builder задан)
+      if (!bDef?.autonomous_builder) continue;
+
+      const wages      = slot.wages_paid   ?? 0;  // revenue × wage_rate (руб рабочим)
+      const profitLast = slot.profit_last  ?? 0;  // чистая прибыль после всех затрат
+      const slotOwner  = slot.owner        ?? 'nation';
+
+      if (slotOwner === 'farmers_class') {
+        // ── Самозанятые земледельцы (семейная ферма) ────────────────────────
+        // Трудовая доля (wages) + земельная прибыль (profitLast) = весь доход
+        const totalFarmerIncome = wages + Math.max(0, profitLast);
+        if (totalFarmerIncome > 0) {
+          cc.farmers_class             = (cc.farmers_class || 0) + totalFarmerIncome;
+          incomeTick.farmers_class    += totalFarmerIncome;
+        }
+
+      } else {
+        // ── Наёмные арендаторы (вилла / латифундия) ─────────────────────────
+        // Зарплата → всегда земледельцам (они физически работают на земле)
+        if (wages > 0) {
+          cc.farmers_class            = (cc.farmers_class || 0) + wages;
+          incomeTick.farmers_class   += wages;
+        }
+
+        // Чистая прибыль → владельцу здания
+        if (profitLast > 0) {
+          if (slotOwner === 'nation') {
+            // Государственная латифундия: прибыль прямо в казну
+            economy.treasury = (economy.treasury || 0) + profitLast;
+          } else if (cc[slotOwner] !== undefined) {
+            // Классовая собственность: аристократы / солдаты
+            cc[slotOwner]              = (cc[slotOwner] || 0) + profitLast;
+            incomeTick[slotOwner]      = (incomeTick[slotOwner] || 0) + profitLast;
+          }
+        }
+      }
+    }
+  }
+
+  // ── Военная зарплата: казна → soldiers_class ───────────────────────────────
+  // Солдаты получают жалованье от государства (SOLDIER_SALARY ден./чел./тик).
+  // Сумма ограничена текущим балансом казны (не уходим в минус из-за зарплат).
+  const soldiersPop     = nation.population.by_profession?.soldiers ?? 0;
+  const salaryPerPerson = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.SOLDIER_SALARY) || 2;
+  const totalSalary     = Math.round(soldiersPop * salaryPerPerson);
+  if (totalSalary > 0) {
+    const paid = Math.min(totalSalary, Math.max(0, economy.treasury || 0));
+    if (paid > 0) {
+      economy.treasury           -= paid;
+      cc.soldiers_class           = (cc.soldiers_class || 0) + paid;
+      incomeTick.soldiers_class  += paid;
+    }
+  }
+
+  // ── class_income_per_capita: средний доход на человека за тик (UI) ─────────
+  const classPops = (typeof calculateClassPopulations === 'function')
+    ? calculateClassPopulations(nation.population.by_profession || {})
+    : {};
+  const cipc = economy.class_income_per_capita;
+  for (const [cls, income] of Object.entries(incomeTick)) {
+    const pop  = Math.max(1, classPops[cls] ?? 1);
+    cipc[cls]  = Math.round((income / pop) * 10) / 10;  // 1 знак после запятой
+  }
+}
+
 // ──────────────────────────────────────────────────────────────
 // 7. ФИНАНСОВЫЙ ЖУРНАЛ ЗДАНИЙ
 //
