@@ -764,6 +764,35 @@ function initGame() {
     }
   }
 
+  // Классовая экономика: накопленный капитал и средний доход на человека.
+  //
+  // class_capital[cls]           — накопленный золотой запас класса (персистентный).
+  //   Пополняется каждый тик через distributeClassIncome().
+  //   Тратится когда класс строит здание (autonomous_builder).
+  //   Уходит в 0 (→ 'nation') при банкротстве класса-владельца здания.
+  //
+  // class_income_per_capita[cls] — средний доход на 1 человека за тик (только для UI).
+  //   Обновляется в distributeClassIncome(), не хранится между тиками.
+  //
+  // Стартовые значения: скромный начальный капитал пропорционально размеру класса.
+  // Аристократы богаче — могут начать инвестировать раньше.
+  for (const nation of Object.values(GAME_STATE.nations)) {
+    if (!nation.economy.class_capital) {
+      nation.economy.class_capital = {
+        aristocrats:    5000,   // могут начать строить латифундию сразу (порог 5500)
+        soldiers_class: 1000,   // нужно накопить до 3600 для виллы
+        farmers_class:  500,    // нужно накопить до 3100 для фермы
+      };
+    }
+    if (!nation.economy.class_income_per_capita) {
+      nation.economy.class_income_per_capita = {
+        aristocrats:    0,
+        soldiers_class: 0,
+        farmers_class:  0,
+      };
+    }
+  }
+
   // Fix #4: Гарантируем, что все товары из GOODS присутствуют в GAME_STATE.market.
   // Нужно при добавлении новых товаров в GOODS без правки INITIAL_GAME_STATE.
   if (typeof initializeAllMarketEntries === 'function') {

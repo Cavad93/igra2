@@ -450,12 +450,21 @@ function _completeConstruction(entry, region, regionId) {
     console.warn(`[buildings] ${entry.building_id}: worker_profession определён, но ни один рабочий не добавлен`);
   }
 
+  // owner: кто владеет зданием и получает прибыль (profit_portion).
+  //   'nation'         — построено игроком или AI; прибыль → казна
+  //   'aristocrats'    — построено классом аристократов; прибыль → class_capital
+  //   'soldiers_class' — построено классом солдат; прибыль → class_capital
+  //   'farmers_class'  — построено классом земледельцев; прибыль → class_capital
+  // entry.owner задаётся при постановке в очередь; по умолчанию 'nation'.
+  const slotOwner = entry.owner ?? 'nation';
+
   region.building_slots.push({
     slot_id:      entry.slot_id,
     building_id:  entry.building_id,
     status:       'active',
     level:        1,
     workers,
+    owner:        slotOwner,
     founded_turn:           GAME_STATE.turn,
     revenue:                0,
     wages_paid:             0,
