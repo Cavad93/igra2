@@ -1591,13 +1591,16 @@ function procureCapitalInputs(nationId) {
             buyEffMult = (buyGood === ci.alt_good) ? altEff : 1.0;
           }
 
-          // Этап 3: региональный рынок сначала (нет транспортных расходов),
-          // затем национальный stockpile (провинциальный/мировой — Этапы 4–5).
+          // Трёхуровневое снабжение:
+          //   1. region.local_stockpile  (0% надбавка)
+          //   2. провинциальный рынок    (+15%, −5% при дорогах) — Этап 4
+          //   3. nation.economy.stockpile (национальный пул)
           const headsNeeded  = deficit / buyEffMult;
           let   stillNeeded  = headsNeeded;
 
           // ── 1. Берём из region.local_stockpile (цена = мировая, 0% доставка) ──
-          const localStock   = region.local_stockpile || {};
+          if (!region.local_stockpile) region.local_stockpile = {};
+          const localStock   = region.local_stockpile;
           const localAvail   = localStock[buyGood] || 0;
           const fromLocal    = Math.min(stillNeeded, localAvail);
           if (fromLocal > 0) {
@@ -1606,7 +1609,34 @@ function procureCapitalInputs(nationId) {
             stillNeeded -= fromLocal;
           }
 
-          // ── 2. Остаток — из nation.economy.stockpile (национальный пул) ──────
+          // ── 2. Провинциальный рынок (+15%, −5% при дорогах) ─────────────────
+          if (stillNeeded > 0 && typeof getRegionProvince === 'function') {
+            const provName = getRegionProvince(rid);
+            const prov     = provName ? GAME_STATE.provinces?.[provName] : null;
+            if (prov?.market?.[buyGood]?.available > 0) {
+              const provEntry  = prov.market[buyGood];
+              const fromProv   = Math.min(stillNeeded, provEntry.available);
+              if (fromProv > 0) {
+                // Вычитаем из local_stockpile провинциальных регионов пропорционально
+                let toDeduct = fromProv;
+                for (const provRid of prov.regions) {
+                  if (toDeduct <= 0) break;
+                  const provRegion = GAME_STATE.regions[provRid];
+                  if (!provRegion?.local_stockpile) continue;
+                  const avail = provRegion.local_stockpile[buyGood] || 0;
+                  if (avail <= 0) continue;
+                  const take = Math.min(toDeduct, avail);
+                  provRegion.local_stockpile[buyGood] = Math.max(0, avail - take);
+                  toDeduct -= take;
+                }
+                slot._capital_stock[buyGood] = (slot._capital_stock[buyGood] || 0) + fromProv;
+                provEntry.available = Math.max(0, provEntry.available - fromProv);
+                stillNeeded -= fromProv;
+              }
+            }
+          }
+
+          // ── 3. Остаток — из nation.economy.stockpile (национальный пул) ──────
           if (stillNeeded > 0) {
             const nationalAvail = stockpile[buyGood] || 0;
             const fromNational  = Math.min(stillNeeded, nationalAvail);

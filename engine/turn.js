@@ -719,6 +719,9 @@ function initGame() {
   GAME_STATE.nations.macedon.characters  = JSON.parse(JSON.stringify(INITIAL_HETAIROI_MACEDON));
   GAME_STATE.nations.numidia.characters  = JSON.parse(JSON.stringify(INITIAL_ELDERS_NUMIDIA));
 
+  // Инициализируем провинции (до рендера!)
+  if (typeof initProvinces === 'function') initProvinces();
+
   // Инициализируем культуры (до рендера!)
   if (typeof initCultures === 'function') initCultures();
   if (typeof initRegionCultures === 'function') initRegionCultures();

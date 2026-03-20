@@ -834,11 +834,19 @@ function runEconomyTick() {
   }
 
   // ════════════════════════════════════════════════════════════
-  // ШАГ 1.5: РЕГИОНАЛЬНЫЕ ЦЕНЫ
-  //   Пересчитывает region.local_market[good].price на основе
-  //   локального баланса local_stockpile vs 3-тиковой ёмкости.
-  //   Цена варьируется ±15–20% от мировой цены.
+  // ШАГ 1.5: РЫНОЧНЫЕ ЦЕНЫ РЕГИОНОВ И ПРОВИНЦИЙ
+  //   1.5а. updateProvinceControl — пересчёт контроля/влияния по провинциям
+  //   1.5б. buildProvinceMarket  — агрегирует local_stockpile → prov.market
+  //         (транспортная надбавка +15%, −5% при дорогах)
+  //   1.5в. updateRegionalMarketPrices — region.local_market[good].price
+  //         (±15–20% от мировой цены по балансу местного запаса)
   // ════════════════════════════════════════════════════════════
+  if (typeof updateProvinceControl === 'function') {
+    try { updateProvinceControl(); } catch (e) { console.warn('[province_control]', e); }
+  }
+  if (typeof buildProvinceMarket === 'function') {
+    try { buildProvinceMarket(); } catch (e) { console.warn('[province_market]', e); }
+  }
   if (typeof updateRegionalMarketPrices === 'function') {
     try { updateRegionalMarketPrices(); } catch (e) { console.warn('[regional_prices]', e); }
   }
