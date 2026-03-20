@@ -391,31 +391,33 @@ function calculateAllBuildingProduction(nationId) {
 // ──────────────────────────────────────────────────────────────
 
 function processBuildingConstruction() {
-  const nationId = GAME_STATE.player_nation;
-  const nation   = GAME_STATE.nations[nationId];
-  if (!nation) return;
+  // Обрабатываем строительные очереди ВСЕХ наций (игрока + AI + автономные классы).
+  for (const nationId of Object.keys(GAME_STATE.nations)) {
+    const nation = GAME_STATE.nations[nationId];
+    if (!nation) continue;
 
-  for (const rid of nation.regions) {
-    const region = GAME_STATE.regions[rid];
-    if (!region?.construction_queue?.length) continue;
+    for (const rid of nation.regions) {
+      const region = GAME_STATE.regions[rid];
+      if (!region?.construction_queue?.length) continue;
 
-    const completedIds = [];
+      const completedIds = [];
 
-    for (const entry of region.construction_queue) {
-      entry.turns_left = Math.max(0, entry.turns_left - 1);
+      for (const entry of region.construction_queue) {
+        entry.turns_left = Math.max(0, entry.turns_left - 1);
 
-      if (entry.turns_left <= 0) {
-        _completeConstruction(entry, region, rid);
-        completedIds.push(entry.slot_id);
+        if (entry.turns_left <= 0) {
+          _completeConstruction(entry, region, rid);
+          completedIds.push(entry.slot_id);
+        }
       }
-    }
 
-    // Убираем завершённые из очереди
-    if (completedIds.length) {
-      region.construction_queue = region.construction_queue.filter(
-        e => !completedIds.includes(e.slot_id),
-      );
-      recalculateRegionEmployment(region);
+      // Убираем завершённые из очереди
+      if (completedIds.length) {
+        region.construction_queue = region.construction_queue.filter(
+          e => !completedIds.includes(e.slot_id),
+        );
+        recalculateRegionEmployment(region);
+      }
     }
   }
 }
