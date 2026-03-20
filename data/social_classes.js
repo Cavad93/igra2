@@ -48,7 +48,7 @@ const SOCIAL_CLASSES = {
     wealth_level:  5,
     political_weight: 0.20,  // высокое политическое влияние
     needs: {
-      wheat:       { per_100: 840, priority: 'basic',    label: 'Зерно' },
+      wheat:       { per_100: 450, priority: 'basic',    label: 'Зерно' },
       salt:        { per_100: 2,   priority: 'basic',    label: 'Соль' },
       wine:        { per_100: 28,  priority: 'standard', label: 'Вино' },
       olive_oil:   { per_100: 20,  priority: 'standard', label: 'Оливковое масло' },
@@ -81,7 +81,7 @@ const SOCIAL_CLASSES = {
     wealth_level:  4,
     political_weight: 0.12,
     needs: {
-      wheat:       { per_100: 900, priority: 'basic',    label: 'Зерно' },
+      wheat:       { per_100: 630, priority: 'basic',    label: 'Зерно' },
       salt:        { per_100: 2,   priority: 'basic',    label: 'Соль' },
       wine:        { per_100: 16,  priority: 'standard', label: 'Вино' },
       olive_oil:   { per_100: 12, priority: 'standard', label: 'Оливковое масло' },
@@ -113,7 +113,7 @@ const SOCIAL_CLASSES = {
     wealth_level:  3,
     political_weight: 0.10,
     needs: {
-      wheat:       { per_100: 780, priority: 'basic',    label: 'Зерно' },
+      wheat:       { per_100: 660, priority: 'basic',    label: 'Зерно' },
       salt:        { per_100: 2,   priority: 'basic',    label: 'Соль' },
       olive_oil:   { per_100: 12,  priority: 'standard', label: 'Оливковое масло' },
       wine:        { per_100: 14, priority: 'standard', label: 'Вино (обряды)' },
@@ -145,7 +145,8 @@ const SOCIAL_CLASSES = {
     wealth_level:  3,
     political_weight: 0.18,
     needs: {
-      wheat:       { per_100: 840, priority: 'basic',    label: 'Зерно' },
+      wheat:       { per_100: 540, priority: 'basic',    label: 'Зерно' },
+      barley:      { per_100: 240, priority: 'basic',    label: 'Ячмень' },
       salt:        { per_100: 2,   priority: 'basic',    label: 'Соль' },
       wine:        { per_100: 12,  priority: 'standard', label: 'Вино' },
       olive_oil:   { per_100: 9,  priority: 'standard', label: 'Оливковое масло' },
@@ -175,8 +176,8 @@ const SOCIAL_CLASSES = {
     wealth_level:  2,
     political_weight: 0.12,
     needs: {
-      wheat:       { per_100: 960, priority: 'basic',    label: 'Зерно' },
-      barley:      { per_100: 240, priority: 'basic',    label: 'Ячмень' },
+      wheat:       { per_100: 480, priority: 'basic',    label: 'Зерно' },
+      barley:      { per_100: 360, priority: 'basic',    label: 'Ячмень' },
       salt:        { per_100: 2,   priority: 'basic',    label: 'Соль' },
       wine:        { per_100: 6,  priority: 'standard', label: 'Вино' },
       cloth:       { per_100: 7,  priority: 'standard', label: 'Ткань' },
@@ -207,8 +208,8 @@ const SOCIAL_CLASSES = {
     wealth_level:  1,
     political_weight: 0.10,
     needs: {
-      wheat:       { per_100: 780, priority: 'basic',    label: 'Зерно' },
-      barley:      { per_100: 600, priority: 'basic',    label: 'Ячмень' },
+      wheat:       { per_100: 180, priority: 'basic',    label: 'Зерно' },
+      barley:      { per_100: 720, priority: 'basic',    label: 'Ячмень' },
       salt:        { per_100: 2,   priority: 'basic',    label: 'Соль' },
       cloth:       { per_100: 5,  priority: 'standard', label: 'Ткань' },
       wool:        { per_100: 4,  priority: 'standard', label: 'Шерсть' },
@@ -238,9 +239,9 @@ const SOCIAL_CLASSES = {
     wealth_level:  2,
     political_weight: 0.06,
     needs: {
-      wheat:       { per_100: 840,  priority: 'basic',    label: 'Зерно' },
-      barley:      { per_100: 240,  priority: 'basic',    label: 'Ячмень' },
-      fish:        { per_100: 660,  priority: 'basic',    label: 'Рыба' },
+      wheat:       { per_100: 360,  priority: 'basic',    label: 'Зерно' },
+      barley:      { per_100: 540,  priority: 'basic',    label: 'Ячмень' },
+      fish:        { per_100: 400,  priority: 'basic',    label: 'Рыба' },
       salt:        { per_100: 3,    priority: 'basic',    label: 'Соль' },
       wine:        { per_100: 9,  priority: 'standard', label: 'Вино' },
       cloth:       { per_100: 6,  priority: 'standard', label: 'Ткань' },
@@ -269,8 +270,8 @@ const SOCIAL_CLASSES = {
     wealth_level:  2,
     political_weight: 0.08,
     needs: {
-      wheat:       { per_100: 1020, priority: 'basic',    label: 'Зерно (паёк)' },
-      barley:      { per_100: 360,  priority: 'basic',    label: 'Ячмень (паёк)' },
+      wheat:       { per_100: 1080, priority: 'basic',    label: 'Зерно (паёк)' },
+      barley:      { per_100: 80,   priority: 'basic',    label: 'Ячмень (штрафной паёк)' },
       salt:        { per_100: 3,  priority: 'basic',    label: 'Соль' },
       wine:        { per_100: 7,  priority: 'standard', label: 'Вино' },
       cloth:       { per_100: 6,  priority: 'standard', label: 'Ткань' },
@@ -300,7 +301,7 @@ const SOCIAL_CLASSES = {
     wealth_level:  1,
     political_weight: 0.04,
     needs: {
-      wheat:       { per_100: 660, priority: 'basic',    label: 'Зерно' },
+      wheat:       { per_100: 240, priority: 'basic',    label: 'Зерно' },
       barley:      { per_100: 480, priority: 'basic',    label: 'Ячмень' },
       salt:        { per_100: 2,   priority: 'basic',    label: 'Соль' },
       cloth:       { per_100: 5,  priority: 'standard', label: 'Ткань' },
@@ -327,8 +328,8 @@ const SOCIAL_CLASSES = {
     wealth_level:  0,
     political_weight: 0.00,  // нет политического влияния
     needs: {
-      wheat:       { per_100: 540, priority: 'basic',    label: 'Зерно' },
-      barley:      { per_100: 360, priority: 'basic',    label: 'Ячмень' },
+      wheat:       { per_100: 240,  priority: 'basic',    label: 'Зерно' },
+      barley:      { per_100: 960,  priority: 'basic',    label: 'Ячмень' },
       salt:        { per_100: 1,  priority: 'basic',    label: 'Соль' },
       cloth:       { per_100: 2,  priority: 'standard', label: 'Ткань' },
     },
