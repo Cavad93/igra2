@@ -804,6 +804,16 @@ const BUILDINGS = {
       { good: 'wheat', base_rate: 2000 },
     ],
 
+    // ── Производственные ресурсы (капитальные вложения на уровень) ───────────
+    // Фермы должны держать эти ресурсы как запас. При нехватке снижается _capital_ratio.
+    // monthly_wear — доля списания в тик (1 мес): инструменты ломаются, скот стареет.
+    // alt_good / alt_efficiency — альтернативный товар с бонусом к эффективности.
+    capital_inputs: [
+      { good: 'tools',  count_per_level: 1,  monthly_wear: 0.021 },
+      { good: 'cattle', count_per_level: 1,  monthly_wear: 0.007,
+        alt_good: 'horses', alt_efficiency: 1.2 },
+    ],
+
     // legacy
     profession_growth: { farmers: 0.003 },
   },
@@ -847,6 +857,12 @@ const BUILDINGS = {
       { good: 'wheat', base_rate: 10000 },
     ],
 
+    capital_inputs: [
+      { good: 'tools',  count_per_level: 3,  monthly_wear: 0.021 },
+      { good: 'cattle', count_per_level: 10, monthly_wear: 0.007,
+        alt_good: 'horses', alt_efficiency: 1.2 },
+    ],
+
     // legacy
     profession_growth: { farmers: 0.005 },
   },
@@ -855,12 +871,12 @@ const BUILDINGS = {
     name:        'Латифундия (пшеница)',
     icon:        '🌿',
     description: 'Крупное поместье с отлаженным производством. Максимальная ' +
-                 'отдача с гектара. 100 свободных фермеров + 100 рабов; ' +
-                 'при отмене рабства или нехватке рабов — все 200 становятся фермерами.',
+                 'отдача с гектара. 50 свободных фермеров + до 50 рабов; ' +
+                 'при нехватке рабов недостающие слоты заменяются фермерами.',
     cost:        2500,
     category:    'agriculture',
     footprint_ha: 300,         // га на 1 латифундию
-    workers_per_unit: 200,     // 100 фермеров + 100 рабов (или 200 фермеров)
+    workers_per_unit: 100,     // 50 фермеров + до 50 рабов (или 100 фермеров)
 
     // ── Автономное строительство ──────────────────────────────────────────────
     // Может строиться ДВУМЯ путями:
@@ -878,8 +894,8 @@ const BUILDINGS = {
     construction_labor:     530,
 
     worker_profession: [
-      { profession: 'farmers', count: 100 },
-      { profession: 'slaves',  count: 100 },
+      { profession: 'farmers', count: 50 },
+      { profession: 'slaves',  count: 50 },  // до 50% — рабы (если есть на рынке)
     ],
     // Замена рабов: если nation.population.by_profession.slaves === 0,
     // движок заменяет слот рабов фермерами (slave_fallback_profession).
@@ -894,15 +910,100 @@ const BUILDINGS = {
     max_level:          5,
 
     production_output: [
-      // (200/1000)×3000×1.8 = 1080 пш/ход → 3.6 пш/га
+      // (100/1000)×3000×1.8 = 540 пш/ход → 1.8 пш/га (итог ниже, но рабочих вдвое меньше)
       { good: 'wheat',  base_rate: 3000 },
-      // побочный ячмень: (200/1000)×834×1.8 ≈ 300 ячм/ход → 1 ячм/га
+      // побочный ячмень: (100/1000)×834×1.8 ≈ 150 ячм/ход → 0.5 ячм/га
       { good: 'barley', base_rate: 834 },
+    ],
+
+    capital_inputs: [
+      { good: 'tools',  count_per_level: 20, monthly_wear: 0.021 },
+      { good: 'cattle', count_per_level: 30, monthly_wear: 0.007,
+        alt_good: 'horses', alt_efficiency: 1.2 },
     ],
 
     // legacy
     profession_growth:  { farmers: 0.006, slaves: 0.015 },
     slave_mortality_mod: 0.003,
+  },
+
+  // ══════════════════════════════════════════════════════════════
+  // СКОТОВОДСТВО — разведение тягловых животных
+  // Дают horses / cattle, которые фермы потребляют как capital_inputs.
+  // ══════════════════════════════════════════════════════════════
+
+  horse_ranch: {
+    name:        'Конный завод',
+    icon:        '🐎',
+    description: 'Разведение лошадей для сельского хозяйства, армии и транспорта. ' +
+                 'Лошади эффективнее волов (+20%) и дороже. ' +
+                 'Строится классом всадников.',
+    cost:        400,
+    category:    'agriculture',
+    footprint_ha: 40,
+    workers_per_unit: 8,
+
+    autonomous_builder: 'soldiers_class',   // всадники заинтересованы в лошадях
+    efficiency_mult: 1.0,
+
+    // timber×4(88) + tools×2(70) = 158; labor=242 → ~400
+    construction_materials: { timber: 4, tools: 2 },
+    construction_labor:     242,
+
+    worker_profession: [
+      { profession: 'farmers', count: 8 },
+    ],
+    wage_rate:   0.30,
+    labor_type:  'tenant',
+    build_turns: 3,
+    terrain_restriction: ['plains', 'steppe', 'mediterranean_hills',
+                          'hills', 'river_valley'],
+    max_per_region: null,
+    max_level:   6,
+
+    production_output: [
+      // (8/1000)×60×1.0 = 0.48 головы/мес на уровень
+      { good: 'horses', base_rate: 60 },
+    ],
+
+    profession_growth: { farmers: 0.002 },
+  },
+
+  cattle_farm: {
+    name:        'Скотоводческое хозяйство',
+    icon:        '🐂',
+    description: 'Разведение волов и крупного рогатого скота для пашни. ' +
+                 'Дешевле лошадей, медленнее, но незаменимы для плуга. ' +
+                 'Строится классом земледельцев.',
+    cost:        250,
+    category:    'agriculture',
+    footprint_ha: 30,
+    workers_per_unit: 6,
+
+    autonomous_builder: 'farmers_class',    // земледельцы держат скот
+    efficiency_mult: 1.0,
+
+    // timber×3(66) + tools×1(35) = 101; labor=149 → ~250
+    construction_materials: { timber: 3, tools: 1 },
+    construction_labor:     149,
+
+    worker_profession: [
+      { profession: 'farmers', count: 6 },
+    ],
+    wage_rate:   0.30,
+    labor_type:  'tenant',
+    build_turns: 2,
+    terrain_restriction: ['plains', 'steppe', 'river_valley',
+                          'mediterranean_coast', 'mediterranean_hills', 'hills'],
+    max_per_region: null,
+    max_level:   8,
+
+    production_output: [
+      // (6/1000)×80×1.0 = 0.48 головы/мес на уровень
+      { good: 'cattle', base_rate: 80 },
+    ],
+
+    profession_growth: { farmers: 0.002 },
   },
 
   // ══════════════════════════════════════════════════════════════

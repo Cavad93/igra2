@@ -335,6 +335,34 @@ var GOODS = {
     price_elasticity: 1.3,
   },
 
+  // ── СКОТ ────────────────────────────────────────────────────────────────
+  horses: {
+    name:       'Лошади',
+    name_gen:   'лошадей',
+    base_price: 120,
+    unit:       'голова',
+    category:   'livestock',
+    producers:  ['soldiers_class'],  // конный завод строится soldiers_class
+    is_food:    false,
+    icon:       '🐎',
+    market_category:       'livestock',
+    stockpile_target_turns: 8,
+    price_elasticity:       0.55,
+  },
+  cattle: {
+    name:       'Крупный рогатый скот',
+    name_gen:   'скота',
+    base_price: 70,
+    unit:       'голова',
+    category:   'livestock',
+    producers:  ['farmers_class'],   // скотоводческое хозяйство — farmers_class
+    is_food:    false,
+    icon:       '🐂',
+    market_category:       'livestock',
+    stockpile_target_turns: 8,
+    price_elasticity:       0.60,
+  },
+
   // ── РАБОЧАЯ СИЛА ────────────────────────────────────────────────────────
   slaves: {
     name: 'Рабы',
