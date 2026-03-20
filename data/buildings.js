@@ -794,9 +794,10 @@ const BUILDINGS = {
     build_turns:        1,
     terrain_restriction: ['plains', 'hills', 'river_valley',
                           'mediterranean_coast', 'mediterranean_hills',
-                          'river_valley', 'steppe', 'temperate_forest'],
+                          'river_valley', 'steppe', 'temperate_forest',
+                          'coastal_city'],   // хора полиса — сельская округа города
     max_per_region:     null,
-    max_level:          20,    // до 20 ферм на регион
+    max_level:          null,  // ограничено землёй и населением, не константой
 
     production_output: [
       // base_rate = канонический выход на 1000 рабочих (без efficiency_mult)
@@ -848,9 +849,10 @@ const BUILDINGS = {
     build_turns:        3,
     terrain_restriction: ['plains', 'hills', 'river_valley',
                           'mediterranean_coast', 'mediterranean_hills',
-                          'steppe', 'temperate_forest'],
+                          'steppe', 'temperate_forest',
+                          'coastal_city'],   // хора полиса — сельская округа города
     max_per_region:     null,
-    max_level:          10,
+    max_level:          null,  // ограничено землёй и населением, не константой
 
     production_output: [
       // (15/1000)×10000×1.3 = 195 пш/ход/виллу → 2.6 пш/га
@@ -907,7 +909,7 @@ const BUILDINGS = {
     terrain_restriction: ['plains', 'river_valley',
                           'mediterranean_coast', 'mediterranean_hills'],
     max_per_region:     null,
-    max_level:          5,
+    max_level:          null,  // ограничено землёй (footprint_ha × level ≤ region_farmland) и рабами
 
     production_output: [
       // (100/1000)×3000×1.8 = 540 пш/ход → 1.8 пш/га (итог ниже, но рабочих вдвое меньше)
