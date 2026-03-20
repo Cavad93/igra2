@@ -808,6 +808,23 @@ function runEconomyTick() {
   updateMarketPrices(allProduced, allActualConsumed);
 
   // ════════════════════════════════════════════════════════════
+  // ШАГ 5б: АВТОНОМНОЕ СТРОИТЕЛЬСТВО КЛАССОВ
+  //   Классы тратят class_capital на новые здания (после рынка —
+  //   чтобы использовать актуальные цены при оценке прибыльности).
+  //   Затем проверяем банкротства классов.
+  // ════════════════════════════════════════════════════════════
+  if (typeof processAutonomousBuilding === 'function') {
+    for (const nationId of Object.keys(GAME_STATE.nations)) {
+      try { processAutonomousBuilding(nationId); } catch (e) { console.warn('[auto_build]', e); }
+    }
+  }
+  if (typeof checkClassBankruptcy === 'function') {
+    for (const nationId of Object.keys(GAME_STATE.nations)) {
+      try { checkClassBankruptcy(nationId); } catch (e) { console.warn('[class_bankrupt]', e); }
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════
   // ШАГ 6: UI / СОБЫТИЯ
   //   6a. Торговля и казна
   //   6b. Применение активных законов

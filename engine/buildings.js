@@ -783,6 +783,223 @@ function distributeClassIncome(nationId) {
   }
 }
 
+// ══════════════════════════════════════════════════════════════
+// 6в. ЧИСЛОВАЯ ОЦЕНКА ПРИБЫЛЬНОСТИ РЕГИОНА — _estimateSlotProfit
+//
+// Возвращает числовую прибыль (не bool) для здания в конкретном регионе.
+// Используется processAutonomousBuilding для выбора лучшего региона.
+// ══════════════════════════════════════════════════════════════
+function _estimateSlotProfit(buildingId, region, nation) {
+  const bDef = BUILDINGS[buildingId];
+  if (!bDef) return -Infinity;
+
+  const tempSlot = {
+    building_id:    buildingId,
+    status:         'active',
+    level:          1,
+    production_eff: 1.0,
+    workers:        {},
+    _recipe_ratios: {},
+    owner:          'nation',
+  };
+
+  if (bDef.worker_profession) {
+    for (const { profession, count } of bDef.worker_profession) {
+      tempSlot.workers[profession] = count;
+    }
+  }
+
+  const baseOut   = _calcSlotBaseOutput(tempSlot, region, nation);
+  const market    = GAME_STATE.market;
+  const maintCost = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
+
+  let gross = 0;
+  for (const [g, amt] of Object.entries(baseOut)) {
+    gross += amt * (market[g]?.price ?? 10);
+  }
+
+  const wages = gross * (bDef.wage_rate ?? 0);
+
+  let inputCosts = 0;
+  const recipes = (typeof BUILDING_RECIPES !== 'undefined')
+    ? (BUILDING_RECIPES[buildingId] ?? []) : [];
+  for (const recipe of recipes) {
+    const baseAmt = baseOut[recipe.output_good] || 0;
+    for (const input of recipe.inputs) {
+      const price = market[input.good]?.price
+        ?? (typeof GOODS !== 'undefined' ? GOODS[input.good]?.base_price : null)
+        ?? 10;
+      inputCosts += baseAmt * input.amount * price;
+    }
+  }
+
+  return gross - inputCosts - wages - maintCost;
+}
+
+// ══════════════════════════════════════════════════════════════
+// 6г. АВТОНОМНОЕ СТРОИТЕЛЬСТВО КЛАССОВ — processAutonomousBuilding(nationId)
+//
+// Классы тратят накопленный class_capital на постройку новых зданий.
+//
+// Порог: bDef.cost + _CLASS_SAFETY_RESERVE
+//   _CLASS_SAFETY_RESERVE = 3000 = 5 лет × 12 тиков × 50 коп. обслуживания
+//
+// Алгоритм:
+//   Для каждого класса находим здание с autonomous_builder === cls,
+//   перебираем все регионы нации, выбираем регион с наибольшей оценочной прибылью
+//   (canBuildInRegion ok + _estimateSlotProfit максимальна).
+//   Помещаем запись в construction_queue с entry.owner = cls.
+//   Вычитаем bDef.cost из class_capital[cls].
+//   Максимум 1 здание за класс за тик.
+//
+// ВЫЗОВ: после updateMarketPrices() — ШАГ 5 runEconomyTick().
+// ══════════════════════════════════════════════════════════════
+const _CLASS_SAFETY_RESERVE = 3000;
+
+function processAutonomousBuilding(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return;
+
+  const economy  = nation.economy;
+  if (!economy.class_capital) return;
+
+  const cc       = economy.class_capital;
+  const isPlayer = (nationId === GAME_STATE.player_nation);
+
+  // Карта: cls → [buildingId]
+  const autoBuildingsByClass = {};
+  for (const [bid, bDef] of Object.entries(BUILDINGS)) {
+    const cls = bDef.autonomous_builder;
+    if (!cls) continue;
+    if (!autoBuildingsByClass[cls]) autoBuildingsByClass[cls] = [];
+    autoBuildingsByClass[cls].push(bid);
+  }
+
+  const clsLabels = {
+    aristocrats:    'Аристократы',
+    soldiers_class: 'Солдаты',
+    farmers_class:  'Земледельцы',
+  };
+
+  for (const [cls, buildingIds] of Object.entries(autoBuildingsByClass)) {
+    const capital = cc[cls] ?? 0;
+
+    let bestBid    = null;
+    let bestRid    = null;
+    let bestProfit = -Infinity;
+
+    for (const bid of buildingIds) {
+      const bDef = BUILDINGS[bid];
+      if (!bDef) continue;
+
+      const threshold = (bDef.cost || 0) + _CLASS_SAFETY_RESERVE;
+      if (capital < threshold) continue;
+
+      for (const rid of nation.regions) {
+        const region = GAME_STATE.regions[rid];
+        if (!region) continue;
+
+        const check = (typeof canBuildInRegion === 'function')
+          ? canBuildInRegion(bid, region)
+          : { ok: true };
+        if (!check.ok) continue;
+
+        // Не строим если уже идёт строительство этого типа от этого класса
+        const alreadyQueued = (region.construction_queue || [])
+          .some(e => e.building_id === bid && e.owner === cls);
+        if (alreadyQueued) continue;
+
+        const profit = _estimateSlotProfit(bid, region, nation);
+        if (profit > bestProfit) {
+          bestProfit = profit;
+          bestBid    = bid;
+          bestRid    = rid;
+        }
+      }
+    }
+
+    if (!bestBid || !bestRid) continue;
+
+    const bDef   = BUILDINGS[bestBid];
+    const region = GAME_STATE.regions[bestRid];
+    const cost   = bDef.cost || 0;
+
+    cc[cls] -= cost;
+
+    region.construction_queue = region.construction_queue || [];
+    region.construction_queue.push({
+      slot_id:      `${bestRid}_auto_${cls}_${Date.now()}`,
+      building_id:  bestBid,
+      turns_left:   bDef.build_turns || 1,
+      turns_total:  bDef.build_turns || 1,
+      ordered_turn: GAME_STATE.turn,
+      owner:        cls,
+    });
+
+    if (isPlayer && typeof addEventLog === 'function') {
+      const rName = (typeof MAP_REGIONS !== 'undefined' && MAP_REGIONS[bestRid]?.name) || bestRid;
+      addEventLog(
+        `🏗 ${clsLabels[cls] || cls} начали строительство ${bDef.icon || ''} ${bDef.name} в ${rName}.`
+        + ` (казна класса: ${Math.round(cc[cls])} монет)`,
+        'economy',
+      );
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// 6д. БАНКРОТСТВО КЛАССОВ — checkClassBankruptcy(nationId)
+//
+// Если class_capital[cls] ушёл в минус — класс банкрот:
+//   • Все здания класса (slot.owner === cls) переходят государству (slot.owner = 'nation').
+//   • Долг списывается (cc[cls] = 0) — государство поглощает убыток.
+//   • Для нации игрока — событие в лог.
+//
+// ВЫЗОВ: после processAutonomousBuilding() каждый тик.
+// ══════════════════════════════════════════════════════════════
+function checkClassBankruptcy(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return;
+
+  const economy  = nation.economy;
+  const cc       = economy.class_capital;
+  if (!cc) return;
+
+  const isPlayer = (nationId === GAME_STATE.player_nation);
+
+  const clsLabels = {
+    aristocrats:    'Аристократы',
+    soldiers_class: 'Солдаты',
+    farmers_class:  'Земледельцы',
+  };
+
+  for (const cls of ['aristocrats', 'soldiers_class', 'farmers_class']) {
+    if ((cc[cls] ?? 0) >= 0) continue;
+
+    let reverted = 0;
+    for (const rid of nation.regions) {
+      const region = GAME_STATE.regions[rid];
+      if (!region?.building_slots?.length) continue;
+
+      for (const slot of region.building_slots) {
+        if (slot.owner !== cls) continue;
+        slot.owner = 'nation';
+        reverted++;
+      }
+    }
+
+    // Государство поглощает долг
+    cc[cls] = 0;
+
+    if (reverted > 0 && isPlayer && typeof addEventLog === 'function') {
+      addEventLog(
+        `⚠ ${clsLabels[cls] || cls} обанкротились. ${reverted} зданий перешли государству.`,
+        'warning',
+      );
+    }
+  }
+}
+
 // ──────────────────────────────────────────────────────────────
 // 7. ФИНАНСОВЫЙ ЖУРНАЛ ЗДАНИЙ
 //
