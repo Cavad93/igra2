@@ -407,32 +407,91 @@ function calculateConsumption(nation) {
 // ШАГ 4: ТОРГОВЛЯ
 // ──────────────────────────────────────────────────────────────
 
+// ──────────────────────────────────────────────────────────────
+// _WORLD_IMPORT_GOODS — товары, которые нация закупает на мировом
+// рынке при дефиците в processTrade (не capital_inputs — они в
+// procureCapitalInputs).  Приоритет: сначала продовольствие,
+// затем инструменты и сырьё.
+// ──────────────────────────────────────────────────────────────
+const _WORLD_IMPORT_GOODS = [
+  'wheat', 'barley', 'salt', 'cloth',         // потребительские
+  'tools', 'iron', 'timber', 'bronze',         // производственные
+  'wine', 'olive_oil', 'pottery',              // ценные
+];
+
 function processTrade(nationId) {
   const nation = GAME_STATE.nations[nationId];
   let tradeProfit = 0;
 
+  // ── 1. Экспортная прибыль от торговых маршрутов ───────────────────────
   for (const partnerNationId of (nation.economy.trade_routes || [])) {
     const partner = GAME_STATE.nations[partnerNationId];
     if (!partner) continue;
 
-    // Ищем товары с разницей цен (упрощённая модель)
-    for (const [good, market] of Object.entries(GAME_STATE.market)) {
+    for (const [good, mkt] of Object.entries(GAME_STATE.market)) {
       const nationStock = nation.economy.stockpile[good] || 0;
       if (nationStock < 100) continue;
 
-      // Простая модель: торговля даёт 5% от стоимости экспортируемых излишков
-      const surplus = nationStock - 500;  // минимальный резерв
+      const surplus = nationStock - 500;
       if (surplus <= 0) continue;
 
-      const tradeVolume = Math.min(surplus * 0.1, 1000);  // не более 10% за ход
-      // Торговый договор с партнёром: +50% прибыли
+      const tradeVolume = Math.min(surplus * 0.1, 1000);
       const hasTradeTreaty = (nation.relations?.[partnerNationId]?.treaties ?? []).includes('trade');
       const treatyMult = hasTradeTreaty ? 1.5 : 1.0;
-      const profit = tradeVolume * market.price * 0.05 * treatyMult
+      const profit = tradeVolume * mkt.price * 0.05 * treatyMult
                    * (1 - CONFIG.BALANCE.PIRACY_BASE)
                    * (1 - CONFIG.BALANCE.BASE_TARIFF);
 
       tradeProfit += profit;
+    }
+  }
+
+  // ── 2. Импорт с мирового рынка при дефиците товаров ──────────────────
+  //   Условие: нация имеет доступ к мировому рынку (canAccessWorldMarket).
+  //   Закупает только то, чего не хватает (stockpile < demand × 2 тика).
+  //   Квота и транспортные расходы те же, что в procureCapitalInputs.
+  if (typeof canAccessWorldMarket === 'function' && canAccessWorldMarket(nationId)) {
+    const stockpile = nation.economy.stockpile;
+
+    for (const good of _WORLD_IMPORT_GOODS) {
+      const mktEntry = GAME_STATE.market[good];
+      if (!mktEntry || (mktEntry.world_stockpile || 0) <= 0) continue;
+
+      const currentStock = stockpile[good] || 0;
+      const demandPerTick = mktEntry.demand
+                          ? mktEntry.demand / Math.max(1, Object.keys(GAME_STATE.nations).length)
+                          : 0;
+
+      // Только если запас < 2 тика потребления
+      if (demandPerTick <= 0 || currentStock >= demandPerTick * 2) continue;
+
+      const needed = demandPerTick * 2 - currentStock;
+
+      const quota      = mktEntry._quota_per_buyer ?? (mktEntry.world_stockpile || 0);
+      const boughtSoFar = (mktEntry._world_bought_tick?.[nationId] || 0);
+      const canBuy     = Math.max(0, quota - boughtSoFar);
+      const fromWorld  = Math.min(needed, canBuy, mktEntry.world_stockpile || 0);
+
+      if (fromWorld <= 0) continue;
+
+      const transportCost = typeof getWorldMarketTransportCost === 'function'
+        ? getWorldMarketTransportCost(nationId, good)
+        : 0.25;
+      const priceWithTransport = (mktEntry.price || 0) * (1 + transportCost);
+      const payment = fromWorld * priceWithTransport;
+
+      // Закупаем только если казна позволяет
+      if ((nation.economy.treasury || 0) < payment) continue;
+
+      nation.economy.treasury = (nation.economy.treasury || 0) - payment;
+      stockpile[good] = (stockpile[good] || 0) + fromWorld;
+
+      mktEntry.world_stockpile = Math.max(0, mktEntry.world_stockpile - fromWorld);
+      if (!mktEntry._world_bought_tick) mktEntry._world_bought_tick = {};
+      mktEntry._world_bought_tick[nationId] = boughtSoFar + fromWorld;
+
+      // Учитываем в торговой прибыли (отрицательно — расход)
+      tradeProfit -= payment;
     }
   }
 
@@ -793,10 +852,16 @@ function runEconomyTick() {
 
   // ════════════════════════════════════════════════════════════
   // ШАГ 0.5: КАПИТАЛЬНЫЕ РЕСУРСЫ ФЕРМ
-  //   0.5а. Амортизация + закупка инструментов/скота → slot._capital_ratio
+  //   0.5а. Квоты мирового рынка — делим world_stockpile на число
+  //         наций с морским доступом (computeWorldMarketQuotas).
+  //   0.5б. Амортизация + закупка инструментов/скота → slot._capital_ratio
   //         (нехватка уменьшит выход при расчёте производства)
-  //   0.5б. Закупка рабов для латифундий → nation.population.by_profession.slaves
+  //   0.5в. Закупка рабов для латифундий → nation.population.by_profession.slaves
   // ════════════════════════════════════════════════════════════
+  if (typeof computeWorldMarketQuotas === 'function') {
+    try { computeWorldMarketQuotas(); } catch (e) { console.warn('[world_quotas]', e); }
+  }
+
   if (typeof procureCapitalInputs === 'function') {
     for (const nationId of Object.keys(GAME_STATE.nations)) {
       try { procureCapitalInputs(nationId); } catch (e) { console.warn('[capital_inputs]', e); }

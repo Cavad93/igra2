@@ -1643,6 +1643,47 @@ function procureCapitalInputs(nationId) {
             if (fromNational > 0) {
               stockpile[buyGood]           = Math.max(0, nationalAvail - fromNational);
               slot._capital_stock[buyGood] = (slot._capital_stock[buyGood] || 0) + fromNational;
+              stillNeeded -= fromNational;
+            }
+          }
+
+          // ── 4. Мировой рынок (+25%, −10% договор, −5% монополия, кap +40%) ──
+          if (stillNeeded > 0
+              && typeof canAccessWorldMarket === 'function'
+              && canAccessWorldMarket(nationId)) {
+
+            const mktEntry = market[buyGood];
+            if (mktEntry && (mktEntry.world_stockpile || 0) > 0) {
+              const quota    = mktEntry._quota_per_buyer ?? (mktEntry.world_stockpile || 0);
+              const boughtSoFar = (mktEntry._world_bought_tick?.[nationId] || 0);
+              const canBuy   = Math.max(0, quota - boughtSoFar);
+              const fromWorld = Math.min(stillNeeded, canBuy, mktEntry.world_stockpile || 0);
+
+              if (fromWorld > 0) {
+                const transportCost = typeof getWorldMarketTransportCost === 'function'
+                  ? getWorldMarketTransportCost(nationId, buyGood)
+                  : _WORLD_SEA_COST_BASE ?? 0.25;
+
+                // Транспортные расходы списываем с казны
+                const payment = fromWorld * (mktEntry.price || 0) * transportCost;
+                nation.economy.treasury = (nation.economy.treasury || 0) - payment;
+
+                mktEntry.world_stockpile = Math.max(0, mktEntry.world_stockpile - fromWorld);
+                if (!mktEntry._world_bought_tick) mktEntry._world_bought_tick = {};
+                mktEntry._world_bought_tick[nationId] = boughtSoFar + fromWorld;
+
+                slot._capital_stock[buyGood] = (slot._capital_stock[buyGood] || 0) + fromWorld;
+                stillNeeded -= fromWorld;
+
+                if (isPlayer && typeof addEventLog === 'function') {
+                  const gName = GOODS?.[buyGood]?.name ?? buyGood;
+                  addEventLog(
+                    `🌊 Закупка ${Math.round(fromWorld)} ${gName} на мировом рынке`
+                    + ` (+${Math.round(transportCost * 100)}% транспорт, −${Math.round(payment)} монет)`,
+                    'economy',
+                  );
+                }
+              }
             }
           }
         }

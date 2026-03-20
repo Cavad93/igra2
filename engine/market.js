@@ -136,6 +136,90 @@ function updateMarketPrices(totalProduced, totalConsumed) {
 // Цена ВСЕГДА привязана к мировой цене ± локальная поправка.
 // ══════════════════════════════════════════════════════════════
 
+// ══════════════════════════════════════════════════════════════
+// МИРОВОЙ РЫНОК — доступ, транспортные расходы, квоты
+//
+// canAccessWorldMarket(nationId) — нация может закупаться на
+//   мировом рынке если:
+//     1. Есть хотя бы один прибрежный регион (type/terrain = 'coastal_city')
+//     2. Есть trade_route с любой нацией ИЛИ 'trade' договор с любым
+//        не-воюющим партнёром
+//
+// getWorldMarketTransportCost(nationId, good) → число 0–0.40
+//   base = +25%
+//   −10% если есть 'trade' договор с любым партнёром без войны
+//   −5%  если нация единственный покупатель этого товара в тике
+//   cap  = +40%
+//
+// computeWorldMarketQuotas() — вызывается в шаге 0 перед procureCapitalInputs.
+//   Для каждого товара считает buyer_count и устанавливает
+//   market[good]._quota_per_buyer = world_stockpile / buyer_count.
+//   Сбрасывает market[good]._world_bought_tick = {}.
+// ══════════════════════════════════════════════════════════════
+
+const _WORLD_SEA_COST_BASE      = 0.25;  // базовая морская надбавка
+const _WORLD_TREATY_DISCOUNT    = 0.10;  // скидка за торговый договор
+const _WORLD_MONOPOLY_DISCOUNT  = 0.05;  // скидка при монопольном маршруте
+const _WORLD_COST_CAP           = 0.40;  // максимальная надбавка
+
+// ──────────────────────────────────────────────────────────────
+function canAccessWorldMarket(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return false;
+
+  // 1. Прибрежный регион
+  const hasCoastal = (nation.regions || []).some(rid => {
+    const r = GAME_STATE.regions[rid];
+    return r?.type === 'coastal_city' || r?.terrain === 'coastal_city';
+  });
+  if (!hasCoastal) return false;
+
+  // 2. Торговый маршрут или договор с хотя бы одним не-воюющим партнёром
+  const hasRoute   = (nation.economy?.trade_routes || []).length > 0;
+  const hasTreaty  = Object.values(nation.relations || {}).some(
+    rel => rel.treaties?.includes('trade') && !rel.at_war,
+  );
+  return hasRoute || hasTreaty;
+}
+
+// ──────────────────────────────────────────────────────────────
+function getWorldMarketTransportCost(nationId, good) {
+  let cost = _WORLD_SEA_COST_BASE;
+
+  const nation = GAME_STATE.nations[nationId];
+  if (nation) {
+    const hasTreaty = Object.values(nation.relations || {}).some(
+      rel => rel.treaties?.includes('trade') && !rel.at_war,
+    );
+    if (hasTreaty) cost -= _WORLD_TREATY_DISCOUNT;
+  }
+
+  // Монопольная скидка — единственный покупатель этого товара в тике
+  const buyerCount = GAME_STATE.market[good]?._buyer_count ?? 1;
+  if (buyerCount <= 1) cost -= _WORLD_MONOPOLY_DISCOUNT;
+
+  return Math.min(_WORLD_COST_CAP, Math.max(0, cost));
+}
+
+// ──────────────────────────────────────────────────────────────
+// computeWorldMarketQuotas()
+//
+// Вызывается перед шагом 0.5 в runEconomyTick.
+// Определяет список наций с доступом к мировому рынку,
+// распределяет world_stockpile на равные доли между ними.
+// Сбрасывает _world_bought_tick для отслеживания тикового объёма.
+// ──────────────────────────────────────────────────────────────
+function computeWorldMarketQuotas() {
+  const buyers = Object.keys(GAME_STATE.nations).filter(canAccessWorldMarket);
+  const count  = buyers.length || 1;
+
+  for (const mkt of Object.values(GAME_STATE.market)) {
+    mkt._buyer_count      = count;
+    mkt._quota_per_buyer  = Math.max(0, (mkt.world_stockpile || 0) / count);
+    mkt._world_bought_tick = {};  // { nationId: amount } — сбрасываем каждый тик
+  }
+}
+
 const _REGIONAL_SMOOTH      = 0.30;  // сглаживание локальной цены за тик
 const _REGIONAL_DEFICIT_MAX = 0.20;  // максимальная надбавка при дефиците (+20%)
 const _REGIONAL_SURPLUS_MAX = 0.15;  // максимальная скидка при избытке (−15%)
