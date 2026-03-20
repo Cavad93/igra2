@@ -798,6 +798,119 @@ function distributeClassIncome(nationId) {
 }
 
 // ══════════════════════════════════════════════════════════════
+// 6б.  МОНЕТАРНЫЙ РЫНОК ПРОДОВОЛЬСТВИЯ — deductFoodPurchases
+//
+// Цель: соединить доходы работников с реальными расходами на пшеницу,
+//       создав тем самым денежно-обеспеченный спрос на рынке.
+//
+// Модель двух уровней:
+//   1) Занятые в ЗДАНИЯХ работники продают весь урожай на рынок
+//      и покупают обратно нужное им зерно на заработанное золото.
+//      → class_capital[class] уменьшается на стоимость купленной пшеницы.
+//   2) Subsistence-производители (не занятые в зданиях) сами себя
+//      кормят — монетарная транзакция не нужна, они уже учтены
+//      в физической модели supply/demand.
+//
+// Маппинг профессия → кошелёк:
+//   farmers  → class_capital.farmers_class
+//   slaves   → class_capital.aristocrats  (господин кормит рабов)
+//   soldiers → economy.treasury           (государство кормит армию)
+//   прочие   → пропускаем (класс пока без капитала)
+//
+// Привязка монеты к пшенице (wheat standard):
+//   base_price = 10 → 1 золотой = 0,1 бушеля ≈ 3 кг зерна.
+//   При введении чеканки монет количество золота вырастет →
+//   цена пшеницы поднимется (инфляция), что автоматически
+//   отразится в трёхзонной модели рынка.
+//
+// ВЫЗОВ: сразу после distributeClassIncome(), до updatePopWealth().
+// ══════════════════════════════════════════════════════════════
+function deductFoodPurchases(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return;
+
+  const economy = nation.economy;
+  const market  = GAME_STATE.market;
+  const wheatPrice = market?.wheat?.price ?? 10;
+
+  // Lazy-init class_capital с начальным буфером вместо нулей.
+  // Стартовые 6 месяцев ожидаемых расходов на еду + строительный резерв.
+  if (!economy.class_capital) {
+    const farmersPop = nation.population.by_profession?.farmers ?? 0;
+    const monthlyFood = (farmersPop / 1000) * 0.8 * wheatPrice; // бушели×цена
+    economy.class_capital = {
+      aristocrats:    Math.round(monthlyFood * 4),   // доходы с ренты, 4 мес.
+      soldiers_class: Math.round(monthlyFood * 1),   // солдаты: 1 мес.
+      farmers_class:  Math.round(monthlyFood * 6),   // главный класс, 6 мес.
+    };
+  }
+  if (!economy.class_income_per_capita) {
+    economy.class_income_per_capita = {
+      aristocrats: 0, soldiers_class: 0, farmers_class: 0,
+    };
+  }
+
+  const cc = economy.class_capital;
+
+  // Аккумуляторы для UI
+  let foodSpendFarmers    = 0;
+  let foodSpendAristocrats = 0;
+  let foodSpendTreasury   = 0;
+
+  // ── Обходим только активные здания ───────────────────────────────────────
+  for (const rid of nation.regions) {
+    const region = GAME_STATE.regions[rid];
+    if (!region?.building_slots?.length) continue;
+
+    for (const slot of region.building_slots) {
+      if (slot.status !== 'active') continue;
+      if (!slot.workers)           continue;
+
+      // Корзина потребления пшеницы на тик для каждой группы работников.
+      // Используем фиксированный коэффициент 0.8 (бедняк, wealth≈10):
+      //   при богатстве > 30 пшеницы нужно меньше — корректировка в updatePopWealth.
+      const WHEAT_PER_KPERSON = 0.8; // бушелей / 1000 чел. / тик
+
+      for (const [prof, count] of Object.entries(slot.workers)) {
+        if (!count) continue;
+
+        const wheatNeed = (count / 1000) * WHEAT_PER_KPERSON;
+        const cost      = wheatNeed * wheatPrice;
+
+        if (prof === 'farmers' || prof === 'craftsmen') {
+          // Фермеры-арендаторы и ремесленники → farmers_class
+          const avail = Math.max(0, cc.farmers_class || 0);
+          const spent = Math.min(cost, avail);
+          cc.farmers_class    -= spent;
+          foodSpendFarmers    += spent;
+
+        } else if (prof === 'slaves') {
+          // Рабов кормит хозяин (аристократы)
+          const avail = Math.max(0, cc.aristocrats || 0);
+          const spent = Math.min(cost, avail);
+          cc.aristocrats       -= spent;
+          foodSpendAristocrats += spent;
+
+        } else if (prof === 'soldiers') {
+          // Армию кормит казна
+          const avail = Math.max(0, economy.treasury || 0);
+          const spent = Math.min(cost, avail);
+          economy.treasury    -= spent;
+          foodSpendTreasury   += spent;
+        }
+        // merchants, sailors, clergy → пока без монетарной модели еды
+      }
+    }
+  }
+
+  // Записываем для UI / отладки
+  if (!economy._food_spending) economy._food_spending = {};
+  economy._food_spending.farmers_class = Math.round(foodSpendFarmers  * 10) / 10;
+  economy._food_spending.aristocrats   = Math.round(foodSpendAristocrats * 10) / 10;
+  economy._food_spending.treasury      = Math.round(foodSpendTreasury  * 10) / 10;
+}
+
+// ══════════════════════════════════════════════════════════════
 // 6в. ЧИСЛОВАЯ ОЦЕНКА ПРИБЫЛЬНОСТИ РЕГИОНА — _estimateSlotProfit
 //
 // Возвращает числовую прибыль (не bool) для здания в конкретном регионе.

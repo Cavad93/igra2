@@ -1010,6 +1010,16 @@ function runEconomyTick() {
     }
   }
 
+  // ── 4в. МОНЕТАРНЫЕ РАСХОДЫ НА ПИТАНИЕ ───────────────────────────────────────
+  // Работники зданий тратят часть class_capital на покупку пшеницы с рынка.
+  // Subsistence-фермеры (не в зданиях) кормят себя напрямую — без транзакции.
+  // Вызов до updatePopWealth: изменения class_capital должны быть видны в wealth.
+  if (typeof deductFoodPurchases === 'function') {
+    for (const nationId of Object.keys(GAME_STATE.nations)) {
+      try { deductFoodPurchases(nationId); } catch (e) { console.warn('[food_purchases]', e); }
+    }
+  }
+
   if (typeof updatePopWealth === 'function') {
     for (const nationId of Object.keys(GAME_STATE.nations)) {
       try { updatePopWealth(nationId); } catch (e) { console.warn('[pops_wealth]', e); }
