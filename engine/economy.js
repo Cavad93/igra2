@@ -668,9 +668,26 @@ function runEconomyTick() {
   }
 
   // ════════════════════════════════════════════════════════════
+  // ШАГ 0.5: КАПИТАЛЬНЫЕ РЕСУРСЫ ФЕРМ
+  //   0.5а. Амортизация + закупка инструментов/скота → slot._capital_ratio
+  //         (нехватка уменьшит выход при расчёте производства)
+  //   0.5б. Закупка рабов для латифундий → nation.population.by_profession.slaves
+  // ════════════════════════════════════════════════════════════
+  if (typeof procureCapitalInputs === 'function') {
+    for (const nationId of Object.keys(GAME_STATE.nations)) {
+      try { procureCapitalInputs(nationId); } catch (e) { console.warn('[capital_inputs]', e); }
+    }
+  }
+  if (typeof procureSlaves === 'function') {
+    for (const nationId of Object.keys(GAME_STATE.nations)) {
+      try { procureSlaves(nationId); } catch (e) { console.warn('[procure_slaves]', e); }
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════
   // ШАГ 1: ПРОИЗВОДСТВО
   //   1a. Рецепты — проверка ресурсов, production_ratio, вычет входных
-  //   1b. Actual output с учётом production_eff × _pop_eff × recipe_ratios
+  //   1b. Actual output с учётом production_eff × _pop_eff × recipe_ratios × _capital_ratio
   //   1c. Зачисление произведённого в stockpile
   // ════════════════════════════════════════════════════════════
 

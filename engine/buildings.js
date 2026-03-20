@@ -135,6 +135,9 @@ function _calcSlotBaseOutput(slot, region, nation) {
   // _pop_eff: 0.7–1.0, зависит от удовлетворённости рабочих (Stage 6).
   const popEff = slot._pop_eff ?? 1.0;
 
+  // _capital_ratio: 0.0–1.0, нехватка инструментов/скота снижает выход (Stage 2).
+  const capitalRatio = slot._capital_ratio ?? 1.0;
+
   // efficiency_mult: масштабный коэффициент урожайности на га (1.0 / 1.3 / 1.8).
   // Задаётся в определении здания; отсутствие поля = 1.0 (не влияет).
   const effMult = bDef.efficiency_mult ?? 1.0;
@@ -144,7 +147,9 @@ function _calcSlotBaseOutput(slot, region, nation) {
     const terrainBonus = _terrainGoodBonus(terrain, good);
     // base_rate: канонический выход на 1000 рабочих (без масштабного коэф.)
     // effMult: умножитель эффективности за счёт масштаба хозяйства
-    const amount = (workers / 1000) * base_rate * effMult * fertility * satMod * terrainBonus * eff * popEff;
+    // capitalRatio: снижение при нехватке инструментов/тягловых животных
+    const amount = (workers / 1000) * base_rate * effMult * fertility * satMod
+                 * terrainBonus * eff * popEff * capitalRatio;
     if (amount > 0.1) output[good] = (output[good] || 0) + amount;
   }
 
@@ -477,6 +482,13 @@ function _completeConstruction(entry, region, regionId) {
     costs_last:             0,     // затраты за прошлый тик
     profit_last:            0,     // чистая прибыль за прошлый тик
     construction_cost_cached: bDef.cost || 0,  // стоимость постройки по ценам тика
+    // ── Stage 2: капитальные ресурсы (инструменты / скот) ──────────────────
+    // _capital_stock: сколько единиц каждого товара хранится у здания.
+    //   Ключ — good id (tools, cattle, horses). Заполняется procureCapitalInputs().
+    // _capital_ratio: 0.0–1.0, минимум из всех capital_inputs ratios.
+    //   Умножается на базовый выход в _calcSlotBaseOutput.
+    _capital_stock:         {},
+    _capital_ratio:         1.0,
   });
 
   if (typeof addEventLog === 'function') {
@@ -1468,4 +1480,217 @@ function cancelConstruction(nationId, regionId, slotId) {
   }
 
   return { ok: true, refund };
+}
+
+// ══════════════════════════════════════════════════════════════
+// STAGE 2: КАПИТАЛЬНЫЕ РЕСУРСЫ ФЕРМ
+//
+// Фермы потребляют инструменты и тягловых животных как
+// производственный капитал. Нехватка снижает _capital_ratio,
+// который умножается на выход в _calcSlotBaseOutput.
+//
+// Вызывается в runEconomyTick ДО processAllRecipes (шаг 0.5а).
+// ══════════════════════════════════════════════════════════════
+
+// Вспомогательная функция: wear-ставка для конкретного товара.
+function _capitalWearRate(good, ciMonthlyWear) {
+  if (ciMonthlyWear != null) return ciMonthlyWear;
+  if (good === 'horses') return CONFIG.BALANCE.HORSE_MONTHLY_WEAR  ?? 0.0083;
+  if (good === 'cattle') return CONFIG.BALANCE.CATTLE_MONTHLY_WEAR ?? 0.0070;
+  if (good === 'tools')  return CONFIG.BALANCE.TOOLS_MONTHLY_WEAR  ?? 0.021;
+  return 0.02;
+}
+
+// ──────────────────────────────────────────────────────────────
+// procureCapitalInputs(nationId)
+//
+// Для каждого активного здания с capital_inputs:
+//   1. Амортизирует текущий запас (_capital_stock).
+//   2. Вычисляет дефицит до требуемого уровня.
+//   3. Для скота — выбирает лошадей или волов по соотношению цена/эффект.
+//   4. Закупает из nation.economy.stockpile (региональный рынок — Этапы 3–4).
+//   5. Устанавливает slot._capital_ratio = min(ratio по всем входам).
+// ──────────────────────────────────────────────────────────────
+function procureCapitalInputs(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return;
+
+  const stockpile = nation.economy.stockpile;
+  const market    = GAME_STATE.market;
+  const isPlayer  = (nationId === GAME_STATE.player_nation);
+
+  for (const rid of nation.regions) {
+    const region = GAME_STATE.regions[rid];
+    if (!region?.building_slots?.length) continue;
+
+    for (const slot of region.building_slots) {
+      if (slot.status !== 'active') continue;
+
+      const bDef = BUILDINGS[slot.building_id];
+      if (!bDef?.capital_inputs?.length) {
+        // Здание без capital_inputs — полная эффективность
+        slot._capital_ratio = 1.0;
+        continue;
+      }
+
+      // Гарантируем инициализацию (для зданий, построенных до Stage 2)
+      if (!slot._capital_stock) slot._capital_stock = {};
+
+      const level = slot.level || 1;
+      let minRatio = 1.0;
+
+      for (const ci of bDef.capital_inputs) {
+        const required = ci.count_per_level * level;
+
+        // ── 1. Амортизация основного товара ──────────────────────────────
+        const wear = _capitalWearRate(ci.good, ci.monthly_wear);
+        if ((slot._capital_stock[ci.good] || 0) > 0) {
+          slot._capital_stock[ci.good] = Math.max(
+            0, slot._capital_stock[ci.good] * (1 - wear),
+          );
+        }
+
+        // Амортизация альтернативного товара (лошади, если держали вместо волов)
+        if (ci.alt_good && (slot._capital_stock[ci.alt_good] || 0) > 0) {
+          const altWear = _capitalWearRate(ci.alt_good, null);
+          slot._capital_stock[ci.alt_good] = Math.max(
+            0, slot._capital_stock[ci.alt_good] * (1 - altWear),
+          );
+        }
+
+        // ── 2. Эффективный текущий запас (с учётом бонуса лошадей) ───────
+        const altEff     = ci.alt_efficiency ?? CONFIG.BALANCE.HORSE_EFFICIENCY_MULT ?? 1.2;
+        const stockPrim  = slot._capital_stock[ci.good]                   || 0;
+        const stockAlt   = ci.alt_good ? (slot._capital_stock[ci.alt_good] || 0) * altEff : 0;
+        const currentEff = stockPrim + stockAlt;
+
+        // ── 3. Закупка при дефиците ───────────────────────────────────────
+        const deficit = Math.max(0, required - currentEff);
+        if (deficit > 0) {
+          // Выбираем товар: тот, у которого ниже cost-per-effective-unit
+          let buyGood    = ci.good;
+          let buyEffMult = 1.0;
+
+          if (ci.alt_good) {
+            const priceAlt  = market[ci.alt_good]?.price ?? GOODS?.[ci.alt_good]?.base_price ?? 9999;
+            const pricePrim = market[ci.good]?.price     ?? GOODS?.[ci.good]?.base_price     ?? 9999;
+            const effCostAlt  = priceAlt  / altEff;   // цена за 1 eff-unit от alt
+            const effCostPrim = pricePrim / 1.0;       // цена за 1 eff-unit от primary
+
+            // Не меняем тип если уже накоплен запас противоположного
+            // (избегаем постоянного переключения при малой разнице цен)
+            const holdingAlt  = slot._capital_stock[ci.alt_good] || 0;
+            const holdingPrim = slot._capital_stock[ci.good]     || 0;
+
+            if (holdingAlt > holdingPrim) {
+              // Уже держим лошадей — оставаться если не намного выгоднее переключиться
+              buyGood    = (effCostPrim < effCostAlt * 0.75) ? ci.good : ci.alt_good;
+            } else {
+              buyGood    = (effCostAlt <= effCostPrim) ? ci.alt_good : ci.good;
+            }
+            buyEffMult = (buyGood === ci.alt_good) ? altEff : 1.0;
+          }
+
+          // Фактическое количество голов/комплектов для покупки
+          const headsNeeded = deficit / buyEffMult;
+          const available   = stockpile[buyGood] || 0;
+          const canBuy      = Math.min(headsNeeded, available);
+
+          if (canBuy > 0) {
+            stockpile[buyGood]              = Math.max(0, available - canBuy);
+            slot._capital_stock[buyGood]    = (slot._capital_stock[buyGood] || 0) + canBuy;
+          }
+        }
+
+        // ── 4. Итоговый ratio после закупки ──────────────────────────────
+        const finalPrim  = slot._capital_stock[ci.good]                    || 0;
+        const finalAlt   = ci.alt_good ? (slot._capital_stock[ci.alt_good] || 0) * altEff : 0;
+        const finalEff   = finalPrim + finalAlt;
+        const ratio      = required > 0 ? Math.min(1.0, finalEff / required) : 1.0;
+        minRatio         = Math.min(minRatio, ratio);
+
+        // ── 5. Предупреждение для игрока при серьёзном дефиците ───────────
+        if (isPlayer && ratio < 0.5 && typeof addEventLog === 'function') {
+          const goodName = GOODS?.[ci.good]?.name ?? ci.good;
+          const bName    = BUILDINGS?.[slot.building_id]?.name ?? slot.building_id;
+          addEventLog(
+            `⚠ ${bName}: нехватка ${goodName} (${Math.round(ratio * 100)}% запаса), производительность снижена`,
+            'warning',
+          );
+        }
+      }
+
+      slot._capital_ratio = minRatio;
+    }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// procureSlaves(nationId)
+//
+// Поддерживает численность рабов в зданиях с slave_fallback_profession.
+// Покупает недостающих рабов с мирового рынка (market.slaves).
+//
+// Логика:
+//   • Считает суммарную потребность всех активных рабовладельческих зданий.
+//   • Сравнивает с nation.population.by_profession.slaves.
+//   • Докупает дефицит из market.slaves.world_stockpile (до 50 в тик).
+//   • Цена → nation.economy.treasury; рабы → nation.population.
+//
+// Вызывается в runEconomyTick ДО processAllRecipes (шаг 0.5б).
+// ──────────────────────────────────────────────────────────────
+function procureSlaves(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return;
+
+  const slaveGood = GAME_STATE.market?.slaves;
+  if (!slaveGood || (slaveGood.world_stockpile ?? 0) <= 0) return;
+
+  const byProf = nation.population.by_profession;
+
+  // Суммируем сколько рабов нужно всем активным зданиям нации
+  let totalNeeded = 0;
+  for (const rid of nation.regions) {
+    const region = GAME_STATE.regions[rid];
+    if (!region?.building_slots?.length) continue;
+
+    for (const slot of region.building_slots) {
+      if (slot.status !== 'active') continue;
+
+      const bDef = BUILDINGS[slot.building_id];
+      if (!bDef?.slave_fallback_profession) continue;
+
+      const level          = slot.level || 1;
+      const slaveWorkerDef = (bDef.worker_profession || []).find(wp => wp.profession === 'slaves');
+      if (!slaveWorkerDef) continue;
+
+      totalNeeded += slaveWorkerDef.count * level;
+    }
+  }
+
+  if (totalNeeded === 0) return;
+
+  const currentSlaves = byProf.slaves || 0;
+  const deficit       = Math.max(0, totalNeeded - currentSlaves);
+  if (deficit <= 0) return;
+
+  const worldAvailable = slaveGood.world_stockpile ?? 0;
+  const price          = slaveGood.price ?? 200;
+  const canAfford      = Math.floor(nation.economy.treasury / price);
+  // Ограничиваем закупку: не более 50 в тик, не больше рыночного предложения и казны
+  const toBuy = Math.min(deficit, worldAvailable, canAfford, 50);
+  if (toBuy <= 0) return;
+
+  const cost = toBuy * price;
+  nation.economy.treasury              -= cost;
+  byProf.slaves                         = currentSlaves + toBuy;
+  nation.population.total               = (nation.population.total || 0) + toBuy;
+  slaveGood.world_stockpile             = Math.max(0, worldAvailable - toBuy);
+
+  if (nationId === GAME_STATE.player_nation && typeof addEventLog === 'function') {
+    addEventLog(
+      `⛓ Куплено ${toBuy} рабов для латифундий — ${Math.round(cost)} монет`,
+      'economy',
+    );
+  }
 }
