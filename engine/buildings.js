@@ -1610,10 +1610,18 @@ function procureCapitalInputs(nationId) {
           }
 
           // ── 2. Провинциальный рынок (+15%, −5% при дорогах) ─────────────────
+          //   Доступ зависит от effective_control (Этап 6):
+          //     'full' / 'partial' → закупка разрешена
+          //     'trade_only'       → закупка разрешена, цена +15%
+          //     'none'             → пропустить уровень
           if (stillNeeded > 0 && typeof getRegionProvince === 'function') {
-            const provName = getRegionProvince(rid);
-            const prov     = provName ? GAME_STATE.provinces?.[provName] : null;
-            if (prov?.market?.[buyGood]?.available > 0) {
+            const provName   = getRegionProvince(rid);
+            const prov       = provName ? GAME_STATE.provinces?.[provName] : null;
+            const provAccess = (provName && typeof getProvinceMarketAccess === 'function')
+              ? getProvinceMarketAccess(nationId, provName)
+              : { access_tier: 'full' };
+
+            if (provAccess.access_tier !== 'none' && prov?.market?.[buyGood]?.available > 0) {
               const provEntry  = prov.market[buyGood];
               const fromProv   = Math.min(stillNeeded, provEntry.available);
               if (fromProv > 0) {
@@ -1629,6 +1637,12 @@ function procureCapitalInputs(nationId) {
                   provRegion.local_stockpile[buyGood] = Math.max(0, avail - take);
                   toDeduct -= take;
                 }
+                // Транспортные расходы: базовая провинциальная надбавка × access price_modifier
+                const provBaseCost  = _PROVINCE_TRANSPORT_BASE - (prov.has_roads ? _PROVINCE_ROAD_DISCOUNT : 0);
+                const provTotalCost = provBaseCost * (provAccess.price_modifier ?? 1.0);
+                const provPayment   = fromProv * (GAME_STATE.market[buyGood]?.price || 0) * provTotalCost;
+                nation.economy.treasury = (nation.economy.treasury || 0) - provPayment;
+
                 slot._capital_stock[buyGood] = (slot._capital_stock[buyGood] || 0) + fromProv;
                 provEntry.available = Math.max(0, provEntry.available - fromProv);
                 stillNeeded -= fromProv;

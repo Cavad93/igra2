@@ -291,7 +291,10 @@ function renderRegionPolygons() {
     const gameRegion   = GAME_STATE.regions[regionId];
     const nationId     = gameRegion ? gameRegion.nation : mapData.nation;
     const nation       = GAME_STATE.nations[nationId];
-    const color        = nation ? nation.color : '#A8A898';
+    // Провинциальное смешение цветов при оспариваемом контроле
+    const blendColor   = (typeof getProvinceBlendColor === 'function')
+                         ? getProvinceBlendColor(regionId) : null;
+    const color        = blendColor ?? (nation ? nation.color : '#A8A898');
     const isPlayerRegion = (nationId === GAME_STATE.player_nation);
     const isSelected   = (selectedRegionId === regionId);
 
@@ -1530,7 +1533,9 @@ function refreshRegionStyles() {
     const gameRegion = GAME_STATE.regions[regionId];
     const nationId = gameRegion ? gameRegion.nation : mapData?.nation;
     const nation = GAME_STATE.nations[nationId];
-    const color = nation ? nation.color : '#A8A898';
+    const blendColor = (typeof getProvinceBlendColor === 'function')
+                       ? getProvinceBlendColor(regionId) : null;
+    const color = blendColor ?? (nation ? nation.color : '#A8A898');
     const isPlayer = (nationId === GAME_STATE.player_nation);
     const isSelected = (regionId === selectedRegionId);
     layer.setStyle(buildPolygonStyle(color, isPlayer, isSelected));

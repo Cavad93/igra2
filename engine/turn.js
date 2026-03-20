@@ -127,6 +127,11 @@ async function processTurn() {
       try { triggerRandomEvent(); } catch (e) { console.warn('[random_event]', e); }
     }
 
+    // 5.4. Провинциальный контроль — события при смене баланса сил
+    if (typeof checkProvinceControlEvents === 'function') {
+      try { checkProvinceControlEvents(); } catch (e) { console.warn('[province_events]', e); }
+    }
+
     // 5.5. Автономное поведение персонажей (fire-and-forget)
     processCharacterAutonomy(GAME_STATE.player_nation).catch(console.warn);
 
