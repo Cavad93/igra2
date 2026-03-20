@@ -1313,3 +1313,102 @@ function updateHappiness() {
     applyDelta(`nations.${nationId}.population.happiness`, happiness);
   }
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+// _initEconomyPreview()
+//
+// Вызывается ОДИН РАЗ при старте игры (initGame) ДО первого хода.
+// Заполняет income_per_turn / expense_per_turn / _income_breakdown /
+// _expense_breakdown для всех наций, используя ту же формулу, что и
+// updateTreasury(), но БЕЗ изменения казны, морали или стабильности.
+// ══════════════════════════════════════════════════════════════════════════
+function _initEconomyPreview() {
+  for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
+    const eco = nation?.economy;
+    if (!eco) continue;
+
+    const prof = nation.population?.by_profession || {};
+    const mil  = nation.military || {};
+    const gov  = nation.government || {};
+
+    // Инициализируем ставки налогов если их нет
+    if (!eco.tax_rates_by_class) {
+      const rate = eco.tax_rate || 0.10;
+      eco.tax_rates_by_class = {
+        aristocrats: Math.min(0.30, parseFloat((rate * 1.5).toFixed(2))),
+        clergy:      Math.min(0.30, parseFloat((rate * 0.7).toFixed(2))),
+        commoners:   Math.min(0.30, parseFloat((rate * 1.0).toFixed(2))),
+        soldiers:    Math.min(0.30, parseFloat((rate * 0.4).toFixed(2))),
+      };
+    }
+
+    const bldBonuses = (typeof getBuildingBonuses === 'function')
+      ? getBuildingBonuses(nationId)
+      : { tax_mult: 1, port_bonus: 0 };
+
+    // ── Доходы ──────────────────────────────────────────────────────────
+    const taxBases = computeTaxGroupBases(prof);
+    const r = eco.tax_rates_by_class;
+    const taxMult = bldBonuses.tax_mult || 1;
+    const taxByClass = {
+      aristocrats: Math.round((taxBases.aristocrats || 0) * r.aristocrats * TAX_CALIBRATION * taxMult),
+      clergy:      Math.round((taxBases.clergy      || 0) * r.clergy      * TAX_CALIBRATION * taxMult),
+      commoners:   Math.round((taxBases.commoners   || 0) * r.commoners   * TAX_CALIBRATION * taxMult),
+      soldiers:    Math.round((taxBases.soldiers    || 0) * r.soldiers    * TAX_CALIBRATION * taxMult),
+    };
+    const taxTotal = taxByClass.aristocrats + taxByClass.clergy
+                   + taxByClass.commoners   + taxByClass.soldiers;
+
+    const coastalCount = (nation.regions || []).filter(rId => {
+      const reg = GAME_STATE.regions?.[rId];
+      return reg && reg.terrain === 'coastal_city';
+    }).length;
+    const portDuties = Math.round(coastalCount * 120 + (bldBonuses.port_bonus || 0));
+
+    const totalIncome = taxTotal + portDuties;
+
+    // ── Расходы ─────────────────────────────────────────────────────────
+    const expLvls  = eco.expense_levels || {};
+    const armyLvl  = expLvls.army  ?? 1.0;
+    const navyLvl  = expLvls.navy  ?? 1.0;
+    const courtLvl = expLvls.court ?? 1.0;
+
+    const expArmy = Math.round((
+      (mil.infantry    || 0) * CONFIG.BALANCE.INFANTRY_UPKEEP  +
+      (mil.cavalry     || 0) * CONFIG.BALANCE.CAVALRY_UPKEEP   +
+      (mil.mercenaries || 0) * CONFIG.BALANCE.MERCENARY_UPKEEP
+    ) * armyLvl);
+    const expNavy = Math.round((mil.ships || 0) * CONFIG.BALANCE.SHIP_UPKEEP * navyLvl);
+
+    const aliveChars  = (nation.characters || []).filter(c => c.alive !== false);
+    const advisorCnt  = aliveChars.filter(c => c.role === 'advisor').length;
+    const expCourt    = Math.round((aliveChars.length * 15 + advisorCnt * 50) * courtLvl);
+
+    const stability   = gov.stability ?? 50;
+    const expStab     = Math.round(200 * (1 - stability / 100));
+    const expSlaves   = Math.round((prof.slaves || 0) * CONFIG.BALANCE.SLAVE_UPKEEP);
+
+    const totalExpense = expArmy + expNavy + expCourt + expStab + expSlaves;
+
+    // ── Записываем только поля UI (казна не меняется) ───────────────────
+    eco.income_per_turn  = totalIncome;
+    eco.expense_per_turn = totalExpense;
+    eco._income_breakdown = {
+      tax_aristocrats: taxByClass.aristocrats,
+      tax_clergy:      taxByClass.clergy,
+      tax_commoners:   taxByClass.commoners,
+      tax_soldiers:    taxByClass.soldiers,
+      port_duties:     portDuties,
+      trade_profit:    0,
+      total:           totalIncome,
+    };
+    eco._expense_breakdown = {
+      army:       expArmy,
+      navy:       expNavy,
+      court:      expCourt,
+      stability:  expStab,
+      slaves:     expSlaves,
+      total:      totalExpense,
+    };
+  }
+}

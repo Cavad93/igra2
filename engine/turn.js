@@ -763,6 +763,32 @@ function initGame() {
     }
   }
 
+  // Инициализируем world_stockpile и price_history до первого рендера
+  // чтобы Биржа в Экономическом обзоре показывала реальные данные с хода 1.
+  if (typeof GOODS !== 'undefined') {
+    for (const [good, mkt] of Object.entries(GAME_STATE.market || {})) {
+      if (mkt.world_stockpile == null) {
+        const targetTurns = GOODS[good]?.stockpile_target_turns ?? 4;
+        mkt.world_stockpile = (mkt.demand || mkt.supply || 100) * targetTurns;
+      }
+      if (!Array.isArray(mkt.price_history) || mkt.price_history.length === 0) {
+        mkt.price_history = [mkt.price ?? mkt.base ?? 10];
+      }
+    }
+  }
+
+  // Инициализируем pops для всех наций (wealth, satisfied) до первого рендера
+  if (typeof ensureNationPops === 'function') {
+    for (const nationId of Object.keys(GAME_STATE.nations)) {
+      try { ensureNationPops(nationId); } catch (e) { /* ignore */ }
+    }
+  }
+
+  // Предварительный расчёт доходов/расходов для UI (без изменения казны)
+  if (typeof _initEconomyPreview === 'function') {
+    try { _initEconomyPreview(); } catch (e) { console.warn('[init_economy_preview]', e); }
+  }
+
   // Первоначальный рендер
   renderAll();
 
