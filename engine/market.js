@@ -118,3 +118,82 @@ function updateMarketPrices(totalProduced, totalConsumed) {
     if (market.price_history.length > 24) market.price_history.shift();
   }
 }
+
+// ══════════════════════════════════════════════════════════════
+// updateRegionalMarketPrices()
+//
+// Вызывается в шаге 1.5 runEconomyTick — ПОСЛЕ routeProductionToLocalStockpiles.
+//
+// Для каждого региона с local_stockpile и _production_last_tick:
+//   • Сравнивает local_stockpile[good] с capacity = 3 × production_last_tick[good]
+//   • Устанавливает region.local_market[good].price:
+//       дефицит (< 50% ёмкости)  → до +20% к мировой цене
+//       баланс (50%–200%)         → ±5% к мировой цене
+//       избыток (> 200%)          → до −15% к мировой цене
+//       товар не производится здесь → мировая цена (транзитный товар)
+//   • Сглаживание 30% за тик (чтобы цены не прыгали резко)
+//
+// Цена ВСЕГДА привязана к мировой цене ± локальная поправка.
+// ══════════════════════════════════════════════════════════════
+
+const _REGIONAL_SMOOTH      = 0.30;  // сглаживание локальной цены за тик
+const _REGIONAL_DEFICIT_MAX = 0.20;  // максимальная надбавка при дефиците (+20%)
+const _REGIONAL_SURPLUS_MAX = 0.15;  // максимальная скидка при избытке (−15%)
+const _REGIONAL_BALANCE_AMP = 0.05;  // амплитуда колебаний в зоне баланса (±5%)
+
+function updateRegionalMarketPrices() {
+  for (const region of Object.values(GAME_STATE.regions)) {
+    const ls   = region.local_stockpile;
+    const prod = region._production_last_tick;
+
+    if (!ls || !prod) continue;
+    if (!region.local_market) region.local_market = {};
+
+    // Обновляем цены для всех товаров, присутствующих в local_stockpile
+    for (const good of Object.keys(ls)) {
+      const worldEntry = GAME_STATE.market[good];
+      if (!worldEntry) continue;
+
+      const worldPrice = worldEntry.price;
+      const prodAmt    = prod[good] || 0;
+      const localStock = ls[good]   || 0;
+
+      let targetPrice;
+
+      if (prodAmt <= 0) {
+        // Товар не производится здесь (инструменты/скот как капитал).
+        // Транзитная цена = мировая без надбавок.
+        targetPrice = worldPrice;
+
+      } else {
+        // Локальная ёмкость = 3 месяца производства
+        const capacity = prodAmt * 3;
+
+        if (localStock < 0.5 * capacity) {
+          // ДЕФИЦИТ → надбавка линейно до +20%
+          const t = localStock / (0.5 * capacity);           // 0..1
+          targetPrice = worldPrice * (1 + _REGIONAL_DEFICIT_MAX * (1 - t));
+
+        } else if (localStock > 2.0 * capacity) {
+          // ИЗБЫТОК → скидка линейно до −15%
+          const t = Math.min((localStock / capacity - 2.0) / 2.0, 1.0); // 0..1
+          targetPrice = worldPrice * (1 - _REGIONAL_SURPLUS_MAX * t);
+
+        } else {
+          // БАЛАНС → малые колебания ±5% пропорционально отклонению от ёмкости
+          const deviation = (localStock - capacity) / capacity;  // −0.5..+1.0
+          targetPrice = worldPrice * (1 + _REGIONAL_BALANCE_AMP * deviation);
+        }
+      }
+
+      // Сглаживание: не прыгаем резко между тиками
+      const entry = region.local_market[good];
+      if (!entry) {
+        region.local_market[good] = { price: targetPrice };
+      } else {
+        entry.price = entry.price * (1 - _REGIONAL_SMOOTH) + targetPrice * _REGIONAL_SMOOTH;
+        entry.price = Math.round(entry.price * 10) / 10;
+      }
+    }
+  }
+}

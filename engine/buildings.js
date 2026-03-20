@@ -1591,14 +1591,29 @@ function procureCapitalInputs(nationId) {
             buyEffMult = (buyGood === ci.alt_good) ? altEff : 1.0;
           }
 
-          // Фактическое количество голов/комплектов для покупки
-          const headsNeeded = deficit / buyEffMult;
-          const available   = stockpile[buyGood] || 0;
-          const canBuy      = Math.min(headsNeeded, available);
+          // Этап 3: региональный рынок сначала (нет транспортных расходов),
+          // затем национальный stockpile (провинциальный/мировой — Этапы 4–5).
+          const headsNeeded  = deficit / buyEffMult;
+          let   stillNeeded  = headsNeeded;
 
-          if (canBuy > 0) {
-            stockpile[buyGood]              = Math.max(0, available - canBuy);
-            slot._capital_stock[buyGood]    = (slot._capital_stock[buyGood] || 0) + canBuy;
+          // ── 1. Берём из region.local_stockpile (цена = мировая, 0% доставка) ──
+          const localStock   = region.local_stockpile || {};
+          const localAvail   = localStock[buyGood] || 0;
+          const fromLocal    = Math.min(stillNeeded, localAvail);
+          if (fromLocal > 0) {
+            localStock[buyGood]          = Math.max(0, localAvail - fromLocal);
+            slot._capital_stock[buyGood] = (slot._capital_stock[buyGood] || 0) + fromLocal;
+            stillNeeded -= fromLocal;
+          }
+
+          // ── 2. Остаток — из nation.economy.stockpile (национальный пул) ──────
+          if (stillNeeded > 0) {
+            const nationalAvail = stockpile[buyGood] || 0;
+            const fromNational  = Math.min(stillNeeded, nationalAvail);
+            if (fromNational > 0) {
+              stockpile[buyGood]           = Math.max(0, nationalAvail - fromNational);
+              slot._capital_stock[buyGood] = (slot._capital_stock[buyGood] || 0) + fromNational;
+            }
           }
         }
 

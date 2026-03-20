@@ -212,6 +212,130 @@ function calculateProduction() {
   return produced;
 }
 
+// ══════════════════════════════════════════════════════════════
+// ЭТАП 3: РЕГИОНАЛЬНЫЕ ЗАПАСЫ
+//
+// Производство сначала идёт в region.local_stockpile (буфер 3 тика).
+// Избыток переливается в nation.economy.stockpile.
+// Товары, не произведённые в регионе (инструменты/скот как капитал),
+// в local_stockpile НЕ переполняются — остаются там до потребления.
+// ══════════════════════════════════════════════════════════════
+
+// Возвращает производство зданий по регионам: { regionId: { good: amount } }
+// Вызывается только из routeProductionToLocalStockpiles.
+function _getRegionalBuildingProduction(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return {};
+
+  const result = {};
+  for (const rid of nation.regions) {
+    const region = GAME_STATE.regions[rid];
+    if (!region?.building_slots?.length) continue;
+
+    const regionOut = {};
+    for (const slot of region.building_slots) {
+      if (slot.status !== 'active') continue;
+      if (typeof getBuildingOutput !== 'function') continue;
+      const out = getBuildingOutput(slot, region, nation);
+      for (const [good, amt] of Object.entries(out)) {
+        regionOut[good] = (regionOut[good] || 0) + amt;
+      }
+    }
+    if (Object.keys(regionOut).length > 0) result[rid] = regionOut;
+  }
+  return result;
+}
+
+// ──────────────────────────────────────────────────────────────
+// routeProductionToLocalStockpiles(nationId, allProduced)
+//
+// Заменяет прямое добавление в nation.economy.stockpile (шаг 1c).
+// Для каждого региона нации:
+//   1. Зачисляет производство зданий и неорганизованное → local_stockpile
+//   2. Вычисляет local_capacity = 3 × тик-производство региона
+//   3. Переводит overflow → nation.economy.stockpile
+//
+// Товары без производства в регионе (инструменты/скот, хранящиеся как
+// капитал) не переполняются — остаются в local_stockpile.
+// ──────────────────────────────────────────────────────────────
+function routeProductionToLocalStockpiles(nationId, allProduced) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return;
+
+  const nationProduced  = allProduced[nationId] || {};
+  const nationStockpile = nation.economy.stockpile;
+
+  // ── A. Производство зданий по регионам ──────────────────────────────────
+  const bldByRegion = _getRegionalBuildingProduction(nationId);
+
+  // Суммарное здание-производство по всей нации (для вычисления неорганизованного)
+  const bldTotal = {};
+  for (const rOut of Object.values(bldByRegion)) {
+    for (const [g, a] of Object.entries(rOut)) {
+      bldTotal[g] = (bldTotal[g] || 0) + a;
+    }
+  }
+
+  // Неорганизованное производство = nationProduced − здания
+  const unorgTotal = {};
+  for (const [good, amt] of Object.entries(nationProduced)) {
+    const unorg = Math.max(0, amt - (bldTotal[good] || 0));
+    if (unorg > 0.01) unorgTotal[good] = unorg;
+  }
+
+  // Суммарное население всех регионов нации (для пропорций)
+  let totalRegionPop = 0;
+  for (const rid of nation.regions) {
+    totalRegionPop += GAME_STATE.regions[rid]?.population || 0;
+  }
+  if (totalRegionPop <= 0) totalRegionPop = 1;
+
+  // ── B. Маршрутизация по регионам ────────────────────────────────────────
+  for (const rid of nation.regions) {
+    const region = GAME_STATE.regions[rid];
+    if (!region) continue;
+
+    // Ленивая инициализация (не меняем regions_data.js — тысячи регионов)
+    if (!region.local_stockpile) region.local_stockpile = {};
+    if (!region.local_market)   region.local_market   = {};
+
+    const ls           = region.local_stockpile;
+    const prodThisTick = {};  // что произведено ЗДЕСЬ в этот тик
+
+    // Производство зданий региона
+    for (const [good, amt] of Object.entries(bldByRegion[rid] || {})) {
+      ls[good]             = (ls[good]             || 0) + amt;
+      prodThisTick[good]   = (prodThisTick[good]   || 0) + amt;
+    }
+
+    // Доля неорганизованного производства пропорционально населению
+    const popShare = (region.population || 0) / totalRegionPop;
+    for (const [good, unorgAmt] of Object.entries(unorgTotal)) {
+      const share = unorgAmt * popShare;
+      if (share > 0.01) {
+        ls[good]           = (ls[good]           || 0) + share;
+        prodThisTick[good] = (prodThisTick[good] || 0) + share;
+      }
+    }
+
+    // Запоминаем для расчёта региональных цен и ёмкости
+    region._production_last_tick = prodThisTick;
+
+    // ── C. Overflow: только для произведённых здесь товаров ─────────────
+    // Capacity = 3 тика производства. Непроизведённые товары (инструменты,
+    // скот как капитальный запас) не переполняются.
+    for (const [good, produced] of Object.entries(prodThisTick)) {
+      const capacity = produced * 3;
+      const current  = ls[good] || 0;
+      if (current > capacity) {
+        const overflow = current - capacity;
+        nationStockpile[good] = (nationStockpile[good] || 0) + overflow;
+        ls[good] = capacity;
+      }
+    }
+  }
+}
+
 // ──────────────────────────────────────────────────────────────
 // ШАГ 2: ПОТРЕБЛЕНИЕ (классовая модель)
 // ──────────────────────────────────────────────────────────────
@@ -688,7 +812,8 @@ function runEconomyTick() {
   // ШАГ 1: ПРОИЗВОДСТВО
   //   1a. Рецепты — проверка ресурсов, production_ratio, вычет входных
   //   1b. Actual output с учётом production_eff × _pop_eff × recipe_ratios × _capital_ratio
-  //   1c. Зачисление произведённого в stockpile
+  //   1c. Роутинг: → region.local_stockpile (буфер 3 тика) → overflow → nation.stockpile
+  //   1.5. Пересчёт региональных цен на основе локального баланса
   // ════════════════════════════════════════════════════════════
 
   // 1a. Сброс production_cost + пересчёт ratios/cost/inputs через рецепты
@@ -702,12 +827,20 @@ function runEconomyTick() {
   // 1b. Вычислить actual output (использует slot._pop_eff и _recipe_ratios)
   const allProduced = calculateProduction();
 
-  // 1c. Зачислить произведённое в stockpile каждой нации
-  for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
-    const stockpile = nation.economy.stockpile;
-    for (const [good, amount] of Object.entries(allProduced[nationId] || {})) {
-      stockpile[good] = (stockpile[good] || 0) + amount;
-    }
+  // 1c. Маршрутизировать произведённое:
+  //     здания/неорганизованное → region.local_stockpile → overflow → nation.economy.stockpile
+  for (const nationId of Object.keys(GAME_STATE.nations)) {
+    try { routeProductionToLocalStockpiles(nationId, allProduced); } catch (e) { console.warn('[route_prod]', e); }
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 1.5: РЕГИОНАЛЬНЫЕ ЦЕНЫ
+  //   Пересчитывает region.local_market[good].price на основе
+  //   локального баланса local_stockpile vs 3-тиковой ёмкости.
+  //   Цена варьируется ±15–20% от мировой цены.
+  // ════════════════════════════════════════════════════════════
+  if (typeof updateRegionalMarketPrices === 'function') {
+    try { updateRegionalMarketPrices(); } catch (e) { console.warn('[regional_prices]', e); }
   }
 
   // ════════════════════════════════════════════════════════════
