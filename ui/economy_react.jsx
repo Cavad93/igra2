@@ -382,6 +382,332 @@ function _eRenderC(selProf) {
     <div>${tierDetails || `<div style="text-align:center;padding:16px;color:${_C.ivoryFade};font-size:11px;font-style:italic">Нет данных о потреблении</div>`}</div>`;
 }
 
+// ─── Вкладка M: Рынки ────────────────────────────────────────────────────
+let _eMarketSub    = 'world';   // 'world' | 'province' | 'region'
+let _eMarketProvTag = null;
+let _eMarketRegId   = null;
+
+function _eSetMarketSub(s)  { _eMarketSub = s; _eRender(); }
+function _eSetMarketProv(t) { _eMarketProvTag = t; _eRender(); }
+function _eSetMarketReg(id) { _eMarketRegId  = id; _eRender(); }
+
+// ─── Загрузка рыночных данных ─────────────────────────────────────────────
+function _eLoadWorldGoods() {
+  if (typeof GOODS === 'undefined') return [];
+  const market = window.GAME_STATE?.market || {};
+  return Object.entries(GOODS)
+    .filter(([g]) => market[g] && g !== 'slaves')
+    .map(([gId, def]) => {
+      const mkt   = market[gId];
+      const price = mkt.price ?? def.base_price ?? 0;
+      const base  = mkt.base ?? def.base_price ?? price;
+      const ph    = Array.isArray(mkt.price_history) && mkt.price_history.length ? mkt.price_history.slice(-12) : [price];
+      const trend = ph.length >= 2 ? +((ph[ph.length-1] - ph[0]) / (ph[0] || 1) * 100).toFixed(1) : 0;
+      const ws    = mkt.world_stockpile ?? 0;
+      const dem   = Math.max(mkt.demand  || 1, 1);
+      const sup   = mkt.supply || 0;
+      const tgt   = (def.stockpile_target_turns ?? 4) * dem;
+      const status = ws < 0.5 * tgt ? 'Дефицит' : ws > 2 * tgt ? 'Избыток' : 'Норма';
+      const pctBase = base > 0 ? ((price - base) / base * 100) : 0;
+      const cat     = _E_CAT_MAP[def.category] || 'Промышленность';
+      return { id: gId, name: def.name || gId, icon: def.icon || '📦', category: cat,
+               price, base, pctBase, stock: ws, target: tgt, supply: sup, demand: dem,
+               trend, status, history: ph };
+    });
+}
+
+function _eLoadNationProvinces() {
+  const nId    = window.GAME_STATE?.player_nation;
+  const nation = window.GAME_STATE?.nations?.[nId];
+  if (!nation) return [];
+  const provs  = window.GAME_STATE?.provinces || {};
+  // collect province tags from nation's regions
+  const seen = new Set();
+  for (const rid of (nation.regions || [])) {
+    const region = window.GAME_STATE?.regions?.[rid];
+    const tag    = Array.isArray(region?.tags) ? region.tags[0] : null;
+    if (tag && provs[tag]) seen.add(tag);
+  }
+  return [...seen].map(tag => {
+    const prov = provs[tag];
+    const ctrl = prov.effective_control?.[nId] ?? 0;
+    const tier = ctrl >= 1.0 ? 'full' : ctrl >= 0.5 ? 'partial' : ctrl >= 0.2 ? 'trade_only' : 'none';
+    return { tag, prov, ctrl, tier };
+  });
+}
+
+function _eLoadNationRegions() {
+  const nId    = window.GAME_STATE?.player_nation;
+  const nation = window.GAME_STATE?.nations?.[nId];
+  if (!nation) return [];
+  const provs  = window.GAME_STATE?.provinces || {};
+  return (nation.regions || []).map(rid => {
+    const region  = window.GAME_STATE?.regions?.[rid];
+    if (!region) return null;
+    const tag     = Array.isArray(region.tags) ? region.tags[0] : null;
+    const name    = (typeof MAP_REGIONS !== 'undefined' && MAP_REGIONS[rid]?.name) || rid;
+    const stocks  = region.local_stockpile || {};
+    const locMkt  = region.local_market    || {};
+    const prod    = region._production_last_tick || {};
+    return { rid, name, tag, stocks, locMkt, prod };
+  }).filter(Boolean);
+}
+
+// ─── M: Мировой рынок ──────────────────────────────────────────────────────
+function _eRenderM_World() {
+  const goods = _eLoadWorldGoods();
+  if (!goods.length) return `<div style="text-align:center;padding:30px;color:${_C.ivoryFade};font-size:11px;font-style:italic">Нет рыночных данных. Запустите ход.</div>`;
+
+  const catOrder = ['Провизия', 'Промышленность', 'Роскошь'];
+  const groups   = {};
+  for (const g of goods) {
+    if (!groups[g.category]) groups[g.category] = [];
+    groups[g.category].push(g);
+  }
+  const cats = [...catOrder.filter(c => groups[c]), ...Object.keys(groups).filter(c => !catOrder.includes(c))];
+
+  const defCol  = `rgba(224,85,85,0.12)`;
+  const surpCol = `rgba(91,155,213,0.08)`;
+
+  return cats.map(cat => {
+    const items = [...(groups[cat] || [])].sort((a, b) => {
+      const da = a.status === 'Дефицит' ? 0 : 1;
+      const db = b.status === 'Дефицит' ? 0 : 1;
+      return da !== db ? da - db : Math.abs(b.trend) - Math.abs(a.trend);
+    });
+    const meta = _E_CAT_META[cat] || { icon: '📦', color: _C.gold };
+    const nDef = items.filter(i => i.status === 'Дефицит').length;
+
+    const header = `<div style="display:grid;grid-template-columns:180px 90px 90px 90px 90px 70px 76px;align-items:center;gap:6px;padding:5px 10px;font-size:8.5px;text-transform:uppercase;letter-spacing:.4px;color:${_C.ivoryFade};border-bottom:1px solid ${_C.border}">
+      <span>Товар</span><span style="text-align:right">Цена</span><span style="text-align:right">Δ база</span><span style="text-align:right">Мировой запас</span><span style="text-align:right">Спрос</span><span style="text-align:right">Предл.</span><span style="text-align:center">Статус</span>
+    </div>`;
+
+    const rows = items.map(item => {
+      const isD  = item.status === 'Дефицит';
+      const isS  = item.status === 'Избыток';
+      const tc   = item.trend > 1.5 ? _C.red : item.trend < -1.5 ? _C.green : _C.gold;
+      const ti   = item.trend > 1.5 ? '▲' : item.trend < -1.5 ? '▼' : '▸';
+      const pcol = item.pctBase > 5 ? _C.red : item.pctBase < -5 ? _C.green : _C.ivoryDim;
+      const badgeStyle = isD
+        ? `background:rgba(224,85,85,0.15);border:1px solid rgba(224,85,85,0.35);color:#e07777`
+        : isS
+          ? `background:rgba(91,155,213,0.15);border:1px solid rgba(91,155,213,0.3);color:#5b9bd5`
+          : `background:rgba(74,159,106,0.12);border:1px solid rgba(74,159,106,0.28);color:#4a9f6a`;
+      const badge = `<span style="display:inline-flex;align-items:center;padding:2px 7px;border-radius:10px;font-size:8.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap;${badgeStyle}">${item.status}</span>`;
+      const bg    = isD ? defCol : isS ? surpCol : _C.bgGhost;
+      return `<div style="display:grid;grid-template-columns:180px 90px 90px 90px 90px 70px 76px;align-items:center;gap:6px;padding:7px 10px;border-radius:6px;background:${bg};border:1px solid ${isD ? 'rgba(224,85,85,0.18)' : _C.border};margin-bottom:2px">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:18px;line-height:1">${item.icon}</span>
+          <div>
+            <div style="font-size:11px;color:${_C.ivory};font-weight:600;line-height:1.2">${item.name}</div>
+            <div style="font-size:8.5px;color:${_C.ivoryDim}">Запас: ${_efmt(item.stock)}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:13px;font-family:'Cinzel',serif;color:${_C.gold}">${item.price.toFixed(1)}</div>
+          <div style="font-size:8px;color:${_C.ivoryFade}">gold</div>
+        </div>
+        <div style="text-align:right;font-size:10.5px;color:${pcol};font-weight:600">${item.pctBase > 0 ? '+' : ''}${item.pctBase.toFixed(1)}%</div>
+        <div style="text-align:right">
+          <div style="font-size:10px;color:${_C.ivory}">${_efmt(item.stock)}</div>
+          <div style="font-size:8px;color:${_C.ivoryFade}">цель: ${_efmt(item.target)}</div>
+        </div>
+        <div style="text-align:right;font-size:10px;color:${_C.ivory}">${_efmt(item.demand)}</div>
+        <div style="text-align:right;font-size:10px;color:${_C.green}">${_efmt(item.supply)}</div>
+        <div style="text-align:center">${badge}</div>
+      </div>`;
+    }).join('');
+
+    return `<div style="margin-bottom:10px;border-radius:10px;overflow:hidden;border:1px solid ${_C.border};background:rgba(15,22,15,0.6)">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid ${_C.border}">
+        <span style="font-size:18px;line-height:1">${meta.icon}</span>
+        <span style="font-size:12px;font-family:'Cinzel',serif;color:${meta.color};letter-spacing:.5px">${cat}</span>
+        ${nDef > 0 ? `<span style="font-size:9px;color:${_C.red};margin-left:6px">${nDef} в дефиците</span>` : `<span style="font-size:9px;color:${_C.green};margin-left:6px">Баланс норм</span>`}
+      </div>
+      <div style="padding:6px 8px 8px">
+        ${header}
+        ${rows}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── M: Областные рынки ───────────────────────────────────────────────────
+function _eRenderM_Province() {
+  const provList = _eLoadNationProvinces();
+  if (!provList.length) return `<div style="text-align:center;padding:30px;color:${_C.ivoryFade};font-size:11px;font-style:italic">Нет провинций под контролем.</div>`;
+
+  const selTag = _eMarketProvTag || provList[0]?.tag;
+  const selObj = provList.find(p => p.tag === selTag) || provList[0];
+  const prov   = selObj?.prov;
+
+  const tierLabels = { full: 'Полный', partial: 'Частичный', trade_only: 'Торговля', none: 'Нет доступа' };
+  const tierColors = { full: _C.green, partial: _C.gold, trade_only: _C.copper, none: _C.red };
+
+  // left: province list
+  const provNav = provList.map(p => {
+    const on      = p.tag === selTag;
+    const tierCol = tierColors[p.tier] || _C.ivoryDim;
+    return `<div onclick="_eSetMarketProv('${p.tag}')" style="padding:8px 12px;border-radius:7px;cursor:pointer;background:${on ? 'rgba(74,159,106,0.15)' : _C.bgGhost};border:1px solid ${on ? 'rgba(74,159,106,0.4)' : _C.border};margin-bottom:4px">
+      <div style="font-size:11px;color:${on ? '#a8d8b0' : _C.ivory};font-family:'Cinzel',serif;text-transform:capitalize">${p.tag}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+        <span style="font-size:9px;color:${tierCol}">${tierLabels[p.tier] || p.tier}</span>
+        <span style="font-size:9px;color:${_C.ivoryFade}">· ${(p.ctrl * 100).toFixed(0)}%</span>
+        ${prov?.has_roads ? `<span style="font-size:9px;color:${_C.blue}">🛣 Дороги</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  // right: goods table for selected province
+  let goodsHtml;
+  const mkt = prov?.market || {};
+  const goodEntries = Object.entries(mkt).filter(([g]) => GOODS?.[g]);
+  if (!goodEntries.length) {
+    goodsHtml = `<div style="padding:20px;text-align:center;color:${_C.ivoryFade};font-size:11px;font-style:italic">Рынок ещё не инициализирован. Запустите ход.</div>`;
+  } else {
+    const header = `<div style="display:grid;grid-template-columns:1fr 90px 90px 80px;align-items:center;gap:6px;padding:5px 10px;font-size:8.5px;text-transform:uppercase;letter-spacing:.4px;color:${_C.ivoryFade};border-bottom:1px solid ${_C.border}">
+      <span>Товар</span><span style="text-align:right">Цена пров.</span><span style="text-align:right">Доступно</span><span style="text-align:right">Δ от мирового</span>
+    </div>`;
+    const rows = goodEntries.map(([gId, entry]) => {
+      const def      = GOODS[gId];
+      const worldPrc = window.GAME_STATE?.market?.[gId]?.price ?? def?.base_price ?? 0;
+      const provPrc  = entry.price ?? worldPrc;
+      const diff     = worldPrc > 0 ? ((provPrc - worldPrc) / worldPrc * 100) : 0;
+      const diffCol  = diff > 3 ? _C.red : diff < -3 ? _C.green : _C.ivoryDim;
+      const avail    = entry.available ?? 0;
+      return `<div style="display:grid;grid-template-columns:1fr 90px 90px 80px;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:15px">${def.icon || '📦'}</span>
+          <span style="font-size:11px;color:${_C.ivory}">${def.name || gId}</span>
+        </div>
+        <div style="text-align:right;font-size:12px;font-family:'Cinzel',serif;color:${_C.gold}">${provPrc.toFixed(1)}</div>
+        <div style="text-align:right;font-size:10.5px;color:${_C.ivory}">${_efmt(avail)}</div>
+        <div style="text-align:right;font-size:10px;color:${diffCol};font-weight:600">${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%</div>
+      </div>`;
+    }).join('');
+    goodsHtml = `${header}<div>${rows}</div>`;
+  }
+
+  const ctrlVal = (selObj?.ctrl ?? 0);
+  const roadInfo = prov?.has_roads ? `🛣 Дороги есть (транспорт -5%)` : `Дорог нет (транспорт +15%)`;
+
+  return `<div style="display:grid;grid-template-columns:200px 1fr;gap:10px">
+    <div>
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:${_C.ivoryFade};margin-bottom:8px;padding:0 4px">Области</div>
+      ${provNav}
+    </div>
+    <div style="border-radius:10px;overflow:hidden;border:1px solid ${_C.border};background:rgba(15,22,15,0.6)">
+      <div style="padding:10px 14px;border-bottom:1px solid ${_C.border};display:flex;align-items:center;gap:12px">
+        <div style="flex:1">
+          <div style="font-size:13px;font-family:'Cinzel',serif;color:${_C.gold};text-transform:capitalize">${selTag}</div>
+          <div style="font-size:9px;color:${_C.ivoryFade};margin-top:2px">${roadInfo} · Контроль: ${(ctrlVal * 100).toFixed(0)}% · Доступ: <span style="color:${tierColors[selObj?.tier]}">${tierLabels[selObj?.tier] || '—'}</span></div>
+        </div>
+        <div style="font-size:9px;color:${_C.ivoryDim}">${(prov?.regions || []).length} регионов</div>
+      </div>
+      <div style="max-height:420px;overflow-y:auto">${goodsHtml}</div>
+    </div>
+  </div>`;
+}
+
+// ─── M: Региональные рынки ────────────────────────────────────────────────
+function _eRenderM_Region() {
+  const regions = _eLoadNationRegions();
+  if (!regions.length) return `<div style="text-align:center;padding:30px;color:${_C.ivoryFade};font-size:11px;font-style:italic">Нет регионов.</div>`;
+
+  // group by province tag
+  const byProv = {};
+  for (const r of regions) {
+    const key = r.tag || '—';
+    if (!byProv[key]) byProv[key] = [];
+    byProv[key].push(r);
+  }
+
+  const selId  = _eMarketRegId || regions[0]?.rid;
+  const selReg = regions.find(r => r.rid === selId) || regions[0];
+
+  // left: region list grouped by province
+  const regNav = Object.entries(byProv).map(([provTag, regs]) => {
+    const provHead = `<div style="font-size:8.5px;text-transform:uppercase;letter-spacing:.5px;color:${_C.ivoryFade};padding:6px 4px 3px;font-family:'Cinzel',serif">${provTag}</div>`;
+    const regItems = regs.map(r => {
+      const on     = r.rid === selId;
+      const nGoods = Object.keys(r.stocks).length;
+      return `<div onclick="_eSetMarketReg('${r.rid}')" style="padding:6px 10px;border-radius:6px;cursor:pointer;background:${on ? 'rgba(74,159,106,0.15)' : _C.bgGhost};border:1px solid ${on ? 'rgba(74,159,106,0.4)' : _C.border};margin-bottom:3px">
+        <div style="font-size:10.5px;color:${on ? '#a8d8b0' : _C.ivory}">${r.name}</div>
+        <div style="font-size:8.5px;color:${_C.ivoryFade};margin-top:1px">${nGoods} товаров</div>
+      </div>`;
+    }).join('');
+    return `<div>${provHead}${regItems}</div>`;
+  }).join('');
+
+  // right: local market for selected region
+  let goodsHtml;
+  const stockEntries = Object.entries(selReg?.stocks || {}).filter(([g]) => GOODS?.[g]);
+  if (!stockEntries.length) {
+    goodsHtml = `<div style="padding:20px;text-align:center;color:${_C.ivoryFade};font-size:11px;font-style:italic">Нет локальных данных. Запустите ход для инициализации.</div>`;
+  } else {
+    const header = `<div style="display:grid;grid-template-columns:1fr 80px 80px 80px 75px;align-items:center;gap:6px;padding:5px 10px;font-size:8.5px;text-transform:uppercase;letter-spacing:.4px;color:${_C.ivoryFade};border-bottom:1px solid ${_C.border}">
+      <span>Товар</span><span style="text-align:right">Цена лок.</span><span style="text-align:right">Запас лок.</span><span style="text-align:right">Произв./тик</span><span style="text-align:right">Δ от мирового</span>
+    </div>`;
+    const rows = stockEntries.map(([gId, stock]) => {
+      const def      = GOODS[gId];
+      const worldPrc = window.GAME_STATE?.market?.[gId]?.price ?? def?.base_price ?? 0;
+      const locPrc   = selReg.locMkt[gId]?.price ?? worldPrc;
+      const prod     = selReg.prod[gId]  ?? 0;
+      const diff     = worldPrc > 0 ? ((locPrc - worldPrc) / worldPrc * 100) : 0;
+      const diffCol  = diff > 5 ? _C.red : diff < -5 ? _C.green : _C.ivoryDim;
+      const prodCol  = prod > 0 ? _C.green : _C.ivoryFade;
+      return `<div style="display:grid;grid-template-columns:1fr 80px 80px 80px 75px;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:15px">${def.icon || '📦'}</span>
+          <span style="font-size:11px;color:${_C.ivory}">${def.name || gId}</span>
+        </div>
+        <div style="text-align:right;font-size:12px;font-family:'Cinzel',serif;color:${_C.gold}">${locPrc.toFixed(1)}</div>
+        <div style="text-align:right;font-size:10.5px;color:${_C.ivory}">${_efmt(stock)}</div>
+        <div style="text-align:right;font-size:10px;color:${prodCol}">${prod > 0 ? '+' : ''}${_efmt(prod)}</div>
+        <div style="text-align:right;font-size:10px;color:${diffCol};font-weight:600">${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%</div>
+      </div>`;
+    }).join('');
+    goodsHtml = `${header}<div>${rows}</div>`;
+  }
+
+  return `<div style="display:grid;grid-template-columns:200px 1fr;gap:10px">
+    <div style="max-height:480px;overflow-y:auto">
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:${_C.ivoryFade};margin-bottom:4px;padding:0 4px">Регионы</div>
+      ${regNav}
+    </div>
+    <div style="border-radius:10px;overflow:hidden;border:1px solid ${_C.border};background:rgba(15,22,15,0.6)">
+      <div style="padding:10px 14px;border-bottom:1px solid ${_C.border}">
+        <div style="font-size:13px;font-family:'Cinzel',serif;color:${_C.gold}">${selReg?.name || selId}</div>
+        <div style="font-size:9px;color:${_C.ivoryFade};margin-top:2px">Область: ${selReg?.tag || '—'}</div>
+      </div>
+      <div style="max-height:420px;overflow-y:auto">${goodsHtml}</div>
+    </div>
+  </div>`;
+}
+
+// ─── M: Главный блок рынков ───────────────────────────────────────────────
+function _eRenderM() {
+  const subTabs = [
+    { id: 'world',    label: '🌍 Мировой'  },
+    { id: 'province', label: '🏛 Области'  },
+    { id: 'region',   label: '🏘 Регионы'  },
+  ];
+  const sub = _eMarketSub;
+  const nav = subTabs.map(t => {
+    const on = t.id === sub;
+    return `<button onclick="_eSetMarketSub('${t.id}')" style="padding:5px 14px;border-radius:5px;font-size:10px;cursor:pointer;font-family:inherit;font-weight:${on ? 700 : 400};background:${on ? 'rgba(212,175,55,0.15)' : 'transparent'};border:${on ? `1px solid ${_C.borderAcc}` : `1px solid ${_C.border}`};color:${on ? _C.gold : _C.ivoryDim};transition:all .15s">${t.label}</button>`;
+  }).join('');
+
+  const content =
+    sub === 'world'    ? _eRenderM_World()    :
+    sub === 'province' ? _eRenderM_Province() :
+                         _eRenderM_Region();
+
+  return `
+    <div style="display:flex;gap:6px;margin-bottom:12px">${nav}</div>
+    ${content}`;
+}
+
 // ─── Блок D: Баланс кошелька ──────────────────────────────────────────────
 function _eRenderD() {
   const { pops, byP, hist, eco } = _eLoadPop();
@@ -485,6 +811,7 @@ function _eRender() {
     { id: 'B', label: '💰 Доходы'  },
     { id: 'C', label: '🧺 Корзина' },
     { id: 'D', label: '⚖ Баланс'   },
+    { id: 'M', label: '🗺 Рынки'   },
   ];
 
   const tabNav = TABS.map(t => {
@@ -498,6 +825,7 @@ function _eRender() {
     tab === 'A' ? _eRenderA(marketData) :
     tab === 'B' ? _eRenderB() :
     tab === 'C' ? _eRenderC(_ecoSelProf) :
+    tab === 'M' ? _eRenderM() :
                   _eRenderD();
 
   el.innerHTML = `
