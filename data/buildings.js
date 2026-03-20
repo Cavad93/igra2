@@ -238,35 +238,6 @@ const BUILDINGS = {
   // АГРАРНЫЕ
   // ══════════════════════════════════════════════════════════════
 
-  farm: {
-    name:        'Ферма',
-    icon:        '🌾',
-    description: 'Семейная ферма. Арендаторы-земледельцы отдают часть урожая владельцу.',
-    cost:        400,
-    category:    'agriculture',
-    footprint_ha: 100,  // legacy: одна ферма-слот = условный надел ~100 га
-    // timber×6(132) + tools×3(105) = 237; labor=163 → ~400
-    construction_materials: { timber: 6, tools: 3 },
-    construction_labor:     163,
-
-    worker_profession: [
-      { profession: 'farmers', count: 500 },
-    ],
-    wage_rate:          0.30,   // 30% урожая остаётся у арендаторов
-    labor_type:         'tenant',
-    build_turns:        2,
-    terrain_restriction: ['plains', 'hills', 'river_valley'],
-    max_per_region:     null,   // можно строить несколько
-    max_level:          5,
-
-    production_output: [
-      { good: 'wheat',  base_rate: 200 },
-      { good: 'barley', base_rate:  80 },
-    ],
-
-    // legacy
-    profession_growth: { farmers: 0.005 },
-  },
 
   ranch: {
     name:        'Пастбище',
@@ -329,38 +300,6 @@ const BUILDINGS = {
     famine_protection:     0.30,
   },
 
-  latifundium: {
-    name:        'Латифундия',
-    icon:        '🌿',
-    description: 'Крупное поместье. Земледельцы — издольщики, рабы — без оплаты.',
-    cost:        900,
-    category:    'agriculture',
-    footprint_ha: 500,  // legacy: крупное поместье с полями и угодьями
-    // timber×12(264) + iron×5(225) + tools×6(210) = 699; labor=201 → ~900
-    construction_materials: { timber: 12, iron: 5, tools: 6 },
-    construction_labor:     201,
-
-    worker_profession: [
-      { profession: 'farmers', count: 600 },
-      { profession: 'slaves',  count: 200 },
-    ],
-    wage_rate:          0.28,   // арендаторы получают ~28% урожая (рабы — ничего)
-    labor_type:         'tenant',  // аристократ-землевладелец = profit goes to aristocrats
-    build_turns:        4,
-    terrain_restriction: ['plains', 'hills', 'river_valley'],
-    max_per_region:     null,
-    max_level:          3,
-
-    production_output: [
-      { good: 'wheat',  base_rate: 180 },
-      { good: 'olives', base_rate:  60 },
-    ],
-
-    // legacy
-    profession_growth:        { farmers: 0.008, slaves: 0.022 },
-    mobility:                 [{ from: 'farmers', to: 'slaves', rate: 0.003 }],
-    needs_satisfaction_bonus:  0.04,
-  },
 
   irrigation: {
     name:        'Ирригационные каналы',
@@ -986,38 +925,6 @@ const BUILDINGS = {
     ],
   },
 
-  grain_estate: {
-    name:        'Сицилийская пшеничная латифундия',
-    icon:        '🌾',
-    description: 'Обширное поместье на плодороднейших равнинах Леонтин и Акраганта. Сицилийская пшеница кормила весь греческий мир. Арендаторы и рабы работают на владельца.',
-    cost:        1200,
-    category:    'agriculture',
-    footprint_ha: 800,  // обширные сицилийские поля
-    // timber×15(330) + iron×5(225) + tools×8(280) = 835; labor=365 → ~1200
-    construction_materials: { timber: 15, iron: 5, tools: 8 },
-    construction_labor:     365,
-
-    worker_profession: [
-      { profession: 'farmers', count: 900 },
-      { profession: 'slaves',  count: 300 },
-    ],
-    wage_rate:               0.28,   // аренда на сицилийских условиях
-    labor_type:              'tenant',
-    build_turns:             5,
-    terrain_restriction:     ['plains', 'river_valley'],
-    region_tag_restriction:  ['sicily'],
-    max_per_region:          null,
-    max_level:          5,
-
-    production_output: [
-      { good: 'wheat',  base_rate: 300 },  // исключительная урожайность
-      { good: 'barley', base_rate: 110 },
-    ],
-
-    class_happiness_bonus: {
-      farmers_class: 2,   // земледельцы ценят stabile landholding
-    },
-  },
 
   papyrus_bed: {
     name:        'Папирусные заросли',
