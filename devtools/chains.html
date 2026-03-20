@@ -436,6 +436,7 @@
   <button class="btn active" id="btn-table"  onclick="switchView('table')">📋 Таблица</button>
   <button class="btn"        id="btn-graph"  onclick="switchView('graph')">🕸 Граф</button>
   <button class="btn"        id="btn-biomes" onclick="switchView('biomes')">🌍 Биомы</button>
+  <button class="btn"        id="btn-wheat"  onclick="switchView('wheat')">🌾 Пшеница</button>
 
   <div class="sep"></div>
   <span class="label">Фильтр:</span>
@@ -503,6 +504,24 @@
 
   <!-- BIOMES VIEW -->
   <div id="view-biomes" class="view hidden"></div>
+
+  <!-- WHEAT CHAIN VIEW -->
+  <div id="view-wheat" class="view hidden" style="padding:0; overflow:hidden; display:flex; flex-direction:column;">
+    <!-- Legend bar -->
+    <div id="wheat-legend" style="
+      background:#161b22; border-bottom:1px solid #30363d;
+      padding:7px 18px; display:flex; gap:20px; align-items:center;
+      font-size:11px; color:#8b949e; flex-shrink:0; flex-wrap:wrap;">
+      <strong style="color:#c9d1d9; font-size:12px; margin-right:4px;">🌾 Цепочка пшеницы</strong>
+      <span><svg width="28" height="10" style="vertical-align:middle"><line x1="0" y1="5" x2="22" y2="5" stroke="#3fb950" stroke-width="2"/><polygon points="22,2 28,5 22,8" fill="#3fb950"/></svg> Производство</span>
+      <span><svg width="28" height="10" style="vertical-align:middle"><line x1="0" y1="5" x2="22" y2="5" stroke="#79c0ff" stroke-width="2"/><polygon points="22,2 28,5 22,8" fill="#79c0ff"/></svg> capital_input</span>
+      <span><svg width="30" height="10" style="vertical-align:middle"><line x1="0" y1="5" x2="22" y2="5" stroke="#f85149" stroke-width="2" stroke-dasharray="5,3"/><polygon points="22,2 28,5 22,8" fill="#f85149"/></svg> Посев. фонд</span>
+      <span><svg width="28" height="10" style="vertical-align:middle"><line x1="0" y1="5" x2="22" y2="5" stroke="#ffa657" stroke-width="2"/><polygon points="22,2 28,5 22,8" fill="#ffa657"/></svg> Рецептурный вход</span>
+      <span><svg width="30" height="10" style="vertical-align:middle"><line x1="0" y1="5" x2="22" y2="5" stroke="#d29922" stroke-width="2" stroke-dasharray="5,3"/><polygon points="22,2 28,5 22,8" fill="#d29922"/></svg> Денежный поток</span>
+      <span style="margin-left:auto; color:#58a6ff; font-size:11px;">прямоугольник = здание&nbsp;&nbsp;|&nbsp;&nbsp;скругл. прямоугольник = товар</span>
+    </div>
+    <svg id="wheat-svg" style="flex:1; display:block; background:#0d1117; width:100%;"></svg>
+  </div>
 
   <!-- GRAPH VIEW (этап 3) -->
   <div id="view-graph" class="view hidden" style="padding:0; display:flex; flex-direction:column;">
@@ -837,9 +856,11 @@ function switchView(v) {
   document.getElementById('view-table').classList.toggle('hidden', v !== 'table');
   document.getElementById('view-graph').classList.toggle('hidden', v !== 'graph');
   document.getElementById('view-biomes').classList.toggle('hidden', v !== 'biomes');
+  document.getElementById('view-wheat').classList.toggle('hidden', v !== 'wheat');
   document.getElementById('btn-table').classList.toggle('active', v === 'table');
   document.getElementById('btn-graph').classList.toggle('active', v === 'graph');
   document.getElementById('btn-biomes').classList.toggle('active', v === 'biomes');
+  document.getElementById('btn-wheat').classList.toggle('active', v === 'wheat');
 
   const url = new URL(location.href);
   url.searchParams.set('view', v);
@@ -848,6 +869,7 @@ function switchView(v) {
   if (v === 'table')  renderTable();
   if (v === 'graph')  requestAnimationFrame(initGraph);
   if (v === 'biomes') renderBiomes();
+  if (v === 'wheat')  requestAnimationFrame(renderWheatChain);
 }
 
 // ── Biomes view ──────────────────────────────────────────────────────
@@ -1569,6 +1591,225 @@ function stopSim() {
 
 function toggleSim() {
   simRunning ? stopSim() : startSim();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ПШЕНИЧНАЯ ЦЕПОЧКА — renderWheatChain()
+//
+// Рисует полную цепочку производства пшеницы как SVG-схему:
+//
+//   Секция A (капитал): железо + дерево → мастерская → инструменты
+//                                                              ↓ capital_input
+//   Секция B (фермы):   [пшеничные хозяйства] → пшеница (нетто 80%)
+//                         ↑ capital (скот)   ↑ рецепт (семена 20%)
+//
+//   Секция C (скот):    пшеница → скот. хоз-во → скот → фермы
+//
+//   Секция D (рынок):   пшеница → рынок → зарплата → закупка → рынок (спрос)
+//
+// Узлы (node): товары = скруглённые прямоугольники (rx=12)
+//              здания = прямоугольники (rx=6, синяя рамка)
+// Рёбра (edge): цвет кодирует тип связи (зелёный/синий/красн/оранж/золот)
+// ══════════════════════════════════════════════════════════════════════
+
+function renderWheatChain() {
+  const svg = document.getElementById('wheat-svg');
+  if (!svg) return;
+
+  // Используем viewBox — схема масштабируется с окном
+  svg.setAttribute('viewBox', '0 0 1100 530');
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+  // ── Узлы ────────────────────────────────────────────────────────────
+  // cx/cy — центр, w/h — размер, rx — скругление (12=товар, 6=здание)
+  // bg/tc/bd — фон, цвет текста, цвет рамки
+  const N = {
+    iron:        { cx:  95, cy:  82, w:120, h:34, rx:12, icon:'⚙️',  label:'Железо',               bg:'#1c2a3a', tc:'#79c0ff', bd:'#1c4a7a' },
+    timber:      { cx:  95, cy:174, w:120, h:34, rx:12, icon:'🪵',  label:'Древесина',             bg:'#1c2a3a', tc:'#79c0ff', bd:'#1c4a7a' },
+    workshop:    { cx: 295, cy:128, w:152, h:44, rx: 6, icon:'🏭',  label:'Мастерская',            bg:'#161b22', tc:'#c9d1d9', bd:'#388bfd' },
+    tools:       { cx: 494, cy:  82, w:136, h:34, rx:12, icon:'🔨',  label:'Инструменты',           bg:'#2d2000', tc:'#ffa657', bd:'#7a5000' },
+    wheat_farms: { cx: 666, cy:228, w:172, h:84, rx: 6, icon:'🌾',  label:'Пшеничные\nхозяйства', bg:'#161b22', tc:'#c9d1d9', bd:'#388bfd' },
+    cattle_farm: { cx: 358, cy:438, w:168, h:44, rx: 6, icon:'🐂',  label:'Скот. хоз-во',         bg:'#161b22', tc:'#c9d1d9', bd:'#388bfd' },
+    cattle:      { cx: 580, cy:438, w:114, h:34, rx:12, icon:'🐂',  label:'Скот',                  bg:'#2d2000', tc:'#ffa657', bd:'#7a5000' },
+    wheat_net:   { cx: 858, cy:220, w:156, h:42, rx:12, icon:'🌾',  label:'Пшеница (нетто)',       bg:'#1a2d1a', tc:'#7ee787', bd:'#238636' },
+    market:      { cx:1026, cy:220, w:118, h:34, rx:12, icon:'💰',  label:'Рынок',                 bg:'#2d2500', tc:'#d29922', bd:'#7a5c00' },
+    wages:       { cx:1026, cy:390, w:158, h:34, rx:12, icon:'💵',  label:'Зарплата / прибыль',    bg:'#1a2d1a', tc:'#7ee787', bd:'#238636' },
+    food_buy:    { cx: 858, cy:390, w:152, h:34, rx:12, icon:'🛒',  label:'Закупка пшеницы',       bg:'#21262d', tc:'#c9d1d9', bd:'#444c56' },
+  };
+
+  // ── Типы стрелок ─────────────────────────────────────────────────────
+  const ARR = {
+    gray:   { color:'#555',    dash:'',     id:'wc-gray'   },
+    green:  { color:'#3fb950', dash:'',     id:'wc-green'  },
+    blue:   { color:'#79c0ff', dash:'',     id:'wc-blue'   },
+    red:    { color:'#f85149', dash:'6,3',  id:'wc-red'    },
+    orange: { color:'#ffa657', dash:'',     id:'wc-orange' },
+    gold:   { color:'#d29922', dash:'',     id:'wc-gold'   },
+    goldD:  { color:'#d29922', dash:'5,4',  id:'wc-goldd'  },
+  };
+
+  // ── Рёбра ────────────────────────────────────────────────────────────
+  // f/t = id узлов; s = стиль (ключ ARR); label = подпись; curve/poly = маршрут
+  const edges = [
+    { f:'iron',        t:'workshop',    s:'gray',   label:'' },
+    { f:'timber',      t:'workshop',    s:'gray',   label:'' },
+    { f:'workshop',    t:'tools',       s:'green',  label:'производство' },
+    { f:'tools',       t:'wheat_farms', s:'blue',   label:'capital_input' },
+    { f:'cattle',      t:'wheat_farms', s:'blue',   label:'capital_input' },
+    // Основное производство пшеницы
+    { f:'wheat_farms', t:'wheat_net',   s:'green',  label:'урожай' },
+    // Посевной фонд: пшеница возвращается в фермы (curved ниже)
+    { f:'wheat_net',   t:'wheat_farms', s:'red',    label:'семена ×0.20', curve:'below' },
+    // Рецептурный вход cattle_farm: пшеница идёт на корм
+    { f:'wheat_net',   t:'cattle_farm', s:'orange', label:'вход ×0.30/гол.' },
+    { f:'cattle_farm', t:'cattle',      s:'green',  label:'' },
+    // Рынок
+    { f:'wheat_net',   t:'market',      s:'green',  label:'поставка' },
+    { f:'market',      t:'wages',       s:'gold',   label:'выручка' },
+    { f:'wages',       t:'food_buy',    s:'gold',   label:'' },
+    // Денежный спрос (dashed, огибает wages справа)
+    { f:'food_buy',    t:'market',      s:'goldD',  label:'монетарный спрос', poly:[1068,390, 1068,220] },
+  ];
+
+  // ── Вычисление точки выхода с границы прямоугольника ─────────────────
+  function edgePt(node, tx, ty) {
+    const dx = tx - node.cx, dy = ty - node.cy;
+    const hw = node.w / 2 + 4, hh = node.h / 2 + 4;
+    if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) return { x: node.cx, y: node.cy };
+    if (Math.abs(dx) * (node.h / 2) >= Math.abs(dy) * (node.w / 2)) {
+      const t = hw / Math.abs(dx);
+      return { x: node.cx + Math.sign(dx) * hw, y: node.cy + dy * t };
+    } else {
+      const t = hh / Math.abs(dy);
+      return { x: node.cx + dx * t, y: node.cy + Math.sign(dy) * hh };
+    }
+  }
+
+  // ── Генерация SVG-разметки ────────────────────────────────────────────
+  let html = '<defs>';
+  for (const a of Object.values(ARR)) {
+    html += `<marker id="${a.id}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0,8 3,0 6" fill="${a.color}"/></marker>`;
+  }
+  html += '</defs>';
+
+  // Фоновые секции
+  const zones = [
+    { x:30,  y:42,  w:540, h:152, fill:'#1c2230', label:'A  ИНСТРУМЕНТЫ' },
+    { x:476, y:160, w:410, h:146, fill:'#1c2a1c', label:'B  ПШЕНИЧНЫЕ ХОЗЯЙСТВА' },
+    { x:236, y:400, w:502, h: 90, fill:'#2a1c1c', label:'C  CATTLE LOOP' },
+    { x:822, y:160, w:272, h:286, fill:'#2a2010', label:'D  РЫНОК' },
+  ];
+  for (const z of zones) {
+    html += `<rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}"
+      rx="8" fill="${z.fill}" fill-opacity=".45" stroke="#30363d" stroke-width=".5"/>
+    <text x="${z.x+12}" y="${z.y+16}" font-size="9.5" fill="#6e7681"
+      font-weight="700" letter-spacing="1">${z.label}</text>`;
+  }
+
+  // Рёбра
+  for (const e of edges) {
+    const src = N[e.f], tgt = N[e.t];
+    const A = ARR[e.s];
+
+    let pathD;
+    if (e.curve === 'below') {
+      // Посевной фонд: wheat_net → wheat_farms, идём дугой снизу
+      const p1 = edgePt(src, tgt.cx, src.cy + 200);  // выход вниз из src
+      const p2 = edgePt(tgt, src.cx, tgt.cy + 200);  // вход снизу в tgt
+      const cy = Math.max(src.cy + src.h/2, tgt.cy + tgt.h/2) + 72;
+      pathD = `M ${p1.x},${p1.y} C ${p1.x},${cy} ${p2.x},${cy} ${p2.x},${p2.y}`;
+    } else if (e.poly) {
+      // Ломаный маршрут (food_buy → market огибает wages)
+      const sp = edgePt(src, e.poly[0], e.poly[1]);
+      const ep = edgePt(tgt, e.poly[e.poly.length-2], e.poly[e.poly.length-1]);
+      const mid = e.poly.join(',');
+      pathD = `M ${sp.x},${sp.y} L ${mid} L ${ep.x},${ep.y}`;
+    } else {
+      const sp = edgePt(src, tgt.cx, tgt.cy);
+      const ep = edgePt(tgt, src.cx, src.cy);
+      pathD = `M ${sp.x},${sp.y} L ${ep.x},${ep.y}`;
+    }
+
+    const dashAttr = A.dash ? `stroke-dasharray="${A.dash}"` : '';
+    html += `<path d="${pathD}" fill="none" stroke="${A.color}"
+      stroke-width="1.8" stroke-opacity=".9" ${dashAttr}
+      marker-end="url(#${A.id})"/>`;
+
+    // Подпись на ребре
+    if (e.label) {
+      let lx, ly;
+      if (e.curve === 'below') {
+        const p1 = edgePt(src, tgt.cx, src.cy + 200);
+        const p2 = edgePt(tgt, src.cx, tgt.cy + 200);
+        const cy = Math.max(src.cy + src.h/2, tgt.cy + tgt.h/2) + 72;
+        lx = (p1.x + p2.x) / 2;
+        ly = cy + 2;
+      } else if (e.poly) {
+        lx = e.poly[0] + 8;
+        ly = (e.poly[1] + (e.poly[3] ?? e.poly[1])) / 2 - 5;
+      } else {
+        const sp = edgePt(src, tgt.cx, tgt.cy);
+        const ep = edgePt(tgt, src.cx, src.cy);
+        lx = (sp.x + ep.x) / 2;
+        ly = (sp.y + ep.y) / 2 - 6;
+      }
+      const tw = e.label.length * 5.6 + 8;
+      html += `<rect x="${lx - tw/2}" y="${ly - 9}" width="${tw}" height="13"
+        fill="#0d1117" rx="3" opacity=".88"/>
+      <text x="${lx}" y="${ly}" text-anchor="middle" font-size="9.5"
+        fill="${A.color}" opacity=".95">${e.label}</text>`;
+    }
+  }
+
+  // Узлы
+  for (const [id, n] of Object.entries(N)) {
+    const x = n.cx - n.w / 2, y = n.cy - n.h / 2;
+    const lines = n.label.split('\n');
+    const lh = 13, totalH = lines.length * lh;
+    const ty0 = n.cy - totalH / 2 + lh * 0.6;
+
+    html += `<g class="wc-node">
+      <rect x="${x}" y="${y}" width="${n.w}" height="${n.h}" rx="${n.rx}"
+        fill="${n.bg}" stroke="${n.bd}" stroke-width="1.4"/>
+      <text x="${x + 16}" y="${n.cy + 1}" dominant-baseline="central" font-size="13"
+        style="pointer-events:none">${n.icon}</text>`;
+    for (let i = 0; i < lines.length; i++) {
+      const fw = (n.rx === 6) ? 600 : 400;
+      html += `<text x="${n.cx + 5}" y="${ty0 + i * lh}"
+        text-anchor="middle" dominant-baseline="central"
+        font-size="10.5" fill="${n.tc}" font-weight="${fw}"
+        style="pointer-events:none">${lines[i]}</text>`;
+    }
+    html += '</g>';
+  }
+
+  // Подписи под зданиями (детали)
+  const bldSub = {
+    wheat_farms: 'сем. ферма (×0.35 wages) / вилла (×0.30) / латифундия (×0.25)',
+    cattle_farm: 'autonomous_builder: farmers_class',
+    workshop:    'input: iron×0.30 + timber×0.05 → tools',
+  };
+  for (const [id, sub] of Object.entries(bldSub)) {
+    const n = N[id];
+    html += `<text x="${n.cx}" y="${n.cy + n.h/2 + 13}"
+      text-anchor="middle" font-size="8.5" fill="#6e7681">${sub}</text>`;
+  }
+
+  // Денежный якорь (wheat standard)
+  html += `<text x="30" y="512" font-size="9" fill="#6e7681">
+    💡 Wheat standard: base_price = 10  →  1 gold = 0.1 бушеля ≈ 3 кг  |  при чеканке монет: M↑ → P_wheat↑
+  </text>`;
+
+  svg.innerHTML = html;
+
+  // Масштабирование по изменению размеров окна
+  if (!renderWheatChain._resizeAttached) {
+    window.addEventListener('resize', () => {
+      if (currentView === 'wheat') renderWheatChain();
+    });
+    renderWheatChain._resizeAttached = true;
+  }
 }
 
 // ── Entry point ───────────────────────────────────────────────────────
