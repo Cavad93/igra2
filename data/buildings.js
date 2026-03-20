@@ -794,7 +794,7 @@ const BUILDINGS = {
     build_turns:        1,
     terrain_restriction: ['plains', 'hills', 'river_valley',
                           'mediterranean_coast', 'mediterranean_hills',
-                          'river_valley', 'steppe', 'temperate_forest',
+                          'steppe', 'temperate_forest',
                           'coastal_city'],   // хора полиса — сельская округа города
     max_per_region:     null,
     max_level:          null,  // ограничено землёй и населением, не константой
@@ -1198,7 +1198,8 @@ function canBuildInRegion(buildingId, region) {
 
   // ── Система уровней ───────────────────────────────────────────────────────
   // Если здание уже есть в регионе — это улучшение, а не новое строительство.
-  const maxLevel    = b.max_level ?? 1;
+  // null означает «без верхнего предела» (ограничено землёй/населением, а не константой)
+  const maxLevel    = b.max_level ?? Infinity;
   const existingSlot = (region.building_slots || [])
     .find(s => s.building_id === buildingId && s.status !== 'demolished');
 

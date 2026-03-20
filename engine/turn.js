@@ -756,6 +756,13 @@ function initGame() {
   // Попытка загрузки сохранения
   const hasSave = loadGame();
 
+  // Пересчёт занятости по building_slots (данные в regions_data.js могут быть устаревшими)
+  if (typeof recalculateAllEmployment === 'function') {
+    for (const nationId of Object.keys(GAME_STATE.nations)) {
+      try { recalculateAllEmployment(nationId); } catch (e) { console.warn('[init_employment]', e); }
+    }
+  }
+
   // Первоначальный рендер
   renderAll();
 

@@ -134,7 +134,8 @@ function _rbtActiveCard(slot, regionId, nation, region) {
   if (!bDef) return '';
 
   const level    = slot.level || 1;
-  const maxLevel = bDef.max_level ?? 1;
+  // null = без верхнего предела (ограничено землёй/населением)
+  const maxLevel = bDef.max_level ?? Infinity;
   const revenue  = slot.revenue ? Math.round(slot.revenue) : 0;
   const wages    = slot.wages_paid ? Math.round(slot.wages_paid) : 0;
 

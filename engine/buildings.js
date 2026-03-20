@@ -1533,7 +1533,7 @@ function orderBuildingConstruction(nationId, regionId, buildingId) {
     }
   }
 
-  return { ok: true, slot_id };
+  return { ok: true, slot_id: queueId };
 }
 
 // ──────────────────────────────────────────────────────────────
