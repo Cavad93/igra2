@@ -712,7 +712,10 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   }
 
   // ── КЭШ РАЗБИВКИ ДЛЯ UI ────────────────────────────────────
-  const buildingProfit = Math.round(nation.economy._building_profit_last_tick || 0);
+  const buildingProfit  = Math.round(nation.economy._building_profit_last_tick || 0);
+  // Расходы, выплачиваемые вне updateTreasury (уже вычтены из казны напрямую)
+  const soldierSalary   = Math.round(nation.economy._soldier_salary_per_turn || 0);
+  const foodSoldiers    = Math.round(nation.economy._food_spending?.treasury  || 0);
   applyDelta(`nations.${nationId}.economy._income_breakdown`, {
     tax_aristocrats: taxByClass.aristocrats,
     tax_clergy:      taxByClass.clergy,
@@ -748,7 +751,9 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     slaves:            effSlaves,
     slaves_base:       expSlaves,
     slaves_level:      slavesLvl,
-    total:            totalExpense,
+    soldier_salary:    soldierSalary,
+    food_soldiers:     foodSoldiers,
+    total:             totalExpense + soldierSalary + foodSoldiers,
   });
 
   // ── БАНКРОТСТВО ────────────────────────────────────────────

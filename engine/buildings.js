@@ -808,14 +808,18 @@ function distributeClassIncome(nationId) {
   const soldiersPop     = nation.population.by_profession?.soldiers ?? 0;
   const salaryPerPerson = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.SOLDIER_SALARY) || 2;
   const totalSalary     = Math.round(soldiersPop * salaryPerPerson);
+  let soldierSalaryPaid = 0;
   if (totalSalary > 0) {
     const paid = Math.min(totalSalary, Math.max(0, economy.treasury || 0));
     if (paid > 0) {
       economy.treasury           -= paid;
       cc.soldiers_class           = (cc.soldiers_class || 0) + paid;
       incomeTick.soldiers_class  += paid;
+      soldierSalaryPaid           = paid;
     }
   }
+  // Отслеживаем для корректного отображения баланса в UI
+  economy._soldier_salary_per_turn = soldierSalaryPaid;
 
   // ── Обновляем батарейки классов (прогресс к следующей инвестиции) ─────────
   {
