@@ -381,7 +381,13 @@ function uiCancelConstruction(regionId, slotId) {
 }
 
 function uiDemolishBuilding(regionId, slotId) {
-  if (!confirm('Снести здание? Рабочие потеряют занятость.')) return;
+  const region = GAME_STATE.regions[regionId];
+  const slot   = (region?.building_slots || []).find(s => s.slot_id === slotId);
+  const level  = slot?.level ?? 1;
+  const msg    = level > 1
+    ? `Снизить уровень здания с ${level} до ${level - 1}? Возврат 50% стоимости уровня.`
+    : 'Снести здание полностью? Рабочие потеряют занятость.';
+  if (!confirm(msg)) return;
   if (typeof demolishBuilding === 'function') {
     demolishBuilding(GAME_STATE.player_nation, regionId, slotId);
   }

@@ -1624,15 +1624,25 @@ function demolishBuilding(nationId, regionId, slotId) {
 
   const slot = region.building_slots[slotIdx];
   const bDef = BUILDINGS[slot.building_id];
+  const currentLevel = slot.level ?? 1;
+  const rName = (typeof MAP_REGIONS !== 'undefined' && MAP_REGIONS[regionId]?.name) || regionId;
 
-  // Помечаем снесённым (не удаляем сразу — может понадобиться для анимации)
-  slot.status = 'demolished';
-
-  recalculateRegionEmployment(region);
-
-  if (typeof addEventLog === 'function') {
-    const rName = (typeof MAP_REGIONS !== 'undefined' && MAP_REGIONS[regionId]?.name) || regionId;
-    addEventLog(`🏚 ${bDef?.name || slot.building_id} снесено в ${rName}.`, 'info');
+  if (currentLevel > 1) {
+    // Уменьшаем уровень на 1, возвращаем половину стоимости одного уровня
+    slot.level = currentLevel - 1;
+    const refund = Math.round((bDef?.cost ?? 0) * 0.5);
+    if (refund > 0) nation.economy.treasury = (nation.economy.treasury || 0) + refund;
+    recalculateRegionEmployment(region);
+    if (typeof addEventLog === 'function') {
+      addEventLog(`🏚 ${bDef?.name || slot.building_id} в ${rName}: уровень снижен до ${slot.level}.`, 'info');
+    }
+  } else {
+    // Уровень 1 — сносим полностью
+    slot.status = 'demolished';
+    recalculateRegionEmployment(region);
+    if (typeof addEventLog === 'function') {
+      addEventLog(`🏚 ${bDef?.name || slot.building_id} снесено в ${rName}.`, 'info');
+    }
   }
 
   return { ok: true };
