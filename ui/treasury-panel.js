@@ -211,9 +211,10 @@ function _tpRenderIncome() {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const inc    = nation.economy._income_breakdown || {};
   const taxTotal     = _tpTaxTotal();
-  const portDuties   = inc.port_duties  || 0;
-  const tradeProfit  = inc.trade_profit || 0;
-  const totalPreview = taxTotal + portDuties + tradeProfit;
+  const portDuties     = inc.port_duties     || 0;
+  const tradeProfit    = inc.trade_profit    || 0;
+  const buildingProfit = inc.building_profit || 0;
+  const totalPreview   = taxTotal + portDuties + tradeProfit + buildingProfit;
 
   return `
     <div class="tp-col-title">📈 ДОХОДЫ</div>
@@ -233,6 +234,11 @@ function _tpRenderIncome() {
       <span class="tp-item-label">⚓ Портовые пошлины</span>
       <span class="tp-item-value">${portDuties.toLocaleString()} ₴</span>
     </div>
+    ${buildingProfit > 0 ? `
+    <div class="tp-row-item">
+      <span class="tp-item-label">🏛 Гос. здания</span>
+      <span class="tp-item-value">${buildingProfit.toLocaleString()} ₴</span>
+    </div>` : ''}
 
     <div class="tp-row-total">
       <span class="tp-item-label">Итого доходов</span>
@@ -571,10 +577,11 @@ function _tpRender() {
   const exp      = eco._expense_breakdown || {};
   const inc      = eco._income_breakdown  || {};
 
-  const taxTotal    = _tpTaxTotal();
-  const portDuties  = inc.port_duties  || 0;
-  const tradeProfit = inc.trade_profit || 0;
-  const totalInc    = taxTotal + portDuties + tradeProfit;
+  const taxTotal       = _tpTaxTotal();
+  const portDuties     = inc.port_duties     || 0;
+  const tradeProfit    = inc.trade_profit    || 0;
+  const buildingProfit = inc.building_profit || 0;
+  const totalInc       = taxTotal + portDuties + tradeProfit + buildingProfit;
   const totalExp    = exp.total || eco.expense_per_turn || 0;
   const balance     = totalInc - totalExp;
   const balColor    = balance >= 0 ? 'var(--positive)' : 'var(--negative)';

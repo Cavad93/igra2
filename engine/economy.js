@@ -712,6 +712,7 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   }
 
   // ── КЭШ РАЗБИВКИ ДЛЯ UI ────────────────────────────────────
+  const buildingProfit = Math.round(nation.economy._building_profit_last_tick || 0);
   applyDelta(`nations.${nationId}.economy._income_breakdown`, {
     tax_aristocrats: taxByClass.aristocrats,
     tax_clergy:      taxByClass.clergy,
@@ -719,7 +720,8 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     tax_soldiers:    taxByClass.soldiers,
     trade_profit:    Math.round(effTradeProfit),
     port_duties:     Math.round(effPortDuties),
-    total:           Math.round(totalIncome),
+    building_profit: buildingProfit,
+    total:           Math.round(totalIncome) + buildingProfit,
   });
   applyDelta(`nations.${nationId}.economy._expense_breakdown`, {
     army_infantry:     effArmyInf,

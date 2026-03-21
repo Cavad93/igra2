@@ -711,6 +711,9 @@ function distributeClassIncome(nationId) {
 
   const economy = nation.economy;
 
+  // Сбрасываем накопленную прибыль госзданий за этот тик
+  economy._building_profit_last_tick = 0;
+
   // Lazy init — гарантируем поля для загруженных сохранений (без class_capital)
   if (!economy.class_capital) {
     economy.class_capital = { aristocrats: 0, soldiers_class: 0, farmers_class: 0 };
@@ -761,6 +764,7 @@ function distributeClassIncome(nationId) {
           if (slotOwner === 'nation') {
             // Государственная латифундия: прибыль прямо в казну
             economy.treasury = (economy.treasury || 0) + profitLast;
+            economy._building_profit_last_tick = (economy._building_profit_last_tick || 0) + profitLast;
           } else if (cc[slotOwner] !== undefined) {
             // Классовая собственность: аристократы / солдаты
             cc[slotOwner]              = (cc[slotOwner] || 0) + profitLast;
