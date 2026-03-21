@@ -3526,6 +3526,49 @@
     }
     .pop-card.slaves:hover { opacity: .88; }
 
+    /* ── Class Income Dashboard (cid-) ───────────────────────────── */
+    .cid-wrap { padding: 4px 16px 16px; }
+    .cid-filter-row {
+      display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;
+    }
+    .cid-filter-btn {
+      padding: 4px 14px; border-radius: 14px; font-size: 12px; cursor: pointer;
+      border: 1px solid rgba(212,175,55,.28); background: rgba(255,255,255,.05);
+      color: rgba(212,175,55,.6); transition: all .15s;
+    }
+    .cid-filter-btn.active, .cid-filter-btn:hover {
+      background: rgba(212,175,55,.18); border-color: rgba(212,175,55,.55);
+      color: #d4af37;
+    }
+    .cid-cls-card {
+      background: rgba(22,17,11,.7); border-radius: 7px;
+      border: 1px solid rgba(255,255,255,.08);
+      padding: 10px 14px; margin-bottom: 8px;
+    }
+    .cid-cls-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 8px;
+    }
+    .cid-cls-icon { font-size: 13px; font-weight: 600; }
+    .cid-cls-inc  { font-size: 11px; color: var(--positive, #4CAF50); }
+    .cid-batt-row { margin-bottom: 8px; }
+    .cid-batt-label {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 11px; color: rgba(255,255,255,.55); margin-bottom: 4px;
+    }
+    .cid-batt-nums { font-variant-numeric: tabular-nums; }
+    .cid-share { color: rgba(255,255,255,.35); margin-left: 4px; }
+    .cid-batt-track {
+      height: 8px; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden;
+    }
+    .cid-batt-fill { height: 100%; border-radius: 4px; transition: width .5s ease; }
+    .cid-batt-ready {
+      font-size: 10px; color: #4CAF50; margin-top: 3px; text-align: right;
+    }
+    .cid-empty {
+      padding: 18px; text-align: center; font-size: 12px; color: rgba(255,255,255,.3);
+    }
+
     /* Card header row */
     .pop-ch {
       display: flex; align-items: center; gap: 8px; padding: 10px 10px 5px;

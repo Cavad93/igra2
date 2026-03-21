@@ -1476,7 +1476,133 @@ function uiToggleLaborLaw(lawId) {
 // ГЛАВНАЯ ФУНКЦИЯ РЕНДЕРА
 // ─────────────────────────────────────────────────────────────────────────
 
-let _popExpandedClass = null;
+let _popExpandedClass  = null;
+let _popIncomeFilter   = null; // null = all production types
+
+// ─────────────────────────────────────────────────────────────────────────
+// СЕКЦИЯ "ДОХОДЫ И ИНВЕСТИЦИИ КЛАССОВ"
+// ─────────────────────────────────────────────────────────────────────────
+
+function _popSetIncomeFilter(type) {
+  _popIncomeFilter = (_popIncomeFilter === type) ? null : type;
+  renderPopulationOverlay();
+}
+
+const _PROD_TYPE_META = {
+  wheat:  { icon: '🌾', label: 'Пшеница' },
+  horse:  { icon: '🐎', label: 'Кони' },
+  cattle: { icon: '🐄', label: 'Скот' },
+};
+
+const _CLS_INCOME_META = {
+  aristocrats:    { icon: '👑', label: 'Аристократы', color: '#d4af37' },
+  soldiers_class: { icon: '⚔️',  label: 'Солдаты',     color: '#c0392b' },
+  farmers_class:  { icon: '🌾', label: 'Земледельцы', color: '#27ae60' },
+};
+
+function buildClassIncomeSection(nation) {
+  const eco  = nation.economy;
+  const ibt  = eco._class_income_by_type || {};
+  const batt = eco._class_battery        || {};
+  const cipc = eco.class_income_per_capita || {};
+  const maint = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
+
+  // Collect production types that have any income
+  const allTypes = new Set();
+  for (const types of Object.values(ibt)) {
+    for (const t of Object.keys(types)) allTypes.add(t);
+  }
+
+  if (allTypes.size === 0) {
+    return `<div class="cid-empty">Данные появятся после первого хода с активными зданиями</div>`;
+  }
+
+  // Filter buttons
+  const filterBtns = [...allTypes].map(type => {
+    const meta   = _PROD_TYPE_META[type] || { icon: '📦', label: type };
+    const active = _popIncomeFilter === type;
+    return `<button class="cid-filter-btn${active ? ' active' : ''}"
+                    onclick="_popSetIncomeFilter('${type}')">
+              ${meta.icon} ${meta.label}
+            </button>`;
+  }).join('');
+
+  const activeTypes = _popIncomeFilter ? [_popIncomeFilter] : [...allTypes];
+
+  // Class cards
+  const clsRows = ['aristocrats', 'soldiers_class', 'farmers_class'].map(cls => {
+    const clsMeta  = _CLS_INCOME_META[cls] || { icon: '👤', label: cls, color: '#aaa' };
+    const clsTypes = ibt[cls]  || {};
+    const clsBatt  = batt[cls] || {};
+
+    // Only show types with income (and matching active filter)
+    const visTypes = activeTypes.filter(t => (clsTypes[t] || 0) > 0);
+    if (visTypes.length === 0) return '';
+
+    const totalInc = Object.values(clsTypes).reduce((s, v) => s + v, 0);
+    const perCap   = cipc[cls] ?? 0;
+
+    // Battery bars
+    const battBars = visTypes.map(ptype => {
+      const meta    = _PROD_TYPE_META[ptype] || { icon: '📦', label: ptype };
+      const battVal = clsBatt[ptype] || 0;
+
+      // Find threshold for this class + production type
+      let bThresh = 3000;
+      if (typeof BUILDINGS !== 'undefined') {
+        for (const [bid, bDef] of Object.entries(BUILDINGS)) {
+          if (bDef.autonomous_builder === cls && bid.startsWith(ptype + '_')) {
+            bThresh = (bDef.cost || 0) + 5 * 12 * maint;
+            break;
+          }
+        }
+      }
+
+      const pct    = Math.min(100, Math.round(battVal / bThresh * 100));
+      const ready  = pct >= 100;
+      const fillCl = ready ? '#4CAF50' : (pct > 60 ? '#FF9800' : '#5b8dd9');
+
+      // Proportional share of this type in class's total income (for mixed ownership)
+      const typeInc    = clsTypes[ptype] || 0;
+      const sharePct   = totalInc > 0 ? Math.round(typeInc / totalInc * 100) : 0;
+      const shareLabel = activeTypes.length > 1 ? ` <span class="cid-share">${sharePct}%</span>` : '';
+
+      return `
+        <div class="cid-batt-row">
+          <div class="cid-batt-label">
+            <span>${meta.icon} ${meta.label}${shareLabel}</span>
+            <span class="cid-batt-nums">${Math.round(battVal).toLocaleString()} / ${bThresh.toLocaleString()} ₴
+              ${ready ? '&nbsp;🔓' : `&nbsp;${pct}%`}
+            </span>
+          </div>
+          <div class="cid-batt-track">
+            <div class="cid-batt-fill" style="width:${pct}%;background:${fillCl}"></div>
+          </div>
+          ${ready ? '<div class="cid-batt-ready">Готов к инвестиции — ждём следующего хода</div>' : ''}
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="cid-cls-card" style="border-left:3px solid ${clsMeta.color}20;
+                                       border-color:${clsMeta.color}40">
+        <div class="cid-cls-header">
+          <span class="cid-cls-icon" style="color:${clsMeta.color}">${clsMeta.icon} ${clsMeta.label}</span>
+          <span class="cid-cls-inc">${totalInc.toLocaleString()} ₴/мес &nbsp;·&nbsp; ${perCap.toLocaleString()} ₴/чел</span>
+        </div>
+        ${battBars}
+      </div>`;
+  }).filter(Boolean).join('');
+
+  return `
+    <div class="cid-wrap">
+      <div class="cid-filter-row">
+        <button class="cid-filter-btn${!_popIncomeFilter ? ' active' : ''}"
+                onclick="_popSetIncomeFilter(null)">Все типы</button>
+        ${filterBtns}
+      </div>
+      ${clsRows || '<div class="cid-empty">Нет данных по выбранному типу производства</div>'}
+    </div>`;
+}
 
 function renderPopulationOverlay() {
   const overlay = document.getElementById('population-overlay');
@@ -1544,6 +1670,9 @@ function renderPopulationOverlay() {
   // ── Возрастная демография + законы труда ──
   const ageHtml = buildAgeDemographicsSection(nation);
 
+  // ── Доходы и инвестиции классов ──
+  const incomeHtml = buildClassIncomeSection(nation);
+
   overlay.innerHTML = `
     <div class="pop-oi">
 
@@ -1594,6 +1723,13 @@ function renderPopulationOverlay() {
       <div class="pop-grid">
         ${cardsHtml}
       </div>
+
+      <!-- Income & Investment section -->
+      <div class="pop-sh" style="margin-top:12px">
+        <span class="pop-st">💰 Доходы и инвестиции классов</span>
+        <span class="pop-hint">Прогресс накопления к следующей постройке</span>
+      </div>
+      ${incomeHtml}
 
     </div>
   `;

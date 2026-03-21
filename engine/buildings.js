@@ -714,6 +714,12 @@ function distributeClassIncome(nationId) {
   // Сбрасываем накопленную прибыль госзданий за этот тик
   economy._building_profit_last_tick = 0;
 
+  // Сбрасываем доход по типам производства за этот тик (для UI батарейки)
+  economy._class_income_by_type = {};
+
+  // Lazy init батарейки
+  if (!economy._class_battery) economy._class_battery = {};
+
   // Lazy init — гарантируем поля для загруженных сохранений (без class_capital)
   if (!economy.class_capital) {
     economy.class_capital = { aristocrats: 0, soldiers_class: 0, farmers_class: 0 };
@@ -741,22 +747,32 @@ function distributeClassIncome(nationId) {
       const wages      = slot.wages_paid   ?? 0;  // revenue × wage_rate (руб рабочим)
       const profitLast = slot.profit_last  ?? 0;  // чистая прибыль после всех затрат
       const slotOwner  = slot.owner        ?? 'nation';
+      const prodType   = slot.building_id  ? slot.building_id.split('_')[0] : null;
+      const _ibt       = economy._class_income_by_type;
 
       if (slotOwner === 'farmers_class') {
         // ── Самозанятые земледельцы (семейная ферма) ────────────────────────
         // Трудовая доля (wages) + земельная прибыль (profitLast) = весь доход
         const totalFarmerIncome = wages + Math.max(0, profitLast);
         if (totalFarmerIncome > 0) {
-          cc.farmers_class             = (cc.farmers_class || 0) + totalFarmerIncome;
-          incomeTick.farmers_class    += totalFarmerIncome;
+          cc.farmers_class          = (cc.farmers_class || 0) + totalFarmerIncome;
+          incomeTick.farmers_class += totalFarmerIncome;
+          if (prodType) {
+            if (!_ibt.farmers_class) _ibt.farmers_class = {};
+            _ibt.farmers_class[prodType] = (_ibt.farmers_class[prodType] || 0) + totalFarmerIncome;
+          }
         }
 
       } else {
         // ── Наёмные арендаторы (вилла / латифундия) ─────────────────────────
         // Зарплата → всегда земледельцам (они физически работают на земле)
         if (wages > 0) {
-          cc.farmers_class            = (cc.farmers_class || 0) + wages;
-          incomeTick.farmers_class   += wages;
+          cc.farmers_class          = (cc.farmers_class || 0) + wages;
+          incomeTick.farmers_class += wages;
+          if (prodType) {
+            if (!_ibt.farmers_class) _ibt.farmers_class = {};
+            _ibt.farmers_class[prodType] = (_ibt.farmers_class[prodType] || 0) + wages;
+          }
         }
 
         // Чистая прибыль → владельцу здания
@@ -767,8 +783,12 @@ function distributeClassIncome(nationId) {
             economy._building_profit_last_tick = (economy._building_profit_last_tick || 0) + profitLast;
           } else if (cc[slotOwner] !== undefined) {
             // Классовая собственность: аристократы / солдаты
-            cc[slotOwner]              = (cc[slotOwner] || 0) + profitLast;
-            incomeTick[slotOwner]      = (incomeTick[slotOwner] || 0) + profitLast;
+            cc[slotOwner]         = (cc[slotOwner] || 0) + profitLast;
+            incomeTick[slotOwner] = (incomeTick[slotOwner] || 0) + profitLast;
+            if (prodType) {
+              if (!_ibt[slotOwner]) _ibt[slotOwner] = {};
+              _ibt[slotOwner][prodType] = (_ibt[slotOwner][prodType] || 0) + profitLast;
+            }
           }
         }
       }
@@ -787,6 +807,27 @@ function distributeClassIncome(nationId) {
       economy.treasury           -= paid;
       cc.soldiers_class           = (cc.soldiers_class || 0) + paid;
       incomeTick.soldiers_class  += paid;
+    }
+  }
+
+  // ── Обновляем батарейки классов (прогресс к следующей инвестиции) ─────────
+  {
+    const _maint = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
+    for (const [cls, types] of Object.entries(economy._class_income_by_type)) {
+      for (const [ptype, income] of Object.entries(types)) {
+        let bThresh = 3000;
+        for (const [bid, bDef] of Object.entries(BUILDINGS)) {
+          if (bDef.autonomous_builder === cls && bid.startsWith(ptype + '_')) {
+            bThresh = (bDef.cost || 0) + 5 * 12 * _maint;
+            break;
+          }
+        }
+        if (!economy._class_battery[cls]) economy._class_battery[cls] = {};
+        economy._class_battery[cls][ptype] = Math.min(
+          (economy._class_battery[cls][ptype] || 0) + income,
+          bThresh
+        );
+      }
     }
   }
 
@@ -1023,8 +1064,12 @@ function processAutonomousBuilding(nationId) {
       const bDef = BUILDINGS[bid];
       if (!bDef) continue;
 
-      const threshold = (bDef.cost || 0) + _CLASS_SAFETY_RESERVE;
-      if (capital < threshold) continue;
+      const _maint       = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
+      const prodType     = bid.split('_')[0];
+      const battThreshold = (bDef.cost || 0) + 5 * 12 * _maint;
+      const battery      = economy._class_battery?.[cls]?.[prodType] ?? 0;
+      if (battery < battThreshold) continue;
+      if (capital < (bDef.cost || 0)) continue;
 
       for (const rid of nation.regions) {
         const region = GAME_STATE.regions[rid];
@@ -1056,6 +1101,16 @@ function processAutonomousBuilding(nationId) {
     const cost   = bDef.cost || 0;
 
     cc[cls] -= cost;
+
+    // Уменьшаем батарейку: стоимость + 1 год обслуживания (класс копит заново)
+    {
+      const _maintPost = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
+      const _ptPost    = bestBid.split('_')[0];
+      if (!economy._class_battery)         economy._class_battery = {};
+      if (!economy._class_battery[cls])    economy._class_battery[cls] = {};
+      economy._class_battery[cls][_ptPost] = Math.max(0,
+        (economy._class_battery[cls][_ptPost] || 0) - (cost + 12 * _maintPost));
+    }
 
     region.construction_queue = region.construction_queue || [];
     region.construction_queue.push({
