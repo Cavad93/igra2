@@ -279,12 +279,12 @@ function _eRenderB() {
         ${isAlrt ? `<span class="eco-alert-blink" style="color:${_C.red};font-size:14px">⚠</span>` : ''}
       </div>
       <div style="font-size:15px;font-family:'Cinzel',serif;color:${_C.gold};margin-bottom:8px;line-height:1">
-        ${_efmt(income)} <span style="font-size:9px;color:${_C.ivoryFade};font-family:sans-serif;margin-left:4px">gold/тик</span>
+        ${_efmt(income)} <span style="font-size:9px;color:${_C.ivoryFade};font-family:sans-serif;margin-left:4px">gold/мес</span>
       </div>
       <div style="background:rgba(255,255,255,0.07);border-radius:3px;height:5px;margin-bottom:9px;overflow:hidden">
         <div style="width:${Math.min(100, Math.round(wealth))}%;height:5px;background:${wCol};border-radius:3px;box-shadow:0 0 6px ${wCol}66"></div>
       </div>
-      ${[['Δ 1 тик', d1], ['Δ 12 тиков', d12], ['Богатство', null]].map(([lbl, v], idx) => `
+      ${[['Δ 1 мес', d1], ['Δ 12 мес', d12], ['Богатство', null]].map(([lbl, v], idx) => `
         <div style="display:flex;justify-content:space-between;font-size:9.5px;font-family:sans-serif;margin-bottom:2px">
           <span style="color:${_C.ivoryDim}">${lbl}</span>
           <span style="color:${idx === 2 ? _C.ivoryDim : _eDeltaColor(v)}">${idx === 2 ? wealth.toFixed(1) : _ePct(v)}</span>
@@ -293,7 +293,7 @@ function _eRenderB() {
   }).filter(Boolean).join('');
 
   return `
-    ${alert ? `<div style="background:rgba(224,85,85,0.12);border:1px solid rgba(224,85,85,0.4);border-radius:8px;padding:9px 14px;margin-bottom:12px;font-size:10.5px;color:#e07777;display:flex;align-items:center;gap:8px"><span style="font-size:14px">⚠</span>Один или несколько классов потеряли более 20% дохода за прошедший тик!</div>` : ''}
+    ${alert ? `<div style="background:rgba(224,85,85,0.12);border:1px solid rgba(224,85,85,0.4);border-radius:8px;padding:9px 14px;margin-bottom:12px;font-size:10.5px;color:#e07777;display:flex;align-items:center;gap:8px"><span style="font-size:14px">⚠</span>Один или несколько классов потеряли более 20% дохода за прошедший месяц!</div>` : ''}
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:8px">
       ${cards || `<div style="padding:24px;text-align:center;color:${_C.ivoryFade};font-size:11px;font-style:italic;grid-column:1/-1">Запустите несколько ходов для накопления статистики.</div>`}
     </div>`;
@@ -367,7 +367,7 @@ function _eRenderC(selProf) {
       </div>
       <div style="text-align:right">
         <div style="font-size:17px;font-family:'Cinzel',serif;color:${_C.gold}">${_efmt(totalGroup)}</div>
-        <div style="font-size:9px;color:${_C.ivoryFade}">gold / тик</div>
+        <div style="font-size:9px;color:${_C.ivoryFade}">gold / мес</div>
       </div>
     </div>
     <div style="margin-bottom:14px">
@@ -658,7 +658,7 @@ function _eRenderM_Region() {
       return (GOODS[a]?.name || a).localeCompare(GOODS[b]?.name || b, 'ru');
     });
     const header = `<div style="display:grid;grid-template-columns:1fr 80px 80px 80px 75px;align-items:center;gap:6px;padding:5px 10px;font-size:8.5px;text-transform:uppercase;letter-spacing:.4px;color:${_C.ivoryFade};border-bottom:1px solid ${_C.border}">
-      <span>Товар</span><span style="text-align:right">Цена лок.</span><span style="text-align:right">Запас лок.</span><span style="text-align:right">Произв./тик</span><span style="text-align:right">Δ от мирового</span>
+      <span>Товар</span><span style="text-align:right">Цена лок.</span><span style="text-align:right">Запас лок.</span><span style="text-align:right">Произв./мес</span><span style="text-align:right">Δ от мирового</span>
     </div>`;
     const rows = sorted.map(gId => {
       const def      = GOODS[gId];
@@ -788,7 +788,7 @@ function _eRenderD() {
       </div>
       <div><div style="font-size:8.5px;color:${_C.ivoryFade};text-transform:uppercase;letter-spacing:.3px">Доходы</div><div style="font-size:12px;color:${_C.green};font-family:sans-serif;margin-top:1px">${(actualInc > 0 ? '+' : '') + _efmt(actualInc)}</div></div>
       <div><div style="font-size:8.5px;color:${_C.ivoryFade};text-transform:uppercase;letter-spacing:.3px">Расходы</div><div style="font-size:12px;color:${_C.red};font-family:sans-serif;margin-top:1px">${(actualExp > 0 ? '-' : '') + _efmt(actualExp)}</div></div>
-      <div><div style="font-size:8.5px;color:${_C.ivoryFade};text-transform:uppercase;letter-spacing:.3px">Баланс / тик</div><div style="font-size:14px;font-family:'Cinzel',serif;color:${dCol};font-weight:700;margin-top:1px">${delta >= 0 ? '+' : ''}${_efmt(delta)}</div></div>
+      <div><div style="font-size:8.5px;color:${_C.ivoryFade};text-transform:uppercase;letter-spacing:.3px">Баланс / мес</div><div style="font-size:14px;font-family:'Cinzel',serif;color:${dCol};font-weight:700;margin-top:1px">${delta >= 0 ? '+' : ''}${_efmt(delta)}</div></div>
     </div>`;
 }
 
@@ -800,8 +800,8 @@ function _eHeroStrip(eco) {
   const effectiveR  = _eEffectiveTaxRate(eco, byP);
   const metrics = [
     { label: 'Казна',        value: _efmt(eco?.treasury || 0),                              unit: 'золото', color: _C.gold   },
-    { label: 'Доход / тик',  value: (actualInc  > 0 ? '+' : '') + _efmt(actualInc),         unit: '',       color: _C.green  },
-    { label: 'Расход / тик', value: (actualExp  > 0 ? '-' : '') + _efmt(actualExp),          unit: '',       color: _C.red    },
+    { label: 'Доход / мес',  value: (actualInc  > 0 ? '+' : '') + _efmt(actualInc),         unit: '',       color: _C.green  },
+    { label: 'Расход / мес', value: (actualExp  > 0 ? '-' : '') + _efmt(actualExp),          unit: '',       color: _C.red    },
     { label: 'Ср. налог',    value: (effectiveR * 100).toFixed(1) + '%',                     unit: '',       color: _C.copper },
   ];
   return `<div style="display:flex;border-bottom:1px solid ${_C.border}">` +
