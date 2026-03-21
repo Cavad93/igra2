@@ -1478,6 +1478,7 @@ function uiToggleLaborLaw(lawId) {
 
 let _popExpandedClass  = null;
 let _popIncomeFilter   = null; // null = all production types
+let _cidExpanded       = new Set(); // "cls|ptype" keys
 
 // ─────────────────────────────────────────────────────────────────────────
 // СЕКЦИЯ "ДОХОДЫ И ИНВЕСТИЦИИ КЛАССОВ"
@@ -1485,6 +1486,13 @@ let _popIncomeFilter   = null; // null = all production types
 
 function _popSetIncomeFilter(type) {
   _popIncomeFilter = (_popIncomeFilter === type) ? null : type;
+  renderPopulationOverlay();
+}
+
+function _cidToggle(cls, ptype) {
+  const key = cls + '|' + ptype;
+  if (_cidExpanded.has(key)) _cidExpanded.delete(key);
+  else _cidExpanded.add(key);
   renderPopulationOverlay();
 }
 
@@ -1500,14 +1508,145 @@ const _CLS_INCOME_META = {
   farmers_class:  { icon: '🌾', label: 'Земледельцы', color: '#27ae60' },
 };
 
+// ── Агрегированный P&L по классу + типу производства ─────────────────────
+// Читает GAME_STATE напрямую — вызывается только при открытом оверлее.
+function _computeClassBreakdown(nation) {
+  const maint = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
+  // result[cls][ptype] = { count_own, revenue, wages_out, other_costs, profit_own,
+  //                        wages_in, building_name }
+  const result = {};
+
+  for (const rid of (nation.regions || [])) {
+    const region = GAME_STATE.regions[rid];
+    if (!region?.building_slots) continue;
+
+    for (const slot of region.building_slots) {
+      if (slot.status !== 'active') continue;
+      const bDef = typeof BUILDINGS !== 'undefined' ? BUILDINGS[slot.building_id] : null;
+      if (!bDef?.autonomous_builder) continue;
+
+      const owner   = slot.owner ?? 'nation';
+      const ptype   = slot.building_id.split('_')[0];
+      const rev     = slot.revenue_last ?? slot.revenue ?? 0;
+      const wages   = slot.wages_paid   ?? 0;
+      const profit  = slot.profit_last  ?? 0;
+      const level   = slot.level || 1;
+      // other_costs = maintenance + input_costs (everything except wages)
+      const other   = Math.max(0, rev - wages - profit);
+
+      if (owner === 'farmers_class') {
+        // Self-employed farmers: all income theirs
+        if (!result.farmers_class)         result.farmers_class = {};
+        if (!result.farmers_class[ptype])  result.farmers_class[ptype] = {
+          count_own: 0, revenue_own: 0, costs_own: 0, income_own: 0,
+          wages_in: 0, building_name: bDef.name,
+        };
+        const d = result.farmers_class[ptype];
+        d.count_own++;
+        d.revenue_own += rev;
+        d.costs_own   += other;
+        d.income_own  += wages + Math.max(0, profit); // totalFarmerIncome
+
+      } else if (owner !== 'nation') {
+        // Aristocrats / soldiers: they get profit, workers (farmers) get wages
+        if (!result[owner])         result[owner] = {};
+        if (!result[owner][ptype])  result[owner][ptype] = {
+          count_own: 0, revenue: 0, wages_out: 0, other_costs: 0, profit: 0,
+          building_name: bDef.name,
+        };
+        const d = result[owner][ptype];
+        d.count_own++;
+        d.revenue     += rev;
+        d.wages_out   += wages;
+        d.other_costs += other;
+        d.profit      += profit;
+
+        // Same wages are income for farmers_class
+        if (wages > 0) {
+          if (!result.farmers_class)        result.farmers_class = {};
+          if (!result.farmers_class[ptype]) result.farmers_class[ptype] = {
+            count_own: 0, revenue_own: 0, costs_own: 0, income_own: 0,
+            wages_in: 0, building_name: bDef.name,
+          };
+          result.farmers_class[ptype].wages_in += wages;
+        }
+      }
+    }
+  }
+  return result;
+}
+
+// ── Рендер строки разбивки P&L ────────────────────────────────────────────
+function _renderBreakdown(cls, ptype, bd) {
+  const d = bd?.[cls]?.[ptype];
+  if (!d) return '';
+
+  const fmt = v => Math.round(v).toLocaleString();
+  const pct = (part, total) => total > 0 ? ` <span class="cid-bd-pct">${Math.round(part / total * 100)}%</span>` : '';
+
+  if (cls === 'farmers_class') {
+    const hasOwn   = d.income_own > 0;
+    const hasWages = d.wages_in   > 0;
+    const total    = d.income_own + d.wages_in;
+    return `
+      <div class="cid-breakdown">
+        ${hasOwn ? `
+        <div class="cid-bd-row">
+          <span>🏡 Своих зданий</span><span>${d.count_own}</span>
+        </div>
+        <div class="cid-bd-row cid-bd-rev">
+          <span>Выручка своих</span><span>+${fmt(d.revenue_own)} ₴</span>
+        </div>
+        <div class="cid-bd-row cid-bd-cost">
+          <span>Расходы (содержание)</span><span>−${fmt(d.costs_own)} ₴${pct(d.costs_own, d.revenue_own)}</span>
+        </div>
+        <div class="cid-bd-row cid-bd-sub">
+          <span>Доход своих ферм</span><span>${fmt(d.income_own)} ₴</span>
+        </div>` : ''}
+        ${hasWages ? `
+        <div class="cid-bd-row cid-bd-rev">
+          <span>Зарплата от вилл/лат.</span><span>+${fmt(d.wages_in)} ₴</span>
+        </div>` : ''}
+        <div class="cid-bd-sep"></div>
+        <div class="cid-bd-row cid-bd-profit">
+          <span>Итого</span><span>${fmt(total)} ₴</span>
+        </div>
+      </div>`;
+  }
+
+  // Aristocrats / soldiers
+  const rev = d.revenue, wo = d.wages_out, oc = d.other_costs, pr = d.profit;
+  return `
+    <div class="cid-breakdown">
+      <div class="cid-bd-row">
+        <span>🏛 Зданий</span><span>${d.count_own} (${d.building_name})</span>
+      </div>
+      <div class="cid-bd-row cid-bd-rev">
+        <span>Выручка</span><span>+${fmt(rev)} ₴</span>
+      </div>
+      <div class="cid-bd-row cid-bd-cost">
+        <span>Зарплата арендаторам</span>
+        <span>−${fmt(wo)} ₴${pct(wo, rev)}</span>
+      </div>
+      <div class="cid-bd-row cid-bd-cost">
+        <span>Содержание и затраты</span>
+        <span>−${fmt(oc)} ₴${pct(oc, rev)}</span>
+      </div>
+      <div class="cid-bd-sep"></div>
+      <div class="cid-bd-row cid-bd-profit">
+        <span>Ваш доход</span>
+        <span>${fmt(pr)} ₴${pct(pr, rev)}</span>
+      </div>
+    </div>`;
+}
+
 function buildClassIncomeSection(nation) {
-  const eco  = nation.economy;
-  const ibt  = eco._class_income_by_type || {};
-  const batt = eco._class_battery        || {};
-  const cipc = eco.class_income_per_capita || {};
+  const eco   = nation.economy;
+  const ibt   = eco._class_income_by_type  || {};
+  const batt  = eco._class_battery         || {};
+  const cipc  = eco.class_income_per_capita || {};
   const maint = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
 
-  // Collect production types that have any income
   const allTypes = new Set();
   for (const types of Object.values(ibt)) {
     for (const t of Object.keys(types)) allTypes.add(t);
@@ -1516,6 +1655,9 @@ function buildClassIncomeSection(nation) {
   if (allTypes.size === 0) {
     return `<div class="cid-empty">Данные появятся после первого хода с активными зданиями</div>`;
   }
+
+  // Compute full P&L breakdown once
+  const bd = _computeClassBreakdown(nation);
 
   // Filter buttons
   const filterBtns = [...allTypes].map(type => {
@@ -1529,25 +1671,21 @@ function buildClassIncomeSection(nation) {
 
   const activeTypes = _popIncomeFilter ? [_popIncomeFilter] : [...allTypes];
 
-  // Class cards
   const clsRows = ['aristocrats', 'soldiers_class', 'farmers_class'].map(cls => {
     const clsMeta  = _CLS_INCOME_META[cls] || { icon: '👤', label: cls, color: '#aaa' };
     const clsTypes = ibt[cls]  || {};
     const clsBatt  = batt[cls] || {};
 
-    // Only show types with income (and matching active filter)
     const visTypes = activeTypes.filter(t => (clsTypes[t] || 0) > 0);
     if (visTypes.length === 0) return '';
 
     const totalInc = Object.values(clsTypes).reduce((s, v) => s + v, 0);
     const perCap   = cipc[cls] ?? 0;
 
-    // Battery bars
     const battBars = visTypes.map(ptype => {
       const meta    = _PROD_TYPE_META[ptype] || { icon: '📦', label: ptype };
       const battVal = clsBatt[ptype] || 0;
 
-      // Find threshold for this class + production type
       let bThresh = 3000;
       if (typeof BUILDINGS !== 'undefined') {
         for (const [bid, bDef] of Object.entries(BUILDINGS)) {
@@ -1562,15 +1700,24 @@ function buildClassIncomeSection(nation) {
       const ready  = pct >= 100;
       const fillCl = ready ? '#4CAF50' : (pct > 60 ? '#FF9800' : '#5b8dd9');
 
-      // Proportional share of this type in class's total income (for mixed ownership)
       const typeInc    = clsTypes[ptype] || 0;
       const sharePct   = totalInc > 0 ? Math.round(typeInc / totalInc * 100) : 0;
-      const shareLabel = activeTypes.length > 1 ? ` <span class="cid-share">${sharePct}%</span>` : '';
+      const shareLabel = activeTypes.length > 1
+        ? ` <span class="cid-share">${sharePct}%</span>` : '';
+
+      const expKey  = cls + '|' + ptype;
+      const isOpen  = _cidExpanded.has(expKey);
+      const chevron = isOpen ? '▲' : '▼';
+
+      const breakdownHtml = isOpen ? _renderBreakdown(cls, ptype, bd) : '';
 
       return `
         <div class="cid-batt-row">
-          <div class="cid-batt-label">
-            <span>${meta.icon} ${meta.label}${shareLabel}</span>
+          <div class="cid-batt-label cid-clickable"
+               onclick="_cidToggle('${cls}','${ptype}')">
+            <span>${meta.icon} ${meta.label}${shareLabel}
+              <span class="cid-chevron">${chevron}</span>
+            </span>
             <span class="cid-batt-nums">${Math.round(battVal).toLocaleString()} / ${bThresh.toLocaleString()} ₴
               ${ready ? '&nbsp;🔓' : `&nbsp;${pct}%`}
             </span>
@@ -1579,12 +1726,12 @@ function buildClassIncomeSection(nation) {
             <div class="cid-batt-fill" style="width:${pct}%;background:${fillCl}"></div>
           </div>
           ${ready ? '<div class="cid-batt-ready">Готов к инвестиции — ждём следующего хода</div>' : ''}
+          ${breakdownHtml}
         </div>`;
     }).join('');
 
     return `
-      <div class="cid-cls-card" style="border-left:3px solid ${clsMeta.color}20;
-                                       border-color:${clsMeta.color}40">
+      <div class="cid-cls-card" style="border-color:${clsMeta.color}40">
         <div class="cid-cls-header">
           <span class="cid-cls-icon" style="color:${clsMeta.color}">${clsMeta.icon} ${clsMeta.label}</span>
           <span class="cid-cls-inc">${totalInc.toLocaleString()} ₴/мес &nbsp;·&nbsp; ${perCap.toLocaleString()} ₴/чел</span>
