@@ -150,7 +150,9 @@ function _rbtActiveCard(slot, regionId, nation, region) {
   const upgrading = (region.construction_queue || [])
     .some(e => e.building_id === slot.building_id && e.is_upgrade);
 
-  const upgBtn = (level < maxLevel && !upgrading)
+  // Здания с nation_buildable===false улучшаются только автономно (классами), не игроком
+  const canUpgrade = bDef.nation_buildable !== false;
+  const upgBtn = (canUpgrade && level < maxLevel && !upgrading)
     ? `<button class="rbt-btn rbt-btn--upg"
         onclick="uiOrderConstruction('${regionId}','${slot.building_id}')">▲ Улучшить до ур. ${level + 1}</button>`
     : (upgrading ? `<span class="rbt-badge rbt-badge--wip">Улучшение…</span>` : '');
