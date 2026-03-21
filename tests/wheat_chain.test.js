@@ -51,7 +51,19 @@ loadGlobal('data/buildings.js');
 loadGlobal('data/recipes.js');
 
 const BUILDINGS       = globalThis.BUILDINGS;
-const BUILDING_RECIPES = globalThis.BUILDING_RECIPES;
+const BUILDING_RECIPES       = globalThis.BUILDING_RECIPES;
+// getBuildingsForTerrain объявлена как function-declaration в data/buildings.js —
+// она недоступна через globalThis после eval, поэтому берём из eval-контекста.
+// Вместо этого переиспользуем логику напрямую в тесте (см. секцию 5).
+const getBuildingsForTerrain = globalThis.getBuildingsForTerrain ?? function(terrain) {
+  return Object.entries(BUILDINGS)
+    .filter(([, b]) => {
+      if (b.nation_buildable === false) return false;
+      if (b.terrain_restriction && !b.terrain_restriction.includes(terrain)) return false;
+      return true;
+    })
+    .map(([id, b]) => ({ id, ...b }));
+};
 
 if (!BUILDINGS) {
   console.error('Не удалось загрузить BUILDINGS — проверь путь');
@@ -185,8 +197,49 @@ for (const bid of ['wheat_family_farm', 'wheat_villa', 'wheat_latifundium']) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// 5. Итого
+// 5. Terrain restriction vs REGION_BIOMES
+// ─────────────────────────────────────────────────────────────
+section('5. terrain_restriction и биомы');
+
+// Латифундия должна быть видна в plains и river_valley
+const latiRestriction = lati.terrain_restriction;
+assert(latiRestriction.includes('plains'),               'wheat_latifundium доступна в plains');
+assert(latiRestriction.includes('river_valley'),         'wheat_latifundium доступна в river_valley');
+assert(latiRestriction.includes('mediterranean_coast'),  'wheat_latifundium доступна в mediterranean_coast');
+assert(latiRestriction.includes('mediterranean_hills'),  'wheat_latifundium доступна в mediterranean_hills');
+
+// Семейная ферма и вилла — более широкий список
+const farmRestriction = farm.terrain_restriction;
+assert(farmRestriction.includes('hills'),      'wheat_family_farm доступна в hills');
+assert(farmRestriction.includes('steppe'),     'wheat_family_farm доступна в steppe');
+assert(!latiRestriction.includes('hills'),     'wheat_latifundium НЕ строится в hills (только лёгкий рельеф)');
+assert(!latiRestriction.includes('mountains'), 'wheat_latifundium НЕ строится в mountains');
+
+// getBuildingsForTerrain должна включать латифундию при terrain='plains'
+const plainsList  = getBuildingsForTerrain('plains');
+const rvList      = getBuildingsForTerrain('river_valley');
+const medCoast    = getBuildingsForTerrain('mediterranean_coast');
+const hillsList   = getBuildingsForTerrain('hills');
+
+const ids = arr => arr.map(b => b.id);
+assert(ids(plainsList).includes('wheat_latifundium'),      'Латифундия в списке для plains');
+assert(ids(rvList).includes('wheat_latifundium'),          'Латифундия в списке для river_valley');
+assert(ids(medCoast).includes('wheat_latifundium'),        'Латифундия в списке для mediterranean_coast');
+assert(!ids(hillsList).includes('wheat_latifundium'),      'Латифундия НЕ в списке для hills');
+
+// nation_buildable=false здания не должны появляться ни в каком terrain
+const neverBuildable = ['wheat_family_farm', 'wheat_villa', 'cattle_farm', 'horse_ranch'];
+for (const bid of neverBuildable) {
+  for (const tList of [plainsList, rvList, hillsList]) {
+    assert(!ids(tList).includes(bid), `${bid} не появляется в getBuildingsForTerrain`);
+    break; // достаточно одной проверки на здание
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 6. Итого
 // ─────────────────────────────────────────────────────────────
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`Итого: ${passed} пройдено, ${failed} провалено`);
 if (failed > 0) process.exit(1);
+

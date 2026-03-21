@@ -25,7 +25,10 @@ function renderConstructionTab(regionId) {
     </div>`;
   }
 
-  const terrain  = region.terrain || 'plains';
+  // Биом имеет приоритет над terrain (как в engine/buildings.js).
+  // REGION_BIOMES хранит более точную классификацию (mediterranean_coast и т.д.)
+  const _biome   = (typeof REGION_BIOMES !== 'undefined' && REGION_BIOMES[parseInt(regionId)]) || null;
+  const terrain  = _biome || region.terrain || 'plains';
   const maxSlots = (typeof getRegionMaxSlots === 'function') ? getRegionMaxSlots(terrain) : 4;
 
   const activeSlots = (region.building_slots || []).filter(s => s.status !== 'demolished');
