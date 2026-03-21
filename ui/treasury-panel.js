@@ -504,7 +504,9 @@ function _tpAdvisorText() {
   const gov     = nation.government;
   const exp     = eco._expense_breakdown || {};
   const totalExp = Math.max(exp.total || eco.expense_per_turn || 1, 1);
-  const balance  = (eco.income_per_turn || 0) - (eco.expense_per_turn || 0);
+  // Используем breakdown.total — включает building_profit, soldier_salary и food_soldiers
+  const balance  = (eco._income_breakdown?.total ?? eco.income_per_turn ?? 0)
+                 - (eco._expense_breakdown?.total ?? eco.expense_per_turn ?? 0);
   const treasury = eco.treasury || 0;
 
   const lines = [];

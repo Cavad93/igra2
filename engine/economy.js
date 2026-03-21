@@ -123,8 +123,8 @@ function getBuildingBonuses(nationId) {
       const name = String(building).toLowerCase();
       for (const [key, bonus] of Object.entries(BUILDING_BONUSES)) {
         if (name.includes(key)) {
-          bonuses.production_mult += (bonus.production_mult ?? 1) - 1;
-          bonuses.tax_mult        += (bonus.tax_mult        ?? 1) - 1;
+          bonuses.production_mult *= (bonus.production_mult ?? 1);
+          bonuses.tax_mult        *= (bonus.tax_mult        ?? 1);
           bonuses.port_bonus      += (bonus.port_bonus      ?? 0);
           bonuses.happiness_bonus += (bonus.happiness_bonus ?? 0);
         }
@@ -602,7 +602,7 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     const region = GAME_STATE.regions[regionId];
     if (!region) continue;
     slotWalls += (region.building_slots || []).filter(
-      s => s.status === 'active' && (s.type === 'walls' || s.type === 'fortress')
+      s => s.status === 'active' && (s.building_id === 'walls' || s.building_id === 'fortress')
     ).length;
   }
   const expFortresses = (legacyWalls + slotWalls) * 80;
@@ -621,7 +621,7 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     // Новые building_slots — только для AI (игрок учтён в distributeWages)
     if (nationId !== GAME_STATE.player_nation) {
       const activeNonWall = (region.building_slots || []).filter(
-        s => s.status === 'active' && s.type !== 'walls' && s.type !== 'fortress'
+        s => s.status === 'active' && s.building_id !== 'walls' && s.building_id !== 'fortress'
       ).length;
       expBuildings += activeNonWall * CONFIG.BALANCE.BUILDING_MAINTENANCE;
     }
@@ -776,8 +776,9 @@ function recordEconomyHistory() {
   if (!nation) return;
   const eco  = nation.economy;
   const turn = GAME_STATE.turn || 0;
-  const income  = eco.income_per_turn  || 0;
-  const expense = eco.expense_per_turn || 0;
+  // Используем _breakdown.total — включает building_profit и все внеплановые расходы
+  const income  = eco._income_breakdown?.total  ?? eco.income_per_turn  ?? 0;
+  const expense = eco._expense_breakdown?.total ?? eco.expense_per_turn ?? 0;
   if (!Array.isArray(eco._balance_history)) eco._balance_history = [];
   eco._balance_history.push({ turn, income, expense, net: income - expense });
   if (eco._balance_history.length > 24) eco._balance_history.shift();

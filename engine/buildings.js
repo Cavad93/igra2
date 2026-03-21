@@ -594,7 +594,14 @@ function distributeWages(nationId) {
       slot.revenue    = Math.round(revenue);
       slot.wages_paid = Math.round(wages);
       totalWagesPaid    += wages;
-      totalMaintenance  += maintCost;
+      // Автономные здания (wheat_*) сами учитывают maintenance в profit_last,
+      // который затем направляется в казну через distributeClassIncome.
+      // Добавлять их maintenance в _building_maintenance_per_turn нельзя —
+      // это привело бы к двойному вычету из казны (БАГ 1).
+      // Также учитываем level: здание уровня N стоит N × maintCost (БАГ 9).
+      if (!bDef.autonomous_builder) {
+        totalMaintenance += maintCost * level;
+      }
 
       const totalWorkers = _slotTotalWorkers(slot);
       const hasOutput    = (bDef.production_output?.length ?? 0) > 0;
@@ -1070,6 +1077,7 @@ function processAutonomousBuilding(nationId) {
     let bestBid    = null;
     let bestRid    = null;
     let bestProfit = -Infinity;
+    let bestCheck  = null;  // сохраняем результат canBuildInRegion для upgrade-логики
 
     for (const bid of buildingIds) {
       const bDef = BUILDINGS[bid];
@@ -1088,7 +1096,7 @@ function processAutonomousBuilding(nationId) {
 
         const check = (typeof canBuildInRegion === 'function')
           ? canBuildInRegion(bid, region)
-          : { ok: true };
+          : { ok: true, is_upgrade: false };
         if (!check.ok) continue;
 
         // Не строим если уже идёт строительство этого типа от этого класса
@@ -1101,11 +1109,12 @@ function processAutonomousBuilding(nationId) {
           bestProfit = profit;
           bestBid    = bid;
           bestRid    = rid;
+          bestCheck  = check;
         }
       }
     }
 
-    if (!bestBid || !bestRid) continue;
+    if (!bestBid || !bestRid || !bestCheck) continue;
 
     const bDef   = BUILDINGS[bestBid];
     const region = GAME_STATE.regions[bestRid];
@@ -1123,15 +1132,30 @@ function processAutonomousBuilding(nationId) {
         (economy._class_battery[cls][_ptPost] || 0) - (cost + 12 * _maintPost));
     }
 
-    region.construction_queue = region.construction_queue || [];
-    region.construction_queue.push({
-      slot_id:      `${bestRid}_auto_${cls}_${Date.now()}`,
+    // Детерминированный slot_id: ход + регион + счётчик слотов (без Date.now())
+    const queueCount = (region.construction_queue || []).length;
+    const slotId = bestCheck.is_upgrade
+      ? `${bestRid}_upg_${bestBid}_t${GAME_STATE.turn}`
+      : `${bestRid}_auto_${cls}_t${GAME_STATE.turn}_${queueCount}`;
+
+    const queueEntry = {
+      slot_id:      slotId,
       building_id:  bestBid,
       turns_left:   bDef.build_turns || 1,
       turns_total:  bDef.build_turns || 1,
       ordered_turn: GAME_STATE.turn,
       owner:        cls,
-    });
+    };
+
+    // Если здание уже есть — это улучшение, а не новое строительство
+    if (bestCheck.is_upgrade) {
+      queueEntry.is_upgrade     = true;
+      queueEntry.target_slot_id = bestCheck.target_slot_id;
+      queueEntry.to_level       = bestCheck.to_level;
+    }
+
+    region.construction_queue = region.construction_queue || [];
+    region.construction_queue.push(queueEntry);
 
     if (isPlayer && typeof addEventLog === 'function') {
       const rName = (typeof MAP_REGIONS !== 'undefined' && MAP_REGIONS[bestRid]?.name) || bestRid;
@@ -1570,9 +1594,11 @@ function orderBuildingConstruction(nationId, regionId, buildingId) {
   nation.economy.treasury -= cost;
 
   // Формируем запись очереди
+  // Детерминированный ID: ход + количество существующих слотов (без Date.now())
+  const _slotIdx = (region.building_slots || []).length + (region.construction_queue || []).length;
   const queueId = check.is_upgrade
-    ? `${regionId}_upg_${Date.now()}`
-    : `${regionId}_slot_${Date.now()}`;
+    ? `${regionId}_upg_${buildingId}_t${GAME_STATE.turn}`
+    : `${regionId}_slot_t${GAME_STATE.turn}_${_slotIdx}`;
 
   const entry = {
     slot_id:      queueId,
