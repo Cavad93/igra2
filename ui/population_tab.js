@@ -1649,7 +1649,11 @@ function buildClassIncomeSection(nation) {
 
   // Population data for % share
   const byProf  = nation.population?.by_profession || {};
-  const totalPop = Object.values(byProf).reduce((a, b) => a + b, 0) || 1;
+  const totalPop = nation.population?.total || Object.values(byProf).reduce((a, b) => a + b, 0) || 1;
+  // Class populations (maps profession shares → class populations)
+  const classPops = (typeof calculateClassPopulations === 'function')
+    ? calculateClassPopulations(byProf)
+    : {};
 
   const allTypes = new Set();
   for (const types of Object.values(ibt)) {
@@ -1678,8 +1682,8 @@ function buildClassIncomeSection(nation) {
     const clsTypes = ibt[cls]  || {};
     const clsBatt  = batt[cls] || {};
 
-    // Population stats for this class
-    const clsPop    = byProf[cls] || 0;
+    // Population stats for this class (via profession→class mapping)
+    const clsPop    = classPops[cls] || 0;
     const clsPopPct = totalPop > 0 ? (clsPop / totalPop * 100).toFixed(1) : '0.0';
     const totalInc  = Object.values(clsTypes).reduce((s, v) => s + v, 0);
     const perCap    = cipc[cls] ?? 0;
