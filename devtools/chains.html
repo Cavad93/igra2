@@ -174,6 +174,28 @@
     /* bottleneck row highlight */
     tr.has-bottleneck td { border-left: 3px solid #9a5000; }
 
+    /* ── New building-detail columns ───────────────────────────────── */
+    .bld-detail {
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .bld-badges {
+      display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px;
+    }
+    .bld-badge {
+      display: inline-block; padding: 1px 6px; border-radius: 8px;
+      font-size: 10px; background: #21262d; color: #8b949e;
+      white-space: nowrap;
+    }
+    .bld-badge.wage  { background: #2d1a3a; color: #d2a8ff; }
+    .bld-badge.land  { background: #1a2d1a; color: #7ee787; }
+    .bld-badge.work  { background: #1c2a3a; color: #79c0ff; }
+    .bld-badge.cost  { background: #3a2500; color: #ffa657; }
+    .bld-badge.auto  { background: #162d22; color: #3fb950; }
+    .wage-col  { color: #d2a8ff; font-weight: 700; font-size: 12px; }
+    .maint-note { font-size: 10px; color: #6e7681; margin-top: 2px; }
+    .profit-detail { display: flex; flex-direction: column; gap: 1px; }
+    .profit-abs { font-size: 10px; color: #6e7681; }
+
     /* ── Inline editable inputs ─────────────────────────────────────── */
     .amt-inp, .labor-inp {
       width: 52px;
@@ -475,10 +497,10 @@
           <th>Здание</th>
           <th>Местность</th>
           <th>Входы</th>
-          <th>Цена&nbsp;выхода</th>
-          <th>Стоимость&nbsp;входов</th>
-          <th>Труд&nbsp;⚒</th>
-          <th>Рентабельность</th>
+          <th>Цена выхода</th>
+          <th>Затраты входов</th>
+          <th title="wage_rate × цена выхода — зарплата арендаторов/нанятых">Зарплата %</th>
+          <th title="(цена − затраты − зарплата) / цена — как в движке">Маржа</th>
           <th>Категория</th>
         </tr>
       </thead>
@@ -556,6 +578,7 @@
   <span>Товаров: <em id="s-goods">—</em></span>
   <span>Узких мест: <em id="s-bottlenecks">—</em></span>
   <span>Изменений: <em id="s-changes">0</em></span>
+  <span id="s-price-source" title="Источник цен для расчёта рентабельности"></span>
   <span id="s-filter"></span>
 </div>
 
@@ -614,6 +637,9 @@ function inputUsageCounts() {
   return c;
 }
 
+// Стоимость обслуживания одного здания за ход (из config.js)
+const MAINT = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
+
 function buildRows() {
   if (typeof BUILDING_RECIPES === 'undefined') return [];
   const usage = inputUsageCounts();
@@ -629,12 +655,33 @@ function buildRows() {
         const key = `${bld}|${recipe.output_good}|${inp.good}`;
         return { good: inp.good, amount: patches[key] !== undefined ? patches[key] : inp.amount, orig: inp.amount };
       });
-      const laborKey = `${bld}|${recipe.output_good}`;
-      const labor    = patchLabor[laborKey] !== undefined ? patchLabor[laborKey] : recipe.labor_cost_per_worker;
 
-      const outPrice  = G.base_price || 0;
-      const inCost    = inputs.reduce((s, i) => s + (goodData(i.good).base_price || 0) * i.amount, 0);
-      const profitPct = outPrice ? Math.round((outPrice - inCost - labor) / outPrice * 100) : 0;
+      // ── Реальные поля из BUILDINGS ──────────────────────────────────────
+      const wageRate      = B.wage_rate       ?? 0;    // доля выручки → зарплата
+      const footprintHa   = B.footprint_ha    ?? null; // га на единицу (уровень)
+      const workersPerUnit= B.workers_per_unit ?? null; // рабочих на единицу
+      const bldCost       = B.cost            ?? null; // стоимость постройки
+      const autonomousBy  = B.autonomous_builder ?? null;
+      const nationBuild   = B.nation_buildable !== false; // false = только классы
+
+      // ── Цены ────────────────────────────────────────────────────────────
+      // Приоритет: реальная рыночная цена из GAME_STATE (если страница открыта
+      // в контексте игры), иначе base_price из data/goods.js
+      const marketPrice = (typeof GAME_STATE !== 'undefined' && GAME_STATE.market?.[recipe.output_good]?.price);
+      const outPrice    = marketPrice || G.base_price || 0;
+
+      const inCost = inputs.reduce((s, i) => {
+        const iMarket = (typeof GAME_STATE !== 'undefined' && GAME_STATE.market?.[i.good]?.price);
+        return s + (iMarket || goodData(i.good).base_price || 0) * i.amount;
+      }, 0);
+
+      // ── Формула прибыли — как в движке ──────────────────────────────────
+      // wages    = outPrice × wage_rate  (tenant/wage арендаторы)
+      // profit   = outPrice − wages − inCost
+      // margin % = profit / outPrice × 100
+      const wages      = outPrice * wageRate;
+      const profitAbs  = outPrice - wages - inCost;
+      const profitPct  = outPrice ? Math.round(profitAbs / outPrice * 100) : 0;
 
       rows.push({
         bld, bldName: B.name || bld, bldIcon: B.icon || '🏗',
@@ -643,8 +690,10 @@ function buildRows() {
         outName: G.name || recipe.output_good,
         outIcon: G.icon || '📦',
         outCat:  G.category || 'material',
-        outPrice, inCost, profitPct,
-        inputs, labor,
+        outPrice, inCost, profitPct, profitAbs,
+        wages, wageRate,
+        footprintHa, workersPerUnit, bldCost, autonomousBy, nationBuild,
+        inputs,
         isRaw: recipe.inputs.length === 0,
         usage,
       });
@@ -706,8 +755,23 @@ function renderTable() {
     }
 
     // ── profitability ──
-    const pc  = profitClass(row.profitPct);
+    const pc    = profitClass(row.profitPct);
     const arrow = row.profitPct >= 0 ? '▲' : '▼';
+
+    // ── building detail badges ──
+    const badges = [];
+    if (row.footprintHa   != null) badges.push(`<span class="bld-badge land" title="га пашни на единицу (уровень)">📐 ${row.footprintHa} га</span>`);
+    if (row.workersPerUnit != null) badges.push(`<span class="bld-badge work" title="рабочих на единицу">👷 ${row.workersPerUnit}/ед</span>`);
+    if (row.bldCost        != null) badges.push(`<span class="bld-badge cost" title="стоимость постройки">🪙 ${row.bldCost}</span>`);
+    if (row.autonomousBy)           badges.push(`<span class="bld-badge auto" title="строит только этот класс">🤖 ${row.autonomousBy}</span>`);
+    const badgesHtml = badges.length ? `<div class="bld-badges">${badges.join('')}</div>` : '';
+
+    // ── wage cell ──
+    const wageLabel = row.wageRate > 0
+      ? `<span class="wage-col">${Math.round(row.wageRate * 100)}%</span>
+         <div class="maint-note">= ${row.wages.toFixed(1)} 💰 на ед.</div>
+         <div class="maint-note">содерж.: ${MAINT} 💰/здание/ход</div>`
+      : `<span style="color:#6e7681">—</span>`;
 
     return `<tr${hasBottleneck ? ' class="has-bottleneck"' : ''} data-row="${row.bld}|${row.output}">
       <td>
@@ -719,14 +783,22 @@ function renderTable() {
           </span>
         </div>
       </td>
-      <td><div class="bld-cell">${row.bldIcon} ${row.bldName}</div></td>
+      <td>
+        <div class="bld-detail">
+          <div class="bld-cell">${row.bldIcon} ${row.bldName}</div>
+          ${badgesHtml}
+        </div>
+      </td>
       <td>${terrainHtml(row.terrain)}</td>
       <td>${inpHtml}</td>
       <td class="px-out">${row.outPrice} 💰</td>
       <td id="cell-incost-${row.bld}-${row.output}" class="px-in">${row.inCost.toFixed(1)} 💰</td>
-      <td id="cell-labor-${row.bld}-${row.output}">${laborCell(row)}</td>
+      <td id="cell-wage-${row.bld}-${row.output}">${wageLabel}</td>
       <td id="cell-profit-${row.bld}-${row.output}">
-        <span class="profit ${pc}">${arrow} ${row.profitPct}%</span>
+        <div class="profit-detail">
+          <span class="profit ${pc}">${arrow} ${row.profitPct}%</span>
+          <span class="profit-abs">${row.profitAbs >= 0 ? '+' : ''}${row.profitAbs.toFixed(1)} 💰/ед</span>
+        </div>
       </td>
       <td>${catPill(row.outCat)}</td>
     </tr>`;
@@ -739,6 +811,12 @@ function renderTable() {
   document.getElementById('s-bottlenecks').textContent = bnCount;
   document.getElementById('s-filter').textContent      =
     currentFilter !== 'all' ? `Показано ${rows.length} из ${allRows.length}` : '';
+  const hasMarket = typeof GAME_STATE !== 'undefined' && !!GAME_STATE.market;
+  const priceEl = document.getElementById('s-price-source');
+  if (priceEl) {
+    priceEl.textContent = hasMarket ? '📈 Цены: рыночные (GAME_STATE)' : '📋 Цены: базовые (data/goods.js)';
+    priceEl.style.color = hasMarket ? '#7ee787' : '#8b949e';
+  }
 }
 
 // ── Labor cell helper ─────────────────────────────────────────────────
@@ -816,18 +894,21 @@ function recalcRow(bld, output) {
   if (!origRecipe) return;
 
   const G        = goodData(output);
-  const outPrice = G.base_price || 0;
-
-  const laborKey = `${bld}|${output}`;
-  const labor    = patchLabor[laborKey] !== undefined ? patchLabor[laborKey] : origRecipe.labor_cost_per_worker;
+  const B        = bldData(bld);
+  const marketPr = (typeof GAME_STATE !== 'undefined' && GAME_STATE.market?.[output]?.price);
+  const outPrice = marketPr || G.base_price || 0;
+  const wageRate = B.wage_rate ?? 0;
 
   const inCost = origRecipe.inputs.reduce((s, inp) => {
     const k   = `${bld}|${output}|${inp.good}`;
     const amt = patches[k] !== undefined ? patches[k] : inp.amount;
-    return s + (goodData(inp.good).base_price || 0) * amt;
+    const iMp = (typeof GAME_STATE !== 'undefined' && GAME_STATE.market?.[inp.good]?.price);
+    return s + (iMp || goodData(inp.good).base_price || 0) * amt;
   }, 0);
 
-  const profitPct = outPrice ? Math.round((outPrice - inCost - labor) / outPrice * 100) : 0;
+  const wages     = outPrice * wageRate;
+  const profitAbs = outPrice - wages - inCost;
+  const profitPct = outPrice ? Math.round(profitAbs / outPrice * 100) : 0;
   const pc        = profitClass(profitPct);
   const arrow     = profitPct >= 0 ? '▲' : '▼';
 
@@ -835,14 +916,11 @@ function recalcRow(bld, output) {
   if (cellIn) cellIn.textContent = `${inCost.toFixed(1)} 💰`;
 
   const cellPr = document.getElementById(`cell-profit-${bld}-${output}`);
-  if (cellPr) cellPr.innerHTML = `<span class="profit ${pc}">${arrow} ${profitPct}%</span>`;
-
-  // обновляем отображение значения труда в инпуте (значение уже в patchLabor)
-  const cellLb = document.getElementById(`cell-labor-${bld}-${output}`);
-  if (cellLb) {
-    const inp = cellLb.querySelector('input');
-    if (inp) inp.value = labor;
-  }
+  if (cellPr) cellPr.innerHTML = `
+    <div class="profit-detail">
+      <span class="profit ${pc}">${arrow} ${profitPct}%</span>
+      <span class="profit-abs">${profitAbs >= 0 ? '+' : ''}${profitAbs.toFixed(1)} 💰/ед</span>
+    </div>`;
 }
 
 function updateChangeCount() {
