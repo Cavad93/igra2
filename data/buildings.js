@@ -777,6 +777,7 @@ const BUILDINGS = {
     // Строится ТОЛЬКО классом farmers_class на накопленный капитал.
     // Игрок и AI нации НЕ могут строить это здание напрямую.
     autonomous_builder: 'farmers_class',
+    nation_buildable: false,
     // ── Масштабный коэффициент урожайности (эффективность на га) ──────────────
     // efficiency_mult × (workers/1000) × base_rate = итоговый выход
     // Базовый уровень: 5 чел × (2000/1000) × 1.0 = 10 ед./ход → 2 ед./га
@@ -833,6 +834,7 @@ const BUILDINGS = {
     // Строится ТОЛЬКО классом soldiers_class на накопленный капитал.
     // Игрок и AI нации НЕ могут строить это здание напрямую.
     autonomous_builder: 'soldiers_class',
+    nation_buildable: false,
     // ── Масштабный коэффициент ────────────────────────────────────────────────
     // (15/1000)×10000×1.3 = 195 пш/ход → 2.6 пш/га (×1.3 vs ферма)
     efficiency_mult: 1.3,
@@ -946,6 +948,7 @@ const BUILDINGS = {
     workers_per_unit: 8,
 
     autonomous_builder: 'soldiers_class',   // всадники заинтересованы в лошадях
+    nation_buildable: false,
     efficiency_mult: 1.0,
 
     // timber×4(88) + tools×2(70) = 158; labor=242 → ~400
@@ -984,6 +987,7 @@ const BUILDINGS = {
     workers_per_unit: 6,
 
     autonomous_builder: 'farmers_class',    // земледельцы держат скот
+    nation_buildable: false,
     efficiency_mult: 1.0,
 
     // timber×3(66) + tools×1(35) = 101; labor=149 → ~250
@@ -1162,6 +1166,7 @@ function getBuildingsForTerrain(terrain, region = null) {
   const regionTags = region?.tags || [];
   return Object.entries(BUILDINGS)
     .filter(([, b]) => {
+      if (b.nation_buildable === false) return false;
       if (b.terrain_restriction && !b.terrain_restriction.includes(terrain)) return false;
       if (b.region_tag_restriction) {
         // Скрываем провинциальные здания в регионах без нужного тега

@@ -1547,6 +1547,11 @@ function orderBuildingConstruction(nationId, regionId, buildingId) {
   const bDef = BUILDINGS[buildingId];
   if (!bDef) return { ok: false, reason: 'Здание не определено' };
 
+  // Здания с nation_buildable === false строятся только классами автономно
+  if (bDef.nation_buildable === false) {
+    return { ok: false, reason: `Это здание строится только классом (${bDef.autonomous_builder}), не нацией` };
+  }
+
   // Проверяем ограничения (terrain, tag, slots, уровень)
   const check = (typeof canBuildInRegion === 'function')
     ? canBuildInRegion(buildingId, region)
