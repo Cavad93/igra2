@@ -100,6 +100,21 @@ const BIOME_ARABLE = {
   semi_arid:           0.48,
 };
 
+// ── Земельные биомы регионов (из data/biomes.js REGION_BIOMES) ─
+// Используется ТОЛЬКО для проверки земельных ограничений,
+// не для расчёта производства (для производства — terrain из regions_data.js).
+const LAND_BIOME = {
+  '55': 'volcanic', '102': 'volcanic',
+  '245': 'mediterranean_coast', '247': 'mediterranean_coast',
+  '248': 'mediterranean_coast', '249': 'mediterranean_coast',
+  '763': 'mediterranean_coast',
+  '2402': 'semi_arid', '2407': 'semi_arid', '2408': 'semi_arid',
+  '2410': 'semi_arid', '2411': 'semi_arid', '2412': 'semi_arid',
+  '2414': 'semi_arid', '2415': 'mediterranean_coast', '2416': 'mediterranean_coast',
+  '2418': 'mediterranean_coast', '2419': 'mediterranean_coast',
+  '2420': 'semi_arid', '2423': 'semi_arid', '2424': 'semi_arid',
+};
+
 // ── Актуальные данные регионов (из data/regions_data.js) ────────
 // biome = terrain-тип из regions_data.js (как использует движок).
 // Точные значения: terrain, fertility, population — из исходных данных.
@@ -123,11 +138,11 @@ const SICILY_REGIONS = {
   r2407: { biome: 'hills',        fertility: 0.60, pop: 12000,
             villa: 54,   farm: 204,  lat: null },
   r2408: { biome: 'river_valley', fertility: 0.90, pop: 30000,
-            villa: 95,   farm: 406,  lat: 74 },
+            villa: 3,    farm: 11,   lat: 76 },
   r2410: { biome: 'coastal_city', fertility: 0.50, pop: 5000,
             villa: 38,   farm: 123,  lat: null },
   r2411: { biome: 'river_valley', fertility: 0.60, pop: 15000,
-            villa: 61,   farm: 236,  lat: 72 },
+            villa: 61,   farm: 236,  lat: 81 },
   r2412: { biome: 'coastal_city', fertility: 0.55, pop: 55000,
             villa: 150,  farm: 687,  lat: null },
   r2414: { biome: 'hills',        fertility: 0.60, pop: 35000,
@@ -143,7 +158,7 @@ const SICILY_REGIONS = {
   r2420: { biome: 'plains',       fertility: 0.60, pop: 10000,
             villa: 49,   farm: 181,  lat: 48 },
   r2423: { biome: 'river_valley', fertility: 0.60, pop: 7000,
-            villa: 43,   farm: 147,  lat: 34 },
+            villa: 43,   farm: 147,  lat: 53 },
   r2424: { biome: 'plains',       fertility: 0.55, pop: 5000,
             villa: 38,   farm: 123,  lat: 20 },
 };
@@ -295,7 +310,7 @@ assert(semiAridBonus === 0.45,
   `фактически: ${semiAridBonus}`);
 
 // 4. Проверка вклада латифундии r2408 (river_valley, fertility=0.9)
-const latLevel2408 = 74; // новый уровень после ребалансировки
+const latLevel2408 = 76; // уровень после ребалансировки
 const simpleNoPenalty = latLevel2408 * 864; // без fertility/terrain_bonus
 const realFertility = 0.9;
 const realOut = calcWheatOutput('wheat_latifundium', latLevel2408, 'river_valley', realFertility);
@@ -344,6 +359,28 @@ console.log(`     Достижение:                   ${achievePct.toFixed(1
 assert(achievePct >= 90,
   'Нетто-производство ≥ 90% целевого (потребление + 70k тонн профицита)',
   `${achievePct.toFixed(1)}%`);
+
+// 10. Проверка земельных ограничений: ни один регион не занимает >90% пашни
+console.log('\n── ЗЕМЕЛЬНЫЕ ОГРАНИЧЕНИЯ (≤ 90% пашни) ───────────────────────────────');
+let landViolations = 0;
+for (const [rid, r] of Object.entries(SICILY_REGIONS)) {
+  const numId = rid.replace('r', '');
+  const areaKm2 = REGION_AREAS[numId] || 0;
+  if (areaKm2 === 0) continue;
+  const landBiome = LAND_BIOME[numId];
+  if (!landBiome) continue;
+  const arableFactor = BIOME_ARABLE[landBiome] ?? 0.60;
+  const maxArableHa = areaKm2 * 100 * arableFactor;
+  const limit90 = maxArableHa * 0.90;
+  const wheatHa = (r.lat || 0) * 300 + (r.villa || 0) * 75 + (r.farm || 0) * 5;
+  const pct = (wheatHa / maxArableHa * 100).toFixed(1);
+  const ok = wheatHa <= limit90;
+  if (!ok) landViolations++;
+  console.log(`  ${rid.padEnd(7)}: wheat=${wheatHa}ha / 90%lim=${Math.round(limit90)}ha (${pct}%) ${ok ? '✓' : '❌ ПРЕВЫШЕНИЕ!'}`);
+}
+assert(landViolations === 0,
+  'Все регионы: площадь пшеничных зданий ≤ 90% пахотного фонда',
+  `нарушений: ${landViolations}`);
 
 // ═══════════════════════════════════════════════════════════
 // АНАЛИЗ TERRAIN BONUS ЭФФЕКТА
