@@ -1647,14 +1647,16 @@ function buildClassIncomeSection(nation) {
   const cipc  = eco.class_income_per_capita || {};
   const maint = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
 
+  // Population data for % share
+  const byProf  = nation.population?.by_profession || {};
+  const totalPop = Object.values(byProf).reduce((a, b) => a + b, 0) || 1;
+
   const allTypes = new Set();
   for (const types of Object.values(ibt)) {
     for (const t of Object.keys(types)) allTypes.add(t);
   }
-
-  if (allTypes.size === 0) {
-    return `<div class="cid-empty">Данные появятся после первого хода с активными зданиями</div>`;
-  }
+  // Always include known production types so filter buttons appear
+  for (const t of Object.keys(_PROD_TYPE_META)) allTypes.add(t);
 
   // Compute full P&L breakdown once
   const bd = _computeClassBreakdown(nation);
@@ -1676,46 +1678,49 @@ function buildClassIncomeSection(nation) {
     const clsTypes = ibt[cls]  || {};
     const clsBatt  = batt[cls] || {};
 
-    const visTypes = activeTypes.filter(t => (clsTypes[t] || 0) > 0);
-    if (visTypes.length === 0) return '';
+    // Population stats for this class
+    const clsPop    = byProf[cls] || 0;
+    const clsPopPct = totalPop > 0 ? (clsPop / totalPop * 100).toFixed(1) : '0.0';
+    const totalInc  = Object.values(clsTypes).reduce((s, v) => s + v, 0);
+    const perCap    = cipc[cls] ?? 0;
 
-    const totalInc = Object.values(clsTypes).reduce((s, v) => s + v, 0);
-    const perCap   = cipc[cls] ?? 0;
-
-    const battBars = visTypes.map(ptype => {
-      const meta    = _PROD_TYPE_META[ptype] || { icon: '📦', label: ptype };
-      const battVal = clsBatt[ptype] || 0;
-
-      let bThresh = 3000;
-      if (typeof BUILDINGS !== 'undefined') {
-        for (const [bid, bDef] of Object.entries(BUILDINGS)) {
-          if (bDef.autonomous_builder === cls && bid.startsWith(ptype + '_')) {
-            bThresh = (bDef.cost || 0) + 5 * 12 * maint;
-            break;
-          }
+    // For threshold lookup: collect once for all prod types
+    const threshByType = {};
+    if (typeof BUILDINGS !== 'undefined') {
+      for (const [bid, bDef] of Object.entries(BUILDINGS)) {
+        if (bDef.autonomous_builder !== cls) continue;
+        const pt = bid.split('_')[0];
+        if (!threshByType[pt]) {
+          threshByType[pt] = (bDef.cost || 0) + 5 * 12 * maint;
         }
       }
+    }
+
+    // All production types this class can invest in
+    const relevantTypes = activeTypes.filter(t => threshByType[t] !== undefined);
+
+    // Build one battery bar per production type, even if income=0
+    const battBars = relevantTypes.map(ptype => {
+      const meta    = _PROD_TYPE_META[ptype] || { icon: '📦', label: ptype };
+      const battVal = clsBatt[ptype] || 0;
+      const bThresh = threshByType[ptype] || 3000;
+      const typeInc = clsTypes[ptype] || 0;
 
       const pct    = Math.min(100, Math.round(battVal / bThresh * 100));
       const ready  = pct >= 100;
       const fillCl = ready ? '#4CAF50' : (pct > 60 ? '#FF9800' : '#5b8dd9');
 
-      const typeInc    = clsTypes[ptype] || 0;
-      const sharePct   = totalInc > 0 ? Math.round(typeInc / totalInc * 100) : 0;
-      const shareLabel = activeTypes.length > 1
-        ? ` <span class="cid-share">${sharePct}%</span>` : '';
-
       const expKey  = cls + '|' + ptype;
       const isOpen  = _cidExpanded.has(expKey);
       const chevron = isOpen ? '▲' : '▼';
-
       const breakdownHtml = isOpen ? _renderBreakdown(cls, ptype, bd) : '';
 
       return `
         <div class="cid-batt-row">
           <div class="cid-batt-label cid-clickable"
                onclick="_cidToggle('${cls}','${ptype}')">
-            <span>${meta.icon} ${meta.label}${shareLabel}
+            <span>${meta.icon} ${meta.label}
+              <span class="cid-batt-typeinc">${typeInc > 0 ? '+' + Math.round(typeInc).toLocaleString() + ' ₴/мес' : '—'}</span>
               <span class="cid-chevron">${chevron}</span>
             </span>
             <span class="cid-batt-nums">${Math.round(battVal).toLocaleString()} / ${bThresh.toLocaleString()} ₴
@@ -1730,15 +1735,29 @@ function buildClassIncomeSection(nation) {
         </div>`;
     }).join('');
 
+    const noData = relevantTypes.length === 0;
+
     return `
       <div class="cid-cls-card" style="border-color:${clsMeta.color}40">
         <div class="cid-cls-header">
           <span class="cid-cls-icon" style="color:${clsMeta.color}">${clsMeta.icon} ${clsMeta.label}</span>
-          <span class="cid-cls-inc">${totalInc.toLocaleString()} ₴/мес &nbsp;·&nbsp; ${perCap.toLocaleString()} ₴/чел</span>
+          <span class="cid-cls-stats">
+            <span class="cid-cls-pop" title="Численность класса">${clsPop.toLocaleString()} чел
+              <span class="cid-cls-poppct">${clsPopPct}% нации</span>
+            </span>
+            <span class="cid-cls-sep">·</span>
+            <span class="cid-cls-inc" title="Доход класса">${totalInc > 0 ? Math.round(totalInc).toLocaleString() + ' ₴/мес' : '—'}</span>
+            ${perCap > 0 ? `<span class="cid-cls-sep">·</span><span class="cid-cls-percap" title="Средний доход на человека">${perCap.toLocaleString()} ₴/чел</span>` : ''}
+          </span>
         </div>
-        ${battBars}
+        <div class="cid-cls-popbar">
+          <div class="cid-cls-popfill" style="width:${clsPopPct}%;background:${clsMeta.color}80"></div>
+        </div>
+        ${noData
+          ? `<div class="cid-batt-none">Нет активных зданий этого класса</div>`
+          : battBars}
       </div>`;
-  }).filter(Boolean).join('');
+  }).join('');
 
   return `
     <div class="cid-wrap">
@@ -1747,7 +1766,7 @@ function buildClassIncomeSection(nation) {
                 onclick="_popSetIncomeFilter(null)">Все типы</button>
         ${filterBtns}
       </div>
-      ${clsRows || '<div class="cid-empty">Нет данных по выбранному типу производства</div>'}
+      ${clsRows || '<div class="cid-empty">Нет данных по классам</div>'}
     </div>`;
 }
 

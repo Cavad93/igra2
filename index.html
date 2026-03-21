@@ -3546,11 +3546,37 @@
       padding: 10px 14px; margin-bottom: 8px;
     }
     .cid-cls-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 8px;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 4px; gap: 8px;
     }
-    .cid-cls-icon { font-size: 13px; font-weight: 600; }
-    .cid-cls-inc  { font-size: 11px; color: var(--positive, #4CAF50); }
+    .cid-cls-icon { font-size: 13px; font-weight: 600; white-space: nowrap; }
+    .cid-cls-stats {
+      display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+      justify-content: flex-end; font-size: 11px;
+    }
+    .cid-cls-pop  { color: rgba(255,255,255,.7); }
+    .cid-cls-poppct {
+      display: inline-block; background: rgba(255,255,255,.1);
+      border-radius: 3px; padding: 1px 5px; font-size: 10px; margin-left: 3px;
+      color: rgba(255,255,255,.5);
+    }
+    .cid-cls-sep  { color: rgba(255,255,255,.2); }
+    .cid-cls-inc  { color: var(--positive, #4CAF50); font-weight: 600; }
+    .cid-cls-percap { color: rgba(255,255,255,.45); }
+    /* Population share mini-bar */
+    .cid-cls-popbar {
+      height: 3px; background: rgba(255,255,255,.06); border-radius: 2px;
+      margin-bottom: 10px; overflow: hidden;
+    }
+    .cid-cls-popfill { height: 100%; border-radius: 2px; transition: width .5s ease; }
+    /* per-type income in battery label */
+    .cid-batt-typeinc {
+      font-size: 10px; color: var(--positive, #4CAF50); margin-left: 6px;
+    }
+    .cid-batt-none {
+      font-size: 11px; color: rgba(255,255,255,.25); padding: 6px 0 2px;
+      text-align: center; font-style: italic;
+    }
     .cid-batt-row { margin-bottom: 8px; }
     .cid-batt-label {
       display: flex; justify-content: space-between; align-items: baseline;
