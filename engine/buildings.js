@@ -2,9 +2,12 @@
 // ДВИЖОК ЗДАНИЙ — строительство, производство, зарплаты
 //
 // Порядок вызова в turn.js:
-//   1. processBuildingConstruction()   ← до runEconomyTick()
-//   2. runEconomyTick()               ← читает buildingProduction
-//   3. distributeWages(nationId)      ← после runEconomyTick(), для игрока
+//   1. processBuildingConstruction()        ← до runEconomyTick()
+//   2. runEconomyTick()                    ← читает buildingProduction
+//   3. distributeWages(nationId)           ← шаг 4а; пишет slot.wages_paid
+//   4. recomputeAllProductionCosts()       ← шаг 5; пишет slot.profit_last, revenue_last
+//   5. distributeClassIncome(nationId)     ← шаг 5б; читает актуальный profit_last
+//   6. deductFoodPurchases(nationId)       ← шаг 5в; вычитает еду из class_capital
 //
 // Ключевые концепции:
 //   • region.building_slots[]   — активные / строящиеся здания региона
@@ -678,8 +681,11 @@ function distributeWages(nationId) {
 //
 // Маршрутизирует прибыль зданий в системе классовой собственности.
 //
-// Читает slot.revenue_last / slot.wages_paid / slot.profit_last
-// (заполняются в updateBuildingFinancials + distributeWages на шагах 3–4).
+// Читает slot.revenue_last / slot.wages_paid / slot.profit_last.
+//   slot.wages_paid    — заполняется в updateBuildingFinancials (шаг 3).
+//   slot.revenue_last  — заполняется в recomputeAllProductionCosts (шаг 5).
+//   slot.profit_last   — заполняется в recomputeAllProductionCosts (шаг 5).
+// Вызывается ПОСЛЕ шага 5: все три поля принадлежат ТЕКУЩЕМУ тику.
 //
 // Обрабатывает ТОЛЬКО здания с bDef.autonomous_builder (пшеничные):
 //   wheat_family_farm, wheat_villa, wheat_latifundium.
@@ -703,7 +709,8 @@ function distributeWages(nationId) {
 //   updateTreasury вычитает его повторно через _building_maintenance_per_turn
 //   (~50 ден./здание/тик — допустимая погрешность для текущей версии).
 //
-// ВЫЗОВ: после distributeWages() в ШАГ 4 runEconomyTick().
+// ВЫЗОВ: ШАГ 5б — после recomputeAllProductionCosts(), до deductFoodPurchases().
+//   Перенесено из шага 4 чтобы читать profit_last ТЕКУЩЕГО тика.
 // ══════════════════════════════════════════════════════════════
 function distributeClassIncome(nationId) {
   const nation = GAME_STATE.nations[nationId];
@@ -868,7 +875,7 @@ function distributeClassIncome(nationId) {
 //   цена пшеницы поднимется (инфляция), что автоматически
 //   отразится в трёхзонной модели рынка.
 //
-// ВЫЗОВ: сразу после distributeClassIncome(), до updatePopWealth().
+// ВЫЗОВ: ШАГ 5в — сразу после distributeClassIncome() (class_capital уже пополнен).
 // ══════════════════════════════════════════════════════════════
 function deductFoodPurchases(nationId) {
   const nation = GAME_STATE.nations[nationId];

@@ -839,11 +839,12 @@ function evaluateCondition(value, condition) {
 //   2    calculateConsumption + updatePopSatisfied
 //   3    updateBuildingFinancials + applyBuildingAdaptiveBehavior
 //   4а   distributeWages
-//   4б   distributeClassIncome
-//   4в   updatePopWealth
+//   4б   updatePopWealth
 //   5    recomputeAllProductionCosts + updateMarketPrices
-//   5б   processAutonomousBuilding
-//   5в   checkClassBankruptcy
+//   5б   distributeClassIncome   ← после пересчёта profit_last
+//   5в   deductFoodPurchases
+//   5г   processAutonomousBuilding
+//   5д   checkClassBankruptcy
 //   6    processTrade + updateTreasury + applyActiveLaws + события
 //
 // updateProvinceControl (calculateProvinceControl) вызывается СНАРУЖИ
@@ -999,29 +1000,9 @@ function runEconomyTick() {
     }
   }
 
-  // ── 4б. КЛАССОВАЯ ЭКОНОМИКА ───────────────────────────────────────────────
-  // Читает slot.revenue_last / wages_paid / profit_last (готовы после шагов 3–4).
-  // Маршрутизирует:
-  //   nation-owned зерновые здания  → treasury
-  //   class-owned зерновые здания   → class_capital[owner]
-  //   арендная зарплата фермеров    → class_capital.farmers_class
-  //   военная зарплата солдат       → treasury → class_capital.soldiers_class
-  if (typeof distributeClassIncome === 'function') {
-    for (const nationId of Object.keys(GAME_STATE.nations)) {
-      try { distributeClassIncome(nationId); } catch (e) { console.warn('[class_income]', e); }
-    }
-  }
-
-  // ── 4в. МОНЕТАРНЫЕ РАСХОДЫ НА ПИТАНИЕ ───────────────────────────────────────
-  // Работники зданий тратят часть class_capital на покупку пшеницы с рынка.
-  // Subsistence-фермеры (не в зданиях) кормят себя напрямую — без транзакции.
-  // Вызов до updatePopWealth: изменения class_capital должны быть видны в wealth.
-  if (typeof deductFoodPurchases === 'function') {
-    for (const nationId of Object.keys(GAME_STATE.nations)) {
-      try { deductFoodPurchases(nationId); } catch (e) { console.warn('[food_purchases]', e); }
-    }
-  }
-
+  // ── 4б. WEALTH ────────────────────────────────────────────────────────────
+  // updatePopWealth зависит только от _wage_bonuses (шаг 4а) и рыночных цен.
+  // class_capital здесь не читается → можно вызывать до distributeClassIncome.
   if (typeof updatePopWealth === 'function') {
     for (const nationId of Object.keys(GAME_STATE.nations)) {
       try { updatePopWealth(nationId); } catch (e) { console.warn('[pops_wealth]', e); }
@@ -1029,7 +1010,7 @@ function runEconomyTick() {
   }
 
   // ════════════════════════════════════════════════════════════
-  // ШАГ 5: РЫНОК
+  // ШАГ 5: РЫНОК + ПРОИЗВОДСТВЕННЫЕ ЗАТРАТЫ
   //   5a. Сброс production_cost → чистый пересчёт по текущим ценам
   //   5b. Обновить price_floor = production_cost × 0.5
   //   5c. Алгоритм трёх зон (дефицит/баланс/избыток), Этап 2
@@ -1047,8 +1028,33 @@ function runEconomyTick() {
   // allActualConsumed = что реально вычтено (min(demanded, available))
   updateMarketPrices(allProduced, allActualConsumed);
 
+  // ── 5б. КЛАССОВАЯ ЭКОНОМИКА ───────────────────────────────────────────────
+  // Перенесено ПОСЛЕ recomputeAllProductionCosts: теперь slot.profit_last,
+  // slot.revenue_last, slot.costs_last содержат данные ТЕКУЩЕГО тика,
+  // что обеспечивает полное соответствие между числами в батарейках и P&L-разбивкой.
+  // Маршрутизирует:
+  //   nation-owned здания          → treasury
+  //   class-owned здания           → class_capital[owner]
+  //   арендная зарплата фермеров   → class_capital.farmers_class
+  //   военная зарплата солдат      → treasury → class_capital.soldiers_class
+  if (typeof distributeClassIncome === 'function') {
+    for (const nationId of Object.keys(GAME_STATE.nations)) {
+      try { distributeClassIncome(nationId); } catch (e) { console.warn('[class_income]', e); }
+    }
+  }
+
+  // ── 5в. МОНЕТАРНЫЕ РАСХОДЫ НА ПИТАНИЕ ────────────────────────────────────
+  // Работники зданий тратят часть class_capital на покупку пшеницы с рынка.
+  // Subsistence-фермеры (не в зданиях) кормят себя напрямую — без транзакции.
+  // Вызывается сразу после distributeClassIncome (class_capital уже пополнен).
+  if (typeof deductFoodPurchases === 'function') {
+    for (const nationId of Object.keys(GAME_STATE.nations)) {
+      try { deductFoodPurchases(nationId); } catch (e) { console.warn('[food_purchases]', e); }
+    }
+  }
+
   // ════════════════════════════════════════════════════════════
-  // ШАГ 5б: АВТОНОМНОЕ СТРОИТЕЛЬСТВО КЛАССОВ
+  // ШАГ 5г: АВТОНОМНОЕ СТРОИТЕЛЬСТВО КЛАССОВ
   //   Классы тратят class_capital на новые здания (после рынка —
   //   чтобы использовать актуальные цены при оценке прибыльности).
   //   Затем проверяем банкротства классов.
