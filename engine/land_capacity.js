@@ -146,19 +146,21 @@ function calcRegionLandCapacity(region, regionId) {
   // ── A: Непригодная земля (константа биома) ───────────────────────────────
   const unsuitable_ha = Math.round(total * params.unsuitable_pct);
 
-  // ── B: Земля под поселения (ДИНАМИЧЕСКАЯ — меняется с населением) ────────
+  // ── B: Земля под поселения (информационная, НЕ вычитается из пашни) ──────
+  // Исторически: города строились на холмах, побережье, склонах — не на
+  // пахотных равнинах. Поэтому settlement_ha не конкурирует с farmland.
   const settlement_ha = Math.round(pop * params.ha_per_person);
 
   // ── C: Обязательный резерв леса и пастбищ (константа биома) ─────────────
   const reserve_ha = Math.round(total * params.reserve_pct);
 
-  // ── D: Теоретический максимум пашни (без учёта населения) ───────────────
+  // ── D: Пахотный фонд региона (константа — зависит от площади и биома) ───
+  // settlement_ha НЕ вычитается: поселения занимают непригодную/склонную
+  // землю, а не пашню. Пашня — это только равнины и долины.
   const max_arable_ha = total - unsuitable_ha - reserve_ha;
+  const arable_ha     = max_arable_ha;   // одно значение, без динамики
 
-  // ── E: Фактически доступная пашня (с учётом населения) ──────────────────
-  const arable_ha = Math.max(0, max_arable_ha - settlement_ha);
-
-  // ── F: Занято зданиями ───────────────────────────────────────────────────
+  // ── E: Занято зданиями ───────────────────────────────────────────────────
   // Читаем footprint_ha из BUILDINGS[id] — единственный источник истины.
   const buildings_ha = (region.building_slots ?? [])
     .filter(s => s.status !== 'demolished')
@@ -166,36 +168,37 @@ function calcRegionLandCapacity(region, regionId) {
       return sum + getBuildingFootprint(s.building_id) * (s.level ?? 1);
     }, 0);
 
-  // ── G: Свободно для строительства ───────────────────────────────────────
+  // ── F: Свободно для строительства ───────────────────────────────────────
   const free_ha = Math.max(0, arable_ha - buildings_ha);
 
-  // ── H: Степень освоения (0.0 — пусто, 1.0 — полностью застроено) ────────
+  // ── G: Степень освоения (0.0 — пусто, 1.0 — полностью застроено) ────────
   const exploitation = arable_ha > 0
     ? Math.min(1.0, buildings_ha / arable_ha)
     : 1.0;
 
-  // ── I: Предупреждения ────────────────────────────────────────────────────
+  // ── H: Плотность населения (предупреждения) ──────────────────────────────
+  // settlement_ha используем только для информационных предупреждений,
+  // не как ограничитель строительства.
+  const pop_density = total > 0 ? Math.round(pop / (total / 100)) : 0; // чел/км²
   const warnings = [];
-  if (settlement_ha > max_arable_ha * 0.5) {
-    warnings.push('ПЕРЕНАСЕЛЕНИЕ: население занимает более 50% пашни');
+  if (settlement_ha > arable_ha * 0.8) {
+    warnings.push('ПЕРЕНАСЕЛЕНИЕ: жилая зона занимает более 80% пахотного фонда');
   }
-  if (free_ha < max_arable_ha * 0.05) {
+  if (free_ha < arable_ha * 0.05) {
     warnings.push('ЗЕМЛЯ ЗАКАНЧИВАЕТСЯ: осталось менее 5% свободной пашни');
-  }
-  if (settlement_ha > max_arable_ha) {
-    warnings.push('КРИЗИС: население вытеснило всю пашню — голод неизбежен');
   }
 
   return {
     total_ha:     total,
     unsuitable_ha,              // константа биома
-    settlement_ha,              // ДИНАМИЧЕСКАЯ — ключевая переменная
+    settlement_ha,              // информационно (не ограничивает строительство)
     reserve_ha,                 // константа биома
-    max_arable_ha,              // теоретический максимум без населения
-    arable_ha,                  // фактически доступная пашня
+    max_arable_ha,              // = arable_ha (сохранено для совместимости)
+    arable_ha,                  // пахотный фонд (константа биома + площади)
     buildings_ha,               // занято зданиями
     free_ha,                    // СВОБОДНО ДЛЯ СТРОИТЕЛЬСТВА
     exploitation,               // коэффициент освоения 0.0-1.0
+    pop_density,                // чел/км² (для отладки)
     warnings,
     biome,                      // для отладки
 

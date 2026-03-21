@@ -122,6 +122,7 @@ function _rbtLandBar(region) {
           свободно <b>${free.toLocaleString()}</b> га
         </span>
       </div>
+      ${land.settlement_ha > 0 ? `<div class="rbt-land-settlement">🏘 Поселения: ${land.settlement_ha.toLocaleString()} га</div>` : ''}
       ${hintsHtml}
     </div>
   `;
