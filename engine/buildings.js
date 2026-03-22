@@ -731,6 +731,10 @@ function distributeClassIncome(nationId) {
   // Сбрасываем доход по типам производства за этот тик (для UI батарейки)
   economy._class_income_by_type = {};
 
+  // Сбрасываем счётчик вовлечённых людей: только те, кто РЕАЛЬНО связан с производством
+  // (фермеры в конкретных полях, солдаты владеющие виллами, аристократы — латифундиями)
+  economy._class_workers_by_type = {};
+
   // Lazy init батарейки
   if (!economy._class_battery) economy._class_battery = {};
 
@@ -763,6 +767,14 @@ function distributeClassIncome(nationId) {
       const slotOwner  = slot.owner        ?? 'nation';
       const prodType   = slot.building_id  ? slot.building_id.split('_')[0] : null;
       const _ibt       = economy._class_income_by_type;
+      const _cwbt      = economy._class_workers_by_type;
+
+      // Вспомогательная функция: добавить вовлечённых людей к типу производства
+      const _addEngaged = (cls, ptype, count) => {
+        if (!ptype || count <= 0) return;
+        if (!_cwbt[cls]) _cwbt[cls] = {};
+        _cwbt[cls][ptype] = (_cwbt[cls][ptype] || 0) + count;
+      };
 
       if (slotOwner === 'farmers_class') {
         // ── Самозанятые земледельцы (семейная ферма) ────────────────────────
@@ -774,6 +786,8 @@ function distributeClassIncome(nationId) {
           if (prodType) {
             if (!_ibt.farmers_class) _ibt.farmers_class = {};
             _ibt.farmers_class[prodType] = (_ibt.farmers_class[prodType] || 0) + totalFarmerIncome;
+            // Вовлечены: только фермеры этой конкретной фермы
+            _addEngaged('farmers_class', prodType, slot.workers?.farmers ?? 0);
           }
         }
 
@@ -786,6 +800,8 @@ function distributeClassIncome(nationId) {
           if (prodType) {
             if (!_ibt.farmers_class) _ibt.farmers_class = {};
             _ibt.farmers_class[prodType] = (_ibt.farmers_class[prodType] || 0) + wages;
+            // Вовлечены: наёмные фермеры, получившие зарплату в этом слоте
+            _addEngaged('farmers_class', prodType, slot.workers?.farmers ?? 0);
           }
         }
 
@@ -802,6 +818,9 @@ function distributeClassIncome(nationId) {
             if (prodType) {
               if (!_ibt[slotOwner]) _ibt[slotOwner] = {};
               _ibt[slotOwner][prodType] = (_ibt[slotOwner][prodType] || 0) + profitLast;
+              // Вовлечены: все работники их слота (масштаб владения)
+              const slotWorkers = Object.values(slot.workers || {}).reduce((s, v) => s + v, 0);
+              _addEngaged(slotOwner, prodType, Math.max(1, slotWorkers));
             }
           }
         }
@@ -840,14 +859,13 @@ function distributeClassIncome(nationId) {
   }
 
   // ── Обновляем батарейки классов (прогресс к следующей инвестиции) ─────────
-  // Критическое условие: батарейка заполняется на средний доход ОДНОГО человека
-  // за ход (income / class_population), а не на всю сумму класса.
-  // Это гарантирует, что аристократ накапливает быстрее земледельца (высокий avg),
-  // а огромная армия солдат не заполняет батарейку мгновенно.
+  // Батарейка заполняется на avg_income вовлечённых людей, а не всего класса:
+  //   Аристократы → только работники их латифундий (масштаб владения)
+  //   Солдаты     → только работники их вилл
+  //   Земледельцы → только фермеры, реально занятые в данном типе производства
   {
     const _maint = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
     for (const [cls, types] of Object.entries(economy._class_income_by_type)) {
-      const clsPop = Math.max(1, classPops[cls] ?? 1);
       for (const [ptype, income] of Object.entries(types)) {
         let bThresh = 3000;
         for (const [bid, bDef] of Object.entries(BUILDINGS)) {
@@ -856,8 +874,9 @@ function distributeClassIncome(nationId) {
             break;
           }
         }
-        // Прогресс за ход = средний доход на душу (не общая сумма класса)
-        const perCapitaIncome = income / clsPop;
+        // Делитель — только вовлечённые в это производство, не весь класс
+        const engaged = Math.max(1, economy._class_workers_by_type?.[cls]?.[ptype] ?? 1);
+        const perCapitaIncome = income / engaged;
         if (!economy._class_battery[cls]) economy._class_battery[cls] = {};
         economy._class_battery[cls][ptype] = Math.min(
           (economy._class_battery[cls][ptype] || 0) + perCapitaIncome,
