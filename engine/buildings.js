@@ -1429,9 +1429,10 @@ function _estimateSlotProfitability(slot, bDef, region, nation) {
   // Создаём временный «идеальный» слот с production_eff=1 и полными рабочими
   const tempSlot = {
     ...slot,
-    production_eff: 1.0,
-    workers:        {},
-    _recipe_ratios: {},  // нет данных о входах → ratio = 1
+    production_eff:  1.0,
+    _capital_ratio:  1.0,  // предполагаем полное снабжение (нехватка ресурсов — временна)
+    workers:         {},
+    _recipe_ratios:  {},   // нет данных о входах → ratio = 1
   };
   for (const { profession: prof, count } of _getBuildingWorkerProfile(bDef, slot)) {
     tempSlot.workers[prof] = count;
@@ -1493,6 +1494,20 @@ function applyBuildingAdaptiveBehavior(nationId) {
           }
         }
         _restoreSlotWorkers(slot, bDef, 0.05, nation);  // +5%/тик — медленнее, чем -10%
+        continue;
+      }
+
+      // ── Приостановленное здание (eff=0, workers>0, streak 9–15): проверяем возобновление ─
+      // Без этой проверки здание навсегда застревает в паузе: eff=0 → доход=0 → убыток
+      // → streak растёт → закрытие. Оценка идёт при полной мощности (_capital_ratio=1.0).
+      const isPaused = (eff <= 0 && _slotTotalWorkers(slot) > 0);
+      if (isPaused) {
+        if (_estimateSlotProfitability(slot, bDef, region, nation)) {
+          slot.production_eff  = 1.0;
+          slot.loss_streak     = 0;
+          slot._recovery_accum = 0;
+          if (isPlayer) _logSlotEvent(slot, bDef, rid, '▶ возобновлено (экономика улучшилась).', 'info');
+        }
         continue;
       }
 
@@ -2132,6 +2147,11 @@ function initBuildingOwnership() {
       const nAristocr = Math.max(1, Math.round(nLat * 0.7));
       data.latifundia.forEach((slot, i) => {
         slot.owner = i < nAristocr ? 'aristocrats' : 'nation';
+        // Сбрасываем убытки/паузу — старое обслуживание (50×level) или нехватка
+        // capital_inputs могла закрыть латифундии. После исправления — открываем.
+        slot.loss_streak     = 0;
+        slot._recovery_accum = 0;
+        slot.production_eff  = 1.0;
       });
       report.push({
         nation: nId, cls: 'Аристократы', type: 'Латифундия',
