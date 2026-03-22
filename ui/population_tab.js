@@ -1511,7 +1511,6 @@ const _CLS_INCOME_META = {
 // ── Агрегированный P&L по классу + типу производства ─────────────────────
 // Читает GAME_STATE напрямую — вызывается только при открытом оверлее.
 function _computeClassBreakdown(nation) {
-  const maint = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
   // result[cls][ptype] = { count_own, revenue, wages_out, other_costs, profit_own,
   //                        wages_in, building_name }
   const result = {};
@@ -1645,8 +1644,6 @@ function buildClassIncomeSection(nation) {
   const ibt   = eco._class_income_by_type  || {};
   const batt  = eco._class_battery         || {};
   const cipc  = eco.class_income_per_capita || {};
-  const maint = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
-
   // Population data for % share
   const byProf  = nation.population?.by_profession || {};
   const totalPop = nation.population?.total || Object.values(byProf).reduce((a, b) => a + b, 0) || 1;
@@ -1695,7 +1692,10 @@ function buildClassIncomeSection(nation) {
         if (bDef.autonomous_builder !== cls) continue;
         const pt = bid.split('_')[0];
         if (!threshByType[pt]) {
-          threshByType[pt] = (bDef.cost || 0) + 5 * 12 * maint;
+          const maintPerUnit = (typeof _calcBuildingMaintenance === 'function')
+            ? _calcBuildingMaintenance(bDef, 1)
+            : (bDef.workers_per_unit ?? 5) * 2;
+          threshByType[pt] = (bDef.cost || 0) + 5 * 12 * maintPerUnit;
         }
       }
     }

@@ -516,6 +516,24 @@ function calculateBuildingRevenue(slot, region, nation) {
 }
 
 // ──────────────────────────────────────────────────────────────
+// ОБСЛУЖИВАНИЕ ЗДАНИЯ — динамический расчёт
+//
+// Обслуживание масштабируется с числом рабочих здания, а не фиксировано.
+// Формула: workers_per_unit × MAINTENANCE_PER_WORKER × level
+//
+// Итог (при MAINTENANCE_PER_WORKER = 2):
+//   wheat_family_farm (5 раб.)  →  10 ден/уровень  (было 50)
+//   wheat_villa       (15 раб.) →  30 ден/уровень  (было 50)
+//   wheat_latifundium (100 раб.)→ 200 ден/уровень  (было 50)
+// ──────────────────────────────────────────────────────────────
+function _calcBuildingMaintenance(bDef, level) {
+  const ratePerWorker = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.MAINTENANCE_PER_WORKER) ?? 2;
+  const workersPerUnit = bDef.workers_per_unit
+    ?? (bDef.worker_profession?.reduce((s, p) => s + p.count, 0) ?? 1);
+  return Math.max(1, workersPerUnit * ratePerWorker) * (level || 1);
+}
+
+// ──────────────────────────────────────────────────────────────
 // 6. РАСПРЕДЕЛЕНИЕ ЗАРПЛАТ
 //
 // Для каждого активного здания:
@@ -572,8 +590,6 @@ function distributeWages(nationId) {
   let totalWagesPaid   = 0;
   let totalMaintenance = 0;
 
-  const maintCost = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
-
   for (const rid of nation.regions) {
     const region = GAME_STATE.regions[rid];
     if (!region?.building_slots?.length) continue;
@@ -589,7 +605,7 @@ function distributeWages(nationId) {
       const laborType = bDef.labor_type ?? 'none';
       const level     = slot.level || 1;
       const wages     = revenue * wageRate;
-      const profit    = revenue - wages - maintCost * level;
+      const profit    = revenue - wages - _calcBuildingMaintenance(bDef, level);
 
       slot.revenue    = Math.round(revenue);
       slot.wages_paid = Math.round(wages);
@@ -598,9 +614,8 @@ function distributeWages(nationId) {
       // который затем направляется в казну через distributeClassIncome.
       // Добавлять их maintenance в _building_maintenance_per_turn нельзя —
       // это привело бы к двойному вычету из казны (БАГ 1).
-      // Также учитываем level: здание уровня N стоит N × maintCost (БАГ 9).
       if (!bDef.autonomous_builder) {
-        totalMaintenance += maintCost * level;
+        totalMaintenance += _calcBuildingMaintenance(bDef, level);
       }
 
       const totalWorkers = _slotTotalWorkers(slot);
@@ -870,13 +885,12 @@ function distributeClassIncome(nationId) {
   //   Солдаты     → только работники их вилл
   //   Земледельцы → только фермеры, реально занятые в данном типе производства
   {
-    const _maint = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
     for (const [cls, types] of Object.entries(economy._class_income_by_type)) {
       for (const [ptype, income] of Object.entries(types)) {
         let bThresh = 3000;
         for (const [bid, bDef] of Object.entries(BUILDINGS)) {
           if (bDef.autonomous_builder === cls && bid.startsWith(ptype + '_')) {
-            bThresh = (bDef.cost || 0) + 5 * 12 * _maint;
+            bThresh = (bDef.cost || 0) + 5 * 12 * _calcBuildingMaintenance(bDef, 1);
             break;
           }
         }
@@ -1034,8 +1048,6 @@ function _estimateSlotProfit(buildingId, region, nation) {
 
   const baseOut   = _calcSlotBaseOutput(tempSlot, region, nation);
   const market    = GAME_STATE.market;
-  const maintCost = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
-
   let gross = 0;
   for (const [g, amt] of Object.entries(baseOut)) {
     gross += amt * (market[g]?.price ?? 10);
@@ -1056,7 +1068,7 @@ function _estimateSlotProfit(buildingId, region, nation) {
     }
   }
 
-  return gross - inputCosts - wages - maintCost;
+  return gross - inputCosts - wages - _calcBuildingMaintenance(bDef, 1);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1116,9 +1128,8 @@ function processAutonomousBuilding(nationId) {
       const bDef = BUILDINGS[bid];
       if (!bDef) continue;
 
-      const _maint       = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
-      const prodType     = bid.split('_')[0];
-      const battThreshold = (bDef.cost || 0) + 5 * 12 * _maint;
+      const prodType      = bid.split('_')[0];
+      const battThreshold = (bDef.cost || 0) + 5 * 12 * _calcBuildingMaintenance(bDef, 1);
       const battery      = economy._class_battery?.[cls]?.[prodType] ?? 0;
       if (battery < battThreshold) continue;
       if (capital < (bDef.cost || 0)) continue;
@@ -1157,12 +1168,11 @@ function processAutonomousBuilding(nationId) {
 
     // Уменьшаем батарейку: стоимость + 1 год обслуживания (класс копит заново)
     {
-      const _maintPost = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
       const _ptPost    = bestBid.split('_')[0];
       if (!economy._class_battery)         economy._class_battery = {};
       if (!economy._class_battery[cls])    economy._class_battery[cls] = {};
       economy._class_battery[cls][_ptPost] = Math.max(0,
-        (economy._class_battery[cls][_ptPost] || 0) - (cost + 12 * _maintPost));
+        (economy._class_battery[cls][_ptPost] || 0) - (cost + 12 * _calcBuildingMaintenance(BUILDINGS[bestBid], 1)));
     }
 
     // Детерминированный slot_id: ход + регион + счётчик слотов (без Date.now())
@@ -1264,7 +1274,7 @@ function checkClassBankruptcy(nationId) {
 // Формула (Stage 4.2):
 //   input_costs   = Σ (actual_output × recipe.input.amount × input_price)
 //   wages         = gross_revenue × bDef.wage_rate
-//   maintenance   = CONFIG.BALANCE.BUILDING_MAINTENANCE × level
+//   maintenance   = _calcBuildingMaintenance(bDef, level)  (workers_per_unit × MAINTENANCE_PER_WORKER × level)
 //   net_profit    = gross_revenue − input_costs − wages − maintenance
 // ──────────────────────────────────────────────────────────────
 
@@ -1273,8 +1283,6 @@ function updateBuildingFinancials(nationId) {
   if (!nation) return;
 
   const market    = GAME_STATE.market;
-  const maintCost = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
-
   for (const rid of nation.regions) {
     const region = GAME_STATE.regions[rid];
     if (!region?.building_slots?.length) continue;
@@ -1286,7 +1294,7 @@ function updateBuildingFinancials(nationId) {
       if (!bDef) continue;
 
       const level         = slot.level || 1;
-      const maintenance   = maintCost * level;
+      const maintenance   = _calcBuildingMaintenance(bDef, level);
 
       // Выручка и зарплата (через существующую функцию)
       const gross_revenue = calculateBuildingRevenue(slot, region, nation);
@@ -1413,15 +1421,13 @@ function _estimateSlotProfitability(slot, bDef, region, nation) {
 
   const baseOut   = _calcSlotBaseOutput(tempSlot, region, nation);
   const market    = GAME_STATE.market;
-  const maintCost = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
-
   let gross = 0;
   for (const [g, amt] of Object.entries(baseOut)) {
     gross += amt * (market[g]?.price ?? 10);
   }
 
   const wages = gross * (bDef?.wage_rate ?? 0);
-  const maint = maintCost * (slot.level || 1);
+  const maint = _calcBuildingMaintenance(bDef, slot.level || 1);
 
   let inputCosts = 0;
   const recipes = (typeof BUILDING_RECIPES !== 'undefined')

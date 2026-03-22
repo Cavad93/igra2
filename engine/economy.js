@@ -615,15 +615,18 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     if (!region) continue;
     // Legacy: плоский список (не стены — они в expFortresses)
     if (region.buildings?.length) {
+      const legacyRate = CONFIG.BALANCE?.MAINTENANCE_PER_WORKER ?? 2;
       const nonWalls = region.buildings.filter(b => b !== 'walls').length;
-      expBuildings += nonWalls * CONFIG.BALANCE.BUILDING_MAINTENANCE;
+      expBuildings += nonWalls * legacyRate * 5; // ~5 рабочих на устаревшее здание
     }
     // Новые building_slots — только для AI (игрок учтён в distributeWages)
     if (nationId !== GAME_STATE.player_nation) {
-      const activeNonWall = (region.building_slots || []).filter(
-        s => s.status === 'active' && s.building_id !== 'walls' && s.building_id !== 'fortress'
-      ).length;
-      expBuildings += activeNonWall * CONFIG.BALANCE.BUILDING_MAINTENANCE;
+      for (const slot of (region.building_slots || [])) {
+        if (slot.status !== 'active') continue;
+        if (slot.building_id === 'walls' || slot.building_id === 'fortress') continue;
+        const bDef = (typeof BUILDINGS !== 'undefined') ? BUILDINGS[slot.building_id] : null;
+        if (bDef) expBuildings += _calcBuildingMaintenance(bDef, slot.level || 1);
+      }
     }
   }
   if (nationId === GAME_STATE.player_nation) {
