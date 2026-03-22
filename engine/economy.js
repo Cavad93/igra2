@@ -1391,10 +1391,11 @@ function _initEconomyPreview() {
     const totalIncome = taxTotal + portDuties;
 
     // ── Расходы ─────────────────────────────────────────────────────────
-    const expLvls  = eco.expense_levels || {};
-    const armyLvl  = expLvls.army  ?? 1.0;
-    const navyLvl  = expLvls.navy  ?? 1.0;
-    const courtLvl = expLvls.court ?? 1.0;
+    const expLvls   = eco.expense_levels || {};
+    const armyLvl   = expLvls.army   ?? 1.0;
+    const navyLvl   = expLvls.navy   ?? 1.0;
+    const courtLvl  = expLvls.court  ?? 1.0;
+    const slavesLvl = expLvls.slaves ?? 1.0;
 
     const expArmy = Math.round((
       (mil.infantry    || 0) * CONFIG.BALANCE.INFANTRY_UPKEEP  +
@@ -1409,7 +1410,9 @@ function _initEconomyPreview() {
 
     const stability   = gov.stability ?? 50;
     const expStab     = Math.round(200 * (1 - stability / 100));
-    const expSlaves   = Math.round((prof.slaves || 0) * CONFIG.BALANCE.SLAVE_UPKEEP);
+    // Применяем slavesLvl так же как updateTreasury — иначе на старте показывается 100%
+    const expSlavesBase = Math.round((prof.slaves || 0) * CONFIG.BALANCE.SLAVE_UPKEEP);
+    const expSlaves     = Math.round(expSlavesBase * slavesLvl);
 
     const totalExpense = expArmy + expNavy + expCourt + expStab + expSlaves;
 
@@ -1426,12 +1429,14 @@ function _initEconomyPreview() {
       total:           totalIncome,
     };
     eco._expense_breakdown = {
-      army:       expArmy,
-      navy:       expNavy,
-      court:      expCourt,
-      stability:  expStab,
-      slaves:     expSlaves,
-      total:      totalExpense,
+      army:        expArmy,
+      navy:        expNavy,
+      court:       expCourt,
+      stability:   expStab,
+      slaves:      expSlaves,
+      slaves_base: expSlavesBase,
+      slaves_level: slavesLvl,
+      total:       totalExpense,
     };
   }
 }

@@ -142,8 +142,61 @@ function applyTreasuryRates() {
   ecoRef._reform_events.push({ turn: turnNow });
   if (ecoRef._reform_events.length > 24) ecoRef._reform_events.shift();
 
+  // ── Немедленно обновляем _income_breakdown и _expense_breakdown ──────
+  // Иначе левая панель и заголовок казны показывают устаревшие ставки
+  // до следующего хода (updateTreasury обновит их только тогда).
+  _tpRefreshBreakdowns(nationId);
+
   _tpDirty = false;
   _tpRender();
+}
+
+// Пересчитывает _income_breakdown.total и _expense_breakdown с текущими ставками.
+// Вызывается после applyTreasuryRates() чтобы левая панель отражала новые настройки.
+function _tpRefreshBreakdowns(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return;
+  const eco  = nation.economy;
+  const inc  = eco._income_breakdown;
+  const exp  = eco._expense_breakdown;
+  if (!inc || !exp) return; // ещё не инициализировано
+
+  // Пересчитываем налоговый доход с новыми ставками
+  const rates = eco.tax_rates_by_class || {};
+  const newTaxAr = _tpIncomeFor('aristocrats', rates.aristocrats ?? 0);
+  const newTaxCl = _tpIncomeFor('clergy',      rates.clergy      ?? 0);
+  const newTaxCo = _tpIncomeFor('commoners',   rates.commoners   ?? 0);
+  const newTaxSo = _tpIncomeFor('soldiers',    rates.soldiers    ?? 0);
+  const newTaxTotal = newTaxAr + newTaxCl + newTaxCo + newTaxSo;
+  const newTotal = newTaxTotal + (inc.port_duties || 0) + (inc.trade_profit || 0) + (inc.building_profit || 0);
+
+  inc.tax_aristocrats = newTaxAr;
+  inc.tax_clergy      = newTaxCl;
+  inc.tax_commoners   = newTaxCo;
+  inc.tax_soldiers    = newTaxSo;
+  inc.total           = newTotal + (inc.soldier_salary || 0); // soldier_salary в доходах не участвует, но total левой панели = inc.total
+  // income.total = только приходы (зарплата солдат — расход, не доход)
+  inc.total = newTotal;
+
+  // Пересчитываем расходы рабов с новым slavesLvl
+  const lvls      = eco.expense_levels || {};
+  const slavesLvl = lvls.slaves ?? 1.0;
+  const slavesBase = exp.slaves_base ?? exp.slaves ?? 0;
+  exp.slaves       = Math.round(slavesBase * slavesLvl);
+  exp.slaves_level = slavesLvl;
+
+  // Пересчитываем total расходов: base categories + soldierSalary + foodSoldiers
+  const baseCats = (exp.army_infantry    || exp.army || 0)
+                 + (exp.army_cavalry     || 0)
+                 + (exp.army_mercenaries || 0)
+                 + (exp.navy             || 0)
+                 + (exp.court            || 0)
+                 + (exp.advisors         || 0)
+                 + (exp.stability        || 0)
+                 + (exp.fortresses       || 0)
+                 + (exp.buildings        || 0)
+                 + exp.slaves;
+  exp.total = baseCats + (exp.soldier_salary || 0) + (exp.food_soldiers || 0);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -350,10 +403,15 @@ function _tpRenderExpenses() {
   const bldBase    = exp.buildings_base  ?? (exp.buildings  ?? 0);
   const slavBase   = exp.slaves_base     ?? (exp.slaves     ?? 0);
 
+  // Скрытые расходы — выплачиваются вне updateTreasury, не управляются слайдерами
+  const soldierSalary = exp.soldier_salary || 0;
+  const foodSoldiers  = exp.food_soldiers  || 0;
+
   const totalAll = effOf('army', armyBase) + effOf('navy', navyBase)
     + effOf('court', courtBase) + effOf('stability', stabilBase)
     + effOf('fortresses', fortBase) + effOf('buildings', bldBase)
-    + effOf('slaves', slavBase);
+    + effOf('slaves', slavBase)
+    + soldierSalary + foodSoldiers;
 
   const sign = v => v >= 0 ? '+' : '';
 
@@ -422,6 +480,23 @@ function _tpRenderExpenses() {
       ${bldSlider}
       ${slaveSlider}
     </div>
+
+    ${(soldierSalary > 0 || foodSoldiers > 0) ? `
+    <div class="tp-divider"></div>
+
+    <div class="tp-subsection">
+      <div class="tp-sub-label">Прямые выплаты</div>
+      ${soldierSalary > 0 ? `
+      <div class="tp-row-item">
+        <span class="tp-item-label">⚔️ Жалованье солдат</span>
+        <span class="tp-item-value tp-val-neg">${soldierSalary.toLocaleString()} ₴</span>
+      </div>` : ''}
+      ${foodSoldiers > 0 ? `
+      <div class="tp-row-item">
+        <span class="tp-item-label">🌾 Продовольствие армии</span>
+        <span class="tp-item-value tp-val-neg">${foodSoldiers.toLocaleString()} ₴</span>
+      </div>` : ''}
+    </div>` : ''}
 
     <div class="tp-row-total">
       <span class="tp-item-label">Итого расходов</span>
