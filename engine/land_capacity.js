@@ -168,12 +168,20 @@ function calcRegionLandCapacity(region, regionId) {
       return sum + getBuildingFootprint(s.building_id) * (s.level ?? 1);
     }, 0);
 
-  // ── F: Свободно для строительства ───────────────────────────────────────
-  const free_ha = Math.max(0, arable_ha - buildings_ha);
+  // ── F: Жёсткий лимит застройки — не более 70% площади региона ──────────
+  // Критическое условие: здания (все, любого типа) в сумме не должны
+  // занимать более 70% полной площади региона (total_ha), а не только пашни.
+  const MAX_BUILDING_PCT  = 0.70;
+  const max_buildings_ha  = Math.floor(total * MAX_BUILDING_PCT);
+
+  // Реальный лимит свободной земли = минимум из пашни и 70%-порога.
+  const buildable_ha = Math.min(arable_ha, max_buildings_ha);
+  const free_ha      = Math.max(0, buildable_ha - buildings_ha);
 
   // ── G: Степень освоения (0.0 — пусто, 1.0 — полностью застроено) ────────
-  const exploitation = arable_ha > 0
-    ? Math.min(1.0, buildings_ha / arable_ha)
+  // Считаем относительно жёсткого лимита (70% площади), а не только пашни.
+  const exploitation = max_buildings_ha > 0
+    ? Math.min(1.0, buildings_ha / max_buildings_ha)
     : 1.0;
 
   // ── H: Плотность населения (предупреждения) ──────────────────────────────
@@ -184,8 +192,10 @@ function calcRegionLandCapacity(region, regionId) {
   if (settlement_ha > arable_ha * 0.8) {
     warnings.push('ПЕРЕНАСЕЛЕНИЕ: жилая зона занимает более 80% пахотного фонда');
   }
-  if (free_ha < arable_ha * 0.05) {
-    warnings.push('ЗЕМЛЯ ЗАКАНЧИВАЕТСЯ: осталось менее 5% свободной пашни');
+  if (buildings_ha >= max_buildings_ha) {
+    warnings.push('ЛИМИТ ЗАСТРОЙКИ: здания занимают 70% площади региона — строительство запрещено');
+  } else if (free_ha < buildable_ha * 0.05) {
+    warnings.push('ЗЕМЛЯ ЗАКАНЧИВАЕТСЯ: осталось менее 5% от допустимого лимита застройки');
   }
 
   return {
@@ -195,9 +205,11 @@ function calcRegionLandCapacity(region, regionId) {
     reserve_ha,                 // константа биома
     max_arable_ha,              // = arable_ha (сохранено для совместимости)
     arable_ha,                  // пахотный фонд (константа биома + площади)
+    max_buildings_ha,           // ЖЁСТКИЙ ЛИМ: 70% от total_ha
+    buildable_ha,               // эффективный лимит = min(arable_ha, max_buildings_ha)
     buildings_ha,               // занято зданиями
-    free_ha,                    // СВОБОДНО ДЛЯ СТРОИТЕЛЬСТВА
-    exploitation,               // коэффициент освоения 0.0-1.0
+    free_ha,                    // СВОБОДНО ДЛЯ СТРОИТЕЛЬСТВА (с учётом 70%-лимита)
+    exploitation,               // коэффициент освоения 0.0-1.0 (отн. 70%-лимита)
     pop_density,                // чел/км² (для отладки)
     warnings,
     biome,                      // для отладки

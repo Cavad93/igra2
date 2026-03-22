@@ -82,13 +82,15 @@ function _rbtLandBar(region) {
     return '<div class="rbt-land rbt-land--nodata">📐 Земельные данные недоступны</div>';
   }
 
-  const used  = land.buildings_ha  || 0;
-  const total = land.arable_ha;
-  const free  = land.free_ha       || 0;
-  const pct   = Math.min(100, Math.round(used / total * 100));
+  const used    = land.buildings_ha    || 0;
+  // Лимит застройки = 70% от total_ha (жёсткое ограничение)
+  const limit   = land.max_buildings_ha || land.arable_ha;
+  const free    = land.free_ha          || 0;
+  const total   = land.total_ha         || land.arable_ha;
+  const pct     = Math.min(100, Math.round(used / limit * 100));
 
-  // Цвет полосы по степени заполнения
-  const tier = pct >= 90 ? 'red' : pct >= 70 ? 'yellow' : 'green';
+  // Цвет полосы по степени заполнения (относительно 70%-лимита)
+  const tier = pct >= 95 ? 'red' : pct >= 75 ? 'yellow' : 'green';
 
   // Подсказки: сколько единиц каждого пшеничного типа ещё влезет
   const hints = [];
@@ -113,10 +115,11 @@ function _rbtLandBar(region) {
     <div class="rbt-land">
       <div class="rbt-land-track">
         <div class="rbt-land-fill rbt-land-fill--${tier}" style="width:${pct}%"></div>
+        <div class="rbt-land-limit-marker" title="Лимит 70% площади региона" style="left:100%"></div>
       </div>
       <div class="rbt-land-row">
         <span class="rbt-land-stat">
-          <b>${used.toLocaleString()}</b> га занято из <b>${total.toLocaleString()}</b> га
+          <b>${used.toLocaleString()}</b> га занято из <b>${limit.toLocaleString()}</b> га (лимит 70% от ${total.toLocaleString()} га)
         </span>
         <span class="rbt-land-free rbt-land-free--${tier}">
           свободно <b>${free.toLocaleString()}</b> га
