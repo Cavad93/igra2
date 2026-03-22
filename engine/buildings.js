@@ -839,9 +839,9 @@ function distributeClassIncome(nationId) {
             if (prodType) {
               if (!_ibt[slotOwner]) _ibt[slotOwner] = {};
               _ibt[slotOwner][prodType] = (_ibt[slotOwner][prodType] || 0) + profitLast;
-              // Вовлечены: все работники их слота (масштаб владения)
-              const slotWorkers = Object.values(slot.workers || {}).reduce((s, v) => s + v, 0);
-              _addEngaged(slotOwner, prodType, Math.max(1, slotWorkers));
+              // Вовлечены: количество единиц здания (1 слот = 1 владелец на уровень)
+              // Делитель — число ВЛАДЕЛЬЦЕВ, а не наёмных рабочих в слоте
+              _addEngaged(slotOwner, prodType, slot.level || 1);
             }
           }
         }
