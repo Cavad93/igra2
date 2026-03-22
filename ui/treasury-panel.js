@@ -213,7 +213,8 @@ function _tpRenderIncome() {
   const taxTotal     = _tpTaxTotal();
   const portDuties     = inc.port_duties     || 0;
   const tradeProfit    = inc.trade_profit    || 0;
-  const buildingProfit = inc.building_profit || 0;
+  const buildingProfit      = inc.building_profit      || 0;
+  const stateBuildingCount  = inc.state_building_count || 0;
   const totalPreview   = taxTotal + portDuties + tradeProfit + buildingProfit;
 
   return `
@@ -234,10 +235,10 @@ function _tpRenderIncome() {
       <span class="tp-item-label">⚓ Портовые пошлины</span>
       <span class="tp-item-value">${portDuties.toLocaleString()} ₴</span>
     </div>
-    ${buildingProfit > 0 ? `
+    ${stateBuildingCount > 0 ? `
     <div class="tp-row-item">
       <span class="tp-item-label">🏛 Гос. здания</span>
-      <span class="tp-item-value">${buildingProfit.toLocaleString()} ₴</span>
+      <span class="tp-item-value${buildingProfit <= 0 ? ' tp-val-neg' : ''}">${buildingProfit > 0 ? '+' : ''}${buildingProfit.toLocaleString()} ₴</span>
     </div>` : ''}
 
     <div class="tp-row-total">
@@ -582,7 +583,8 @@ function _tpRender() {
   const taxTotal       = _tpTaxTotal();
   const portDuties     = inc.port_duties     || 0;
   const tradeProfit    = inc.trade_profit    || 0;
-  const buildingProfit = inc.building_profit || 0;
+  const buildingProfit     = inc.building_profit      || 0;
+  const stateBuildingCount = inc.state_building_count || 0;
   const totalInc       = taxTotal + portDuties + tradeProfit + buildingProfit;
   const totalExp    = exp.total || eco.expense_per_turn || 0;
   const balance     = totalInc - totalExp;

@@ -723,8 +723,9 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     tax_soldiers:    taxByClass.soldiers,
     trade_profit:    Math.round(effTradeProfit),
     port_duties:     Math.round(effPortDuties),
-    building_profit: buildingProfit,
-    total:           Math.round(totalIncome) + buildingProfit,
+    building_profit:       buildingProfit,
+    state_building_count:  nation.economy._state_building_active_count || 0,
+    total:                 Math.round(totalIncome) + buildingProfit,
   });
   applyDelta(`nations.${nationId}.economy._expense_breakdown`, {
     army_infantry:     effArmyInf,

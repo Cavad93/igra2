@@ -727,6 +727,7 @@ function distributeClassIncome(nationId) {
 
   // Сбрасываем накопленную прибыль госзданий за этот тик
   economy._building_profit_last_tick = 0;
+  economy._state_building_active_count = 0;
 
   // Сбрасываем доход по типам производства за этот тик (для UI батарейки)
   economy._class_income_by_type = {};
@@ -803,6 +804,11 @@ function distributeClassIncome(nationId) {
             // Вовлечены: наёмные фермеры, получившие зарплату в этом слоте
             _addEngaged('farmers_class', prodType, slot.workers?.farmers ?? 0);
           }
+        }
+
+        // Считаем активные государственные здания (включая убыточные)
+        if (slotOwner === 'nation') {
+          economy._state_building_active_count = (economy._state_building_active_count || 0) + 1;
         }
 
         // Чистая прибыль → владельцу здания
