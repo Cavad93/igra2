@@ -23,6 +23,19 @@ const _BALANCE_SENS      = 0.05;   // чувствительность зоны 
 const _SURPLUS_RATE      = 0.03;   // скорость снижения цены в зоне избытка
 const _DEFICIT_INTENSITY = 0.10;   // базовый множитель дельты в зоне дефицита
 
+// Компенсация ненаписанных наций.
+// Пока не все нации/регионы реализованы, реальный спрос занижен:
+// производство есть, потребителей нет → хронический избыток.
+// Множитель искусственно увеличивает demand-сторону баланса,
+// имитируя спрос тех наций, которые ещё не добавлены в игру.
+//
+// Как подбирать:
+//   1.0 = все нации написаны, балансировать нечего
+//   2.0 = реализована примерно половина наций
+//   3.0 = реализована ~треть (текущее состояние разработки)
+// Убирать постепенно по мере добавления новых наций.
+const _MISSING_NATIONS_DEMAND_MULT = 3.0;
+
 // ──────────────────────────────────────────────────────────────
 // updateMarketPrices(totalProduced, totalConsumed)
 //
@@ -64,19 +77,27 @@ function updateMarketPrices(totalProduced, totalConsumed) {
     const elasticity     = goodDef?.price_elasticity      ?? 1.0;
     const base           = market.base;
 
-    // Инициализация мирового склада при первом тике
+    // Инициализация мирового склада при первом тике.
+    // Берём max(supply, demand) — не заглушку 1000 из nations.js,
+    // а реальный объём производства/потребления первого тика.
     if (market.world_stockpile == null) {
-      market.world_stockpile = demand * targetTurns; // начинаем «в норме»
+      market.world_stockpile = Math.max(supply, demand) * targetTurns;
     }
 
     // ── 2a. Обновляем мировой склад ──────────────────────────────────────
-    market.world_stockpile = Math.max(0, market.world_stockpile + supply - demand);
-    const stockpileTarget = Math.max(1, demand * targetTurns);
+    // effectiveDemand учитывает ненаписанные нации: пока они не добавлены,
+    // их потребление отсутствует, но производство реализованных наций есть.
+    const effectiveDemand = demand * _MISSING_NATIONS_DEMAND_MULT;
+    market.world_stockpile = Math.max(0, market.world_stockpile + supply - effectiveDemand);
+    const stockpileTarget = Math.max(1, effectiveDemand * targetTurns);
 
     // ── 2b. Нижняя граница цены (production_cost из рецептов) ────────────
+    // Флор = max(себестоимость×0.5, base×0.5) — никогда не падает ниже
+    // base×0.5, чтобы не возникала петля: цена↓ → себестоимость↓ → флор↓ → цена↓
+    const baseFloor = base * 0.5;
     const floor   = (market.production_cost != null)
-                    ? market.production_cost * 0.5
-                    : base * 0.5;
+                    ? Math.max(market.production_cost * 0.5, baseFloor)
+                    : baseFloor;
     const ceiling = base * 10;
     market.price_floor = floor;  // обновляем для UI / step 3
 
