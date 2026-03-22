@@ -1542,7 +1542,7 @@ function _computeClassBreakdown(nation) {
           wages_in: 0, building_name: bDef.name,
         };
         const d = result.farmers_class[ptype];
-        d.count_own++;
+        d.count_own += level;
         d.revenue_own += rev;
         d.costs_own   += other;
         d.income_own  += wages + Math.max(0, profit); // totalFarmerIncome
@@ -1555,7 +1555,7 @@ function _computeClassBreakdown(nation) {
           building_name: bDef.name,
         };
         const d = result[owner][ptype];
-        d.count_own++;
+        d.count_own += level;
         d.revenue     += rev;
         d.wages_out   += wages;
         d.other_costs += other;
