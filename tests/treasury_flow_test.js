@@ -467,6 +467,79 @@ section('ПОРЯДОК: profit_last вычисляется до distributeClass
 })();
 
 // ══════════════════════════════════════════════════════════════
+// БАГ-D: Батарейка farmers_class раздута зарплатами от вилл
+// ══════════════════════════════════════════════════════════════
+section('БАГ-D: perCapitaIncome батарейки земледельцев завышен зарплатами вилл');
+
+(function testBatteryInflatedByVillaWages() {
+  // Реальные числа из UI:
+  //   Доход своих ферм:   105 170 ₴  (ферм: 3196 ур.)
+  //   Зарплата от вилл:   338 780 ₴  (вилла ~848 ур. × 15 фермеров/ур.)
+  //   Итого класс:        443 950 ₴
+  //
+  // СЛОМАННАЯ батарейка = (105 170 + 338 780) / (3196 + ~915) = 443 950 / 4111 ≈ 108
+  // ИСПРАВЛЕННАЯ        =  105 170             /  3196              ≈ 32.87
+  //
+  // Разница: 108 / 32.87 = 3.29× — батарейка заполняется в 3× быстрее, чем нужно.
+
+  const farmIncome    = 105170;  // income от слотов slotOwner==='farmers_class'
+  const villaWages    = 338780;  // wages от villa/lat → farmers_class
+  const farmLevels    = 3196;    // уровни ферм (engaged own)
+  const villaLevels   = 915;     // уровни вилл (engaged hired)
+
+  const bThresh = 700;           // bDef.cost(100) + 5×12×maint(10) = 700
+
+  // ── СЛОМАННАЯ ЛОГИКА: villa wages + villa levels в батарейке ──────────────
+  function batteryIncrement_BROKEN(farmInc, villaWg, farmLvl, villaLvl) {
+    const income   = farmInc + villaWg;     // оба источника в числителе
+    const engaged  = farmLvl + villaLvl;    // оба типа уровней в знаменателе
+    return income / engaged;
+  }
+
+  // ── ИСПРАВЛЕННАЯ ЛОГИКА: только своё производство ────────────────────────
+  function batteryIncrement_FIXED(farmInc, _villaWg, farmLvl, _villaLvl) {
+    return farmInc / farmLvl;              // только фермы → только фермы
+  }
+
+  const brokenRate = batteryIncrement_BROKEN(farmIncome, villaWages, farmLevels, villaLevels);
+  const fixedRate  = batteryIncrement_FIXED(farmIncome,  villaWages, farmLevels, villaLevels);
+
+  // Проверяем что сломанная логика ≈ 108 (как в UI)
+  assert(Math.abs(brokenRate - 108) < 1,
+    '[BAG-D] Сломанная батарейка ≈ 108 ₴/тик (как в UI)',
+    `${brokenRate.toFixed(2)} ₴`);
+
+  // Проверяем что исправленная логика ≈ 32.87 (ожидание пользователя)
+  assert(Math.abs(fixedRate - 32.87) < 0.1,
+    '[BAG-D] Исправленная батарейка ≈ 32.87 ₴/тик (совпадает с расчётом пользователя)',
+    `${fixedRate.toFixed(2)} ₴`);
+
+  // Коэффициент завышения
+  const inflation = brokenRate / fixedRate;
+  assert(inflation > 3.2 && inflation < 3.4,
+    `[BAG-D] Завышение: сломанная в ${inflation.toFixed(2)}× быстрее исправленной`);
+
+  // Время заполнения батарейки до порога 700 ₴
+  const ticksBroken = bThresh / brokenRate;
+  const ticksFixed  = bThresh / fixedRate;
+  console.log(`\n  ℹ  Время заполнения батарейки (порог ${bThresh} ₴):`);
+  console.log(`     Сломанная: ${ticksBroken.toFixed(1)} тиков (~${(ticksBroken/12).toFixed(1)} лет) — СЛИШКОМ БЫСТРО`);
+  console.log(`     Исправленная: ${ticksFixed.toFixed(1)} тиков (~${(ticksFixed/12).toFixed(1)} лет) — реалистично`);
+
+  assert(ticksBroken < 10,
+    `[BAG-D] Сломанная: новая ферма строится каждые ${ticksBroken.toFixed(1)} тиков (~${(ticksBroken).toFixed(0)} мес) — слишком часто`);
+  assert(ticksFixed > 15,
+    `[BAG-D] Исправленная: новая ферма строится каждые ${ticksFixed.toFixed(1)} тиков (~${(ticksFixed).toFixed(0)} мес) — реалистично`);
+
+  // class_capital ПРОДОЛЖАЕТ получать villa wages (это корректно)
+  let cc_farmers = 0;
+  cc_farmers += farmIncome;   // от своих ферм
+  cc_farmers += villaWages;   // от найма на виллы
+  assertEqual(cc_farmers, farmIncome + villaWages,
+    '[BAG-D] class_capital.farmers_class всё равно получает ПОЛНЫЙ доход (фермы + зарплаты вилл)');
+})();
+
+// ══════════════════════════════════════════════════════════════
 // ИТОГИ
 // ══════════════════════════════════════════════════════════════
 console.log('\n' + '═'.repeat(65));
