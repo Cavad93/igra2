@@ -619,13 +619,18 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
       const nonWalls = region.buildings.filter(b => b !== 'walls').length;
       expBuildings += nonWalls * legacyRate * 5; // ~5 рабочих на устаревшее здание
     }
-    // Новые building_slots — только для AI (игрок учтён в distributeWages)
+    // Новые building_slots — только для AI (игрок учтён в distributeWages).
+    // БАГ-B FIX: autonomous_builder здания (wheat_*) пропускаем — их обслуживание
+    // уже вычтено внутри profit_last, который поступает в казну через distributeClassIncome.
+    // Включать их сюда → двойной вычет из AI-казны (~15 200 ₴/тик за 76 латифундий).
     if (nationId !== GAME_STATE.player_nation) {
       for (const slot of (region.building_slots || [])) {
         if (slot.status !== 'active') continue;
         if (slot.building_id === 'walls' || slot.building_id === 'fortress') continue;
         const bDef = (typeof BUILDINGS !== 'undefined') ? BUILDINGS[slot.building_id] : null;
-        if (bDef) expBuildings += _calcBuildingMaintenance(bDef, slot.level || 1);
+        if (bDef && !bDef.autonomous_builder) {
+          expBuildings += _calcBuildingMaintenance(bDef, slot.level || 1);
+        }
       }
     }
   }

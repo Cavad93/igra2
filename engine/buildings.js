@@ -826,15 +826,19 @@ function distributeClassIncome(nationId) {
           economy._state_building_active_count = (economy._state_building_active_count || 0) + 1;
         }
 
-        // Чистая прибыль → владельцу здания
-        if (profitLast > 0) {
-          if (slotOwner === 'nation') {
-            // Государственная латифундия: прибыль прямо в казну
-            economy.treasury = (economy.treasury || 0) + profitLast;
-            economy._building_profit_last_tick = (economy._building_profit_last_tick || 0) + profitLast;
-          } else if (cc[slotOwner] !== undefined) {
-            // Классовая собственность: аристократы / солдаты
-            cc[slotOwner]         = (cc[slotOwner] || 0) + profitLast;
+        // Чистая прибыль (или убыток) → владельцу здания.
+        // БАГ-A FIX: убыток (profitLast < 0) тоже применяется — без guard на > 0.
+        //   nation-owned: убыток вычитается из казны (государство несёт расходы).
+        //   class-owned:  убыток снижает class_capital владельца (класс несёт убыток).
+        if (slotOwner === 'nation') {
+          // Государственная латифундия: прибыль/убыток прямо в/из казны
+          economy.treasury = (economy.treasury || 0) + profitLast;
+          economy._building_profit_last_tick = (economy._building_profit_last_tick || 0) + profitLast;
+        } else if (cc[slotOwner] !== undefined) {
+          // Классовая собственность: аристократы / солдаты — всегда, даже убыток
+          cc[slotOwner]         = (cc[slotOwner] || 0) + profitLast;
+          if (profitLast > 0) {
+            // В батарейки и incomeTick записываем только прибыль (для UI battery)
             incomeTick[slotOwner] = (incomeTick[slotOwner] || 0) + profitLast;
             if (prodType) {
               if (!_ibt[slotOwner]) _ibt[slotOwner] = {};
