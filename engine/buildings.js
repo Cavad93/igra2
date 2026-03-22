@@ -2210,7 +2210,32 @@ function initBuildingOwnership() {
     }
   }
 
-  // ── 3. Отчёт в консоль ───────────────────────────────────────────────────
+  // ── 3. Предзаполнение капитальных запасов зданий ─────────────────────────
+  // На старте новой игры здания уже работают (исторический сценарий).
+  // slot._capital_stock пуст → в первый ход procureCapitalInputs не может
+  // купить весь объём из тощего госзапаса → _capital_ratio=0 → выручка=0.
+  // Решение: заполнить _capital_stock по норме (count_per_level × level).
+  // Если уже есть запас ≥ 50% нормы — не трогаем (игровая сессия в процессе).
+  for (const region of Object.values(regions)) {
+    if (!Array.isArray(region.building_slots)) continue;
+    for (const slot of region.building_slots) {
+      if (slot.status !== 'active') continue;
+      const bDef = (typeof BUILDINGS !== 'undefined') ? BUILDINGS[slot.building_id] : null;
+      if (!bDef?.capital_inputs?.length) continue;
+      const level = slot.level || 1;
+      if (!slot._capital_stock) slot._capital_stock = {};
+      for (const ci of bDef.capital_inputs) {
+        const required = ci.count_per_level * level;
+        if ((slot._capital_stock[ci.good] || 0) < required * 0.5) {
+          slot._capital_stock[ci.good] = required;
+        }
+      }
+      // После заполнения гарантируем полную эффективность на старте
+      slot._capital_ratio = 1.0;
+    }
+  }
+
+  // ── 4. Отчёт в консоль ───────────────────────────────────────────────────
   console.log('[initBuildingOwnership] Собственность зданий инициализирована:');
   console.table(report.map(r => ({
     Нация: r.nation, Класс: r.cls, Тип: r.type,
