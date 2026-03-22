@@ -519,7 +519,7 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   const stabilLvl    = Math.max(0.5, Math.min(1.5, expLevels.stability  ?? 1.0));
   const fortressLvl  = Math.max(0.5, Math.min(1.5, expLevels.fortresses ?? 1.0));
   const buildingsLvl = Math.max(0.5, Math.min(1.5, expLevels.buildings  ?? 1.0));
-  const slavesLvl    = Math.max(0.5, Math.min(1.5, expLevels.slaves     ?? 1.0));
+  // slavesLvl удалён — расходы на содержание рабов покрываются maintenance зданий
 
   // ── ДОХОДЫ: НАЛОГИ ─────────────────────────────────────────
   // Единая механика для всех наций: tax_rates_by_class × wealth_level.
@@ -638,8 +638,9 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     expBuildings += economy._building_maintenance_per_turn || 0;
   }
 
-  // ── РАСХОДЫ: РАБЫ ──────────────────────────────────────────
-  const expSlaves = (prof.slaves || 0) * CONFIG.BALANCE.SLAVE_UPKEEP;
+  // Расходы на рабов из казны убраны: их содержание (питание, жильё) покрывается
+  // через maintenance зданий (workers_per_unit × 2), в которых они фактически работают.
+  // Рабы без государственных зданий — свободный рынок труда, не нагрузка на казну.
 
   // ── ПРИМЕНЯЕМ УРОВНИ ФИНАНСИРОВАНИЯ ────────────────────────
   const effArmyInf      = Math.round(expArmyInfantry    * armyLvl);
@@ -651,11 +652,10 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   const effStabExp      = Math.round(expStability        * stabilLvl);
   const effFortresses   = Math.round(expFortresses       * fortressLvl);
   const effBuildings    = Math.round(expBuildings        * buildingsLvl);
-  const effSlaves       = Math.round(expSlaves           * slavesLvl);
 
   const totalExpense = effArmyInf + effArmyCav + effArmyMerc
                      + effNavyExp + effCourtExp + effAdvisorsExp + effStabExp
-                     + effFortresses + effBuildings + effSlaves;
+                     + effFortresses + effBuildings;
 
   // ── ОБНОВЛЯЕМ КАЗНУ ────────────────────────────────────────
   const delta = totalIncome - totalExpense;
@@ -711,14 +711,6 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
         Math.max(0, Math.min(100, parseFloat((currentStab + stabDelta).toFixed(2)))));
     }
   }
-  // Рабы: условия содержания влияют на счастье населения
-  economy._slave_condition = slavesLvl;
-  if ((prof.slaves || 0) > 0 && Math.abs(slavesLvl - 1.0) > 0.01) {
-    const happDelta = parseFloat(((slavesLvl - 1.0) * 8).toFixed(1));
-    applyDelta(`nations.${nationId}.population.happiness`,
-      Math.max(0, Math.min(100, (nation.population.happiness ?? 50) + happDelta)));
-  }
-
   // ── КЭШ РАЗБИВКИ ДЛЯ UI ────────────────────────────────────
   const buildingProfit  = Math.round(nation.economy._building_profit_last_tick || 0);
   // Расходы, выплачиваемые вне updateTreasury (уже вычтены из казны напрямую)
@@ -757,9 +749,6 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     buildings:         effBuildings,
     buildings_base:    expBuildings,
     buildings_level:   buildingsLvl,
-    slaves:            effSlaves,
-    slaves_base:       expSlaves,
-    slaves_level:      slavesLvl,
     soldier_salary:    soldierSalary,
     food_soldiers:     foodSoldiers,
     total:             totalExpense + soldierSalary + foodSoldiers,
@@ -1391,11 +1380,10 @@ function _initEconomyPreview() {
     const totalIncome = taxTotal + portDuties;
 
     // ── Расходы ─────────────────────────────────────────────────────────
-    const expLvls   = eco.expense_levels || {};
-    const armyLvl   = expLvls.army   ?? 1.0;
-    const navyLvl   = expLvls.navy   ?? 1.0;
-    const courtLvl  = expLvls.court  ?? 1.0;
-    const slavesLvl = expLvls.slaves ?? 1.0;
+    const expLvls  = eco.expense_levels || {};
+    const armyLvl  = expLvls.army  ?? 1.0;
+    const navyLvl  = expLvls.navy  ?? 1.0;
+    const courtLvl = expLvls.court ?? 1.0;
 
     const expArmy = Math.round((
       (mil.infantry    || 0) * CONFIG.BALANCE.INFANTRY_UPKEEP  +
@@ -1408,13 +1396,12 @@ function _initEconomyPreview() {
     const advisorCnt  = aliveChars.filter(c => c.role === 'advisor').length;
     const expCourt    = Math.round((aliveChars.length * 15 + advisorCnt * 50) * courtLvl);
 
-    const stability   = gov.stability ?? 50;
-    const expStab     = Math.round(200 * (1 - stability / 100));
-    // Применяем slavesLvl так же как updateTreasury — иначе на старте показывается 100%
-    const expSlavesBase = Math.round((prof.slaves || 0) * CONFIG.BALANCE.SLAVE_UPKEEP);
-    const expSlaves     = Math.round(expSlavesBase * slavesLvl);
+    const stability = gov.stability ?? 50;
+    const expStab   = Math.round(200 * (1 - stability / 100));
+    // Рабы не являются расходом казны: их содержание покрывается
+    // через maintenance зданий (workers × 2), в которых они работают.
 
-    const totalExpense = expArmy + expNavy + expCourt + expStab + expSlaves;
+    const totalExpense = expArmy + expNavy + expCourt + expStab;
 
     // ── Записываем только поля UI (казна не меняется) ───────────────────
     eco.income_per_turn  = totalIncome;
@@ -1431,12 +1418,9 @@ function _initEconomyPreview() {
     eco._expense_breakdown = {
       army:        expArmy,
       navy:        expNavy,
-      court:       expCourt,
-      stability:   expStab,
-      slaves:      expSlaves,
-      slaves_base: expSlavesBase,
-      slaves_level: slavesLvl,
-      total:       totalExpense,
+      court:     expCourt,
+      stability: expStab,
+      total:     totalExpense,
     };
   }
 }

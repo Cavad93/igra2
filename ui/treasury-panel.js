@@ -31,7 +31,6 @@ function showTreasuryOverlay() {
     stability:  lvls.stability  ?? 1.0,
     fortresses: lvls.fortresses ?? 1.0,
     buildings:  lvls.buildings  ?? 1.0,
-    slaves:     lvls.slaves     ?? 1.0,
   };
   _tpDirty = false;
 
@@ -178,13 +177,6 @@ function _tpRefreshBreakdowns(nationId) {
   // income.total = только приходы (зарплата солдат — расход, не доход)
   inc.total = newTotal;
 
-  // Пересчитываем расходы рабов с новым slavesLvl
-  const lvls      = eco.expense_levels || {};
-  const slavesLvl = lvls.slaves ?? 1.0;
-  const slavesBase = exp.slaves_base ?? exp.slaves ?? 0;
-  exp.slaves       = Math.round(slavesBase * slavesLvl);
-  exp.slaves_level = slavesLvl;
-
   // Пересчитываем total расходов: base categories + soldierSalary + foodSoldiers
   const baseCats = (exp.army_infantry    || exp.army || 0)
                  + (exp.army_cavalry     || 0)
@@ -194,8 +186,7 @@ function _tpRefreshBreakdowns(nationId) {
                  + (exp.advisors         || 0)
                  + (exp.stability        || 0)
                  + (exp.fortresses       || 0)
-                 + (exp.buildings        || 0)
-                 + exp.slaves;
+                 + (exp.buildings        || 0);
   exp.total = baseCats + (exp.soldier_salary || 0) + (exp.food_soldiers || 0);
 }
 
@@ -342,7 +333,7 @@ function _tpExpSliderRow(category, icon, name, effectsFn) {
   } else if (category === 'buildings') {
     baseCost = exp.buildings_base ?? (nation.economy._building_maintenance_per_turn || 0);
   } else if (category === 'slaves') {
-    baseCost = exp.slaves_base ?? (prof.slaves || 0) * (B.SLAVE_UPKEEP || 1);
+    baseCost = 0; // рабы не являются прямым расходом казны
   } else {
     baseCost = 0;
   }
@@ -395,13 +386,12 @@ function _tpRenderExpenses() {
   // Вычисляем эффективные расходы из preview-уровней и базовых значений
   function effOf(cat, base) { return Math.round(base * (lvls[cat] ?? 1.0)); }
 
-  const armyBase   = exp.army_base     ?? (exp.army_infantry ?? 0) + (exp.army_cavalry ?? 0) + (exp.army_mercenaries ?? 0);
-  const navyBase   = exp.navy_base     ?? (exp.navy      ?? 0);
-  const courtBase  = exp.court_base    ?? (exp.court     ?? 0) + (exp.advisors  ?? 0);
-  const stabilBase = exp.stability_base ?? (exp.stability ?? 0);
-  const fortBase   = exp.fortresses_base ?? (exp.fortresses ?? 0);
-  const bldBase    = exp.buildings_base  ?? (exp.buildings  ?? 0);
-  const slavBase   = exp.slaves_base     ?? (exp.slaves     ?? 0);
+  const armyBase   = exp.army_base      ?? (exp.army_infantry ?? 0) + (exp.army_cavalry ?? 0) + (exp.army_mercenaries ?? 0);
+  const navyBase   = exp.navy_base      ?? (exp.navy          ?? 0);
+  const courtBase  = exp.court_base     ?? (exp.court         ?? 0) + (exp.advisors  ?? 0);
+  const stabilBase = exp.stability_base ?? (exp.stability     ?? 0);
+  const fortBase   = exp.fortresses_base ?? (exp.fortresses   ?? 0);
+  const bldBase    = exp.buildings_base  ?? (exp.buildings    ?? 0);
 
   // Скрытые расходы — выплачиваются вне updateTreasury, не управляются слайдерами
   const soldierSalary = exp.soldier_salary || 0;
@@ -410,7 +400,6 @@ function _tpRenderExpenses() {
   const totalAll = effOf('army', armyBase) + effOf('navy', navyBase)
     + effOf('court', courtBase) + effOf('stability', stabilBase)
     + effOf('fortresses', fortBase) + effOf('buildings', bldBase)
-    + effOf('slaves', slavBase)
     + soldierSalary + foodSoldiers;
 
   const sign = v => v >= 0 ? '+' : '';
@@ -449,12 +438,6 @@ function _tpRenderExpenses() {
     return `${lvl >= 1.0 ? '✓' : '⚠'} Портовые пошлины ×${lvl.toFixed(2)}`;
   });
 
-  const slaveSlider = _tpExpSliderRow('slaves', '⛓', 'Рабы', (lvl) => {
-    if (Math.abs(lvl - 1.0) < 0.01) return '';
-    const h = parseFloat(((lvl - 1.0) * 8).toFixed(1));
-    return `${h >= 0 ? '✓' : '⚠'} Счастье населения: ${sign(h)}${h}/ход`;
-  });
-
   return `
     <div class="tp-col-title">📉 РАСХОДЫ</div>
 
@@ -478,7 +461,6 @@ function _tpRenderExpenses() {
       <div class="tp-sub-label">Инфраструктура</div>
       ${fortSlider}
       ${bldSlider}
-      ${slaveSlider}
     </div>
 
     ${(soldierSalary > 0 || foodSoldiers > 0) ? `
@@ -593,9 +575,8 @@ function _tpAdvisorText() {
     'Флот':         exp.navy        || 0,
     'Двор':         (exp.court || 0) + (exp.advisors || 0),
     'Стабильность': exp.stability   || 0,
-    'Крепости':     exp.fortresses  || 0,
-    'Здания':       exp.buildings   || 0,
-    'Рабов':        exp.slaves      || 0,
+    'Крепости':  exp.fortresses || 0,
+    'Здания':    exp.buildings  || 0,
   };
   const [topName, topVal] = Object.entries(cats).sort(([,a],[,b]) => b - a)[0];
   const topPct = Math.round(topVal / totalExp * 100);
@@ -621,9 +602,6 @@ function _tpAdvisorText() {
 
   // Легитимность
   if ((gov?.legitimacy ?? 100) < 30) lines.push('Легитимность власти под угрозой. Увеличьте содержание двора.');
-
-  // Условия рабов
-  if ((eco._slave_condition ?? 1.0) < 0.75) lines.push('Недофинансирование содержания рабов провоцирует социальное напряжение.');
 
   // Крепости
   if ((eco._fortress_defense_mult ?? 1.0) < 0.75) lines.push('Запущенные укрепления снижают безопасность границ и стабильность.');
