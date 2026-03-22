@@ -2045,3 +2045,109 @@ function procureSlaves(nationId) {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// initBuildingOwnership()
+//
+// Вызывается ОДИН РАЗ при старте новой игры (initGame, до loadGame).
+// Для всех наций (игрок + ИИ) корректирует собственность wheat-зданий:
+//
+//   wheat_latifundium : 70% → aristocrats, 30% → nation
+//     • Сортировка по level убыв. — крупнейшие латифундии достаются
+//       аристократам (при round(N×0.7) аристократов, остальные — государству)
+//     • Если в нации только одна латифундия — она идёт аристократам (round(0.7)=1)
+//
+//   wheat_villa       : 100% → soldiers_class
+//     • Проверка лимита: сумма level по слотам нации < soldiers_population
+//       Если превышает — уровни крупнейших вилл обрезаются до 80% от солдат
+//
+//   wheat_family_farm : 100% → farmers_class
+//
+// ИСПРАВЛЯЕТ БАГ: на старте ряд латифундий имел owner='nation' вместо
+// owner='aristocrats', из-за чего аристократы показывали 0 зданий/0 дохода.
+// ─────────────────────────────────────────────────────────────────────────────
+function initBuildingOwnership() {
+  const regions = GAME_STATE.regions;
+  if (!regions) return;
+
+  // ── 1. Группируем слоты по нации ────────────────────────────────────────
+  const byNation = {};
+  for (const region of Object.values(regions)) {
+    if (!Array.isArray(region.building_slots)) continue;
+    const nId = region.nation;
+    if (!nId || nId === 'neutral') continue;
+    if (!byNation[nId]) byNation[nId] = { latifundia: [], villas: [], farms: [] };
+    for (const slot of region.building_slots) {
+      if (slot.status !== 'active') continue;
+      if      (slot.building_id === 'wheat_latifundium')  byNation[nId].latifundia.push(slot);
+      else if (slot.building_id === 'wheat_villa')        byNation[nId].villas.push(slot);
+      else if (slot.building_id === 'wheat_family_farm')  byNation[nId].farms.push(slot);
+    }
+  }
+
+  // ── 2. Применяем правила для каждой нации ───────────────────────────────
+  const report = [];
+
+  for (const [nId, data] of Object.entries(byNation)) {
+    const nation = GAME_STATE.nations[nId];
+    const soldiersPop = nation?.population?.by_profession?.soldiers ?? Infinity;
+
+    // 2a. Латифундии: 70% аристократам, 30% государству
+    if (data.latifundia.length > 0) {
+      data.latifundia.sort((a, b) => (b.level ?? 0) - (a.level ?? 0));
+      const nLat      = data.latifundia.length;
+      const nAristocr = Math.max(1, Math.round(nLat * 0.7));
+      data.latifundia.forEach((slot, i) => {
+        slot.owner = i < nAristocr ? 'aristocrats' : 'nation';
+      });
+      report.push({
+        nation: nId, cls: 'Аристократы', type: 'Латифундия',
+        pct: `${Math.round((nAristocr / nLat) * 100)}%`, count: nAristocr,
+      });
+      if (nLat - nAristocr > 0) {
+        report.push({
+          nation: nId, cls: 'Государство', type: 'Латифундия',
+          pct: `${Math.round(((nLat - nAristocr) / nLat) * 100)}%`, count: nLat - nAristocr,
+        });
+      }
+    }
+
+    // 2b. Виллы: 100% солдатам, лимит по суммарному уровню
+    if (data.villas.length > 0) {
+      data.villas.sort((a, b) => (b.level ?? 0) - (a.level ?? 0));
+      const totalLevel = data.villas.reduce((s, sl) => s + (sl.level ?? 1), 0);
+      if (totalLevel >= soldiersPop) {
+        // Обрезаем уровни до 80% от популяции солдат
+        const cap = Math.floor(soldiersPop * 0.8);
+        let remaining = cap;
+        for (const slot of data.villas) {
+          const take = Math.min(slot.level ?? 1, remaining);
+          slot.level = take;
+          remaining -= take;
+          if (remaining <= 0) slot.level = 0;
+        }
+      }
+      data.villas.forEach(slot => { slot.owner = 'soldiers_class'; });
+      report.push({
+        nation: nId, cls: 'Солдаты', type: 'Вилла',
+        pct: '100%', count: data.villas.length,
+      });
+    }
+
+    // 2c. Фермы: 100% земледельцам
+    if (data.farms.length > 0) {
+      data.farms.forEach(slot => { slot.owner = 'farmers_class'; });
+      report.push({
+        nation: nId, cls: 'Земледельцы', type: 'Семейная ферма',
+        pct: '100%', count: data.farms.length,
+      });
+    }
+  }
+
+  // ── 3. Отчёт в консоль ───────────────────────────────────────────────────
+  console.log('[initBuildingOwnership] Собственность зданий инициализирована:');
+  console.table(report.map(r => ({
+    Нация: r.nation, Класс: r.cls, Тип: r.type,
+    '% владения': r.pct, 'Кол-во слотов': r.count,
+  })));
+}

@@ -753,6 +753,13 @@ function initGame() {
   if (typeof initReligions === 'function') initReligions();
   if (typeof initRegionReligions === 'function') initRegionReligions();
 
+  // Инициализируем собственность зданий по классам (70/30 для латифундий и т.д.)
+  // Вызываем ДО loadGame, чтобы новые игры стартовали с корректным распределением.
+  // При наличии сохранения loadGame() перезапишет значения сохранёнными.
+  if (typeof initBuildingOwnership === 'function') {
+    try { initBuildingOwnership(); } catch (e) { console.warn('[init_ownership]', e); }
+  }
+
   // Попытка загрузки сохранения
   const hasSave = loadGame();
 
