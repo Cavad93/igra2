@@ -534,6 +534,41 @@ function _calcBuildingMaintenance(bDef, level) {
 }
 
 // ──────────────────────────────────────────────────────────────
+// calcSlaveUpkeepPerPerson()
+//
+// Стоимость содержания одного занятого раба за тик.
+// Равна рыночной стоимости базовой корзины + стандартной корзины.
+// Пересчитывается каждый ход вместе с рыночными ценами.
+//
+//   Базовая    (SLAVE_BASIC_BASKET):    wheat 0.25 + salt 0.005
+//   Стандартная (SLAVE_STANDARD_BASKET): wheat 0.10 + salt 0.005 + cloth 0.01
+//
+// При wheat=10, salt=12, cloth=15:
+//   базовая  = 0.25×10 + 0.005×12 = 2.56 ₴
+//   стандарт = 0.10×10 + 0.005×12 + 0.01×15 = 1.21 ₴
+//   итого    ≈ 3.77 ₴/раб/тик
+// ──────────────────────────────────────────────────────────────
+function calcSlaveUpkeepPerPerson() {
+  const B       = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE) || {};
+  const market  = (typeof GAME_STATE !== 'undefined' && GAME_STATE.market) || {};
+  const GOODS_  = (typeof GOODS !== 'undefined') ? GOODS : {};
+
+  const basic    = B.SLAVE_BASIC_BASKET    || { wheat: 0.25, salt: 0.005 };
+  const standard = B.SLAVE_STANDARD_BASKET || { wheat: 0.10, salt: 0.005, cloth: 0.01 };
+
+  let cost = 0;
+  for (const [good, amount] of Object.entries(basic)) {
+    const price = market[good]?.price ?? GOODS_[good]?.base_price ?? 10;
+    cost += amount * price;
+  }
+  for (const [good, amount] of Object.entries(standard)) {
+    const price = market[good]?.price ?? GOODS_[good]?.base_price ?? 10;
+    cost += amount * price;
+  }
+  return cost;
+}
+
+// ──────────────────────────────────────────────────────────────
 // 6. РАСПРЕДЕЛЕНИЕ ЗАРПЛАТ
 //
 // Для каждого активного здания:
@@ -605,10 +640,16 @@ function distributeWages(nationId) {
       const laborType = bDef.labor_type ?? 'none';
       const level     = slot.level || 1;
       const wages     = revenue * wageRate;
-      const profit    = revenue - wages - _calcBuildingMaintenance(bDef, level);
+
+      // Содержание занятых рабов по рыночной стоимости корзин (базовая + стандартная)
+      const slaveCount  = slot.workers?.slaves ?? 0;
+      const slaveUpkeep = slaveCount > 0 ? slaveCount * calcSlaveUpkeepPerPerson() : 0;
+
+      const profit    = revenue - wages - _calcBuildingMaintenance(bDef, level) - slaveUpkeep;
 
       slot.revenue    = Math.round(revenue);
       slot.wages_paid = Math.round(wages);
+      slot.slave_upkeep_last = Math.round(slaveUpkeep);
       totalWagesPaid    += wages;
       // Автономные здания (wheat_*) сами учитывают maintenance в profit_last,
       // который затем направляется в казну через distributeClassIncome.
@@ -1000,11 +1041,9 @@ function deductFoodPurchases(nationId) {
           foodSpendFarmers    += spent;
 
         } else if (prof === 'slaves') {
-          // Рабов кормит хозяин (аристократы)
-          const avail = Math.max(0, cc.aristocrats || 0);
-          const spent = Math.min(cost, avail);
-          cc.aristocrats       -= spent;
-          foodSpendAristocrats += spent;
+          // Еда рабов теперь входит в корзину содержания здания (calcSlaveUpkeepPerPerson),
+          // которая вычитается из прибыли здания в updateBuildingFinancials / distributeWages.
+          // Здесь не списываем — иначе получим двойной счёт.
 
         } else if (prof === 'soldiers') {
           // Армию кормит казна
@@ -1326,12 +1365,17 @@ function updateBuildingFinancials(nationId) {
         }
       }
 
-      const net_profit = gross_revenue - input_costs - wages - maintenance;
+      // Содержание занятых рабов по рыночной стоимости корзин
+      const slaveCount  = slot.workers?.slaves ?? 0;
+      const slaveUpkeep = slaveCount > 0 ? slaveCount * calcSlaveUpkeepPerPerson() : 0;
+
+      const net_profit = gross_revenue - input_costs - wages - maintenance - slaveUpkeep;
 
       // ── Финансовый журнал ─────────────────────────────────────────────
-      slot.revenue_last = Math.round(gross_revenue);
-      slot.costs_last   = Math.round(input_costs + wages + maintenance);
-      slot.profit_last  = Math.round(net_profit);
+      slot.revenue_last      = Math.round(gross_revenue);
+      slot.slave_upkeep_last = Math.round(slaveUpkeep);
+      slot.costs_last        = Math.round(input_costs + wages + maintenance + slaveUpkeep);
+      slot.profit_last       = Math.round(net_profit);
 
       // ── loss_streak: ++ при убытке, -- при прибыли (медленнее) ───────
       if (net_profit < 0) {
