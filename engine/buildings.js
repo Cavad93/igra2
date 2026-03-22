@@ -802,8 +802,8 @@ function distributeClassIncome(nationId) {
           if (prodType) {
             if (!_ibt.farmers_class) _ibt.farmers_class = {};
             _ibt.farmers_class[prodType] = (_ibt.farmers_class[prodType] || 0) + totalFarmerIncome;
-            // Вовлечены: только фермеры этой конкретной фермы
-            _addEngaged('farmers_class', prodType, slot.workers?.farmers ?? 0);
+            // Вовлечены: число единиц фермы (слот = N ферм = N семей-владельцев)
+            _addEngaged('farmers_class', prodType, slot.level || 1);
           }
         }
 
@@ -816,8 +816,8 @@ function distributeClassIncome(nationId) {
           if (prodType) {
             if (!_ibt.farmers_class) _ibt.farmers_class = {};
             _ibt.farmers_class[prodType] = (_ibt.farmers_class[prodType] || 0) + wages;
-            // Вовлечены: наёмные фермеры, получившие зарплату в этом слоте
-            _addEngaged('farmers_class', prodType, slot.workers?.farmers ?? 0);
+            // Вовлечены: число единиц виллы/латифундии (1 единица = 1 арендная ячейка)
+            _addEngaged('farmers_class', prodType, slot.level || 1);
           }
         }
 
