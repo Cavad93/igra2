@@ -828,10 +828,26 @@ function distributeClassIncome(nationId) {
   // Отслеживаем для корректного отображения баланса в UI
   economy._soldier_salary_per_turn = soldierSalaryPaid;
 
+  // ── class_income_per_capita: средний доход на человека за тик (UI + батарейка) ──
+  // Вычисляем ДО цикла батарейки — per-capita нужен для правильного накопления.
+  const classPops = (typeof calculateClassPopulations === 'function')
+    ? calculateClassPopulations(nation.population.by_profession || {})
+    : {};
+  const cipc = economy.class_income_per_capita;
+  for (const [cls, income] of Object.entries(incomeTick)) {
+    const pop  = Math.max(1, classPops[cls] ?? 1);
+    cipc[cls]  = Math.round((income / pop) * 10) / 10;  // 1 знак после запятой
+  }
+
   // ── Обновляем батарейки классов (прогресс к следующей инвестиции) ─────────
+  // Критическое условие: батарейка заполняется на средний доход ОДНОГО человека
+  // за ход (income / class_population), а не на всю сумму класса.
+  // Это гарантирует, что аристократ накапливает быстрее земледельца (высокий avg),
+  // а огромная армия солдат не заполняет батарейку мгновенно.
   {
     const _maint = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.BUILDING_MAINTENANCE) || 50;
     for (const [cls, types] of Object.entries(economy._class_income_by_type)) {
+      const clsPop = Math.max(1, classPops[cls] ?? 1);
       for (const [ptype, income] of Object.entries(types)) {
         let bThresh = 3000;
         for (const [bid, bDef] of Object.entries(BUILDINGS)) {
@@ -840,23 +856,15 @@ function distributeClassIncome(nationId) {
             break;
           }
         }
+        // Прогресс за ход = средний доход на душу (не общая сумма класса)
+        const perCapitaIncome = income / clsPop;
         if (!economy._class_battery[cls]) economy._class_battery[cls] = {};
         economy._class_battery[cls][ptype] = Math.min(
-          (economy._class_battery[cls][ptype] || 0) + income,
+          (economy._class_battery[cls][ptype] || 0) + perCapitaIncome,
           bThresh
         );
       }
     }
-  }
-
-  // ── class_income_per_capita: средний доход на человека за тик (UI) ─────────
-  const classPops = (typeof calculateClassPopulations === 'function')
-    ? calculateClassPopulations(nation.population.by_profession || {})
-    : {};
-  const cipc = economy.class_income_per_capita;
-  for (const [cls, income] of Object.entries(incomeTick)) {
-    const pop  = Math.max(1, classPops[cls] ?? 1);
-    cipc[cls]  = Math.round((income / pop) * 10) / 10;  // 1 знак после запятой
   }
 }
 
