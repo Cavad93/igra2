@@ -1378,15 +1378,33 @@ function _cutSlotWorkers(slot, fraction) {
   }
 }
 
+// Возвращает профиль рабочих здания в унифицированном формате [{profession, count}].
+// Стандартные здания используют worker_profession; автономные (wheat_*) — workers_per_unit.
+// Для автономных зданий основная профессия определяется по текущим данным слота:
+// берём профессию с максимальным числом рабочих (или 'farmers' по умолчанию).
+function _getBuildingWorkerProfile(bDef, slot) {
+  if (bDef?.worker_profession?.length) return bDef.worker_profession;
+  if (bDef?.workers_per_unit) {
+    // Определяем профессию: из slot.workers или 'farmers' по умолчанию
+    let mainProf = 'farmers';
+    if (slot?.workers && Object.keys(slot.workers).length > 0) {
+      mainProf = Object.keys(slot.workers)[0];
+    }
+    return [{ profession: mainProf, count: bDef.workers_per_unit }];
+  }
+  return [];
+}
+
 // Постепенное восстановление рабочих до максимума из bDef.
 // Если задан slave_fallback_profession и рабов нет в нации → восстанавливаем
 // фермеров вместо рабов (не пытаемся нанять несуществующих рабов).
 function _restoreSlotWorkers(slot, bDef, fraction, nation) {
-  if (!bDef?.worker_profession) return;
+  const profile = _getBuildingWorkerProfile(bDef, slot);
+  if (!profile.length) return;
   const slavePop      = nation?.population?.by_profession?.slaves ?? 0;
-  const fallbackProf  = bDef.slave_fallback_profession;
+  const fallbackProf  = bDef?.slave_fallback_profession;
 
-  for (const { profession: prof, count: maxCount } of bDef.worker_profession) {
+  for (const { profession: prof, count: maxCount } of profile) {
     // Если рабов нет в нации и этот слот — рабский, восстанавливаем fallback-профессию
     const effectiveProf = (prof === 'slaves' && slavePop === 0 && fallbackProf)
       ? fallbackProf
@@ -1415,7 +1433,7 @@ function _estimateSlotProfitability(slot, bDef, region, nation) {
     workers:        {},
     _recipe_ratios: {},  // нет данных о входах → ratio = 1
   };
-  for (const { profession: prof, count } of (bDef?.worker_profession || [])) {
+  for (const { profession: prof, count } of _getBuildingWorkerProfile(bDef, slot)) {
     tempSlot.workers[prof] = count;
   }
 
@@ -1481,11 +1499,14 @@ function applyBuildingAdaptiveBehavior(nationId) {
       // ── Закрытое здание: проверяем рыночное условие для повторного открытия ─
       if (isClosed) {
         if (_estimateSlotProfitability(slot, bDef, region, nation)) {
-          slot.production_eff  = 0.10;  // запускаем с 10% мощности
-          slot.loss_streak     = 8;      // сбрасываем в зону «сокращение», а не «закрытие»
+          // Полное восстановление сразу: частичное открытие не работает для зданий,
+          // у которых обслуживание фиксировано (не масштабируется с eff).
+          // При eff=0.10 revenue ≈ maintenance → убыток → немедленное закрытие снова.
+          slot.production_eff  = 1.0;
+          slot.loss_streak     = 0;
           slot._recovery_accum = 0;
-          _restoreSlotWorkers(slot, bDef, 0.05, nation);
-          if (isPlayer) _logSlotEvent(slot, bDef, rid, '🔄 начинает повторное открытие (рынок улучшился).', 'info');
+          _restoreSlotWorkers(slot, bDef, 1.0, nation);  // полное восстановление
+          if (isPlayer) _logSlotEvent(slot, bDef, rid, '🔄 повторно открыто (экономика улучшилась).', 'info');
         }
         continue;
       }
@@ -2148,7 +2169,20 @@ function initBuildingOwnership() {
 
     // 2c. Фермы: 100% земледельцам
     if (data.farms.length > 0) {
-      data.farms.forEach(slot => { slot.owner = 'farmers_class'; });
+      const farmDef = (typeof BUILDINGS !== 'undefined') ? BUILDINGS['wheat_family_farm'] : null;
+      data.farms.forEach(slot => {
+        slot.owner          = 'farmers_class';
+        // Сбрасываем убытки: при старом обслуживании (50×level) фермы уходили
+        // в хронический убыток и закрывались. После исправления формулы — открываем.
+        slot.loss_streak     = 0;
+        slot._recovery_accum = 0;
+        slot.production_eff  = 1.0;
+        if (slot.workers && farmDef?.workers_per_unit) {
+          for (const prof of Object.keys(slot.workers)) {
+            slot.workers[prof] = farmDef.workers_per_unit;
+          }
+        }
+      });
       report.push({
         nation: nId, cls: 'Земледельцы', type: 'Семейная ферма',
         pct: '100%', count: data.farms.length,
