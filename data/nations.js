@@ -1068,6 +1068,208 @@ const INITIAL_GAME_STATE = {
       relations: { syracuse: { score: -5, treaties: [], at_war: false }, carthage: { score: -5, treaties: [], at_war: false } },
       active_laws: [], characters: [],
     },
+
+    // ════════════════════════════════════════════════════════════════
+    // ГРЕЦИЯ И ЭГЕИДА
+    // ════════════════════════════════════════════════════════════════
+
+    // ── СПАРТА (Уровень A) ─────────────────────────────────────────
+    sparta: {
+      name: 'Спарта', adjective: 'спартанское', color: '#8B0000', flag_emoji: '🛡️',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'military',
+      government: {
+        type: 'oligarchy', legitimacy: 65, stability: 60,
+        ruler: { type: 'person', name: 'Клеомен II', personal_power: 55 },
+      },
+      regions: [],
+      population: {
+        total: 42000,
+        by_profession: { farmers: 12000, craftsmen: 4000, merchants: 2000, sailors: 1000, clergy: 2000, soldiers: 8000, slaves: 13000 },
+        happiness: 52, growth_rate: 0.001,
+      },
+      economy: {
+        treasury: 2000, tax_rate: 0.08,
+        primary_exports: ['iron', 'slaves'], primary_imports: ['wheat', 'trade_goods'],
+        trade_partners: ['athens', 'argos', 'corinth'],
+        stockpile: { wheat: 5000, fish: 800, iron: 600, horses: 300, cattle: 1200 },
+        trade_routes: [],
+      },
+      military: { infantry: 8000, cavalry: 600, ships: 20, mercenaries: 500, morale: 85, loyalty: 80, at_war_with: [] },
+      relations: {
+        athens:   { score: -30, treaties: [], at_war: false },
+        macedon:  { score: -40, treaties: [], at_war: false },
+        argos:    { score: -20, treaties: [], at_war: false },
+        epirus:   { score: 20,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'В 304 г. до н.э. Спарта переживает глубокий упадок: потеря Мессении подорвала экономику, а численность граждан-воинов катастрофически сократилась. Клеомен II царствует, но реальная власть у эфоров. Спарта пытается сохранить влияние на Пелопоннесе.',
+    },
+
+    // ── АФИНЫ (Уровень A) ──────────────────────────────────────────
+    athens: {
+      name: 'Афины', adjective: 'афинское', color: '#4169E1', flag_emoji: '🦉',
+      is_player: false, is_minor: false,
+      ai_personality: 'mercantile', ai_priority: 'economy',
+      government: {
+        type: 'oligarchy', legitimacy: 55, stability: 50,
+        ruler: { type: 'person', name: 'Деметрий Фалерский', personal_power: 70 },
+      },
+      regions: [],
+      population: {
+        total: 155000,
+        by_profession: { farmers: 40000, craftsmen: 30000, merchants: 25000, sailors: 15000, clergy: 5000, soldiers: 6000, slaves: 34000 },
+        happiness: 48, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 6000, tax_rate: 0.12,
+        primary_exports: ['pottery', 'olive_oil', 'trade_goods'], primary_imports: ['wheat', 'timber', 'iron'],
+        trade_partners: ['rhodes', 'bosporan_kingdom', 'corinth', 'sparta'],
+        stockpile: { wheat: 18000, fish: 4000, iron: 1200, horses: 200, cattle: 800 },
+        trade_routes: [],
+      },
+      military: { infantry: 6000, cavalry: 400, ships: 80, mercenaries: 2000, morale: 60, loyalty: 55, at_war_with: [] },
+      relations: {
+        sparta:            { score: -30, treaties: [], at_war: false },
+        macedon:           { score: -50, treaties: [], at_war: false },
+        antipatrid_kingdom:{ score: -40, treaties: [], at_war: false },
+        rhodes:            { score: 30,  treaties: [], at_war: false },
+        epirus:            { score: -10, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'В 304 г. до н.э. Афины управляются Деметрием Фалерским как наместником Кассандра. Демократия подавлена, но город процветает благодаря торговле. Осада Деметрия Полиоркета ещё впереди — пока Афины живут в относительном мире под македонским протекторатом.',
+    },
+
+    // ── РОДОС (Уровень A) ──────────────────────────────────────────
+    rhodes: {
+      name: 'Родос', adjective: 'родосское', color: '#FFD700', flag_emoji: '⚓',
+      is_player: false, is_minor: false,
+      ai_personality: 'mercantile', ai_priority: 'economy',
+      government: {
+        type: 'republic', legitimacy: 80, stability: 75,
+        ruler: { type: 'council', name: 'Совет родосских навархов', personal_power: 65 },
+      },
+      regions: [],
+      population: {
+        total: 82000,
+        by_profession: { farmers: 15000, craftsmen: 18000, merchants: 22000, sailors: 12000, clergy: 3000, soldiers: 3000, slaves: 9000 },
+        happiness: 72, growth_rate: 0.003,
+      },
+      economy: {
+        treasury: 15000, tax_rate: 0.10,
+        primary_exports: ['trade_goods', 'pottery', 'olive_oil'], primary_imports: ['wheat', 'timber', 'iron'],
+        trade_partners: ['athens', 'ptolemaic_kingdom', 'seleukid_empire', 'corinth'],
+        stockpile: { wheat: 12000, fish: 6000, iron: 800, horses: 100, cattle: 400 },
+        trade_routes: [],
+      },
+      military: { infantry: 3000, cavalry: 200, ships: 120, mercenaries: 1000, morale: 80, loyalty: 85, at_war_with: [] },
+      relations: {
+        athens:            { score: 30, treaties: [], at_war: false },
+        ptolemaic_kingdom: { score: 40, treaties: [], at_war: false },
+        seleukid_empire:   { score: 20, treaties: [], at_war: false },
+        antigonid_kingdom: { score: -20, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'В 304 г. до н.э. Родос — крупнейший торговый порт Восточного Средиземноморья, и именно сейчас Деметрий Полиоркет осаждает остров (осада 305–304 гг. до н.э.). Родосцы держатся стойко, и вскоре Деметрий снимет осаду, получив прозвище «Полиоркет» — Берущий города.',
+    },
+
+    // ── МАССАЛИЯ (Уровень A) ───────────────────────────────────────
+    massilia: {
+      name: 'Массалия', adjective: 'массалийское', color: '#228B22', flag_emoji: '🍷',
+      is_player: false, is_minor: false,
+      ai_personality: 'mercantile', ai_priority: 'economy',
+      government: {
+        type: 'republic', legitimacy: 75, stability: 70,
+        ruler: { type: 'council', name: 'Совет шестисот', personal_power: 60 },
+      },
+      regions: [],
+      population: {
+        total: 26000,
+        by_profession: { farmers: 5000, craftsmen: 6000, merchants: 7000, sailors: 4000, clergy: 1000, soldiers: 1000, slaves: 2000 },
+        happiness: 68, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 8000, tax_rate: 0.09,
+        primary_exports: ['trade_goods', 'wine', 'olive_oil'], primary_imports: ['tin', 'amber', 'furs', 'slaves'],
+        trade_partners: ['athens', 'rhodes', 'carthage'],
+        stockpile: { wheat: 4000, fish: 2000, iron: 300, horses: 100, cattle: 500 },
+        trade_routes: [],
+      },
+      military: { infantry: 1500, cavalry: 100, ships: 40, mercenaries: 500, morale: 70, loyalty: 75, at_war_with: [] },
+      relations: {
+        carthage: { score: -20, treaties: [], at_war: false },
+        athens:   { score: 25,  treaties: [], at_war: false },
+        rhodes:   { score: 30,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Массалия (совр. Марсель) — греческая колония, основанная фокейцами ок. 600 г. до н.э. В 304 г. она является главным торговым посредником между греческим миром и кельтской Галлией, обменивая вино и оливковое масло на янтарь, олово и меха варваров.',
+    },
+
+    // ── КОРИНФ (Уровень A) ─────────────────────────────────────────
+    corinth: {
+      name: 'Коринф', adjective: 'коринфское', color: '#B8860B', flag_emoji: '🏺',
+      is_player: false, is_minor: false,
+      ai_personality: 'mercantile', ai_priority: 'economy',
+      government: {
+        type: 'oligarchy', legitimacy: 40, stability: 35,
+        ruler: { type: 'council', name: 'Македонский гарнизон', personal_power: 50 },
+      },
+      regions: [],
+      population: {
+        total: 18000,
+        by_profession: { farmers: 4000, craftsmen: 5000, merchants: 4000, sailors: 2000, clergy: 1000, soldiers: 500, slaves: 1500 },
+        happiness: 40, growth_rate: 0.001,
+      },
+      economy: {
+        treasury: 3000, tax_rate: 0.12,
+        primary_exports: ['pottery', 'bronze', 'trade_goods'], primary_imports: ['wheat', 'timber'],
+        trade_partners: ['athens', 'sparta', 'rhodes'],
+        stockpile: { wheat: 3000, fish: 1000, iron: 400, horses: 100, cattle: 300 },
+        trade_routes: [],
+      },
+      military: { infantry: 1500, cavalry: 100, ships: 25, mercenaries: 500, morale: 50, loyalty: 45, at_war_with: [] },
+      relations: {
+        macedon:           { score: -30, treaties: [], at_war: false },
+        antipatrid_kingdom:{ score: -20, treaties: [], at_war: false },
+        athens:            { score: 10,  treaties: [], at_war: false },
+        sparta:            { score: -10, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'В 304 г. до н.э. Коринф существует как стратегически важный город с македонским гарнизоном на Акрокоринфе — «оковы Эллады». Тот, кто держит Коринф, контролирует перешеек между Элладой и Пелопоннесом. Город постепенно восстанавливает торговое значение под македонской опекой.',
+    },
+
+    // ── БОСПОРСКОЕ ЦАРСТВО (Уровень A) ────────────────────────────
+    bosporan_kingdom: {
+      name: 'Боспорское царство', adjective: 'боспорское', color: '#4B0082', flag_emoji: '🌾',
+      is_player: false, is_minor: false,
+      ai_personality: 'mercantile', ai_priority: 'economy',
+      government: {
+        type: 'monarchy', legitimacy: 72, stability: 65,
+        ruler: { type: 'person', name: 'Спарток III', personal_power: 75 },
+      },
+      regions: [],
+      population: {
+        total: 180000,
+        by_profession: { farmers: 70000, craftsmen: 25000, merchants: 30000, sailors: 15000, clergy: 5000, soldiers: 10000, slaves: 25000 },
+        happiness: 60, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 12000, tax_rate: 0.12,
+        primary_exports: ['wheat', 'fish', 'slaves', 'furs'], primary_imports: ['wine', 'pottery', 'olive_oil', 'trade_goods'],
+        trade_partners: ['athens', 'rhodes', 'scythians'],
+        stockpile: { wheat: 40000, fish: 12000, iron: 800, horses: 2000, cattle: 5000 },
+        trade_routes: [],
+      },
+      military: { infantry: 8000, cavalry: 3000, ships: 60, mercenaries: 2000, morale: 70, loyalty: 70, at_war_with: [] },
+      relations: {
+        athens:    { score: 50, treaties: [], at_war: false },
+        rhodes:    { score: 40, treaties: [], at_war: false },
+        scythians: { score: 20, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Боспорское царство контролирует ключевые торговые пути через Боспор Киммерийский. Спарток III — потомок фракийских тиранов — умело балансирует между греческой культурой и скифскими союзниками. Главный поставщик зерна в Афины: без боспорской пшеницы Аттика голодает.',
+    },
+
   },
   regions: {},
 
