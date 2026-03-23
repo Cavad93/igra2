@@ -3125,6 +3125,297 @@ var PDF_CHAINS = {
     },
     delay_turns: 5,
     warning_turns: 10
+  },
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 🌾 КРИЗИСНЫЕ И КОЛЛАПСНЫЕ (#94–100)
+  // ══════════════════════════════════════════════════════════════════════
+
+  // ===== ШАГ 12: #94–100 + вспомогательные объекты =====
+
+  94: {
+    id: 94,
+    name: 'Военно-финансовая спираль',
+    name_key: 'military_financial_spiral',
+    category: 'crisis',
+    nodes: ['threat', 'army_buildup', 'expenses_exceed_income', 'new_taxes', 'economy_shrinks', 'less_tax_base', 'cant_pay_army', 'desertion', 'bigger_threat', 'more_expenses'],
+    inputs: ['threat'],
+    output: 'financial_collapse',
+    primary_building: null,
+    is_circular: true,
+    contradiction: null,
+    bottleneck: 'Нет внутреннего тормоза — каждый шаг логичен, результат катастрофален',
+    bottleneck_goods: ['silver', 'gold'],
+    bottleneck_buildings: [],
+    bottleneck_conditions: ['no_peace_option', 'debt_spiral'],
+    alternative: 'Принять мир даже невыгодный: остановить спираль пока не поздно',
+    alternative_chain_id: null,
+    alternative_good: null,
+    historical_example: 'Именно так погибла держава Селевкидов под давлением Парфии и Рима одновременно',
+    historical_date: null,
+    historical_figure: null,
+    upstream_chain_ids: [43],
+    downstream_chain_ids: [95, 100],
+    is_crisis_chain: true,
+    crisis_trigger: 'military_expense > income AND debt > 40%',
+    game_effects: {
+      active_bonus: null,
+      broken_penalty: 'army_collapse, state_bankruptcy'
+    },
+    delay_turns: 3,
+    warning_turns: 5
+  },
+
+  95: {
+    id: 95,
+    name: 'Три кризиса одновременно',
+    name_key: 'triple_crisis',
+    category: 'crisis',
+    nodes: ['border_war', 'internal_revolt', 'famine_from_war', 'three_crises_feed_each_other', 'army_on_border_no_suppress_revolt', 'revolt_blocks_grain', 'hunger_weakens_army', 'collapse'],
+    inputs: ['war', 'revolt', 'famine'],
+    output: 'state_collapse',
+    primary_building: null,
+    is_circular: true,
+    contradiction: null,
+    bottleneck: 'Любой из трёх в отдельности — управляем; все три вместе — нет',
+    bottleneck_goods: ['wheat'],
+    bottleneck_buildings: [],
+    bottleneck_conditions: ['simultaneous_crises'],
+    alternative: 'Быстро закончить войну (даже проиграв) чтобы заняться внутренним',
+    alternative_chain_id: null,
+    alternative_good: null,
+    historical_example: 'Кризис III века Рима: именно одновременность кризисов сломала систему',
+    historical_date: '235 AD',
+    historical_figure: null,
+    upstream_chain_ids: [25, 69, 72, 75, 85, 91],
+    downstream_chain_ids: [100],
+    is_crisis_chain: true,
+    crisis_trigger: 'border_war AND internal_revolt AND famine',
+    game_effects: {
+      active_bonus: null,
+      broken_penalty: 'state_collapse_imminent, recovery_very_hard'
+    },
+    delay_turns: 1,
+    warning_turns: 5
+  },
+
+  96: {
+    id: 96,
+    name: 'Гиперинфляция античности',
+    name_key: 'ancient_hyperinflation',
+    category: 'crisis',
+    nodes: ['budget_deficit', 'coin_debasement', 'merchants_raise_prices', 'more_debasement', 'prices_outpace_wages', 'army_demands_payment_in_kind', 'barter', 'trade_dies', 'cant_collect_taxes'],
+    inputs: [],
+    output: 'monetary_collapse',
+    primary_building: 'mint',
+    is_circular: true,
+    contradiction: null,
+    bottleneck: 'Доверие к валюте — хрупкое; потеряв, не восстановить без внешней поддержки',
+    bottleneck_goods: ['silver', 'gold'],
+    bottleneck_buildings: ['mint'],
+    bottleneck_conditions: ['coin_trust_lost'],
+    alternative: 'Жёсткая монетарная политика: не портить монету никогда, даже в кризис',
+    alternative_chain_id: 50,
+    alternative_good: null,
+    historical_example: 'Денарий: 90% серебра при Августе → 2% при Галлиене (260 н.э.)',
+    historical_date: '260 AD',
+    historical_figure: 'Галлиен',
+    upstream_chain_ids: [38, 43, 68],
+    downstream_chain_ids: [100],
+    is_crisis_chain: true,
+    crisis_trigger: 'coin_silver_content < 10%',
+    game_effects: {
+      active_bonus: null,
+      broken_penalty: 'trade_collapses, tax_income -50%, barter_economy'
+    },
+    delay_turns: 3,
+    warning_turns: 5
+  },
+
+  97: {
+    id: 97,
+    name: 'Антагонизм армии и гражданских',
+    name_key: 'army_civilian_antagonism',
+    category: 'crisis',
+    nodes: ['army_lives_off_provinces', 'civilians_hate_army', 'army_represses', 'hatred_grows', 'civilians_support_army_enemies', 'internal_war', 'state_weakens'],
+    inputs: [],
+    output: 'internal_war',
+    primary_building: null,
+    is_circular: true,
+    contradiction: null,
+    bottleneck: 'Нет выхода если армия потеряла дисциплину и привыкла к реквизициям',
+    bottleneck_goods: [],
+    bottleneck_buildings: [],
+    bottleneck_conditions: ['army_undisciplined', 'requisitions_habitual'],
+    alternative: 'Регулярное снабжение армии = нет нужды в реквизициях; дорого, но работает',
+    alternative_chain_id: 15,
+    alternative_good: null,
+    historical_example: 'Позднеримские войска терроризировали население хуже варваров — это задокументировано',
+    historical_date: '300 AD',
+    historical_figure: null,
+    upstream_chain_ids: [],
+    downstream_chain_ids: [95],
+    is_crisis_chain: true,
+    crisis_trigger: 'army_discipline < 30',
+    game_effects: {
+      active_bonus: null,
+      broken_penalty: 'civilian_revolt, army_vs_population'
+    },
+    delay_turns: 2,
+    warning_turns: 4
+  },
+
+  98: {
+    id: 98,
+    name: 'Сукцессионный коллапс',
+    name_key: 'succession_collapse',
+    category: 'crisis',
+    nodes: ['strong_leader_dies', 'no_clear_heir', 'multiple_claimants', 'civil_war', 'winner_weakened', 'external_enemies_attack', 'new_succession_crisis'],
+    inputs: [],
+    output: 'succession_war',
+    primary_building: null,
+    is_circular: true,
+    contradiction: null,
+    bottleneck: 'Каждая гражданская война делает следующую более вероятной',
+    bottleneck_goods: [],
+    bottleneck_buildings: [],
+    bottleneck_conditions: ['no_succession_law', 'multiple_heirs'],
+    alternative: 'Чёткое законодательство о наследовании: устраняет неопределённость',
+    alternative_chain_id: null,
+    alternative_good: null,
+    historical_example: 'Год четырёх императоров (69 н.э.): Рим пережил. Год пяти (193 н.э.): началось разложение',
+    historical_date: '193 AD',
+    historical_figure: null,
+    upstream_chain_ids: [65, 69, 74],
+    downstream_chain_ids: [95, 100],
+    is_crisis_chain: true,
+    crisis_trigger: 'ruler_dies AND succession_law_undefined',
+    game_effects: {
+      active_bonus: null,
+      broken_penalty: 'civil_war, state_exhaustion, external_vulnerability'
+    },
+    delay_turns: 1,
+    warning_turns: 5
+  },
+
+  99: {
+    id: 99,
+    name: 'Варваризация армии',
+    name_key: 'army_barbarization',
+    category: 'crisis',
+    nodes: ['citizen_soldier_shortage', 'hire_barbarians', 'barbarian_tactics_loyalty', 'army_loses_common_culture', 'barbarian_commanders', 'army_serves_commander_not_state', 'army_against_state'],
+    inputs: [],
+    output: 'army_disloyalty',
+    primary_building: 'barracks',
+    is_circular: true,
+    contradiction: null,
+    bottleneck: 'Процесс необратим: уволить варварскую армию = остаться без армии',
+    bottleneck_goods: [],
+    bottleneck_buildings: ['barracks'],
+    bottleneck_conditions: ['no_citizen_soldiers', 'barbarian_army_only'],
+    alternative: 'Ускоренная ассимиляция и гражданство за службу: дольше, но создаёт лояльных',
+    alternative_chain_id: 54,
+    alternative_good: null,
+    historical_example: 'К 400 н.э. римская армия на 80% состояла из варваров под варварскими командирами',
+    historical_date: '400 AD',
+    historical_figure: null,
+    upstream_chain_ids: [97],
+    downstream_chain_ids: [100],
+    is_crisis_chain: true,
+    crisis_trigger: 'barbarian_ratio > 70%',
+    game_effects: {
+      active_bonus: null,
+      broken_penalty: 'army_loyalty -5, warlord_risk'
+    },
+    delay_turns: 10,
+    warning_turns: 10
+  },
+
+  100: {
+    id: 100,
+    name: 'Финальный коллапс',
+    name_key: 'final_collapse',
+    category: 'crisis',
+    nodes: ['empty_treasury', 'army_no_pay', 'desertion', 'borders_open', 'barbarians_enter', 'looting', 'less_taxes', 'less_army', 'territory_lost', 'income_falls', 'cant_hire_army'],
+    inputs: [],
+    output: 'civilizational_collapse',
+    primary_building: null,
+    is_circular: true,
+    contradiction: null,
+    bottleneck: 'Нет точки возврата — каждая потеря делает восстановление невозможнее',
+    bottleneck_goods: ['silver', 'gold'],
+    bottleneck_buildings: [],
+    bottleneck_conditions: ['no_treasury', 'no_army', 'borders_collapsed'],
+    alternative: 'Нет: когда запущен этот цикл — только чудо или внешняя помощь',
+    alternative_chain_id: null,
+    alternative_good: null,
+    historical_example: '476 н.э. Одоакр низложил Ромула Августула. Ни одного легиона не пришло на защиту.',
+    historical_date: '476 AD',
+    historical_figure: 'Одоакр',
+    upstream_chain_ids: [94, 95, 96, 98, 99],
+    downstream_chain_ids: [],
+    is_crisis_chain: true,
+    crisis_trigger: 'treasury = 0 AND army = 0',
+    game_effects: {
+      active_bonus: null,
+      broken_penalty: 'GAME_OVER: civilizational_collapse'
+    },
+    delay_turns: 1,
+    warning_turns: 10
   }
 
+};
+
+// ══════════════════════════════════════════════════════════════════════
+// Вспомогательные объекты
+// ══════════════════════════════════════════════════════════════════════
+
+var CHAINS_BY_CATEGORY = {
+  military:    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+  food:        [19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35],
+  trade:       [36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50],
+  demographic: [51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63],
+  political:   [64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75],
+  religious:   [76, 77, 78, 79, 80, 81, 82, 83, 84, 85],
+  ecological:  [86, 87, 88, 89, 90, 91, 92, 93],
+  crisis:      [94, 95, 96, 97, 98, 99, 100]
+};
+
+// Поиск цепочек по ключевым товарам
+var CHAINS_BY_GOOD = {
+  iron:        [1, 4, 44],
+  charcoal:    [1],
+  timber:      [2, 4, 6, 31, 86],
+  silver:      [3, 11, 17, 38, 40, 46, 50],
+  gold:        [3, 17, 40, 46, 50],
+  horses:      [5],
+  stone:       [6, 16, 27],
+  slaves:      [6, 12, 13, 19, 23, 46, 51, 57],
+  wheat:       [19, 22, 24, 25, 26, 35, 87, 91],
+  olive_oil:   [20],
+  fish:        [21, 34, 89],
+  salt:        [21, 29, 34],
+  wine:        [26],
+  copper:      [44],
+  tin:         [44],
+  bronze:      [44],
+  papyrus:     [45],
+  amber:       [47],
+  sulfur:      [32],
+  honey:       [30],
+  wax:         [30, 45],
+  purple_dye:  [41],
+  tuna:        [34, 89],
+  cloth:       [24, 58]
+};
+
+// Пороговые условия для деструктивных цепочек
+var CRISIS_THRESHOLDS = {
+  94: { condition: 'military_expense > income AND debt > 40%',   warning_turns: 5,  is_reversible: true  },
+  95: { condition: 'border_war AND internal_revolt AND famine',  warning_turns: 5,  is_reversible: false },
+  96: { condition: 'coin_silver_content < 10%',                  warning_turns: 5,  is_reversible: false },
+  97: { condition: 'army_discipline < 30',                       warning_turns: 4,  is_reversible: true  },
+  98: { condition: 'ruler_dies AND succession_law_undefined',    warning_turns: 5,  is_reversible: true  },
+  99: { condition: 'barbarian_ratio > 70%',                      warning_turns: 10, is_reversible: false },
+  100:{ condition: 'treasury = 0 AND army = 0',                  warning_turns: 10, is_reversible: false }
 };
