@@ -1464,6 +1464,127 @@ const BUILDINGS = {
     historical_note: 'Аттический мёд с горы Гиметт считался лучшим в античном мире и экспортировался по всему Средиземноморью; воск шёл на таблички, свечи и корабельную конопатку.',
   },
 
+  // ── РЫБОЛОВЕЦКОЕ ХОЗЯЙСТВО ───────────────────────────────────
+  fishery: {
+    name:        'Рыболовецкое хозяйство',
+    icon:        '🎣',
+    description: 'Прибрежный рыбный промысел: сети, верши, лодки. ' +
+                 'Моряки выходят ежедневно; улов идёт на рынок и на засолку. ' +
+                 'Строится только на морском побережье или у рек.',
+    cost:        280,
+    category:    'production',
+    footprint_ha: 5,
+    workers_per_unit: 50,
+    worker_profession: [
+      { profession: 'sailors',   count: 40 },
+      { profession: 'craftsmen', count: 10 },
+    ],
+    wage_rate:          0.30,
+    labor_type:         'free',
+    construction_materials: { timber: 7, tools: 3 },
+    construction_labor:     130,
+    build_turns:        2,
+    autonomous_builder: 'sailors_class',
+    nation_buildable:   true,
+    production_output: [
+      { good: 'fish', base_rate: 80 },
+    ],
+    production_inputs: [],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'biome', deposit_key: null,
+      allowed_biomes: ['mediterranean_coast', 'river_valley'],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          5,
+    maintenance_cost:   5,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Понтийское побережье и Боспор Киммерийский поставляли Афинам сушёную и солёную рыбу; рыболовство было одним из главных промыслов всего Средиземноморья.',
+  },
+
+  // ── МАСТЕРСКАЯ ГАРУМА ────────────────────────────────────────
+  garum_workshop: {
+    name:        'Мастерская гарума',
+    icon:        '🐟',
+    description: 'Производство рыбного соуса из ферментированных рыбных внутренностей с солью. ' +
+                 'Гарум был важнейшим кулинарным и торговым продуктом Рима и Карфагена. ' +
+                 'Требует постоянного притока рыбы и соли.',
+    cost:        350,
+    category:    'production',
+    footprint_ha: 2,
+    workers_per_unit: 12,
+    worker_profession: [
+      { profession: 'craftsmen', count: 12 },
+    ],
+    wage_rate:          0.28,
+    labor_type:         'free',
+    construction_materials: { timber: 7, stone: 3, tools: 3 },
+    construction_labor:     120,
+    build_turns:        2,
+    autonomous_builder: 'sailors_class',
+    nation_buildable:   true,
+    production_output: [
+      { good: 'garum', base_rate: 55 },
+    ],
+    production_inputs: [
+      { good: 'fish', amount_per_turn: 20, required: true },
+      { good: 'salt', amount_per_turn:  5, required: true },
+    ],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'none', deposit_key: null, allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          4,
+    maintenance_cost:   5,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Карфагенский и испанский гарум (Гадес, Картахена) были главными экспортными продуктами западного Средиземноморья — амфоры с ним найдены по всей Римской империи.',
+  },
+
+  // ── БОЙНЯ И МЯСНАЯ ЛАВКА ─────────────────────────────────────
+  butchery: {
+    name:        'Бойня и мясная лавка',
+    icon:        '🥩',
+    description: 'Забой скота и продажа мяса на рынке. ' +
+                 'Ремесленники-мясники работают за долю выручки. ' +
+                 'Требует регулярного подвоза живого скота.',
+    cost:        200,
+    category:    'production',
+    footprint_ha: 1,
+    workers_per_unit: 15,
+    worker_profession: [
+      { profession: 'craftsmen', count: 15 },
+    ],
+    wage_rate:          0.28,
+    labor_type:         'wage',
+    construction_materials: { timber: 4, tools: 2 },
+    construction_labor:     86,
+    build_turns:        1,
+    autonomous_builder: null,
+    nation_buildable:   true,
+    production_output: [
+      { good: 'meat', base_rate: 60 },
+    ],
+    production_inputs: [
+      { good: 'cattle', amount_per_turn: 10, required: true },
+    ],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'none', deposit_key: null, allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          4,
+    maintenance_cost:   4,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Городские бойни (macellum) были обычным явлением в римских и греческих городах; жертвенный скот после храмовых ритуалов часто продавался на рынке.',
+  },
+
   papyrus_bed: {
     name:        'Папирусные заросли',
     icon:        '📜',
