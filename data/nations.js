@@ -2192,6 +2192,238 @@ const INITIAL_GAME_STATE = {
     },
 
 
+    // ════════════════════════════════════════════════════════════════
+    // СЕВЕРНАЯ АФРИКА
+    // ════════════════════════════════════════════════════════════════
+
+    // ── КИРЕНА (Уровень A) ────────────────────────────────────────
+    cyrene: {
+      name: 'Кирена', adjective: 'киренское', color: '#DAA520', flag_emoji: '🌿',
+      is_player: false, is_minor: false,
+      ai_personality: 'mercantile', ai_priority: 'economy',
+      government: {
+        type: 'oligarchy', legitimacy: 65, stability: 60,
+        ruler: { type: 'person', name: 'Офелла', personal_power: 70 },
+      },
+      regions: [],
+      population: {
+        total: 300000,
+        by_profession: { farmers: 100000, craftsmen: 40000, merchants: 50000, sailors: 20000, clergy: 15000, soldiers: 15000, slaves: 60000 },
+        happiness: 60, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 18000, tax_rate: 0.12,
+        primary_exports: ['horses', 'wheat', 'olive_oil', 'trade_goods'],
+        primary_imports: ['timber', 'iron', 'slaves'],
+        trade_partners: ['ptolemaic_kingdom', 'carthage', 'rhodes', 'athens'],
+        stockpile: { wheat: 35000, fish: 5000, iron: 1000, horses: 4000, cattle: 5000 },
+        trade_routes: [],
+      },
+      military: { infantry: 12000, cavalry: 3000, ships: 30, mercenaries: 3000, morale: 68, loyalty: 62, at_war_with: [] },
+      relations: {
+        ptolemaic_kingdom: { score: -20, treaties: [], at_war: false },
+        carthage:          { score: 10,  treaties: [], at_war: false },
+        masaesyli:         { score: -15, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Кирена — богатейшая греческая колония Северной Африки. В 304 г. до н.э. полководец Офелла правит городом, опираясь на поддержку Агафокла Сиракузского. Кирена известна породистыми лошадьми, силфием (ценнейшим лекарственным растением) и пшеницей. Вскоре попадёт под власть Птолемея I.',
+    },
+
+    // ── МАВРЕТАНИЯ (Уровень A) ────────────────────────────────────
+    mauretania: {
+      name: 'Мавретания', adjective: 'мавретанское', color: '#CD853F', flag_emoji: '🐎',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'survival',
+      government: {
+        type: 'tribal', legitimacy: 60, stability: 55,
+        ruler: { type: 'tribal_chief', name: 'Вождь мавров', personal_power: 65 },
+      },
+      regions: [],
+      population: {
+        total: 350000,
+        by_profession: { farmers: 120000, craftsmen: 30000, merchants: 20000, sailors: 15000, clergy: 15000, soldiers: 50000, slaves: 100000 },
+        happiness: 58, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 6000, tax_rate: 0.07,
+        primary_exports: ['horses', 'slaves', 'furs', 'ivory', 'cattle'],
+        primary_imports: ['iron', 'salt', 'trade_goods', 'wine'],
+        trade_partners: ['carthage', 'masaesyli', 'lixus'],
+        stockpile: { wheat: 20000, fish: 4000, iron: 500, horses: 8000, cattle: 15000 },
+        trade_routes: [],
+      },
+      military: { infantry: 20000, cavalry: 8000, ships: 5, mercenaries: 0, morale: 70, loyalty: 70, at_war_with: [] },
+      relations: {
+        carthage:  { score: -10, treaties: [], at_war: false },
+        masaesyli: { score: 10,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Берберские племена крайнего запада Северной Африки (совр. Марокко и запад Алжира). Мавры — искусные конники, их конница будет востребована Карфагеном. В 304 г. разрозненные племена ещё не объединены в единое царство.',
+    },
+
+    // ── МАСИЛИИ (Уровень A) ───────────────────────────────────────
+    massylii: {
+      name: 'Масилии', adjective: 'масилийское', color: '#B8860B', flag_emoji: '🐎',
+      is_player: false, is_minor: false,
+      ai_personality: 'opportunist', ai_priority: 'military',
+      government: {
+        type: 'tribal', legitimacy: 65, stability: 60,
+        ruler: { type: 'tribal_chief', name: 'Вождь масилиев', personal_power: 68 },
+      },
+      regions: [],
+      population: {
+        total: 450000,
+        by_profession: { farmers: 160000, craftsmen: 40000, merchants: 30000, sailors: 10000, clergy: 20000, soldiers: 60000, slaves: 130000 },
+        happiness: 60, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 9000, tax_rate: 0.08,
+        primary_exports: ['horses', 'slaves', 'ivory', 'wheat', 'cattle'],
+        primary_imports: ['iron', 'trade_goods', 'salt'],
+        trade_partners: ['carthage', 'masaesyli', 'cyrene'],
+        stockpile: { wheat: 30000, fish: 3000, iron: 1000, horses: 10000, cattle: 20000 },
+        trade_routes: [],
+      },
+      military: { infantry: 25000, cavalry: 12000, ships: 5, mercenaries: 2000, morale: 72, loyalty: 68, at_war_with: [] },
+      relations: {
+        carthage:   { score: 50, treaties: [], at_war: false },
+        masaesyli:  { score: -30, treaties: [], at_war: false },
+        cyrene:     { score: -10, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Восточная Нумидия — союзница Карфагена. Предки будущего царя Масиниссы, великого союзника Рима в Пунических войнах. В 304 г. масилии поставляют Карфагену лучшую в мире лёгкую конницу.',
+    },
+
+    // ── МАСЭСИЛИИ (Уровень A) ─────────────────────────────────────
+    masaesyli: {
+      name: 'Масэсилии', adjective: 'масэсилийское', color: '#C8A820', flag_emoji: '🐎',
+      is_player: false, is_minor: false,
+      ai_personality: 'opportunist', ai_priority: 'military',
+      government: {
+        type: 'tribal', legitimacy: 62, stability: 58,
+        ruler: { type: 'tribal_chief', name: 'Вождь масэсилиев', personal_power: 65 },
+      },
+      regions: [],
+      population: {
+        total: 500000,
+        by_profession: { farmers: 180000, craftsmen: 40000, merchants: 25000, sailors: 10000, clergy: 20000, soldiers: 70000, slaves: 155000 },
+        happiness: 58, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 8000, tax_rate: 0.07,
+        primary_exports: ['horses', 'slaves', 'ivory', 'cattle', 'wheat'],
+        primary_imports: ['iron', 'trade_goods', 'salt'],
+        trade_partners: ['carthage', 'massylii', 'mauretania'],
+        stockpile: { wheat: 32000, fish: 2000, iron: 800, horses: 12000, cattle: 25000 },
+        trade_routes: [],
+      },
+      military: { infantry: 28000, cavalry: 14000, ships: 5, mercenaries: 1500, morale: 70, loyalty: 66, at_war_with: [] },
+      relations: {
+        carthage:  { score: 40,  treaties: [], at_war: false },
+        massylii:  { score: -30, treaties: [], at_war: false },
+        mauretania:{ score: 10,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Западная Нумидия — крупнейшее нумидийское царство, союзник Карфагена. Предки будущего царя Сифака, соперника Масиниссы. В 304 г. контролируют огромную территорию от Орана до Атласских гор.',
+    },
+
+    // ── МЕРОЭ (Уровень A) ─────────────────────────────────────────
+    meroe: {
+      name: 'Мероэ', adjective: 'мероитское', color: '#8B4513', flag_emoji: '🐘',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'economy',
+      government: {
+        type: 'monarchy', legitimacy: 80, stability: 75,
+        ruler: { type: 'person', name: 'Царица-кандака Нахирсан', personal_power: 72 },
+      },
+      regions: [],
+      population: {
+        total: 250000,
+        by_profession: { farmers: 90000, craftsmen: 40000, merchants: 30000, sailors: 10000, clergy: 30000, soldiers: 20000, slaves: 30000 },
+        happiness: 65, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 15000, tax_rate: 0.12,
+        primary_exports: ['iron', 'ivory', 'slaves', 'trade_goods', 'cattle'],
+        primary_imports: ['wheat', 'papyrus', 'glass', 'trade_goods'],
+        trade_partners: ['ptolemaic_kingdom', 'axum', 'blemmyes'],
+        stockpile: { wheat: 15000, fish: 2000, iron: 5000, horses: 1000, cattle: 8000 },
+        trade_routes: [],
+      },
+      military: { infantry: 15000, cavalry: 2000, ships: 10, mercenaries: 1000, morale: 72, loyalty: 75, at_war_with: [] },
+      relations: {
+        ptolemaic_kingdom: { score: -20, treaties: [], at_war: false },
+        blemmyes:          { score: -15, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Нубийское царство со столицей в Мероэ — наследник древнего Куша. В 304 г. Мероэ переживает период расцвета: железные кузницы, слоновая кость и контроль над торговыми путями в Центральную Африку. Женщины-правительницы (кандаки) известны воинственностью и властью.',
+    },
+
+    // ── ГАРАМАНТЫ (Уровень A) ────────────────────────────────────
+    garamantes: {
+      name: 'Гараманты', adjective: 'гарамантское', color: '#D2691E', flag_emoji: '🐫',
+      is_player: false, is_minor: false,
+      ai_personality: 'aggressive', ai_priority: 'military',
+      government: {
+        type: 'tribal', legitimacy: 62, stability: 58,
+        ruler: { type: 'tribal_chief', name: 'Верховный вождь гарамантов', personal_power: 70 },
+      },
+      regions: [],
+      population: {
+        total: 300000,
+        by_profession: { farmers: 80000, craftsmen: 30000, merchants: 20000, sailors: 0, clergy: 20000, soldiers: 60000, slaves: 90000 },
+        happiness: 60, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 7000, tax_rate: 0.07,
+        primary_exports: ['slaves', 'ivory', 'furs', 'cattle'],
+        primary_imports: ['iron', 'salt', 'trade_goods'],
+        trade_partners: ['carthage', 'massylii', 'nasamonia'],
+        stockpile: { wheat: 12000, fish: 500, iron: 500, horses: 5000, cattle: 12000 },
+        trade_routes: [],
+      },
+      military: { infantry: 15000, cavalry: 10000, ships: 0, mercenaries: 0, morale: 72, loyalty: 72, at_war_with: [] },
+      relations: {
+        carthage:  { score: -10, treaties: [], at_war: false },
+        nasamonia: { score: -20, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Гараманты — Берберские кочевники Сахары, контролирующие транссахарские торговые пути. Их уникальная система подземных ирригационных каналов (фоггара) позволяет жить в пустыне. В 304 г. они совершают регулярные набеги на прибрежные земли и торгуют рабами.',
+    },
+
+    // ── НАСАМОНИЯ (Уровень A) ────────────────────────────────────
+    nasamonia: {
+      name: 'Насамония', adjective: 'насамонийское', color: '#E8C87A', flag_emoji: '🏜️',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'survival',
+      government: {
+        type: 'tribal', legitimacy: 58, stability: 55,
+        ruler: { type: 'tribal_chief', name: 'Вождь насамонов', personal_power: 62 },
+      },
+      regions: [],
+      population: {
+        total: 150000,
+        by_profession: { farmers: 50000, craftsmen: 15000, merchants: 10000, sailors: 5000, clergy: 10000, soldiers: 30000, slaves: 30000 },
+        happiness: 55, growth_rate: 0.001,
+      },
+      economy: {
+        treasury: 3000, tax_rate: 0.06,
+        primary_exports: ['slaves', 'cattle', 'furs'],
+        primary_imports: ['iron', 'salt', 'wheat'],
+        trade_partners: ['garamantes', 'cyrene', 'psyllia'],
+        stockpile: { wheat: 8000, fish: 2000, iron: 300, horses: 2000, cattle: 8000 },
+        trade_routes: [],
+      },
+      military: { infantry: 10000, cavalry: 4000, ships: 0, mercenaries: 0, morale: 65, loyalty: 65, at_war_with: [] },
+      relations: {
+        garamantes: { score: -20, treaties: [], at_war: false },
+        cyrene:     { score: -10, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Ливийское племя вокруг большого сирта (совр. Ливия). Насамоны — кочевники-пастухи, ныряльщики за обломками кораблей и торговцы. Геродот описывал их ритуал ночёвки на могилах предков для получения пророческих снов.',
+    },
+
+
   },
   regions: {},
 
