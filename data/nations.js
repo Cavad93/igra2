@@ -4336,6 +4336,280 @@ const INITIAL_GAME_STATE = {
     active_laws: [], characters: [],
     historical_note: "Яёйская культура 304 г. до н.э. — переходный период в истории Японии, когда с Корейского полуострова распространяется влажное рисоводство и бронзовые изделия. Японские острова состоят из множества мелких племенных вождеств."
   }
+  ,
+
+  // ===== ШАГ 9: СЕВЕРНАЯ И ЗАПАДНАЯ ЕВРОПА =====
+
+  // === LEVEL B ===
+
+  gaul: {
+    name: "Галлия (Кельты)",
+    adjective: "галльский",
+    color: "#228B22",
+    flag_emoji: "🪓",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "militarist",
+    ai_priority: ["expansion", "military", "trade"],
+    government: { type: "tribal", stability: 50, corruption: 25 },
+    regions: ["gallia_lugdunensis", "gallia_belgica", "gallia_narbonensis", "gallia_aquitania", "armorica", "gallia_celtica"],
+    population: { total: 2000000 },
+    economy: {
+      gold: 400,
+      income_per_turn: 75,
+      trade_routes: ["rome", "massalia", "iberian_tribes"],
+      stockpile: { grain: 3000, wood: 2000, iron: 800, furs: 600 }
+    },
+    military: { infantry: 120000, cavalry: 20000, ships: 100, at_war_with: [] },
+    relations: { rome: -40, carthage: 10, macedon: -20, epirus: -20, massalia: -20, iberian_tribes: 20, germani: 10, helvetii: 20, belgae: 40 },
+    active_laws: [], characters: [],
+    historical_note: "Галлия в 304 г. до н.э. — земля многочисленных кельтских племён, объединённых общей культурой, но постоянно воюющих между собой. В 390 г. до н.э. галлы разграбили Рим, создав травму, которая в Риме не забудется никогда. Постепенно устанавливаются торговые связи с греческой Массалией (Марсель) и этрусскими городами."
+  },
+
+  dacia: {
+    name: "Дакия",
+    adjective: "дакийский",
+    color: "#8B4513",
+    flag_emoji: "🐺",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "balanced",
+    ai_priority: ["military", "economy"],
+    government: { type: "tribal", stability: 55, corruption: 30 },
+    regions: ["transylvania", "moldavia_north", "wallachia_east", "dacian_highlands"],
+    population: { total: 700000 },
+    economy: {
+      gold: 200,
+      income_per_turn: 40,
+      trade_routes: ["macedon", "getae", "scythians"],
+      stockpile: { grain: 1500, gold_ore: 400, iron: 300, silver: 200 }
+    },
+    military: { infantry: 35000, cavalry: 8000, ships: 0, at_war_with: [] },
+    relations: { macedon: -10, getae: 30, scythians: -20, rome: -20, illyria: -10 },
+    active_laws: [], characters: [],
+    historical_note: "Даки — фракийские племена в Карпатах, богатые золотом и серебром Трансильвании. В 304 г. до н.э. ещё раздроблены на множество племён. Впоследствии объединятся под властью Буребисты и станут главным противником Рима на севере."
+  },
+
+  illyria: {
+    name: "Иллирия",
+    adjective: "иллирийский",
+    color: "#4169E1",
+    flag_emoji: "⚓",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "raider",
+    ai_priority: ["military", "trade", "expansion"],
+    government: { type: "monarchy", stability: 50, corruption: 35 },
+    regions: ["dalmatia", "albania_north", "bosnia", "montenegro"],
+    population: { total: 500000 },
+    economy: {
+      gold: 180,
+      income_per_turn: 38,
+      trade_routes: ["macedon", "epirus", "rome"],
+      stockpile: { grain: 800, iron: 400, timber: 600, fish: 300 }
+    },
+    military: { infantry: 25000, cavalry: 5000, ships: 200, at_war_with: [] },
+    relations: { macedon: -30, epirus: -40, rome: -30, gaul: 10, dacia: 20 },
+    active_laws: [], characters: [],
+    historical_note: "Иллирийцы — пираты и воины западных Балкан. Их набеги на греческие торговые пути станут причиной первой Иллирийской войны с Римом (229 г. до н.э.). В 304 г. до н.э. иллирийские пираты уже представляют серьёзную угрозу для адриатической торговли."
+  },
+
+  celtiberia: {
+    name: "Кельтиберия",
+    adjective: "кельтиберийский",
+    color: "#CD5C5C",
+    flag_emoji: "⚔️",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "defensive",
+    ai_priority: ["military", "economy"],
+    government: { type: "tribal", stability: 50, corruption: 25 },
+    regions: ["meseta_central", "aragon_interior", "castile_old", "cantabria"],
+    population: { total: 800000 },
+    economy: {
+      gold: 250,
+      income_per_turn: 45,
+      trade_routes: ["carthage", "iberian_coast"],
+      stockpile: { grain: 1500, silver: 600, iron: 500, horses: 400 }
+    },
+    military: { infantry: 40000, cavalry: 12000, ships: 0, at_war_with: [] },
+    relations: { carthage: -10, rome: -20, gaul: 20, iberian_coast: 10 },
+    active_laws: [], characters: [],
+    historical_note: "Кельтиберы — смешение кельтских и иберийских традиций во внутренней Испании. Свирепые воины, чей меч-фальката вдохновит создание римского гладиуса. Серебряные рудники делают их регион лакомой добычей для Карфагена и Рима."
+  },
+
+  // === LEVEL C ===
+
+  belgae: {
+    name: "Белги",
+    adjective: "бельгийский",
+    color: "#3CB371",
+    flag_emoji: "🪓",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "militarist",
+    ai_priority: ["military", "expansion"],
+    government: { type: "tribal", stability: 45, corruption: 20 },
+    regions: ["gallia_belgica_north", "rhine_lower_west"],
+    population: { total: 400000 },
+    economy: { gold: 100, income_per_turn: 20, trade_routes: ["gaul", "germani"], stockpile: { grain: 800, iron: 300 } },
+    military: { infantry: 30000, cavalry: 8000, ships: 50, at_war_with: [] },
+    relations: { gaul: 40, germani: -10, rome: -30, britannia: 20 },
+    active_laws: [], characters: [],
+    historical_note: "Белги — самые северные и воинственные кельтские племена Галлии, смешавшиеся с германскими народами. Даже Цезарь восхитится их стойкостью три века спустя."
+  },
+
+  britannia: {
+    name: "Британские племена",
+    adjective: "британский",
+    color: "#4682B4",
+    flag_emoji: "☁️",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "defensive",
+    ai_priority: ["economy", "military"],
+    government: { type: "tribal", stability: 50, corruption: 20 },
+    regions: ["britannia_south", "britannia_central"],
+    population: { total: 600000 },
+    economy: { gold: 150, income_per_turn: 28, trade_routes: ["gaul", "belgae"], stockpile: { grain: 1200, tin: 500, iron: 300 } },
+    military: { infantry: 30000, cavalry: 5000, ships: 150, at_war_with: [] },
+    relations: { gaul: 30, belgae: 20, rome: -10 },
+    active_laws: [], characters: [],
+    historical_note: "Британские острова в 304 г. до н.э. населены многочисленными кельтскими племенами, ведущими активную торговлю оловом с Галлией и далёким Средиземноморьем. Массалиот Пифей посетил острова около 320 г. до н.э."
+  },
+
+  germani: {
+    name: "Германские племена",
+    adjective: "германский",
+    color: "#696969",
+    flag_emoji: "🌲",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "raider",
+    ai_priority: ["expansion", "military"],
+    government: { type: "tribal", stability: 40, corruption: 15 },
+    regions: ["germania_west", "germania_north", "elbe_valley"],
+    population: { total: 800000 },
+    economy: { gold: 80, income_per_turn: 18, trade_routes: ["gaul", "belgae"], stockpile: { wood: 1000, furs: 600, iron: 200 } },
+    military: { infantry: 60000, cavalry: 10000, ships: 100, at_war_with: [] },
+    relations: { gaul: 10, belgae: -10, dacia: 20, venedia: 10 },
+    active_laws: [], characters: [],
+    historical_note: "Германские племена в 304 г. до н.э. ещё слабо отделены от кельтов в глазах греческих и римских авторов. Живут в бескрайних лесах к востоку от Рейна, занимаясь скотоводством и охотой. Постепенно давят на кельтские племена с севера."
+  },
+
+  helvetii: {
+    name: "Гельветы",
+    adjective: "гельветский",
+    color: "#FF4500",
+    flag_emoji: "⛰️",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "balanced",
+    ai_priority: ["military", "trade"],
+    government: { type: "tribal", stability: 55, corruption: 20 },
+    regions: ["helvetia_plateau"],
+    population: { total: 250000 },
+    economy: { gold: 80, income_per_turn: 18, trade_routes: ["gaul", "rome"], stockpile: { grain: 500, iron: 200 } },
+    military: { infantry: 20000, cavalry: 3000, ships: 0, at_war_with: [] },
+    relations: { gaul: 30, germani: -20, rome: 10 },
+    active_laws: [], characters: [],
+    historical_note: "Гельветы — кельтские племена в Альпах и на Швейцарском плато. Известны как умелые воины и торговцы между Галлией и Северной Италией."
+  },
+
+  getae: {
+    name: "Геты",
+    adjective: "гетский",
+    color: "#9370DB",
+    flag_emoji: "🏹",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "balanced",
+    ai_priority: ["military", "economy"],
+    government: { type: "tribal", stability: 50, corruption: 25 },
+    regions: ["lower_danube_plain", "dobrudja"],
+    population: { total: 300000 },
+    economy: { gold: 90, income_per_turn: 22, trade_routes: ["macedon", "scythians", "dacia"], stockpile: { grain: 800, horses: 300 } },
+    military: { infantry: 15000, cavalry: 10000, ships: 50, at_war_with: [] },
+    relations: { macedon: -20, scythians: -10, dacia: 30 },
+    active_laws: [], characters: [],
+    historical_note: "Геты — фракийские племена у низовьев Дуная, которым Александр Македонский нанёс карательный удар в 335 г. до н.э. Известны культом бессмертия и жертвоприношением вестников богу Замолксису."
+  },
+
+  venedia: {
+    name: "Венеды",
+    adjective: "венедский",
+    color: "#708090",
+    flag_emoji: "🌿",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "defensive",
+    ai_priority: ["economy", "trade"],
+    government: { type: "tribal", stability: 50, corruption: 15 },
+    regions: ["vistula_valley", "oder_valley"],
+    population: { total: 300000 },
+    economy: { gold: 50, income_per_turn: 12, trade_routes: ["germani", "balts"], stockpile: { grain: 600, amber: 300, furs: 400 } },
+    military: { infantry: 15000, cavalry: 2000, ships: 50, at_war_with: [] },
+    relations: { germani: 10, balts: 30, dacia: 20, getae: 10 },
+    active_laws: [], characters: [],
+    historical_note: "Венеды (предки западных славян) — загадочный народ, упоминаемый лишь поздними авторами. Ведут торговлю янтарём с южными народами через великий Янтарный путь."
+  },
+
+  balts: {
+    name: "Балтийские племена",
+    adjective: "балтский",
+    color: "#2E8B57",
+    flag_emoji: "🌊",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "defensive",
+    ai_priority: ["economy", "trade"],
+    government: { type: "tribal", stability: 55, corruption: 10 },
+    regions: ["prussia_region", "latvia_region", "lithuania_region"],
+    population: { total: 200000 },
+    economy: { gold: 40, income_per_turn: 10, trade_routes: ["venedia", "germani"], stockpile: { amber: 800, furs: 500, honey: 200 } },
+    military: { infantry: 10000, cavalry: 1000, ships: 80, at_war_with: [] },
+    relations: { venedia: 30, germani: 10 },
+    active_laws: [], characters: [],
+    historical_note: "Балтийские племена (галинды, йотвинги, куршы) живут на берегах Балтийского моря. Контролируют добычу янтаря — «солнечного камня», высоко ценимого в Средиземноморье. Включают предков галиндов и вельтов, упомянутых в источниках."
+  },
+
+  picts: {
+    name: "Пикты",
+    adjective: "пиктский",
+    color: "#4B0082",
+    flag_emoji: "🗿",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "defensive",
+    ai_priority: ["military"],
+    government: { type: "tribal", stability: 50, corruption: 10 },
+    regions: ["caledonia", "pictland"],
+    population: { total: 150000 },
+    economy: { gold: 25, income_per_turn: 8, trade_routes: ["britannia"], stockpile: { furs: 300, cattle: 400 } },
+    military: { infantry: 12000, cavalry: 500, ships: 50, at_war_with: [] },
+    relations: { britannia: -10 },
+    active_laws: [], characters: [],
+    historical_note: "Пикты — таинственный народ Каледонии (Шотландия), оставивший загадочные резные камни. Происхождение их спорно: возможно, они — потомки доиндоевропейского населения Британии или ранние кельты с уникальными традициями."
+  },
+
+  iberian_coast: {
+    name: "Иберийское побережье",
+    adjective: "иберийский",
+    color: "#FF8C00",
+    flag_emoji: "⚓",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "balanced",
+    ai_priority: ["trade", "economy"],
+    government: { type: "tribal", stability: 55, corruption: 30 },
+    regions: ["valencia_coast", "catalonia_coast", "andalusia_coast"],
+    population: { total: 500000 },
+    economy: { gold: 200, income_per_turn: 42, trade_routes: ["carthage", "massalia", "celtiberia"], stockpile: { grain: 1000, silver: 400, fish: 600 } },
+    military: { infantry: 20000, cavalry: 8000, ships: 200, at_war_with: [] },
+    relations: { carthage: 30, massalia: -10, rome: -20, celtiberia: 10 },
+    active_laws: [], characters: [],
+    historical_note: "Иберийские народы средиземноморского побережья Испании — умелые торговцы и воины, исповедующие культ лошади и ведущие активный обмен с финикийскими колониями и греческой Массалией. Их серебро привлекает Карфаген."
+  }
   },
   regions: {},
 
