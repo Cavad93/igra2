@@ -1881,6 +1881,164 @@ const BUILDINGS = {
     historical_note: 'Македония и Фракия были главными поставщиками корабельной смолы для греческих флотов; контроль над хвойными лесами Македонии был стратегическим приоритетом Афин.',
   },
 
+  // ── СБОР ЯНТАРЯ ──────────────────────────────────────────────
+  amber_gathering: {
+    name:        'Янтарный промысел',
+    icon:        '🟠',
+    description: 'Сбор янтаря на балтийском побережье — поиск на пляжах и ловля сетями с лодок. ' +
+                 'Простой труд, но доступен только там, где янтарь выбрасывает море. ' +
+                 'Собранный янтарь идёт на юг по Янтарному пути через тысячи км.',
+    cost:        120,
+    category:    'production',
+    footprint_ha: 10,
+    workers_per_unit: 15,
+    worker_profession: [
+      { profession: 'farmers', count: 12 },
+      { profession: 'sailors', count: 3 },
+    ],
+    wage_rate:          0.32,
+    labor_type:         'free',
+    construction_materials: { timber: 3, tools: 1 },
+    construction_labor:     56,
+    build_turns:        1,
+    autonomous_builder: 'farmers_class',
+    nation_buildable:   true,
+    production_output: [
+      { good: 'amber', base_rate: 30 },
+    ],
+    production_inputs: [],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'deposit', deposit_key: 'amber_beds', allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     1,
+    max_level:          3,
+    maintenance_cost:   2,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Самбийский полуостров (совр. Калининград) был главным источником янтаря античности; Плиний Старший описывает янтарный путь длиной более 600 миль от Балтики до Карнунта.',
+  },
+
+  // ── ПУШНОЙ ПРОМЫСЕЛ ──────────────────────────────────────────
+  fur_trapping: {
+    name:        'Пушной промысел',
+    icon:        '🦊',
+    description: 'Охота и ловля пушных зверей в северных лесах и тундре. ' +
+                 'Охотники расставляют ловушки на соболя, куницу, бобра и лису. ' +
+                 'Меха высоко ценятся на юге как предмет роскоши и зимняя одежда.',
+    cost:        100,
+    category:    'production',
+    footprint_ha: 50,
+    workers_per_unit: 10,
+    worker_profession: [
+      { profession: 'farmers', count: 10 },
+    ],
+    wage_rate:          0.35,
+    labor_type:         'free',
+    construction_materials: { timber: 2, tools: 1 },
+    construction_labor:     47,
+    build_turns:        1,
+    autonomous_builder: 'farmers_class',
+    nation_buildable:   true,
+    production_output: [
+      { good: 'furs', base_rate: 35 },
+    ],
+    production_inputs: [],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'deposit', deposit_key: 'fur_grounds', allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          4,
+    maintenance_cost:   2,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Скифские и германские племена торговали мехами с греческими колониями Причерноморья; Геродот упоминает торговлю мехами у народов к северу от Скифии.',
+  },
+
+  // ── ОЛОВЯННЫЙ РУДНИК ─────────────────────────────────────────
+  tin_mine: {
+    name:        'Оловянный рудник',
+    icon:        '⬜',
+    description: 'Добыча касситерита — оловянной руды. ' +
+                 'Крупнейшие месторождения античности — в Иберии, Корнуолле и Бретани. ' +
+                 'Без олова невозможно производство бронзы; контроль над рудниками — стратегический приоритет.',
+    cost:        950,
+    category:    'production',
+    footprint_ha: 20,
+    workers_per_unit: 55,
+    worker_profession: [
+      { profession: 'craftsmen', count: 10 },
+      { profession: 'slaves',    count: 45 },
+    ],
+    wage_rate:          0.08,
+    labor_type:         'slave',
+    construction_materials: { timber: 12, iron: 5, tools: 6 },
+    construction_labor:     207,
+    build_turns:        5,
+    autonomous_builder: null,
+    nation_buildable:   true,
+    production_output: [
+      { good: 'tin', base_rate: 45 },
+    ],
+    production_inputs: [
+      { good: 'timber', amount_per_turn: 7, required: true },
+      { good: 'tools',  amount_per_turn: 4, required: true },
+    ],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'deposit', deposit_key: 'tin_ore', allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          4,
+    maintenance_cost:   18,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Финикийцы и карфагеняне монополизировали морской путь к оловянным "Кассiteridам" (Британским островам); само слово "касситерит" — греческого происхождения.',
+    slave_mortality_mod: 0.004,
+  },
+
+  // ── ПЛАНТАЦИЯ БЛАГОВОНИЙ ─────────────────────────────────────
+  incense_grove: {
+    name:        'Плантация благовоний',
+    icon:        '🌿',
+    description: 'Сбор ладана (Boswellia) и мирры (Commiphora) в аравийских и восточноафриканских пустынях. ' +
+                 'Деревья надрезают, смола застывает и собирается вручную. ' +
+                 'Возможно только в пустынных регионах с соответствующими деревьями.',
+    cost:        300,
+    category:    'production',
+    footprint_ha: 30,
+    workers_per_unit: 20,
+    worker_profession: [
+      { profession: 'farmers', count: 20 },
+    ],
+    wage_rate:          0.30,
+    labor_type:         'free',
+    construction_materials: { timber: 3, tools: 2 },
+    construction_labor:     115,
+    build_turns:        2,
+    autonomous_builder: 'farmers_class',
+    nation_buildable:   true,
+    production_output: [
+      { good: 'incense', base_rate: 40 },
+    ],
+    production_inputs: [],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'deposit', deposit_key: 'incense_trees', allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          4,
+    maintenance_cost:   5,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Сабейское царство (Йемен) контролировало торговлю ладаном; путь благовоний из Аравии Феликс в Газу занимал около 65 дней на верблюдах.',
+  },
+
   papyrus_bed: {
     name:        'Папирусные заросли',
     icon:        '📜',
