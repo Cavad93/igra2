@@ -709,6 +709,31 @@ const SOCIAL_CLASSES = {
     happy_effects: {
       production_mod: +0.05,
     },
+    // ── НОВЫЕ ПОЛЯ ───────────────────────────────────────────────────────────
+    can_work_in: {
+      primary:   ['tavern', 'market', 'pottery_workshop', 'workshop', 'garum_workshop', 'butchery'],
+      secondary: ['port', 'warehouse', 'fishery'],
+      forbidden: ['barracks', 'temple', 'forum', 'school', 'silver_mine', 'gold_mine'],
+    },
+    ownership_rights: {
+      can_own:   ['tavern'],
+      can_build: ['tavern'],
+      max_owned: 2,
+    },
+    political_actions: {
+      can_vote:          false,
+      can_hold_office:   false,
+      can_lead_army:     false,
+      can_conspire:      false,
+      rebellion_trigger: 20,
+      rebellion_type:    'riot',
+      pressure_actions:  [
+        'flee_patron',
+        'join_slave_revolt',
+        'petition_magistrate',
+        'refuse_work_contract',
+      ],
+    },
   },
 
   // ── РАБЫ ───────────────────────────────────────────────────────────────
@@ -740,6 +765,105 @@ const SOCIAL_CLASSES = {
     happy_effects: {
       production_mod: +0.08,
     },
+    // ── НОВЫЕ ПОЛЯ ───────────────────────────────────────────────────────────
+    can_work_in: {
+      primary: [
+        'iron_mine', 'copper_mine', 'silver_mine', 'gold_mine',
+        'tin_mine', 'sulfur_mine', 'quarry', 'mine',
+        'wheat_latifundium', 'road', 'aqueduct', 'walls',
+        'charcoal_kiln', 'baths',
+      ],
+      secondary: [
+        'wheat_villa', 'forge', 'textile_mill', 'tannery',
+        'lumber_camp', 'cattle_farm', 'salt_works',
+      ],
+      forbidden: ['barracks', 'forum', 'temple', 'school', 'market', 'port'],
+    },
+    ownership_rights: {
+      can_own:   [],
+      can_build: [],
+      max_owned: 0,
+    },
+    political_actions: {
+      can_vote:          false,
+      can_hold_office:   false,
+      can_lead_army:     false,
+      can_conspire:      true,
+      rebellion_trigger: 15,
+      rebellion_type:    'slave_revolt',
+      pressure_actions:  [
+        'work_slowdown',
+        'sabotage',
+        'escape_to_hills',
+        'mass_desertion',
+        'poison_master',
+      ],
+    },
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// МАТРИЦА КОНФЛИКТОВ МЕЖДУ КЛАССАМИ
+// tension: 0–100 — базовая напряжённость
+// trigger: событие которое усиливает конфликт
+// escalation: что происходит при tension > 80
+// ─────────────────────────────────────────────────────────────────────────
+const CLASS_CONFLICTS = {
+
+  aristocrats_vs_citizens: {
+    tension: 45,
+    over: ['land', 'political_power'],
+    trigger: 'land_reform_law',
+    escalation: 'aristocrats fund coup against reformers',
+  },
+
+  craftsmen_vs_slaves: {
+    tension: 60,
+    over: ['jobs', 'wages'],
+    trigger: 'slave_count_exceeds_craftsmen',
+    escalation: 'craftsmen demand slave restrictions — production_mod -0.15',
+  },
+
+  farmers_vs_latifundia: {
+    tension: 70,
+    over: ['land'],
+    trigger: 'wheat_latifundium_count > 3 in region',
+    escalation: 'farmers abandon fields — famine risk',
+  },
+
+  soldiers_vs_officials: {
+    tension: 35,
+    over: ['budget_priority'],
+    trigger: 'treasury_deficit',
+    escalation: 'soldiers threaten coup if pay cut',
+  },
+
+  clergy_vs_officials: {
+    tension: 30,
+    over: ['tax_exemption', 'political_influence'],
+    trigger: 'temple_tax_law',
+    escalation: 'clergy incite religious unrest — happiness_base_mod -5',
+  },
+
+  slaves_vs_aristocrats: {
+    tension: 75,
+    over: ['freedom', 'living_conditions'],
+    trigger: 'slave_happiness_below_20',
+    escalation: 'slave revolt spreads across region — production_mod -0.40',
+  },
+
+  sailors_vs_merchants: {
+    tension: 25,
+    over: ['profit_share', 'port_fees'],
+    trigger: 'port_tax_increase',
+    escalation: 'sailors blockade port — trade_income_mod -0.30',
+  },
+
+  freedmen_vs_craftsmen: {
+    tension: 40,
+    over: ['guild_access', 'workshop_contracts'],
+    trigger: 'freedmen_population_exceeds_10pct',
+    escalation: 'guild protests — craftsmen strike',
   },
 };
 
