@@ -3718,6 +3718,324 @@ const INITIAL_GAME_STATE = {
     },
 
 
+  // ===== ШАГ 7: СТЕПЬ, ЦЕНТРАЛЬНАЯ АЗИЯ, ИНДИЯ =====
+
+  // === LEVEL A ===
+
+  scythians: {
+    name: "Скифское царство",
+    adjective: "скифский",
+    color: "#8B6914",
+    flag_emoji: "🏹",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "raider",
+    ai_priority: ["military", "expansion", "trade"],
+    government: { type: "monarchy", stability: 55, corruption: 40 },
+    regions: ["northern_pontic_steppe", "crimea_steppes", "dnieper_bend", "dniester_lower", "don_lower", "azov_coast", "kuban_steppe", "caucasus_foothills_north", "tanais_region", "zaporizhia_steppe"],
+    population: {
+      by_profession: {
+        farmers: 80000, craftsmen: 15000, merchants: 8000,
+        soldiers: 40000, nobles: 3000, priests: 2000, slaves: 10000
+      }
+    },
+    economy: {
+      gold: 280,
+      income_per_turn: 60,
+      trade_routes: ["olbia", "byzantion", "chersonesus", "tanais"],
+      stockpile: { grain: 600, wood: 120, iron: 80, horses: 800, gold_ore: 40 }
+    },
+    military: {
+      infantry: 15000,
+      cavalry: 45000,
+      ships: 0,
+      at_war_with: []
+    },
+    relations: {
+      macedon: -20, rome: 0, carthage: 0, egypt: 10,
+      seleucid_empire: -30, roxolani: -40, iazyges: -30,
+      chersonesus: 20, olbia: 30, bosporan_kingdom: 40
+    },
+    active_laws: [],
+    characters: [],
+    historical_note: "Скифы в 304 г. до н.э. — могущественный кочевой народ Причерноморья, контролирующий обширные степи от Дуная до Дона. Их царь Атей погиб в 339 г. до н.э. в битве с Филиппом II Македонским, и народ переживает период частичного упадка, теснимый сарматами с востока. Скифская конница — одна из лучших в мире."
+  },
+
+  maurya_empire: {
+    name: "Империя Маурьев",
+    adjective: "маурийский",
+    color: "#FF8C00",
+    flag_emoji: "🦚",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "expansionist",
+    ai_priority: ["expansion", "economy", "military"],
+    government: { type: "monarchy", stability: 70, corruption: 35 },
+    regions: ["magadha", "pataliputra_region", "anga", "videha", "kosala", "kashi", "vajji", "malla", "panchala", "avanti", "surashtra", "sindhu_lower", "taxila", "gandhara_core", "kalinga_coast", "deccan_north", "andhra_north"],
+    population: {
+      by_profession: {
+        farmers: 2500000, craftsmen: 400000, merchants: 200000,
+        soldiers: 300000, nobles: 20000, priests: 50000, slaves: 150000
+      }
+    },
+    economy: {
+      gold: 2000,
+      income_per_turn: 320,
+      trade_routes: ["bactria", "parthia", "seleucid_empire", "gandhara"],
+      stockpile: { grain: 8000, wood: 2000, iron: 1500, spices: 3000, cotton: 2500 }
+    },
+    military: {
+      infantry: 250000,
+      cavalry: 30000,
+      ships: 800,
+      at_war_with: []
+    },
+    relations: {
+      seleucid_empire: 40, bactria: 20, parthia: 10, egypt: 20,
+      macedon: 10, rome: 0, gandhara: 60
+    },
+    active_laws: [],
+    characters: [],
+    historical_note: "Империя Маурьев под управлением Чандрагупты Маурьи к 304 г. до н.э. стала крупнейшей державой Индийского субконтинента. В 305 г. до н.э. Чандрагупта разгромил армию Селевка I Никатора и получил северо-западные индийские территории. Советник Чанакья (Каутилья) написал знаменитый трактат об управлении государством «Артхашастра»."
+  },
+
+  // === LEVEL B ===
+
+  parthia: {
+    name: "Парфия",
+    adjective: "парфянский",
+    color: "#8B0000",
+    flag_emoji: "🏹",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "balanced",
+    ai_priority: ["economy", "military", "diplomacy"],
+    government: { type: "satrapy", stability: 55, corruption: 40 },
+    regions: ["parthiene", "hyrcania", "nisa_region", "margiana"],
+    population: { total: 350000 },
+    economy: {
+      gold: 180,
+      income_per_turn: 45,
+      trade_routes: ["seleucid_empire", "bactria", "maurya_empire"],
+      stockpile: { grain: 400, horses: 600, iron: 100, textiles: 200 }
+    },
+    military: { infantry: 8000, cavalry: 12000, ships: 0, at_war_with: [] },
+    relations: { seleucid_empire: 50, bactria: 30, scythians: -20, maurya_empire: 10 },
+    active_laws: [], characters: [],
+    historical_note: "В 304 г. до н.э. Парфия — восточная сатрапия государства Селевкидов. Местные иранские племена парнов обеспечивают отличную конницу. Спустя полвека Парфия обретёт независимость под предводительством Аршака I."
+  },
+
+  bactria: {
+    name: "Бактрия",
+    adjective: "бактрийский",
+    color: "#4169E1",
+    flag_emoji: "🐪",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "balanced",
+    ai_priority: ["trade", "economy", "military"],
+    government: { type: "satrapy", stability: 60, corruption: 35 },
+    regions: ["bactria_core", "sogdia", "maracanda_region", "chorasmia_south", "ferghana_west"],
+    population: { total: 500000 },
+    economy: {
+      gold: 250,
+      income_per_turn: 65,
+      trade_routes: ["seleucid_empire", "parthia", "maurya_empire", "scythians"],
+      stockpile: { grain: 500, gold_ore: 300, horses: 700, lapis_lazuli: 400 }
+    },
+    military: { infantry: 12000, cavalry: 18000, ships: 0, at_war_with: [] },
+    relations: { seleucid_empire: 55, parthia: 40, maurya_empire: 20, scythians: -30, saka: -40 },
+    active_laws: [], characters: [],
+    historical_note: "Бактрия в 304 г. до н.э. — богатейшая восточная сатрапия Селевкидов, расположенная на великом торговом пути из Индии в Средиземноморье. Смешение греческой и иранской культур создаёт уникальную цивилизацию. В середине III в. до н.э. здесь возникнет независимое Греко-Бактрийское царство."
+  },
+
+  roxolani: {
+    name: "Роксоланы",
+    adjective: "роксоланский",
+    color: "#6B8E23",
+    flag_emoji: "🐴",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "raider",
+    ai_priority: ["military", "expansion"],
+    government: { type: "tribal", stability: 45, corruption: 20 },
+    regions: ["don_middle", "volga_lower", "caspian_steppe"],
+    population: { total: 120000 },
+    economy: {
+      gold: 60,
+      income_per_turn: 15,
+      trade_routes: ["scythians", "bosporan_kingdom"],
+      stockpile: { horses: 900, cattle: 500, furs: 200 }
+    },
+    military: { infantry: 5000, cavalry: 20000, ships: 0, at_war_with: [] },
+    relations: { scythians: -40, iazyges: 30, siraces: 20, aorsi: 40 },
+    active_laws: [], characters: [],
+    historical_note: "Роксоланы — сарматское племя, теснящее скифов с востока. Их тяжёлая кавалерия в доспехах из костяных пластин произведёт впечатление даже на римлян в будущем. В 304 г. до н.э. активно расширяются в причерноморские степи."
+  },
+
+  maeotae: {
+    name: "Меоты",
+    adjective: "меотский",
+    color: "#20B2AA",
+    flag_emoji: "🐟",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "balanced",
+    ai_priority: ["trade", "economy"],
+    government: { type: "tribal", stability: 50, corruption: 25 },
+    regions: ["azov_east_coast", "kuban_lower", "taman_peninsula"],
+    population: { total: 80000 },
+    economy: {
+      gold: 50,
+      income_per_turn: 18,
+      trade_routes: ["bosporan_kingdom", "scythians"],
+      stockpile: { fish: 600, grain: 300, furs: 150 }
+    },
+    military: { infantry: 6000, cavalry: 4000, ships: 80, at_war_with: [] },
+    relations: { scythians: 10, bosporan_kingdom: 50, roxolani: -10 },
+    active_laws: [], characters: [],
+    historical_note: "Меоты — оседлые земледельцы и рыболовы на восточном берегу Меотийского озера (Азовское море). Тесно связаны с Боспорским царством, поставляя зерно и рыбу."
+  },
+
+  saka: {
+    name: "Саки",
+    adjective: "сакский",
+    color: "#CD853F",
+    flag_emoji: "🏹",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "raider",
+    ai_priority: ["military", "expansion"],
+    government: { type: "tribal", stability: 40, corruption: 20 },
+    regions: ["aral_steppe", "jaxartes_middle", "fergana_steppe", "pamir_foothills"],
+    population: { total: 200000 },
+    economy: {
+      gold: 80,
+      income_per_turn: 20,
+      trade_routes: ["bactria", "chorasmia"],
+      stockpile: { horses: 1200, furs: 300, gold_ore: 100 }
+    },
+    military: { infantry: 10000, cavalry: 30000, ships: 0, at_war_with: [] },
+    relations: { bactria: -40, parthia: -30, maurya_empire: -20, scythians: 20 },
+    active_laws: [], characters: [],
+    historical_note: "Саки (восточные скифы) — иранские кочевники Центральной Азии, упоминаемые в персидских и греческих источниках. Несколько их племён угрожают Бактрии с севера, и их давление в конечном счёте сыграет роль в падении Греко-Бактрийского царства."
+  },
+
+  // === LEVEL C ===
+
+  iazyges: {
+    name: "Языги",
+    adjective: "языгский",
+    color: "#9ACD32",
+    flag_emoji: "⚔️",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "raider",
+    ai_priority: ["military"],
+    government: { type: "tribal", stability: 40, corruption: 15 },
+    regions: ["dnieper_left", "desna_lower"],
+    population: { total: 60000 },
+    economy: { gold: 30, income_per_turn: 8, trade_routes: [], stockpile: { horses: 400, cattle: 200 } },
+    military: { infantry: 3000, cavalry: 8000, ships: 0, at_war_with: [] },
+    relations: { scythians: -30, roxolani: 30 },
+    active_laws: [], characters: [],
+    historical_note: "Языги — западное сарматское племя, постепенно вытесняющее скифов с их западных территорий."
+  },
+
+  siraces: {
+    name: "Сираки",
+    adjective: "сиракский",
+    color: "#DAA520",
+    flag_emoji: "⚔️",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "balanced",
+    ai_priority: ["military", "trade"],
+    government: { type: "tribal", stability: 50, corruption: 20 },
+    regions: ["kuban_middle", "stavropol_steppe"],
+    population: { total: 70000 },
+    economy: { gold: 40, income_per_turn: 12, trade_routes: ["bosporan_kingdom"], stockpile: { horses: 500, furs: 150 } },
+    military: { infantry: 4000, cavalry: 10000, ships: 0, at_war_with: [] },
+    relations: { scythians: -20, bosporan_kingdom: 20, roxolani: 30, maeotae: 10 },
+    active_laws: [], characters: [],
+    historical_note: "Сираки — сарматское племя у предгорий Кавказа, союзники Боспорского царства и посредники в торговле между степью и греческими городами."
+  },
+
+  aorsi: {
+    name: "Аорсы",
+    adjective: "аорсский",
+    color: "#7B68EE",
+    flag_emoji: "🐴",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "raider",
+    ai_priority: ["military"],
+    government: { type: "tribal", stability: 45, corruption: 15 },
+    regions: ["ural_lower", "caspian_north_coast"],
+    population: { total: 80000 },
+    economy: { gold: 35, income_per_turn: 10, trade_routes: ["roxolani"], stockpile: { horses: 700, furs: 200 } },
+    military: { infantry: 4000, cavalry: 15000, ships: 0, at_war_with: [] },
+    relations: { roxolani: 40, siraces: 20, scythians: -30 },
+    active_laws: [], characters: [],
+    historical_note: "Аорсы — сарматское племя Прикаспийских степей, в будущем прославятся как посредники в торговле между Китаем и Средиземноморьем."
+  },
+
+  chorasmia: {
+    name: "Хорезм",
+    adjective: "хорезмийский",
+    color: "#B8860B",
+    flag_emoji: "🌾",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "balanced",
+    ai_priority: ["trade", "economy"],
+    government: { type: "monarchy", stability: 55, corruption: 30 },
+    regions: ["amu_darya_delta"],
+    population: { total: 120000 },
+    economy: { gold: 90, income_per_turn: 22, trade_routes: ["bactria", "saka"], stockpile: { grain: 400, cotton: 300 } },
+    military: { infantry: 5000, cavalry: 8000, ships: 0, at_war_with: [] },
+    relations: { bactria: 30, seleucid_empire: 20, saka: -20 },
+    active_laws: [], characters: [],
+    historical_note: "Хорезм — независимое оазисное царство в дельте Амударьи, богатое благодаря орошаемому земледелию и торговле."
+  },
+
+  gedrosia: {
+    name: "Гедросия",
+    adjective: "гедросийский",
+    color: "#A0522D",
+    flag_emoji: "🏜️",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "balanced",
+    ai_priority: ["economy"],
+    government: { type: "satrapy", stability: 45, corruption: 35 },
+    regions: ["gedrosia_desert"],
+    population: { total: 90000 },
+    economy: { gold: 60, income_per_turn: 15, trade_routes: ["maurya_empire", "parthia"], stockpile: { grain: 150, spices: 200 } },
+    military: { infantry: 4000, cavalry: 3000, ships: 100, at_war_with: [] },
+    relations: { seleucid_empire: 40, maurya_empire: 30, parthia: 20 },
+    active_laws: [], characters: [],
+    historical_note: "Гедросия — суровая прибрежная провинция на юге Персии, печально прославленная катастрофическим переходом армии Александра Македонского через пустыню."
+  },
+
+  gandhara: {
+    name: "Гандхара",
+    adjective: "гандхарский",
+    color: "#DEB887",
+    flag_emoji: "🕌",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "balanced",
+    ai_priority: ["trade", "economy"],
+    government: { type: "satrapy", stability: 60, corruption: 30 },
+    regions: ["taxila_region", "peshawar_valley"],
+    population: { total: 200000 },
+    economy: { gold: 120, income_per_turn: 35, trade_routes: ["maurya_empire", "bactria"], stockpile: { grain: 600, iron: 200, lapis_lazuli: 250 } },
+    military: { infantry: 8000, cavalry: 5000, ships: 0, at_war_with: [] },
+    relations: { maurya_empire: 60, bactria: 40, seleucid_empire: 20 },
+    active_laws: [], characters: [],
+    historical_note: "Гандхара — культурный перекрёсток у подножия Гиндукуша, где сходятся индийская и эллинистическая цивилизации. Таксила — один из крупнейших образовательных центров древнего мира."
+  }
   },
   regions: {},
 
