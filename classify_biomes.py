@@ -5,97 +5,125 @@ import json
 import os
 
 # ── Biome metadata ─────────────────────────────────────────────────────────────
+# Единственный источник истины для всех полей биомов.
+# Запуск скрипта регенерирует data/biomes.js — не редактировать JS вручную.
 BIOME_META = {
     "mediterranean_coast": {
         "name": "Средиземноморское побережье",
         "description": "Прибрежные регионы Средиземного моря — мягкий климат, торговые пути, рыболовство",
         "color": "#4A9E8F",
+        "icon": "🌊",
         "production_bonus": {"food": 1.1, "trade": 1.3, "fish": 1.5},
         "movement_cost": 1.0,
+        "agriculture": {"suitability": 0.70, "arable": 0.40, "wheat_share": 0.45, "yield_kg": 1000, "stability": "средняя"},
     },
     "mediterranean_hills": {
         "name": "Средиземноморские холмы",
         "description": "Внутренние холмы и равнины Средиземноморья — виноградники, оливы, зерно",
         "color": "#8FBF5A",
+        "icon": "🫒",
         "production_bonus": {"food": 1.2, "wine": 1.4, "olives": 1.4},
         "movement_cost": 1.2,
+        "agriculture": {"suitability": 0.60, "arable": 0.55, "wheat_share": 0.50, "yield_kg": 800, "stability": "средняя"},
     },
     "river_valley": {
         "name": "Речная долина",
         "description": "Великие речные долины древнего мира — плодородные наносные почвы, ирригация",
         "color": "#5DB87A",
+        "icon": "💧",
         "production_bonus": {"food": 1.5, "grain": 1.6, "population": 1.2},
         "movement_cost": 0.9,
+        "agriculture": {"suitability": 0.95, "arable": 0.75, "wheat_share": 0.55, "yield_kg": 1350, "stability": "высокая"},
     },
     "desert": {
         "name": "Пустыня",
         "description": "Настоящая пустыня — Сахара, Аравия, Ливия. Осадки < 200 мм/год",
         "color": "#D4AA5A",
+        "icon": "🏜️",
         "production_bonus": {"trade": 0.8, "food": 0.4},
         "movement_cost": 1.8,
+        "agriculture": {"suitability": 0.02, "arable": 0.02, "wheat_share": 0.00, "yield_kg": 0, "stability": "нет"},
     },
     "steppe": {
         "name": "Степь",
         "description": "Евразийская степь — Скифия, Сарматия, Центральная Азия. Пастбища и конница",
         "color": "#C8C06A",
+        "icon": "🐎",
         "production_bonus": {"horses": 1.5, "livestock": 1.3, "food": 0.7},
         "movement_cost": 0.9,
+        "agriculture": {"suitability": 0.40, "arable": 0.35, "wheat_share": 0.40, "yield_kg": 500, "stability": "оч.низкая"},
     },
     "temperate_forest": {
         "name": "Умеренный лес",
         "description": "Листопадные леса Галлии, Германии, Британии, Иллирии",
         "color": "#3A7D44",
+        "icon": "🌲",
         "production_bonus": {"lumber": 1.5, "hunting": 1.3, "food": 0.9},
         "movement_cost": 1.5,
+        "agriculture": {"suitability": 0.50, "arable": 0.40, "wheat_share": 0.35, "yield_kg": 650, "stability": "средняя"},
     },
     "alpine": {
         "name": "Высокогорье",
         "description": "Альпы, Кавказ, Загрос, Тавр, Атлас — горные массивы выше 1500 м",
         "color": "#8A9BAF",
+        "icon": "⛰️",
         "production_bonus": {"mining": 1.4, "livestock": 1.1, "food": 0.6},
         "movement_cost": 2.5,
+        "agriculture": {"suitability": 0.10, "arable": 0.08, "wheat_share": 0.20, "yield_kg": 200, "stability": "оч.низкая"},
     },
     "semi_arid": {
         "name": "Полузасушливый",
         "description": "Нумидия, Мавретания, Анатолийское плато — переход между пустыней и Средиземноморьем",
         "color": "#C4A66A",
+        "icon": "☀️",
         "production_bonus": {"livestock": 1.2, "food": 0.7, "trade": 0.9},
         "movement_cost": 1.4,
+        "agriculture": {"suitability": 0.35, "arable": 0.25, "wheat_share": 0.30, "yield_kg": 450, "stability": "низкая"},
     },
     "subtropical": {
         "name": "Субтропики",
         "description": "Левант, Финикия, Вавилония, западная Персия — плодородный полумесяц",
         "color": "#7DB87A",
+        "icon": "🌴",
         "production_bonus": {"food": 1.3, "trade": 1.2, "dates": 1.4},
         "movement_cost": 1.1,
+        "agriculture": {"suitability": 0.45, "arable": 0.45, "wheat_share": 0.30, "yield_kg": 600, "stability": "низкая"},
     },
     "savanna": {
         "name": "Саванна",
         "description": "Тропическая саванна — Нубия, Эфиопия, Судан, западная Африка",
         "color": "#B8A838",
+        "icon": "🦁",
         "production_bonus": {"ivory": 1.5, "livestock": 1.1, "food": 0.8},
         "movement_cost": 1.3,
+        "agriculture": {"suitability": 0.15, "arable": 0.15, "wheat_share": 0.10, "yield_kg": 150, "stability": "низкая"},
     },
     "volcanic": {
         "name": "Вулканический",
         "description": "Вулканические зоны — Этна, Везувий, Эолийские острова, Санторини",
         "color": "#8B3A2A",
+        "icon": "🌋",
         "production_bonus": {"food": 1.4, "minerals": 1.3, "sulfur": 1.6},
         "movement_cost": 1.6,
+        "agriculture": {"suitability": 0.85, "arable": 0.50, "wheat_share": 0.40, "yield_kg": 1500, "stability": "высокая"},
     },
     "arctic": {
         "name": "Арктика / Субарктика",
         "description": "Северная Скандинавия и Русский север — суровый климат, тундра",
         "color": "#C8DDE8",
+        "icon": "❄️",
         "production_bonus": {"fish": 1.2, "furs": 1.5, "food": 0.3},
         "movement_cost": 2.0,
+        "agriculture": {"suitability": 0.00, "arable": 0.00, "wheat_share": 0.00, "yield_kg": 0, "stability": "нет"},
     },
     "tropical": {
         "name": "Тропики",
         "description": "Экваториальная Африка, южная Индия, Юго-Восточная Азия — влажные джунгли",
         "color": "#1A7A3A",
+        "icon": "🌿",
         "production_bonus": {"exotic_goods": 1.6, "lumber": 1.3, "food": 0.9},
         "movement_cost": 1.7,
+        "agriculture": {"suitability": 0.20, "arable": 0.20, "wheat_share": 0.15, "yield_kg": 250, "stability": "низкая"},
     },
 }
 
@@ -205,26 +233,52 @@ def main():
         biome_regions[biome].append(int(region_id))
         total += 1
 
-    # Write one file per biome
-    os.makedirs("biomes", exist_ok=True)
+    # Build REGION_BIOMES lookup: { region_id_str: biome_id }
+    region_biomes = {}
+    for biome_id, regions in biome_regions.items():
+        for rid in sorted(regions):
+            region_biomes[str(rid)] = biome_id
+
+    # Serialise BIOME_META as JS object literal
+    meta_lines = []
     for biome_id, meta in BIOME_META.items():
-        regions = sorted(biome_regions[biome_id])
-        output = {
-            "id": biome_id,
-            "name": meta["name"],
-            "description": meta["description"],
-            "color": meta["color"],
-            "production_bonus": meta["production_bonus"],
-            "movement_cost": meta["movement_cost"],
-            "region_count": len(regions),
-            "regions": regions,
-        }
-        path = os.path.join("biomes", f"{biome_id}.json")
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(output, f, ensure_ascii=False, indent=2)
+        agri = meta["agriculture"]
+        agri_str = (
+            f'{{ "suitability": {agri["suitability"]}, "arable": {agri["arable"]}, '
+            f'"wheat_share": {agri["wheat_share"]}, "yield_kg": {agri["yield_kg"]}, '
+            f'"stability": "{agri["stability"]}" }}'
+        )
+        bonus_str = json.dumps(meta["production_bonus"], ensure_ascii=False)
+        meta_lines.append(
+            f'  "{biome_id}": {{\n'
+            f'    "id": "{biome_id}",\n'
+            f'    "name": {json.dumps(meta["name"], ensure_ascii=False)},\n'
+            f'    "description": {json.dumps(meta["description"], ensure_ascii=False)},\n'
+            f'    "color": "{meta["color"]}",\n'
+            f'    "icon": "{meta["icon"]}",\n'
+            f'    "production_bonus": {bonus_str},\n'
+            f'    "movement_cost": {meta["movement_cost"]},\n'
+            f'    "agriculture": {agri_str}\n'
+            f'  }}'
+        )
+    biome_meta_js = "const BIOME_META = {\n" + ",\n".join(meta_lines) + "\n};"
+
+    # Serialise REGION_BIOMES as a compact single-line JSON object
+    region_biomes_js = "const REGION_BIOMES = " + json.dumps(region_biomes, ensure_ascii=False) + ";"
+
+    js_content = (
+        "// AUTO-GENERATED by classify_biomes.py — do not edit directly\n"
+        "// Biome metadata and per-region lookup\n\n"
+        + biome_meta_js + "\n\n"
+        + region_biomes_js + "\n"
+    )
+
+    out_path = os.path.join("data", "biomes.js")
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(js_content)
 
     # Summary
-    print(f"✓ Classified {total} regions into 13 biomes")
+    print(f"✓ Classified {total} regions → wrote {out_path}")
     print()
     print(f"{'Biome':<25} {'Count':>6}")
     print("-" * 33)
