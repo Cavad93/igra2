@@ -718,8 +718,8 @@ var GOODS = {
     unit: 'голова',
     category: 'military',
     resource_type: 'livestock',   // саванна (Африка) и субтропики (Индия)
-    deposit_key: null,
-    requires_building: null,   // только торговля или захват
+    deposit_key: 'elephant_grounds',
+    requires_building: 'elephant_corral',
     is_food: false,
     is_grain: false,
     producers: ['merchants'],
@@ -778,7 +778,7 @@ var GOODS = {
     category: 'labor',
     resource_type: 'livestock',
     deposit_key: null,
-    requires_building: null,   // военный захват или работорговля
+    requires_building: 'slave_market',   // рынок не производит рабов — только распределяет захваченных в войне
     is_food: false,
     is_grain: false,
     producers: ['merchants'],
