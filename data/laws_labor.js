@@ -843,6 +843,213 @@ const LAWS_LABOR = {
     is_default: false,
     historical_note: 'Тиберий Гракх (133 до н.э.) предложил возобновить Лициниевы законы об ограничении земли — за это был убит разъярёнными сенаторами прямо в народном собрании.',
   },
+
+  // ══════════════════════════════════════════════════════
+  // МОРСКОЙ ТРУД
+  // ══════════════════════════════════════════════════════
+
+  maritime_free: {
+    id:          'maritime_free',
+    name:        'Свободное мореходство',
+    icon:        '⚓',
+    category:    'labor',
+    group:       'maritime_labor',
+    description: 'Море открыто для всех — рыбаки и торговцы ходят свободно без лицензий и пошлин. Государство не вмешивается в морской промысел. Стандарт греческих полисов; максимальная активность частного флота.',
+    effects: {
+      labor_laws: {
+        navy_conscription: 0.02,
+        fishing_rights:    'open',
+        port_tax_rate:     0.05,
+      },
+      production_bonus:   {},
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      sailors_class: +6,
+    },
+    requires: null,
+    incompatible_with: ['maritime_state_control', 'maritime_piracy_sanctioned'],
+    is_default: true,
+    historical_note: 'Афинский Пирей в V–IV вв. до н.э. был крупнейшим свободным портом Средиземноморья — любой корабль мог войти, торговать и выйти без особых разрешений.',
+  },
+
+  maritime_state_control: {
+    id:          'maritime_state_control',
+    name:        'Государственный контроль портов',
+    icon:        '🏛',
+    category:    'labor',
+    group:       'maritime_labor',
+    description: 'Государство монополизирует морскую торговлю и рыболовство: лицензии, портовые инспекторы, закрытые торговые пути для чужаков. Карфагенская модель. Повышает налоговые поступления, но душит частную инициативу моряков и купцов.',
+    effects: {
+      labor_laws: {
+        navy_conscription: 0.10,
+        fishing_rights:    'licensed',
+        port_tax_rate:     0.12,
+      },
+      production_bonus:   {},
+      class_wealth_mod:   {},
+      tax_efficiency_mod: +0.08,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      sailors_class: -8,
+      officials:     +5,
+    },
+    requires: {
+      government_type: ['tyranny', 'oligarchy', 'empire'],
+      min_stability:   null,
+      min_treasury:    null,
+      has_law:         null,
+    },
+    incompatible_with: ['maritime_free', 'maritime_piracy_sanctioned'],
+    is_default: false,
+    historical_note: 'Карфаген закрывал Гибралтарский пролив для чужих кораблей и топил нарушителей: Юстин сообщает, что карфагеняне отправляли в море специальные патрули.',
+  },
+
+  maritime_piracy_sanctioned: {
+    id:          'maritime_piracy_sanctioned',
+    name:        'Попустительство пиратству',
+    icon:        '🏴‍☠️',
+    category:    'labor',
+    group:       'maritime_labor',
+    description: 'Государство негласно поощряет пиратство против чужих торговцев или закрывает глаза на флибустьерские операции. Флот получает безнаказанность — ослабляет экономику врагов. Репутация государства падает, стабильность страдает.',
+    effects: {
+      labor_laws: {
+        navy_conscription: 0.05,
+        fishing_rights:    'open',
+        port_tax_rate:     0.03,
+      },
+      production_bonus:   {},
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      -1,
+    },
+    satisfaction_effects: {
+      sailors_class: +10,
+      clergy_class:  -8,
+      citizens:      -5,
+    },
+    requires: {
+      government_type: ['tyranny'],
+      min_stability:   null,
+      min_treasury:    null,
+      has_law:         null,
+    },
+    incompatible_with: ['maritime_free', 'maritime_state_control'],
+    is_default: false,
+    historical_note: 'Иллирийская царица Тевта (ок. 230 до н.э.) официально санкционировала пиратство против греческих и итальянских купцов — это вызвало первую Иллирийскую войну с Римом.',
+  },
+
+  // ══════════════════════════════════════════════════════
+  // РЕГУЛИРОВАНИЕ РЕМЁСЕЛ
+  // ══════════════════════════════════════════════════════
+
+  crafts_unregulated: {
+    id:          'crafts_unregulated',
+    name:        'Нерегулируемые ремёсла',
+    icon:        '🔨',
+    category:    'labor',
+    group:       'craft_regulation',
+    description: 'Ремесленник сам определяет стандарты, цены и учеников. Быстрый вход в профессию, конкуренция без правил. Низкий барьер входа максимизирует количество ремесленников, но качество продукции непостоянно.',
+    effects: {
+      labor_laws: {
+        apprentice_years:  0,
+        quality_standards: false,
+        export_license:    false,
+      },
+      production_bonus:   {},
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      craftsmen_class: +3,
+    },
+    requires: null,
+    incompatible_with: ['crafts_guild_system', 'crafts_state_workshops'],
+    is_default: true,
+    historical_note: 'В большинстве греческих полисов ремёсла были нерегулируемы — любой свободный человек мог открыть мастерскую, платить налог с оборота и работать без государственного надзора.',
+  },
+
+  crafts_guild_system: {
+    id:          'crafts_guild_system',
+    name:        'Система гильдий',
+    icon:        '🏅',
+    category:    'labor',
+    group:       'craft_regulation',
+    description: 'Обязательное ученичество три года перед самостоятельной работой. Гильдия контролирует качество и выдаёт экспортные лицензии. Вход в профессию медленнее, но продукция лучше и дороже на внешних рынках.',
+    effects: {
+      labor_laws: {
+        apprentice_years:  3,
+        quality_standards: true,
+        export_license:    true,
+      },
+      production_bonus: {
+        forge:             0.15,
+        bronze_foundry:    0.12,
+        textile_mill:      0.12,
+        pottery_workshop:  0.10,
+      },
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      craftsmen_class: +12,
+      citizens:        +4,
+      slaves_class:    -5,
+      farmers_class:   -2,
+    },
+    requires: {
+      government_type: ['republic', 'oligarchy'],
+      min_stability:   null,
+      min_treasury:    null,
+      has_law:         null,
+    },
+    incompatible_with: ['crafts_unregulated', 'crafts_state_workshops'],
+    is_default: false,
+    historical_note: 'Коринф в VII–V вв. до н.э. прославился высококачественной бронзовой посудой и керамикой, экспортируемой по всему Средиземноморью — без конкуренции благодаря высоким стандартам.',
+  },
+
+  crafts_state_workshops: {
+    id:          'crafts_state_workshops',
+    name:        'Государственные мастерские',
+    icon:        '🏭',
+    category:    'labor',
+    group:       'craft_regulation',
+    description: 'Государственные мастерские заменяют частных ремесленников: военное производство централизовано, оружие и доспехи изготавливаются только для казны. Эффективно для армии, но уничтожает частное ремесло и лишает мастеров дохода.',
+    effects: {
+      labor_laws: {
+        apprentice_years:  0,
+        quality_standards: true,
+        export_license:    false,
+      },
+      production_bonus: {
+        forge:    0.25,
+        barracks: 0.10,
+      },
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      craftsmen_class: -15,
+      officials:       +8,
+      soldiers_class:  +10,
+      aristocrats:     +3,
+    },
+    requires: {
+      government_type: ['tyranny', 'empire'],
+      min_stability:   null,
+      min_treasury:    null,
+      has_law:         null,
+    },
+    incompatible_with: ['crafts_unregulated', 'crafts_guild_system'],
+    is_default: false,
+    historical_note: 'Птолемеевский Египет создал государственные текстильные мастерские (эргастерии), обеспечивавшие армию и флот; частное производство тканей было строго ограничено.',
+  },
 };
 
 // ══════════════════════════════════════════════════════════════
