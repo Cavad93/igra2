@@ -181,16 +181,19 @@ const LAWS_LABOR = {
     icon:        '👴',
     category:    'labor',
     group:       'elder_threshold',
-    description: 'После 45 лет человек считается стариком. Жёсткая реальность ранней Античности — мало кто доживал до 60 в добром здравии.',
+    description: 'После 45 лет человек считается стариком, но пожилые продолжают работать под давлением нужды. Жёсткий рынок труда выжимает максимум из каждого тела. Краткосрочный прирост рабочей силы оборачивается ростом смертности и недовольством.',
     effects: {
-      labor_laws: { elder_threshold: 45, elder_work_intensity: 0.30 },
+      labor_laws: { elder_threshold: 45, elder_work_intensity: 0.70 },
     },
     satisfaction_effects: {
-      farmers_class: -3,
-      soldiers_class: -4,  // ветераны теряют статус раньше
+      clergy_class:  -5,
+      soldiers_class: -4,
+      aristocrats:   -3,
     },
+    requires: null,
     incompatible_with: ['elder_55', 'elder_60'],
     is_default: false,
+    historical_note: 'Среднестатистическая продолжительность жизни в Античности составляла 35–40 лет; лишь немногие доживали до 60 в добром здравии.',
   },
 
   elder_55: {
@@ -199,31 +202,36 @@ const LAWS_LABOR = {
     icon:        '🧓',
     category:    'labor',
     group:       'elder_threshold',
-    description: 'После 55 лет граждане отходят от тяжёлого труда, но многие продолжают советовать, торговать и обучать. Античный стандарт.',
+    description: 'После 55 лет граждане отходят от тяжёлого труда, но многие продолжают советовать, торговать и обучать. Античный стандарт — баланс опыта и отдыха. Нейтральный вариант для большинства государств.',
     effects: {
       labor_laws: { elder_threshold: 55, elder_work_intensity: 0.50 },
     },
     satisfaction_effects: {},
+    requires: null,
     incompatible_with: ['elder_45', 'elder_60'],
     is_default: true,
+    historical_note: 'В Афинах мужчины старше 50 освобождались от воинской службы, но продолжали участвовать в народном собрании и управлении.',
   },
 
   elder_60: {
     id:          'elder_60',
-    name:        'Активная старость до 60',
+    name:        'Уважение к старикам',
     icon:        '🏛',
     category:    'labor',
     group:       'elder_threshold',
-    description: 'Пожилые граждане остаются активными участниками экономики до 60 лет. Снижает иждивенческую нагрузку.',
+    description: 'Государство признаёт граждан пожилыми с 60 лет и облегчает их труд. Уважение к старости повышает авторитет власти и поддержку духовенства. Рабочая сила сокращается, но лояльность растёт.',
     effects: {
-      labor_laws: { elder_threshold: 60, elder_work_intensity: 0.65 },
+      labor_laws: { elder_threshold: 60, elder_work_intensity: 0.30 },
     },
     satisfaction_effects: {
-      citizens:  +3,
-      merchants: +2,
+      clergy_class:  +5,
+      citizens:      +3,
+      farmers_class: +2,
     },
+    requires: null,
     incompatible_with: ['elder_45', 'elder_55'],
     is_default: false,
+    historical_note: 'В Спарте совет герусии (герон — старец) заседал с 60 лет; пожилые граждане освобождались от физического труда, сохраняя политический вес.',
   },
 
   // ══════════════════════════════════════════════════════
@@ -311,21 +319,52 @@ const LAWS_LABOR = {
 // ══════════════════════════════════════════════════════════════
 
 const DEFAULT_LABOR_LAWS = {
-  min_work_age:          12,    // лет — стандарт Античности
-  child_labor_intensity: 0.40,  // 40% детей вовлечены в посильный труд
-  elder_threshold:       55,    // лет — возраст «старости»
-  elder_work_intensity:  0.50,  // пожилые работают вполсилы
-  women_participation:   0.40,  // 40% женщин в рыночной экономике
-  child_work_efficiency: 0.38,  // КПД ребёнка = 38% от взрослого
-  elder_work_efficiency: 0.55,  // КПД пожилого = 55% от взрослого
+  // ── Существующие поля ──
+  min_work_age:           12,
+  child_labor_intensity:  0.40,
+  elder_threshold:        55,
+  elder_work_intensity:   0.50,
+  women_participation:    0.40,
+  child_work_efficiency:  0.38,
+  elder_work_efficiency:  0.55,
+  // ── Рабский труд ──
+  slave_efficiency:        1.00,
+  slave_freedom_chance:    0.01,
+  slave_revolt_threshold:  0,
+  // ── Свободный труд ──
+  wage_floor:              0.0,
+  free_labor_mobility:     1.0,
+  guild_strength:          0.0,
+  // ── Воинская обязанность ──
+  conscription_rate:       0.03,
+  military_exemptions:     ['all'],
+  veterans_rights:         0.0,
+  // ── Земельные обязательства ──
+  land_tax_rate:           0.10,
+  forced_cultivation:      false,
+  fallow_requirement:      false,
+  // ── Морской труд ──
+  navy_conscription:       0.02,
+  fishing_rights:          'open',
+  port_tax_rate:           0.05,
+  // ── Регулирование ремёсел ──
+  apprentice_years:        0,
+  quality_standards:       false,
+  export_license:          false,
 };
 
 // Порядок отображения групп законов в UI
 const LABOR_LAW_GROUPS = [
-  { id: 'min_work_age',    name: 'Минимальный возраст труда', icon: '👶' },
-  { id: 'child_intensity', name: 'Интенсивность детского труда', icon: '⚒' },
-  { id: 'elder_threshold', name: 'Порог старости',             icon: '👴' },
-  { id: 'women_labor',     name: 'Участие женщин в экономике', icon: '⚖' },
+  { id: 'min_work_age',             name: 'Минимальный возраст труда',    icon: '👶' },
+  { id: 'child_intensity',          name: 'Интенсивность детского труда', icon: '⚒' },
+  { id: 'elder_threshold',          name: 'Порог старости',               icon: '👴' },
+  { id: 'women_labor',              name: 'Участие женщин в экономике',   icon: '⚖' },
+  { id: 'slave_labor',              name: 'Статус рабского труда',        icon: '⛓' },
+  { id: 'free_labor',               name: 'Условия свободного труда',     icon: '🤝' },
+  { id: 'military_service',         name: 'Воинская обязанность',         icon: '⚔️' },
+  { id: 'agricultural_obligation',  name: 'Земельные обязательства',      icon: '🌾' },
+  { id: 'maritime_labor',           name: 'Морской труд',                 icon: '⚓' },
+  { id: 'craft_regulation',         name: 'Регулирование ремёсел',        icon: '🔨' },
 ];
 
 // ══════════════════════════════════════════════════════════════
