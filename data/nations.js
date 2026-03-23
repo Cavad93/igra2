@@ -2933,6 +2933,274 @@ const INITIAL_GAME_STATE = {
     },
 
 
+    // ── ПОНТ (Уровень A) ──────────────────────────────────────────
+    pontus: {
+      name: 'Понт', adjective: 'понтийское', color: '#006400', flag_emoji: '🌊',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'military',
+      government: {
+        type: 'monarchy', legitimacy: 70, stability: 65,
+        ruler: { type: 'person', name: 'Митридат I', personal_power: 78 },
+      },
+      regions: [],
+      population: {
+        total: 600000,
+        by_profession: { farmers: 250000, craftsmen: 80000, merchants: 60000, sailors: 40000, clergy: 30000, soldiers: 60000, slaves: 80000 },
+        happiness: 58, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 10000, tax_rate: 0.12,
+        primary_exports: ['wheat', 'fish', 'iron', 'slaves', 'timber'],
+        primary_imports: ['trade_goods', 'olive_oil', 'wine'],
+        trade_partners: ['bosporan_kingdom', 'sinope', 'rhodes', 'seleukid_empire'],
+        stockpile: { wheat: 40000, fish: 15000, iron: 5000, horses: 3000, cattle: 12000 },
+        trade_routes: [],
+      },
+      military: { infantry: 20000, cavalry: 4000, ships: 40, mercenaries: 3000, morale: 72, loyalty: 70, at_war_with: [] },
+      relations: {
+        seleukid_empire:    { score: -30, treaties: [], at_war: false },
+        bosporan_kingdom:   { score: 25,  treaties: [], at_war: false },
+        antipatrid_kingdom: { score: -10, treaties: [], at_war: false },
+        paphlagonia:        { score: -20, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Понтийское царство основано Митридатом I ок. 302 г. до н.э. — персидской династией, укрепившейся на черноморском побережье Малой Азии. В 304 г. Митридат только формирует государство, опираясь на греческие прибрежные города (Синопа, Амис) и контроль над торговыми путями Понта Эвксинского.',
+    },
+
+    // ── КАППАДОКИЯ (Уровень A) ────────────────────────────────────
+    cappadocia: {
+      name: 'Каппадокия', adjective: 'каппадокийское', color: '#8B4513', flag_emoji: '🐎',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'survival',
+      government: {
+        type: 'monarchy', legitimacy: 68, stability: 60,
+        ruler: { type: 'person', name: 'Ариарат II', personal_power: 72 },
+      },
+      regions: [],
+      population: {
+        total: 800000,
+        by_profession: { farmers: 350000, craftsmen: 80000, merchants: 50000, sailors: 5000, clergy: 40000, soldiers: 80000, slaves: 195000 },
+        happiness: 55, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 12000, tax_rate: 0.11,
+        primary_exports: ['horses', 'cattle', 'slaves', 'iron'],
+        primary_imports: ['trade_goods', 'wine', 'olive_oil', 'timber'],
+        trade_partners: ['seleukid_empire', 'pontus', 'armenia'],
+        stockpile: { wheat: 40000, fish: 1000, iron: 4000, horses: 12000, cattle: 20000 },
+        trade_routes: [],
+      },
+      military: { infantry: 25000, cavalry: 8000, ships: 0, mercenaries: 3000, morale: 68, loyalty: 65, at_war_with: [] },
+      relations: {
+        seleukid_empire: { score: -20, treaties: [], at_war: false },
+        pontus:          { score: -15, treaties: [], at_war: false },
+        armenia:         { score: 20,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Каппадокия — персидская сатрапия, де-факто независимая. Ариарат II сохраняет власть, лавируя между диадохами. Край знаменит табунами лошадей и серебряными рудниками. В 301 г. Ариарат поддержал Антигона при Ипсе, но успел замириться с победителями.',
+    },
+
+    // ── АРМЕНИЯ (Уровень A) ───────────────────────────────────────
+    armenia: {
+      name: 'Армения', adjective: 'армянское', color: '#DC143C', flag_emoji: '🦅',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'survival',
+      government: {
+        type: 'monarchy', legitimacy: 72, stability: 65,
+        ruler: { type: 'person', name: 'Оронт II', personal_power: 70 },
+      },
+      regions: [],
+      population: {
+        total: 1500000,
+        by_profession: { farmers: 650000, craftsmen: 150000, merchants: 80000, sailors: 0, clergy: 80000, soldiers: 120000, slaves: 420000 },
+        happiness: 58, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 14000, tax_rate: 0.10,
+        primary_exports: ['horses', 'iron', 'cattle', 'slaves', 'furs'],
+        primary_imports: ['trade_goods', 'wine', 'olive_oil'],
+        trade_partners: ['cappadocia', 'seleukid_empire', 'atropatene'],
+        stockpile: { wheat: 60000, fish: 2000, iron: 6000, horses: 15000, cattle: 25000 },
+        trade_routes: [],
+      },
+      military: { infantry: 40000, cavalry: 12000, ships: 0, mercenaries: 2000, morale: 70, loyalty: 70, at_war_with: [] },
+      relations: {
+        seleukid_empire: { score: -15, treaties: [], at_war: false },
+        cappadocia:      { score: 20,  treaties: [], at_war: false },
+        atropatene:      { score: 15,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Армения — обширная горная страна на перекрёстке Малой Азии, Кавказа и Иранского нагорья. В 304 г. Оронт II правит как персидский сатрап, сохраняя фактическую независимость. Армянские лошади и катафракты — лучшие в мире по мнению греков.',
+    },
+
+    // ── ВИФИНИЯ (Уровень A) ───────────────────────────────────────
+    bithynia: {
+      name: 'Вифиния', adjective: 'вифинское', color: '#20B2AA', flag_emoji: '⚓',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'survival',
+      government: {
+        type: 'monarchy', legitimacy: 65, stability: 62,
+        ruler: { type: 'person', name: 'Зипойт I', personal_power: 72 },
+      },
+      regions: [],
+      population: {
+        total: 250000,
+        by_profession: { farmers: 100000, craftsmen: 35000, merchants: 25000, sailors: 20000, clergy: 15000, soldiers: 25000, slaves: 30000 },
+        happiness: 58, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 6000, tax_rate: 0.11,
+        primary_exports: ['timber', 'fish', 'wheat', 'slaves'],
+        primary_imports: ['trade_goods', 'iron', 'wine'],
+        trade_partners: ['byzantion', 'antipatrid_kingdom', 'pontus'],
+        stockpile: { wheat: 18000, fish: 8000, iron: 2000, horses: 1500, cattle: 5000 },
+        trade_routes: [],
+      },
+      military: { infantry: 10000, cavalry: 1500, ships: 25, mercenaries: 1000, morale: 68, loyalty: 68, at_war_with: [] },
+      relations: {
+        lysimachus_kingdom: { score: -30, treaties: [], at_war: false },
+        antipatrid_kingdom: { score: -20, treaties: [], at_war: false },
+        pontus:             { score: -15, treaties: [], at_war: false },
+        byzantion:          { score: 15,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Зипойт I провозгласил независимость Вифинии от Лисимаха ок. 297 г. до н.э. В 304 г. Вифиния балансирует между диадохами, используя лесистые горы как защиту. Главный ресурс — строевой лес для корабельного строительства и контроль над проливом Боспор.',
+    },
+
+    // ── ПАФЛАГОНИЯ (Уровень A) ────────────────────────────────────
+    paphlagonia: {
+      name: 'Пафлагония', adjective: 'пафлагонское', color: '#5F9EA0', flag_emoji: '🌲',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'survival',
+      government: {
+        type: 'monarchy', legitimacy: 60, stability: 55,
+        ruler: { type: 'person', name: 'Местный правитель', personal_power: 60 },
+      },
+      regions: [],
+      population: {
+        total: 400000,
+        by_profession: { farmers: 170000, craftsmen: 55000, merchants: 35000, sailors: 20000, clergy: 20000, soldiers: 40000, slaves: 60000 },
+        happiness: 55, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 7000, tax_rate: 0.10,
+        primary_exports: ['timber', 'iron', 'fish', 'slaves'],
+        primary_imports: ['trade_goods', 'wine'],
+        trade_partners: ['pontus', 'bithynia', 'seleukid_empire'],
+        stockpile: { wheat: 25000, fish: 8000, iron: 3000, horses: 2000, cattle: 8000 },
+        trade_routes: [],
+      },
+      military: { infantry: 15000, cavalry: 2500, ships: 15, mercenaries: 1000, morale: 62, loyalty: 60, at_war_with: [] },
+      relations: {
+        pontus:          { score: -20, treaties: [], at_war: false },
+        bithynia:        { score: -15, treaties: [], at_war: false },
+        seleukid_empire: { score: -20, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Пафлагония — горная страна на черноморском побережье между Вифинией и Понтом. Богатейшие леса и железные руды делают её лакомой добычей для соседей. В 304 г. сохраняет шаткую независимость между сильными соседями.',
+    },
+
+    // ── НАБАТЕЯ (Уровень A) ───────────────────────────────────────
+    nabataea: {
+      name: 'Набатея', adjective: 'набатейское', color: '#D2691E', flag_emoji: '🌿',
+      is_player: false, is_minor: false,
+      ai_personality: 'mercantile', ai_priority: 'economy',
+      government: {
+        type: 'monarchy', legitimacy: 75, stability: 70,
+        ruler: { type: 'person', name: 'Царь набатеев', personal_power: 72 },
+      },
+      regions: [],
+      population: {
+        total: 300000,
+        by_profession: { farmers: 80000, craftsmen: 50000, merchants: 80000, sailors: 15000, clergy: 20000, soldiers: 25000, slaves: 30000 },
+        happiness: 65, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 20000, tax_rate: 0.10,
+        primary_exports: ['incense', 'trade_goods', 'horses', 'slaves'],
+        primary_imports: ['iron', 'timber', 'wheat', 'wine'],
+        trade_partners: ['ptolemaic_kingdom', 'seleukid_empire', 'judea'],
+        stockpile: { wheat: 15000, fish: 2000, iron: 1000, horses: 3000, cattle: 5000 },
+        trade_routes: [],
+      },
+      military: { infantry: 8000, cavalry: 5000, ships: 20, mercenaries: 1000, morale: 72, loyalty: 75, at_war_with: [] },
+      relations: {
+        ptolemaic_kingdom: { score: -10, treaties: [], at_war: false },
+        seleukid_empire:   { score: -15, treaties: [], at_war: false },
+        judea:             { score: 10,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Набатеи контролируют торговлю благовониями по «Дороге ладана» от Аравии до Средиземноморья. В 304 г. они только что успешно отразили две экспедиции Антигона, опираясь на неприступность Петры и умение воевать в пустыне. Их торговый потенциал огромен.',
+    },
+
+    // ── ИУДЕЯ (Уровень A) ────────────────────────────────────────
+    judea: {
+      name: 'Иудея', adjective: 'иудейское', color: '#1C1C8C', flag_emoji: '✡️',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'survival',
+      government: {
+        type: 'theocracy', legitimacy: 78, stability: 70,
+        ruler: { type: 'person', name: 'Первосвященник Симон I', personal_power: 72 },
+      },
+      regions: [],
+      population: {
+        total: 350000,
+        by_profession: { farmers: 150000, craftsmen: 60000, merchants: 40000, sailors: 5000, clergy: 50000, soldiers: 15000, slaves: 30000 },
+        happiness: 62, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 8000, tax_rate: 0.10,
+        primary_exports: ['olive_oil', 'trade_goods', 'pottery', 'wine'],
+        primary_imports: ['wheat', 'iron', 'timber'],
+        trade_partners: ['ptolemaic_kingdom', 'nabataea', 'samaria'],
+        stockpile: { wheat: 20000, fish: 3000, iron: 1000, horses: 500, cattle: 4000 },
+        trade_routes: [],
+      },
+      military: { infantry: 6000, cavalry: 500, ships: 5, mercenaries: 500, morale: 68, loyalty: 75, at_war_with: [] },
+      relations: {
+        ptolemaic_kingdom: { score: -20, treaties: [], at_war: false },
+        seleukid_empire:   { score: -20, treaties: [], at_war: false },
+        nabataea:          { score: 10,  treaties: [], at_war: false },
+        samaria:           { score: -20, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Иудея в 304 г. — под властью Птолемея I, захватившего Иерусалим в 302 г. до н.э. Первосвященник Симон I управляет внутренними делами через Синедрион. Эллинизация только начинается и встречает сопротивление религиозных традиционалистов. Иерусалимский храм — центр иудейской жизни.',
+    },
+
+    // ── ОДРИССКОЕ ЦАРСТВО (Уровень A) ────────────────────────────
+    odrysian_kingdom: {
+      name: 'Одрисское царство', adjective: 'одрисское', color: '#8B008B', flag_emoji: '⚔️',
+      is_player: false, is_minor: false,
+      ai_personality: 'aggressive', ai_priority: 'military',
+      government: {
+        type: 'monarchy', legitimacy: 62, stability: 55,
+        ruler: { type: 'person', name: 'Севт III', personal_power: 72 },
+      },
+      regions: [],
+      population: {
+        total: 300000,
+        by_profession: { farmers: 120000, craftsmen: 40000, merchants: 30000, sailors: 15000, clergy: 15000, soldiers: 50000, slaves: 30000 },
+        happiness: 56, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 5000, tax_rate: 0.09,
+        primary_exports: ['slaves', 'furs', 'horses', 'amber', 'cattle'],
+        primary_imports: ['iron', 'wine', 'trade_goods'],
+        trade_partners: ['lysimachus_kingdom', 'bosporan_kingdom', 'antipatrid_kingdom'],
+        stockpile: { wheat: 20000, fish: 5000, iron: 2000, horses: 4000, cattle: 10000 },
+        trade_routes: [],
+      },
+      military: { infantry: 15000, cavalry: 5000, ships: 10, mercenaries: 1000, morale: 70, loyalty: 68, at_war_with: [] },
+      relations: {
+        lysimachus_kingdom: { score: -30, treaties: [], at_war: false },
+        antipatrid_kingdom: { score: -20, treaties: [], at_war: false },
+        scythians:          { score: 10,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Одрисское царство — фракийская держава в долинах Фракии. Севт III основал новую столицу Севтополь и противостоит экспансии Лисимаха. Фракийская конница ценится по всему эллинистическому миру как наёмники.',
+    },
+
+
   },
   regions: {},
 
