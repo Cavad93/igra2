@@ -40,6 +40,7 @@ const LAWS_LABOR = {
     },
     incompatible_with: ['work_age_10', 'work_age_12', 'work_age_14', 'work_age_16'],
     is_default: false,
+    historical_note: 'В Риме дети из бедных семей работали с 7–8 лет: мальчики помогали отцам в поле или ремесленных мастерских, девочки — на кухне и за прялкой.',
   },
 
   work_age_10: {
@@ -57,6 +58,7 @@ const LAWS_LABOR = {
     },
     incompatible_with: ['work_age_8', 'work_age_12', 'work_age_14', 'work_age_16'],
     is_default: false,
+    historical_note: 'Греческие мальчики с 10 лет пасли скот; Ксенофонт в «Домострое» описывает воспитание сельского хозяина с детства через наблюдение и лёгкий труд.',
   },
 
   work_age_12: {
@@ -72,6 +74,7 @@ const LAWS_LABOR = {
     satisfaction_effects: {},
     incompatible_with: ['work_age_8', 'work_age_10', 'work_age_14', 'work_age_16'],
     is_default: true,
+    historical_note: 'Аристотель в «Политике» считал 12–14 лет оптимальным возрастом начала практического обучения ремеслу; до этого — гимнасий и музыка.',
   },
 
   work_age_14: {
@@ -91,6 +94,7 @@ const LAWS_LABOR = {
     },
     incompatible_with: ['work_age_8', 'work_age_10', 'work_age_12', 'work_age_16'],
     is_default: false,
+    historical_note: 'Платон в «Законах» предписывал воздерживаться от производительного труда до 14 лет, посвящая время музыке, математике и воспитанию характера.',
   },
 
   work_age_16: {
@@ -111,6 +115,7 @@ const LAWS_LABOR = {
     },
     incompatible_with: ['work_age_8', 'work_age_10', 'work_age_12', 'work_age_14'],
     is_default: false,
+    historical_note: 'Спартанские мальчики с 7 лет уходили в агоге — военную систему воспитания; физический труд там был запрещён, зато суровые испытания заменяли работу.',
   },
 
   // ══════════════════════════════════════════════════════
@@ -134,6 +139,7 @@ const LAWS_LABOR = {
     },
     incompatible_with: ['child_labor_light', 'child_labor_none'],
     is_default: false,
+    historical_note: 'Дети рабов на сицилийских латифундиях работали в полях с ранних лет — Диодор Сицилийский описывает жуткие условия труда детей на сахарных и зерновых фермах.',
   },
 
   child_labor_light: {
@@ -149,6 +155,7 @@ const LAWS_LABOR = {
     satisfaction_effects: {},
     incompatible_with: ['child_labor_heavy', 'child_labor_none'],
     is_default: true,
+    historical_note: 'Традиционная крестьянская семья Античности — дети пасли коз и помогали в огороде с 7–8 лет, но тяжёлые полевые работы начинались после подросткового возраста.',
   },
 
   child_labor_none: {
@@ -169,6 +176,7 @@ const LAWS_LABOR = {
     },
     incompatible_with: ['child_labor_heavy', 'child_labor_light'],
     is_default: false,
+    historical_note: 'Платон в «Государстве» и Аристотель в «Политике» осуждали привлечение детей к ремёслам, считая это препятствием для полноценного воспитания свободного гражданина.',
   },
 
   // ══════════════════════════════════════════════════════
@@ -255,6 +263,7 @@ const LAWS_LABOR = {
     },
     incompatible_with: ['women_crafts', 'women_market', 'women_full'],
     is_default: false,
+    historical_note: 'Афинские женщины-гражданки жили за закрытыми дверями гинекея; Ксенофонт в «Домострое» описывает идеальную жену как управительницу дома, но не участницу рынка.',
   },
 
   women_crafts: {
@@ -270,6 +279,7 @@ const LAWS_LABOR = {
     satisfaction_effects: {},
     incompatible_with: ['women_domestic', 'women_market', 'women_full'],
     is_default: true,
+    historical_note: 'Большинство греческих женщин занимались прядением и ткачеством дома или в небольших мастерских — ткань была второй по важности экспортной статьёй Афин после серебра.',
   },
 
   women_market: {
@@ -283,13 +293,14 @@ const LAWS_LABOR = {
       labor_laws: { women_participation: 0.60 },
     },
     satisfaction_effects: {
-      merchants:       +5,
+      craftsmen_class: +5,
       citizens:        +3,
       aristocrats:    -3,
       clergy_class:   -2,
     },
     incompatible_with: ['women_domestic', 'women_crafts', 'women_full'],
     is_default: false,
+    historical_note: 'Женщины в Карфагене и эллинистических городах участвовали в рыночной торговле; коринфские торговки пурпуром упомянуты у Страбона как отдельная экономическая группа.',
   },
 
   women_full: {
@@ -311,6 +322,7 @@ const LAWS_LABOR = {
     },
     incompatible_with: ['women_domestic', 'women_crafts', 'women_market'],
     is_default: false,
+    historical_note: 'Птолемеевский Египет давал женщинам более широкие права в хозяйственной сфере, чем большинство государств Античности — они могли владеть землёй, заключать контракты и вести суды.',
   },
 
   // ══════════════════════════════════════════════════════
@@ -589,7 +601,7 @@ const LAWS_LABOR = {
     effects: {
       labor_laws: {
         conscription_rate:    0.03,
-        military_exemptions:  ['all'],
+        military_exemptions:  1.0,
         veterans_rights:      0.0,
       },
       production_bonus:   {},
@@ -618,7 +630,7 @@ const LAWS_LABOR = {
     effects: {
       labor_laws: {
         conscription_rate:   0.08,
-        military_exemptions: ['slaves_class', 'freedmen'],
+        military_exemptions: 0.5,
         veterans_rights:     0.5,
       },
       production_bonus: {
@@ -650,7 +662,7 @@ const LAWS_LABOR = {
     effects: {
       labor_laws: {
         conscription_rate:   0.15,
-        military_exemptions: ['clergy_class'],
+        military_exemptions: 0.1,
         veterans_rights:     0.8,
       },
       production_bonus:   {},
@@ -686,7 +698,7 @@ const LAWS_LABOR = {
     effects: {
       labor_laws: {
         conscription_rate:   0.00,
-        military_exemptions: ['all'],
+        military_exemptions: 1.0,
         veterans_rights:     0.0,
       },
       production_bonus:   {},
@@ -858,7 +870,7 @@ const LAWS_LABOR = {
     effects: {
       labor_laws: {
         navy_conscription: 0.02,
-        fishing_rights:    'open',
+        fishing_rights:    true,
         port_tax_rate:     0.05,
       },
       production_bonus:   {},
@@ -885,7 +897,7 @@ const LAWS_LABOR = {
     effects: {
       labor_laws: {
         navy_conscription: 0.10,
-        fishing_rights:    'licensed',
+        fishing_rights:    false,
         port_tax_rate:     0.12,
       },
       production_bonus:   {},
@@ -918,7 +930,7 @@ const LAWS_LABOR = {
     effects: {
       labor_laws: {
         navy_conscription: 0.05,
-        fishing_rights:    'open',
+        fishing_rights:    true,
         port_tax_rate:     0.03,
       },
       production_bonus:   {},
@@ -1075,7 +1087,7 @@ const DEFAULT_LABOR_LAWS = {
   guild_strength:          0.0,
   // ── Воинская обязанность ──
   conscription_rate:       0.03,
-  military_exemptions:     ['all'],
+  military_exemptions:     1.0,
   veterans_rights:         0.0,
   // ── Земельные обязательства ──
   land_tax_rate:           0.10,
@@ -1083,7 +1095,7 @@ const DEFAULT_LABOR_LAWS = {
   fallow_requirement:      false,
   // ── Морской труд ──
   navy_conscription:       0.02,
-  fishing_rights:          'open',
+  fishing_rights:          true,
   port_tax_rate:           0.05,
   // ── Регулирование ремёсел ──
   apprentice_years:        0,
