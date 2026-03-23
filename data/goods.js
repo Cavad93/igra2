@@ -389,7 +389,7 @@ var GOODS = {
     name: 'Рабы',
     name_gen: 'рабов',
     base_price: 200,
-    unit: 'человек',
+    unit: 'человек',   // штучный товар — 1 ед = 1 человек
     category: 'labor',
     producers: ['merchants'],
     is_food: false,
@@ -397,6 +397,259 @@ var GOODS = {
     market_category: 'labor',
     stockpile_target_turns: 2,
     price_elasticity: 0.7,
+  },
+
+  // ── ПЕРЕРАБОТАННЫЕ ПРОДУКТЫ ──────────────────────────────────────────────
+
+  garum: {
+    name:     'Гарум',
+    name_gen: 'гарума',
+    base_price: 30,
+    unit: 'кг',
+    category: 'food',
+    producers: ['craftsmen'],
+    is_food: true,
+    // Ферментированный рыбный соус — главная приправа Рима и Греции.
+    // Производство: рыба + соль → 3–4 месяца ферментации. Экспортировался по всему Средиземноморью.
+    icon: '🫙',
+    market_category: 'food_processed',
+    stockpile_target_turns: 4,
+    price_elasticity: 1.1,
+  },
+
+  meat: {
+    name:     'Мясо',
+    name_gen: 'мяса',
+    base_price: 25,
+    unit: 'кг',
+    category: 'food',
+    producers: ['farmers'],
+    is_food: true,
+    // Говядина, баранина, свинина. Дорогой продукт — большинство крестьян ели мясо редко.
+    // Аристократы и солдаты — основные потребители.
+    icon: '🥩',
+    market_category: 'food_staple',
+    stockpile_target_turns: 3,
+    price_elasticity: 1.2,
+  },
+
+  // ── МЕТАЛЛЫ — СЫРЬЁ ─────────────────────────────────────────────────────
+
+  copper: {
+    name:     'Медь',
+    name_gen: 'меди',
+    base_price: 35,
+    unit: 'кг',
+    category: 'material',
+    producers: ['craftsmen'],
+    is_food: false,
+    // Основа бронзового сплава (90% меди + 10% олова). Кипр — главный поставщик.
+    // Также: монеты, кровля, утварь.
+    icon: '🪙',
+    market_category: 'raw_material',
+    stockpile_target_turns: 4,
+    price_elasticity: 0.9,
+  },
+
+  tin: {
+    name:     'Олово',
+    name_gen: 'олова',
+    base_price: 80,
+    unit: 'кг',
+    category: 'material',
+    producers: ['craftsmen'],
+    is_food: false,
+    // Редкий металл. Главные источники: Иберия (Gallaecia), Британия (Cornwall).
+    // Необходимо для бронзы. Высокая цена из-за дальности транспортировки.
+    icon: '⬜',
+    market_category: 'raw_material',
+    stockpile_target_turns: 6,
+    price_elasticity: 0.8,
+  },
+
+  silver: {
+    name:     'Серебро',
+    name_gen: 'серебра',
+    base_price: 800,
+    unit: 'кг',
+    category: 'precious',
+    producers: ['craftsmen'],
+    is_food: false,
+    // Основа монетного дела (драхма, денарий). Лаврий (Аттика), Иберия.
+    // Государственный резерв. Высокая эластичность спроса как у денег.
+    icon: '🥈',
+    market_category: 'precious',
+    stockpile_target_turns: 8,
+    price_elasticity: 0.5,
+  },
+
+  gold: {
+    name:     'Золото',
+    name_gen: 'золота',
+    base_price: 4000,
+    unit: 'кг',
+    category: 'precious',
+    producers: ['craftsmen'],
+    is_food: false,
+    // Самый ценный металл. Чеканка ауреусов и статеров. Стратегический резерв.
+    icon: '🥇',
+    market_category: 'precious',
+    stockpile_target_turns: 12,
+    price_elasticity: 0.4,
+  },
+
+  // ── ТОПЛИВО И СТРОИТЕЛЬНЫЕ МАТЕРИАЛЫ ────────────────────────────────────
+
+  charcoal: {
+    name:     'Древесный уголь',
+    name_gen: 'древесного угля',
+    base_price: 12,
+    unit: 'кг',
+    category: 'material',
+    producers: ['craftsmen', 'farmers'],
+    is_food: false,
+    // Топливо для металлургии: ~5 кг угля на 1 кг железа. Производится из древесины.
+    // Ограничивает производство металлов там, где мало леса (Сицилия, Греция).
+    icon: '⬛',
+    market_category: 'raw_material',
+    stockpile_target_turns: 4,
+    price_elasticity: 1.1,
+  },
+
+  stone: {
+    name:     'Камень',
+    name_gen: 'камня',
+    base_price: 5,
+    unit: 'кг',
+    category: 'material',
+    producers: ['craftsmen'],
+    is_food: false,
+    // Строительный материал: стены, храмы, дороги. Добывается в каменоломнях.
+    // Дёшев в добыче, дорог в транспортировке из-за веса.
+    icon: '🪨',
+    market_category: 'raw_material',
+    stockpile_target_turns: 3,
+    price_elasticity: 0.7,
+  },
+
+  // ── КОРАБЕЛЬНЫЕ МАТЕРИАЛЫ ────────────────────────────────────────────────
+
+  hemp: {
+    name:     'Пенька',
+    name_gen: 'пеньки',
+    base_price: 18,
+    unit: 'кг',
+    category: 'material',
+    producers: ['farmers'],
+    is_food: false,
+    // Волокно конопли — канаты, паруса, оснастка флота. Без пеньки нет флота.
+    // Выращивается в речных долинах и прибрежных равнинах.
+    icon: '🌿',
+    market_category: 'raw_material',
+    stockpile_target_turns: 4,
+    price_elasticity: 0.9,
+  },
+
+  pitch: {
+    name:     'Смола',
+    name_gen: 'смолы',
+    base_price: 25,
+    unit: 'кг',
+    category: 'material',
+    producers: ['craftsmen', 'farmers'],
+    is_food: false,
+    // Корабельная смола — гидроизоляция обшивки и конопатка. Из хвойной древесины.
+    // Также: факелы, бочки, медицина. Производится в лесных регионах.
+    icon: '🟫',
+    market_category: 'raw_material',
+    stockpile_target_turns: 5,
+    price_elasticity: 1.0,
+  },
+
+  // ── ВОЕННОЕ СНАРЯЖЕНИЕ ───────────────────────────────────────────────────
+
+  weapons: {
+    name:     'Оружие',
+    name_gen: 'оружия',
+    base_price: 120,
+    unit: 'кг',
+    category: 'military',
+    producers: ['craftsmen'],
+    is_food: false,
+    // Мечи, копья, щиты. Производится из железа/бронзы + дерева.
+    // Стратегический товар — контролируется государством.
+    icon: '⚔️',
+    market_category: 'military',
+    stockpile_target_turns: 6,
+    price_elasticity: 0.7,
+  },
+
+  armor: {
+    name:     'Доспехи',
+    name_gen: 'доспехов',
+    base_price: 200,
+    unit: 'кг',
+    category: 'military',
+    producers: ['craftsmen'],
+    is_food: false,
+    // Бронзовые и железные шлемы, панцири, поножи, щиты.
+    // Дорого, долго, трудоёмко — один полный комплект = ~25 кг металла.
+    icon: '🛡️',
+    market_category: 'military',
+    stockpile_target_turns: 8,
+    price_elasticity: 0.6,
+  },
+
+  // ── ЭКЗОТИЧЕСКИЕ И СЕВЕРНЫЕ ТОВАРЫ ──────────────────────────────────────
+
+  amber: {
+    name:     'Янтарь',
+    name_gen: 'янтаря',
+    base_price: 200,
+    unit: 'кг',
+    category: 'luxury',
+    producers: ['merchants'],
+    is_food: false,
+    // Балтийский янтарь. Янтарный путь: Балтика → Висла → Дунай → Средиземноморье.
+    // Украшения, амулеты. Только торговля, не добывается в игровом регионе.
+    icon: '🟠',
+    market_category: 'luxury',
+    stockpile_target_turns: 2,
+    price_elasticity: 0.5,
+  },
+
+  furs: {
+    name:     'Меха',
+    name_gen: 'мехов',
+    base_price: 80,
+    unit: 'кг',
+    category: 'luxury',
+    producers: ['merchants', 'farmers'],
+    is_food: false,
+    // Из северных лесов: Галлия, Германия, Скифия, Дакия.
+    // Тёплая одежда и статусный товар для элиты южных регионов.
+    icon: '🦊',
+    market_category: 'luxury',
+    stockpile_target_turns: 3,
+    price_elasticity: 0.6,
+  },
+
+  // ── ВОЕННЫЕ ЖИВОТНЫЕ ────────────────────────────────────────────────────
+
+  war_elephants: {
+    name:     'Боевые слоны',
+    name_gen: 'боевых слонов',
+    base_price: 8000,
+    unit: 'голова',   // штучный товар — 1 ед = 1 животное
+    category: 'military',
+    producers: ['merchants'],
+    is_food: false,
+    // Из Африки (Карфаген — лесной слон) и Индии (Диадохи — индийский слон).
+    // Требует корм (зерно, сено), дрессировщиков. Огромный эффект на поле боя.
+    icon: '🐘',
+    market_category: 'military',
+    stockpile_target_turns: 12,
+    price_elasticity: 0.3,
   },
 };
 
@@ -522,27 +775,50 @@ function getGoodInfo(goodId, market) {
 // ══════════════════════════════════════════════════════════════
 (function _addProducedBy() {
   const MAP = {
-    wheat:       ['farm', 'latifundium', 'grain_estate'],
-    barley:      ['farm', 'grain_estate'],
-    fish:        ['port'],
-    olives:      ['latifundium'],
-    olive_oil:   ['oil_press'],
-    honey:       ['ranch'],
-    wine:        ['winery'],
-    salt:        ['salt_works'],
-    iron:        ['mine'],
-    bronze:      ['mine'],
-    timber:      ['lumber_camp'],
-    wool:        ['ranch'],
-    cloth:       ['workshop'],
-    leather:     ['ranch'],
-    tools:       ['workshop'],
-    pottery:     ['workshop', 'pottery_workshop'],
-    papyrus:     ['papyrus_bed'],
-    trade_goods: ['port'],
-    sulfur:      ['sulfur_mine'],
-    tuna:        ['tuna_trap'],
-    // не производятся зданиями: wax, incense, purple_dye, slaves
+    // ── ЕДА ─────────────────────────────────────────────────────────────
+    wheat:          ['farm', 'latifundium', 'grain_estate'],
+    barley:         ['farm', 'grain_estate'],
+    fish:           ['port'],
+    tuna:           ['tuna_trap'],
+    garum:          ['workshop'],           // рыба + соль → ферментация
+    meat:           ['ranch', 'latifundium'],
+    olives:         ['latifundium', 'farm'],
+    olive_oil:      ['oil_press'],
+    wine:           ['winery'],
+    honey:          ['ranch'],
+    // ── МЕТАЛЛЫ — СЫРЬЁ ─────────────────────────────────────────────────
+    iron:           ['mine'],
+    bronze:         ['workshop'],           // медь + олово → плавка
+    copper:         ['mine'],
+    tin:            ['mine'],
+    silver:         ['mine'],
+    gold:           ['mine'],
+    // ── ТОПЛИВО И СТРОИТЕЛЬСТВО ─────────────────────────────────────────
+    charcoal:       ['lumber_camp'],        // обжиг древесины
+    timber:         ['lumber_camp'],
+    stone:          ['quarry'],
+    // ── КОРАБЕЛЬНЫЕ МАТЕРИАЛЫ ────────────────────────────────────────────
+    hemp:           ['farm'],
+    pitch:          ['lumber_camp'],        // смолокурня из хвойной древесины
+    // ── ПЕРЕРАБОТАННОЕ ───────────────────────────────────────────────────
+    tools:          ['workshop'],
+    weapons:        ['armory'],
+    armor:          ['armory'],
+    cloth:          ['workshop'],
+    leather:        ['ranch', 'workshop'],
+    pottery:        ['workshop', 'pottery_workshop'],
+    wool:           ['ranch'],
+    salt:           ['salt_works'],
+    sulfur:         ['sulfur_mine'],
+    papyrus:        ['papyrus_bed'],
+    trade_goods:    ['port'],
+    // ── НЕ ПРОИЗВОДЯТСЯ ЗДАНИЯМИ — ТОЛЬКО ИМПОРТ/ТОРГОВЛЯ ───────────────
+    // wax, incense, purple_dye: природный сбор или импорт
+    // amber: торговый путь с Балтики
+    // furs: охота или торговля с севером
+    // war_elephants: только импорт из Африки/Индии
+    // slaves: военный захват или работорговля
+    // horses, cattle: разведение (через ranch — уже штучные товары)
   };
   for (const [goodId, bldIds] of Object.entries(MAP)) {
     if (GOODS[goodId]) GOODS[goodId].produced_by = bldIds;
