@@ -290,7 +290,7 @@ var GOODS_META = {
     produced_by:               null,
     import_sources:            [],
     breed_terrains:            [],
-    is_strategic:              false,
+    is_strategic:              true,
     chain_importance:          5,
     can_be_absent:             false,
     note: 'Строительство дорог, акведуков, укреплений (#6 #16 #27)',
@@ -647,4 +647,84 @@ var GOODS_META = {
     note: 'Транзит. Доход без производства (#36)',
   },
 
+  // ── ЖИВЫЕ РЕСУРСЫ ────────────────────────────────────────
+
+  horses: {
+    resource_type:             'livestock',
+    allowed_terrains:          [],
+    terrain_bonus:             { steppe: 1.40, plains: 1.20 },
+    terrain_penalty:           {},
+    deposit_key:               null,
+    tradeable_without_deposit: false,
+    inputs:                    null,
+    produced_by:               null,
+    import_sources:            ['scythians', 'numidia', 'cyrene', 'massylii'],
+    breed_terrains:            ['steppe', 'plains', 'semi_arid', 'mediterranean_hills'],
+    is_strategic:              true,
+    chain_importance:          8,
+    can_be_absent:             false,
+    note: 'Ячмень vs люди — ключевой выбор ресурсов (#5)',
+  },
+
+  cattle: {
+    resource_type:             'livestock',
+    allowed_terrains:          [],
+    terrain_bonus:             { plains: 1.20, river_valley: 1.10 },
+    terrain_penalty:           {},
+    deposit_key:               null,
+    tradeable_without_deposit: false,
+    inputs:                    null,
+    produced_by:               null,
+    import_sources:            [],
+    breed_terrains:            ['plains', 'mediterranean_hills', 'steppe',
+                                'temperate_forest', 'river_valley'],
+    is_strategic:              false,
+    chain_importance:          5,
+    can_be_absent:             false,
+    note: 'Тягловая сила, мясо, кожа — основа агрикультуры (#24)',
+  },
+
+  slaves: {
+    resource_type:             'livestock',
+    allowed_terrains:          [],
+    terrain_bonus:             {},
+    terrain_penalty:           {},
+    deposit_key:               null,
+    tradeable_without_deposit: false,
+    inputs:                    null,
+    produced_by:               null,
+    import_sources:            ['bosporan_kingdom', 'scythians', 'delian_market'],
+    breed_terrains:            [],
+    is_strategic:              true,
+    chain_importance:          10,
+    can_be_absent:             false,
+    note: 'Делос: до 10 000 рабов в день. Война = новые рабы (#12 #46 #51)',
+  },
+
 };
+
+// ── Вспомогательные индексы ──────────────────────────────
+
+// DEPOSIT_KEYS — обратный индекс: deposit_key → good_id
+// Используется движком при чтении region.deposits
+var DEPOSIT_KEYS = {
+  iron_ore:        'iron',
+  copper_ore:      'copper',
+  silver_ore:      'silver',
+  gold_ore:        'gold',
+  sulfur_deposit:  'sulfur',
+  salt_deposit:    'salt',
+  tuna_migration:  'tuna',
+  murex:           'purple_dye',
+};
+
+// STRATEGIC_GOODS — все товары с is_strategic: true
+var STRATEGIC_GOODS = [
+  'wheat', 'barley', 'iron', 'charcoal', 'tools', 'weapons',
+  'armor', 'bronze', 'timber', 'silver', 'gold', 'salt',
+  'horses', 'slaves', 'tin', 'stone', 'copper',
+];
+
+// IMPORT_ONLY_GOODS — товары без производства на карте
+var IMPORT_ONLY_GOODS = ['tin', 'amber', 'furs', 'incense'];
+
