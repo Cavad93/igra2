@@ -110,6 +110,43 @@ const SOCIAL_CLASSES = {
       tax_efficiency_mod: +0.05,
       legitimacy_mod: +0.5,
     },
+    // ── НОВЫЕ ПОЛЯ ───────────────────────────────────────────────────────────
+    can_work_in: {
+      primary:   [],   // аристократы не работают руками
+      secondary: ['barracks'],   // военное командование
+      forbidden: [
+        'forge', 'iron_mine', 'copper_mine', 'silver_mine', 'gold_mine',
+        'tin_mine', 'sulfur_mine', 'quarry', 'mine',
+        'charcoal_kiln', 'lumber_camp', 'salt_works', 'pottery_workshop',
+        'textile_mill', 'tannery', 'bronze_foundry', 'garum_workshop',
+        'butchery', 'fishery', 'dye_works', 'pitch_works',
+        'amber_gathering', 'fur_trapping', 'incense_grove',
+      ],
+    },
+    ownership_rights: {
+      can_own: [
+        'wheat_latifundium', 'wheat_villa', 'horse_ranch', 'cattle_farm',
+        'silver_mine', 'gold_mine', 'iron_mine', 'copper_mine',
+        'winery', 'oil_press', 'market', 'olive_grove',
+      ],
+      can_build:  ['wheat_latifundium', 'wheat_villa'],
+      max_owned:  null,
+    },
+    political_actions: {
+      can_vote:          true,
+      can_hold_office:   true,
+      can_lead_army:     true,
+      can_conspire:      true,
+      rebellion_trigger: 30,
+      rebellion_type:    'coup',
+      pressure_actions:  [
+        'reduce_tax_demand',
+        'block_legislation',
+        'fund_rival_faction',
+        'withdraw_military_support',
+        'bribe_officials',
+      ],
+    },
   },
 
   // ── ЧИНОВНИКИ ──────────────────────────────────────────────────────────
@@ -152,6 +189,39 @@ const SOCIAL_CLASSES = {
     },
     happy_effects: {
       tax_efficiency_mod: +0.08,
+    },
+    // ── НОВЫЕ ПОЛЯ ───────────────────────────────────────────────────────────
+    can_work_in: {
+      primary:   ['forum', 'market', 'granary', 'warehouse', 'port', 'slave_market'],
+      secondary: ['temple', 'school'],
+      forbidden: [
+        'forge', 'iron_mine', 'copper_mine', 'silver_mine', 'gold_mine',
+        'tin_mine', 'sulfur_mine', 'quarry', 'mine',
+        'charcoal_kiln', 'lumber_camp', 'salt_works',
+        'textile_mill', 'tannery', 'bronze_foundry', 'butchery',
+        'fishery', 'garum_workshop', 'dye_works',
+        'wheat_family_farm', 'wheat_villa', 'wheat_latifundium',
+        'cattle_farm', 'horse_ranch', 'ranch',
+      ],
+    },
+    ownership_rights: {
+      can_own:   ['market', 'warehouse'],
+      can_build: [],
+      max_owned: 2,
+    },
+    political_actions: {
+      can_vote:          true,
+      can_hold_office:   true,
+      can_lead_army:     false,
+      can_conspire:      true,
+      rebellion_trigger: 25,
+      rebellion_type:    'assassination',
+      pressure_actions:  [
+        'slow_tax_collection',
+        'falsify_records',
+        'leak_information',
+        'obstruct_permits',
+      ],
     },
   },
 
