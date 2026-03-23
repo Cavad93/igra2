@@ -565,6 +565,40 @@ const SOCIAL_CLASSES = {
     happy_effects: {
       trade_income_mod: +0.10,
     },
+    // ── НОВЫЕ ПОЛЯ ───────────────────────────────────────────────────────────
+    can_work_in: {
+      primary: [
+        'port', 'shipyard', 'fishery', 'tuna_trap',
+        'garum_workshop', 'salt_works',
+      ],
+      secondary: ['market', 'warehouse', 'trading_post'],
+      forbidden: [
+        'barracks', 'walls', 'forge', 'iron_mine', 'copper_mine',
+        'silver_mine', 'gold_mine', 'quarry', 'mine',
+        'wheat_family_farm', 'wheat_villa', 'wheat_latifundium',
+        'cattle_farm', 'horse_ranch', 'irrigation',
+        'temple', 'forum', 'school',
+      ],
+    },
+    ownership_rights: {
+      can_own:   ['fishery', 'garum_workshop', 'trading_post'],
+      can_build: ['fishery', 'garum_workshop'],
+      max_owned: 3,
+    },
+    political_actions: {
+      can_vote:          true,
+      can_hold_office:   false,
+      can_lead_army:     false,
+      can_conspire:      false,
+      rebellion_trigger: 30,
+      rebellion_type:    'strike',
+      pressure_actions:  [
+        'refuse_naval_service',
+        'port_blockade',
+        'demand_prize_share',
+        'smuggle_goods',
+      ],
+    },
   },
 
   // ── СОЛДАТЫ ────────────────────────────────────────────────────────────
@@ -608,6 +642,37 @@ const SOCIAL_CLASSES = {
     happy_effects: {
       military_loyalty_mod: +4,
       military_morale_mod: +5,
+    },
+    // ── НОВЫЕ ПОЛЯ ───────────────────────────────────────────────────────────
+    can_work_in: {
+      primary:   ['barracks', 'walls'],
+      secondary: ['forge'],   // обслуживание и ремонт снаряжения
+      forbidden: [
+        'market', 'forum', 'school', 'temple', 'port', 'shipyard',
+        'workshop', 'pottery_workshop', 'textile_mill', 'tannery',
+        'iron_mine', 'copper_mine', 'silver_mine', 'gold_mine',
+        'wheat_family_farm', 'wheat_villa', 'cattle_farm', 'irrigation',
+      ],
+    },
+    ownership_rights: {
+      can_own:   [],   // солдаты не владеют — получают жалованье от государства
+      can_build: [],
+      max_owned: 0,
+    },
+    political_actions: {
+      can_vote:          false,
+      can_hold_office:   false,
+      can_lead_army:     true,
+      can_conspire:      true,
+      rebellion_trigger: 20,
+      rebellion_type:    'coup',
+      pressure_actions:  [
+        'demand_back_pay',
+        'refuse_orders',
+        'loot_civilians',
+        'support_rival_general',
+        'threaten_desertion',
+      ],
     },
   },
 
