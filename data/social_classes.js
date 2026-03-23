@@ -33,12 +33,25 @@ const CLASS_FROM_PROFESSION = {
 // political_weight — вклад класса в итоговое счастье нации
 // unhappy_threshold / happy_threshold — пороги для политических эффектов
 // ─────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────
+// ЕДИНИЦА: 1 ед = 1 кг (CONFIG.UNIT_KG).
+// per_100 — кг на 100 человек в год. Движок делит на 12 для месячного расчёта.
+//
+// Источники калибровки:
+//   Зерно: Полибий — паёк легионера ~870 г зерна/день = ~320 кг/год.
+//          Катон «О земледелии» — полевой раб ~700 г хлеба/день ≈ 255-320 кг зерна/год.
+//          Норма выживания взрослого ~200 кг зерна/год.
+//   Вино:  богатые римляне ~0.5 л/день ≈ 180 л/год ≈ 180 кг/год.
+//          Бедные ~0.1-0.2 л/день. Корабельный паёк ~0.1 л/день.
+//   Масло: ~10-25 кг/год (кулинария + освещение + гигиена).
+//   Соль:  ~3-7 кг/год (еда + консервация продуктов).
+// ─────────────────────────────────────────────────────────────────────────
 const SOCIAL_CLASSES = {
 
   // ── АРИСТОКРАТЫ ────────────────────────────────────────────────────────
-  // Нагрузка: сидячая (~2000 ккал/день). Зерна мало — калории покрывают
-  // вино, оливковое масло, мёд. Пшеница пшеничная — статусный хлеб,
-  // а не основа питания.
+  // Сидячий труд. Зерна мало — калории покрывают вино, масло, рыба.
+  // Пшеница — статусный белый хлеб, а не основа питания.
+  // 150 кг пшеницы + 200 л вина + 25 кг масла на человека в год.
   aristocrats: {
     name:          'Аристократы',
     name_gen:      'аристократов',
@@ -46,18 +59,19 @@ const SOCIAL_CLASSES = {
     description:   'Землевладельцы, полководцы, богатые граждане. Владеют землёй и рабами.',
     color:         '#9C27B0',
     wealth_level:  5,
-    political_weight: 0.20,  // высокое политическое влияние
+    political_weight: 0.20,
     needs: {
-      wheat:       { per_100: 450, priority: 'basic',    label: 'Зерно' },
-      salt:        { per_100: 2,   priority: 'basic',    label: 'Соль' },
-      wine:        { per_100: 28,  priority: 'standard', label: 'Вино' },
-      olive_oil:   { per_100: 20,  priority: 'standard', label: 'Оливковое масло' },
-      cloth:       { per_100: 14, priority: 'standard', label: 'Ткань' },
-      pottery:     { per_100: 8,  priority: 'standard', label: 'Керамика' },
-      papyrus:     { per_100: 8,  priority: 'standard', label: 'Папирус' },
-      honey:       { per_100: 8,  priority: 'luxury',   label: 'Мёд' },
-      incense:     { per_100: 5,  priority: 'luxury',   label: 'Благовония' },
-      purple_dye:  { per_100: 2,  priority: 'luxury',   label: 'Пурпур' },
+      wheat:       { per_100: 15_000, priority: 'basic',    label: 'Зерно' },
+      salt:        { per_100:    600, priority: 'basic',    label: 'Соль' },
+      wine:        { per_100: 20_000, priority: 'standard', label: 'Вино' },
+      olive_oil:   { per_100:  2_500, priority: 'standard', label: 'Оливковое масло' },
+      fish:        { per_100:  1_000, priority: 'standard', label: 'Рыба' },
+      cloth:       { per_100:    800, priority: 'standard', label: 'Ткань' },
+      pottery:     { per_100:    500, priority: 'standard', label: 'Керамика' },
+      papyrus:     { per_100:    200, priority: 'standard', label: 'Папирус' },
+      honey:       { per_100:    150, priority: 'luxury',   label: 'Мёд' },
+      incense:     { per_100:     50, priority: 'luxury',   label: 'Благовония' },
+      purple_dye:  { per_100:      5, priority: 'luxury',   label: 'Пурпур' },
     },
     unhappy_effects: {
       conspiracy_chance_mod: +0.12,
@@ -70,8 +84,8 @@ const SOCIAL_CLASSES = {
   },
 
   // ── ЧИНОВНИКИ ──────────────────────────────────────────────────────────
-  // Нагрузка: лёгкая (~2300 ккал/день). Сидячий труд, часть калорий
-  // из вина и масла. Пшеница — основа, но в умеренном количестве.
+  // Лёгкий труд (~2300 ккал/день). 200 кг пшеницы + 100 л вина + 18 кг масла.
+  // Высокий расход папируса — профессиональная необходимость.
   officials: {
     name:          'Чиновники',
     name_gen:      'чиновников',
@@ -81,15 +95,16 @@ const SOCIAL_CLASSES = {
     wealth_level:  4,
     political_weight: 0.12,
     needs: {
-      wheat:       { per_100: 630, priority: 'basic',    label: 'Зерно' },
-      salt:        { per_100: 2,   priority: 'basic',    label: 'Соль' },
-      wine:        { per_100: 16,  priority: 'standard', label: 'Вино' },
-      olive_oil:   { per_100: 12, priority: 'standard', label: 'Оливковое масло' },
-      cloth:       { per_100: 12, priority: 'standard', label: 'Ткань' },
-      papyrus:     { per_100: 20, priority: 'standard', label: 'Папирус' },
-      wax:         { per_100: 8,  priority: 'standard', label: 'Воск' },
-      pottery:     { per_100: 5,  priority: 'standard', label: 'Керамика' },
-      honey:       { per_100: 4,  priority: 'luxury',   label: 'Мёд' },
+      wheat:       { per_100: 20_000, priority: 'basic',    label: 'Зерно' },
+      salt:        { per_100:    500, priority: 'basic',    label: 'Соль' },
+      wine:        { per_100: 10_000, priority: 'standard', label: 'Вино' },
+      olive_oil:   { per_100:  1_800, priority: 'standard', label: 'Оливковое масло' },
+      fish:        { per_100:    800, priority: 'standard', label: 'Рыба' },
+      cloth:       { per_100:    600, priority: 'standard', label: 'Ткань' },
+      papyrus:     { per_100:    500, priority: 'standard', label: 'Папирус' },
+      wax:         { per_100:    200, priority: 'standard', label: 'Воск' },
+      pottery:     { per_100:    300, priority: 'standard', label: 'Керамика' },
+      honey:       { per_100:     80, priority: 'luxury',   label: 'Мёд' },
     },
     unhappy_effects: {
       tax_efficiency_mod: -0.10,
@@ -101,9 +116,8 @@ const SOCIAL_CLASSES = {
   },
 
   // ── ЖРЕЧЕСТВО ──────────────────────────────────────────────────────────
-  // Нагрузка: сидячая (~2000 ккал/день). Ритуальный пост и воздержание
-  // снижают зерновую норму ниже среднего. Оливковое масло и вино —
-  // культовые, а не только пищевые.
+  // Сидячий труд. Масло и вино — ритуальные. Главный потребитель благовоний:
+  // 5 кг/жреца/год (храмовые курения ежедневно).
   clergy_class: {
     name:          'Жречество',
     name_gen:      'жречества',
@@ -113,16 +127,17 @@ const SOCIAL_CLASSES = {
     wealth_level:  3,
     political_weight: 0.10,
     needs: {
-      wheat:       { per_100: 660, priority: 'basic',    label: 'Зерно' },
-      salt:        { per_100: 2,   priority: 'basic',    label: 'Соль' },
-      olive_oil:   { per_100: 12,  priority: 'standard', label: 'Оливковое масло' },
-      wine:        { per_100: 14, priority: 'standard', label: 'Вино (обряды)' },
-      cloth:       { per_100: 12, priority: 'standard', label: 'Ткань' },
-      incense:     { per_100: 18, priority: 'standard', label: 'Благовония' },
-      papyrus:     { per_100: 12, priority: 'standard', label: 'Папирус' },
-      wax:         { per_100: 6,  priority: 'standard', label: 'Воск' },
-      pottery:     { per_100: 5,  priority: 'standard', label: 'Керамика' },
-      honey:       { per_100: 4,  priority: 'luxury',   label: 'Мёд' },
+      wheat:       { per_100: 20_000, priority: 'basic',    label: 'Зерно' },
+      salt:        { per_100:    500, priority: 'basic',    label: 'Соль' },
+      olive_oil:   { per_100:  2_000, priority: 'standard', label: 'Оливковое масло' },
+      wine:        { per_100:  8_000, priority: 'standard', label: 'Вино (обряды)' },
+      fish:        { per_100:    800, priority: 'standard', label: 'Рыба' },
+      cloth:       { per_100:    500, priority: 'standard', label: 'Ткань' },
+      incense:     { per_100:    500, priority: 'standard', label: 'Благовония' },
+      papyrus:     { per_100:    300, priority: 'standard', label: 'Папирус' },
+      wax:         { per_100:    300, priority: 'standard', label: 'Воск' },
+      pottery:     { per_100:    300, priority: 'standard', label: 'Керамика' },
+      honey:       { per_100:     80, priority: 'luxury',   label: 'Мёд' },
     },
     unhappy_effects: {
       happiness_base_mod: -5,
@@ -134,8 +149,8 @@ const SOCIAL_CLASSES = {
   },
 
   // ── СВОБОДНЫЕ ГРАЖДАНЕ ─────────────────────────────────────────────────
-  // Нагрузка: лёгкая (~2300 ккал/день). Торговля и управление — не тяжёлый
-  // труд. Пшеница и вино, умеренный достаток.
+  // Лёгкий труд (~2300 ккал/день). 180 кг пшеницы + 80 кг ячменя.
+  // Рыба — регулярный продукт в Средиземноморье: 15 кг/чел/год.
   citizens: {
     name:          'Свободные граждане',
     name_gen:      'свободных граждан',
@@ -145,15 +160,16 @@ const SOCIAL_CLASSES = {
     wealth_level:  3,
     political_weight: 0.18,
     needs: {
-      wheat:       { per_100: 540, priority: 'basic',    label: 'Зерно' },
-      barley:      { per_100: 240, priority: 'basic',    label: 'Ячмень' },
-      salt:        { per_100: 2,   priority: 'basic',    label: 'Соль' },
-      wine:        { per_100: 12,  priority: 'standard', label: 'Вино' },
-      olive_oil:   { per_100: 9,  priority: 'standard', label: 'Оливковое масло' },
-      cloth:       { per_100: 9,  priority: 'standard', label: 'Ткань' },
-      pottery:     { per_100: 7,  priority: 'standard', label: 'Керамика' },
-      tools:       { per_100: 4,  priority: 'standard', label: 'Инструменты' },
-      honey:       { per_100: 3,  priority: 'luxury',   label: 'Мёд' },
+      wheat:       { per_100: 18_000, priority: 'basic',    label: 'Зерно' },
+      barley:      { per_100:  8_000, priority: 'basic',    label: 'Ячмень' },
+      salt:        { per_100:    500, priority: 'basic',    label: 'Соль' },
+      wine:        { per_100:  6_000, priority: 'standard', label: 'Вино' },
+      olive_oil:   { per_100:  1_500, priority: 'standard', label: 'Оливковое масло' },
+      fish:        { per_100:  1_500, priority: 'standard', label: 'Рыба' },
+      cloth:       { per_100:    400, priority: 'standard', label: 'Ткань' },
+      pottery:     { per_100:    400, priority: 'standard', label: 'Керамика' },
+      tools:       { per_100:    200, priority: 'standard', label: 'Инструменты' },
+      honey:       { per_100:     60, priority: 'luxury',   label: 'Мёд' },
     },
     unhappy_effects: {
       trade_income_mod: -0.10,
@@ -165,8 +181,8 @@ const SOCIAL_CLASSES = {
   },
 
   // ── РЕМЕСЛЕННИКИ ───────────────────────────────────────────────────────
-  // Нагрузка: умеренная–тяжёлая (~2700 ккал/день). Кузнецы, плотники и
-  // строители работают физически. Ячмень — дешёвое дополнение к пшенице.
+  // Тяжёлый физический труд (~2700 ккал/день).
+  // 150 кг пшеницы + 150 кг ячменя. Инструменты: 10 кг/чел/год — рабочий износ.
   craftsmen_class: {
     name:          'Ремесленники',
     name_gen:      'ремесленников',
@@ -176,16 +192,18 @@ const SOCIAL_CLASSES = {
     wealth_level:  2,
     political_weight: 0.12,
     needs: {
-      wheat:       { per_100: 480, priority: 'basic',    label: 'Зерно' },
-      barley:      { per_100: 360, priority: 'basic',    label: 'Ячмень' },
-      salt:        { per_100: 2,   priority: 'basic',    label: 'Соль' },
-      wine:        { per_100: 6,  priority: 'standard', label: 'Вино' },
-      cloth:       { per_100: 7,  priority: 'standard', label: 'Ткань' },
-      wool:        { per_100: 5,  priority: 'standard', label: 'Шерсть' },
-      tools:       { per_100: 12, priority: 'standard', label: 'Инструменты' },
-      iron:        { per_100: 4,  priority: 'standard', label: 'Железо' },
-      leather:     { per_100: 3,  priority: 'standard', label: 'Кожа' },
-      pottery:     { per_100: 6,  priority: 'standard', label: 'Керамика' },
+      wheat:       { per_100: 15_000, priority: 'basic',    label: 'Зерно' },
+      barley:      { per_100: 15_000, priority: 'basic',    label: 'Ячмень' },
+      salt:        { per_100:    400, priority: 'basic',    label: 'Соль' },
+      wine:        { per_100:  3_000, priority: 'standard', label: 'Вино' },
+      olive_oil:   { per_100:  1_200, priority: 'standard', label: 'Оливковое масло' },
+      fish:        { per_100:  2_000, priority: 'standard', label: 'Рыба' },
+      cloth:       { per_100:    300, priority: 'standard', label: 'Ткань' },
+      wool:        { per_100:    300, priority: 'standard', label: 'Шерсть' },
+      tools:       { per_100:  1_000, priority: 'standard', label: 'Инструменты' },
+      iron:        { per_100:    400, priority: 'standard', label: 'Железо' },
+      leather:     { per_100:    200, priority: 'standard', label: 'Кожа' },
+      pottery:     { per_100:    200, priority: 'standard', label: 'Керамика' },
     },
     unhappy_effects: {
       production_mod: -0.15,
@@ -196,9 +214,9 @@ const SOCIAL_CLASSES = {
   },
 
   // ── ЗЕМЛЕДЕЛЬЦЫ ────────────────────────────────────────────────────────
-  // Нагрузка: тяжёлая (~3200 ккал/день). Пашут, сеют, жнут. Питаются
-  // преимущественно ячменём — дешевле пшеницы. Katona: 4 фунта хлеба/день
-  // для работника поля. Самые высокие зерновые потребности в игре.
+  // Очень тяжёлый труд. В основном ячмень — дешевле пшеницы.
+  // 50 кг пшеницы + 250 кг ячменя. Соль важна: консервация продуктов.
+  // Сушёная рыба: 15 кг/чел/год — доступный белок для бедных.
   farmers_class: {
     name:          'Земледельцы',
     name_gen:      'земледельцев',
@@ -208,13 +226,15 @@ const SOCIAL_CLASSES = {
     wealth_level:  1,
     political_weight: 0.10,
     needs: {
-      wheat:       { per_100: 180, priority: 'basic',    label: 'Зерно' },
-      barley:      { per_100: 720, priority: 'basic',    label: 'Ячмень' },
-      salt:        { per_100: 2,   priority: 'basic',    label: 'Соль' },
-      cloth:       { per_100: 5,  priority: 'standard', label: 'Ткань' },
-      wool:        { per_100: 4,  priority: 'standard', label: 'Шерсть' },
-      tools:       { per_100: 6,  priority: 'standard', label: 'Инструменты' },
-      pottery:     { per_100: 4,  priority: 'standard', label: 'Керамика' },
+      wheat:       { per_100:  5_000, priority: 'basic',    label: 'Зерно' },
+      barley:      { per_100: 25_000, priority: 'basic',    label: 'Ячмень' },
+      salt:        { per_100:    400, priority: 'basic',    label: 'Соль' },
+      olive_oil:   { per_100:  1_000, priority: 'standard', label: 'Оливковое масло' },
+      fish:        { per_100:  1_500, priority: 'standard', label: 'Рыба' },
+      cloth:       { per_100:    200, priority: 'standard', label: 'Ткань' },
+      wool:        { per_100:    200, priority: 'standard', label: 'Шерсть' },
+      tools:       { per_100:    500, priority: 'standard', label: 'Инструменты' },
+      pottery:     { per_100:    200, priority: 'standard', label: 'Керамика' },
     },
     unhappy_effects: {
       production_mod: -0.12,
@@ -227,9 +247,9 @@ const SOCIAL_CLASSES = {
   },
 
   // ── МОРЯКИ ─────────────────────────────────────────────────────────────
-  // Нагрузка: тяжёлая (~3200 ккал/день). Гребля и такелаж — изнурительный
-  // труд. Рыба — основной белок и часть калорий; ячмень дополняет зерновую
-  // норму. Паёк греческого гребца: пшеница + рыба + вино.
+  // Очень тяжёлый труд. Рыба — основной белок (60 кг/чел/год).
+  // Соль высокая (9 кг): консервация рыбы в море + личный расход.
+  // Паёк афинского гребца: пшеница + ячмень + рыба + вино.
   sailors_class: {
     name:          'Моряки',
     name_gen:      'моряков',
@@ -239,15 +259,16 @@ const SOCIAL_CLASSES = {
     wealth_level:  2,
     political_weight: 0.06,
     needs: {
-      wheat:       { per_100: 360,  priority: 'basic',    label: 'Зерно' },
-      barley:      { per_100: 540,  priority: 'basic',    label: 'Ячмень' },
-      fish:        { per_100: 400,  priority: 'basic',    label: 'Рыба' },
-      salt:        { per_100: 3,    priority: 'basic',    label: 'Соль' },
-      wine:        { per_100: 9,  priority: 'standard', label: 'Вино' },
-      cloth:       { per_100: 6,  priority: 'standard', label: 'Ткань' },
-      wool:        { per_100: 5,  priority: 'standard', label: 'Шерсть (такелаж)' },
-      leather:     { per_100: 4,  priority: 'standard', label: 'Кожа' },
-      pottery:     { per_100: 4,  priority: 'standard', label: 'Керамика' },
+      wheat:       { per_100: 12_000, priority: 'basic',    label: 'Зерно' },
+      barley:      { per_100: 16_000, priority: 'basic',    label: 'Ячмень' },
+      fish:        { per_100:  6_000, priority: 'basic',    label: 'Рыба' },
+      salt:        { per_100:    900, priority: 'basic',    label: 'Соль' },
+      wine:        { per_100:  4_000, priority: 'standard', label: 'Вино' },
+      olive_oil:   { per_100:  1_000, priority: 'standard', label: 'Оливковое масло' },
+      cloth:       { per_100:    200, priority: 'standard', label: 'Ткань' },
+      wool:        { per_100:    300, priority: 'standard', label: 'Шерсть (такелаж)' },
+      leather:     { per_100:    300, priority: 'standard', label: 'Кожа' },
+      pottery:     { per_100:    200, priority: 'standard', label: 'Керамика' },
     },
     unhappy_effects: {
       trade_income_mod: -0.12,
@@ -258,9 +279,9 @@ const SOCIAL_CLASSES = {
   },
 
   // ── СОЛДАТЫ ────────────────────────────────────────────────────────────
-  // Нагрузка: тяжёлая (~3200 ккал/день). Полибий: греческий солдат получал
-  // 2/3 медимна пшеницы в месяц (~4 модия). Паёк формализован, поэтому
-  // зерновая норма выше чем у свободного крестьянина.
+  // Полибий: легионер получал 2/3 аттического медимна пшеницы в месяц
+  //   = ~27 кг/мес = 324 кг/год. Здесь: 320 кг/чел/год.
+  // Соль: традиционный "salarium" — часть жалованья солдата.
   soldiers_class: {
     name:          'Солдаты',
     name_gen:      'солдат',
@@ -270,14 +291,16 @@ const SOCIAL_CLASSES = {
     wealth_level:  2,
     political_weight: 0.08,
     needs: {
-      wheat:       { per_100: 1080, priority: 'basic',    label: 'Зерно (паёк)' },
-      barley:      { per_100: 80,   priority: 'basic',    label: 'Ячмень (штрафной паёк)' },
-      salt:        { per_100: 3,  priority: 'basic',    label: 'Соль' },
-      wine:        { per_100: 7,  priority: 'standard', label: 'Вино' },
-      cloth:       { per_100: 6,  priority: 'standard', label: 'Ткань' },
-      iron:        { per_100: 6,  priority: 'standard', label: 'Железо (снаряжение)' },
-      leather:     { per_100: 6,  priority: 'standard', label: 'Кожа (доспех)' },
-      tools:       { per_100: 2,  priority: 'standard', label: 'Инструменты' },
+      wheat:       { per_100: 32_000, priority: 'basic',    label: 'Зерно (паёк)' },
+      barley:      { per_100:  3_000, priority: 'basic',    label: 'Ячмень (штрафной паёк)' },
+      salt:        { per_100:    500, priority: 'basic',    label: 'Соль' },
+      wine:        { per_100:  2_500, priority: 'standard', label: 'Вино' },
+      olive_oil:   { per_100:    800, priority: 'standard', label: 'Оливковое масло' },
+      fish:        { per_100:  1_000, priority: 'standard', label: 'Рыба' },
+      cloth:       { per_100:    300, priority: 'standard', label: 'Ткань' },
+      iron:        { per_100:    500, priority: 'standard', label: 'Железо (снаряжение)' },
+      leather:     { per_100:    500, priority: 'standard', label: 'Кожа (доспех)' },
+      tools:       { per_100:    200, priority: 'standard', label: 'Инструменты' },
     },
     unhappy_effects: {
       military_loyalty_mod: -8,
@@ -290,8 +313,8 @@ const SOCIAL_CLASSES = {
   },
 
   // ── ВОЛЬНООТПУЩЕННИКИ ──────────────────────────────────────────────────
-  // Нагрузка: умеренная–тяжёлая (~2800 ккал/день). Работают поденно,
-  // подёнщики и мелкие ремесленники. Ячменя больше чем пшеницы — дешевле.
+  // Поденщики и мелкие ремесленники. Бедный, но свободный класс.
+  // 70 кг пшеницы + 150 кг ячменя. Масло и рыба — доступный минимум.
   freedmen: {
     name:          'Вольноотпущенники',
     name_gen:      'вольноотпущенников',
@@ -301,11 +324,13 @@ const SOCIAL_CLASSES = {
     wealth_level:  1,
     political_weight: 0.04,
     needs: {
-      wheat:       { per_100: 240, priority: 'basic',    label: 'Зерно' },
-      barley:      { per_100: 480, priority: 'basic',    label: 'Ячмень' },
-      salt:        { per_100: 2,   priority: 'basic',    label: 'Соль' },
-      cloth:       { per_100: 5,  priority: 'standard', label: 'Ткань' },
-      pottery:     { per_100: 3,  priority: 'standard', label: 'Керамика' },
+      wheat:       { per_100:  7_000, priority: 'basic',    label: 'Зерно' },
+      barley:      { per_100: 15_000, priority: 'basic',    label: 'Ячмень' },
+      salt:        { per_100:    400, priority: 'basic',    label: 'Соль' },
+      olive_oil:   { per_100:    800, priority: 'standard', label: 'Оливковое масло' },
+      fish:        { per_100:  1_500, priority: 'standard', label: 'Рыба' },
+      cloth:       { per_100:    200, priority: 'standard', label: 'Ткань' },
+      pottery:     { per_100:    200, priority: 'standard', label: 'Керамика' },
     },
     unhappy_effects: {
       conspiracy_chance_mod: +0.03,
@@ -316,9 +341,9 @@ const SOCIAL_CLASSES = {
   },
 
   // ── РАБЫ ───────────────────────────────────────────────────────────────
-  // Нагрузка: тяжёлая (~3200 ккал/день). Катон: 4–4.5 фунта хлеба/день
-  // для полевого раба, 3 фунта для надсмотрщика. Паёк намеренно минимален —
-  // достаточно чтобы работать, не более. Ячмень вместо пшеницы — дешевле.
+  // Катон «О земледелии» гл. 56: ~700 г хлеба/день для полевого раба
+  //   ≈ ~500 г зерна/день × 365 = ~183 кг пшеницы или ~255 кг ячменя.
+  // Здесь: 40 кг пшеницы + 280 кг ячменя = 320 кг/год — полевой раб.
   slaves_class: {
     name:          'Рабы',
     name_gen:      'рабов',
@@ -326,12 +351,12 @@ const SOCIAL_CLASSES = {
     description:   'Домашние, рудничные и сельские рабы. Основа производства.',
     color:         '#455A64',
     wealth_level:  0,
-    political_weight: 0.00,  // нет политического влияния
+    political_weight: 0.00,
     needs: {
-      wheat:       { per_100: 240,  priority: 'basic',    label: 'Зерно' },
-      barley:      { per_100: 960,  priority: 'basic',    label: 'Ячмень' },
-      salt:        { per_100: 1,  priority: 'basic',    label: 'Соль' },
-      cloth:       { per_100: 2,  priority: 'standard', label: 'Ткань' },
+      wheat:       { per_100:  4_000, priority: 'basic',    label: 'Зерно' },
+      barley:      { per_100: 28_000, priority: 'basic',    label: 'Ячмень' },
+      salt:        { per_100:    300, priority: 'basic',    label: 'Соль' },
+      cloth:       { per_100:    100, priority: 'standard', label: 'Ткань' },
     },
     unhappy_effects: {
       rebellion_risk: +0.08,
