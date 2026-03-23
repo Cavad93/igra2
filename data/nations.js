@@ -4036,6 +4036,306 @@ const INITIAL_GAME_STATE = {
     active_laws: [], characters: [],
     historical_note: "Гандхара — культурный перекрёсток у подножия Гиндукуша, где сходятся индийская и эллинистическая цивилизации. Таксила — один из крупнейших образовательных центров древнего мира."
   }
+  ,
+
+  // ===== ШАГ 8: КИТАЙ И ВОСТОЧНАЯ АЗИЯ =====
+
+  // === LEVEL A ===
+
+  qin: {
+    name: "Царство Цинь",
+    adjective: "циньский",
+    color: "#8B0000",
+    flag_emoji: "🐉",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "expansionist",
+    ai_priority: ["expansion", "military", "economy"],
+    government: { type: "monarchy", stability: 75, corruption: 30 },
+    regions: ["guanzhong_plain", "wei_river_valley", "hanzhong", "sichuan_basin", "shaanxi_north", "gansu_corridor", "longxi", "northern_shaanxi", "southern_shanxi", "northwest_henan"],
+    population: {
+      by_profession: {
+        farmers: 2000000, craftsmen: 300000, merchants: 100000,
+        soldiers: 200000, nobles: 15000, priests: 10000, slaves: 50000
+      }
+    },
+    economy: {
+      gold: 1500,
+      income_per_turn: 250,
+      trade_routes: ["bactria", "xiongnu"],
+      stockpile: { grain: 6000, iron: 2000, wood: 1500, silk: 1000, bronze: 800 }
+    },
+    military: {
+      infantry: 150000,
+      cavalry: 20000,
+      ships: 200,
+      at_war_with: []
+    },
+    relations: {
+      chu: -60, zhao: -50, wei: -50, qi: -40, han: -40, yan: -30,
+      xiongnu: -40, donghu: -20, gojoseon: 0
+    },
+    active_laws: [],
+    characters: [],
+    historical_note: "К 304 г. до н.э. Цинь — сильнейшее из Воюющих царств Китая, уже поглотившее несколько соперников и захватившее плодородный Сычуаньский бассейн. Реформы Шан Яна (356–338 гг. до н.э.) создали высокоэффективную военную и административную машину, основанную на жёстком легизме. До объединения Китая под властью Цинь Ши Хуанди остаётся ещё 83 года."
+  },
+
+  chu: {
+    name: "Царство Чу",
+    adjective: "чуский",
+    color: "#006400",
+    flag_emoji: "🐲",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "balanced",
+    ai_priority: ["expansion", "military", "economy"],
+    government: { type: "monarchy", stability: 55, corruption: 45 },
+    regions: ["yangtze_middle", "hubei_plain", "hunan_north", "jiangxi_north", "anhui_south", "henan_south", "jiangsu_north", "zhejiang_north", "guangdong_north", "guizhou_north"],
+    population: {
+      by_profession: {
+        farmers: 2500000, craftsmen: 280000, merchants: 150000,
+        soldiers: 180000, nobles: 20000, priests: 15000, slaves: 80000
+      }
+    },
+    economy: {
+      gold: 1200,
+      income_per_turn: 210,
+      trade_routes: ["qi", "wei"],
+      stockpile: { grain: 7000, wood: 3000, silk: 1500, lacquer: 800, bronze: 600 }
+    },
+    military: {
+      infantry: 130000,
+      cavalry: 15000,
+      ships: 600,
+      at_war_with: []
+    },
+    relations: {
+      qin: -60, zhao: 20, wei: 10, qi: 20, han: -10, yan: 10,
+      xiongnu: -10, gojoseon: 0
+    },
+    active_laws: [],
+    characters: [],
+    historical_note: "Чу — крупнейшее по территории Воюющее царство, занимающее весь юг Китая. Несмотря на постоянные потери в войнах с Цинь, Чу остаётся мощной державой с богатейшей культурой — именно здесь расцветает поэзия Цюй Юаня. Царство сочетает древние местные традиции с элементами общекитайской культуры Чжоу."
+  },
+
+  // === LEVEL B ===
+
+  zhao: {
+    name: "Царство Чжао",
+    adjective: "чжаоский",
+    color: "#4682B4",
+    flag_emoji: "🏹",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "militarist",
+    ai_priority: ["military", "expansion", "diplomacy"],
+    government: { type: "monarchy", stability: 60, corruption: 40 },
+    regions: ["hebei_south", "shanxi_north", "inner_mongolia_south", "shanxi_south"],
+    population: { total: 1500000 },
+    economy: {
+      gold: 600,
+      income_per_turn: 95,
+      trade_routes: ["yan", "wei", "xiongnu"],
+      stockpile: { grain: 2500, horses: 1200, iron: 600 }
+    },
+    military: { infantry: 80000, cavalry: 25000, ships: 0, at_war_with: [] },
+    relations: { qin: -50, chu: 20, wei: 30, qi: 20, han: 20, yan: -10, xiongnu: -30, donghu: -20 },
+    active_laws: [], characters: [],
+    historical_note: "Чжао — северное Воюющее царство, граничащее со степями. Реформы Улинвана (307 г. до н.э.) ввели кочевнический стиль верховой езды и конную стрельбу из лука, создав мощную кавалерию. Армия Чжао в 304 г. до н.э. — одна из сильнейших в Китае."
+  },
+
+  wei: {
+    name: "Царство Вэй",
+    adjective: "вэйский",
+    color: "#9932CC",
+    flag_emoji: "⚔️",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "balanced",
+    ai_priority: ["economy", "trade", "military"],
+    government: { type: "monarchy", stability: 50, corruption: 45 },
+    regions: ["henan_north", "shanxi_southeast", "hebei_south_west"],
+    population: { total: 1200000 },
+    economy: {
+      gold: 550,
+      income_per_turn: 90,
+      trade_routes: ["zhao", "han", "qi", "qin"],
+      stockpile: { grain: 2000, iron: 500, bronze: 400 }
+    },
+    military: { infantry: 70000, cavalry: 12000, ships: 100, at_war_with: [] },
+    relations: { qin: -50, chu: 10, zhao: 30, qi: 20, han: 30, yan: 20 },
+    active_laws: [], characters: [],
+    historical_note: "Вэй — центральное Воюющее царство, некогда сильнейшее среди всех семи, но к 304 г. до н.э. ослабленное войнами с Цинь. Расположено на перекрёстке торговых путей, что делает его богатым, но уязвимым."
+  },
+
+  qi: {
+    name: "Царство Ци",
+    adjective: "циский",
+    color: "#DAA520",
+    flag_emoji: "📚",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "balanced",
+    ai_priority: ["economy", "trade", "diplomacy"],
+    government: { type: "monarchy", stability: 65, corruption: 35 },
+    regions: ["shandong_peninsula", "hebei_east", "jiangsu_north_coast"],
+    population: { total: 1800000 },
+    economy: {
+      gold: 800,
+      income_per_turn: 130,
+      trade_routes: ["yan", "wei", "zhao"],
+      stockpile: { grain: 3000, fish: 1000, salt: 2000, silk: 800 }
+    },
+    military: { infantry: 90000, cavalry: 8000, ships: 400, at_war_with: [] },
+    relations: { qin: -40, chu: 20, zhao: 20, wei: 20, han: 10, yan: -20 },
+    active_laws: [], characters: [],
+    historical_note: "Ци — богатейшее восточное Воюющее царство на берегу Жёлтого моря. Академия Цзися в столице Линьцзы — крупнейший интеллектуальный центр древнего мира, где собрались учёные всех школ: конфуцианцы, легисты, даосы, моисты."
+  },
+
+  han: {
+    name: "Царство Хань",
+    adjective: "ханьский",
+    color: "#DC143C",
+    flag_emoji: "⚔️",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "defensive",
+    ai_priority: ["military", "economy", "diplomacy"],
+    government: { type: "monarchy", stability: 50, corruption: 40 },
+    regions: ["henan_central", "shanxi_south_east"],
+    population: { total: 900000 },
+    economy: {
+      gold: 400,
+      income_per_turn: 65,
+      trade_routes: ["wei", "chu", "zhao"],
+      stockpile: { grain: 1500, iron: 800, bronze: 300 }
+    },
+    military: { infantry: 50000, cavalry: 5000, ships: 50, at_war_with: [] },
+    relations: { qin: -40, chu: -10, zhao: 20, wei: 30, qi: 10, yan: 20 },
+    active_laws: [], characters: [],
+    historical_note: "Хань — наименьшее из Воюющих царств, зажатое между могучими соседями. Известно превосходными арбалетами, которые делали их пехоту грозной боевой силой. Хань будет первым из семи царств покорено Цинь в 230 г. до н.э."
+  },
+
+  yan: {
+    name: "Царство Янь",
+    adjective: "яньский",
+    color: "#20B2AA",
+    flag_emoji: "❄️",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "defensive",
+    ai_priority: ["economy", "diplomacy", "military"],
+    government: { type: "monarchy", stability: 55, corruption: 35 },
+    regions: ["hebei_north", "liaoning_west", "beijing_region"],
+    population: { total: 1000000 },
+    economy: {
+      gold: 450,
+      income_per_turn: 70,
+      trade_routes: ["qi", "zhao", "gojoseon"],
+      stockpile: { grain: 2000, furs: 500, horses: 600 }
+    },
+    military: { infantry: 55000, cavalry: 18000, ships: 200, at_war_with: [] },
+    relations: { qin: -30, chu: 10, zhao: -10, qi: -20, han: 20, donghu: -40, gojoseon: 20 },
+    active_laws: [], characters: [],
+    historical_note: "Янь — северо-восточное Воюющее царство, отрезанное от остального Китая и граничащее с кочевниками дунху. В 300 г. до н.э. Янь проигрывает опустошительную войну Ци, потеряв столицу. Именно из Янь позднее сбежит неудачливый убийца будущего первого императора Китая Цинь Ши Хуанди."
+  },
+
+  // === LEVEL C ===
+
+  xiongnu: {
+    name: "Сюнну",
+    adjective: "сюннуский",
+    color: "#8B4513",
+    flag_emoji: "🏹",
+    is_player: false,
+    is_minor: false,
+    ai_personality: "raider",
+    ai_priority: ["military", "expansion"],
+    government: { type: "tribal", stability: 45, corruption: 20 },
+    regions: ["outer_mongolia_central", "inner_mongolia_north", "gobi_steppe"],
+    population: { total: 300000 },
+    economy: { gold: 100, income_per_turn: 25, trade_routes: ["qin", "zhao"], stockpile: { horses: 1500, cattle: 800, furs: 400 } },
+    military: { infantry: 10000, cavalry: 60000, ships: 0, at_war_with: [] },
+    relations: { qin: -40, zhao: -30, yan: -30, donghu: -40, yuezhi: -30 },
+    active_laws: [], characters: [],
+    historical_note: "Сюнну — кочевой союз племён Монгольских степей. В 304 г. до н.э. ещё не объединены под единым шаньюем, но уже представляют серьёзную угрозу для северных китайских царств. В следующем веке Модэ-шаньюй создаст великую кочевую империю."
+  },
+
+  donghu: {
+    name: "Дунху",
+    adjective: "дунхуский",
+    color: "#556B2F",
+    flag_emoji: "🐎",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "raider",
+    ai_priority: ["military", "expansion"],
+    government: { type: "tribal", stability: 40, corruption: 15 },
+    regions: ["liaoning_north", "inner_mongolia_east"],
+    population: { total: 150000 },
+    economy: { gold: 50, income_per_turn: 12, trade_routes: ["yan"], stockpile: { horses: 800, furs: 300 } },
+    military: { infantry: 8000, cavalry: 25000, ships: 0, at_war_with: [] },
+    relations: { xiongnu: -40, yan: -30, zhao: -20, gojoseon: -10 },
+    active_laws: [], characters: [],
+    historical_note: "Дунху — восточные кочевники к северу от Янь и Чжао. Впоследствии разгромлены Сюнну и растворятся в других народах, дав начало сяньби и ухуань."
+  },
+
+  yuezhi: {
+    name: "Юэчжи",
+    adjective: "юэчжийский",
+    color: "#B8860B",
+    flag_emoji: "🐪",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "balanced",
+    ai_priority: ["trade", "military"],
+    government: { type: "tribal", stability: 50, corruption: 20 },
+    regions: ["gansu_west", "qilian_mountains"],
+    population: { total: 200000 },
+    economy: { gold: 70, income_per_turn: 18, trade_routes: ["bactria", "qin", "xiongnu"], stockpile: { horses: 1000, jade: 300, furs: 200 } },
+    military: { infantry: 10000, cavalry: 30000, ships: 0, at_war_with: [] },
+    relations: { xiongnu: -30, qin: -20, bactria: 20, saka: 10 },
+    active_laws: [], characters: [],
+    historical_note: "Юэчжи — индоевропейские кочевники в Ганьсу, посредники в торговле нефритом между Китаем и Центральной Азией. Впоследствии вытесненные сюнну на запад, они основают Кушанское царство."
+  },
+
+  gojoseon: {
+    name: "Древний Чосон",
+    adjective: "чосонский",
+    color: "#CC3333",
+    flag_emoji: "🌅",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "defensive",
+    ai_priority: ["economy", "diplomacy"],
+    government: { type: "monarchy", stability: 60, corruption: 30 },
+    regions: ["korea_northwest", "manchuria_south"],
+    population: { total: 400000 },
+    economy: { gold: 150, income_per_turn: 30, trade_routes: ["yan", "qi"], stockpile: { grain: 1000, bronze: 400, iron: 200 } },
+    military: { infantry: 15000, cavalry: 3000, ships: 100, at_war_with: [] },
+    relations: { yan: 20, qi: 20, donghu: -10, xiongnu: -20 },
+    active_laws: [], characters: [],
+    historical_note: "Древний Чосон — первое корейское государство со столицей у Пхеньяна. В 304 г. до н.э. принимает беженцев из охваченного войной Китая и поддерживает торговые отношения с Янь и Ци."
+  },
+
+  yayoi_japan: {
+    name: "Яёй (Япония)",
+    adjective: "яёйский",
+    color: "#FF6347",
+    flag_emoji: "⛩️",
+    is_player: false,
+    is_minor: true,
+    ai_personality: "defensive",
+    ai_priority: ["economy"],
+    government: { type: "tribal", stability: 55, corruption: 10 },
+    regions: ["northern_kyushu", "western_honshu"],
+    population: { total: 200000 },
+    economy: { gold: 30, income_per_turn: 10, trade_routes: [], stockpile: { grain: 500, bronze: 150 } },
+    military: { infantry: 8000, cavalry: 0, ships: 200, at_war_with: [] },
+    relations: { gojoseon: 10 },
+    active_laws: [], characters: [],
+    historical_note: "Яёйская культура 304 г. до н.э. — переходный период в истории Японии, когда с Корейского полуострова распространяется влажное рисоводство и бронзовые изделия. Японские острова состоят из множества мелких племенных вождеств."
+  }
   },
   regions: {},
 
