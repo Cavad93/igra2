@@ -1711,6 +1711,176 @@ const BUILDINGS = {
     historical_note: 'Карфагенские фактории (emporion) на берегах Африки и Иберии позволяли контролировать обмен золота и слоновой кости без постоянных колоний.',
   },
 
+  // ── ОЛИВКОВАЯ РОЩА ───────────────────────────────────────────
+  olive_grove: {
+    name:        'Оливковая роща',
+    icon:        '🫒',
+    description: 'Посадка и уход за оливковыми деревьями. ' +
+                 'Деревья начинают плодоносить через 10–15 лет, зато живут столетиями. ' +
+                 'Строится только в средиземноморском климате.',
+    cost:        250,
+    category:    'agriculture',
+    footprint_ha: 40,
+    workers_per_unit: 20,
+    worker_profession: [
+      { profession: 'farmers', count: 15 },
+      { profession: 'slaves',  count: 5 },
+    ],
+    wage_rate:          0.30,
+    labor_type:         'mixed',
+    construction_materials: { timber: 3, tools: 2 },
+    construction_labor:     95,
+    build_turns:        3,
+    autonomous_builder: 'farmers_class',
+    nation_buildable:   true,
+    production_output: [
+      { good: 'olives', base_rate: 120 },
+    ],
+    production_inputs: [],
+    capital_inputs: [
+      { good: 'tools', count_per_level: 2, monthly_wear: 0.015,
+        alt_good: null, alt_efficiency: null },
+    ],
+    location_requirement: {
+      type: 'biome', deposit_key: null,
+      allowed_biomes: ['mediterranean_coast', 'mediterranean_hills'],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          6,
+    maintenance_cost:   5,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Оливковое масло было основой экономики классических Афин; Солон запретил вырубку олив под страхом смерти — настолько они были ценны для полиса.',
+  },
+
+  // ── ЗОЛОТОЙ РУДНИК ───────────────────────────────────────────
+  gold_mine: {
+    name:        'Золотой рудник',
+    icon:        '🥇',
+    description: 'Добыча золота — россыпного или жильного. ' +
+                 'Исключительно рабский труд в тяжелейших условиях; смертность огромна. ' +
+                 'Строится только в регионах с золотыми месторождениями.',
+    cost:        1400,
+    category:    'production',
+    footprint_ha: 20,
+    workers_per_unit: 80,
+    worker_profession: [
+      { profession: 'craftsmen', count: 10 },
+      { profession: 'slaves',    count: 70 },
+    ],
+    wage_rate:          0.05,
+    labor_type:         'slave',
+    construction_materials: { timber: 16, iron: 8, tools: 8 },
+    construction_labor:     312,
+    build_turns:        6,
+    autonomous_builder: null,
+    nation_buildable:   true,
+    production_output: [
+      { good: 'gold', base_rate: 20 },
+    ],
+    production_inputs: [
+      { good: 'timber', amount_per_turn: 10, required: true },
+      { good: 'tools',  amount_per_turn:  6, required: true },
+    ],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'deposit', deposit_key: 'gold_ore', allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          4,
+    maintenance_cost:   30,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Нубийские золотые рудники Египта (Вади-Аллаки) к III в. до н.э. были крупнейшими в мире; Диодор Сицилийский описывает условия труда там как ужасающие.',
+    slave_mortality_mod: 0.012,
+  },
+
+  // ── КОНОПЛЯНОЕ ПОЛЕ ──────────────────────────────────────────
+  hemp_field: {
+    name:        'Конопляное поле',
+    icon:        '🌿',
+    description: 'Возделывание конопли для получения волокна и верёвок. ' +
+                 'Конопляный канат был незаменим для флота и строительства. ' +
+                 'Строится в умеренном и степном климате.',
+    cost:        150,
+    category:    'agriculture',
+    footprint_ha: 20,
+    workers_per_unit: 15,
+    worker_profession: [
+      { profession: 'farmers', count: 15 },
+    ],
+    wage_rate:          0.30,
+    labor_type:         'tenant',
+    construction_materials: { timber: 2, tools: 1 },
+    construction_labor:     67,
+    build_turns:        1,
+    autonomous_builder: 'farmers_class',
+    nation_buildable:   true,
+    production_output: [
+      { good: 'hemp', base_rate: 100 },
+    ],
+    production_inputs: [],
+    capital_inputs: [
+      { good: 'tools', count_per_level: 1, monthly_wear: 0.015,
+        alt_good: null, alt_efficiency: null },
+    ],
+    location_requirement: {
+      type: 'biome', deposit_key: null,
+      allowed_biomes: ['temperate_forest', 'steppe', 'river_valley'],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          5,
+    maintenance_cost:   3,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Скифы и народы Причерноморья выращивали коноплю тысячелетиями; Геродот описывает скифские конопляные бани. Римский флот потреблял огромные количества пеньки для такелажа.',
+  },
+
+  // ── СМОЛОКУРНЯ ───────────────────────────────────────────────
+  pitch_works: {
+    name:        'Смолокурня',
+    icon:        '🌲',
+    description: 'Перегонка смолы из хвойной древесины — производство корабельной смолы и дёгтя. ' +
+                 'Без pitch невозможно законопатить и просмолить корабль. ' +
+                 'Строится только там, где есть хвойный лес.',
+    cost:        200,
+    category:    'production',
+    footprint_ha: 8,
+    workers_per_unit: 10,
+    worker_profession: [
+      { profession: 'craftsmen', count: 7 },
+      { profession: 'farmers',   count: 3 },
+    ],
+    wage_rate:          0.25,
+    labor_type:         'mixed',
+    construction_materials: { timber: 5, tools: 2 },
+    construction_labor:     83,
+    build_turns:        2,
+    autonomous_builder: null,
+    nation_buildable:   true,
+    production_output: [
+      { good: 'pitch', base_rate: 60 },
+    ],
+    production_inputs: [
+      { good: 'timber', amount_per_turn: 12, required: true },
+    ],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'biome', deposit_key: null,
+      allowed_biomes: ['temperate_forest', 'alpine'],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          4,
+    maintenance_cost:   4,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Македония и Фракия были главными поставщиками корабельной смолы для греческих флотов; контроль над хвойными лесами Македонии был стратегическим приоритетом Афин.',
+  },
+
   papyrus_bed: {
     name:        'Папирусные заросли',
     icon:        '📜',
