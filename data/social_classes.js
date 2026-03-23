@@ -412,6 +412,43 @@ const SOCIAL_CLASSES = {
     happy_effects: {
       production_mod: +0.10,
     },
+    // ── НОВЫЕ ПОЛЯ ───────────────────────────────────────────────────────────
+    can_work_in: {
+      primary: [
+        'forge', 'bronze_foundry', 'pottery_workshop', 'textile_mill',
+        'tannery', 'workshop', 'charcoal_kiln', 'lumber_camp',
+        'shipyard', 'garum_workshop', 'dye_works', 'butchery',
+        'salt_works', 'winery', 'oil_press',
+      ],
+      secondary: ['market', 'warehouse', 'pitch_works', 'elephant_corral'],
+      forbidden: ['barracks', 'temple', 'silver_mine', 'gold_mine', 'forum', 'school'],
+    },
+    ownership_rights: {
+      can_own: [
+        'forge', 'pottery_workshop', 'textile_mill',
+        'workshop', 'tannery', 'charcoal_kiln',
+      ],
+      can_build: [
+        'forge', 'pottery_workshop', 'textile_mill',
+        'workshop', 'tannery',
+      ],
+      max_owned: null,
+    },
+    political_actions: {
+      can_vote:          true,
+      can_hold_office:   false,
+      can_lead_army:     false,
+      can_conspire:      false,
+      rebellion_trigger: 30,
+      rebellion_type:    'strike',
+      pressure_actions:  [
+        'production_slowdown',
+        'price_increase',
+        'guild_protest',
+        'refuse_army_contracts',
+        'demand_wage_increase',
+      ],
+    },
   },
 
   // ── ЗЕМЛЕДЕЛЬЦЫ ────────────────────────────────────────────────────────
@@ -453,6 +490,37 @@ const SOCIAL_CLASSES = {
     happy_effects: {
       production_mod: +0.08,
       growth_rate_mod: +0.001,
+    },
+    // ── НОВЫЕ ПОЛЯ ───────────────────────────────────────────────────────────
+    can_work_in: {
+      primary: [
+        'wheat_family_farm', 'wheat_villa', 'wheat_latifundium',
+        'cattle_farm', 'horse_ranch', 'ranch', 'apiary',
+        'irrigation', 'granary', 'olive_grove', 'hemp_field',
+        'incense_grove',
+      ],
+      secondary: ['lumber_camp', 'quarry', 'amber_gathering', 'fur_trapping'],
+      forbidden: ['forge', 'shipyard', 'silver_mine', 'gold_mine', 'barracks', 'forum'],
+    },
+    ownership_rights: {
+      can_own:   ['wheat_family_farm', 'apiary', 'olive_grove', 'hemp_field'],
+      can_build: ['wheat_family_farm', 'apiary', 'olive_grove', 'hemp_field'],
+      max_owned: null,
+    },
+    political_actions: {
+      can_vote:          true,
+      can_hold_office:   false,
+      can_lead_army:     false,
+      can_conspire:      false,
+      rebellion_trigger: 25,
+      rebellion_type:    'riot',
+      pressure_actions:  [
+        'abandon_fields',
+        'flee_to_city',
+        'refuse_grain_tithe',
+        'support_demagogue',
+        'block_roads',
+      ],
     },
   },
 
