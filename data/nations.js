@@ -3201,6 +3201,204 @@ const INITIAL_GAME_STATE = {
     },
 
 
+    // ── СОФЕНА (Уровень A) ────────────────────────────────────────
+    sophene: {
+      name: 'Софена', adjective: 'софенское', color: '#9B4040', flag_emoji: '🏔️',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'survival',
+      government: {
+        type: 'monarchy', legitimacy: 62, stability: 58,
+        ruler: { type: 'person', name: 'Сатрап Софены', personal_power: 62 },
+      },
+      regions: [],
+      population: {
+        total: 350000,
+        by_profession: { farmers: 150000, craftsmen: 50000, merchants: 30000, sailors: 0, clergy: 20000, soldiers: 40000, slaves: 60000 },
+        happiness: 54, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 7000, tax_rate: 0.10,
+        primary_exports: ['iron', 'horses', 'cattle', 'slaves'],
+        primary_imports: ['trade_goods', 'wine'],
+        trade_partners: ['armenia', 'cappadocia', 'seleukid_empire'],
+        stockpile: { wheat: 22000, fish: 500, iron: 4000, horses: 5000, cattle: 10000 },
+        trade_routes: [],
+      },
+      military: { infantry: 15000, cavalry: 4000, ships: 0, mercenaries: 1000, morale: 65, loyalty: 62, at_war_with: [] },
+      relations: {
+        armenia:         { score: -20, treaties: [], at_war: false },
+        seleukid_empire: { score: -20, treaties: [], at_war: false },
+        cappadocia:      { score: 10,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Горная область между Арменией и Евфратом. В 304 г. Софена — спорная территория на границе армянских, селевкидских и каппадокийских интересов, управляемая полунезависимым династом персидского происхождения.',
+    },
+
+    // ── АТРОПАТЕНА (Уровень A) ────────────────────────────────────
+    atropatene: {
+      name: 'Мидия Атропатена', adjective: 'атропатенское', color: '#8B6914', flag_emoji: '🔥',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'survival',
+      government: {
+        type: 'monarchy', legitimacy: 70, stability: 65,
+        ruler: { type: 'person', name: 'Атропат', personal_power: 75 },
+      },
+      regions: [],
+      population: {
+        total: 400000,
+        by_profession: { farmers: 170000, craftsmen: 50000, merchants: 30000, sailors: 0, clergy: 30000, soldiers: 50000, slaves: 70000 },
+        happiness: 58, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 8000, tax_rate: 0.10,
+        primary_exports: ['horses', 'cattle', 'iron', 'slaves'],
+        primary_imports: ['trade_goods', 'wine'],
+        trade_partners: ['armenia', 'seleukid_empire', 'persis'],
+        stockpile: { wheat: 25000, fish: 500, iron: 3000, horses: 8000, cattle: 12000 },
+        trade_routes: [],
+      },
+      military: { infantry: 18000, cavalry: 6000, ships: 0, mercenaries: 1000, morale: 68, loyalty: 68, at_war_with: [] },
+      relations: {
+        seleukid_empire: { score: -15, treaties: [], at_war: false },
+        armenia:         { score: 20,  treaties: [], at_war: false },
+        persis:          { score: 15,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Атропат — персидский сатрап, не подчинившийся Александру и сохранивший власть. Северо-западная Мидия носит его имя (Азербайджан). В 304 г. Атропатена — буфер между Арменией и Селевкидами, опираясь на природную крепость Иранского нагорья.',
+    },
+
+    // ── ПЕРСИДА (Уровень A) ───────────────────────────────────────
+    persis: {
+      name: 'Персида', adjective: 'персидское', color: '#CC7722', flag_emoji: '🏛️',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'survival',
+      government: {
+        type: 'monarchy', legitimacy: 68, stability: 60,
+        ruler: { type: 'person', name: 'Фратаферн', personal_power: 65 },
+      },
+      regions: [],
+      population: {
+        total: 500000,
+        by_profession: { farmers: 200000, craftsmen: 80000, merchants: 60000, sailors: 5000, clergy: 50000, soldiers: 50000, slaves: 55000 },
+        happiness: 55, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 12000, tax_rate: 0.11,
+        primary_exports: ['horses', 'trade_goods', 'iron', 'cattle'],
+        primary_imports: ['timber', 'wheat', 'wine'],
+        trade_partners: ['seleukid_empire', 'atropatene', 'india'],
+        stockpile: { wheat: 30000, fish: 1000, iron: 5000, horses: 10000, cattle: 15000 },
+        trade_routes: [],
+      },
+      military: { infantry: 20000, cavalry: 7000, ships: 10, mercenaries: 2000, morale: 65, loyalty: 60, at_war_with: [] },
+      relations: {
+        seleukid_empire: { score: -20, treaties: [], at_war: false },
+        atropatene:      { score: 15,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Персида — историческое сердце державы Ахеменидов. Под властью Селевка, но сохраняет местную персидскую аристократию и зороастрийские традиции. Персеполь ещё стоит, хотя и разграблен Александром. Местные фратараки сохраняют автономию.',
+    },
+
+    // ── ГОРДИЕНА (Уровень A) ──────────────────────────────────────
+    gordyene: {
+      name: 'Гордиена', adjective: 'гордиенское', color: '#6B4B8B', flag_emoji: '🏔️',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'survival',
+      government: {
+        type: 'monarchy', legitimacy: 58, stability: 55,
+        ruler: { type: 'person', name: 'Правитель Гордиены', personal_power: 60 },
+      },
+      regions: [],
+      population: {
+        total: 250000,
+        by_profession: { farmers: 100000, craftsmen: 35000, merchants: 20000, sailors: 0, clergy: 15000, soldiers: 30000, slaves: 50000 },
+        happiness: 53, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 5000, tax_rate: 0.10,
+        primary_exports: ['iron', 'timber', 'cattle', 'horses'],
+        primary_imports: ['trade_goods', 'wheat'],
+        trade_partners: ['armenia', 'seleukid_empire', 'sophene'],
+        stockpile: { wheat: 15000, fish: 500, iron: 3000, horses: 4000, cattle: 8000 },
+        trade_routes: [],
+      },
+      military: { infantry: 12000, cavalry: 3000, ships: 0, mercenaries: 500, morale: 65, loyalty: 62, at_war_with: [] },
+      relations: {
+        armenia:         { score: -15, treaties: [], at_war: false },
+        seleukid_empire: { score: -20, treaties: [], at_war: false },
+        sophene:         { score: 10,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Гордиена — горная область в курдских горах к северу от Ниневии. В 304 г. формально под властью Селевка, но фактически управляется местными династами. Богатые медные и железные рудники.',
+    },
+
+    // ── КОММАГЕНА (Уровень A) ────────────────────────────────────
+    commagene: {
+      name: 'Коммагена', adjective: 'коммагенское', color: '#7B5B8B', flag_emoji: '🌉',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'survival',
+      government: {
+        type: 'monarchy', legitimacy: 62, stability: 58,
+        ruler: { type: 'person', name: 'Птолемей Коммагенский', personal_power: 62 },
+      },
+      regions: [],
+      population: {
+        total: 300000,
+        by_profession: { farmers: 120000, craftsmen: 50000, merchants: 40000, sailors: 5000, clergy: 20000, soldiers: 30000, slaves: 35000 },
+        happiness: 56, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 6500, tax_rate: 0.11,
+        primary_exports: ['iron', 'trade_goods', 'cattle', 'horses'],
+        primary_imports: ['wheat', 'wine', 'timber'],
+        trade_partners: ['seleukid_empire', 'armenia', 'sophene'],
+        stockpile: { wheat: 18000, fish: 1000, iron: 3000, horses: 3000, cattle: 7000 },
+        trade_routes: [],
+      },
+      military: { infantry: 12000, cavalry: 2500, ships: 5, mercenaries: 500, morale: 62, loyalty: 60, at_war_with: [] },
+      relations: {
+        seleukid_empire: { score: -15, treaties: [], at_war: false },
+        armenia:         { score: 10,  treaties: [], at_war: false },
+        sophene:         { score: 15,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Коммагена контролирует важнейшую переправу через Евфрат у Самосаты. В 304 г. — буферное государство между Селевкидами и Арменией. Смешение персидских, армянских и греческих традиций.',
+    },
+
+    // ── САМАРИЯ (Уровень A) ──────────────────────────────────────
+    samaria: {
+      name: 'Самария', adjective: 'самарийское', color: '#4B7B8B', flag_emoji: '🏛️',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'survival',
+      government: {
+        type: 'oligarchy', legitimacy: 52, stability: 48,
+        ruler: { type: 'council', name: 'Совет Самарии', personal_power: 48 },
+      },
+      regions: [],
+      population: {
+        total: 200000,
+        by_profession: { farmers: 90000, craftsmen: 35000, merchants: 25000, sailors: 5000, clergy: 20000, soldiers: 10000, slaves: 15000 },
+        happiness: 48, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 5000, tax_rate: 0.11,
+        primary_exports: ['olive_oil', 'wheat', 'trade_goods'],
+        primary_imports: ['iron', 'timber', 'trade_goods'],
+        trade_partners: ['ptolemaic_kingdom', 'judea', 'nabataea'],
+        stockpile: { wheat: 12000, fish: 1500, iron: 800, horses: 500, cattle: 3000 },
+        trade_routes: [],
+      },
+      military: { infantry: 5000, cavalry: 400, ships: 5, mercenaries: 500, morale: 55, loyalty: 50, at_war_with: [] },
+      relations: {
+        ptolemaic_kingdom: { score: -15, treaties: [], at_war: false },
+        judea:             { score: -20, treaties: [], at_war: false },
+        seleukid_empire:   { score: -15, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Самария — бывшая столица Израильского царства, заселённая ассирийскими переселенцами. В 304 г. находится под властью Птолемея, но самаритяне — давние враги иудеев, строящие собственный храм на горе Гаризим.',
+    },
+
+
   },
   regions: {},
 
