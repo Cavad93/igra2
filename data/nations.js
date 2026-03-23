@@ -2754,6 +2754,185 @@ const INITIAL_GAME_STATE = {
     },
 
 
+    // ════════════════════════════════════════════════════════════════
+    // БЛИЖНИЙ ВОСТОК И ДИАДОХИ
+    // ════════════════════════════════════════════════════════════════
+
+    // ── ДЕРЖАВА СЕЛЕВКА (Уровень A) ───────────────────────────────
+    seleukid_empire: {
+      name: 'Держава Селевка', adjective: 'селевкидское', color: '#FFD700', flag_emoji: '🐘',
+      is_player: false, is_minor: false,
+      ai_personality: 'expansionist', ai_priority: 'military',
+      government: {
+        type: 'empire', legitimacy: 72, stability: 62,
+        ruler: { type: 'person', name: 'Селевк I Никатор', personal_power: 90 },
+      },
+      regions: [],
+      population: {
+        total: 6000000,
+        by_profession: { farmers: 2500000, craftsmen: 800000, merchants: 600000, sailors: 150000, clergy: 250000, soldiers: 300000, slaves: 400000 },
+        happiness: 52, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 50000, tax_rate: 0.14,
+        primary_exports: ['trade_goods', 'purple_dye', 'iron', 'horses'],
+        primary_imports: ['wheat', 'timber', 'slaves'],
+        trade_partners: ['ptolemaic_kingdom', 'bactria', 'india', 'rhodes'],
+        stockpile: { wheat: 200000, fish: 15000, iron: 20000, horses: 15000, cattle: 30000 },
+        trade_routes: [],
+      },
+      military: { infantry: 80000, cavalry: 15000, ships: 80, mercenaries: 20000, morale: 78, loyalty: 70, at_war_with: [] },
+      relations: {
+        ptolemaic_kingdom: { score: -50, treaties: [], at_war: false },
+        lysimachus_kingdom:{ score: -40, treaties: [], at_war: false },
+        antipatrid_kingdom:{ score: -20, treaties: [], at_war: false },
+        bactria:           { score: 20,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'В 304 г. до н.э. Селевк I только что выиграл битву при Ипсе (301 г.) против Антигона Одноглазого, получив контроль над большей частью Азии. Его держава простирается от Сирии до Индии. Селевк — опытнейший из диадохов, основатель царских городов: Антиохии, Селевкии.',
+    },
+
+    // ── ПТОЛЕМЕЕВСКИЙ ЕГИПЕТ (Уровень A) ─────────────────────────
+    ptolemaic_kingdom: {
+      name: 'Птолемеевское царство', adjective: 'птолемеевское', color: '#4682B4', flag_emoji: '🏺',
+      is_player: false, is_minor: false,
+      ai_personality: 'expansionist', ai_priority: 'economy',
+      government: {
+        type: 'empire', legitimacy: 78, stability: 72,
+        ruler: { type: 'person', name: 'Птолемей I Сотер', personal_power: 85 },
+      },
+      regions: [],
+      population: {
+        total: 7000000,
+        by_profession: { farmers: 3000000, craftsmen: 900000, merchants: 700000, sailors: 300000, clergy: 400000, soldiers: 250000, slaves: 450000 },
+        happiness: 58, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 200000, tax_rate: 0.15,
+        primary_exports: ['wheat', 'papyrus', 'linen', 'glass', 'trade_goods'],
+        primary_imports: ['timber', 'iron', 'horses', 'slaves'],
+        trade_partners: ['rhodes', 'seleukid_empire', 'meroe', 'cyrene'],
+        stockpile: { wheat: 500000, fish: 50000, iron: 10000, horses: 8000, cattle: 40000 },
+        trade_routes: [],
+      },
+      military: { infantry: 40000, cavalry: 8000, ships: 200, mercenaries: 15000, morale: 72, loyalty: 68, at_war_with: [] },
+      relations: {
+        seleukid_empire:   { score: -50, treaties: [], at_war: false },
+        lysimachus_kingdom:{ score: 20,  treaties: [], at_war: false },
+        antipatrid_kingdom:{ score: 10,  treaties: [], at_war: false },
+        rhodes:            { score: 40,  treaties: [], at_war: false },
+        cyrene:            { score: -20, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'В 304 г. до н.э. Птолемей I принял царский титул и строит Александрийский мусей и библиотеку. Египет — богатейшая держава эллинистического мира. Птолемей искусно использует дипломатию и флот, избегая сухопутных войн и приобретая Кипр, Киренаику и земли Леванта.',
+    },
+
+    // ── АНТИПАТРИДСКОЕ ЦАРСТВО (Уровень A) ───────────────────────
+    antipatrid_kingdom: {
+      name: 'Антипатридское царство', adjective: 'антипатридское', color: '#4169E1', flag_emoji: '⚡',
+      is_player: false, is_minor: false,
+      ai_personality: 'expansionist', ai_priority: 'military',
+      government: {
+        type: 'empire', legitimacy: 65, stability: 58,
+        ruler: { type: 'person', name: 'Кассандр', personal_power: 80 },
+      },
+      regions: [],
+      population: {
+        total: 2500000,
+        by_profession: { farmers: 1000000, craftsmen: 400000, merchants: 250000, sailors: 100000, clergy: 100000, soldiers: 150000, slaves: 500000 },
+        happiness: 48, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 20000, tax_rate: 0.13,
+        primary_exports: ['timber', 'iron', 'horses', 'slaves'],
+        primary_imports: ['wheat', 'trade_goods', 'olive_oil'],
+        trade_partners: ['athens', 'corinth', 'sparta', 'lysimachus_kingdom'],
+        stockpile: { wheat: 80000, fish: 10000, iron: 8000, horses: 5000, cattle: 15000 },
+        trade_routes: [],
+      },
+      military: { infantry: 35000, cavalry: 5000, ships: 60, mercenaries: 8000, morale: 70, loyalty: 65, at_war_with: [] },
+      relations: {
+        lysimachus_kingdom: { score: 20,  treaties: [], at_war: false },
+        seleukid_empire:    { score: -20, treaties: [], at_war: false },
+        antigonid_kingdom:  { score: -60, treaties: [], at_war: false },
+        ptolemaic_kingdom:  { score: 10,  treaties: [], at_war: false },
+        athens:             { score: -40, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Кассандр — сын Антипатра, правит Македонией и Грецией. В 304 г. он удерживает власть, несмотря на угрозы со стороны Деметрия Полиоркета. Кассандр приказал казнить Роксану и Александра IV — уничтожив прямую линию Александра Великого.',
+    },
+
+    // ── ДЕРЖАВА АНТИГОНИДОВ (Уровень A) ──────────────────────────
+    antigonid_kingdom: {
+      name: 'Держава Антигонидов', adjective: 'антигонидское', color: '#9400D3', flag_emoji: '🏰',
+      is_player: false, is_minor: false,
+      ai_personality: 'expansionist', ai_priority: 'military',
+      government: {
+        type: 'empire', legitimacy: 60, stability: 50,
+        ruler: { type: 'person', name: 'Деметрий I Полиоркет', personal_power: 88 },
+      },
+      regions: [],
+      population: {
+        total: 4000000,
+        by_profession: { farmers: 1600000, craftsmen: 600000, merchants: 400000, sailors: 200000, clergy: 150000, soldiers: 250000, slaves: 800000 },
+        happiness: 44, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 25000, tax_rate: 0.14,
+        primary_exports: ['trade_goods', 'timber', 'iron', 'slaves'],
+        primary_imports: ['wheat', 'horses', 'papyrus'],
+        trade_partners: ['antipatrid_kingdom', 'athens', 'rhodian_trade'],
+        stockpile: { wheat: 120000, fish: 20000, iron: 12000, horses: 6000, cattle: 20000 },
+        trade_routes: [],
+      },
+      military: { infantry: 50000, cavalry: 8000, ships: 150, mercenaries: 15000, morale: 75, loyalty: 62, at_war_with: [] },
+      relations: {
+        antipatrid_kingdom: { score: -60, treaties: [], at_war: false },
+        ptolemaic_kingdom:  { score: -30, treaties: [], at_war: false },
+        seleukid_empire:    { score: -40, treaties: [], at_war: false },
+        lysimachus_kingdom: { score: -30, treaties: [], at_war: false },
+        rhodes:             { score: -40, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'После гибели Антигона Одноглазого при Ипсе (301 г.) его сын Деметрий Полиоркет сохранил флот и часть территорий. В 304 г. он завершает осаду Родоса и ищет путь к трону Македонии. Деметрий — блестящий полководец и изобретатель осадных машин.',
+    },
+
+    // ── ДЕРЖАВА ЛИСИМАХА (Уровень A) ─────────────────────────────
+    lysimachus_kingdom: {
+      name: 'Держава Лисимаха', adjective: 'лисимаховское', color: '#2E8B57', flag_emoji: '🦁',
+      is_player: false, is_minor: false,
+      ai_personality: 'expansionist', ai_priority: 'military',
+      government: {
+        type: 'empire', legitimacy: 68, stability: 60,
+        ruler: { type: 'person', name: 'Лисимах', personal_power: 82 },
+      },
+      regions: [],
+      population: {
+        total: 1800000,
+        by_profession: { farmers: 750000, craftsmen: 280000, merchants: 200000, sailors: 80000, clergy: 80000, soldiers: 130000, slaves: 280000 },
+        happiness: 50, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 18000, tax_rate: 0.13,
+        primary_exports: ['wheat', 'timber', 'furs', 'slaves', 'horses'],
+        primary_imports: ['trade_goods', 'iron', 'olive_oil'],
+        trade_partners: ['bosporan_kingdom', 'antipatrid_kingdom', 'ptolemaic_kingdom'],
+        stockpile: { wheat: 70000, fish: 10000, iron: 6000, horses: 5000, cattle: 15000 },
+        trade_routes: [],
+      },
+      military: { infantry: 30000, cavalry: 6000, ships: 50, mercenaries: 8000, morale: 72, loyalty: 65, at_war_with: [] },
+      relations: {
+        seleukid_empire:    { score: -40, treaties: [], at_war: false },
+        antipatrid_kingdom: { score: 20,  treaties: [], at_war: false },
+        ptolemaic_kingdom:  { score: 20,  treaties: [], at_war: false },
+        antigonid_kingdom:  { score: -30, treaties: [], at_war: false },
+        odrysian_kingdom:   { score: -20, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Лисимах контролирует Фракию, западный берег Малой Азии и часть Македонии. В 304 г. он недавно получил часть добычи после Ипса и укрепляет своё положение. Лисимах известен тем, что провёл ночь в клетке со львом по приказу Александра — и выжил, задушив зверя.',
+    },
+
+
   },
   regions: {},
 
