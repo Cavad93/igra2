@@ -1615,6 +1615,214 @@ const INITIAL_GAME_STATE = {
     },
 
 
+    // ════════════════════════════════════════════════════════════════
+    // ИТАЛИЯ
+    // ════════════════════════════════════════════════════════════════
+
+    // ── ЭТРУССКИЙ СОЮЗ (Уровень A) ─────────────────────────────────
+    etruscan_conf: {
+      name: 'Этрусский союз', adjective: 'этрусское', color: '#8B4513', flag_emoji: '🏺',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'survival',
+      government: {
+        type: 'federation', legitimacy: 52, stability: 45,
+        ruler: { type: 'council', name: 'Совет двенадцати городов', personal_power: 40 },
+      },
+      regions: [],
+      population: {
+        total: 500000,
+        by_profession: { farmers: 180000, craftsmen: 100000, merchants: 70000, sailors: 30000, clergy: 30000, soldiers: 30000, slaves: 60000 },
+        happiness: 44, growth_rate: 0.001,
+      },
+      economy: {
+        treasury: 18000, tax_rate: 0.11,
+        primary_exports: ['iron', 'bronze', 'pottery', 'trade_goods'],
+        primary_imports: ['wheat', 'slaves', 'timber'],
+        trade_partners: ['rome', 'massilia', 'carthage'],
+        stockpile: { wheat: 35000, fish: 5000, iron: 5000, horses: 1000, cattle: 8000 },
+        trade_routes: [],
+      },
+      military: { infantry: 25000, cavalry: 2000, ships: 40, mercenaries: 3000, morale: 52, loyalty: 48, at_war_with: [] },
+      relations: {
+        rome:    { score: -40, treaties: [], at_war: false },
+        samnites:{ score: 20,  treaties: [], at_war: false },
+        carthage:{ score: 10,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'В 304 г. до н.э. Этрурия стремительно слабеет под натиском Рима. Двенадцатиградный союз раздроблен, каждый город думает о себе. Цере (Черветери) уже в союзе с Римом, Вейи завоёваны в 396 г. Богатства Этрурии — железо горы Амиата, бронзовые изделия, торговля — постепенно переходят под контроль Рима.',
+    },
+
+    // ── САМНИТЫ (Уровень A) ────────────────────────────────────────
+    samnites: {
+      name: 'Самниты', adjective: 'самнитское', color: '#6B8B3B', flag_emoji: '🐺',
+      is_player: false, is_minor: false,
+      ai_personality: 'aggressive', ai_priority: 'military',
+      government: {
+        type: 'federation', legitimacy: 70, stability: 62,
+        ruler: { type: 'person', name: 'Гай Понтий', personal_power: 78 },
+      },
+      regions: [],
+      population: {
+        total: 350000,
+        by_profession: { farmers: 140000, craftsmen: 50000, merchants: 20000, sailors: 5000, clergy: 15000, soldiers: 50000, slaves: 70000 },
+        happiness: 58, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 8000, tax_rate: 0.09,
+        primary_exports: ['iron', 'cattle', 'slaves', 'wool'],
+        primary_imports: ['trade_goods', 'wheat', 'pottery'],
+        trade_partners: ['lucani', 'taras', 'etruscan_conf'],
+        stockpile: { wheat: 25000, fish: 2000, iron: 4000, horses: 3000, cattle: 12000 },
+        trade_routes: [],
+      },
+      military: { infantry: 25000, cavalry: 3000, ships: 5, mercenaries: 1000, morale: 82, loyalty: 80, at_war_with: ['rome'] },
+      relations: {
+        rome:        { score: -80, treaties: [], at_war: true  },
+        lucani:      { score: 30,  treaties: [], at_war: false },
+        etruscan_conf:{ score: 20, treaties: [], at_war: false },
+        taras:       { score: 25,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'В 304 г. до н.э. Самния завершает Вторую Самнитскую войну с Римом (327–304 гг.). Гай Понтий выиграл битву при Кавдинских Ущельях, унизив Рим, но мир оказался непрочным. Самниты — самый упорный враг римской экспансии, их горные легионы превосходят римлян в тактике засад.',
+    },
+
+    // ── ЛУКАНЦЫ (Уровень A) ────────────────────────────────────────
+    lucani: {
+      name: 'Луканцы', adjective: 'луканское', color: '#5B7B4B', flag_emoji: '🗡️',
+      is_player: false, is_minor: false,
+      ai_personality: 'aggressive', ai_priority: 'military',
+      government: {
+        type: 'tribal', legitimacy: 60, stability: 55,
+        ruler: { type: 'tribal_chief', name: 'Совет луканских вождей', personal_power: 55 },
+      },
+      regions: [],
+      population: {
+        total: 250000,
+        by_profession: { farmers: 100000, craftsmen: 35000, merchants: 15000, sailors: 8000, clergy: 12000, soldiers: 40000, slaves: 40000 },
+        happiness: 56, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 5000, tax_rate: 0.08,
+        primary_exports: ['cattle', 'slaves', 'timber', 'iron'],
+        primary_imports: ['trade_goods', 'pottery', 'olive_oil'],
+        trade_partners: ['samnites', 'brutii', 'taras'],
+        stockpile: { wheat: 18000, fish: 3000, iron: 2000, horses: 2000, cattle: 10000 },
+        trade_routes: [],
+      },
+      military: { infantry: 18000, cavalry: 2500, ships: 0, mercenaries: 500, morale: 72, loyalty: 70, at_war_with: [] },
+      relations: {
+        samnites:  { score: 30,  treaties: [], at_war: false },
+        brutii:    { score: 25,  treaties: [], at_war: false },
+        taras:     { score: -20, treaties: [], at_war: false },
+        rome:      { score: -30, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Луканцы занимают большую часть Южной Италии, тесня греческие колонии. В 304 г. они союзники самнитов против Рима и регулярно воюют с Тарентом за влияние над греческими городами Апулии и Кампании.',
+    },
+
+    // ── УМБРИЙЦЫ (Уровень A) ───────────────────────────────────────
+    umbrians: {
+      name: 'Умбрийцы', adjective: 'умбрийское', color: '#7B6B4B', flag_emoji: '🌲',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'survival',
+      government: {
+        type: 'tribal', legitimacy: 50, stability: 45,
+        ruler: { type: 'council', name: 'Совет умбрийских городов', personal_power: 42 },
+      },
+      regions: [],
+      population: {
+        total: 200000,
+        by_profession: { farmers: 90000, craftsmen: 35000, merchants: 20000, sailors: 5000, clergy: 12000, soldiers: 18000, slaves: 20000 },
+        happiness: 45, growth_rate: 0.001,
+      },
+      economy: {
+        treasury: 4000, tax_rate: 0.09,
+        primary_exports: ['timber', 'cattle', 'iron', 'slaves'],
+        primary_imports: ['trade_goods', 'pottery', 'wheat'],
+        trade_partners: ['rome', 'etruscan_conf', 'samnites'],
+        stockpile: { wheat: 15000, fish: 1500, iron: 1500, horses: 800, cattle: 7000 },
+        trade_routes: [],
+      },
+      military: { infantry: 15000, cavalry: 1000, ships: 0, mercenaries: 500, morale: 55, loyalty: 50, at_war_with: [] },
+      relations: {
+        rome:         { score: -30, treaties: [], at_war: false },
+        etruscan_conf:{ score: 10,  treaties: [], at_war: false },
+        samnites:     { score: 15,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Умбрийцы населяют Апеннины к северу от Самнии. Их романизация ускоряется после основания римских колоний: Нарния (299 г.) и другие форпосты отрезают умбрийские племена друг от друга. К 304 г. часть городов уже заключила союз с Римом.',
+    },
+
+    // ── ТАРЕНТ (Уровень A) ────────────────────────────────────────
+    taras: {
+      name: 'Тарент', adjective: 'тарентское', color: '#1E90FF', flag_emoji: '🐬',
+      is_player: false, is_minor: false,
+      ai_personality: 'mercantile', ai_priority: 'economy',
+      government: {
+        type: 'oligarchy', legitimacy: 62, stability: 55,
+        ruler: { type: 'council', name: 'Совет Тарента', personal_power: 55 },
+      },
+      regions: [],
+      population: {
+        total: 85000,
+        by_profession: { farmers: 18000, craftsmen: 20000, merchants: 18000, sailors: 12000, clergy: 4000, soldiers: 5000, slaves: 8000 },
+        happiness: 58, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 9000, tax_rate: 0.12,
+        primary_exports: ['trade_goods', 'wool', 'fish', 'pottery'],
+        primary_imports: ['wheat', 'timber', 'iron', 'slaves'],
+        trade_partners: ['syracuse', 'epirus', 'corinth', 'athens'],
+        stockpile: { wheat: 10000, fish: 5000, iron: 800, horses: 300, cattle: 1500 },
+        trade_routes: [],
+      },
+      military: { infantry: 5000, cavalry: 600, ships: 50, mercenaries: 3000, morale: 65, loyalty: 60, at_war_with: [] },
+      relations: {
+        syracuse:  { score: 30,  treaties: [], at_war: false },
+        epirus:    { score: 40,  treaties: [], at_war: false },
+        rome:      { score: -25, treaties: [], at_war: false },
+        lucani:    { score: -20, treaties: [], at_war: false },
+        samnites:  { score: 25,  treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Тарент — богатейший греческий город Италии, «пята итальянского сапога». В 304 г. он ведёт постоянные войны с луканами и мессапами, нанимает иностранных полководцев. Скоро Тарент призовёт Пирра Эпирского, что положит начало Пирровой войне с Римом.',
+    },
+
+    // ── РЕГИЙ (Уровень A) ─────────────────────────────────────────
+    rhegium: {
+      name: 'Регий', adjective: 'регийское', color: '#20B2AA', flag_emoji: '⚓',
+      is_player: false, is_minor: false,
+      ai_personality: 'defensive', ai_priority: 'survival',
+      government: {
+        type: 'oligarchy', legitimacy: 58, stability: 52,
+        ruler: { type: 'council', name: 'Совет Регия', personal_power: 50 },
+      },
+      regions: [],
+      population: {
+        total: 28000,
+        by_profession: { farmers: 6000, craftsmen: 7000, merchants: 6000, sailors: 4000, clergy: 1500, soldiers: 1000, slaves: 2500 },
+        happiness: 55, growth_rate: 0.002,
+      },
+      economy: {
+        treasury: 3500, tax_rate: 0.11,
+        primary_exports: ['trade_goods', 'fish', 'olive_oil'],
+        primary_imports: ['wheat', 'timber', 'iron'],
+        trade_partners: ['syracuse', 'taras', 'locri', 'carthage'],
+        stockpile: { wheat: 4000, fish: 3000, iron: 400, horses: 100, cattle: 600 },
+        trade_routes: [],
+      },
+      military: { infantry: 2000, cavalry: 100, ships: 25, mercenaries: 500, morale: 62, loyalty: 60, at_war_with: [] },
+      relations: {
+        syracuse: { score: -10, treaties: [], at_war: false },
+        taras:    { score: 20,  treaties: [], at_war: false },
+        locri:    { score: 15,  treaties: [], at_war: false },
+        brutii:   { score: -30, treaties: [], at_war: false },
+      },
+      active_laws: [], characters: [],
+      historical_note: 'Регий контролирует северный берег Мессинского пролива — жизненно важный перекрёсток между Италией и Сицилией. Город-страж пролива, соперник Сиракуз за контроль над торговлей между двумя морями.',
+    },
+
+
   },
   regions: {},
 
