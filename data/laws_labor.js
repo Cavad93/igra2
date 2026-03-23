@@ -710,6 +710,139 @@ const LAWS_LABOR = {
     is_default: false,
     historical_note: 'Карфаген строил свою военную мощь почти исключительно на наёмниках — нумидийская конница, иберийская пехота, балеарские пращники; сами карфагеняне воевали крайне редко.',
   },
+
+  // ══════════════════════════════════════════════════════
+  // ЗЕМЕЛЬНЫЕ ОБЯЗАТЕЛЬСТВА
+  // ══════════════════════════════════════════════════════
+
+  farming_free_market: {
+    id:          'farming_free_market',
+    name:        'Свободное землепользование',
+    icon:        '🌱',
+    category:    'labor',
+    group:       'agricultural_obligation',
+    description: 'Землевладелец сам решает, что сажать: пшеницу, виноград или оливки. Рынок регулирует специализацию, максимизируя прибыль при стабильных ценах. Оптимальный вариант при богатой казне и налаженных торговых путях.',
+    effects: {
+      labor_laws: {
+        land_tax_rate:     0.10,
+        forced_cultivation: false,
+        fallow_requirement: false,
+      },
+      production_bonus:   {},
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      farmers_class: +5,
+      aristocrats:   +5,
+    },
+    requires: null,
+    incompatible_with: ['farming_grain_mandate', 'farming_three_field', 'farming_latifundia_banned'],
+    is_default: true,
+    historical_note: 'Сицилийские латифундисты в IV–III вв. до н.э. специализировались на экспортном зерне, пользуясь свободой выбора культур и близостью карфагенских и греческих рынков.',
+  },
+
+  farming_grain_mandate: {
+    id:          'farming_grain_mandate',
+    name:        'Зерновая повинность',
+    icon:        '🌾',
+    category:    'labor',
+    group:       'agricultural_obligation',
+    description: 'Государство обязывает засевать минимум 60% пашни пшеницей и ячменём. Гарантирует продовольственную безопасность и снабжение армии. Запрещает уход в виноград и оливки — ограничивает экспортный доход, но защищает от голода.',
+    effects: {
+      labor_laws: {
+        land_tax_rate:      0.12,
+        forced_cultivation:  true,
+        fallow_requirement:  false,
+      },
+      production_bonus: {
+        wheat_family_farm:  0.10,
+        wheat_villa:        0.10,
+        wheat_latifundium:  0.10,
+      },
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      farmers_class:  -5,
+      aristocrats:    -8,
+      soldiers_class: +5,
+      slaves_class:   +2,
+    },
+    requires: null,
+    incompatible_with: ['farming_free_market', 'farming_three_field', 'farming_latifundia_banned'],
+    is_default: false,
+    historical_note: 'Птолемеевский Египет государственно регулировал посевные площади под зерно — крестьяне получали семенной фонд от государства и сдавали часть урожая в казну.',
+  },
+
+  farming_three_field: {
+    id:          'farming_three_field',
+    name:        'Трёхпольный оборот',
+    icon:        '🔄',
+    category:    'labor',
+    group:       'agricultural_obligation',
+    description: 'Обязательный трёхпольный севооборот — треть земли ежегодно отдыхает под паром. Восстанавливает почву и предотвращает долгосрочное истощение. Краткосрочно снижает урожай, долгосрочно защищает от деградации земель.',
+    effects: {
+      labor_laws: {
+        land_tax_rate:      0.10,
+        forced_cultivation:  true,
+        fallow_requirement:  true,
+      },
+      production_bonus:   {},
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      +0.5,
+    },
+    satisfaction_effects: {
+      farmers_class: +3,
+      clergy_class:  +4,
+      aristocrats:   -5,
+    },
+    requires: null,
+    incompatible_with: ['farming_free_market', 'farming_grain_mandate', 'farming_latifundia_banned'],
+    is_default: false,
+    historical_note: 'Катон Старший в трактате «О земледелии» (II в. до н.э.) описывает ротацию культур для поддержания плодородия; греческие агрономы Теофраст и Ксенофонт упоминали пар как необходимый элемент хозяйства.',
+  },
+
+  farming_latifundia_banned: {
+    id:          'farming_latifundia_banned',
+    name:        'Запрет латифундий',
+    icon:        '⚖',
+    category:    'labor',
+    group:       'agricultural_obligation',
+    description: 'Максимальный размер землевладения ограничен законом. Крупные поместья разбиваются, создаётся класс средних землевладельцев. Закон Лициния 367 до н.э. пытался ограничить пользование ager publicus. Политически невозможно при аристократии.',
+    effects: {
+      labor_laws: {
+        land_tax_rate:      0.14,
+        forced_cultivation:  false,
+        fallow_requirement:  false,
+      },
+      production_bonus: {
+        wheat_family_farm:  0.20,
+        wheat_villa:        0.10,
+      },
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      farmers_class: +15,
+      citizens:      +8,
+      aristocrats:   -20,
+      officials:     -5,
+    },
+    requires: {
+      government_type: ['republic', 'tyranny'],
+      min_stability:   60,
+      min_treasury:    null,
+      has_law:         null,
+    },
+    incompatible_with: ['farming_free_market', 'farming_grain_mandate', 'farming_three_field'],
+    is_default: false,
+    historical_note: 'Тиберий Гракх (133 до н.э.) предложил возобновить Лициниевы законы об ограничении земли — за это был убит разъярёнными сенаторами прямо в народном собрании.',
+  },
 };
 
 // ══════════════════════════════════════════════════════════════
