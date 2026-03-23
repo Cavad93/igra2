@@ -1343,6 +1343,127 @@ const BUILDINGS = {
     historical_note: 'Афинская литейная у храма Гефеста производила тысячи бронзовых щитов и статуй в год; бронза оставалась основным конструкционным металлом до II в. до н.э.',
   },
 
+  // ── КОЖЕВНЯ ──────────────────────────────────────────────────
+  tannery: {
+    name:        'Кожевня',
+    icon:        '🐄',
+    description: 'Выделка кожи из шкур скота: вымачивание, дубление дубовой корой, сушка. ' +
+                 'Ремесленники работают за долю выручки. ' +
+                 'Дурно пахнущее производство исторически выносили за городскую черту.',
+    cost:        280,
+    category:    'production',
+    footprint_ha: 3,
+    workers_per_unit: 20,
+    worker_profession: [
+      { profession: 'craftsmen', count: 20 },
+    ],
+    wage_rate:          0.28,
+    labor_type:         'wage',
+    construction_materials: { timber: 6, tools: 3 },
+    construction_labor:     124,
+    build_turns:        2,
+    autonomous_builder: 'craftsmen_class',
+    nation_buildable:   true,
+    production_output: [
+      { good: 'leather', base_rate: 65 },
+    ],
+    production_inputs: [
+      { good: 'cattle', amount_per_turn: 8, required: true },
+      { good: 'wool',   amount_per_turn: 5, required: false },
+    ],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'none', deposit_key: null, allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          4,
+    maintenance_cost:   6,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Кожевенный квартал (βυρσοδεψεία) в античных городах всегда располагался у воды и вниз по ветру; афинская кожевенная деловая сеть Клеона была знаменита своим богатством.',
+  },
+
+  // ── ТКАЦКАЯ МАСТЕРСКАЯ ───────────────────────────────────────
+  textile_mill: {
+    name:        'Ткацкая мастерская',
+    icon:        '🧵',
+    description: 'Прядение и ткачество шерстяных тканей. ' +
+                 'Ремесленники-ткачи работают за наёмную плату; основной товар — ' +
+                 'грубая шерстяная ткань для армии и народа.',
+    cost:        320,
+    category:    'production',
+    footprint_ha: 2,
+    workers_per_unit: 30,
+    worker_profession: [
+      { profession: 'craftsmen', count: 25 },
+      { profession: 'slaves',    count: 5 },
+    ],
+    wage_rate:          0.27,
+    labor_type:         'mixed',
+    construction_materials: { timber: 6, tools: 3 },
+    construction_labor:     134,
+    build_turns:        2,
+    autonomous_builder: 'craftsmen_class',
+    nation_buildable:   true,
+    production_output: [
+      { good: 'cloth', base_rate: 70 },
+    ],
+    production_inputs: [
+      { good: 'wool', amount_per_turn: 15, required: true },
+    ],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'none', deposit_key: null, allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          5,
+    maintenance_cost:   8,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Пергамский текстиль экспортировался по всему Средиземноморью; крупнейшие ткацкие хозяйства Рима использовали труд сотен рабынь.',
+  },
+
+  // ── ПАСЕКА ───────────────────────────────────────────────────
+  apiary: {
+    name:        'Пасека',
+    icon:        '🍯',
+    description: 'Разведение пчёл для получения мёда и воска. ' +
+                 'Несколько пасечников обслуживают ульи; труд лёгкий и сезонный. ' +
+                 'Строится фермерами самостоятельно, государство не вмешивается.',
+    cost:        100,
+    category:    'agriculture',
+    footprint_ha: 3,
+    workers_per_unit: 4,
+    worker_profession: [
+      { profession: 'farmers', count: 4 },
+    ],
+    wage_rate:          0.35,
+    labor_type:         'free',
+    construction_materials: { timber: 2, tools: 1 },
+    construction_labor:     27,
+    build_turns:        1,
+    autonomous_builder: 'farmers_class',
+    nation_buildable:   false,
+    production_output: [
+      { good: 'honey', base_rate: 40 },
+      { good: 'wax',   base_rate: 20 },
+    ],
+    production_inputs: [],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'none', deposit_key: null, allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          6,
+    maintenance_cost:   2,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Аттический мёд с горы Гиметт считался лучшим в античном мире и экспортировался по всему Средиземноморью; воск шёл на таблички, свечи и корабельную конопатку.',
+  },
+
   papyrus_bed: {
     name:        'Папирусные заросли',
     icon:        '📜',
