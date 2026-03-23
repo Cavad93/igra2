@@ -312,6 +312,130 @@ const LAWS_LABOR = {
     incompatible_with: ['women_domestic', 'women_crafts', 'women_market'],
     is_default: false,
   },
+
+  // ══════════════════════════════════════════════════════
+  // СТАТУС РАБСКОГО ТРУДА
+  // ══════════════════════════════════════════════════════
+
+  slavery_harsh: {
+    id:          'slavery_harsh',
+    name:        'Жёсткое рабовладение',
+    icon:        '⛓',
+    category:    'labor',
+    group:       'slave_labor',
+    description: 'Рабы работают с максимальной отдачей под угрозой наказания. Надсмотрщики применяют телесные наказания за малейший проступок. Эффективно краткосрочно, но подавляет любые поблажки и резко повышает риск восстания.',
+    effects: {
+      labor_laws: {
+        slave_efficiency:       1.30,
+        slave_freedom_chance:   0.00,
+        slave_revolt_threshold: -20,
+      },
+      production_bonus:   {},
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      slaves_class:  -15,
+      clergy_class:   -8,
+      citizens:       -5,
+    },
+    requires: null,
+    incompatible_with: ['slavery_standard', 'slavery_moderate', 'slavery_manumission'],
+    is_default: false,
+    historical_note: 'На серебряных рудниках Лавриона в Афинах одновременно работало до 20 000 рабов в чудовищных условиях; рабские восстания там были нередки.',
+  },
+
+  slavery_standard: {
+    id:          'slavery_standard',
+    name:        'Стандартное рабство',
+    icon:        '⚒',
+    category:    'labor',
+    group:       'slave_labor',
+    description: 'Стандартное рабовладение Античности. Умеренное обращение — рабы работают предсказуемо, хозяин не заинтересован уничтожать дорогостоящее имущество. Небольшой шанс отпуска на волю сохраняет надежду и снижает бунтарство.',
+    effects: {
+      labor_laws: {
+        slave_efficiency:       1.00,
+        slave_freedom_chance:   0.01,
+        slave_revolt_threshold: 0,
+      },
+      production_bonus:   {},
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {},
+    requires: null,
+    incompatible_with: ['slavery_harsh', 'slavery_moderate', 'slavery_manumission'],
+    is_default: true,
+    historical_note: 'В классических Афинах раб-ремесленник (хорис ойкон) мог вести собственное дело, откладывая деньги на выкуп — практика, широко распространённая в V–IV вв. до н.э.',
+  },
+
+  slavery_moderate: {
+    id:          'slavery_moderate',
+    name:        'Мягкое рабство',
+    icon:        '🫱',
+    category:    'labor',
+    group:       'slave_labor',
+    description: 'Мягкое обращение с рабами — лучшее питание, право на семью, обещание вольной. Производительность ниже, но лояльность выше. Часть рабов постепенно превращается в вольноотпущенников, пополняя ряды ремесленников.',
+    effects: {
+      labor_laws: {
+        slave_efficiency:       0.80,
+        slave_freedom_chance:   0.03,
+        slave_revolt_threshold: 10,
+      },
+      production_bonus:   {},
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      slaves_class:  +8,
+      freedmen:      +5,
+      clergy_class:  +6,
+      aristocrats:   -4,
+    },
+    requires: null,
+    incompatible_with: ['slavery_harsh', 'slavery_standard', 'slavery_manumission'],
+    is_default: false,
+    historical_note: 'Стоик Хризипп (ок. 280–207 до н.э.) учил, что раб — это «наёмник на всю жизнь», которого следует кормить и одевать достойно; эта философия влияла на практику более гуманного обращения.',
+  },
+
+  slavery_manumission: {
+    id:          'slavery_manumission',
+    name:        'Массовое освобождение',
+    icon:        '🕊',
+    category:    'labor',
+    group:       'slave_labor',
+    description: 'Государство поощряет отпуск рабов на волю. Число рабов падает, число вольноотпущенников и ремесленников растёт. Аристократы теряют дешёвую рабочую силу, но средний класс укрепляется. Исторически — Рим после Пунических войн.',
+    effects: {
+      labor_laws: {
+        slave_efficiency:       0.70,
+        slave_freedom_chance:   0.08,
+        slave_revolt_threshold: 20,
+      },
+      production_bonus:   {},
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      slaves_class:     +15,
+      freedmen:         +12,
+      craftsmen_class:  +5,
+      aristocrats:      -10,
+      farmers_class:    -5,
+    },
+    requires: {
+      government_type: ['republic', 'oligarchy'],
+      min_stability:   50,
+      min_treasury:    null,
+      has_law:         null,
+    },
+    incompatible_with: ['slavery_harsh', 'slavery_standard', 'slavery_moderate'],
+    is_default: false,
+    historical_note: 'После Второй Пунической войны Рим отпустил тысячи рабов, служивших в армии, — это стало одной из причин быстрого роста класса либертов в Республике.',
+  },
 };
 
 // ══════════════════════════════════════════════════════════════
