@@ -2039,6 +2039,89 @@ const BUILDINGS = {
     historical_note: 'Сабейское царство (Йемен) контролировало торговлю ладаном; путь благовоний из Аравии Феликс в Газу занимал около 65 дней на верблюдах.',
   },
 
+  // ── РАБОТОРГОВЫЙ РЫНОК ───────────────────────────────────────
+  slave_market: {
+    name:        'Работорговый рынок',
+    icon:        '⛓️',
+    description: 'Рынок для продажи и распределения рабов, захваченных в ходе войн или куплённых у торговцев. ' +
+                 'Здание само рабов НЕ производит — они поступают только как военные трофеи или по торговым маршрутам. ' +
+                 'Без рынка захваченные рабы не могут быть распределены в хозяйство региона.',
+    cost:        350,
+    category:    'commerce',
+    footprint_ha: 2,
+    workers_per_unit: 15,
+    worker_profession: [
+      { profession: 'merchants', count: 15 },
+    ],
+    wage_rate:          0.28,
+    labor_type:         'wage',
+    construction_materials: { timber: 6, stone: 3, tools: 3 },
+    construction_labor:     128,
+    build_turns:        2,
+    autonomous_builder: null,
+    nation_buildable:   true,
+    production_output: [],   // рабы не производятся — только военный захват
+    production_inputs: [],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'none', deposit_key: null, allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     1,
+    max_level:          2,
+    maintenance_cost:   6,
+    maintenance_goods:  {},
+    effects: {
+      slave_intake_capacity: 500,   // макс. рабов в ход из военных трофеев
+      slave_price_mod:      -0.10,  // -10% к цене рабов в регионе (предложение растёт)
+    },
+    historical_note: 'Делос был крупнейшим невольничьим рынком античности — по словам Страбона, через него проходило до 10 000 рабов в день; Карфаген и Рим имели постоянные рынки у форума.',
+  },
+
+  // ── ЗАГОН ДЛЯ БОЕВЫХ СЛОНОВ ──────────────────────────────────
+  elephant_corral: {
+    name:        'Загон для боевых слонов',
+    icon:        '🐘',
+    description: 'Содержание, кормёжка и боевая дрессировка слонов под руководством опытных mahout. ' +
+                 'Строится только там, где водятся слоны — в саваннах Африки или субтропиках. ' +
+                 'Слоны требуют огромного количества корма и годами обучаются бою.',
+    cost:        800,
+    category:    'military',
+    footprint_ha: 30,
+    workers_per_unit: 25,
+    worker_profession: [
+      { profession: 'craftsmen', count: 15 },  // mahout-дрессировщики
+      { profession: 'farmers',   count: 10 },  // заготовка корма
+    ],
+    wage_rate:          0.25,
+    labor_type:         'wage',
+    construction_materials: { timber: 12, iron: 4, tools: 4 },
+    construction_labor:     230,
+    build_turns:        4,
+    autonomous_builder: null,
+    nation_buildable:   true,
+    production_output: [
+      { good: 'war_elephants', base_rate: 5 },  // медленное воспроизводство
+    ],
+    production_inputs: [
+      { good: 'wheat', amount_per_turn: 20, required: true },  // корм
+      { good: 'meat',  amount_per_turn:  8, required: false }, // доп. корм
+    ],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'deposit', deposit_key: 'elephant_grounds', allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     1,
+    max_level:          3,
+    maintenance_cost:   20,
+    maintenance_goods:  {},
+    effects: {
+      army_elephant_cap: 10,  // +10 слонов к боевому лимиту армии на уровень
+    },
+    historical_note: 'Карфаген использовал лесных слонов из Атласских гор; Птолемеи охотились на слонов в Эфиопии. Один боевой слон требовал корма как 40 солдат и дрессировки 2–3 года.',
+  },
+
   papyrus_bed: {
     name:        'Папирусные заросли',
     icon:        '📜',
