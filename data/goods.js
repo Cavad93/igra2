@@ -652,6 +652,44 @@ var GOODS = {
     stockpile_target_turns: 3,
   },
 
+  hemp: {
+    name: 'Пенька',
+    name_gen: 'пеньки',
+    base_price: 18,
+    price_elasticity: 0.9,
+    price_floor: 5,
+    unit: 'кг',
+    category: 'raw_material',
+    resource_type: 'biome',   // конопля — речные долины и прибрежные равнины
+    deposit_key: null,
+    requires_building: 'farm',
+    is_food: false,
+    is_grain: false,
+    producers: ['farmers'],
+    icon: '🌿',
+    market_category: 'raw_material',
+    stockpile_target_turns: 4,   // без пеньки нет канатов → нет флота
+  },
+
+  pitch: {
+    name: 'Смола',
+    name_gen: 'смолы',
+    base_price: 25,
+    price_elasticity: 1.0,
+    price_floor: 8,
+    unit: 'кг',
+    category: 'raw_material',
+    resource_type: 'processed',   // смолокурня из хвойной древесины
+    deposit_key: null,
+    requires_building: 'lumber_camp',
+    is_food: false,
+    is_grain: false,
+    producers: ['craftsmen', 'farmers'],
+    icon: '🟫',
+    market_category: 'raw_material',
+    stockpile_target_turns: 5,   // гидроизоляция обшивки и конопатка корабля
+  },
+
   purple_dye: {
     name: 'Пурпур',
     name_gen: 'пурпура',
@@ -669,6 +707,25 @@ var GOODS = {
     icon: '💜',
     market_category: 'luxury',
     stockpile_target_turns: 2,
+  },
+
+  war_elephants: {
+    name: 'Боевые слоны',
+    name_gen: 'боевых слонов',
+    base_price: 8000,
+    price_elasticity: 0.3,   // штучный стратегический товар
+    price_floor: 2400,
+    unit: 'голова',
+    category: 'military',
+    resource_type: 'livestock',   // саванна (Африка) и субтропики (Индия)
+    deposit_key: null,
+    requires_building: null,   // только торговля или захват
+    is_food: false,
+    is_grain: false,
+    producers: ['merchants'],
+    icon: '🐘',
+    market_category: 'military',
+    stockpile_target_turns: 12,
   },
 
   // ── ЖИВЫЕ РЕСУРСЫ ────────────────────────────────────────────────────────
@@ -904,6 +961,8 @@ function getGoodInfo(goodId, market) {
     weapons:      ['armory'],
     armor:        ['armory'],
     stone:        ['quarry'],
+    hemp:         ['farm'],
+    pitch:        ['lumber_camp'],        // смолокурня из хвойной древесины
     purple_dye:   ['dye_works'],
     // ── ТРАНЗИТ ──────────────────────────────────────────────────────────────
     trade_goods:  ['port'],
