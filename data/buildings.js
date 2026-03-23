@@ -1255,6 +1255,94 @@ const BUILDINGS = {
     slave_mortality_mod: 0.010,
   },
 
+  // ── УГОЛЬНАЯ ЯМА ─────────────────────────────────────────────
+  charcoal_kiln: {
+    name:        'Угольная яма (углежжение)',
+    icon:        '🪵',
+    description: 'Пережиг дров в древесный уголь — топливо для кузниц и металлургии. ' +
+                 'Несколько дровосеков укладывают кострище, засыпают землёй и жгут неделями. ' +
+                 'Допустима лишь там, где есть достаточно леса.',
+    cost:        150,
+    category:    'production',
+    footprint_ha: 5,
+    workers_per_unit: 6,
+    worker_profession: [
+      { profession: 'craftsmen', count: 4 },
+      { profession: 'farmers',   count: 2 },
+    ],
+    wage_rate:          0.25,
+    labor_type:         'mixed',
+    construction_materials: { timber: 3, tools: 1 },
+    construction_labor:     76,
+    build_turns:        1,
+    autonomous_builder: null,
+    nation_buildable:   true,
+    production_output: [
+      { good: 'charcoal', base_rate: 90 },
+    ],
+    production_inputs: [
+      { good: 'timber', amount_per_turn: 20, required: true },
+    ],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'biome', deposit_key: null,
+      allowed_biomes: ['temperate_forest', 'alpine', 'steppe'],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          5,
+    maintenance_cost:   3,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Для выплавки 1 таланта железа требовалось около 4 талантов древесного угля — углежжение было критической отраслью античной металлургии.',
+  },
+
+  // ── БРОНЗОЛИТЕЙНЯ ────────────────────────────────────────────
+  bronze_foundry: {
+    name:        'Бронзолитейня',
+    icon:        '🫗',
+    description: 'Плавка бронзы из меди и олова — высокотехнологичное производство античности. ' +
+                 'Требует постоянного притока обоих металлов и угля для горна. ' +
+                 'Олово почти всегда привозное, из далёких Корнуолла или Испании.',
+    cost:        700,
+    category:    'production',
+    footprint_ha: 4,
+    workers_per_unit: 25,
+    worker_profession: [
+      { profession: 'craftsmen', count: 20 },
+      { profession: 'slaves',    count: 5 },
+    ],
+    wage_rate:          0.24,
+    labor_type:         'mixed',
+    construction_materials: { timber: 10, iron: 5, tools: 5 },
+    construction_labor:     180,
+    build_turns:        4,
+    autonomous_builder: null,
+    nation_buildable:   true,
+    production_output: [
+      { good: 'bronze', base_rate: 55 },
+    ],
+    production_inputs: [
+      { good: 'copper',   amount_per_turn: 10, required: true },
+      { good: 'tin',      amount_per_turn:  5, required: true },
+      { good: 'charcoal', amount_per_turn:  8, required: true },
+    ],
+    capital_inputs: [
+      { good: 'tools', count_per_level: 3, monthly_wear: 0.020,
+        alt_good: null, alt_efficiency: null },
+    ],
+    location_requirement: {
+      type: 'none', deposit_key: null, allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          4,
+    maintenance_cost:   12,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Афинская литейная у храма Гефеста производила тысячи бронзовых щитов и статуй в год; бронза оставалась основным конструкционным металлом до II в. до н.э.',
+  },
+
   papyrus_bed: {
     name:        'Папирусные заросли',
     icon:        '📜',
