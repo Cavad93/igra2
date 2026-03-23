@@ -22,7 +22,7 @@
   R['r9']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r11']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r15']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
-  R['r22']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
+  R['r22']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},deposits:{tin:1.8},garrison:100};
   R['r24']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.8,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r25']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.4,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r26']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.5,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
@@ -93,7 +93,7 @@
   R['r106']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.5,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3,silver:1.4,iron:1.3},garrison:100};
   R['r107']={nation:'rome',type:'rural',terrain:'river_valley',population:5000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:300};
   R['r108']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.7,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
-  R['r109']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.8,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
+  R['r109']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.8,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1,tin:1.5},garrison:100};
   R['r110']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.4,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3},garrison:100};
   R['r111']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r112']={nation:'numidia',type:'rural',terrain:'plains',population:4500,fertility:0.6,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:300};
@@ -304,7 +304,7 @@
   R['r342']={nation:'numidia',type:'rural',terrain:'mountains',population:2000,fertility:0.6,buildings:[],production:{"iron": 1200, "timber": 600},garrison:300};
   R['r344']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.8,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r345']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
-  R['r346']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.5,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3,iron:1.3},garrison:100};
+  R['r346']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.5,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3,iron:1.3,tin:1.8},garrison:100};
   R['r347']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r348']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.7,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r349']={nation:'numidia',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:300};
@@ -356,12 +356,12 @@
   R['r395']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r396']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.5,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r397']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.6,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
-  R['r398']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.7,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3,gold:1.2},garrison:100};
+  R['r398']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.7,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3,gold:1.2,tin:1.8},garrison:100};
   R['r399']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r400']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.4,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r401']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r402']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.6,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3},garrison:100};
-  R['r404']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
+  R['r404']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},deposits:{tin:1.5},garrison:100};
   R['r405']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r406']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r407']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
@@ -458,7 +458,7 @@
   R['r500']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.4,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r501']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.5,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
   R['r502']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.6,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3},garrison:100};
-  R['r503']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.7,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
+  R['r503']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.7,buildings:[],production:{"fish": 1400, "trade_goods": 900},deposits:{tin:1.8},garrison:100};
   R['r504']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r505']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r506']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
@@ -492,7 +492,7 @@
   R['r534']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r535']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r536']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
-  R['r537']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
+  R['r537']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},deposits:{tin:1.8},garrison:100};
   R['r538']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.7,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r539']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r540']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
@@ -996,7 +996,7 @@
   R['r1084']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1085']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.4,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
   R['r1086']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.5,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3},garrison:100};
-  R['r1087']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
+  R['r1087']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},deposits:{tin:1.8},garrison:100};
   R['r1088']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.7,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r1089']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.8,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
   R['r1090']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.4,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3,iron:1.3},garrison:100};
@@ -1318,7 +1318,7 @@
   R['r1431']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1432']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.6,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r1433']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.7,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
-  R['r1434']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.8,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3},garrison:100};
+  R['r1434']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.8,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3,tin:1.8},garrison:100};
   R['r1435']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1436']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.5,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r1437']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.6,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
@@ -1364,7 +1364,7 @@
   R['r1487']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1488']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.7,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r1489']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.8,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
-  R['r1490']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.4,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3},garrison:100};
+  R['r1490']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.4,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3,tin:1.8},garrison:100};
   R['r1491']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1492']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.6,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r1493']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.7,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
@@ -1623,7 +1623,7 @@
   R['r1758']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.7,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3},garrison:100};
   R['r1759']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1760']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.4,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
-  R['r1761']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.5,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
+  R['r1761']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.5,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1,tin:1.8},garrison:100};
   R['r1762']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.6,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3},garrison:100};
   R['r1763']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.7,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1764']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.8,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
@@ -1654,7 +1654,7 @@
   R['r1789']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.8,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
   R['r1790']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1791']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
-  R['r1792']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.6,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
+  R['r1792']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.6,buildings:[],production:{"wheat": 2500, "olives": 800},deposits:{tin:1.8},garrison:100};
   R['r1793']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.7,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
   R['r1794']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1795']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
@@ -1689,7 +1689,7 @@
   R['r1824']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1825']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.4,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
   R['r1826']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
-  R['r1828']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.7,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
+  R['r1828']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.7,buildings:[],production:{"fish": 1400, "trade_goods": 900},deposits:{tin:1.8},garrison:100};
   R['r1829']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1830']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1831']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
@@ -1721,7 +1721,7 @@
   R['r1858']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.7,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1859']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1860']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
-  R['r1861']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
+  R['r1861']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},deposits:{tin:1.8},garrison:100};
   R['r1862']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1863']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.7,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1864']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.8,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
@@ -1752,7 +1752,7 @@
   R['r1892']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.6,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r1893']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.7,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
   R['r1894']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.8,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3},garrison:100};
-  R['r1895']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
+  R['r1895']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},deposits:{tin:1.8},garrison:100};
   R['r1896']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.5,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r1897']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.6,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
   R['r1898']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.7,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3,iron:1.3},garrison:100};
@@ -1783,7 +1783,7 @@
   R['r1923']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.7,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1924']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.8,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r1925']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.4,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
-  R['r1926']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.5,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3},garrison:100};
+  R['r1926']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.5,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3,tin:1.8},garrison:100};
   R['r1927']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r1928']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.7,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r1929']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.8,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
@@ -1815,7 +1815,7 @@
   R['r1957']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.6,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
   R['r1958']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.7,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3,gold:1.2},garrison:100};
   R['r1959']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
-  R['r1960']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.4,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
+  R['r1960']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.4,buildings:[],production:{"wheat": 2500, "olives": 800},deposits:{tin:1.8},garrison:100};
   R['r1961']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.5,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
   R['r1962']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.6,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3},garrison:100};
   R['r1963']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.7,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
@@ -1872,7 +1872,7 @@
   R['r2015']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},deposits:{amber:1.8,furs:1.5},garrison:100};
   R['r2016']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r2017']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
-  R['r2018']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.7,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
+  R['r2018']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.7,buildings:[],production:{"fish": 1400, "trade_goods": 900},deposits:{tin:1.8},garrison:100};
   R['r2019']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r2021']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.5,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
   R['r2022']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
@@ -1919,7 +1919,7 @@
   R['r2064']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.8,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r2066']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.5,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3},garrison:100};
   R['r2067']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
-  R['r2068']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.7,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
+  R['r2068']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.7,buildings:[],production:{"wheat": 2500, "olives": 800},deposits:{tin:1.8},garrison:100};
   R['r2069']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.8,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
   R['r2070']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.4,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3},garrison:100};
   R['r2071']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
@@ -1960,7 +1960,7 @@
   R['r2106']={nation:'neutral',type:'coastal_city',terrain:'coastal_city',population:6000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r2107']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r2108']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.7,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
-  R['r2109']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.8,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
+  R['r2109']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.8,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1,tin:1.8},garrison:100};
   R['r2110']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.4,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3},garrison:100};
   R['r2111']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r2112']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.6,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
@@ -2139,7 +2139,7 @@
   R['r2294']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.8,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{stone:1.3},garrison:100};
   R['r2295']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r2296']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.5,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
-  R['r2297']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.6,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
+  R['r2297']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.6,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1,tin:1.5},garrison:100};
   R['r2298']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.7,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{iron:1.4},garrison:100};
   R['r2299']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r2300']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.4,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
@@ -2150,7 +2150,7 @@
   R['r2305']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.4,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
   R['r2306']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.5,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{iron:1.4,gold:1.3},garrison:100};
   R['r2307']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
-  R['r2308']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.7,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
+  R['r2308']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.7,buildings:[],production:{"wheat": 2500, "olives": 800},deposits:{tin:1.5},garrison:100};
   R['r2309']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.8,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
   R['r2310']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.4,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{iron:1.4,copper:1.4},garrison:100};
   R['r2311']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
@@ -2161,7 +2161,7 @@
   R['r2316']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.5,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r2317']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.6,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
   R['r2318']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.7,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{iron:1.4},garrison:100};
-  R['r2319']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
+  R['r2319']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},deposits:{tin:1.5},garrison:100};
   R['r2320']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.4,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r2322']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.6,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{iron:1.4,gold:1.3,copper:1.4},garrison:100};
   R['r2323']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.7,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
@@ -2174,7 +2174,7 @@
   R['r2331']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.5,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r2332']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.6,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r2333']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.7,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
-  R['r2334']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.8,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{iron:1.4,silver:1.5,copper:1.4},garrison:100};
+  R['r2334']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.8,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{iron:1.4,silver:1.5,copper:1.4,tin:1.5},garrison:100};
   R['r2335']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r2336']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.5,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r2337']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.6,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
@@ -2185,7 +2185,7 @@
   R['r2342']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.6,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{iron:1.4},garrison:100};
   R['r2343']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.7,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r2344']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.8,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
-  R['r2345']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.4,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
+  R['r2345']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.4,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1,tin:1.5},garrison:100};
   R['r2346']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.5,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{iron:1.4},garrison:100};
   R['r2347']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.6,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r2348']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.7,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
@@ -2198,7 +2198,7 @@
   R['r2355']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.4,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r2356']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.5,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r2357']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.6,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
-  R['r2358']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.7,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{iron:1.4,gold:1.3},garrison:100};
+  R['r2358']={nation:'neutral',type:'rural',terrain:'mountains',population:2000,fertility:0.7,buildings:[],production:{"iron": 1200, "timber": 600},deposits:{iron:1.4,gold:1.3,tin:1.5},garrison:100};
   R['r2359']={nation:'neutral',type:'rural',terrain:'river_valley',population:5000,fertility:0.8,buildings:[],production:{"fish": 1400, "trade_goods": 900},garrison:100};
   R['r2360']={nation:'neutral',type:'rural',terrain:'plains',population:4500,fertility:0.4,buildings:[],production:{"wheat": 2500, "olives": 800},garrison:100};
   R['r2361']={nation:'neutral',type:'rural',terrain:'hills',population:3200,fertility:0.5,buildings:[],production:{"wine": 1200, "iron": 400},deposits:{stone:1.1},garrison:100};
