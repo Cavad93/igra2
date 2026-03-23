@@ -1077,6 +1077,184 @@ const BUILDINGS = {
   },
 
 
+  // ── КУЗНИЦА ──────────────────────────────────────────────────
+  forge: {
+    name:        'Кузница',
+    icon:        '🔥',
+    description: 'Городская кузня — центр производства оружия, доспехов и инструментов. ' +
+                 'Опытные кузнецы работают вместе с рабами-молотобойцами. ' +
+                 'Требует постоянный подвоз железа и древесного угля.',
+    cost:        500,
+    category:    'production',
+    footprint_ha: 2,
+    workers_per_unit: 20,
+    worker_profession: [
+      { profession: 'craftsmen', count: 15 },
+      { profession: 'slaves',    count: 5 },
+    ],
+    wage_rate:          0.25,
+    labor_type:         'mixed',
+    construction_materials: { timber: 8, iron: 6, tools: 4 },
+    construction_labor:     152,
+    build_turns:        3,
+    autonomous_builder: 'craftsmen_class',
+    nation_buildable:   true,
+    production_output: [
+      { good: 'weapons', base_rate: 30 },
+      { good: 'armor',   base_rate: 20 },
+      { good: 'tools',   base_rate: 45 },
+    ],
+    production_inputs: [
+      { good: 'iron',     amount_per_turn: 15, required: true },
+      { good: 'charcoal', amount_per_turn: 10, required: true },
+    ],
+    capital_inputs: [
+      { good: 'tools', count_per_level: 4, monthly_wear: 0.025,
+        alt_good: null, alt_efficiency: null },
+    ],
+    location_requirement: {
+      type: 'none', deposit_key: null, allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          4,
+    maintenance_cost:   15,
+    maintenance_goods:  {},
+    effects: {
+      army_quality: 0.05,
+    },
+    historical_note: 'Сирийские и карфагенские кузнецы поставляли оружие армиям III в. до н.э.; кузница была обязательным элементом любого античного города.',
+  },
+
+  // ── ЖЕЛЕЗНЫЙ РУДНИК ──────────────────────────────────────────
+  iron_mine: {
+    name:        'Железный рудник',
+    icon:        '⛏️',
+    description: 'Подземные или открытые разработки железной руды. ' +
+                 'Почти полностью рабский труд под надзором немногих ремесленников. ' +
+                 'Строится только в регионах с месторождениями железной руды.',
+    cost:        900,
+    category:    'production',
+    footprint_ha: 25,
+    workers_per_unit: 60,
+    worker_profession: [
+      { profession: 'craftsmen', count: 10 },
+      { profession: 'slaves',    count: 50 },
+    ],
+    wage_rate:          0.08,
+    labor_type:         'slave',
+    construction_materials: { timber: 14, iron: 4, tools: 6 },
+    construction_labor:     196,
+    build_turns:        5,
+    autonomous_builder: null,
+    nation_buildable:   true,
+    production_output: [
+      { good: 'iron', base_rate: 80 },
+    ],
+    production_inputs: [
+      { good: 'timber', amount_per_turn: 8, required: true },
+      { good: 'tools',  amount_per_turn: 5, required: true },
+    ],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'deposit', deposit_key: 'iron_ore', allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          4,
+    maintenance_cost:   20,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Рим добывал железо в Популонии (Этрурия) и на острове Эльба — к 200 г. до н.э. её рудники давали тысячи талантов руды в год.',
+    slave_mortality_mod: 0.005,
+  },
+
+  // ── МЕДНЫЙ РУДНИК ────────────────────────────────────────────
+  copper_mine: {
+    name:        'Медный рудник',
+    icon:        '🟤',
+    description: 'Добыча медной руды для бронзового литья. ' +
+                 'Исторически главные медные копи античности — Кипр, Испания, Нубия. ' +
+                 'Рабский труд под надзором; руда без плавки ценится мало.',
+    cost:        850,
+    category:    'production',
+    footprint_ha: 20,
+    workers_per_unit: 50,
+    worker_profession: [
+      { profession: 'craftsmen', count: 8 },
+      { profession: 'slaves',    count: 42 },
+    ],
+    wage_rate:          0.08,
+    labor_type:         'slave',
+    construction_materials: { timber: 12, iron: 4, tools: 5 },
+    construction_labor:     179,
+    build_turns:        5,
+    autonomous_builder: null,
+    nation_buildable:   true,
+    production_output: [
+      { good: 'copper', base_rate: 70 },
+    ],
+    production_inputs: [
+      { good: 'timber', amount_per_turn: 6, required: true },
+      { good: 'tools',  amount_per_turn: 4, required: true },
+    ],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'deposit', deposit_key: 'copper_ore', allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          4,
+    maintenance_cost:   18,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Само слово "купрум" происходит от Kypros — Кипра; крупнейшие античные копи производили тысячи тонн меди ежегодно.',
+    slave_mortality_mod: 0.004,
+  },
+
+  // ── СЕРЕБРЯНЫЙ РУДНИК ────────────────────────────────────────
+  silver_mine: {
+    name:        'Серебряный рудник',
+    icon:        '🪨',
+    description: 'Добыча серебра — самое доходное и самое смертоносное предприятие античности. ' +
+                 'Лаврионские шахты дали Афинам деньги на флот при Фемистокле. ' +
+                 'Строится только в регионах с серебряными месторождениями.',
+    cost:        1200,
+    category:    'production',
+    footprint_ha: 30,
+    workers_per_unit: 80,
+    worker_profession: [
+      { profession: 'craftsmen', count: 10 },
+      { profession: 'slaves',    count: 70 },
+    ],
+    wage_rate:          0.06,
+    labor_type:         'slave',
+    construction_materials: { timber: 18, iron: 8, tools: 8 },
+    construction_labor:     286,
+    build_turns:        6,
+    autonomous_builder: null,
+    nation_buildable:   true,
+    production_output: [
+      { good: 'silver', base_rate: 50 },
+    ],
+    production_inputs: [
+      { good: 'timber', amount_per_turn: 10, required: true },
+      { good: 'tools',  amount_per_turn:  6, required: true },
+    ],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'deposit', deposit_key: 'silver_ore', allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          4,
+    maintenance_cost:   25,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Лаврионские рудники (Аттика) эксплуатировали более 10 000 рабов и к V в. до н.э. приносили Афинам около 25–30 талантов серебра в год.',
+    slave_mortality_mod: 0.010,
+  },
+
   papyrus_bed: {
     name:        'Папирусные заросли',
     icon:        '📜',
