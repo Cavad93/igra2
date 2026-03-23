@@ -10,7 +10,8 @@ const BIOME_META = {
     "icon": "🌊",
     "production_bonus": {"food": 1.1, "trade": 1.3, "fish": 1.5},
     "movement_cost": 1.0,
-    "agriculture": { "suitability": 0.7, "arable": 0.4, "wheat_share": 0.45, "yield_kg": 1000, "stability": "средняя" }
+    "agriculture": { "suitability": 0.7, "arable": 0.4, "wheat_share": 0.45, "yield_kg": 1000, "stability": "средняя" },
+    "goods_bonus": {"wheat": 1.15, "barley": 1.1, "fish": 1.3, "tuna": 1.2, "olives": 1.2, "olive_oil": 1.2, "wine": 1.1, "honey": 1.1, "garum": 1.2, "meat": 0.8, "salt": 1.2, "wool": 0.9, "cloth": 1.0, "leather": 0.9, "iron": 0.8, "bronze": 1.0, "timber": 0.7, "tools": 1.0, "pottery": 1.0, "papyrus": 0.3, "wax": 1.0, "incense": 0.1, "purple_dye": 1.5, "trade_goods": 1.25, "sulfur": 0.5, "horses": 0.5, "cattle": 0.8, "slaves": 1.0, "war_elephants": 0.0, "copper": 0.4, "tin": 0.2, "silver": 0.2, "gold": 0.1, "charcoal": 0.6, "stone": 0.8, "hemp": 0.8, "pitch": 0.5, "amber": 0.1, "furs": 0.2, "weapons": 1.0, "armor": 1.0}
   },
   "mediterranean_hills": {
     "id": "mediterranean_hills",
@@ -20,7 +21,8 @@ const BIOME_META = {
     "icon": "🫒",
     "production_bonus": {"food": 1.2, "wine": 1.4, "olives": 1.4},
     "movement_cost": 1.2,
-    "agriculture": { "suitability": 0.6, "arable": 0.55, "wheat_share": 0.5, "yield_kg": 800, "stability": "средняя" }
+    "agriculture": { "suitability": 0.6, "arable": 0.55, "wheat_share": 0.5, "yield_kg": 800, "stability": "средняя" },
+    "goods_bonus": {"wheat": 1.0, "barley": 1.0, "fish": 0.7, "tuna": 0.0, "olives": 1.35, "olive_oil": 1.35, "wine": 1.4, "honey": 1.2, "garum": 0.6, "meat": 0.9, "salt": 0.7, "wool": 1.1, "cloth": 1.0, "leather": 1.0, "iron": 1.0, "bronze": 1.0, "timber": 0.8, "tools": 1.0, "pottery": 1.0, "papyrus": 0.1, "wax": 1.1, "incense": 0.1, "purple_dye": 0.1, "trade_goods": 0.8, "sulfur": 0.7, "horses": 0.6, "cattle": 0.9, "slaves": 1.0, "war_elephants": 0.0, "copper": 0.6, "tin": 0.3, "silver": 0.5, "gold": 0.3, "charcoal": 0.8, "stone": 1.0, "hemp": 0.7, "pitch": 0.6, "amber": 0.1, "furs": 0.3, "weapons": 1.0, "armor": 1.0}
   },
   "river_valley": {
     "id": "river_valley",
@@ -30,7 +32,8 @@ const BIOME_META = {
     "icon": "💧",
     "production_bonus": {"food": 1.5, "grain": 1.6, "population": 1.2},
     "movement_cost": 0.9,
-    "agriculture": { "suitability": 0.95, "arable": 0.75, "wheat_share": 0.55, "yield_kg": 1350, "stability": "высокая" }
+    "agriculture": { "suitability": 0.95, "arable": 0.75, "wheat_share": 0.55, "yield_kg": 1350, "stability": "высокая" },
+    "goods_bonus": {"wheat": 1.4, "barley": 1.3, "fish": 1.0, "tuna": 0.0, "olives": 0.6, "olive_oil": 0.6, "wine": 0.7, "honey": 1.0, "garum": 0.6, "meat": 0.8, "salt": 0.6, "wool": 0.7, "cloth": 1.15, "leather": 0.8, "iron": 0.5, "bronze": 1.0, "timber": 0.6, "tools": 1.0, "pottery": 1.1, "papyrus": 1.2, "wax": 0.9, "incense": 0.1, "purple_dye": 0.1, "trade_goods": 0.9, "sulfur": 0.2, "horses": 0.6, "cattle": 0.9, "slaves": 1.0, "war_elephants": 0.0, "copper": 0.2, "tin": 0.1, "silver": 0.1, "gold": 0.2, "charcoal": 0.5, "stone": 0.9, "hemp": 1.1, "pitch": 0.4, "amber": 0.1, "furs": 0.3, "weapons": 1.0, "armor": 1.0}
   },
   "desert": {
     "id": "desert",
@@ -40,7 +43,8 @@ const BIOME_META = {
     "icon": "🏜️",
     "production_bonus": {"trade": 0.8, "food": 0.4},
     "movement_cost": 1.8,
-    "agriculture": { "suitability": 0.02, "arable": 0.02, "wheat_share": 0.0, "yield_kg": 0, "stability": "нет" }
+    "agriculture": { "suitability": 0.02, "arable": 0.02, "wheat_share": 0.0, "yield_kg": 0, "stability": "нет" },
+    "goods_bonus": {"wheat": 0.05, "barley": 0.1, "fish": 0.0, "tuna": 0.0, "olives": 0.1, "olive_oil": 0.1, "wine": 0.1, "honey": 0.2, "garum": 0.1, "meat": 0.5, "salt": 1.1, "wool": 0.5, "cloth": 1.0, "leather": 0.6, "iron": 0.3, "bronze": 1.0, "timber": 0.1, "tools": 1.0, "pottery": 1.0, "papyrus": 0.0, "wax": 0.3, "incense": 0.3, "purple_dye": 0.0, "trade_goods": 0.8, "sulfur": 0.4, "horses": 0.4, "cattle": 0.3, "slaves": 1.0, "war_elephants": 0.0, "copper": 0.3, "tin": 0.1, "silver": 0.2, "gold": 0.2, "charcoal": 0.1, "stone": 0.7, "hemp": 0.2, "pitch": 0.0, "amber": 0.0, "furs": 0.1, "weapons": 1.0, "armor": 1.0}
   },
   "steppe": {
     "id": "steppe",
@@ -50,7 +54,8 @@ const BIOME_META = {
     "icon": "🐎",
     "production_bonus": {"horses": 1.5, "livestock": 1.3, "food": 0.7},
     "movement_cost": 0.9,
-    "agriculture": { "suitability": 0.4, "arable": 0.35, "wheat_share": 0.4, "yield_kg": 500, "stability": "оч.низкая" }
+    "agriculture": { "suitability": 0.4, "arable": 0.35, "wheat_share": 0.4, "yield_kg": 500, "stability": "оч.низкая" },
+    "goods_bonus": {"wheat": 0.85, "barley": 0.9, "fish": 0.1, "tuna": 0.0, "olives": 0.2, "olive_oil": 0.2, "wine": 0.4, "honey": 0.8, "garum": 0.2, "meat": 1.3, "salt": 0.3, "wool": 1.2, "cloth": 1.0, "leather": 1.1, "iron": 0.6, "bronze": 1.0, "timber": 0.3, "tools": 1.0, "pottery": 1.0, "papyrus": 0.0, "wax": 0.7, "incense": 0.0, "purple_dye": 0.0, "trade_goods": 0.8, "sulfur": 0.3, "horses": 1.5, "cattle": 1.1, "slaves": 1.0, "war_elephants": 0.0, "copper": 0.3, "tin": 0.2, "silver": 0.3, "gold": 0.2, "charcoal": 0.3, "stone": 0.5, "hemp": 0.9, "pitch": 0.2, "amber": 0.3, "furs": 0.6, "weapons": 1.0, "armor": 1.0}
   },
   "temperate_forest": {
     "id": "temperate_forest",
@@ -60,7 +65,8 @@ const BIOME_META = {
     "icon": "🌲",
     "production_bonus": {"lumber": 1.5, "hunting": 1.3, "food": 0.9},
     "movement_cost": 1.5,
-    "agriculture": { "suitability": 0.5, "arable": 0.4, "wheat_share": 0.35, "yield_kg": 650, "stability": "средняя" }
+    "agriculture": { "suitability": 0.5, "arable": 0.4, "wheat_share": 0.35, "yield_kg": 650, "stability": "средняя" },
+    "goods_bonus": {"wheat": 0.8, "barley": 0.85, "fish": 0.2, "tuna": 0.0, "olives": 0.1, "olive_oil": 0.1, "wine": 0.6, "honey": 1.3, "garum": 0.3, "meat": 1.2, "salt": 0.2, "wool": 1.1, "cloth": 1.0, "leather": 1.1, "iron": 0.9, "bronze": 1.0, "timber": 1.3, "tools": 1.0, "pottery": 1.0, "papyrus": 0.1, "wax": 1.2, "incense": 0.0, "purple_dye": 0.0, "trade_goods": 0.7, "sulfur": 0.2, "horses": 0.8, "cattle": 1.2, "slaves": 1.0, "war_elephants": 0.0, "copper": 0.5, "tin": 0.8, "silver": 0.4, "gold": 0.3, "charcoal": 1.3, "stone": 0.7, "hemp": 1.2, "pitch": 1.3, "amber": 0.8, "furs": 1.3, "weapons": 1.0, "armor": 1.0}
   },
   "alpine": {
     "id": "alpine",
@@ -70,7 +76,8 @@ const BIOME_META = {
     "icon": "⛰️",
     "production_bonus": {"mining": 1.4, "livestock": 1.1, "food": 0.6},
     "movement_cost": 2.5,
-    "agriculture": { "suitability": 0.1, "arable": 0.08, "wheat_share": 0.2, "yield_kg": 200, "stability": "оч.низкая" }
+    "agriculture": { "suitability": 0.1, "arable": 0.08, "wheat_share": 0.2, "yield_kg": 200, "stability": "оч.низкая" },
+    "goods_bonus": {"wheat": 0.2, "barley": 0.25, "fish": 0.0, "tuna": 0.0, "olives": 0.2, "olive_oil": 0.2, "wine": 0.3, "honey": 0.7, "garum": 0.1, "meat": 1.1, "salt": 0.2, "wool": 1.1, "cloth": 1.0, "leather": 0.9, "iron": 1.15, "bronze": 1.0, "timber": 1.2, "tools": 1.0, "pottery": 1.0, "papyrus": 0.0, "wax": 0.7, "incense": 0.0, "purple_dye": 0.0, "trade_goods": 0.6, "sulfur": 0.5, "horses": 0.7, "cattle": 0.9, "slaves": 1.0, "war_elephants": 0.0, "copper": 1.1, "tin": 0.6, "silver": 0.8, "gold": 0.6, "charcoal": 1.0, "stone": 1.3, "hemp": 0.4, "pitch": 0.8, "amber": 0.1, "furs": 0.6, "weapons": 1.0, "armor": 1.0}
   },
   "semi_arid": {
     "id": "semi_arid",
@@ -80,7 +87,8 @@ const BIOME_META = {
     "icon": "☀️",
     "production_bonus": {"livestock": 1.2, "food": 0.7, "trade": 0.9},
     "movement_cost": 1.4,
-    "agriculture": { "suitability": 0.35, "arable": 0.25, "wheat_share": 0.3, "yield_kg": 450, "stability": "низкая" }
+    "agriculture": { "suitability": 0.35, "arable": 0.25, "wheat_share": 0.3, "yield_kg": 450, "stability": "низкая" },
+    "goods_bonus": {"wheat": 0.45, "barley": 0.55, "fish": 0.0, "tuna": 0.0, "olives": 0.4, "olive_oil": 0.4, "wine": 0.5, "honey": 0.4, "garum": 0.2, "meat": 1.2, "salt": 1.15, "wool": 1.0, "cloth": 1.0, "leather": 1.0, "iron": 0.7, "bronze": 1.0, "timber": 0.2, "tools": 1.0, "pottery": 1.0, "papyrus": 0.0, "wax": 0.5, "incense": 0.2, "purple_dye": 0.0, "trade_goods": 0.9, "sulfur": 0.4, "horses": 1.1, "cattle": 0.8, "slaves": 1.0, "war_elephants": 0.0, "copper": 0.6, "tin": 0.3, "silver": 0.4, "gold": 0.3, "charcoal": 0.2, "stone": 0.8, "hemp": 0.5, "pitch": 0.1, "amber": 0.0, "furs": 0.2, "weapons": 1.0, "armor": 1.0}
   },
   "subtropical": {
     "id": "subtropical",
@@ -90,7 +98,8 @@ const BIOME_META = {
     "icon": "🌴",
     "production_bonus": {"food": 1.3, "trade": 1.2, "dates": 1.4},
     "movement_cost": 1.1,
-    "agriculture": { "suitability": 0.45, "arable": 0.45, "wheat_share": 0.3, "yield_kg": 600, "stability": "низкая" }
+    "agriculture": { "suitability": 0.45, "arable": 0.45, "wheat_share": 0.3, "yield_kg": 600, "stability": "низкая" },
+    "goods_bonus": {"wheat": 0.7, "barley": 0.75, "fish": 1.1, "tuna": 0.5, "olives": 0.5, "olive_oil": 0.5, "wine": 0.7, "honey": 0.8, "garum": 0.6, "meat": 0.9, "salt": 0.6, "wool": 0.7, "cloth": 1.0, "leather": 0.8, "iron": 0.6, "bronze": 1.0, "timber": 0.7, "tools": 1.0, "pottery": 1.0, "papyrus": 0.2, "wax": 0.8, "incense": 1.4, "purple_dye": 0.5, "trade_goods": 1.1, "sulfur": 0.3, "horses": 0.7, "cattle": 0.8, "slaves": 1.0, "war_elephants": 0.3, "copper": 0.5, "tin": 0.2, "silver": 0.3, "gold": 0.2, "charcoal": 0.6, "stone": 0.7, "hemp": 0.8, "pitch": 0.5, "amber": 0.0, "furs": 0.2, "weapons": 1.0, "armor": 1.0}
   },
   "savanna": {
     "id": "savanna",
@@ -100,7 +109,8 @@ const BIOME_META = {
     "icon": "🦁",
     "production_bonus": {"ivory": 1.5, "livestock": 1.1, "food": 0.8},
     "movement_cost": 1.3,
-    "agriculture": { "suitability": 0.15, "arable": 0.15, "wheat_share": 0.1, "yield_kg": 150, "stability": "низкая" }
+    "agriculture": { "suitability": 0.15, "arable": 0.15, "wheat_share": 0.1, "yield_kg": 150, "stability": "низкая" },
+    "goods_bonus": {"wheat": 0.3, "barley": 0.35, "fish": 0.3, "tuna": 0.0, "olives": 0.1, "olive_oil": 0.1, "wine": 0.3, "honey": 0.6, "garum": 0.2, "meat": 1.1, "salt": 0.4, "wool": 0.9, "cloth": 1.0, "leather": 1.0, "iron": 0.4, "bronze": 1.0, "timber": 0.4, "tools": 1.0, "pottery": 1.0, "papyrus": 0.1, "wax": 0.6, "incense": 0.8, "purple_dye": 0.0, "trade_goods": 0.7, "sulfur": 0.2, "horses": 0.6, "cattle": 0.8, "slaves": 1.0, "war_elephants": 1.5, "copper": 0.4, "tin": 0.2, "silver": 0.3, "gold": 0.5, "charcoal": 0.4, "stone": 0.5, "hemp": 0.4, "pitch": 0.2, "amber": 0.0, "furs": 0.3, "weapons": 1.0, "armor": 1.0}
   },
   "volcanic": {
     "id": "volcanic",
@@ -110,7 +120,8 @@ const BIOME_META = {
     "icon": "🌋",
     "production_bonus": {"food": 1.4, "minerals": 1.3, "sulfur": 1.6},
     "movement_cost": 1.6,
-    "agriculture": { "suitability": 0.85, "arable": 0.5, "wheat_share": 0.4, "yield_kg": 1500, "stability": "высокая" }
+    "agriculture": { "suitability": 0.85, "arable": 0.5, "wheat_share": 0.4, "yield_kg": 1500, "stability": "высокая" },
+    "goods_bonus": {"wheat": 1.05, "barley": 1.0, "fish": 0.9, "tuna": 0.9, "olives": 1.1, "olive_oil": 1.1, "wine": 1.15, "honey": 0.9, "garum": 0.8, "meat": 0.7, "salt": 0.8, "wool": 0.8, "cloth": 1.0, "leather": 0.8, "iron": 0.9, "bronze": 1.0, "timber": 0.6, "tools": 1.0, "pottery": 1.1, "papyrus": 0.1, "wax": 0.9, "incense": 0.0, "purple_dye": 0.5, "trade_goods": 0.9, "sulfur": 1.4, "horses": 0.4, "cattle": 0.7, "slaves": 1.0, "war_elephants": 0.0, "copper": 0.6, "tin": 0.2, "silver": 0.4, "gold": 0.3, "charcoal": 0.6, "stone": 1.2, "hemp": 0.7, "pitch": 0.4, "amber": 0.0, "furs": 0.1, "weapons": 1.0, "armor": 1.0}
   },
   "arctic": {
     "id": "arctic",
@@ -120,7 +131,8 @@ const BIOME_META = {
     "icon": "❄️",
     "production_bonus": {"fish": 1.2, "furs": 1.5, "food": 0.3},
     "movement_cost": 2.0,
-    "agriculture": { "suitability": 0.0, "arable": 0.0, "wheat_share": 0.0, "yield_kg": 0, "stability": "нет" }
+    "agriculture": { "suitability": 0.0, "arable": 0.0, "wheat_share": 0.0, "yield_kg": 0, "stability": "нет" },
+    "goods_bonus": {"wheat": 0.05, "barley": 0.05, "fish": 1.2, "tuna": 1.1, "olives": 0.0, "olive_oil": 0.0, "wine": 0.0, "honey": 0.5, "garum": 0.8, "meat": 1.0, "salt": 0.3, "wool": 0.8, "cloth": 1.0, "leather": 0.9, "iron": 0.5, "bronze": 1.0, "timber": 1.1, "tools": 1.0, "pottery": 1.0, "papyrus": 0.0, "wax": 0.6, "incense": 0.0, "purple_dye": 0.0, "trade_goods": 0.6, "sulfur": 0.1, "horses": 0.6, "cattle": 0.6, "slaves": 1.0, "war_elephants": 0.0, "copper": 0.3, "tin": 0.4, "silver": 0.2, "gold": 0.1, "charcoal": 0.9, "stone": 0.6, "hemp": 0.6, "pitch": 0.8, "amber": 1.5, "furs": 1.5, "weapons": 1.0, "armor": 1.0}
   },
   "tropical": {
     "id": "tropical",
@@ -130,7 +142,8 @@ const BIOME_META = {
     "icon": "🌿",
     "production_bonus": {"exotic_goods": 1.6, "lumber": 1.3, "food": 0.9},
     "movement_cost": 1.7,
-    "agriculture": { "suitability": 0.2, "arable": 0.2, "wheat_share": 0.15, "yield_kg": 250, "stability": "низкая" }
+    "agriculture": { "suitability": 0.2, "arable": 0.2, "wheat_share": 0.15, "yield_kg": 250, "stability": "низкая" },
+    "goods_bonus": {"wheat": 0.15, "barley": 0.2, "fish": 1.15, "tuna": 0.3, "olives": 0.1, "olive_oil": 0.1, "wine": 0.4, "honey": 0.9, "garum": 0.4, "meat": 0.8, "salt": 0.2, "wool": 0.5, "cloth": 1.0, "leather": 0.7, "iron": 0.3, "bronze": 1.0, "timber": 1.3, "tools": 1.0, "pottery": 1.0, "papyrus": 0.3, "wax": 0.8, "incense": 0.5, "purple_dye": 0.0, "trade_goods": 0.7, "sulfur": 0.2, "horses": 0.4, "cattle": 0.6, "slaves": 1.0, "war_elephants": 0.4, "copper": 0.3, "tin": 0.2, "silver": 0.1, "gold": 0.4, "charcoal": 1.1, "stone": 0.4, "hemp": 0.7, "pitch": 0.8, "amber": 0.0, "furs": 0.5, "weapons": 1.0, "armor": 1.0}
   }
 };
 

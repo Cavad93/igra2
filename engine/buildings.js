@@ -28,36 +28,22 @@ function _slotTotalWorkers(slot) {
 }
 
 // Бонус к производству товара по типу местности или биому региона.
-// Сначала проверяет region.biome (13 биомов), затем region.terrain (5 старых типов).
-// Используется в _calcSlotBaseOutput как terrainBonus.
+// Для 13 биомов читает из BIOME_META[biome].goods_bonus (data/biomes.js).
+// Для старых terrain-типов (plains/hills/mountains/coastal_city) — fallback-таблица.
 function _terrainGoodBonus(terrain, good) {
-  const TABLE = {
-    // ── Старые типы местности (backward-compat) ───────────────────────────
-    plains:       { wheat: 1.15, barley: 1.10, wool:   1.10 },
-    hills:        { wine:  1.20, olive_oil: 1.15, iron: 1.10, sulfur: 1.15 },
-    mountains:    { iron:  1.20, bronze: 1.15, timber: 1.10, sulfur: 1.30 },
-    coastal_city: { fish:  1.20, salt:   1.20, trade_goods: 1.15, tuna: 1.25 },
-
-    // ── 13 биомов (region.biome) ──────────────────────────────────────────
-    // Бонусы пшеницы выведены из BIOME_META.agriculture.yield_kg
-    // (нормализация: mediterranean_hills = 1.00 как базовый уровень)
-    //
-    // biome              yield_kg  wheat  barley  wine   olive  iron   timber fish  trade  salt
-    river_valley:       { wheat: 1.40, barley: 1.30, cloth: 1.15, pottery: 1.10, papyrus: 1.20 },
-    mediterranean_coast:{ wheat: 1.15, barley: 1.10, fish: 1.30, salt: 1.20, trade_goods: 1.25, tuna: 1.20 },
-    mediterranean_hills:{ wheat: 1.00, barley: 1.00, wine: 1.35, olive_oil: 1.30 },
-    steppe:             { wheat: 0.85, barley: 0.90, wool: 1.20, leather: 1.10 },
-    temperate_forest:   { wheat: 0.80, barley: 0.85, timber: 1.30, wool: 1.10 },
-    volcanic:           { wheat: 1.05, barley: 1.00, sulfur: 1.40, wine: 1.15 },
-    subtropical:        { wheat: 0.70, barley: 0.75, fish: 1.10, trade_goods: 1.10 },
-    semi_arid:          { wheat: 0.45, barley: 0.55, salt: 1.15 },
-    savanna:            { wheat: 0.30, barley: 0.35, ivory: 1.50 },
-    alpine:             { wheat: 0.20, barley: 0.25, iron: 1.15, timber: 1.20 },
-    arctic:             { wheat: 0.05, barley: 0.05, fish: 1.20, furs: 1.50 },
-    desert:             { wheat: 0.05, barley: 0.10, salt: 1.10, trade_goods: 0.80 },
-    tropical:           { wheat: 0.15, barley: 0.20, fish: 1.15 },
+  // ── 13 биомов: читаем из BIOME_META (data/biomes.js) ──────────────────
+  if (typeof BIOME_META !== 'undefined' && BIOME_META[terrain]?.goods_bonus) {
+    const v = BIOME_META[terrain].goods_bonus[good];
+    return v !== undefined ? v : 1.0;
+  }
+  // ── Старые типы местности (backward-compat) ────────────────────────────
+  const LEGACY = {
+    plains:       { wheat: 1.15, barley: 1.10, wool: 1.10 },
+    hills:        { wine: 1.20, olive_oil: 1.15, iron: 1.10, sulfur: 1.15 },
+    mountains:    { iron: 1.20, bronze: 1.15, timber: 1.10, sulfur: 1.30 },
+    coastal_city: { fish: 1.20, salt: 1.20, trade_goods: 1.15, tuna: 1.25 },
   };
-  return TABLE[terrain]?.[good] ?? 1.0;
+  return LEGACY[terrain]?.[good] ?? 1.0;
 }
 
 // ──────────────────────────────────────────────────────────────
