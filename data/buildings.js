@@ -52,6 +52,9 @@ const BUILDINGS = {
     // legacy
     profession_growth: { sailors: 0.018, merchants: 0.010 },
     capacity_bonus:    3000,
+    workers_per_unit: 50,
+    location_requirement: {"type":"biome","deposit_key":null,"allowed_biomes":["coastal_city"]},
+    historical_note: "Порты Сиракуз, Карфагена и Александрии были крупнейшими торговыми узлами античного мира; Дионисий Сиракузский расширил гавань до вмещения 200 военных триер.",
   },
 
   shipyard: {
@@ -81,6 +84,9 @@ const BUILDINGS = {
     // legacy
     profession_growth: { sailors: 0.025, craftsmen: 0.010 },
     capacity_bonus:    2000,
+    workers_per_unit: 40,
+    location_requirement: {"type":"biome","deposit_key":null,"allowed_biomes":["coastal_city"]},
+    historical_note: "Дионисий I в 399 до н.э. одновременно задействовал 20 верфей Сиракуз и нанял специалистов со всей Греции — результатом стал первый в истории пятипалубный корабль.",
   },
 
   market: {
@@ -116,6 +122,9 @@ const BUILDINGS = {
     profession_growth:        { merchants: 0.015, craftsmen: 0.008 },
     needs_satisfaction_bonus: 0.05,
     capacity_bonus:           1500,
+    workers_per_unit: 20,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Агора Афин и форум Рима были центрами не только торговли, но и политики; Аристотель выделял особую роль рынка как места формирования гражданского сообщества.",
   },
 
   road: {
@@ -145,6 +154,9 @@ const BUILDINGS = {
     famine_mortality_mod:     -0.002,
     mobility_speed_mod:        1.4,
     needs_satisfaction_bonus:  0.03,
+    workers_per_unit: 10,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Аппиева дорога (312 до н.э.) заложила стандарт: ширина 4 м, щебёночная подсыпка, камень поверху; римские дороги до сих пор служат основой европейских трасс.",
   },
 
   warehouse: {
@@ -172,6 +184,9 @@ const BUILDINGS = {
 
     capacity_bonus:            2000,
     stockpile_capacity_mult:   1.30,  // +30% к объёму склада нации
+    workers_per_unit: 5,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Карфагенские склады-хорреи были государственными монополиями; в Остии хорреи Эпагатиана вмещали до 7 000 тонн зерна и работали непрерывно.",
   },
 
   // ══════════════════════════════════════════════════════════════
@@ -204,6 +219,9 @@ const BUILDINGS = {
     // legacy
     profession_growth: { soldiers: 0.020 },
     mobility: [{ from: 'farmers', to: 'soldiers', rate: 0.006 }],
+    workers_per_unit: 100,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Гарнизонные казармы Сиракуз при Дионисии I вмещали до 10 000 наёмников; казармы совмещали жильё, склады оружия и учебные поля.",
   },
 
   walls: {
@@ -232,6 +250,9 @@ const BUILDINGS = {
     // legacy
     war_mortality_mod: -0.35,
     all_growth_mod:     0.001,
+    workers_per_unit: 30,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Городские стены Сиракуз при Дионисии (402–397 до н.э.) протяжённостью 27 км считались крупнейшими в греческом мире; их возвели за 20 дней с использованием 60 000 рабочих.",
   },
 
   // ══════════════════════════════════════════════════════════════
@@ -265,6 +286,9 @@ const BUILDINGS = {
       { good: 'leather', base_rate: 30 },
       { good: 'honey',   base_rate: 15 },
     ],
+    workers_per_unit: 8,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Скотоводческие хозяйства горных районов Сицилии (Неброди) поставляли шерсть и кожу для военного снаряжения армий Агафокла.",
   },
 
   granary: {
@@ -298,6 +322,9 @@ const BUILDINGS = {
     // legacy
     famine_mortality_mod: -0.004,
     famine_protection:     0.30,
+    workers_per_unit: 5,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Государственные зернохранилища Птолемеевского Египта вмещали годовой урожай провинции; Рим к I в. до н.э. содержал хорреи на 40 000 тонн зерна.",
   },
 
 
@@ -329,6 +356,9 @@ const BUILDINGS = {
     all_growth_mod:        0.002,
     capacity_bonus:        4000,
     famine_mortality_mod: -0.002,
+    workers_per_unit: 12,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Ирригационные системы долины Нила и Вавилонии существовали тысячелетиями; Феофраст описывал продуманные сицилийские водоводы в прибрежных равнинах.",
   },
 
   // ══════════════════════════════════════════════════════════════
@@ -370,6 +400,9 @@ const BUILDINGS = {
     profession_growth: { clergy: 0.025 },
     mortality_mod:     -0.003,
     all_growth_mod:     0.001,
+    workers_per_unit: 15,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Храм Зевса в Акраганте (V в. до н.э.) — крупнейший дорический храм Сицилии; строился силами тысяч карфагенских пленников и так и не был достроен.",
   },
 
   aqueduct: {
@@ -407,6 +440,9 @@ const BUILDINGS = {
     all_growth_mod:         0.003,
     capacity_bonus:         5000,
     epidemic_chance_mod:   -0.4,
+    workers_per_unit: 20,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Акведук Аппия Клавдия (312 до н.э.) первым снабдил Рим чистой водой; Фронтин сообщает, что к I в. н.э. в Рим поступало более миллиона кубометров воды в сутки.",
   },
 
   school: {
@@ -435,6 +471,9 @@ const BUILDINGS = {
     // legacy
     profession_growth: { merchants: 0.008, clergy: 0.006 },
     mobility: [{ from: 'craftsmen', to: 'merchants', rate: 0.004 }],
+    workers_per_unit: 10,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Платоновская Академия и Ликей Аристотеля стали прообразом институтов высшей учёбы; обучение риторике и философии было основой образования свободного гражданина.",
   },
 
   forum: {
@@ -470,6 +509,9 @@ const BUILDINGS = {
     all_growth_mod:            0.001,
     needs_satisfaction_bonus:  0.03,
     capacity_bonus:            1000,
+    workers_per_unit: 5,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Форум Рима — политический, торговый и религиозный центр; сицилийские агоры были меньше, но выполняли те же функции в городах под греческим влиянием.",
   },
 
   tavern: {
@@ -507,6 +549,9 @@ const BUILDINGS = {
       { good: 'wine', amount: 10 },
       { good: 'fish', amount:  5 },
     ],
+    workers_per_unit: 8,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Таверны (caupona) были обязательным элементом античного городского квартала; помпейские cauponae сохранили свинцовые прилавки с подогревом еды и надписи меню.",
   },
 
   baths: {
@@ -543,6 +588,9 @@ const BUILDINGS = {
 
     // legacy
     mortality_mod: -0.002,
+    workers_per_unit: 15,
+    location_requirement: {"type":"biome","deposit_key":null,"allowed_biomes":["coastal_city","mediterranean_coast","plains"]},
+    historical_note: "Термы Агриппы в Риме (25 до н.э.) стали первыми публичными банями; ежедневное посещение терм было социальным ритуалом римского горожанина.",
   },
 
   // ══════════════════════════════════════════════════════════════
@@ -580,6 +628,9 @@ const BUILDINGS = {
     profession_growth: { craftsmen: 0.018 },
     mobility:          [{ from: 'farmers', to: 'craftsmen', rate: 0.005 }],
     capacity_bonus:    1500,
+    workers_per_unit: 15,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Эргастерии — ремесленные мастерские — присутствовали в любом античном городе; крупнейшие афинские мастерские использовали до 120 рабов-ремесленников (Лисий, III в. до н.э.).",
   },
 
   mine: {
@@ -612,6 +663,9 @@ const BUILDINGS = {
     // legacy
     profession_growth:  { craftsmen: 0.008, slaves: 0.015 },
     slave_mortality_mod: 0.008,
+    workers_per_unit: 50,
+    location_requirement: {"type":"deposit","deposit_key":"any","allowed_biomes":[]},
+    historical_note: "Общий термин для рудников разных типов; технология варьировалась от открытых карьеров до глубоких подземных штолен с вентиляцией и насосами.",
   },
 
   salt_works: {
@@ -639,6 +693,9 @@ const BUILDINGS = {
     production_output: [
       { good: 'salt', base_rate: 120 },
     ],
+    workers_per_unit: 15,
+    location_requirement: {"type":"hybrid","deposit_key":"salt_deposit","allowed_biomes":["coastal_city","mediterranean_coast","semi_arid","desert"]},
+    historical_note: "Солеварни у западных берегов Сицилии (Марсала) производили соль тысячелетиями; карфагеняне контролировали этот стратегический ресурс до Первой Пунической войны.",
   },
 
   lumber_camp: {
@@ -666,6 +723,9 @@ const BUILDINGS = {
     production_output: [
       { good: 'timber', base_rate: 90 },
     ],
+    workers_per_unit: 20,
+    location_requirement: {"type":"biome","deposit_key":null,"allowed_biomes":["temperate_forest","alpine","subtropical","mediterranean_hills"]},
+    historical_note: "Леса Неброди и Мадоние на Сицилии заготовляли корабельный лес для флота; Дионисий I организовал промышленную вырубку для 399 до н.э. флотской программы.",
   },
 
   pottery_workshop: {
@@ -692,6 +752,9 @@ const BUILDINGS = {
     production_output: [
       { good: 'pottery', base_rate: 110 },  // увеличено: низкая цена → нужен объём
     ],
+    workers_per_unit: 12,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Коринфская и аттическая керамика экспортировалась по всему античному миру; сицилийские гончары Акраганта производили столовую посуду для местных и карфагенских рынков.",
   },
 
   oil_press: {
@@ -724,6 +787,9 @@ const BUILDINGS = {
     production_output: [
       { good: 'olive_oil', base_rate: 50 },
     ],
+    workers_per_unit: 8,
+    location_requirement: {"type":"biome","deposit_key":null,"allowed_biomes":["mediterranean_hills","mediterranean_coast","volcanic","subtropical"]},
+    historical_note: "Оливковые прессы Аттики производили масло для экспорта; крупная маслобойня использовала тяжёлые каменные жернова и деревянные прессы с верёвочным приводом.",
   },
 
   winery: {
@@ -751,6 +817,9 @@ const BUILDINGS = {
     production_output: [
       { good: 'wine', base_rate: 80 },
     ],
+    workers_per_unit: 10,
+    location_requirement: {"type":"biome","deposit_key":null,"allowed_biomes":["mediterranean_hills","volcanic","mediterranean_coast","subtropical","temperate_forest"]},
+    historical_note: "Сицилийские вина экспортировались через Карфаген в Африку; Диодор упоминает виноградники Акраганта, дававшие десятки тысяч амфор в год.",
   },
 
   // ══════════════════════════════════════════════════════════════
@@ -818,6 +887,8 @@ const BUILDINGS = {
 
     // legacy
     profession_growth: { farmers: 0.003 },
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Мелкие крестьянские хозяйства Сицилии производили большую часть зерна; Диодор описывает 30 000 небольших ферм вокруг Сиракуз в IV в. до н.э.",
   },
 
   wheat_villa: {
@@ -869,6 +940,8 @@ const BUILDINGS = {
 
     // legacy
     profession_growth: { farmers: 0.005 },
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Вилла с рабами среднего размера — стандарт для богатых граждан Сицилии; Катон рекомендовал 13 рабов на виноградник площадью 100 югеров.",
   },
 
   wheat_latifundium: {
@@ -929,6 +1002,8 @@ const BUILDINGS = {
     // legacy
     profession_growth:  { farmers: 0.006, slaves: 0.015 },
     slave_mortality_mod: 0.003,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Крупные латифундии Сицилии с рабским трудом возникли после Второй Пунической войны; Тиберий Гракх видел в них угрозу для малоземельного крестьянства.",
   },
 
   // ══════════════════════════════════════════════════════════════
@@ -972,6 +1047,8 @@ const BUILDINGS = {
     ],
 
     profession_growth: { farmers: 0.002 },
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Нумидийские коневоды поставляли Карфагену лучшую конницу античного мира; на Сицилии конные хозяйства Агригента были известны по всей Греции.",
   },
 
   cattle_farm: {
@@ -1011,6 +1088,8 @@ const BUILDINGS = {
     ],
 
     profession_growth: { farmers: 0.002 },
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Пастбищное скотоводство центральной Сицилии давало тягловых волов, мясо и кожу; Columella описывает оптимальные пропорции стада для смешанного хозяйства.",
   },
 
   // ══════════════════════════════════════════════════════════════
@@ -1046,6 +1125,9 @@ const BUILDINGS = {
     ],
 
     slave_mortality_mod: 0.006,  // опасная добыча
+    workers_per_unit: 25,
+    location_requirement: {"type":"hybrid","deposit_key":"sulfur_deposit","allowed_biomes":["volcanic"]},
+    historical_note: "Сицилийские серные копи у Этны производили дезинфицирующие вещества и зажигательные смеси; монополия острова на серу сохранялась вплоть до XIX века.",
   },
 
   tuna_trap: {
@@ -1074,6 +1156,9 @@ const BUILDINGS = {
     production_output: [
       { good: 'tuna', base_rate: 140 },  // 140 амфор/1000 рыбаков
     ],
+    workers_per_unit: 12,
+    location_requirement: {"type":"hybrid","deposit_key":"tuna_migration","allowed_biomes":["coastal_city"]},
+    historical_note: "Тоннара (ловушка для тунца) в Мессинском проливе — уникальная технология, описанная ещё Страбоном; тысячи тунцов ловились в сезон миграции у берегов Сицилии.",
   },
 
 
@@ -2148,6 +2233,9 @@ const BUILDINGS = {
     production_output: [
       { good: 'papyrus', base_rate: 60 },
     ],
+    workers_per_unit: 8,
+    location_requirement: {"type":"biome","deposit_key":null,"allowed_biomes":["river_valley","subtropical"]},
+    historical_note: "Заросли папируса у Сиракуз (река Анапо) — единственное место в Европе, где рос папирус; небольшое местное производство не покрывало нужд и дополнялось египетским импортом.",
   },
 
 };
