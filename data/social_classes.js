@@ -179,6 +179,7 @@ const SOCIAL_CLASSES = {
       garum:       { per_100:    200, priority: 'standard', label: 'Гарум' },
       olives:      { per_100:    800, priority: 'standard', label: 'Оливки' },
       cloth:       { per_100:    500, priority: 'standard', label: 'Ткань' },
+      leather:     { per_100:    150, priority: 'standard', label: 'Кожа' },            // сандалии, ритуальная обувь
       incense:     { per_100:    500, priority: 'standard', label: 'Благовония' },      // ежедневные курения
       papyrus:     { per_100:    300, priority: 'standard', label: 'Папирус' },         // священные тексты
       wax:         { per_100:    300, priority: 'standard', label: 'Воск' },            // свечи, обеты
@@ -308,6 +309,7 @@ const SOCIAL_CLASSES = {
       olives:      { per_100:    500, priority: 'standard', label: 'Оливки' },
       cloth:       { per_100:    200, priority: 'standard', label: 'Ткань' },
       wool:        { per_100:    200, priority: 'standard', label: 'Шерсть' },
+      leather:     { per_100:    100, priority: 'standard', label: 'Кожа' },            // сандалии, рабочие ремни
       tools:       { per_100:    500, priority: 'standard', label: 'Инструменты' },     // серпы, мотыги
       pottery:     { per_100:    200, priority: 'standard', label: 'Керамика' },
       // ── роскошь ──────────────────────────────────────────────────────
@@ -355,6 +357,7 @@ const SOCIAL_CLASSES = {
       leather:     { per_100:    300, priority: 'standard', label: 'Кожа' },
       pottery:     { per_100:    200, priority: 'standard', label: 'Керамика' },
       hemp:        { per_100:    200, priority: 'standard', label: 'Пенька' },          // ремонт такелажа
+      tools:       { per_100:    400, priority: 'standard', label: 'Инструменты' },     // судовой ремонт, снасти
       // ── роскошь ──────────────────────────────────────────────────────
       meat:        { per_100:    200, priority: 'luxury',   label: 'Мясо' },
       honey:       { per_100:     30, priority: 'luxury',   label: 'Мёд' },
@@ -431,6 +434,8 @@ const SOCIAL_CLASSES = {
       garum:       { per_100:    100, priority: 'standard', label: 'Гарум' },
       olives:      { per_100:    400, priority: 'standard', label: 'Оливки' },
       cloth:       { per_100:    200, priority: 'standard', label: 'Ткань' },
+      leather:     { per_100:     80, priority: 'standard', label: 'Кожа' },            // сандалии, базовые изделия
+      tools:       { per_100:    300, priority: 'standard', label: 'Инструменты' },     // поденная работа
       pottery:     { per_100:    200, priority: 'standard', label: 'Керамика' },
       wine:        { per_100:    500, priority: 'luxury',   label: 'Вино' },
       meat:        { per_100:    200, priority: 'luxury',   label: 'Мясо' },
@@ -460,9 +465,11 @@ const SOCIAL_CLASSES = {
       wheat:       { per_100:  4_000, priority: 'basic',    label: 'Зерно' },
       barley:      { per_100: 28_000, priority: 'basic',    label: 'Ячмень' },
       salt:        { per_100:    300, priority: 'basic',    label: 'Соль' },
+      fish:        { per_100:  1_000, priority: 'standard', label: 'Рыба' },            // дешёвый солёный белок
       cloth:       { per_100:    100, priority: 'standard', label: 'Ткань' },
       leather:     { per_100:     80, priority: 'standard', label: 'Кожа (одежда/обувь)' },
       olive_oil:   { per_100:    200, priority: 'standard', label: 'Оливковое масло' },
+      pottery:     { per_100:    100, priority: 'standard', label: 'Керамика' },        // бытовая посуда
     },
     unhappy_effects: {
       rebellion_risk: +0.08,
