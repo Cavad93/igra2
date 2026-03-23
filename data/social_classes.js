@@ -267,6 +267,39 @@ const SOCIAL_CLASSES = {
     happy_effects: {
       happiness_base_mod: +5,
     },
+    // ── НОВЫЕ ПОЛЯ ───────────────────────────────────────────────────────────
+    can_work_in: {
+      primary:   ['temple'],
+      secondary: ['school', 'aqueduct'],
+      forbidden: [
+        'barracks', 'walls', 'forge', 'iron_mine', 'copper_mine',
+        'silver_mine', 'gold_mine', 'tin_mine', 'sulfur_mine',
+        'quarry', 'mine', 'charcoal_kiln', 'lumber_camp',
+        'salt_works', 'textile_mill', 'tannery', 'bronze_foundry',
+        'garum_workshop', 'butchery', 'fishery', 'dye_works',
+        'wheat_latifundium', 'cattle_farm',
+      ],
+    },
+    ownership_rights: {
+      can_own:   ['temple'],
+      can_build: ['temple'],
+      max_owned: null,
+    },
+    political_actions: {
+      can_vote:          false,
+      can_hold_office:   false,
+      can_lead_army:     false,
+      can_conspire:      true,
+      rebellion_trigger: 20,
+      rebellion_type:    'riot',
+      pressure_actions:  [
+        'religious_unrest',
+        'prophecy_against_ruler',
+        'refuse_rituals',
+        'call_for_sacrifice',
+        'excommunicate_official',
+      ],
+    },
   },
 
   // ── СВОБОДНЫЕ ГРАЖДАНЕ ─────────────────────────────────────────────────
@@ -310,6 +343,32 @@ const SOCIAL_CLASSES = {
     },
     happy_effects: {
       trade_income_mod: +0.08,
+    },
+    // ── НОВЫЕ ПОЛЯ ───────────────────────────────────────────────────────────
+    can_work_in: {
+      primary:   ['market', 'forum', 'port', 'trading_post', 'school', 'slave_market'],
+      secondary: ['barracks', 'warehouse', 'tavern'],
+      forbidden: ['silver_mine', 'iron_mine', 'gold_mine', 'tin_mine', 'sulfur_mine', 'mine'],
+    },
+    ownership_rights: {
+      can_own:   ['trading_post', 'tavern', 'workshop', 'pottery_workshop', 'slave_market'],
+      can_build: ['trading_post', 'tavern'],
+      max_owned: 5,
+    },
+    political_actions: {
+      can_vote:          true,
+      can_hold_office:   true,
+      can_lead_army:     true,
+      can_conspire:      true,
+      rebellion_trigger: 35,
+      rebellion_type:    'riot',
+      pressure_actions:  [
+        'vote_against_ruler',
+        'refuse_military_service',
+        'public_protests',
+        'support_rival',
+        'fund_demagogue',
+      ],
     },
   },
 
