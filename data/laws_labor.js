@@ -574,6 +574,142 @@ const LAWS_LABOR = {
     is_default: false,
     historical_note: 'В Афинах закон Солона (594 до н.э.) отменил долговое рабство граждан и освободил уже порабощённых должников — это стало одной из величайших реформ греческого мира.',
   },
+
+  // ══════════════════════════════════════════════════════
+  // ВОИНСКАЯ ОБЯЗАННОСТЬ
+  // ══════════════════════════════════════════════════════
+
+  service_voluntary: {
+    id:          'service_voluntary',
+    name:        'Добровольная служба',
+    icon:        '🤚',
+    category:    'labor',
+    group:       'military_service',
+    description: 'Армия полностью добровольная: профессиональные солдаты и наёмники по контракту. Производство не страдает от призыва, но содержание армии обходится дорого. Наёмники требуют постоянной оплаты, иначе уходят или мятежатся.',
+    effects: {
+      labor_laws: {
+        conscription_rate:    0.03,
+        military_exemptions:  ['all'],
+        veterans_rights:      0.0,
+      },
+      production_bonus:   {},
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      soldiers_class:  +5,
+      farmers_class:   +5,
+      craftsmen_class: +3,
+    },
+    requires: null,
+    incompatible_with: ['service_citizens_only', 'service_universal', 'service_mercenary_only'],
+    is_default: true,
+    historical_note: 'Греческие тираны — от Дионисия Сиракузского до Агафокла — строили власть на наёмных армиях, свободных от гражданских обязательств и целиком зависевших от жалованья.',
+  },
+
+  service_citizens_only: {
+    id:          'service_citizens_only',
+    name:        'Гражданское ополчение',
+    icon:        '🛡',
+    category:    'labor',
+    group:       'military_service',
+    description: 'Только свободные граждане несут воинскую службу — классическая модель греческих гоплитов. Рабы, вольноотпущенники и женщины освобождены. Ветераны получают земельные наделы. Армия дешевле наёмной, но изымает граждан из производства.',
+    effects: {
+      labor_laws: {
+        conscription_rate:   0.08,
+        military_exemptions: ['slaves_class', 'freedmen'],
+        veterans_rights:     0.5,
+      },
+      production_bonus: {
+        barracks: 0.15,
+      },
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      citizens:        +6,
+      soldiers_class:  +8,
+      farmers_class:   -4,
+      craftsmen_class: -4,
+    },
+    requires: null,
+    incompatible_with: ['service_voluntary', 'service_universal', 'service_mercenary_only'],
+    is_default: false,
+    historical_note: 'Греческое гражданское ополчение — фаланга гоплитов — было основой полисной обороны в V–IV вв. до н.э.; воин сам приобретал своё дорогостоящее снаряжение.',
+  },
+
+  service_universal: {
+    id:          'service_universal',
+    name:        'Всеобщая воинская обязанность',
+    icon:        '⚔️',
+    category:    'labor',
+    group:       'military_service',
+    description: 'Все свободные мужчины призываются на службу. Крупнейшая армия из возможных, но производство серьёзно страдает от призыва. Духовенство освобождено — священные ритуалы не прерываются. Реформа Мария в своём крайнем варианте.',
+    effects: {
+      labor_laws: {
+        conscription_rate:   0.15,
+        military_exemptions: ['clergy_class'],
+        veterans_rights:     0.8,
+      },
+      production_bonus:   {},
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      soldiers_class:  +12,
+      farmers_class:   -8,
+      craftsmen_class: -8,
+      citizens:        -5,
+      aristocrats:     -3,
+    },
+    requires: {
+      government_type: ['republic', 'tyranny', 'empire'],
+      min_stability:   null,
+      min_treasury:    null,
+      has_law:         null,
+    },
+    incompatible_with: ['service_voluntary', 'service_citizens_only', 'service_mercenary_only'],
+    is_default: false,
+    historical_note: 'Реформа Гая Мария (107 до н.э.) открыла армию для пролетариев и ввела профессиональное обучение, превратив Рим из гражданского ополчения в постоянную армию.',
+  },
+
+  service_mercenary_only: {
+    id:          'service_mercenary_only',
+    name:        'Только наёмники',
+    icon:        '💰',
+    category:    'labor',
+    group:       'military_service',
+    description: 'Государство полностью отказывается от призыва — армия состоит исключительно из наёмников. Производство не страдает совсем, граждане довольны. Агафокл держал 10 000 наёмников, финансируя их грабежом Карфагена. Дорого и ненадёжно.',
+    effects: {
+      labor_laws: {
+        conscription_rate:   0.00,
+        military_exemptions: ['all'],
+        veterans_rights:     0.0,
+      },
+      production_bonus:   {},
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      farmers_class:   +8,
+      craftsmen_class: +6,
+      citizens:        +5,
+      soldiers_class:  -10,
+    },
+    requires: {
+      government_type: null,
+      min_stability:   null,
+      min_treasury:    5000,
+      has_law:         null,
+    },
+    incompatible_with: ['service_voluntary', 'service_citizens_only', 'service_universal'],
+    is_default: false,
+    historical_note: 'Карфаген строил свою военную мощь почти исключительно на наёмниках — нумидийская конница, иберийская пехота, балеарские пращники; сами карфагеняне воевали крайне редко.',
+  },
 };
 
 // ══════════════════════════════════════════════════════════════
