@@ -1585,6 +1585,132 @@ const BUILDINGS = {
     historical_note: 'Городские бойни (macellum) были обычным явлением в римских и греческих городах; жертвенный скот после храмовых ритуалов часто продавался на рынке.',
   },
 
+  // ── КАМЕНОЛОМНЯ ──────────────────────────────────────────────
+  quarry: {
+    name:        'Каменоломня',
+    icon:        '🪨',
+    description: 'Добыча строительного камня в горах и холмах. ' +
+                 'Тяжёлый физический труд: рабы колют камень, ремесленники-надзиратели правят работы. ' +
+                 'Строится только в холмистой и горной местности.',
+    cost:        400,
+    category:    'production',
+    footprint_ha: 15,
+    workers_per_unit: 40,
+    worker_profession: [
+      { profession: 'craftsmen', count: 10 },
+      { profession: 'slaves',    count: 30 },
+    ],
+    wage_rate:          0.12,
+    labor_type:         'mixed',
+    construction_materials: { timber: 8, iron: 4, tools: 5 },
+    construction_labor:     143,
+    build_turns:        3,
+    autonomous_builder: null,
+    nation_buildable:   true,
+    production_output: [
+      { good: 'stone', base_rate: 100 },
+    ],
+    production_inputs: [
+      { good: 'tools', amount_per_turn: 5, required: true },
+    ],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'biome', deposit_key: null,
+      allowed_biomes: ['mediterranean_hills', 'alpine', 'volcanic'],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          4,
+    maintenance_cost:   8,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Сиракузские каменоломни Latomie del Paradiso служили одновременно тюрьмой для 7000 афинских пленных (413 до н.э.) и главным источником камня для строительства города.',
+    slave_mortality_mod: 0.003,
+  },
+
+  // ── КРАСИЛЬНЯ ПУРПУРА ────────────────────────────────────────
+  dye_works: {
+    name:        'Красильня пурпура',
+    icon:        '🟣',
+    description: 'Получение тирского пурпура из улиток мурекс — самый дорогой краситель античности. ' +
+                 'Тысячи улиток дают лишь граммы краски; вся мастерская пропитана запахом гниения. ' +
+                 'Возможна только на средиземноморском побережье с залежами мурекса.',
+    cost:        500,
+    category:    'production',
+    footprint_ha: 3,
+    workers_per_unit: 10,
+    worker_profession: [
+      { profession: 'craftsmen', count: 8 },
+      { profession: 'slaves',    count: 2 },
+    ],
+    wage_rate:          0.22,
+    labor_type:         'mixed',
+    construction_materials: { timber: 6, stone: 4, tools: 3 },
+    construction_labor:     137,
+    build_turns:        3,
+    autonomous_builder: null,
+    nation_buildable:   true,
+    production_output: [
+      { good: 'purple_dye', base_rate: 15 },
+    ],
+    production_inputs: [
+      { good: 'fish', amount_per_turn: 5, required: false },
+      { good: 'salt', amount_per_turn: 3, required: false },
+    ],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'hybrid', deposit_key: 'murex',
+      allowed_biomes: ['mediterranean_coast'],
+    },
+    terrain_restriction: [],
+    max_per_region:     1,
+    max_level:          3,
+    maintenance_cost:   10,
+    maintenance_goods:  {},
+    effects: {},
+    historical_note: 'Тирский пурпур (Murex brandaris) стоил дороже золота по весу — 1 г краски требовал около 9000 улиток, что делало его монополией финикийцев и карфагенян.',
+  },
+
+  // ── ТОРГОВАЯ ФАКТОРИЯ ────────────────────────────────────────
+  trading_post: {
+    name:        'Торговая фактория',
+    icon:        '🏪',
+    description: 'Перевалочный пункт для транзитной торговли — генерирует торговые товары из потока грузов. ' +
+                 'Торговцы работают за комиссию; выгодна в узловых точках торговых путей. ' +
+                 'Даёт небольшой бонус к торговым доходам региона.',
+    cost:        450,
+    category:    'commerce',
+    footprint_ha: 2,
+    workers_per_unit: 30,
+    worker_profession: [
+      { profession: 'merchants', count: 30 },
+    ],
+    wage_rate:          0.30,
+    labor_type:         'wage',
+    construction_materials: { timber: 8, tools: 4 },
+    construction_labor:     158,
+    build_turns:        2,
+    autonomous_builder: null,
+    nation_buildable:   true,
+    production_output: [
+      { good: 'trade_goods', base_rate: 50 },
+    ],
+    production_inputs: [],
+    capital_inputs: [],
+    location_requirement: {
+      type: 'none', deposit_key: null, allowed_biomes: [],
+    },
+    terrain_restriction: [],
+    max_per_region:     null,
+    max_level:          4,
+    maintenance_cost:   8,
+    maintenance_goods:  {},
+    effects: {
+      trade_income_mult: 1.1,
+    },
+    historical_note: 'Карфагенские фактории (emporion) на берегах Африки и Иберии позволяли контролировать обмен золота и слоновой кости без постоянных колоний.',
+  },
+
   papyrus_bed: {
     name:        'Папирусные заросли',
     icon:        '📜',
