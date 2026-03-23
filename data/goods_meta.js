@@ -356,7 +356,7 @@ var GOODS_META = {
     terrain_penalty:           {},
     deposit_key:               null,
     tradeable_without_deposit: false,
-    inputs:                    {},
+    inputs:                    { stone: 1, charcoal: 1 },
     produced_by:               'pottery_workshop',
     import_sources:            [],
     breed_terrains:            [],
@@ -637,7 +637,7 @@ var GOODS_META = {
     terrain_penalty:           {},
     deposit_key:               null,
     tradeable_without_deposit: false,
-    inputs:                    {},
+    inputs:                    { silver: 1 },
     produced_by:               'trading_post',
     import_sources:            [],
     breed_terrains:            [],
@@ -701,6 +701,57 @@ var GOODS_META = {
     note: 'Делос: до 10 000 рабов в день. Война = новые рабы (#12 #46 #51)',
   },
 
+  hemp: {
+    resource_type:             'biome',
+    allowed_terrains:          ['river_valley', 'plains', 'temperate_forest', 'mediterranean_coast'],
+    terrain_bonus:             { river_valley: 1.30, plains: 1.10 },
+    terrain_penalty:           { desert: 0.10, arctic: 0.05 },
+    deposit_key:               null,
+    tradeable_without_deposit: false,
+    inputs:                    null,
+    produced_by:               null,
+    import_sources:            [],
+    breed_terrains:            [],
+    is_strategic:              true,
+    chain_importance:          6,
+    can_be_absent:             false,
+    note: 'Верёвки и паруса для флота — без конопли нет кораблей (#2)',
+  },
+
+  pitch: {
+    resource_type:             'processed',
+    allowed_terrains:          [],
+    terrain_bonus:             {},
+    terrain_penalty:           {},
+    deposit_key:               null,
+    tradeable_without_deposit: false,
+    inputs:                    { timber: 2 },
+    produced_by:               'pitch_works',
+    import_sources:            [],
+    breed_terrains:            [],
+    is_strategic:              true,
+    chain_importance:          6,
+    can_be_absent:             false,
+    note: 'Смола для гидроизоляции корпуса корабля — без смолы флот гниёт (#2)',
+  },
+
+  war_elephants: {
+    resource_type:             'livestock',
+    allowed_terrains:          [],
+    terrain_bonus:             {},
+    terrain_penalty:           {},
+    deposit_key:               null,
+    tradeable_without_deposit: false,
+    inputs:                    null,
+    produced_by:               null,
+    import_sources:            ['maurya_empire', 'seleukid_empire', 'ptolemaic_kingdom', 'carthage'],
+    breed_terrains:            ['subtropical', 'savanna'],
+    is_strategic:              true,
+    chain_importance:          7,
+    can_be_absent:             true,
+    note: 'Боевые слоны — психологическое оружие; разрушают строй пехоты (#10)',
+  },
+
 };
 
 // ── Вспомогательные индексы ──────────────────────────────
@@ -723,6 +774,7 @@ var STRATEGIC_GOODS = [
   'wheat', 'barley', 'iron', 'charcoal', 'tools', 'weapons',
   'armor', 'bronze', 'timber', 'silver', 'gold', 'salt',
   'horses', 'slaves', 'tin', 'stone', 'copper',
+  'hemp', 'pitch', 'war_elephants',
 ];
 
 // IMPORT_ONLY_GOODS — товары без производства на карте
