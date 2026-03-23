@@ -436,6 +436,144 @@ const LAWS_LABOR = {
     is_default: false,
     historical_note: 'После Второй Пунической войны Рим отпустил тысячи рабов, служивших в армии, — это стало одной из причин быстрого роста класса либертов в Республике.',
   },
+
+  // ══════════════════════════════════════════════════════
+  // УСЛОВИЯ СВОБОДНОГО ТРУДА
+  // ══════════════════════════════════════════════════════
+
+  labor_unregulated: {
+    id:          'labor_unregulated',
+    name:        'Свободный рынок труда',
+    icon:        '🤝',
+    category:    'labor',
+    group:       'free_labor',
+    description: 'Рынок труда полностью свободен — работодатель платит сколько хочет, работник идёт куда хочет. Максимальная гибкость найма, минимальная защита трудящихся. Аристократы процветают, ремесленники лишены рычагов влияния.',
+    effects: {
+      labor_laws: {
+        wage_floor:          0.0,
+        free_labor_mobility: 1.0,
+        guild_strength:      0.0,
+      },
+      production_bonus:   {},
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      aristocrats:     +5,
+      craftsmen_class: -5,
+      farmers_class:   -3,
+    },
+    requires: null,
+    incompatible_with: ['labor_guild_rights', 'labor_client_system', 'labor_debt_bondage'],
+    is_default: true,
+    historical_note: 'В эллинистических полисах свободные ремесленники (банавсои) нанимались поденно без каких-либо государственных гарантий; их правовая защита зависела только от доброй воли нанимателя.',
+  },
+
+  labor_guild_rights: {
+    id:          'labor_guild_rights',
+    name:        'Права ремесленных коллегий',
+    icon:        '⚙',
+    category:    'labor',
+    group:       'free_labor',
+    description: 'Ремесленные коллегии получают право устанавливать минимальные ставки и контролировать доступ к профессии. Повышает цену труда и качество продукции. Исторически — коллегии Рима и греческие тиасы.',
+    effects: {
+      labor_laws: {
+        wage_floor:          0.3,
+        free_labor_mobility: 0.7,
+        guild_strength:      0.5,
+      },
+      production_bonus: {
+        forge:             0.10,
+        pottery_workshop:  0.10,
+        textile_mill:      0.08,
+      },
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      craftsmen_class: +10,
+      sailors_class:   +6,
+      aristocrats:     -6,
+      officials:       -3,
+    },
+    requires: {
+      government_type: ['republic', 'oligarchy', 'tyranny'],
+      min_stability:   null,
+      min_treasury:    null,
+      has_law:         null,
+    },
+    incompatible_with: ['labor_unregulated', 'labor_client_system', 'labor_debt_bondage'],
+    is_default: false,
+    historical_note: 'Римские коллегии ремесленников (коллегиа опификум) насчитывали десятки видов — от булочников до флейтистов; Нума Помпилий, по преданию, учредил первые восемь коллегий.',
+  },
+
+  labor_client_system: {
+    id:          'labor_client_system',
+    name:        'Патрон-клиентские отношения',
+    icon:        '🏛',
+    category:    'labor',
+    group:       'free_labor',
+    description: 'Свободные работники прикреплены к покровителю (патрону), который обеспечивает защиту и доход в обмен на верность и услуги. Стабильность обеспечена, мобильность падает. Классическая система Рима, смягчающая социальное расслоение.',
+    effects: {
+      labor_laws: {
+        wage_floor:          0.2,
+        free_labor_mobility: 0.5,
+        guild_strength:      0.2,
+      },
+      production_bonus:   {},
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      citizens:        +5,
+      freedmen:        +8,
+      craftsmen_class: +3,
+      farmers_class:   +3,
+    },
+    requires: null,
+    incompatible_with: ['labor_unregulated', 'labor_guild_rights', 'labor_debt_bondage'],
+    is_default: false,
+    historical_note: 'Римская клиентела была основой социальной структуры Республики: клиент получал юридическую защиту и хлеб, патрон — голоса на выборах и преданных сторонников.',
+  },
+
+  labor_debt_bondage: {
+    id:          'labor_debt_bondage',
+    name:        'Долговое рабство',
+    icon:        '📜',
+    category:    'labor',
+    group:       'free_labor',
+    description: 'Должники теряют личную свободу до полной выплаты долга, работая на кредитора. Политически взрывоопасный инструмент, выгодный аристократии. Братья Гракхи погибли именно за попытку отменить практику, близкую к долговому рабству.',
+    effects: {
+      labor_laws: {
+        wage_floor:          0.0,
+        free_labor_mobility: 0.2,
+        guild_strength:      0.0,
+      },
+      production_bonus:   {},
+      class_wealth_mod:   {},
+      tax_efficiency_mod: null,
+      stability_mod:      null,
+    },
+    satisfaction_effects: {
+      aristocrats:     +8,
+      officials:       +3,
+      citizens:        -12,
+      farmers_class:   -15,
+      craftsmen_class: -8,
+    },
+    requires: {
+      government_type: ['tyranny', 'oligarchy', 'monarchy'],
+      min_stability:   null,
+      min_treasury:    null,
+      has_law:         null,
+    },
+    incompatible_with: ['labor_unregulated', 'labor_guild_rights', 'labor_client_system'],
+    is_default: false,
+    historical_note: 'В Афинах закон Солона (594 до н.э.) отменил долговое рабство граждан и освободил уже порабощённых должников — это стало одной из величайших реформ греческого мира.',
+  },
 };
 
 // ══════════════════════════════════════════════════════════════
