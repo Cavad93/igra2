@@ -78,8 +78,6 @@ async function searchWikipedia(query) {
   } catch { return null; }
 }
 
-const ASIA_PREFIXES = ['japan','japanese','korea','korean','china','chinese','india','indian','burma','myanmar','thailand','vietnam','malay','indonesia'];
-
 function getSearchTerms(nation) {
   const base = nation.id.replace(/_/g, ' ');
   const isJapan   = /awa|harima|kii|ise|owari|yamato|musasi|tanba|hida|kai|iga|iki|izu|kaga|noto|suwa|toki|suo|oki|dewa/.test(nation.id);
@@ -310,7 +308,9 @@ async function runGeneration(API_KEY) {
         webDataMap[nation.id] = web;
         const hasPl = !!web.pleiades;
         const hasWi = !!web.wikipedia;
-        if (hasPl) webHits.pleiades++; else if (hasWi) webHits.wikipedia++; else webHits.none++;
+        if (hasPl) webHits.pleiades++;
+        if (hasWi) webHits.wikipedia++;
+        if (!hasPl && !hasWi) webHits.none++;
         emit({ type: 'web_search', id: nation.id, name: nation.name, pleiades: hasPl, wikipedia: hasWi });
         log(`    ${nation.id}: ${hasPl ? 'Pleiades✓' : 'Pleiades✗'} ${hasWi ? 'Wiki✓' : 'Wiki✗'}`);
         await sleep(200);
@@ -376,10 +376,9 @@ const server = http.createServer(async (req, res) => {
       'Connection':    'keep-alive',
     });
     res.write('data: {"type":"connected"}\n\n');
+    // Отправляем статус только новому клиенту
+    res.write(`data: ${JSON.stringify({ type: 'status', running })}\n\n`);
     clients.add(res);
-
-    // Отправляем текущий статус
-    emit({ type: 'status', running });
 
     req.on('close', () => clients.delete(res));
     return;
