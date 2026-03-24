@@ -141,6 +141,8 @@ button:disabled { opacity: 0.4; cursor: default; }
 
 #graph-container {
   flex: 1;
+  min-height: 0;
+  height: 100%;
   background: #0d1117;
 }
 
@@ -430,6 +432,7 @@ function nodeColor(chain) {
 }
 
 function updateGraph(chains) {
+  try {
   const keys = Object.keys(chains);
   if (keys.length === 0) return;
 
@@ -489,6 +492,7 @@ function updateGraph(chains) {
       else $('detail-panel').style.display = 'none';
     });
   }
+  } catch (err) { console.error('[updateGraph]', err); }
 }
 
 function buildTooltip(ch) {
