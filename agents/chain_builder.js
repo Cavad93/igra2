@@ -26,16 +26,9 @@ const TEMPERATURE = 0;
 const DELAY_MS    = 600;
 const RETRY_MAX   = 3;
 
-const SYSTEM_PROMPT = `Ты архитектор игровой экономики Pax Historia (304 BC, Сицилия).
-Используй только реальные исторические данные из контекста.
-Отвечай ТОЛЬКО валидным JSON. Никакого текста вне JSON.`;
-
 // ─── callClaude ───────────────────────────────────────────────────────────────
 
-async function callClaude(system, user, attempt = 0) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY не установлен');
-
+async function callClaude(apiKey, system, user, attempt = 0) {
   const body = {
     model:       MODEL,
     max_tokens:  MAX_TOKENS,
@@ -58,18 +51,16 @@ async function callClaude(system, user, attempt = 0) {
   } catch (fetchErr) {
     if (attempt < RETRY_MAX) {
       const delay = 10_000 * Math.pow(2, attempt);
-      warn(`Сеть недоступна, жду ${delay / 1000}s...`);
       await sleep(delay);
-      return callClaude(system, user, attempt + 1);
+      return callClaude(apiKey, system, user, attempt + 1);
     }
     throw new Error(`fetch failed: ${fetchErr.message}`);
   }
 
   if (response.status === 429) {
     if (attempt < RETRY_MAX) {
-      warn(`Rate limit (429), жду 60s...`);
       await sleep(60_000);
-      return callClaude(system, user, attempt + 1);
+      return callClaude(apiKey, system, user, attempt + 1);
     }
     throw new Error('Rate limit превышен');
   }
@@ -77,9 +68,8 @@ async function callClaude(system, user, attempt = 0) {
   if (response.status >= 500) {
     if (attempt < RETRY_MAX) {
       const delay = 10_000 * Math.pow(2, attempt);
-      warn(`Ошибка сервера (${response.status}), жду ${delay / 1000}s...`);
       await sleep(delay);
-      return callClaude(system, user, attempt + 1);
+      return callClaude(apiKey, system, user, attempt + 1);
     }
     throw new Error(`API ошибка ${response.status}`);
   }
@@ -92,7 +82,6 @@ async function callClaude(system, user, attempt = 0) {
   const data = await response.json();
   const raw  = data?.content?.[0]?.text ?? '';
 
-  // Снимаем markdown-обёртку ```json ... ```
   const cleaned = raw
     .replace(/^```json\s*/i, '')
     .replace(/^```\s*/,      '')
@@ -112,36 +101,31 @@ function sleep(ms) {
 
 // ─── processGood ─────────────────────────────────────────────────────────────
 
-async function processGood(goodId, allData, existingChains) {
-  // Шаг 1: Аналитик
-  log(`  [1/4] аналитик...`);
+async function processGood(apiKey, goodId, allData, existingChains, emit) {
+  emit({ type: 'step', goodId, step: 1, label: 'аналитик' });
   const { system: s1, user: u1 } = buildAnalystPrompt({ goodId, allData });
-  const analystResult = await callClaude(s1, u1);
+  const analystResult = await callClaude(apiKey, s1, u1);
 
-  // Шаг 2: Конструктор цепочки
-  log(`  [2/4] цепочка...`);
+  emit({ type: 'step', goodId, step: 2, label: 'цепочка' });
   const { system: s2, user: u2 } = buildChainPrompt({ goodId, allData, analystResult });
-  const chainResult = await callClaude(s2, u2);
+  const chainResult = await callClaude(apiKey, s2, u2);
 
-  // Шаг 3: Коннектор
-  log(`  [3/4] связи...`);
+  emit({ type: 'step', goodId, step: 3, label: 'связи' });
   const { system: s3, user: u3 } = buildConnectorPrompt({
     goodId, allData, chainResult, existingChains,
   });
-  const connectorResult = await callClaude(s3, u3);
+  const connectorResult = await callClaude(apiKey, s3, u3);
 
-  // Шаг 4: Валидатор
-  log(`  [4/4] валидация...`);
+  emit({ type: 'step', goodId, step: 4, label: 'валидация' });
   const allResults = { ...analystResult, ...chainResult, ...connectorResult };
   const { system: s4, user: u4 } = buildValidatorPrompt({ goodId, allResults, allData });
-  const validatorResult = await callClaude(s4, u4);
+  const validatorResult = await callClaude(apiKey, s4, u4);
 
   if (!validatorResult.valid) {
     logError(goodId, validatorResult.conflicts, JSON.stringify(validatorResult.warnings));
     return null;
   }
 
-  // Сборка финального объекта
   return {
     good_id:              goodId,
     generated_at:         new Date().toISOString(),
@@ -169,115 +153,108 @@ async function processGood(goodId, allData, existingChains) {
   };
 }
 
-// ─── main ─────────────────────────────────────────────────────────────────────
+// ─── runBuilder — публичная функция (используется сервером и CLI) ─────────────
 
-async function main() {
-  // Graceful shutdown
-  let shutdownRequested = false;
-  process.on('SIGINT', () => {
-    warn('\nПолучен SIGINT. Завершаю текущий товар и останавливаюсь...');
-    shutdownRequested = true;
-  });
+export async function runBuilder(apiKey, emit = () => {}) {
+  if (!apiKey) throw new Error('API ключ не передан');
 
-  // 1. Загрузка данных
-  log('Загрузка входных файлов...');
-  let allData;
-  try {
-    allData = loadAllInputs();
-  } catch (e) {
-    err(`Не удалось загрузить входные файлы: ${e.message}`);
-    process.exit(1);
-  }
-
+  emit({ type: 'log', level: 'log', msg: 'Загрузка входных файлов...' });
+  const allData = loadAllInputs();
   const existingChains = loadExistingChains();
 
-  // 2. Очередь товаров
   const allGoods = Object.keys(allData.GOODS);
   const done     = new Set(Object.keys(existingChains));
   const queue    = allGoods.filter(id => !done.has(id));
 
-  log(`Готово: ${done.size}/${allGoods.length}. К обработке: ${queue.length}`);
+  emit({ type: 'status', total: allGoods.length, done: done.size, queue: queue.length });
 
-  // 3. Основной цикл
+  let stopped = false;
+  emit._stop = () => { stopped = true; };
+
   let current = done.size;
   for (const goodId of queue) {
-    if (shutdownRequested) {
-      warn('Остановлено по запросу пользователя.');
+    if (stopped) {
+      emit({ type: 'log', level: 'warn', msg: 'Остановлено.' });
       break;
     }
 
     current++;
-    progress(current, allGoods.length, goodId);
+    emit({ type: 'progress', current, total: allGoods.length, goodId });
 
     try {
-      const chain = await processGood(goodId, allData, existingChains);
-
+      const chain = await processGood(apiKey, goodId, allData, existingChains, emit);
       if (chain) {
         appendChain(goodId, chain);
         existingChains[goodId] = chain;
-        ok(`${goodId} записан`);
+        emit({ type: 'done', goodId, chain });
       } else {
-        warn(`${goodId} пропущен — не прошёл валидацию`);
+        emit({ type: 'skipped', goodId });
       }
     } catch (e) {
-      err(`${goodId} — ошибка: ${e.message}`);
+      emit({ type: 'error', goodId, msg: e.message });
       logError(goodId, e.message, 'processGood');
     }
 
     await sleep(DELAY_MS);
   }
 
-  // 4. Финальный граф
-  if (!shutdownRequested) {
-    log('Строю граф связей...');
+  // Финальный граф
+  if (!stopped) {
+    emit({ type: 'log', level: 'log', msg: 'Строю граф связей...' });
     try {
       const { system: sg, user: ug } = buildGraphPrompt({ completeChainsData: existingChains });
-      const graph = await callClaude(sg, ug);
+      const graph = await callClaude(apiKey, sg, ug);
       fs.writeFileSync(
         path.join(DATA_DIR, 'chains_graph.js'),
         `// AUTO-GENERATED by agents/chain_builder.js\n// Дата: ${new Date().toISOString()}\n\nvar CHAINS_GRAPH = ${JSON.stringify(graph, null, 2)};\n`,
         'utf8',
       );
-      ok('chains_graph.js записан');
+      emit({ type: 'graph', graph });
     } catch (e) {
-      err(`Граф не построен: ${e.message}`);
+      emit({ type: 'error', goodId: '_graph', msg: e.message });
     }
   }
 
-  // 5. Итог
-  const processed  = Object.keys(existingChains).length;
-  const errorCount = allGoods.length - processed;
-
-  console.log('\n' + '═'.repeat(50));
-  console.log('  ИТОГ');
-  console.log('═'.repeat(50));
-  console.log(`  Обработано: ${processed}/${allGoods.length}`);
-  console.log(`  Ошибок/пропущено: ${errorCount}`);
-  if (errorCount > 0) console.log('  Подробности: chains_errors.log');
-  console.log('═'.repeat(50));
+  const processed = Object.keys(existingChains).length;
+  emit({ type: 'finished', processed, total: allGoods.length });
+  return existingChains;
 }
 
-main().catch(e => {
-  err(`Критическая ошибка: ${e.message}`);
-  process.exit(1);
-});
+// ─── CLI-запуск (node agents/chain_builder.js) ────────────────────────────────
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    err('Установи ANTHROPIC_API_KEY');
+    process.exit(1);
+  }
+
+  let stopFn;
+  process.on('SIGINT', () => { if (stopFn) stopFn(); });
+
+  const emit = (ev) => {
+    if (ev.type === 'progress') progress(ev.current, ev.total, ev.goodId);
+    else if (ev.type === 'done')     ok(`${ev.goodId} записан`);
+    else if (ev.type === 'skipped')  warn(`${ev.goodId} пропущен`);
+    else if (ev.type === 'error')    err(`${ev.goodId}: ${ev.msg}`);
+    else if (ev.type === 'step')     log(`  [${ev.step}/4] ${ev.label}...`);
+    else if (ev.type === 'log')      log(ev.msg);
+    else if (ev.type === 'finished') {
+      console.log('\n' + '═'.repeat(50));
+      console.log(`  Обработано: ${ev.processed}/${ev.total}`);
+      console.log('═'.repeat(50));
+    }
+  };
+
+  runBuilder(apiKey, emit)
+    .then(chains => { stopFn = emit._stop; })
+    .catch(e => { err(`Критическая ошибка: ${e.message}`); process.exit(1); });
+}
 
 // ЗАПУСК:
 //   export ANTHROPIC_API_KEY=sk-ant-...
 //   node agents/chain_builder.js
 //
-// ВОЗОБНОВЛЕНИЕ (если прервали):
-//   node agents/chain_builder.js
-//   Агент автоматически продолжит с незавершённых товаров.
-//
-// ТОЛЬКО ГРАФ (все товары уже обработаны):
-//   Агент обнаружит что queue пустой и сразу построит граф.
-//
-// ОЖИДАЕМОЕ ВРЕМЯ:
-//   ~40 товаров × 4 вызова × ~5 сек = ~13 минут
-//   + финальный граф ~1 минута
-//   Итого: ~15 минут
-//
-// СТОИМОСТЬ API:
-//   ~160 вызовов × ~1500 токенов = ~240 000 токенов
-//   claude-sonnet-4: ~$0.72 за весь прогон
+// ЧЕРЕЗ БРАУЗЕР:
+//   node agents/server.js
+//   Открой http://localhost:3000

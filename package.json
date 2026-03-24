@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node agents/chain_builder.js",
+    "ui": "node agents/server.js",
     "validate": "node agents/validate_inputs.js"
   },
   "engines": {

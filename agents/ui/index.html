@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Pax Historia — Chain Builder</title>
+<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117;
+  color: #e6edf3;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Header ── */
+header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  flex-shrink: 0;
+}
+header h1 { font-size: 16px; font-weight: 600; color: #f0883e; letter-spacing: 0.5px; }
+.badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: #21262d;
+  color: #8b949e;
+}
+.badge.running { background: #1f4e3d; color: #3fb950; }
+.badge.done    { background: #1c2c4a; color: #58a6ff; }
+
+/* ── Layout ── */
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Left panel ── */
+.panel-left {
+  width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #30363d;
+  overflow: hidden;
+}
+
+/* ── API Key section ── */
+.section {
+  padding: 14px 16px;
+  border-bottom: 1px solid #30363d;
+}
+.section label { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.8px; display: block; margin-bottom: 6px; }
+
+.key-row { display: flex; gap: 6px; }
+.key-row input {
+  flex: 1;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  color: #e6edf3;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: monospace;
+}
+.key-row input:focus { outline: none; border-color: #58a6ff; }
+.key-row input.saved { border-color: #3fb950; color: #3fb950; }
+
+button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: opacity .15s;
+}
+button:disabled { opacity: 0.4; cursor: default; }
+.btn-save   { background: #21262d; color: #e6edf3; border: 1px solid #30363d; }
+.btn-start  { background: #238636; color: #fff; }
+.btn-stop   { background: #b62324; color: #fff; }
+.btn-graph  { background: #1f4e3d; color: #3fb950; border: 1px solid #238636; font-size: 12px; }
+
+/* ── Progress ── */
+.progress-bar-wrap {
+  height: 4px;
+  background: #21262d;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: #238636;
+  transition: width .3s;
+  border-radius: 2px;
+}
+.progress-text { font-size: 12px; color: #8b949e; margin-top: 6px; }
+
+/* ── Controls ── */
+.controls { display: flex; gap: 8px; padding: 10px 16px; border-bottom: 1px solid #30363d; }
+
+/* ── Log ── */
+.log-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 16px;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.log-wrap::-webkit-scrollbar { width: 4px; }
+.log-wrap::-webkit-scrollbar-track { background: transparent; }
+.log-wrap::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+
+.log-line { padding: 1px 0; white-space: pre-wrap; word-break: break-all; }
+.log-line.ok   { color: #3fb950; }
+.log-line.err  { color: #f85149; }
+.log-line.warn { color: #d29922; }
+.log-line.log  { color: #8b949e; }
+.log-line.prog { color: #58a6ff; font-weight: 600; }
+
+/* ── Right panel — graph ── */
+.panel-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+#graph-container {
+  flex: 1;
+  background: #0d1117;
+}
+
+/* ── Node detail tooltip ── */
+#detail-panel {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 260px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 12px;
+  display: none;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+#detail-panel h3 { color: #f0883e; font-size: 14px; margin-bottom: 10px; }
+#detail-panel .row { display: flex; gap: 6px; margin-bottom: 5px; }
+#detail-panel .key { color: #8b949e; min-width: 110px; }
+#detail-panel .val { color: #e6edf3; }
+#detail-panel .tag {
+  display: inline-block;
+  background: #21262d;
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin: 2px;
+  font-size: 11px;
+}
+#detail-panel .tag.critical { background: #4a1f1f; color: #f85149; }
+#detail-panel .tag.upstream  { background: #1c3a2a; color: #3fb950; }
+#detail-panel .tag.downstream { background: #1c2c4a; color: #58a6ff; }
+
+/* ── Graph toolbar ── */
+.graph-toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #30363d;
+  flex-shrink: 0;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.graph-toolbar span { font-size: 12px; color: #8b949e; }
+.legend { display: flex; gap: 12px; margin-left: auto; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #8b949e; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* ── Empty state ── */
+#graph-empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #30363d;
+  pointer-events: none;
+}
+#graph-empty .big { font-size: 48px; margin-bottom: 12px; }
+#graph-empty p { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚔ Pax Historia — Chain Builder</h1>
+  <span class="badge" id="status-badge">не запущен</span>
+  <span class="badge" id="chain-count-badge">0 цепочек</span>
+</header>
+
+<div class="layout">
+
+  <!-- ── Left panel ── -->
+  <div class="panel-left">
+
+    <!-- API Key -->
+    <div class="section">
+      <label>API ключ Anthropic</label>
+      <div class="key-row">
+        <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." autocomplete="off">
+        <button class="btn-save" id="btn-save-key">Сохранить</button>
+      </div>
+      <div id="key-status" style="font-size:11px;margin-top:5px;color:#8b949e"></div>
+    </div>
+
+    <!-- Progress -->
+    <div class="section">
+      <label>Прогресс</label>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <div class="progress-text" id="progress-text">0 / 41 товаров</div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="btn-start" id="btn-start">▶ Запустить агента</button>
+      <button class="btn-stop"  id="btn-stop" disabled>■ Стоп</button>
+      <button class="btn-graph" id="btn-load-graph">↻ Обновить граф</button>
+    </div>
+
+    <!-- Log -->
+    <div class="log-wrap" id="log"></div>
+
+  </div>
+
+  <!-- ── Right panel — graph ── -->
+  <div class="panel-right">
+    <div class="graph-toolbar">
+      <span>Граф производственных цепочек</span>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#f0883e"></div>Критический узел</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#238636"></div>Локальное производство</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#58a6ff"></div>Импорт</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#6e40c9"></div>Обработка</div>
+      </div>
+    </div>
+    <div id="graph-container">
+      <div id="graph-empty">
+        <div class="big">⛓</div>
+        <p>Граф появится здесь после<br>обработки товаров агентом</p>
+      </div>
+    </div>
+    <div id="detail-panel"></div>
+  </div>
+
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let network = null;
+let allChains = {};
+let running = false;
+
+// ── Utilities ──────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+function addLog(msg, level = 'log') {
+  const log = $('log');
+  const line = document.createElement('div');
+  line.className = `log-line ${level}`;
+  line.textContent = msg;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+  // Ограничиваем 300 строк
+  while (log.children.length > 300) log.removeChild(log.firstChild);
+}
+
+function setProgress(current, total) {
+  const pct = total > 0 ? Math.round(current / total * 100) : 0;
+  $('progress-fill').style.width = pct + '%';
+  $('progress-text').textContent = `${current} / ${total} товаров`;
+}
+
+function setRunning(val) {
+  running = val;
+  $('btn-start').disabled = val;
+  $('btn-stop').disabled  = !val;
+  const badge = $('status-badge');
+  badge.textContent = val ? 'работает...' : 'остановлен';
+  badge.className   = val ? 'badge running' : 'badge';
+}
+
+// ── API helpers ────────────────────────────────────────────────────────────
+async function apiFetch(url, opts = {}) {
+  const res = await fetch(url, opts);
+  return res.json();
+}
+
+// ── Save API key ───────────────────────────────────────────────────────────
+$('btn-save-key').addEventListener('click', async () => {
+  const key = $('api-key-input').value.trim();
+  if (!key) return;
+  const data = await apiFetch('/api/key', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key }),
+  });
+  const st = $('key-status');
+  if (data.ok) {
+    st.textContent = '✓ Ключ сохранён';
+    st.style.color = '#3fb950';
+    $('api-key-input').classList.add('saved');
+    $('btn-start').disabled = false;
+  } else {
+    st.textContent = data.error;
+    st.style.color = '#f85149';
+  }
+});
+
+// ── Start / Stop ───────────────────────────────────────────────────────────
+$('btn-start').addEventListener('click', async () => {
+  const data = await apiFetch('/api/start', { method: 'POST' });
+  if (data.error) addLog('✗ ' + data.error, 'err');
+});
+
+$('btn-stop').addEventListener('click', () => {
+  apiFetch('/api/stop', { method: 'POST' });
+});
+
+// ── SSE stream ─────────────────────────────────────────────────────────────
+const es = new EventSource('/api/stream');
+es.addEventListener('agent', e => {
+  const ev = JSON.parse(e.data);
+
+  if (ev.type === 'log') {
+    addLog(ev.msg, ev.level ?? 'log');
+  }
+  else if (ev.type === 'progress') {
+    addLog(`[${ev.current}/${ev.total}] ${ev.goodId}`, 'prog');
+    setProgress(ev.current, ev.total);
+    setRunning(true);
+  }
+  else if (ev.type === 'step') {
+    addLog(`  [${ev.step}/4] ${ev.label}...`, 'log');
+  }
+  else if (ev.type === 'done') {
+    addLog(`✓ ${ev.goodId} записан`, 'ok');
+    allChains[ev.goodId] = ev.chain;
+    updateGraph(allChains);
+    $('chain-count-badge').textContent = Object.keys(allChains).length + ' цепочек';
+    $('chain-count-badge').className = 'badge done';
+  }
+  else if (ev.type === 'skipped') {
+    addLog(`⚠ ${ev.goodId} пропущен`, 'warn');
+  }
+  else if (ev.type === 'error') {
+    addLog(`✗ ${ev.goodId}: ${ev.msg}`, 'err');
+  }
+  else if (ev.type === 'graph') {
+    addLog('✓ Граф связей построен', 'ok');
+  }
+  else if (ev.type === 'finished') {
+    addLog(`── Готово: ${ev.processed}/${ev.total} ──`, 'ok');
+    setRunning(false);
+  }
+  else if (ev.type === 'status') {
+    setProgress(ev.done, ev.total);
+  }
+});
+
+// ── Load graph button ──────────────────────────────────────────────────────
+$('btn-load-graph').addEventListener('click', loadChainsAndDraw);
+
+async function loadChainsAndDraw() {
+  const chains = await apiFetch('/api/chains');
+  allChains = chains ?? {};
+  const count = Object.keys(allChains).length;
+  $('chain-count-badge').textContent = count + ' цепочек';
+  if (count > 0) $('chain-count-badge').className = 'badge done';
+  setProgress(count, 41);
+  updateGraph(allChains);
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+(async () => {
+  const status = await apiFetch('/api/status');
+  if (status.hasKey) {
+    $('key-status').textContent = '✓ Ключ уже установлен (из env)';
+    $('key-status').style.color = '#3fb950';
+    $('api-key-input').placeholder = '••••••••••••••••';
+  }
+  if (status.running) setRunning(true);
+  if (status.chainCount > 0) {
+    $('chain-count-badge').textContent = status.chainCount + ' цепочек';
+    $('chain-count-badge').className = 'badge done';
+    loadChainsAndDraw();
+  }
+})();
+
+// ── Graph rendering ────────────────────────────────────────────────────────
+
+const CATEGORY_COLOR = {
+  biome:     { bg: '#1f4e3d', border: '#3fb950', font: '#3fb950' },
+  deposit:   { bg: '#1c2c4a', border: '#58a6ff', font: '#58a6ff' },
+  processed: { bg: '#2d1f4e', border: '#8b5cf6', font: '#a78bfa' },
+  import:    { bg: '#1c2c4a', border: '#58a6ff', font: '#58a6ff' },
+  unknown:   { bg: '#21262d', border: '#8b949e', font: '#8b949e' },
+};
+
+function nodeColor(chain) {
+  if (chain.critical_node) return { bg: '#4a1a1a', border: '#f0883e', font: '#f0883e' };
+  if (chain.import_required && !chain.production_possible) return CATEGORY_COLOR.import;
+  const meta_type = chain._meta_type;
+  return CATEGORY_COLOR[meta_type] ?? CATEGORY_COLOR.unknown;
+}
+
+function updateGraph(chains) {
+  const keys = Object.keys(chains);
+  if (keys.length === 0) return;
+
+  $('graph-empty').style.display = 'none';
+
+  // Nodes
+  const nodes = keys.map(id => {
+    const ch = chains[id];
+    const col = nodeColor(ch);
+    return {
+      id,
+      label: id.replace(/_/g, '\n'),
+      color:  { background: col.bg, border: col.border, highlight: { background: col.bg, border: '#fff' } },
+      font:   { color: col.font, size: 11 },
+      shape:  ch.critical_node ? 'diamond' : 'ellipse',
+      size:   ch.critical_node ? 22 : 16,
+      title:  buildTooltip(ch),
+    };
+  });
+
+  // Edges — upstream/downstream
+  const edgeSet = new Set();
+  const edges = [];
+  for (const [id, ch] of Object.entries(chains)) {
+    for (const up of (ch.upstream_chains ?? [])) {
+      if (!chains[up]) continue;
+      const key = `${up}→${id}`;
+      if (!edgeSet.has(key)) {
+        edgeSet.add(key);
+        edges.push({ from: up, to: id, arrows: 'to', color: { color: '#30363d', highlight: '#3fb950' }, width: 1 });
+      }
+    }
+  }
+
+  const data = {
+    nodes: new vis.DataSet(nodes),
+    edges: new vis.DataSet(edges),
+  };
+
+  const options = {
+    physics: {
+      solver: 'forceAtlas2Based',
+      forceAtlas2Based: { gravitationalConstant: -80, centralGravity: 0.008, springLength: 120 },
+      stabilization: { iterations: 200 },
+    },
+    interaction: { hover: true, tooltipDelay: 100 },
+    edges: { smooth: { type: 'continuous', roundness: 0.2 } },
+  };
+
+  if (network) {
+    network.setData(data);
+  } else {
+    network = new vis.Network($('graph-container'), data, options);
+    network.on('click', params => {
+      if (params.nodes.length > 0) showDetail(chains[params.nodes[0]]);
+      else $('detail-panel').style.display = 'none';
+    });
+  }
+}
+
+function buildTooltip(ch) {
+  const lines = [
+    `<b>${ch.good_id}</b>`,
+    `Здание: ${ch.building ?? '—'}`,
+    `Выход: ${ch.output_per_turn ?? 0}/ход`,
+    ch.critical_node ? '⚠ Критический узел' : '',
+    ch.import_required ? '📦 Требует импорта' : '',
+  ].filter(Boolean);
+  return lines.join('<br>');
+}
+
+function showDetail(ch) {
+  if (!ch) return;
+  const p = $('detail-panel');
+
+  const tags = arr => (arr ?? []).map(t => `<span class="tag">${t}</span>`).join('');
+  const upTags = (ch.upstream_chains ?? []).map(t => `<span class="tag upstream">${t}</span>`).join('');
+  const downTags = (ch.downstream_chains ?? []).map(t => `<span class="tag downstream">${t}</span>`).join('');
+  const critTags = (ch.blocks_if_missing ?? []).map(t => `<span class="tag critical">${t}</span>`).join('');
+
+  p.innerHTML = `
+    <h3>${ch.good_id}</h3>
+    <div class="row"><span class="key">Здание</span><span class="val">${ch.building ?? '—'}</span></div>
+    <div class="row"><span class="key">Выход/ход</span><span class="val">${ch.output_per_turn ?? 0}</span></div>
+    <div class="row"><span class="key">Критический</span><span class="val">${ch.critical_node ? '⚠ Да' : 'Нет'}</span></div>
+    <div class="row"><span class="key">Импорт нужен</span><span class="val">${ch.import_required ? 'Да' : 'Нет'}</span></div>
+    <div class="row"><span class="key">Рабочий класс</span><span class="val">${ch.workers?.primary_class ?? '—'}</span></div>
+    <div class="row"><span class="key">Рабы</span><span class="val">${ch.workers?.slave_ratio != null ? (ch.workers.slave_ratio * 100).toFixed(0) + '%' : '—'}</span></div>
+    ${ch.bottleneck ? `<div class="row"><span class="key">Узкое место</span><span class="val">${ch.bottleneck}</span></div>` : ''}
+    ${upTags   ? `<div class="row"><span class="key">Питается от</span><span class="val">${upTags}</span></div>` : ''}
+    ${downTags ? `<div class="row"><span class="key">Питает</span><span class="val">${downTags}</span></div>` : ''}
+    ${critTags ? `<div class="row"><span class="key">Блокирует</span><span class="val">${critTags}</span></div>` : ''}
+    ${ch.warnings?.length ? `<div class="row"><span class="key">Предупреждения</span><span class="val">${tags(ch.warnings)}</span></div>` : ''}
+  `;
+  p.style.display = 'block';
+}
+</script>
+</body>
+</html>
