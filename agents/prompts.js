@@ -630,12 +630,28 @@ export function buildFixPrompt(ctx) {
 }
 
 // ─── ПРОМПТ 5: Граф всех цепочек ─────────────────────────────────────────────
+// Использует КОМПАКТНОЕ представление чтобы не превышать лимит токенов.
 
 export function buildGraphPrompt(ctx) {
   const { completeChainsData } = ctx;
 
+  // Компактный граф — только топологически важные поля, без полных объектов
+  const compactGraph = {};
+  for (const [id, ch] of Object.entries(completeChainsData)) {
+    compactGraph[id] = {
+      building:      ch.building,
+      inputs:        (ch.inputs ?? []).map(i => ({ good: i.good, source: i.source })),
+      output:        ch.output?.good,
+      upstream:      ch.upstream_chains   ?? [],
+      downstream:    ch.downstream_chains ?? [],
+      critical_node: ch.critical_node     ?? false,
+      score:         ch.quality_score     ?? 0,
+      workers_class: ch.workers?.primary_class,
+    };
+  }
+
   const system = SYSTEM_BASE;
-  const user = `${JSON.stringify({ chains_data: completeChainsData }, null, 2)}
+  const user = `${JSON.stringify({ chain_graph: compactGraph }, null, 2)}
 
 Задача: проанализируй граф всех производственных цепочек и верни JSON:
 {
@@ -657,10 +673,102 @@ export function buildGraphPrompt(ctx) {
 }
 
 Поля:
-- critical_nodes: товары которые блокируют 3+ других цепочек (сортировать по blocks_count desc)
-- circular_dependencies: циклические зависимости (A→B→C→A)
+- critical_nodes: товары у которых |downstream| >= 3, сортировать по blocks_count desc
+- circular_dependencies: циклические зависимости (A→B→C→A) из upstream/downstream
 - overloaded_classes: классы занятые в 5+ зданиях одновременно
-- summary: общая статистика по всем цепочкам`;
+- summary: статистика по всем цепочкам в chain_graph`;
+
+  return { system, user };
+}
+
+// ─── ПРОМПТ 7: Улучшение качества (для цепочек с score < SCORE_THRESHOLD) ────
+// Вызывается когда chain.quality_score < 40.
+// Не трогает правильные поля — наращивает качество в слабых местах.
+
+export function buildImprovementPrompt(ctx) {
+  const { chain, scoreBreakdown, allData } = ctx;
+
+  // Определяем слабые места (score < 6 из 10-15 возможных)
+  const weakAreas = Object.entries(scoreBreakdown ?? {})
+    .filter(([, s]) => s < 6)
+    .sort((a, b) => a[1] - b[1])
+    .map(([key, score]) => key);
+
+  // Справочники для исправления слабых мест
+  const refs = {
+    valid_building_ids:  Object.keys(allData.BUILDINGS),
+    valid_good_ids:      Object.keys(allData.GOODS),
+    valid_class_ids:     Object.keys(allData.SOCIAL_CLASSES),
+    valid_biome_ids:     Object.keys(allData.BIOME_META).filter(k => k !== '_region_biomes'),
+    biome_modifiers_ref: Object.fromEntries(
+      Object.entries(allData.BIOME_META)
+        .filter(([k, v]) => k !== '_region_biomes' && typeof v === 'object' && v !== null)
+        .map(([k, v]) => [k, v.goods_bonus?.[chain.good_id] ?? 1.0])
+        .filter(([, v]) => v !== 1.0)
+    ),
+    labor_ref:  allData.GOODS_LABOR?.[chain.good_id] ?? null,
+    good_meta:  allData.GOODS_META?.[chain.good_id]  ?? {},
+    pdf_chains_for_this_good: Object.values(allData.PDF_CHAINS ?? {})
+      .filter(c => {
+        const inputs  = Array.isArray(c.inputs)  ? c.inputs  : [];
+        const outputs = Array.isArray(c.outputs) ? c.outputs : (c.output ? [c.output] : []);
+        return inputs.includes(chain.good_id) || outputs.includes(chain.good_id);
+      })
+      .slice(0, 5)
+      .map(c => ({ id: c.id, name: c.name, inputs: c.inputs, output: c.output })),
+  };
+
+  // Конкретные подсказки по слабым местам
+  const hints = {};
+  if (weakAreas.includes('biome_modifiers')) {
+    hints.biome_modifiers =
+      'Заполни biome_modifiers для всех биомов из refs.biome_modifiers_ref (bonus ≠ 1.0). ' +
+      'Для biome/hybrid товаров обязательно минимум 3 записи.';
+  }
+  if (weakAreas.includes('upstream')) {
+    hints.upstream =
+      'upstream_chains: перечисли good_id из refs.valid_good_ids которые являются inputs для этой цепочки';
+  }
+  if (weakAreas.includes('bottleneck')) {
+    hints.bottleneck =
+      'bottleneck: расширь до 40+ символов с конкретной исторической уязвимостью (нехватка ресурса, блокада, сезонность)';
+  }
+  if (weakAreas.includes('pdf_refs')) {
+    hints.pdf_refs =
+      `pdf_chain_ids: добавь ID из refs.pdf_chains_for_this_good — они напрямую связаны с ${chain.good_id}`;
+  }
+  if (weakAreas.includes('ownership_variety')) {
+    hints.ownership =
+      'ownership: сделай все 4 поля (default/under_tyranny/under_oligarchy/under_republic) разными — ' +
+      'отражай реальную разницу между формами правления';
+  }
+  if (weakAreas.includes('inputs_diversity')) {
+    hints.inputs =
+      'inputs: добавь минимум 2 разных ресурса с разными source (local + import или deposit). ' +
+      'Все good из refs.valid_good_ids.';
+  }
+
+  const context = {
+    good_id:          chain.good_id,
+    current_chain:    chain,
+    quality_score:    chain.quality_score,
+    score_breakdown:  scoreBreakdown,
+    weak_areas:       weakAreas,
+    improvement_hints: hints,
+    refs,
+  };
+
+  const system = SYSTEM_BASE;
+  const user = `${JSON.stringify(context, null, 2)}
+
+Задача: улучши качество цепочки "${chain.good_id}" (текущий score: ${chain.quality_score}/100).
+Слабые места: ${weakAreas.join(', ')}.
+
+Верни ПОЛНЫЙ улучшенный объект цепочки в JSON:
+- Исправляй ТОЛЬКО слабые места согласно improvement_hints
+- НЕ меняй: good_id, generated_at, production_possible, production_locations, import_required, import_sources, building, workers
+- Улучшай: biome_modifiers, upstream_chains, bottleneck, pdf_chain_ids, ownership, inputs, class_conflicts, economic_loops
+- Все ключи из refs.valid_biome_ids, refs.valid_good_ids, refs.valid_class_ids`;
 
   return { system, user };
 }
