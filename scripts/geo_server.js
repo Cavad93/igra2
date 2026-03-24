@@ -40,7 +40,7 @@ let stopFlag  = false;
 // ════════════════════════════════════════════════════════════════
 
 const MODEL      = 'claude-sonnet-4-6';
-const MAX_TOKENS = 8000;
+const MAX_TOKENS = 14000;
 const BATCH_SIZE = 10;
 const DELAY_MS   = 1500;
 
@@ -172,33 +172,58 @@ function buildPrompt(nations, webDataMap, alreadyPlaced, MAP_AREAS_HINT) {
   }).join('\n\n');
 
   return {
-    system: `Ты историко-географический эксперт по античному миру 304 года до н.э.
-Тебе предоставлены РЕАЛЬНЫЕ данные из баз Pleiades (античная география) и Wikipedia.
-Используй эти данные как основу для точных координат.
-Отвечай ТОЛЬКО валидным JSON. Никакого текста вне JSON.`,
+    system: `Ты историко-географический и культурный эксперт по античному миру 304 года до н.э.
+Тебе предоставлены РЕАЛЬНЫЕ данные из баз Pleiades и Wikipedia.
+Используй их как основу. Отвечай ТОЛЬКО валидным JSON. Никакого текста вне JSON.`,
     user: `Список государств игры Pax Historia (304 BC):\n\n${natList}${placedContext}
 
-Для каждого государства укажи его РЕАЛЬНЫЕ географические границы в 304 BC.
-Верни JSON объект где ключ = ID государства:
+Для каждого государства верни полную информацию. JSON объект где ключ = ID государства:
 
 {
   "<nation_id>": {
     "bbox": { "latMin": число, "latMax": число, "lonMin": число, "lonMax": число },
-    "priority": число,
     "capital": { "lat": число, "lon": число },
-    "notes": "источник и обоснование"
+    "priority": число,
+    "color": "#RRGGBB",
+    "culture": "строка",
+    "religion": "строка",
+    "ruler": "Имя правителя 304 BC",
+    "government_type": "monarchy|republic|oligarchy|tribal|theocracy|empire",
+    "population": число,
+    "military_style": "строка",
+    "historical_note": "1-2 предложения реальной истории",
+    "notes": "источник координат"
   }
 }
+
+ЦВЕТА — используй палитру типичную для карт античного мира (мутные землистые тона):
+Эллинский мир:      #4E7FA0 #3D6B8A #5C8FAE #6B9DBB #2E5F7A
+Римский/Италийский: #A04E4E #8A3D3D #B05C5C #7A2E2E #C06060
+Персидский/Ближний Восток: #A07A2E #8A6A1E #B08A3E #C09A4E #7A5A1E
+Египетский/Африканский:    #A09A2E #8A8A1E #B0A83E #7A7A1E #BEBA4E
+Кельтский/Северный:        #3E7A3E #2E6A2E #4E8A4E #5E9A5E #6EAA6E
+Индийский:                 #7A3E8A #6A2E7A #8A4E9E #9A5EAE #5A1E7A
+Степной/Кочевой:           #8A7A2E #7A6A1E #9A8A3E #AAAA4E #6A5A1E
+Аравийский:                #8A5A2E #7A4A1E #9A6A3E #AA7A4E #6A3A1E
+Китайский/Восточный:       #2E6A3E #1E5A2E #3E7A4E #4E8A5E #5E9A6E
+Юго-Восточная Азия:        #2E7A7A #1E6A6A #3E8A8A #4E9A9A #5EAAAA
+Каждая нация получает УНИКАЛЬНЫЙ цвет из палитры выше соответствующий её культурному региону.
 
 ГЕОГРАФИЧЕСКИЕ ОБЛАСТИ ИГРОВОЙ КАРТЫ:
 ${MAP_AREAS_HINT}
 
-ПРАВИЛА:
-- bbox нации ДОЛЖЕН попадать в соответствующую область карты
-- Если есть данные Pleiades с reprPoint — используй как координаты столицы
+ПРАВИЛА КООРДИНАТ:
+- bbox ДОЛЖЕН попадать в соответствующую область карты
+- Pleiades reprPoint → столица; Pleiades bbox → основа для bbox нации
 - НЕ перекрывай bbox уже размещённых наций
-- Для мелких полисов bbox ~0.5-2 градуса, для царств ~5-15, для империй ~15-30
+- Полис: bbox ~0.5-2°, племя: ~2-5°, царство: ~5-15°, империя: ~15-30°
 - priority: город=1-2, полис=3-4, царство=5-7, держава=8-10
+
+ПРАВИЛА КУЛЬТУРЫ/РЕЛИГИИ:
+- culture: hellenic/roman/persian/egyptian/celtic/indian/chinese/steppe/semitic/etc.
+- religion: greek_polytheism/roman_polytheism/zoroastrianism/egyptian_religion/hinduism/buddhism/celtic_paganism/mesopotamian_religion/etc.
+- population: реалистичная оценка для 304 BC (полис ~10k-100k, царство ~100k-1M, империя ~1M+)
+- military_style: hoplites/phalanx/cavalry/war_elephants/chariots/tribal_warriors/legions/etc.
 
 Ориентиры: Афины lat 37.5-38.5 lon 22.5-24.5, Рим lat 41.5-42.5 lon 12.0-13.0`
   };
