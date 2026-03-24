@@ -10855,18 +10855,6 @@ var BUILDING_RECIPES = (function () {
             'labor_cost_per_worker': 15
         }
     ],
-    'farm': [
-        {
-            'output_good': 'wheat',
-            'inputs': [],
-            'labor_cost_per_worker': 3
-        },
-        {
-            'output_good': 'barley',
-            'inputs': [],
-            'labor_cost_per_worker': 3
-        }
-    ],
     'wheat_villa': [
         {
             'output_good': 'wheat',
@@ -10898,30 +10886,6 @@ var BUILDING_RECIPES = (function () {
                     'amount': 0.2
                 }
             ],
-            'labor_cost_per_worker': 2
-        }
-    ],
-    'latifundium': [
-        {
-            'output_good': 'wheat',
-            'inputs': [],
-            'labor_cost_per_worker': 2
-        },
-        {
-            'output_good': 'olives',
-            'inputs': [],
-            'labor_cost_per_worker': 2
-        }
-    ],
-    'grain_estate': [
-        {
-            'output_good': 'wheat',
-            'inputs': [],
-            'labor_cost_per_worker': 2
-        },
-        {
-            'output_good': 'barley',
-            'inputs': [],
             'labor_cost_per_worker': 2
         }
     ],
