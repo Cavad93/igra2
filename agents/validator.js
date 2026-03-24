@@ -171,6 +171,76 @@ export function validateChain(chain, allData) {
     }
   }
 
+  // ── 11. deposit_map — production_locations должны иметь нужный deposit ────
+  const depositMap = allData.DEPOSIT_MAP ?? {};
+  const goodMeta = allData.GOODS_META?.[chain.good_id] ?? {};
+  if (goodMeta.resource_type === 'deposit' || goodMeta.resource_type === 'hybrid') {
+    const depositKey = goodMeta.deposit_key;
+    if (depositKey && depositMap[depositKey]) {
+      const validDepositRegions = new Set(
+        depositMap[depositKey].regions.map(r => r.id)
+      );
+      for (const rId of (chain.production_locations ?? [])) {
+        if (!validDepositRegions.has(rId)) {
+          add(SEVERITY.WARN, 'LOCATION_NO_DEPOSIT',
+            `production_locations: регион "${rId}" не имеет deposit "${depositKey}" для товара "${chain.good_id}"`);
+        }
+      }
+      if ((chain.production_locations ?? []).length === 0 && !chain.import_required) {
+        add(SEVERITY.WARN, 'DEPOSIT_GOOD_NO_LOCATIONS',
+          `Deposit-товар "${chain.good_id}" не имеет production_locations; ожидалось из deposit_map`);
+      }
+    }
+  }
+
+  // ── 12. Валидация спроса (только WARN) ────────────────────────────────────
+  const demandIssues = validateDemand(chain, allData);
+  issues.push(...demandIssues);
+
+  return issues;
+}
+
+// ─── validateDemand — проверка спроса vs. предложения ────────────────────────
+
+export function validateDemand(chain, allData) {
+  const issues = [];
+  const add = (severity, code, msg) => issues.push({ severity, code, msg });
+
+  const goodId = chain.good_id;
+  const opt = chain.output_per_turn ?? 0;
+  if (opt <= 0) return issues; // не проверяем если output не задан
+
+  // Суммируем потребление по всем классам всех наций
+  let totalAnnualDemand = 0;
+  for (const nation of Object.values(allData.NATIONS ?? {})) {
+    const pop = nation.population?.by_profession ?? {};
+    for (const [classId, classPop] of Object.entries(pop)) {
+      const classData = allData.SOCIAL_CLASSES?.[classId];
+      if (!classData) continue;
+      const need = classData.needs?.[goodId];
+      if (!need?.per_100) continue;
+      // per_100 = единиц в год на 100 чел.
+      totalAnnualDemand += (classPop / 100) * need.per_100;
+    }
+  }
+
+  if (totalAnnualDemand === 0) return issues; // товар без потребления — не проверяем
+
+  // output_per_turn * предполагаемое число зданий = годовой выпуск
+  // Предполагаем: ~1 здание на каждые 3 production_locations (грубая оценка)
+  const estBuildings = Math.max(1, (chain.production_locations ?? []).length / 3);
+  const estAnnualOutput = opt * estBuildings * 12; // 12 ходов в год
+
+  const coverRatio = estAnnualOutput / totalAnnualDemand;
+
+  if (coverRatio < 0.01) {
+    add(SEVERITY.WARN, 'DEMAND_SEVERELY_UNDERPRODUCE',
+      `Оценочный выпуск покрывает лишь ${(coverRatio * 100).toFixed(2)}% мирового спроса на "${goodId}" — output_per_turn вероятно занижен`);
+  } else if (coverRatio < 0.05) {
+    add(SEVERITY.WARN, 'DEMAND_UNDERPRODUCE',
+      `Оценочный выпуск покрывает ~${(coverRatio * 100).toFixed(1)}% мирового спроса — проверь output_per_turn`);
+  }
+
   return issues;
 }
 

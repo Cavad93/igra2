@@ -1,4 +1,4 @@
-// agents/prompts.js — все 5 промптов для Claude API
+// agents/prompts.js — все промпты для Claude API
 
 const SYSTEM_BASE = `Ты архитектор игровой экономики Pax Historia (304 BC, весь известный мир).
 Игра охватывает весь античный мир: от Иберии до Индии, от Скифии до Нубии.
@@ -80,7 +80,227 @@ ${JSON.stringify(nationRegions)}
   return { system, user };
 }
 
-// ─── ПРОМПТ 2: Конструктор производственной цепочки ─────────────────────────
+// ─── ПРОМПТ 0: Исторический исследователь (запускается один раз до цикла) ────
+// Генерирует исторический контекст для всех товаров разом.
+// ctx: { allData }
+
+export function buildHistoricalPrompt(ctx) {
+  const { allData } = ctx;
+
+  const goodsSummary = Object.entries(allData.GOODS).map(([id, g]) => ({
+    id,
+    category: g.category,
+    resource_type: allData.GOODS_META?.[id]?.resource_type ?? 'unknown',
+    is_strategic: allData.GOODS_META?.[id]?.is_strategic ?? false,
+    import_sources: allData.GOODS_META?.[id]?.import_sources ?? [],
+  }));
+
+  const nationsSummary = Object.entries(allData.NATIONS).slice(0, 30).map(([id, n]) => ({
+    id,
+    government: n.government?.type ?? 'unknown',
+    region_count: (n.regions ?? []).length,
+  }));
+
+  const context = {
+    game_setting: '304 BC, весь известный мир: от Иберии до Индии, от Скифии до Нубии',
+    goods: goodsSummary,
+    major_nations_sample: nationsSummary,
+    total_nations: Object.keys(allData.NATIONS).length,
+    deposit_keys: Object.keys(allData.DEPOSIT_MAP ?? {}),
+  };
+
+  const system = SYSTEM_BASE;
+  const user = `${JSON.stringify(context, null, 2)}
+
+Задача: для каждого товара в goods создай исторически точный контекст и верни JSON:
+{
+  "<good_id>": {
+    "world_context": string,
+    "primary_producers": string[],
+    "major_trade_routes": string[],
+    "labor_model": string,
+    "strategic_importance": string,
+    "historical_note_304bc": string
+  }
+}
+
+ПРАВИЛА:
+- world_context: где в мире 304 BC производится этот товар (2-3 предложения, весь мир)
+- primary_producers: ID наций из nations которые реально производили/контролировали этот товар
+- major_trade_routes: реальные торговые маршруты с этим товаром
+- labor_model: кто производил (рабы, крестьяне, ремесленники, государство)
+- strategic_importance: военное/политическое значение
+- historical_note_304bc: специфика именно 304 BC (войны, события влиявшие на производство)
+- Охватывай ВЕСЬ мир, не только Грецию/Рим/Сицилию`;
+
+  return { system, user };
+}
+
+// ─── ПРОМПТ 2a: Производственная механика (количественная часть) ─────────────
+// Заменяет первую половину старого buildChainPrompt.
+// Отвечает только за: building, inputs, output, output_per_turn, biome_modifiers,
+//                     bottleneck, alternative_good
+
+export function buildQuantityPrompt(ctx) {
+  const { goodId, allData, analystResult, historicalCtx } = ctx;
+
+  const relevantBuildings = {};
+  for (const [bId, bData] of Object.entries(allData.BUILDINGS)) {
+    const outputs = bData.outputs ?? bData.output ?? {};
+    if (outputs[goodId] !== undefined) {
+      relevantBuildings[bId] = {
+        name:              bData.name,
+        worker_profession: bData.worker_profession,
+        terrain_restriction: bData.terrain_restriction ?? null,
+        production_output: outputs,
+        workers_per_unit:  bData.workers_per_unit ?? null,
+      };
+    }
+  }
+  const allBuildingIds = Object.keys(allData.BUILDINGS);
+
+  const biomeGoodBonus = {};
+  for (const [biomeId, bData] of Object.entries(allData.BIOME_META ?? {})) {
+    if (typeof bData !== 'object' || bData === null || Array.isArray(bData)) continue;
+    const bonus = bData.goods_bonus?.[goodId] ?? 1.0;
+    if (bonus !== 1.0) biomeGoodBonus[biomeId] = bonus;
+  }
+
+  // Из goods_meta: inputs (что нужно для производства)
+  const goodMeta = allData.GOODS_META?.[goodId] ?? {};
+  const goodLaborRef = allData.GOODS_LABOR?.[goodId] ?? {};
+
+  const relevantChains = (analystResult.relevant_pdf_chain_ids ?? [])
+    .map(id => allData.PDF_CHAINS?.[String(id)] ?? allData.PDF_CHAINS?.[id])
+    .filter(Boolean).slice(0, 8);
+
+  const context = {
+    good_id:          goodId,
+    good_data:        allData.GOODS[goodId] ?? {},
+    good_meta:        goodMeta,
+    analyst_result:   analystResult,
+    historical_context: historicalCtx ?? null,
+    relevant_buildings: relevantBuildings,
+    all_building_ids:   allBuildingIds,
+    biome_modifiers_ref: biomeGoodBonus,
+    calibration_target:  {
+      base_output_per_turn: goodLaborRef.base_output_per_turn ?? null,
+      note: 'output_per_turn должен быть 0.1x–10x от base_output_per_turn',
+    },
+    relevant_pdf_chains: relevantChains,
+  };
+
+  const system = SYSTEM_BASE;
+  const user = `${JSON.stringify(context, null, 2)}
+
+Задача: опиши ПРОИЗВОДСТВЕННУЮ МЕХАНИКУ товара "${goodId}" и верни JSON:
+{
+  "building": string,
+  "inputs": [{ "good": string, "quantity": number, "source": "local|import|deposit" }],
+  "output": { "good": "${goodId}", "quantity": number },
+  "output_per_turn": number,
+  "biome_modifiers": { "<biome_id>": number },
+  "bottleneck": string,
+  "alternative_good": string | null
+}
+
+ПРАВИЛА:
+- building: из relevant_buildings (предпочтительно) или all_building_ids
+- inputs: товары необходимые для производства (из good_meta.inputs или логически)
+- output.good ДОЛЖНО быть "${goodId}"
+- output_per_turn: близко к calibration_target.base_output_per_turn (0.1x–10x)
+- biome_modifiers: значения из biome_modifiers_ref, для biome/hybrid товаров заполнить все значимые биомы
+- bottleneck: конкретная историческая уязвимость (минимум 30 символов)
+- alternative_good: товар-замена при дефиците (null если нет)`;
+
+  return { system, user };
+}
+
+// ─── ПРОМПТ 2b: Трудовые отношения и собственность ───────────────────────────
+// Отвечает только за: workers, ownership, class_conflicts (контекст)
+
+export function buildLaborPrompt(ctx) {
+  const { goodId, allData, analystResult, quantityResult, historicalCtx } = ctx;
+
+  // Классы с релевантными характеристиками
+  const classesFull = {};
+  for (const [cId, cData] of Object.entries(allData.SOCIAL_CLASSES ?? {})) {
+    classesFull[cId] = {
+      name:         cData.name,
+      wealth_level: cData.wealth_level,
+      typical_work: cData.typical_work ?? cData.description ?? '',
+      needs_this_good: !!(cData.needs?.[goodId]),
+    };
+  }
+
+  // Законы труда — все релевантные категории
+  const LABOR_CATEGORIES = ['slavery', 'farming', 'crafts', 'maritime', 'labor', 'construction', 'mining'];
+  const relevantLaws = {};
+  for (const [lawId, lawData] of Object.entries(allData.LAWS_LABOR ?? {})) {
+    if (LABOR_CATEGORIES.includes(lawData.category) ||
+        LABOR_CATEGORIES.some(cat => (lawData.group ?? '').startsWith(cat))) {
+      relevantLaws[lawId] = { name: lawData.name, effects: lawData.effects };
+    }
+  }
+
+  // Формы правления по нациям
+  const govTypeCounts = {};
+  for (const nData of Object.values(allData.NATIONS ?? {})) {
+    const gt = nData.government?.type ?? 'unknown';
+    govTypeCounts[gt] = (govTypeCounts[gt] ?? 0) + 1;
+  }
+
+  // Исторические ограничения труда из goods_labor
+  const laborRef = allData.GOODS_LABOR?.[goodId] ?? null;
+
+  const context = {
+    good_id:           goodId,
+    good_meta:         allData.GOODS_META?.[goodId] ?? {},
+    production_building: quantityResult?.building ?? null,
+    analyst_result:    analystResult,
+    historical_context: historicalCtx ?? null,
+    social_classes:    classesFull,
+    labor_laws:        relevantLaws,
+    government_type_distribution: govTypeCounts,
+    historical_labor_constraints: laborRef,
+  };
+
+  const system = SYSTEM_BASE;
+  const user = `${JSON.stringify(context, null, 2)}
+
+Задача: опиши ТРУДОВЫЕ ОТНОШЕНИЯ для производства "${goodId}" и верни JSON:
+{
+  "workers": {
+    "primary_class": string,
+    "secondary_class": string | null,
+    "slave_ratio": number,
+    "total_needed": number
+  },
+  "ownership": {
+    "default": string,
+    "under_tyranny": string,
+    "under_oligarchy": string,
+    "under_republic": string
+  }
+}
+
+ПРАВИЛА:
+- primary_class: из historical_labor_constraints.primary_classes (если задано) или social_classes
+- secondary_class: надсмотрщик/мастер или null; из historical_labor_constraints.secondary_classes
+- slave_ratio: СТРОГО в диапазоне historical_labor_constraints.min_slave_ratio – max_slave_ratio
+- total_needed: близко к historical_labor_constraints.workers_per_building
+- ownership: отражает реальную собственность в зависимости от типа правления
+  * tyranny → государство или тиран
+  * oligarchy → аристократы или частные лица
+  * republic → граждане или государство
+  * default → наиболее распространённая форма в 304 BC для этого товара
+- все значения в ownership должны быть ID из social_classes или "state"`;
+
+  return { system, user };
+}
+
+// ─── ПРОМПТ 2: Конструктор производственной цепочки (УСТАРЕЛ, для совместимости) ─
+// Оставлен как fallback. В основном pipeline используется 2a+2b.
 
 export function buildChainPrompt(ctx) {
   const { goodId, allData, analystResult } = ctx;
@@ -186,6 +406,49 @@ export function buildChainPrompt(ctx) {
 biome_modifiers: используй значения из biome_modifiers_ref (биомы с бонусом ≠ 1.0).
 slave_ratio: определи из labor_laws (slavery_* законы → effects.slave_ratio или effects.labor_laws).
 ownership: используй nation_gov_types чтобы понять какие формы правления реально существуют.`;
+
+  return { system, user };
+}
+
+// ─── ПРОМПТ 3b: Rebuild Connector — полный граф (после генерации всех цепочек) ─
+// Вызывается один раз в конце. Пересчитывает upstream/downstream для ВСЕХ цепочек
+// зная полный граф.
+
+export function buildRebuildConnectorPrompt(ctx) {
+  const { allChains, allData } = ctx;
+
+  // Краткий граф: кто что производит из чего
+  const chainGraph = {};
+  for (const [id, ch] of Object.entries(allChains)) {
+    chainGraph[id] = {
+      building:   ch.building,
+      inputs:     (ch.inputs ?? []).map(i => ({ good: i.good, source: i.source })),
+      output:     ch.output?.good,
+      critical_node: ch.critical_node ?? false,
+    };
+  }
+
+  const system = SYSTEM_BASE;
+  const user = `${JSON.stringify({ chain_graph: chainGraph, all_good_ids: Object.keys(allData.GOODS) }, null, 2)}
+
+Задача: пересчитай связи ВСЕХ цепочек зная полный граф и верни JSON:
+{
+  "<good_id>": {
+    "upstream_chains": string[],
+    "downstream_chains": string[],
+    "critical_node": boolean,
+    "blocks_if_missing": string[],
+    "economic_loops": string[]
+  }
+}
+
+ПРАВИЛА:
+- upstream_chains: все товары из chain_graph которые являются inputs[].good для данной цепочки (source=local)
+- downstream_chains: все товары из chain_graph которые используют данный товар как input
+- critical_node: блокирует 3+ цепочек если отсутствует
+- blocks_if_missing: список good_id которые невозможно произвести без этого товара
+- economic_loops: описание круговых зависимостей (A нужен B нужен A)
+- Верни ТОЛЬКО те good_id которые есть в chain_graph`;
 
   return { system, user };
 }

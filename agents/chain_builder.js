@@ -10,26 +10,30 @@ import {
   appendChain, logError,
 } from './file_io.js';
 import {
-  buildAnalystPrompt, buildChainPrompt,
+  buildAnalystPrompt, buildHistoricalPrompt,
+  buildQuantityPrompt, buildLaborPrompt,
   buildConnectorPrompt, buildValidatorPrompt,
+  buildRebuildConnectorPrompt,
   buildGraphPrompt, buildFixPrompt,
 } from './prompts.js';
 import {
   validateChain, validateCrossChains,
   formatIssues, hasErrors, SEVERITY,
 } from './validator.js';
+import { calibrateChain } from './calibrator.js';
+import { scoreChain, SCORE_THRESHOLD } from './scorer.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR  = path.join(__dirname, '..', 'data');
 
 // ─── Константы ───────────────────────────────────────────────────────────────
 
-const MODEL       = 'claude-sonnet-4-6-20260218';
-const MAX_TOKENS  = 2000;
-const TEMPERATURE = 0;
-const DELAY_MS    = 600;
-const RETRY_MAX   = 3;
-const FIX_MAX     = 2;   // максимум попыток авто-исправления на цепочку
+const MODEL        = 'claude-sonnet-4-6-20260218';
+const MAX_TOKENS   = 3000;   // увеличено: разделённые промпты дают более полные ответы
+const TEMPERATURE  = 0;
+const DELAY_MS     = 600;
+const RETRY_MAX    = 3;
+const FIX_MAX      = 2;      // максимум попыток авто-исправления на цепочку
 
 // ─── callClaude ───────────────────────────────────────────────────────────────
 
@@ -108,6 +112,19 @@ function sleep(ms) {
 
 // ─── fixAndValidate — авто-исправление одной цепочки ─────────────────────────
 
+// ─── classifyErrors — классификация типов ошибок для smart retry ─────────────
+
+function classifyErrors(errors) {
+  const codes = errors.map(e => e.code);
+  const allRef     = codes.every(c => c.startsWith('REF_') || c.startsWith('INVALID_') || c.includes('INVALID'));
+  const allNumeric = codes.every(c => c.includes('QTY') || c.includes('RATIO') || c.includes('PER_TURN') || c.includes('TOTAL'));
+  const hasBiome   = codes.some(c => c.includes('BIOME'));
+  const hasWorkers = codes.some(c => c.includes('WORKER'));
+  return { allRef, allNumeric, hasBiome, hasWorkers };
+}
+
+// ─── fixAndValidate — авто-исправление с адаптивной стратегией ───────────────
+
 async function fixAndValidate(apiKey, chain, issues, allData, emit, crossMode = false, allChains = {}) {
   let current = chain;
   let currentIssues = issues;
@@ -119,16 +136,31 @@ async function fixAndValidate(apiKey, chain, issues, allData, emit, crossMode = 
     emit({ type: 'fix', goodId: current.good_id, attempt, errorCount: errors.length });
     log(`    [fix ${attempt}/${FIX_MAX}] ${errors.length} ошибок → запрашиваю исправление...`);
 
+    // ── Адаптивная стратегия: меняем контекст в зависимости от типа ошибок ──
+    const { allRef, allNumeric, hasBiome, hasWorkers } = classifyErrors(errors);
+    const fixCtx = {
+      chain: current, issues: currentIssues, allData, crossMode, allChains,
+      // Подсказки для стратегии исправления
+      strategy: allRef     ? 'use_reference_lists'    // ERR только в ID — дать полные списки
+               : allNumeric ? 'fix_numbers'             // ERR только числа — откорректировать
+               : hasBiome   ? 'check_biome_keys'        // ERR в biome — дать список биомов
+               : hasWorkers ? 'use_labor_constraints'   // ERR в workers — дать labor_ref
+               : 'general',                             // смешанные — общее исправление
+      // Примеры успешных цепочек для контекста (если они есть)
+      example_chains: crossMode
+        ? Object.entries(allChains).slice(0, 2).map(([id, c]) => ({
+            good_id: id, building: c.building,
+            workers: c.workers, ownership: c.ownership,
+          }))
+        : [],
+    };
+
     try {
-      const { system: sf, user: uf } = buildFixPrompt({
-        chain: current, issues: currentIssues, allData, crossMode, allChains,
-      });
+      const { system: sf, user: uf } = buildFixPrompt(fixCtx);
       const fixed = await callClaude(apiKey, sf, uf);
 
-      // Убеждаемся что good_id не изменился
       fixed.good_id = current.good_id;
 
-      // Ре-валидируем
       const newIssues = crossMode
         ? validateCrossChains({ ...allChains, [current.good_id]: fixed })
             .filter(i => i.chainId === current.good_id)
@@ -159,27 +191,43 @@ async function fixAndValidate(apiKey, chain, issues, allData, emit, crossMode = 
 
 // ─── processGood ─────────────────────────────────────────────────────────────
 
-async function processGood(apiKey, goodId, allData, existingChains, emit) {
+async function processGood(apiKey, goodId, allData, existingChains, emit, historicalCtx = null) {
+  // ── Шаг 1: Аналитик — где производится, откуда импортируется ──────────────
   emit({ type: 'step', goodId, step: 1, label: 'аналитик' });
   const { system: s1, user: u1 } = buildAnalystPrompt({ goodId, allData });
   const analystResult = await callClaude(apiKey, s1, u1);
 
-  emit({ type: 'step', goodId, step: 2, label: 'цепочка' });
-  const { system: s2, user: u2 } = buildChainPrompt({ goodId, allData, analystResult });
-  const chainResult = await callClaude(apiKey, s2, u2);
+  // ── Шаг 2a: Производственная механика (quantity) ───────────────────────────
+  emit({ type: 'step', goodId, step: 2, label: 'механика производства' });
+  const { system: s2a, user: u2a } = buildQuantityPrompt({
+    goodId, allData, analystResult,
+    historicalCtx: historicalCtx?.[goodId] ?? null,
+  });
+  const quantityResult = await callClaude(apiKey, s2a, u2a);
 
-  emit({ type: 'step', goodId, step: 3, label: 'связи' });
+  // ── Шаг 3: Трудовые отношения (labor) ─────────────────────────────────────
+  emit({ type: 'step', goodId, step: 3, label: 'трудовые отношения' });
+  const { system: s2b, user: u2b } = buildLaborPrompt({
+    goodId, allData, analystResult, quantityResult,
+    historicalCtx: historicalCtx?.[goodId] ?? null,
+  });
+  const laborResult = await callClaude(apiKey, s2b, u2b);
+
+  // ── Шаг 4: Связи между цепочками ──────────────────────────────────────────
+  emit({ type: 'step', goodId, step: 4, label: 'связи' });
+  const chainResult = { ...quantityResult, ...laborResult };
   const { system: s3, user: u3 } = buildConnectorPrompt({
     goodId, allData, chainResult, existingChains,
   });
   const connectorResult = await callClaude(apiKey, s3, u3);
 
-  emit({ type: 'step', goodId, step: 4, label: 'валидация Claude' });
+  // ── Шаг 5: Семантическая валидация Claude ─────────────────────────────────
+  emit({ type: 'step', goodId, step: 5, label: 'валидация Claude' });
   const allResults = { ...analystResult, ...chainResult, ...connectorResult };
   const { system: s4, user: u4 } = buildValidatorPrompt({ goodId, allResults, allData });
   const validatorResult = await callClaude(apiKey, s4, u4);
 
-  // Собираем финальный объект
+  // ── Собираем финальный объект ──────────────────────────────────────────────
   let chain = {
     good_id:              goodId,
     generated_at:         new Date().toISOString(),
@@ -188,15 +236,15 @@ async function processGood(apiKey, goodId, allData, existingChains, emit) {
     production_locations: analystResult.production_locations     ?? [],
     import_required:      analystResult.import_required          ?? false,
     import_sources:       analystResult.import_sources           ?? [],
-    building:             chainResult.building                   ?? null,
-    inputs:               chainResult.inputs                     ?? [],
-    output:               chainResult.output                     ?? {},
-    workers:              chainResult.workers                    ?? {},
-    ownership:            chainResult.ownership                  ?? {},
-    output_per_turn:      chainResult.output_per_turn            ?? 0,
-    biome_modifiers:      chainResult.biome_modifiers            ?? {},
-    bottleneck:           chainResult.bottleneck                 ?? '',
-    alternative_good:     chainResult.alternative_good           ?? null,
+    building:             quantityResult.building                ?? null,
+    inputs:               quantityResult.inputs                  ?? [],
+    output:               quantityResult.output                  ?? {},
+    output_per_turn:      quantityResult.output_per_turn         ?? 0,
+    biome_modifiers:      quantityResult.biome_modifiers         ?? {},
+    bottleneck:           quantityResult.bottleneck              ?? '',
+    alternative_good:     quantityResult.alternative_good        ?? null,
+    workers:              laborResult.workers                    ?? {},
+    ownership:            laborResult.ownership                  ?? {},
     upstream_chains:      connectorResult.upstream_chains        ?? [],
     downstream_chains:    connectorResult.downstream_chains      ?? [],
     critical_node:        connectorResult.critical_node          ?? false,
@@ -206,10 +254,18 @@ async function processGood(apiKey, goodId, allData, existingChains, emit) {
     warnings:             validatorResult.warnings               ?? [],
   };
 
-  // ── Шаг 5: структурная валидация (validator.js) ───────────────────────────
-  emit({ type: 'step', goodId, step: 5, label: 'структурная валидация' });
+  // ── Шаг 6: Калибровка числовых полей (без API) ────────────────────────────
+  emit({ type: 'step', goodId, step: 6, label: 'калибровка' });
+  const { chain: calibrated, adjustments } = calibrateChain(chain, allData);
+  chain = calibrated;
+  if (adjustments.length > 0) {
+    log(`    калибровка: ${adjustments.join('; ')}`);
+  }
+
+  // ── Шаг 7: Структурная валидация ──────────────────────────────────────────
+  emit({ type: 'step', goodId, step: 7, label: 'структурная валидация' });
   let issues = validateChain(chain, allData);
-  const errCount = issues.filter(i => i.severity === SEVERITY.ERR).length;
+  const errCount  = issues.filter(i => i.severity === SEVERITY.ERR).length;
   const warnCount = issues.filter(i => i.severity === SEVERITY.WARN).length;
   log(`    валидация: ${errCount} ошибок, ${warnCount} предупреждений`);
 
@@ -219,7 +275,6 @@ async function processGood(apiKey, goodId, allData, existingChains, emit) {
     chain = result.chain;
     issues = result.issues;
 
-    // После исправлений — финальная проверка
     const stillErrors = issues.filter(i => i.severity === SEVERITY.ERR);
     if (stillErrors.length > 0) {
       logError(goodId, stillErrors.map(e => e.code), formatIssues(stillErrors));
@@ -228,8 +283,15 @@ async function processGood(apiKey, goodId, allData, existingChains, emit) {
     }
   }
 
-  // Сохраняем предупреждения в цепочку
   chain.validation_warnings = issues.filter(i => i.severity === SEVERITY.WARN).map(w => w.msg);
+
+  // ── Шаг 8: Скоринг качества ───────────────────────────────────────────────
+  const { score, grade, breakdown } = scoreChain(chain, allData, issues);
+  chain.quality_score = score;
+  chain.quality_grade = grade;
+  emit({ type: 'scored', goodId, score, grade });
+  log(`    оценка качества: ${score}/100 (${grade})`);
+
   return chain;
 }
 
@@ -251,6 +313,20 @@ export async function runBuilder(apiKey, emit = () => {}) {
   let stopped = false;
   emit._stop = () => { stopped = true; };
 
+  // ── Промпт 0: Исторический исследователь (один раз перед циклом) ──────────
+  let historicalCtx = null;
+  if (queue.length > 0) {
+    emit({ type: 'log', level: 'log', msg: 'Исторический исследователь...' });
+    try {
+      const { system: sh, user: uh } = buildHistoricalPrompt({ allData });
+      historicalCtx = await callClaude(apiKey, sh, uh);
+      emit({ type: 'log', level: 'ok', msg: `Исторический контекст получен для ${Object.keys(historicalCtx).length} товаров` });
+    } catch (e) {
+      warn(`  Исторический промпт не удался: ${e.message} — продолжаю без него`);
+    }
+    await sleep(DELAY_MS);
+  }
+
   let current = done.size;
   for (const goodId of queue) {
     if (stopped) {
@@ -262,11 +338,11 @@ export async function runBuilder(apiKey, emit = () => {}) {
     emit({ type: 'progress', current, total: allGoods.length, goodId });
 
     try {
-      const chain = await processGood(apiKey, goodId, allData, existingChains, emit);
+      const chain = await processGood(apiKey, goodId, allData, existingChains, emit, historicalCtx);
       if (chain) {
         appendChain(goodId, chain);
         existingChains[goodId] = chain;
-        emit({ type: 'done', goodId, chain });
+        emit({ type: 'done', goodId, chain, score: chain.quality_score });
       } else {
         emit({ type: 'skipped', goodId });
       }
@@ -310,6 +386,35 @@ export async function runBuilder(apiKey, emit = () => {}) {
     }
   }
 
+  // ── Rebuild Connector Pass — пересчёт всех upstream/downstream ───────────
+  if (!stopped && Object.keys(existingChains).length > 1) {
+    emit({ type: 'log', level: 'log', msg: 'Rebuild connector: пересчёт всех связей...' });
+    try {
+      const { system: src, user: urc } = buildRebuildConnectorPrompt({ allChains: existingChains, allData });
+      const rebuildResult = await callClaude(apiKey, src, urc);
+
+      let updated = 0;
+      for (const [gId, links] of Object.entries(rebuildResult)) {
+        if (!existingChains[gId]) continue;
+        const prev = existingChains[gId];
+        existingChains[gId] = {
+          ...prev,
+          upstream_chains:   links.upstream_chains   ?? prev.upstream_chains,
+          downstream_chains: links.downstream_chains ?? prev.downstream_chains,
+          critical_node:     links.critical_node     ?? prev.critical_node,
+          blocks_if_missing: links.blocks_if_missing ?? prev.blocks_if_missing,
+          economic_loops:    links.economic_loops    ?? prev.economic_loops,
+        };
+        appendChain(gId, existingChains[gId]);
+        updated++;
+      }
+      emit({ type: 'log', level: 'ok', msg: `Rebuild connector: обновлено ${updated} цепочек` });
+    } catch (e) {
+      warn(`  Rebuild connector не удался: ${e.message}`);
+    }
+    await sleep(DELAY_MS);
+  }
+
   // Финальный граф
   if (!stopped) {
     emit({ type: 'log', level: 'log', msg: 'Строю граф связей...' });
@@ -346,14 +451,15 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
 
   const emit = (ev) => {
     if (ev.type === 'progress') progress(ev.current, ev.total, ev.goodId);
-    else if (ev.type === 'done')              ok(`${ev.goodId} записан`);
+    else if (ev.type === 'done')              ok(`${ev.goodId} записан [${ev.score ?? '?'}/100]`);
     else if (ev.type === 'skipped')           warn(`${ev.goodId} пропущен`);
     else if (ev.type === 'validation_failed') err(`${ev.goodId} не прошёл валидацию`);
-    else if (ev.type === 'fix')               warn(`  [fix ${ev.attempt}] ${ev.goodId}: ${ev.errorCount} ошибок`);
+    else if (ev.type === 'scored')            log(`  оценка: ${ev.score}/100 (${ev.grade})`);
+    else if (ev.type === 'fix')               warn(`  [fix ${ev.attempt}] ${ev.goodId}: ${ev.errorCount} ошибок [стратегия: ${ev.strategy ?? 'general'}]`);
     else if (ev.type === 'fixed')             ok(`  ${ev.goodId} исправлен за ${ev.attempt} попытки`);
     else if (ev.type === 'cross_validation')  log(`  Межцепочечная: ${ev.errorCount} ERR, ${ev.warnCount} WARN`);
     else if (ev.type === 'error')             err(`${ev.goodId}: ${ev.msg}`);
-    else if (ev.type === 'step')              log(`  [${ev.step}/5] ${ev.label}...`);
+    else if (ev.type === 'step')              log(`  [${ev.step}/8] ${ev.label}...`);
     else if (ev.type === 'log')      log(ev.msg);
     else if (ev.type === 'finished') {
       console.log('\n' + '═'.repeat(50));
