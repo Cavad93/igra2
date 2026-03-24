@@ -763,6 +763,28 @@ function initGame() {
   // Попытка загрузки сохранения
   const hasSave = loadGame();
 
+  // Стартовый склад — только для новых игр (не загруженных сохранений).
+  // Решает проблему холодного старта для циклических зависимостей:
+  //   wheat нужна wheat (семена), barley нужен barley (семена),
+  //   tools нужны для шахт и ферм, но tools требуют iron, iron требует charcoal.
+  // Используем Math.max — не уменьшаем склад у наций которые уже имеют больше.
+  if (!hasSave) {
+    const STARTING_STOCKPILE = {
+      wheat:    500,   // семена: 1 ферма потребляет 400/тик
+      barley:   400,   // семена: 1 ферма потребляет 360/тик
+      tools:    250,   // кирки/плуги: шахты и фермы потребляют ~10-15/тик каждая
+      iron:     150,   // запас для кузницы: forge потребляет 54/тик
+      charcoal: 80,    // запас для плавки: iron_mine потребляет 28/тик
+    };
+    for (const nation of Object.values(GAME_STATE.nations)) {
+      const sp = nation.economy?.stockpile;
+      if (!sp) continue;
+      for (const [good, min] of Object.entries(STARTING_STOCKPILE)) {
+        sp[good] = Math.max(sp[good] || 0, min);
+      }
+    }
+  }
+
   // Пересчёт занятости по building_slots (данные в regions_data.js могут быть устаревшими)
   if (typeof recalculateAllEmployment === 'function') {
     for (const nationId of Object.keys(GAME_STATE.nations)) {
