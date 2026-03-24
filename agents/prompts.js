@@ -117,16 +117,26 @@ export function buildChainPrompt(ctx) {
     if (bonus !== 1.0) biomeGoodBonus[biomeId] = bonus; // передаём только не-единичные бонусы
   }
 
-  // Ключевые законы о труде: рабство + детский труд
-  const laborKey = {
-    slavery_allowed: allData.LAWS_LABOR?.slavery?.default?.slaves_allowed ?? true,
-    typical_slave_ratio_by_class: {
-      farmers_class:   0.3,
-      craftsmen_class: 0.4,
-      merchants_class: 0.1,
-      aristocrats:     0.0,
-    },
-  };
+  // Законы труда — группируем по категории, передаём только id+name+effects
+  // Категории релевантные для производственных цепочек
+  const LABOR_CATEGORIES = ['slavery', 'farming', 'crafts', 'maritime', 'labor'];
+  const relevantLaws = {};
+  for (const [lawId, lawData] of Object.entries(allData.LAWS_LABOR ?? {})) {
+    if (LABOR_CATEGORIES.includes(lawData.category) || LABOR_CATEGORIES.includes(lawData.group?.split('_')[0])) {
+      relevantLaws[lawId] = {
+        name:    lawData.name,
+        effects: lawData.effects,
+      };
+    }
+  }
+
+  // Нации: government_type → для поля ownership (кто владеет при какой форме правления)
+  const nationGovTypes = {};
+  for (const [nId, nData] of Object.entries(allData.NATIONS ?? {})) {
+    const govType = nData.government?.type ?? nData.government_type ?? 'unknown';
+    if (!nationGovTypes[govType]) nationGovTypes[govType] = [];
+    nationGovTypes[govType].push(nId);
+  }
 
   const context = {
     good_id:             goodId,
@@ -136,8 +146,9 @@ export function buildChainPrompt(ctx) {
     relevant_buildings:  relevantBuildings,
     all_building_ids:    allBuildingIds,
     social_classes:      classesSummary,
-    biome_modifiers_ref: biomeGoodBonus,   // готовые значения для поля biome_modifiers
-    labor_laws_summary:  laborKey,
+    biome_modifiers_ref: biomeGoodBonus,
+    labor_laws:          relevantLaws,           // полные законы труда (farming/slavery/crafts/maritime)
+    nation_gov_types:    nationGovTypes,         // {gov_type: [nation_ids]} для поля ownership
     relevant_pdf_chains: relevantChains,
   };
 
@@ -170,7 +181,8 @@ export function buildChainPrompt(ctx) {
 Используй только ID зданий из relevant_buildings или all_building_ids.
 Используй только ID классов из social_classes (ключи объекта).
 biome_modifiers: используй значения из biome_modifiers_ref (биомы с бонусом ≠ 1.0).
-slave_ratio: бери из labor_laws_summary.typical_slave_ratio_by_class для primary_class.`;
+slave_ratio: определи из labor_laws (slavery_* законы → effects.slave_ratio или effects.labor_laws).
+ownership: используй nation_gov_types чтобы понять какие формы правления реально существуют.`;
 
   return { system, user };
 }
