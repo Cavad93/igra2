@@ -471,7 +471,7 @@ export async function runBuilder(apiKey, emit = () => {}) {
   // ── Промпт 0: Исторический исследователь (батчами по 15 товаров) ──────────
   let historicalCtx = null;
   if (queue.length > 0) {
-    const BATCH_SIZE = 15;
+    const BATCH_SIZE = 8;
     const batches = [];
     for (let i = 0; i < allGoods.length; i += BATCH_SIZE) {
       batches.push(allGoods.slice(i, i + BATCH_SIZE));
