@@ -259,6 +259,15 @@ function saveResults(data) {
   fs.writeFileSync(OUT_PATH, content, 'utf8');
 }
 
+function saveEnriched(data) {
+  const OUT_PATH = path.join(ROOT, 'data', 'nation_enriched.js');
+  const content = `// AUTO-GENERATED: исторические данные наций 304 BC\n// color, culture, religion, ruler, government_type, population, military_style\nvar NATION_ENRICHED = ${JSON.stringify(data, null, 2)};\n`;
+  fs.writeFileSync(OUT_PATH, content, 'utf8');
+}
+
+// Поля которые идут в nation_enriched.js (не в nation_geo.js)
+const ENRICHED_FIELDS = ['color','culture','religion','ruler','government_type','population','military_style','historical_note'];
+
 // ─── Основной цикл генерации ──────────────────────────────────────
 async function runGeneration(API_KEY) {
   running  = true;
@@ -281,7 +290,7 @@ async function runGeneration(API_KEY) {
     vm.runInContext(nCode, ns);
     const NATIONS = ns.INITIAL_GAME_STATE?.nations ?? {};
 
-    // Загрузка существующих результатов
+    // Загрузка существующих geo результатов
     const OUT_PATH = path.join(ROOT, 'data', 'nation_geo.js');
     let existing = {};
     if (fs.existsSync(OUT_PATH)) {
@@ -290,6 +299,18 @@ async function runGeneration(API_KEY) {
         const s = vm.createContext({ console });
         vm.runInContext(c, s);
         existing = s.NATION_GEO ?? {};
+      } catch {}
+    }
+
+    // Загрузка существующих enriched результатов
+    const ENRICHED_PATH = path.join(ROOT, 'data', 'nation_enriched.js');
+    let existingEnriched = {};
+    if (fs.existsSync(ENRICHED_PATH)) {
+      try {
+        const c = fs.readFileSync(ENRICHED_PATH, 'utf8');
+        const s = vm.createContext({ console });
+        vm.runInContext(c, s);
+        existingEnriched = s.NATION_ENRICHED ?? {};
       } catch {}
     }
 
@@ -311,9 +332,10 @@ async function runGeneration(API_KEY) {
     emit({ type: 'start', total: todo.length, batches: batches.length, already: Object.keys(existing).length });
     log(`Наций для обработки: ${todo.length}, батчей: ${batches.length}`);
 
-    const results = { ...existing };
+    const results  = { ...existing };
+    const enriched = { ...existingEnriched };
     // Отправляем уже существующие данные в браузер
-    emit({ type: 'existing', data: existing });
+    emit({ type: 'existing', data: existing, enriched: existingEnriched });
 
     let webHits = { pleiades: 0, wikipedia: 0, none: 0 };
 
@@ -349,18 +371,28 @@ async function runGeneration(API_KEY) {
         const geoData = await callClaude(system, user, API_KEY);
 
         const batchResults = [];
-        for (const [id, geo] of Object.entries(geoData)) {
-          if (!geo?.bbox) { log(`  ⚠ ${id}: нет bbox`); continue; }
-          const { latMin, latMax, lonMin, lonMax } = geo.bbox;
+        for (const [id, raw] of Object.entries(geoData)) {
+          if (!raw?.bbox) { log(`  ⚠ ${id}: нет bbox`); continue; }
+          const { latMin, latMax, lonMin, lonMax } = raw.bbox;
           if (latMin >= latMax || lonMin >= lonMax) { log(`  ⚠ ${id}: перевёрнутый bbox`); continue; }
           if (latMin < -90 || latMax > 90 || lonMin < -180 || lonMax > 180) { log(`  ⚠ ${id}: bbox вне планеты`); continue; }
           if ((latMax - latMin) > 80 || (lonMax - lonMin) > 120) { log(`  ⚠ ${id}: bbox слишком большой`); continue; }
-          results[id] = geo;
-          batchResults.push({ id, name: batch.find(n => n.id === id)?.name ?? id, geo });
-          log(`  ✓ ${id}: [${latMin},${latMax}] × [${lonMin},${lonMax}]`);
+
+          // Разделяем geo и enriched поля
+          const geoEntry = { bbox: raw.bbox, capital: raw.capital, priority: raw.priority, notes: raw.notes };
+          const enrichedEntry = {};
+          for (const f of ENRICHED_FIELDS) { if (raw[f] !== undefined) enrichedEntry[f] = raw[f]; }
+
+          results[id]  = geoEntry;
+          enriched[id] = enrichedEntry;
+
+          const name = batch.find(n => n.id === id)?.name ?? id;
+          batchResults.push({ id, name, geo: geoEntry, enriched: enrichedEntry });
+          log(`  ✓ ${id}: [${latMin},${latMax}] × [${lonMin},${lonMax}] | ${enrichedEntry.culture ?? '?'} | ${enrichedEntry.religion ?? '?'}`);
         }
 
         saveResults(results);
+        saveEnriched(enriched);
         emit({ type: 'batch_done', batch_idx: bi + 1, total_batches: batches.length, results: batchResults, total_so_far: Object.keys(results).length });
         log(`  Сохранено. Всего: ${Object.keys(results).length}. Осталось батчей: ${batches.length - bi - 1}`);
       } catch (e) {
