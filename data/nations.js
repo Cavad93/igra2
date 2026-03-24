@@ -472,7 +472,7 @@ const INITIAL_GAME_STATE = {
         active_transition: null,
       },
 
-      regions: ['carthage', 'elymia', 'panormus', 'selinous'],
+      regions: ["r52","r54","r55","r102","r245","r246","r249","r2402","r2409","r2410","r2411","r2412","r2413","r2414","r2415","r2416","r2417","r2418","r2419","r2420","r2422","r2423","r2424","r2425","r2427","r2428","r2429","r2431","r2432","r2433","r2434","r2435","r2436","r2450","r2462","r2463","r2464"]
 
       population: {
         total: 470000,
@@ -595,7 +595,7 @@ const INITIAL_GAME_STATE = {
         active_transition: null,
       },
 
-      regions: ['alexandria', 'cyrenaica'],
+      regions: ["r123","r124","r193","r195","r455","r456","r457","r1011","r2961","r3221","r3222","r3223","r3228","r3229","r3230","r3231","r3232","r3233","r3234","r3235","r3236","r3237","r3238","r3239","r3240","r3241","r3242","r3243","r3244","r3245","r3246","r3247","r3248","r3249","r3250","r3251","r3252","r3253","r3254","r3255","r3256","r3257","r3258","r3259","r3260","r3261","r3262","r3263","r3264","r3265","r3266","r3267","r3268","r3269","r3283","r3284","r3285","r3286","r3287","r3288","r3289","r3290","r3291","r3292","r3293","r3294","r3295","r3296","r3297","r3298","r3299","r3300","r3301","r3308","r3309","r3310","r3311","r3312","r3313","r3314","r3315","r3316","r3317","r3318","r3319","r3320","r3321","r3322","r3323","r3324","r3325","r3326","r3327","r3328","r3329","r3330","r3331","r3332","r3333","r3334","r3335","r3336","r3337","r3338","r3339","r3340","r3341","r3342","r3343","r3344","r3345","r3346","r3347","r3348","r3349","r3350","r3351","r3352","r3353","r3354","r3355","r3356","r3357","r3358","r3359","r3360","r3361","r3362","r3363","r3364","r3365","r3366","r3367","r3368","r3369","r3370","r3371","r3372","r3373","r3374","r3375","r3376","r3377","r3379","r3380","r3381","r3382","r3383","r3394","r3395","r3403","r3404","r3405","r3406","r3407","r3408","r3409","r3410","r3411","r3412","r3413","r3414","r3417","r3420","r3432","r3438","r3439","r3440","r3441","r3443"]
 
       population: {
         total: 4800000,   // Египет — самая населённая страна
@@ -718,7 +718,7 @@ const INITIAL_GAME_STATE = {
         active_transition: null,
       },
 
-      regions: ['macedon', 'epirus'],
+      regions: ["r224","r380","r3037","r3044","r3045","r3046","r3047","r3048","r3049","r3050","r3051","r3052","r3053","r3054","r3055","r3060","r3061","r3066","r3067","r3068","r3069","r3070","r3072","r3073","r3074","r3075","r3076","r3078","r3079"]
 
       population: {
         total: 380000,
@@ -842,7 +842,7 @@ const INITIAL_GAME_STATE = {
         custom_mechanics: [], active_transition: null,
       },
 
-      regions: ['corinth', 'athens'],
+      regions: ["r163","r202","r227","r233","r234","r235","r772","r775","r776","r778","r797","r810","r1096","r1098","r1099","r1101","r1103","r1104","r1105","r1106","r1107","r1108","r1109","r1110","r1111","r1114","r1115","r1116","r1117","r1118","r1119","r1120","r2973","r2976","r2977","r2990","r2991","r2992","r3006","r3007","r3008","r3033","r3034","r3035","r3036","r3038","r3039","r3040","r3041","r3042","r3043","r3083","r3084","r3085","r3086","r3089","r3090","r3091","r3092","r3161","r3162","r3163","r3164","r3165","r3166","r3167","r3169","r3173","r3174","r3175","r3176","r3177","r3178","r3179","r3183","r3184","r3185","r3188","r3831","r3832","r3833","r3834","r3835","r3836","r3837","r3838","r3839","r3841","r3842","r3843","r3844","r3845","r3846","r3849","r3850","r3855","r3856","r3857"]
       population: { total: 120000, by_profession: { farmers: 50000, craftsmen: 25000, merchants: 20000, sailors: 10000, clergy: 5000, soldiers: 5000, slaves: 5000 }, happiness: 65, growth_rate: 0.001 },
       economy: { treasury: 15000, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.10, stockpile: { wheat: 30000, fish: 8000, cloth: 5000, horses: 200, cattle: 400 }, trade_routes: [] },
       military: { infantry: 5000, cavalry: 500, ships: 40, mercenaries: 0, morale: 70, loyalty: 75, at_war_with: [] },
@@ -861,7 +861,7 @@ const INITIAL_GAME_STATE = {
       is_minor: true,
 
       government: { type: 'monarchy', custom_name: 'Царство Эпира', legitimacy: 70, stability: 60, ruler: { type: 'person', name: 'Пирр', character_ids: [], personal_power: 80 }, institutions: [], power_resource: { type: 'prestige', current: 70, decay_per_turn: 1, restored_by: ['victories', 'personal_combat', 'diplomatic_marriages'] }, elections: null, succession: { tracked: true, heir: null, crisis_if_no_heir: true, claim_types: ['blood', 'conquest'] }, conspiracies: null, transition_history: [], custom_mechanics: [], active_transition: null },
-      regions: ['epirus'],
+      regions: ["r3018","r3019","r3020","r3021","r3022","r3023","r3056","r3057","r3058","r3059","r3062"]
       population: { total: 95000, by_profession: { farmers: 55000, craftsmen: 10000, merchants: 8000, sailors: 4000, clergy: 3000, soldiers: 12000, slaves: 3000 }, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 5500, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.11, stockpile: { wheat: 22000, timber: 8000, iron: 3000, horses: 350, cattle: 300 }, trade_routes: [] },
       military: { infantry: 12000, cavalry: 1200, ships: 20, mercenaries: 0, morale: 80, loyalty: 85, at_war_with: [] },
@@ -880,7 +880,7 @@ const INITIAL_GAME_STATE = {
       is_minor: true,
 
       government: { type: 'monarchy', custom_name: 'Пергамское царство', legitimacy: 68, stability: 65, ruler: { type: 'person', name: 'Филетер', character_ids: [], personal_power: 72 }, institutions: [], power_resource: { type: 'wealth', current: 68, decay_per_turn: 0.5, restored_by: ['trade_profits', 'victories'] }, elections: null, succession: { tracked: true, heir: null, crisis_if_no_heir: true, claim_types: ['blood', 'appointment'] }, conspiracies: null, transition_history: [], custom_mechanics: [], active_transition: null },
-      regions: ['pergamon'],
+      regions: ["r3170","r3171","r3172","r3854","r3859","r3861","r3862","r3863","r3864","r3874"]
       population: { total: 85000, by_profession: { farmers: 45000, craftsmen: 18000, merchants: 12000, sailors: 3000, clergy: 4000, soldiers: 2000, slaves: 1000 }, happiness: 70, growth_rate: 0.002 },
       economy: { treasury: 12000, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.11, stockpile: { wheat: 20000, cloth: 6000, wine: 4000, horses: 200, cattle: 300 }, trade_routes: [] },
       military: { infantry: 3000, cavalry: 400, ships: 15, mercenaries: 500, morale: 65, loyalty: 70, at_war_with: [] },
@@ -899,7 +899,7 @@ const INITIAL_GAME_STATE = {
       is_minor: true,
 
       government: { type: 'tribal', custom_name: 'Нумидийское вождество', legitimacy: 78, stability: 55, ruler: { type: 'person', name: 'Айлимас', character_ids: ['NUM_ELD_001','NUM_ELD_002','NUM_ELD_003','NUM_ELD_004'], personal_power: 75 }, institutions: [{ id: 'INST_elder_council', name: 'Совет старейшин', type: 'advisory', size: 4, character_ids: ['NUM_ELD_001','NUM_ELD_002','NUM_ELD_003','NUM_ELD_004'], decision_method: 'unanimous', quorum: 100, powers: ['approve_war', 'tribal_laws', 'choose_successor'], limitations: ['cannot_override_chieftain_in_battle'], factions: [] }], power_resource: { type: 'prestige', current: 78, decay_per_turn: 1.5, restored_by: ['raids', 'personal_combat', 'generous_feasts'] }, elections: null, succession: null, conspiracies: null, transition_history: [], custom_mechanics: [], active_transition: null },
-      regions: ['numidia'],
+      regions: ["r96","r101","r112","r113","r116","r119","r201","r210","r342","r664","r665","r666","r667","r668","r669","r670","r671","r672","r673","r674","r811","r816","r817","r2460","r2465","r2466","r2468","r2471","r2475","r2477","r2478","r2479","r2482","r2552","r2555","r2559","r2560","r2561","r2575","r2576","r2577","r2578","r2581","r2582","r2583","r2584","r2702","r2807","r2808","r2809","r2810","r2811","r2812","r2813","r2815","r2816","r2817","r2818","r2819"]
       population: { total: 320000, by_profession: { farmers: 200000, craftsmen: 20000, merchants: 15000, sailors: 5000, clergy: 10000, soldiers: 35000, slaves: 35000 }, happiness: 55, growth_rate: 0.003 },
       economy: { treasury: 4200, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.08, stockpile: { wheat: 80000, horses: 5000, cattle: 1000 }, trade_routes: [] },
       military: { infantry: 20000, cavalry: 8000, ships: 5, mercenaries: 0, morale: 75, loyalty: 88, at_war_with: [] },
@@ -1101,7 +1101,7 @@ const INITIAL_GAME_STATE = {
         type: 'oligarchy', legitimacy: 65, stability: 60,
         ruler: { type: 'person', name: 'Клеомен II', personal_power: 55 },
       },
-      regions: [],
+      regions: ["r2972","r2974","r2975","r2979","r2981"]
       population: {
         total: 42000,
         by_profession: { farmers: 12000, craftsmen: 4000, merchants: 2000, sailors: 1000, clergy: 2000, soldiers: 8000, slaves: 13000 },
@@ -1134,7 +1134,7 @@ const INITIAL_GAME_STATE = {
         type: 'oligarchy', legitimacy: 55, stability: 50,
         ruler: { type: 'person', name: 'Деметрий Фалерский', personal_power: 70 },
       },
-      regions: [],
+      regions: ["r209","r1112","r1113","r2982","r2983","r2984","r2985"]
       population: {
         total: 155000,
         by_profession: { farmers: 40000, craftsmen: 30000, merchants: 25000, sailors: 15000, clergy: 5000, soldiers: 6000, slaves: 34000 },
@@ -1168,7 +1168,7 @@ const INITIAL_GAME_STATE = {
         type: 'republic', legitimacy: 80, stability: 75,
         ruler: { type: 'council', name: 'Совет родосских навархов', personal_power: 65 },
       },
-      regions: [],
+      regions: ["r231"]
       population: {
         total: 82000,
         by_profession: { farmers: 15000, craftsmen: 18000, merchants: 22000, sailors: 12000, clergy: 3000, soldiers: 3000, slaves: 9000 },
@@ -1201,7 +1201,7 @@ const INITIAL_GAME_STATE = {
         type: 'republic', legitimacy: 75, stability: 70,
         ruler: { type: 'council', name: 'Совет шестисот', personal_power: 60 },
       },
-      regions: [],
+      regions: ["r94"]
       population: {
         total: 26000,
         by_profession: { farmers: 5000, craftsmen: 6000, merchants: 7000, sailors: 4000, clergy: 1000, soldiers: 1000, slaves: 2000 },
@@ -1234,7 +1234,7 @@ const INITIAL_GAME_STATE = {
         type: 'oligarchy', legitimacy: 40, stability: 35,
         ruler: { type: 'council', name: 'Македонский гарнизон', personal_power: 50 },
       },
-      regions: [],
+      regions: ["r3004"]
       population: {
         total: 18000,
         by_profession: { farmers: 4000, craftsmen: 5000, merchants: 4000, sailors: 2000, clergy: 1000, soldiers: 500, slaves: 1500 },
@@ -1267,7 +1267,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 72, stability: 65,
         ruler: { type: 'person', name: 'Спарток III', personal_power: 75 },
       },
-      regions: [],
+      regions: ["r3142","r3143","r3144","r3145","r3147"]
       population: {
         total: 180000,
         by_profession: { farmers: 70000, craftsmen: 25000, merchants: 30000, sailors: 15000, clergy: 5000, soldiers: 10000, slaves: 25000 },
@@ -1296,7 +1296,7 @@ const INITIAL_GAME_STATE = {
       name: 'Акарнания', adjective: 'акарнанское', color: '#6B8E6B', flag_emoji: '🏛️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'federation', legitimacy: 60, stability: 58, ruler: { type: 'council', name: 'Акарнанский союз', personal_power: 50 } },
-      regions: [],
+      regions: ["r352","r3009","r3010","r3011","r3013","r3017"]
       population: { total: 55000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 1800, tax_rate: 0.09, primary_exports: ['cattle', 'fish'], primary_imports: ['trade_goods', 'wheat'], trade_partners: ['epirus', 'aetolia'], stockpile: { wheat: 4000 }, trade_routes: [] },
       military: { infantry: 3500, cavalry: 300, ships: 15, mercenaries: 500, morale: 65, loyalty: 70, at_war_with: [] },
@@ -1309,7 +1309,7 @@ const INITIAL_GAME_STATE = {
       name: 'Этолийский союз', adjective: 'этолийское', color: '#8B6914', flag_emoji: '⚡',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'federation', legitimacy: 65, stability: 60, ruler: { type: 'council', name: 'Стратег Этолийского союза', personal_power: 60 } },
-      regions: [],
+      regions: ["r213","r785","r2996","r3015"]
       population: { total: 80000, happiness: 62, growth_rate: 0.002 },
       economy: { treasury: 2500, tax_rate: 0.10, primary_exports: ['slaves', 'cattle', 'furs'], primary_imports: ['trade_goods', 'iron'], trade_partners: ['epirus', 'macedon', 'acarnania'], stockpile: { wheat: 5000 }, trade_routes: [] },
       military: { infantry: 7000, cavalry: 500, ships: 10, mercenaries: 1000, morale: 78, loyalty: 75, at_war_with: [] },
@@ -1322,7 +1322,7 @@ const INITIAL_GAME_STATE = {
       name: 'Беотийский союз', adjective: 'беотийское', color: '#A0522D', flag_emoji: '🐂',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'federation', legitimacy: 45, stability: 42, ruler: { type: 'council', name: 'Беотархи', personal_power: 45 } },
-      regions: [],
+      regions: ["r786","r2993","r3002","r3003"]
       population: { total: 60000, happiness: 44, growth_rate: 0.001 },
       economy: { treasury: 1500, tax_rate: 0.10, primary_exports: ['wheat', 'cattle'], primary_imports: ['trade_goods', 'timber'], trade_partners: ['athens', 'corinth'], stockpile: { wheat: 6000 }, trade_routes: [] },
       military: { infantry: 5000, cavalry: 800, ships: 5, mercenaries: 300, morale: 55, loyalty: 50, at_war_with: [] },
@@ -1335,7 +1335,7 @@ const INITIAL_GAME_STATE = {
       name: 'Аргос', adjective: 'аргосское', color: '#CD853F', flag_emoji: '🗡️',
       is_player: false, is_minor: true, ai_personality: 'opportunist', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 55, stability: 50, ruler: { type: 'council', name: 'Совет Аргоса', personal_power: 45 } },
-      regions: [],
+      regions: ["r205"]
       population: { total: 45000, happiness: 52, growth_rate: 0.002 },
       economy: { treasury: 1200, tax_rate: 0.09, primary_exports: ['olive_oil', 'pottery'], primary_imports: ['wheat', 'iron'], trade_partners: ['sparta', 'corinth', 'athens'], stockpile: { wheat: 4000 }, trade_routes: [] },
       military: { infantry: 3000, cavalry: 400, ships: 8, mercenaries: 200, morale: 60, loyalty: 55, at_war_with: [] },
@@ -1348,7 +1348,7 @@ const INITIAL_GAME_STATE = {
       name: 'Эретрия', adjective: 'эретрийское', color: '#6495ED', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 55, stability: 52, ruler: { type: 'council', name: 'Совет Эретрии', personal_power: 50 } },
-      regions: [],
+      regions: ["r783","r788","r2986","r2988","r2989","r3005"]
       population: { total: 38000, happiness: 55, growth_rate: 0.002 },
       economy: { treasury: 2000, tax_rate: 0.10, primary_exports: ['trade_goods', 'pottery'], primary_imports: ['wheat', 'timber'], trade_partners: ['athens', 'macedon'], stockpile: { wheat: 3500 }, trade_routes: [] },
       military: { infantry: 2500, cavalry: 200, ships: 30, mercenaries: 300, morale: 60, loyalty: 60, at_war_with: [] },
@@ -1361,7 +1361,7 @@ const INITIAL_GAME_STATE = {
       name: 'Мегалополь', adjective: 'мегалопольское', color: '#708090', flag_emoji: '🏔️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 50, stability: 48, ruler: { type: 'council', name: 'Совет Мегалополя', personal_power: 40 } },
-      regions: [],
+      regions: ["r779","r780"]
       population: { total: 22000, happiness: 50, growth_rate: 0.001 },
       economy: { treasury: 800, tax_rate: 0.09, primary_exports: ['cattle', 'timber'], primary_imports: ['wheat', 'trade_goods'], trade_partners: ['sparta', 'argos'], stockpile: { wheat: 2000 }, trade_routes: [] },
       military: { infantry: 1800, cavalry: 200, ships: 0, mercenaries: 100, morale: 55, loyalty: 55, at_war_with: [] },
@@ -1374,7 +1374,7 @@ const INITIAL_GAME_STATE = {
       name: 'Тегея', adjective: 'тегейское', color: '#7B7B5A', flag_emoji: '⚔️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 55, stability: 55, ruler: { type: 'council', name: 'Совет Тегеи', personal_power: 45 } },
-      regions: [],
+      regions: ["r777"]
       population: { total: 18000, happiness: 55, growth_rate: 0.001 },
       economy: { treasury: 600, tax_rate: 0.08, primary_exports: ['cattle'], primary_imports: ['wheat'], trade_partners: ['sparta', 'megalopolis'], stockpile: { wheat: 2000 }, trade_routes: [] },
       military: { infantry: 1500, cavalry: 150, ships: 0, mercenaries: 100, morale: 65, loyalty: 65, at_war_with: [] },
@@ -1387,7 +1387,7 @@ const INITIAL_GAME_STATE = {
       name: 'Мантинея', adjective: 'мантинейское', color: '#7B6B5A', flag_emoji: '🏛️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 52, stability: 50, ruler: { type: 'council', name: 'Совет Мантинеи', personal_power: 42 } },
-      regions: [],
+      regions: ["r206"]
       population: { total: 16000, happiness: 53, growth_rate: 0.001 },
       economy: { treasury: 500, tax_rate: 0.08, primary_exports: ['cattle'], primary_imports: ['wheat', 'iron'], trade_partners: ['sparta', 'argos'], stockpile: { wheat: 1800 }, trade_routes: [] },
       military: { infantry: 1200, cavalry: 120, ships: 0, mercenaries: 0, morale: 60, loyalty: 60, at_war_with: [] },
@@ -1400,7 +1400,7 @@ const INITIAL_GAME_STATE = {
       name: 'Трезен', adjective: 'трезенское', color: '#7B8B6B', flag_emoji: '🏛️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 55, stability: 55, ruler: { type: 'council', name: 'Совет Трезена', personal_power: 40 } },
-      regions: [],
+      regions: ["r207","r782"]
       population: { total: 12000, happiness: 58, growth_rate: 0.001 },
       economy: { treasury: 400, tax_rate: 0.08, primary_exports: ['olive_oil', 'fish'], primary_imports: ['wheat'], trade_partners: ['athens', 'sparta'], stockpile: { wheat: 1200 }, trade_routes: [] },
       military: { infantry: 900, cavalry: 80, ships: 10, mercenaries: 0, morale: 62, loyalty: 65, at_war_with: [] },
@@ -1413,7 +1413,7 @@ const INITIAL_GAME_STATE = {
       name: 'Мессения', adjective: 'мессенское', color: '#5F7A5F', flag_emoji: '🌾',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 62, stability: 58, ruler: { type: 'council', name: 'Совет Мессены', personal_power: 50 } },
-      regions: [],
+      regions: ["r2980"]
       population: { total: 50000, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 1400, tax_rate: 0.09, primary_exports: ['wheat', 'cattle'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['epirus', 'athens', 'sparta'], stockpile: { wheat: 7000 }, trade_routes: [] },
       military: { infantry: 4000, cavalry: 300, ships: 5, mercenaries: 200, morale: 72, loyalty: 70, at_war_with: [] },
@@ -1426,7 +1426,7 @@ const INITIAL_GAME_STATE = {
       name: 'Локры Эпизефирские', adjective: 'локрийское', color: '#8FAF8F', flag_emoji: '🏛️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 55, stability: 55, ruler: { type: 'council', name: 'Совет Локров', personal_power: 45 } },
-      regions: [],
+      regions: ["r760"]
       population: { total: 15000, happiness: 55, growth_rate: 0.001 },
       economy: { treasury: 700, tax_rate: 0.10, primary_exports: ['olive_oil', 'trade_goods'], primary_imports: ['wheat', 'iron'], trade_partners: ['rhegium', 'taras', 'corinth'], stockpile: { wheat: 1500 }, trade_routes: [] },
       military: { infantry: 1000, cavalry: 80, ships: 12, mercenaries: 100, morale: 60, loyalty: 62, at_war_with: [] },
@@ -1439,7 +1439,7 @@ const INITIAL_GAME_STATE = {
       name: 'Кротон', adjective: 'кротонское', color: '#9F8FAF', flag_emoji: '🏃',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 50, stability: 48, ruler: { type: 'council', name: 'Совет Кротона', personal_power: 44 } },
-      regions: [],
+      regions: ["r2177"]
       population: { total: 20000, happiness: 50, growth_rate: 0.001 },
       economy: { treasury: 900, tax_rate: 0.10, primary_exports: ['olive_oil', 'cattle'], primary_imports: ['wheat', 'iron'], trade_partners: ['taras', 'locri', 'rhegium'], stockpile: { wheat: 2000 }, trade_routes: [] },
       military: { infantry: 1200, cavalry: 100, ships: 15, mercenaries: 200, morale: 55, loyalty: 55, at_war_with: [] },
@@ -1452,7 +1452,7 @@ const INITIAL_GAME_STATE = {
       name: 'Метапонт', adjective: 'метапонтское', color: '#AF9F6F', flag_emoji: '🌾',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 52, stability: 50, ruler: { type: 'council', name: 'Совет Метапонта', personal_power: 42 } },
-      regions: [],
+      regions: ["r765","r766"]
       population: { total: 18000, happiness: 52, growth_rate: 0.001 },
       economy: { treasury: 1000, tax_rate: 0.10, primary_exports: ['wheat', 'cattle'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['taras', 'croton'], stockpile: { wheat: 3000 }, trade_routes: [] },
       military: { infantry: 1000, cavalry: 120, ships: 10, mercenaries: 100, morale: 55, loyalty: 55, at_war_with: [] },
@@ -1465,7 +1465,7 @@ const INITIAL_GAME_STATE = {
       name: 'Брундизий', adjective: 'брундизийское', color: '#7FAF9F', flag_emoji: '⚓',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 55, stability: 55, ruler: { type: 'council', name: 'Совет Брундизия', personal_power: 48 } },
-      regions: [],
+      regions: ["r243","r2169"]
       population: { total: 16000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 1200, tax_rate: 0.10, primary_exports: ['trade_goods', 'fish'], primary_imports: ['wheat', 'timber'], trade_partners: ['taras', 'rome', 'epirus'], stockpile: { wheat: 2000 }, trade_routes: [] },
       military: { infantry: 800, cavalry: 80, ships: 20, mercenaries: 100, morale: 60, loyalty: 62, at_war_with: [] },
@@ -1480,7 +1480,7 @@ const INITIAL_GAME_STATE = {
       name: 'Тавлантии', adjective: 'тавлантийское', color: '#8B7355', flag_emoji: '⚔️',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 65, stability: 60, ruler: { type: 'tribal_chief', name: 'Главин', personal_power: 70 } },
-      regions: [],
+      regions: ["r350","r351","r353","r3016"]
       population: { total: 60000, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 1200, tax_rate: 0.07, primary_exports: ['slaves', 'cattle', 'furs'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['epirus', 'macedon'], stockpile: { wheat: 3000 }, trade_routes: [] },
       military: { infantry: 6000, cavalry: 800, ships: 5, mercenaries: 0, morale: 72, loyalty: 75, at_war_with: [] },
@@ -1493,7 +1493,7 @@ const INITIAL_GAME_STATE = {
       name: 'Гистры', adjective: 'гистрское', color: '#7B7B8B', flag_emoji: '🗡️',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 60, stability: 58, ruler: { type: 'tribal_chief', name: 'Вождь гистров', personal_power: 65 } },
-      regions: [],
+      regions: ["r2381","r2382","r2383","r2384","r2484"]
       population: { total: 45000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 800, tax_rate: 0.06, primary_exports: ['furs', 'amber', 'slaves'], primary_imports: ['iron', 'salt'], trade_partners: ['veneti', 'taulantii'], stockpile: { wheat: 2500 }, trade_routes: [] },
       military: { infantry: 5000, cavalry: 400, ships: 20, mercenaries: 0, morale: 68, loyalty: 70, at_war_with: [] },
@@ -1506,7 +1506,7 @@ const INITIAL_GAME_STATE = {
       name: 'Скордиски', adjective: 'скордискское', color: '#6B5B3B', flag_emoji: '🪓',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 60, stability: 55, ruler: { type: 'tribal_chief', name: 'Вождь скордисков', personal_power: 65 } },
-      regions: [],
+      regions: ["r180","r360","r371","r387"]
       population: { total: 50000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 900, tax_rate: 0.07, primary_exports: ['slaves', 'cattle', 'iron'], primary_imports: ['trade_goods', 'wine'], trade_partners: ['macedon', 'dardani'], stockpile: { wheat: 2800 }, trade_routes: [] },
       military: { infantry: 6000, cavalry: 600, ships: 0, mercenaries: 0, morale: 72, loyalty: 70, at_war_with: [] },
@@ -1519,7 +1519,7 @@ const INITIAL_GAME_STATE = {
       name: 'Дарданцы', adjective: 'дарданское', color: '#5B4B3B', flag_emoji: '⚔️',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 62, stability: 58, ruler: { type: 'tribal_chief', name: 'Вождь дарданцев', personal_power: 68 } },
-      regions: [],
+      regions: ["r354","r363","r374","r3064","r3065"]
       population: { total: 40000, happiness: 56, growth_rate: 0.002 },
       economy: { treasury: 700, tax_rate: 0.07, primary_exports: ['slaves', 'cattle'], primary_imports: ['iron', 'salt'], trade_partners: ['macedon', 'scordisci'], stockpile: { wheat: 2200 }, trade_routes: [] },
       military: { infantry: 5000, cavalry: 500, ships: 0, mercenaries: 0, morale: 70, loyalty: 72, at_war_with: [] },
@@ -1532,7 +1532,7 @@ const INITIAL_GAME_STATE = {
       name: 'Либурны', adjective: 'либурнское', color: '#4F7F9F', flag_emoji: '⛵',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'tribal', legitimacy: 58, stability: 55, ruler: { type: 'tribal_chief', name: 'Вождь либурнов', personal_power: 60 } },
-      regions: [],
+      regions: ["r253","r345"]
       population: { total: 25000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 900, tax_rate: 0.08, primary_exports: ['fish', 'trade_goods', 'slaves'], primary_imports: ['iron', 'wheat'], trade_partners: ['histri', 'veneti', 'taulantii'], stockpile: { wheat: 1500 }, trade_routes: [] },
       military: { infantry: 1500, cavalry: 100, ships: 30, mercenaries: 0, morale: 65, loyalty: 65, at_war_with: [] },
@@ -1547,7 +1547,7 @@ const INITIAL_GAME_STATE = {
       name: 'Стимфалия', color: '#9B9B8B', flag_emoji: '🏛️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Стимфалии' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r203","r204"]
       population: { total: 8000, happiness: 54 },
       economy: { treasury: 300, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 600, cavalry: 40, ships: 0, morale: 58, at_war_with: [] },
@@ -1560,7 +1560,7 @@ const INITIAL_GAME_STATE = {
       name: 'Пеллена', color: '#9B8B7B', flag_emoji: '🏛️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Пеллены' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r208"]
       population: { total: 10000, happiness: 55 },
       economy: { treasury: 350, stockpile: { wheat: 1000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 700, cavalry: 50, ships: 5, morale: 60, at_war_with: [] },
@@ -1573,7 +1573,7 @@ const INITIAL_GAME_STATE = {
       name: 'Диме', color: '#8B9B8B', flag_emoji: '🏛️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Диме' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r773","r774"]
       population: { total: 9000, happiness: 55 },
       economy: { treasury: 320, stockpile: { wheat: 900 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 600, cavalry: 40, ships: 8, morale: 58, at_war_with: [] },
@@ -1586,7 +1586,7 @@ const INITIAL_GAME_STATE = {
       name: 'Патры', color: '#7B8B9B', flag_emoji: '⚓',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Патр' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r3012"]
       population: { total: 12000, happiness: 56 },
       economy: { treasury: 500, stockpile: { wheat: 1200 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 800, cavalry: 50, ships: 12, morale: 60, at_war_with: [] },
@@ -1599,7 +1599,7 @@ const INITIAL_GAME_STATE = {
       name: 'Эпидавр', color: '#9BAF8B', flag_emoji: '🐍',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Эпидавра' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r781"]
       population: { total: 14000, happiness: 65 },
       economy: { treasury: 800, stockpile: { wheat: 1200 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 800, cavalry: 60, ships: 10, morale: 60, at_war_with: [] },
@@ -1612,7 +1612,7 @@ const INITIAL_GAME_STATE = {
       name: 'Элатея', color: '#8BAF9B', flag_emoji: '🏛️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Элатеи' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r3001"]
       population: { total: 10000, happiness: 48 },
       economy: { treasury: 400, stockpile: { wheat: 900 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 700, cavalry: 50, ships: 0, morale: 55, at_war_with: [] },
@@ -1625,7 +1625,7 @@ const INITIAL_GAME_STATE = {
       name: 'Амфисса', color: '#AF9B7B', flag_emoji: '🏛️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Амфиссы' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r2999","r3000"]
       population: { total: 8000, happiness: 50 },
       economy: { treasury: 350, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 600, cavalry: 30, ships: 0, morale: 55, at_war_with: [] },
@@ -1648,7 +1648,7 @@ const INITIAL_GAME_STATE = {
         type: 'federation', legitimacy: 52, stability: 45,
         ruler: { type: 'council', name: 'Совет двенадцати городов', personal_power: 40 },
       },
-      regions: [],
+      regions: ["r100","r126","r131","r134","r143","r154","r2178","r2179","r2180","r2181","r2182","r2189","r2190","r2191","r2192","r2193","r2194","r2195","r2197","r2198","r2199"]
       population: {
         total: 500000,
         by_profession: { farmers: 180000, craftsmen: 100000, merchants: 70000, sailors: 30000, clergy: 30000, soldiers: 30000, slaves: 60000 },
@@ -1681,7 +1681,7 @@ const INITIAL_GAME_STATE = {
         type: 'federation', legitimacy: 70, stability: 62,
         ruler: { type: 'person', name: 'Гай Понтий', personal_power: 78 },
       },
-      regions: [],
+      regions: ["r137","r2121","r2125","r2143","r2144","r2145","r2146","r2147"]
       population: {
         total: 350000,
         by_profession: { farmers: 140000, craftsmen: 50000, merchants: 20000, sailors: 5000, clergy: 15000, soldiers: 50000, slaves: 70000 },
@@ -1715,7 +1715,7 @@ const INITIAL_GAME_STATE = {
         type: 'tribal', legitimacy: 60, stability: 55,
         ruler: { type: 'tribal_chief', name: 'Совет луканских вождей', personal_power: 55 },
       },
-      regions: [],
+      regions: ["r107","r115","r155","r764","r2152","r2153","r2154","r2155","r2157","r2158","r2161","r2162","r2163","r2164","r2174"]
       population: {
         total: 250000,
         by_profession: { farmers: 100000, craftsmen: 35000, merchants: 15000, sailors: 8000, clergy: 12000, soldiers: 40000, slaves: 40000 },
@@ -1749,7 +1749,7 @@ const INITIAL_GAME_STATE = {
         type: 'tribal', legitimacy: 50, stability: 45,
         ruler: { type: 'council', name: 'Совет умбрийских городов', personal_power: 42 },
       },
-      regions: [],
+      regions: ["r106","r108","r132","r241","r750","r770","r2183","r2184","r2185","r2187","r2188","r2209"]
       population: {
         total: 200000,
         by_profession: { farmers: 90000, craftsmen: 35000, merchants: 20000, sailors: 5000, clergy: 12000, soldiers: 18000, slaves: 20000 },
@@ -1782,7 +1782,7 @@ const INITIAL_GAME_STATE = {
         type: 'oligarchy', legitimacy: 62, stability: 55,
         ruler: { type: 'council', name: 'Совет Тарента', personal_power: 55 },
       },
-      regions: [],
+      regions: ["r757"]
       population: {
         total: 85000,
         by_profession: { farmers: 18000, craftsmen: 20000, merchants: 18000, sailors: 12000, clergy: 4000, soldiers: 5000, slaves: 8000 },
@@ -1817,7 +1817,7 @@ const INITIAL_GAME_STATE = {
         type: 'oligarchy', legitimacy: 58, stability: 52,
         ruler: { type: 'council', name: 'Совет Регия', personal_power: 50 },
       },
-      regions: [],
+      regions: ["r763"]
       population: {
         total: 28000,
         by_profession: { farmers: 6000, craftsmen: 7000, merchants: 6000, sailors: 4000, clergy: 1500, soldiers: 1000, slaves: 2500 },
@@ -1850,7 +1850,7 @@ const INITIAL_GAME_STATE = {
       name: 'Бруттии', adjective: 'бруттийское', color: '#6B5B3B', flag_emoji: '🗡️',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 58, stability: 55, ruler: { type: 'tribal_chief', name: 'Совет бруттийских вождей', personal_power: 60 } },
-      regions: [],
+      regions: ["r759","r2175","r2176"]
       population: { total: 120000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 2500, tax_rate: 0.08, primary_exports: ['timber', 'cattle', 'slaves'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['lucani', 'locri', 'rhegium'], stockpile: { wheat: 8000 }, trade_routes: [] },
       military: { infantry: 10000, cavalry: 800, ships: 5, mercenaries: 500, morale: 70, loyalty: 68, at_war_with: [] },
@@ -1863,7 +1863,7 @@ const INITIAL_GAME_STATE = {
       name: 'Френтаны', adjective: 'френтанское', color: '#7B6B4B', flag_emoji: '⚔️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 55, stability: 52, ruler: { type: 'tribal_chief', name: 'Вождь френтанов', personal_power: 55 } },
-      regions: [],
+      regions: ["r114","r251","r2141","r2142"]
       population: { total: 60000, happiness: 55, growth_rate: 0.002 },
       economy: { treasury: 1200, tax_rate: 0.08, primary_exports: ['cattle', 'wool', 'slaves'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['samnites', 'rome'], stockpile: { wheat: 5000 }, trade_routes: [] },
       military: { infantry: 5000, cavalry: 500, ships: 0, mercenaries: 0, morale: 65, loyalty: 65, at_war_with: [] },
@@ -1876,7 +1876,7 @@ const INITIAL_GAME_STATE = {
       name: 'Пиценты', adjective: 'пицентское', color: '#8B7B5B', flag_emoji: '🌾',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 55, stability: 52, ruler: { type: 'tribal_chief', name: 'Вождь пиценов', personal_power: 55 } },
-      regions: [],
+      regions: ["r141","r240","r2133","r2135"]
       population: { total: 80000, happiness: 54, growth_rate: 0.002 },
       economy: { treasury: 1800, tax_rate: 0.09, primary_exports: ['wheat', 'cattle', 'fish'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['rome', 'samnites', 'umbrians'], stockpile: { wheat: 8000 }, trade_routes: [] },
       military: { infantry: 6000, cavalry: 400, ships: 10, mercenaries: 0, morale: 62, loyalty: 60, at_war_with: [] },
@@ -1889,7 +1889,7 @@ const INITIAL_GAME_STATE = {
       name: 'Марсы', adjective: 'марсийское', color: '#5B6B3B', flag_emoji: '🐍',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 60, stability: 58, ruler: { type: 'tribal_chief', name: 'Вождь марсов', personal_power: 60 } },
-      regions: [],
+      regions: ["r2116","r2126"]
       population: { total: 70000, happiness: 56, growth_rate: 0.002 },
       economy: { treasury: 1500, tax_rate: 0.08, primary_exports: ['cattle', 'iron', 'slaves'], primary_imports: ['trade_goods', 'salt'], trade_partners: ['rome', 'samnites', 'umbrians'], stockpile: { wheat: 5000 }, trade_routes: [] },
       military: { infantry: 6500, cavalry: 600, ships: 0, mercenaries: 0, morale: 72, loyalty: 70, at_war_with: [] },
@@ -1902,7 +1902,7 @@ const INITIAL_GAME_STATE = {
       name: 'Сабины', adjective: 'сабинское', color: '#6B5B2B', flag_emoji: '🌾',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 55, stability: 52, ruler: { type: 'council', name: 'Сенат сабинских городов', personal_power: 48 } },
-      regions: [],
+      regions: ["r136","r138","r139","r140","r142","r144","r146"]
       population: { total: 90000, happiness: 50, growth_rate: 0.002 },
       economy: { treasury: 1800, tax_rate: 0.09, primary_exports: ['cattle', 'wheat', 'wool'], primary_imports: ['trade_goods', 'salt'], trade_partners: ['rome', 'umbrians'], stockpile: { wheat: 8000 }, trade_routes: [] },
       military: { infantry: 7000, cavalry: 600, ships: 0, mercenaries: 0, morale: 60, loyalty: 55, at_war_with: [] },
@@ -1915,7 +1915,7 @@ const INITIAL_GAME_STATE = {
       name: 'Апулийцы', adjective: 'апулийское', color: '#9B8B5B', flag_emoji: '🌾',
       is_player: false, is_minor: true, ai_personality: 'opportunist', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 52, stability: 50, ruler: { type: 'council', name: 'Вожди Апулии', personal_power: 45 } },
-      regions: [],
+      regions: ["r2137","r2138","r2139","r2148","r2165","r2166"]
       population: { total: 130000, happiness: 52, growth_rate: 0.002 },
       economy: { treasury: 3000, tax_rate: 0.09, primary_exports: ['wheat', 'cattle', 'olive_oil'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['taras', 'rome', 'samnites'], stockpile: { wheat: 12000 }, trade_routes: [] },
       military: { infantry: 9000, cavalry: 1500, ships: 5, mercenaries: 500, morale: 60, loyalty: 58, at_war_with: [] },
@@ -1928,7 +1928,7 @@ const INITIAL_GAME_STATE = {
       name: 'Мессапы', adjective: 'мессапское', color: '#7B8B6B', flag_emoji: '⚔️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 58, stability: 55, ruler: { type: 'tribal_chief', name: 'Вождь мессапов', personal_power: 60 } },
-      regions: [],
+      regions: ["r244","r2170","r2171","r2172","r2173"]
       population: { total: 100000, happiness: 56, growth_rate: 0.002 },
       economy: { treasury: 2200, tax_rate: 0.08, primary_exports: ['cattle', 'olive_oil', 'fish'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['taras', 'brundisium', 'apulians'], stockpile: { wheat: 8000 }, trade_routes: [] },
       military: { infantry: 8000, cavalry: 1200, ships: 10, mercenaries: 0, morale: 65, loyalty: 65, at_war_with: [] },
@@ -1941,7 +1941,7 @@ const INITIAL_GAME_STATE = {
       name: 'Венеты', adjective: 'венетское', color: '#5B7B9B', flag_emoji: '🐴',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'economy',
       government: { type: 'federation', legitimacy: 65, stability: 62, ruler: { type: 'council', name: 'Совет венетских городов', personal_power: 55 } },
-      regions: [],
+      regions: ["r2222","r2227","r2228","r2229","r2230","r2232","r2233","r2234","r2235","r2236","r2237","r2238","r2241","r2247","r2248"]
       population: { total: 200000, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 5000, tax_rate: 0.09, primary_exports: ['horses', 'amber', 'trade_goods'], primary_imports: ['iron', 'wine', 'salt'], trade_partners: ['rome', 'histri', 'massilia'], stockpile: { wheat: 15000 }, trade_routes: [] },
       military: { infantry: 12000, cavalry: 3000, ships: 20, mercenaries: 0, morale: 65, loyalty: 68, at_war_with: [] },
@@ -1954,7 +1954,7 @@ const INITIAL_GAME_STATE = {
       name: 'Инсубры', adjective: 'инсубрское', color: '#3B6B3B', flag_emoji: '🪓',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 65, stability: 60, ruler: { type: 'tribal_chief', name: 'Вождь инсубров', personal_power: 70 } },
-      regions: [],
+      regions: ["r2212","r2213","r2214","r2215","r2216","r2217","r2218","r2219","r2223","r2249","r2250","r2251","r2252","r2253","r2254","r2255","r2256","r2257","r2260","r2263","r2267","r2268","r2269","r2304"]
       population: { total: 150000, happiness: 62, growth_rate: 0.002 },
       economy: { treasury: 3500, tax_rate: 0.07, primary_exports: ['iron', 'amber', 'furs', 'slaves'], primary_imports: ['wine', 'trade_goods', 'salt'], trade_partners: ['cenomanni', 'rome', 'massilia'], stockpile: { wheat: 10000 }, trade_routes: [] },
       military: { infantry: 18000, cavalry: 2000, ships: 0, mercenaries: 0, morale: 78, loyalty: 75, at_war_with: [] },
@@ -1967,7 +1967,7 @@ const INITIAL_GAME_STATE = {
       name: 'Ценоманны', adjective: 'ценоманнское', color: '#4B7B4B', flag_emoji: '🛡️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 60, stability: 58, ruler: { type: 'tribal_chief', name: 'Вождь ценоманнов', personal_power: 65 } },
-      regions: [],
+      regions: ["r2220"]
       population: { total: 130000, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 3000, tax_rate: 0.07, primary_exports: ['amber', 'furs', 'cattle'], primary_imports: ['iron', 'salt', 'wine'], trade_partners: ['insubri', 'veneti', 'boii'], stockpile: { wheat: 9000 }, trade_routes: [] },
       military: { infantry: 15000, cavalry: 1500, ships: 0, mercenaries: 0, morale: 72, loyalty: 70, at_war_with: [] },
@@ -1980,7 +1980,7 @@ const INITIAL_GAME_STATE = {
       name: 'Бойи', adjective: 'бойское', color: '#2B5B2B', flag_emoji: '🪓',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 65, stability: 60, ruler: { type: 'tribal_chief', name: 'Вождь бойев', personal_power: 72 } },
-      regions: [],
+      regions: ["r2210","r2211","r2224","r2225"]
       population: { total: 160000, happiness: 62, growth_rate: 0.002 },
       economy: { treasury: 3200, tax_rate: 0.07, primary_exports: ['furs', 'slaves', 'amber', 'cattle'], primary_imports: ['iron', 'wine', 'salt'], trade_partners: ['insubri', 'lingones', 'senones'], stockpile: { wheat: 10000 }, trade_routes: [] },
       military: { infantry: 20000, cavalry: 2500, ships: 0, mercenaries: 0, morale: 78, loyalty: 75, at_war_with: [] },
@@ -1993,7 +1993,7 @@ const INITIAL_GAME_STATE = {
       name: 'Сеноны', adjective: 'сенонское', color: '#1B4B1B', flag_emoji: '🔥',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 62, stability: 58, ruler: { type: 'tribal_chief', name: 'Вождь сенонов', personal_power: 70 } },
-      regions: [],
+      regions: ["r768","r2205","r2206"]
       population: { total: 80000, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 2000, tax_rate: 0.07, primary_exports: ['slaves', 'furs', 'cattle'], primary_imports: ['iron', 'wine'], trade_partners: ['boii', 'umbrians', 'rome'], stockpile: { wheat: 6000 }, trade_routes: [] },
       military: { infantry: 12000, cavalry: 1500, ships: 0, mercenaries: 0, morale: 78, loyalty: 72, at_war_with: [] },
@@ -2006,7 +2006,7 @@ const INITIAL_GAME_STATE = {
       name: 'Лингоны', adjective: 'лингонское', color: '#4B6B2B', flag_emoji: '🌲',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 58, stability: 55, ruler: { type: 'tribal_chief', name: 'Вождь лингонов', personal_power: 58 } },
-      regions: [],
+      regions: ["r329","r330","r338","r2270","r2271","r2274","r2282","r2286","r2292","r2293","r2294","r2295","r2296","r2298","r2301","r2342","r2343"]
       population: { total: 100000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 2200, tax_rate: 0.07, primary_exports: ['furs', 'amber', 'cattle'], primary_imports: ['iron', 'salt', 'wine'], trade_partners: ['boii', 'sequani', 'senones'], stockpile: { wheat: 7000 }, trade_routes: [] },
       military: { infantry: 12000, cavalry: 1500, ships: 0, mercenaries: 0, morale: 68, loyalty: 65, at_war_with: [] },
@@ -2021,7 +2021,7 @@ const INITIAL_GAME_STATE = {
       name: 'Вестины', color: '#7B6B4B', flag_emoji: '⚔️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь вестинов' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r133","r135","r2130","r2134"]
       population: { total: 35000, happiness: 55 },
       economy: { treasury: 700, stockpile: { wheat: 3000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 3000, cavalry: 250, ships: 0, morale: 65, at_war_with: [] },
@@ -2034,7 +2034,7 @@ const INITIAL_GAME_STATE = {
       name: 'Пелигны', color: '#6B5B3B', flag_emoji: '⚔️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь пелигнов' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r2127","r2128","r2129","r2131"]
       population: { total: 30000, happiness: 55 },
       economy: { treasury: 600, stockpile: { wheat: 2500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2500, cavalry: 200, ships: 0, morale: 65, at_war_with: [] },
@@ -2047,7 +2047,7 @@ const INITIAL_GAME_STATE = {
       name: 'Марруцины', color: '#7B7B4B', flag_emoji: '⚔️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь марруцинов' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r2123"]
       population: { total: 25000, happiness: 54 },
       economy: { treasury: 500, stockpile: { wheat: 2000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2000, cavalry: 180, ships: 5, morale: 63, at_war_with: [] },
@@ -2060,7 +2060,7 @@ const INITIAL_GAME_STATE = {
       name: 'Япигия', color: '#8B8B5B', flag_emoji: '🌾',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь япигов' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r767","r2167","r2168"]
       population: { total: 40000, happiness: 53 },
       economy: { treasury: 800, stockpile: { wheat: 3500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 3500, cavalry: 400, ships: 5, morale: 60, at_war_with: [] },
@@ -2073,7 +2073,7 @@ const INITIAL_GAME_STATE = {
       name: 'Сипонт', color: '#9B9B6B', flag_emoji: '⚓',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Сипонта' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r2136","r2140"]
       population: { total: 12000, happiness: 55 },
       economy: { treasury: 600, stockpile: { wheat: 1200 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 700, cavalry: 50, ships: 15, morale: 58, at_war_with: [] },
@@ -2086,7 +2086,7 @@ const INITIAL_GAME_STATE = {
       name: 'Спина', color: '#7B9B9B', flag_emoji: '⚓',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Спины' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r2208","r2226"]
       population: { total: 10000, happiness: 55 },
       economy: { treasury: 800, stockpile: { wheat: 1000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 500, cavalry: 30, ships: 20, morale: 58, at_war_with: [] },
@@ -2099,7 +2099,7 @@ const INITIAL_GAME_STATE = {
       name: 'Анкона', color: '#6B9B9B', flag_emoji: '⚓',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Анконы' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r711"]
       population: { total: 12000, happiness: 57 },
       economy: { treasury: 700, stockpile: { wheat: 1200 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 700, cavalry: 40, ships: 18, morale: 60, at_war_with: [] },
@@ -2112,7 +2112,7 @@ const INITIAL_GAME_STATE = {
       name: 'Генуя', color: '#5B8B8B', flag_emoji: '⚓',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь лигурийцев Генуи' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r2265","r2266"]
       population: { total: 8000, happiness: 55 },
       economy: { treasury: 400, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 600, cavalry: 30, ships: 10, morale: 60, at_war_with: [] },
@@ -2125,7 +2125,7 @@ const INITIAL_GAME_STATE = {
       name: 'Равенна', color: '#8B8B7B', flag_emoji: '🌿',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Равенны' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r2207"]
       population: { total: 9000, happiness: 55 },
       economy: { treasury: 400, stockpile: { wheat: 900 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 500, cavalry: 20, ships: 12, morale: 55, at_war_with: [] },
@@ -2138,7 +2138,7 @@ const INITIAL_GAME_STATE = {
       name: 'Тридентинцы', color: '#6B7B6B', flag_emoji: '🏔️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь тридентинцев' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r2239","r2240","r2305","r2307","r2308","r2309","r2310","r2311","r2312","r2313","r2314","r2315"]
       population: { total: 18000, happiness: 58 },
       economy: { treasury: 500, stockpile: { wheat: 1500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1500, cavalry: 100, ships: 0, morale: 65, at_war_with: [] },
@@ -2151,7 +2151,7 @@ const INITIAL_GAME_STATE = {
       name: 'Карны', color: '#6B6B7B', flag_emoji: '🏔️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь карнов' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r252","r355","r394","r2242","r2243","r2244","r2245","r2246","r2316","r2317","r2318","r2319","r2320","r2331","r2333"]
       population: { total: 22000, happiness: 58 },
       economy: { treasury: 600, stockpile: { wheat: 1800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2000, cavalry: 150, ships: 0, morale: 65, at_war_with: [] },
@@ -2164,7 +2164,7 @@ const INITIAL_GAME_STATE = {
       name: 'Лепонты', color: '#7B6B7B', flag_emoji: '🏔️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь лепонтов' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r109","r344","r400","r2259","r2261","r2262","r2300","r2302","r2303","r2340"]
       population: { total: 15000, happiness: 57 },
       economy: { treasury: 400, stockpile: { wheat: 1200 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1200, cavalry: 80, ships: 0, morale: 62, at_war_with: [] },
@@ -2177,7 +2177,7 @@ const INITIAL_GAME_STATE = {
       name: 'Саласси', color: '#8B7B6B', flag_emoji: '⛏️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь саласси' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r2273","r2297","r2299"]
       population: { total: 20000, happiness: 58 },
       economy: { treasury: 600, stockpile: { wheat: 1500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2000, cavalry: 100, ships: 0, morale: 68, at_war_with: [] },
@@ -2190,7 +2190,7 @@ const INITIAL_GAME_STATE = {
       name: 'Таврины', color: '#7B8B6B', flag_emoji: '🐂',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь тавринов' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r2258","r2272","r2275","r2276","r2277","r2281","r2283","r2284"]
       population: { total: 25000, happiness: 58 },
       economy: { treasury: 700, stockpile: { wheat: 2000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2500, cavalry: 200, ships: 0, morale: 65, at_war_with: [] },
@@ -2203,7 +2203,7 @@ const INITIAL_GAME_STATE = {
       name: 'Вагиенны', color: '#8B7B7B', flag_emoji: '🗡️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь вагиеннов' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r2278","r2279","r2280","r2285","r2287"]
       population: { total: 18000, happiness: 57 },
       economy: { treasury: 500, stockpile: { wheat: 1500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1800, cavalry: 120, ships: 0, morale: 63, at_war_with: [] },
@@ -2226,7 +2226,7 @@ const INITIAL_GAME_STATE = {
         type: 'oligarchy', legitimacy: 65, stability: 60,
         ruler: { type: 'person', name: 'Офелла', personal_power: 70 },
       },
-      regions: [],
+      regions: ["r794"]
       population: {
         total: 300000,
         by_profession: { farmers: 100000, craftsmen: 40000, merchants: 50000, sailors: 20000, clergy: 15000, soldiers: 15000, slaves: 60000 },
@@ -2259,7 +2259,7 @@ const INITIAL_GAME_STATE = {
         type: 'tribal', legitimacy: 60, stability: 55,
         ruler: { type: 'tribal_chief', name: 'Вождь мавров', personal_power: 65 },
       },
-      regions: [],
+      regions: ["r2610","r2614","r2616","r2617","r2618","r2619","r2620","r2621","r2622","r2623","r2624","r2625","r2626","r2629","r2630","r2631","r2633","r2634","r2635","r2636","r2637","r2638","r2639","r2640","r2641","r2642","r2643","r2644","r2645","r2646","r2647","r2648","r2649","r2650","r2651","r2652","r2653","r2654","r2655","r2667","r2668","r2669","r2670","r2707","r2708","r2709","r2710","r2711","r2712","r2713","r2714","r2715","r2716","r2717","r2718","r2720","r2721","r2722","r2723","r2724","r2725","r2726","r2727","r2728","r2729","r2731","r2732","r2734","r2735","r2736","r2737","r2738","r2739","r2740","r2746","r2747","r2751","r2752","r2761","r2762","r2763","r2764","r2765","r2766","r2767","r2768","r2769","r2770","r2771","r2772","r2773","r2774","r2775","r2776","r2777","r2778","r2779","r2780","r2781","r2782","r2783","r2784","r2785","r2786","r2787","r2788","r2789","r2790","r2791","r2792","r2793","r2794","r2795","r2796","r2797","r2798","r2799","r2800","r2801","r2802","r2820","r2821","r2822"]
       population: {
         total: 350000,
         by_profession: { farmers: 120000, craftsmen: 30000, merchants: 20000, sailors: 15000, clergy: 15000, soldiers: 50000, slaves: 100000 },
@@ -2291,7 +2291,7 @@ const INITIAL_GAME_STATE = {
         type: 'tribal', legitimacy: 65, stability: 60,
         ruler: { type: 'tribal_chief', name: 'Вождь масилиев', personal_power: 68 },
       },
-      regions: [],
+      regions: ["r53"]
       population: {
         total: 450000,
         by_profession: { farmers: 160000, craftsmen: 40000, merchants: 30000, sailors: 10000, clergy: 20000, soldiers: 60000, slaves: 130000 },
@@ -2324,7 +2324,7 @@ const INITIAL_GAME_STATE = {
         type: 'tribal', legitimacy: 62, stability: 58,
         ruler: { type: 'tribal_chief', name: 'Вождь масэсилиев', personal_power: 65 },
       },
-      regions: [],
+      regions: ["r823","r2579","r2588","r2592","r2593","r2594","r2595","r2596","r2597","r2598","r2599","r2600","r2601","r2602","r2603","r2604","r2605","r2606","r2607","r2608","r2609","r2611","r2680"]
       population: {
         total: 500000,
         by_profession: { farmers: 180000, craftsmen: 40000, merchants: 25000, sailors: 10000, clergy: 20000, soldiers: 70000, slaves: 155000 },
@@ -2357,7 +2357,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 80, stability: 75,
         ruler: { type: 'person', name: 'Царица-кандака Нахирсан', personal_power: 72 },
       },
-      regions: [],
+      regions: ["r49"]
       population: {
         total: 250000,
         by_profession: { farmers: 90000, craftsmen: 40000, merchants: 30000, sailors: 10000, clergy: 30000, soldiers: 20000, slaves: 30000 },
@@ -2389,7 +2389,7 @@ const INITIAL_GAME_STATE = {
         type: 'tribal', legitimacy: 62, stability: 58,
         ruler: { type: 'tribal_chief', name: 'Верховный вождь гарамантов', personal_power: 70 },
       },
-      regions: [],
+      regions: ["r2917","r2918","r2919","r2925","r2926","r2930","r2931","r2932","r2936"]
       population: {
         total: 300000,
         by_profession: { farmers: 80000, craftsmen: 30000, merchants: 20000, sailors: 0, clergy: 20000, soldiers: 60000, slaves: 90000 },
@@ -2421,7 +2421,7 @@ const INITIAL_GAME_STATE = {
         type: 'tribal', legitimacy: 58, stability: 55,
         ruler: { type: 'tribal_chief', name: 'Вождь насамонов', personal_power: 62 },
       },
-      regions: [],
+      regions: ["r868","r869","r2881","r2886"]
       population: {
         total: 150000,
         by_profession: { farmers: 50000, craftsmen: 15000, merchants: 10000, sailors: 5000, clergy: 10000, soldiers: 30000, slaves: 30000 },
@@ -2451,7 +2451,7 @@ const INITIAL_GAME_STATE = {
       name: 'Ликсус', adjective: 'ликсусское', color: '#C8A04A', flag_emoji: '⚓',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 65, stability: 62, ruler: { type: 'council', name: 'Совет Ликсуса', personal_power: 55 } },
-      regions: [],
+      regions: ["r2627","r2628","r2632"]
       population: { total: 22000, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 2200, tax_rate: 0.10, primary_exports: ['fish', 'trade_goods', 'ivory'], primary_imports: ['iron', 'wheat', 'pottery'], trade_partners: ['carthage', 'mauretania'], stockpile: { wheat: 2500 }, trade_routes: [] },
       military: { infantry: 1000, cavalry: 100, ships: 20, mercenaries: 200, morale: 60, loyalty: 62, at_war_with: [] },
@@ -2464,7 +2464,7 @@ const INITIAL_GAME_STATE = {
       name: 'Утика', adjective: 'утикийское', color: '#B8902A', flag_emoji: '🏛️',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 70, stability: 65, ruler: { type: 'council', name: 'Совет Утики', personal_power: 58 } },
-      regions: [],
+      regions: ["r99"]
       population: { total: 30000, happiness: 62, growth_rate: 0.002 },
       economy: { treasury: 3500, tax_rate: 0.11, primary_exports: ['trade_goods', 'pottery', 'purple_dye'], primary_imports: ['wheat', 'iron', 'timber'], trade_partners: ['carthage', 'massylii'], stockpile: { wheat: 4000 }, trade_routes: [] },
       military: { infantry: 1500, cavalry: 100, ships: 25, mercenaries: 300, morale: 62, loyalty: 65, at_war_with: [] },
@@ -2477,7 +2477,7 @@ const INITIAL_GAME_STATE = {
       name: 'Керкуан', adjective: 'керкуанское', color: '#C8B040', flag_emoji: '🏺',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 62, stability: 60, ruler: { type: 'council', name: 'Совет Керкуана', personal_power: 50 } },
-      regions: [],
+      regions: ["r2461"]
       population: { total: 15000, happiness: 62, growth_rate: 0.002 },
       economy: { treasury: 1800, tax_rate: 0.11, primary_exports: ['purple_dye', 'fish', 'trade_goods'], primary_imports: ['wheat', 'timber'], trade_partners: ['carthage', 'utica'], stockpile: { wheat: 1800 }, trade_routes: [] },
       military: { infantry: 700, cavalry: 50, ships: 15, mercenaries: 100, morale: 58, loyalty: 60, at_war_with: [] },
@@ -2490,7 +2490,7 @@ const INITIAL_GAME_STATE = {
       name: 'Фазания', adjective: 'фазанийское', color: '#D4A060', flag_emoji: '🏜️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 55, stability: 52, ruler: { type: 'tribal_chief', name: 'Верховный вождь фазанов', personal_power: 62 } },
-      regions: [],
+      regions: ["r2872","r2873","r2879","r2885","r2887","r2888","r2889","r2890","r2891","r2892","r2910","r2911","r2912","r2913","r2914","r2915","r2916","r2920","r2921","r2922","r2923","r2924","r2927","r2928","r2929","r2933","r2934","r2935","r2937","r2938","r2939","r2940","r2941"]
       population: { total: 80000, happiness: 56, growth_rate: 0.001 },
       economy: { treasury: 1500, tax_rate: 0.06, primary_exports: ['slaves', 'ivory', 'cattle'], primary_imports: ['iron', 'salt', 'trade_goods'], trade_partners: ['garamantes', 'nasamonia'], stockpile: { wheat: 4000 }, trade_routes: [] },
       military: { infantry: 5000, cavalry: 3000, ships: 0, mercenaries: 0, morale: 65, loyalty: 65, at_war_with: [] },
@@ -2503,7 +2503,7 @@ const INITIAL_GAME_STATE = {
       name: 'Гизантия', adjective: 'гизантийское', color: '#E0B060', flag_emoji: '🍯',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 55, stability: 52, ruler: { type: 'tribal_chief', name: 'Вождь гизантов', personal_power: 58 } },
-      regions: [],
+      regions: ["r219","r220","r221","r229","r230","r278","r280","r349","r372","r377","r381","r382","r383","r414","r818","r819","r822","r1010","r2467","r2486","r2662","r2663","r2664","r2665","r2823","r2824","r2825","r2826","r2827","r2828","r2829","r2830","r2831","r2832","r2833","r2834","r2835","r2836","r2837","r2846","r2847","r2848","r2849"]
       population: { total: 90000, happiness: 56, growth_rate: 0.001 },
       economy: { treasury: 1500, tax_rate: 0.06, primary_exports: ['cattle', 'furs', 'slaves'], primary_imports: ['salt', 'iron'], trade_partners: ['nasamonia', 'phazania'], stockpile: { wheat: 5000 }, trade_routes: [] },
       military: { infantry: 6000, cavalry: 2500, ships: 0, mercenaries: 0, morale: 62, loyalty: 62, at_war_with: [] },
@@ -2516,7 +2516,7 @@ const INITIAL_GAME_STATE = {
       name: 'Гинданцы', adjective: 'гинданское', color: '#D8A850', flag_emoji: '🏜️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 55, stability: 52, ruler: { type: 'tribal_chief', name: 'Вождь гинданцев', personal_power: 60 } },
-      regions: [],
+      regions: ["r222","r2656","r2657","r2658","r2659","r2660","r2661","r2684","r2691","r2692","r2697","r2698","r2699","r2701"]
       population: { total: 75000, happiness: 56, growth_rate: 0.001 },
       economy: { treasury: 1200, tax_rate: 0.06, primary_exports: ['cattle', 'ivory', 'slaves'], primary_imports: ['salt', 'iron'], trade_partners: ['nasamonia', 'masaesyli'], stockpile: { wheat: 4000 }, trade_routes: [] },
       military: { infantry: 5000, cavalry: 2000, ships: 0, mercenaries: 0, morale: 62, loyalty: 62, at_war_with: [] },
@@ -2529,7 +2529,7 @@ const INITIAL_GAME_STATE = {
       name: 'Махлии', adjective: 'махлийское', color: '#C8A040', flag_emoji: '🏜️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 55, stability: 52, ruler: { type: 'tribal_chief', name: 'Вождь махлиев', personal_power: 58 } },
-      regions: [],
+      regions: ["r211","r218","r223","r225","r228","r678","r680","r813","r820","r2545","r2700"]
       population: { total: 60000, happiness: 55, growth_rate: 0.001 },
       economy: { treasury: 1000, tax_rate: 0.06, primary_exports: ['cattle', 'slaves'], primary_imports: ['salt', 'iron'], trade_partners: ['garamantes', 'cyrene'], stockpile: { wheat: 3500 }, trade_routes: [] },
       military: { infantry: 4000, cavalry: 1500, ships: 0, mercenaries: 0, morale: 60, loyalty: 60, at_war_with: [] },
@@ -2542,7 +2542,7 @@ const INITIAL_GAME_STATE = {
       name: 'Мусуламии', adjective: 'мусуламийское', color: '#B89030', flag_emoji: '⚔️',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 58, stability: 55, ruler: { type: 'tribal_chief', name: 'Вождь мусуламиев', personal_power: 65 } },
-      regions: [],
+      regions: ["r214","r215","r216","r217","r2470","r2472","r2473","r2474","r2476","r2480","r2481","r2505","r2506","r2507","r2508","r2509","r2510","r2511","r2512","r2513","r2514","r2515","r2516","r2517","r2518","r2519","r2520","r2521","r2522","r2523","r2524","r2525","r2526","r2527","r2528","r2529","r2530","r2531","r2532","r2533","r2534","r2535","r2536","r2537","r2538","r2539","r2540","r2541","r2542","r2543","r2544","r2546","r2547","r2548","r2549","r2550","r2551","r2553","r2554","r2556","r2557","r2585","r2685","r2686","r2687","r2688","r2689","r2690","r2693","r2694","r2695","r2696","r2814"]
       population: { total: 120000, happiness: 57, growth_rate: 0.002 },
       economy: { treasury: 2000, tax_rate: 0.07, primary_exports: ['cattle', 'slaves', 'horses'], primary_imports: ['iron', 'salt'], trade_partners: ['massylii', 'masaesyli'], stockpile: { wheat: 7000 }, trade_routes: [] },
       military: { infantry: 8000, cavalry: 4000, ships: 0, mercenaries: 0, morale: 68, loyalty: 65, at_war_with: [] },
@@ -2555,7 +2555,7 @@ const INITIAL_GAME_STATE = {
       name: 'Дафнитеи', adjective: 'дафнитейское', color: '#C8B840', flag_emoji: '🏜️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 52, stability: 50, ruler: { type: 'tribal_chief', name: 'Вождь дафнитеев', personal_power: 55 } },
-      regions: [],
+      regions: ["r89","r95","r459","r460","r461","r462","r463","r464","r465","r466","r467","r468","r870","r871","r872","r873","r1102","r2504","r2882","r2883","r2884","r2893","r2894","r2895","r2896","r2897","r2898","r2899","r2900","r2901","r2902","r2903","r2904","r2905","r2906","r2908","r3063","r3200","r3201","r3202","r3203","r3204","r3206","r3207","r3208"]
       population: { total: 80000, happiness: 54, growth_rate: 0.001 },
       economy: { treasury: 1200, tax_rate: 0.06, primary_exports: ['cattle', 'slaves'], primary_imports: ['salt', 'iron'], trade_partners: ['nasamonia', 'garamantes'], stockpile: { wheat: 4000 }, trade_routes: [] },
       military: { infantry: 5000, cavalry: 2000, ships: 0, mercenaries: 0, morale: 60, loyalty: 60, at_war_with: [] },
@@ -2568,7 +2568,7 @@ const INITIAL_GAME_STATE = {
       name: 'Блеммии', adjective: 'блеммийское', color: '#A07040', flag_emoji: '⚔️',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 58, stability: 55, ruler: { type: 'tribal_chief', name: 'Вождь блеммиев', personal_power: 62 } },
-      regions: [],
+      regions: ["r469","r3278","r3280","r3281","r3282","r3378","r3384","r3385","r3386","r3387","r3388","r3389","r3390","r3391","r3392","r3393","r3396","r3397","r3398","r3399","r3400"]
       population: { total: 40000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 800, tax_rate: 0.06, primary_exports: ['ivory', 'slaves', 'gold'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['meroe', 'ptolemaic_kingdom'], stockpile: { wheat: 2000 }, trade_routes: [] },
       military: { infantry: 4000, cavalry: 500, ships: 0, mercenaries: 0, morale: 70, loyalty: 70, at_war_with: [] },
@@ -2581,7 +2581,7 @@ const INITIAL_GAME_STATE = {
       name: 'Додекасхойнос', adjective: 'додекасхойносское', color: '#B09050', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 50, stability: 48, ruler: { type: 'tribal_chief', name: 'Местный правитель', personal_power: 45 } },
-      regions: [],
+      regions: ["r3270","r3272","r3273","r3274","r3275","r3276","r3277","r3279"]
       population: { total: 60000, happiness: 52, growth_rate: 0.001 },
       economy: { treasury: 1000, tax_rate: 0.08, primary_exports: ['ivory', 'cattle', 'slaves'], primary_imports: ['wheat', 'trade_goods'], trade_partners: ['meroe', 'ptolemaic_kingdom'], stockpile: { wheat: 3500 }, trade_routes: [] },
       military: { infantry: 3000, cavalry: 500, ships: 10, mercenaries: 0, morale: 55, loyalty: 52, at_war_with: [] },
@@ -2594,7 +2594,7 @@ const INITIAL_GAME_STATE = {
       name: 'Сембриты', adjective: 'сембритское', color: '#905030', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 50, stability: 48, ruler: { type: 'tribal_chief', name: 'Вождь сембритов', personal_power: 52 } },
-      regions: [],
+      regions: ["r48","r851","r852","r856"]
       population: { total: 20000, happiness: 54 },
       economy: { treasury: 500, stockpile: { wheat: 1500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1500, cavalry: 200, ships: 5, morale: 60, at_war_with: [] },
@@ -2607,7 +2607,7 @@ const INITIAL_GAME_STATE = {
       name: 'Азания', adjective: 'азанийское', color: '#608050', flag_emoji: '🌴',
       is_player: false, is_minor: true, ai_personality: 'isolationist', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 52, stability: 52, ruler: { type: 'tribal_chief', name: 'Вождь азанийцев', personal_power: 55 } },
-      regions: [],
+      regions: ["r746"]
       population: { total: 15000, happiness: 58 },
       economy: { treasury: 400, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1000, cavalry: 0, ships: 5, morale: 60, at_war_with: [] },
@@ -2620,7 +2620,7 @@ const INITIAL_GAME_STATE = {
       name: 'Аксум', adjective: 'аксумское', color: '#507040', flag_emoji: '🌟',
       is_player: false, is_minor: true, ai_personality: 'isolationist', ai_priority: 'survival',
       government: { type: 'monarchy', legitimacy: 62, stability: 60, ruler: { type: 'person', name: 'Вождь аксумитов', personal_power: 60 } },
-      regions: [],
+      regions: ["r80","r847","r848","r849"]
       population: { total: 25000, happiness: 60 },
       economy: { treasury: 600, stockpile: { wheat: 2000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1500, cavalry: 200, ships: 5, morale: 65, at_war_with: [] },
@@ -2635,7 +2635,7 @@ const INITIAL_GAME_STATE = {
       name: 'Русадир', color: '#B89040', flag_emoji: '⚓',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Русадира' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r815"]
       population: { total: 8000, happiness: 58 },
       economy: { treasury: 500, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 400, cavalry: 30, ships: 12, morale: 58, at_war_with: [] },
@@ -2648,7 +2648,7 @@ const INITIAL_GAME_STATE = {
       name: 'Псиллы', color: '#D8C870', flag_emoji: '🐍',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь псиллов' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r2907","r3205","r3209","r3210","r3211","r3212","r3213","r3214","r3215","r3216","r3217","r3218","r3219","r3220","r3225","r3226","r3227"]
       population: { total: 30000, happiness: 54 },
       economy: { treasury: 600, stockpile: { wheat: 2000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2500, cavalry: 1000, ships: 0, morale: 62, at_war_with: [] },
@@ -2661,7 +2661,7 @@ const INITIAL_GAME_STATE = {
       name: 'Тапакы', color: '#C8B050', flag_emoji: '🏜️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь тапаков' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r2838"]
       population: { total: 40000, happiness: 55 },
       economy: { treasury: 800, stockpile: { wheat: 3000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 3000, cavalry: 1500, ships: 0, morale: 62, at_war_with: [] },
@@ -2674,7 +2674,7 @@ const INITIAL_GAME_STATE = {
       name: 'Кохайто', color: '#806040', flag_emoji: '🌄',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь кохайто' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r857"]
       population: { total: 12000, happiness: 58 },
       economy: { treasury: 300, stockpile: { wheat: 1000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 800, cavalry: 100, ships: 0, morale: 60, at_war_with: [] },
@@ -2687,7 +2687,7 @@ const INITIAL_GAME_STATE = {
       name: 'Саба', color: '#C8A030', flag_emoji: '👑',
       is_player: false, is_minor: true,
       government: { type: 'monarchy', ruler: { name: 'Мукарриб Сабы' } , legitimacy: 65, stability: 60},
-      regions: [],
+      regions: ["r855"]
       population: { total: 40000, happiness: 65 },
       economy: { treasury: 2000, stockpile: { wheat: 2000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 3000, cavalry: 500, ships: 10, morale: 65, at_war_with: [] },
@@ -2700,7 +2700,7 @@ const INITIAL_GAME_STATE = {
       name: 'Маин', color: '#D8B040', flag_emoji: '🌿',
       is_player: false, is_minor: true,
       government: { type: 'monarchy', ruler: { name: 'Царь Маина' } , legitimacy: 65, stability: 60},
-      regions: [],
+      regions: ["r472"]
       population: { total: 35000, happiness: 62 },
       economy: { treasury: 1500, stockpile: { wheat: 1500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2500, cavalry: 300, ships: 8, morale: 62, at_war_with: [] },
@@ -2713,7 +2713,7 @@ const INITIAL_GAME_STATE = {
       name: 'Катабан', color: '#E0C050', flag_emoji: '🌿',
       is_player: false, is_minor: true,
       government: { type: 'monarchy', ruler: { name: 'Царь Катабана' } , legitimacy: 65, stability: 60},
-      regions: [],
+      regions: ["r39"]
       population: { total: 30000, happiness: 62 },
       economy: { treasury: 1200, stockpile: { wheat: 1200 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2000, cavalry: 300, ships: 5, morale: 62, at_war_with: [] },
@@ -2726,7 +2726,7 @@ const INITIAL_GAME_STATE = {
       name: 'Хадрамаут', color: '#D8B838', flag_emoji: '🌴',
       is_player: false, is_minor: true,
       government: { type: 'monarchy', ruler: { name: 'Царь Хадрамаута' } , legitimacy: 65, stability: 60},
-      regions: [],
+      regions: ["r470"]
       population: { total: 25000, happiness: 60 },
       economy: { treasury: 1000, stockpile: { wheat: 1000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1800, cavalry: 200, ships: 8, morale: 60, at_war_with: [] },
@@ -2739,7 +2739,7 @@ const INITIAL_GAME_STATE = {
       name: 'Тамуд', color: '#D0A840', flag_emoji: '🐪',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь тамудян' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r125"]
       population: { total: 20000, happiness: 58 },
       economy: { treasury: 500, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1500, cavalry: 600, ships: 0, morale: 62, at_war_with: [] },
@@ -2752,7 +2752,7 @@ const INITIAL_GAME_STATE = {
       name: 'Кинда', color: '#C89030', flag_emoji: '⚔️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь Кинды' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r1016"]
       population: { total: 18000, happiness: 58 },
       economy: { treasury: 400, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1200, cavalry: 500, ships: 0, morale: 62, at_war_with: [] },
@@ -2765,7 +2765,7 @@ const INITIAL_GAME_STATE = {
       name: 'Герра', color: '#E0C060', flag_emoji: '🌊',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Герры' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r454"]
       population: { total: 20000, happiness: 62 },
       economy: { treasury: 1500, stockpile: { wheat: 1000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1000, cavalry: 300, ships: 15, morale: 60, at_war_with: [] },
@@ -2788,7 +2788,7 @@ const INITIAL_GAME_STATE = {
         type: 'empire', legitimacy: 72, stability: 62,
         ruler: { type: 'person', name: 'Селевк I Никатор', personal_power: 90 },
       },
-      regions: [],
+      regions: ["r88","r93","r118","r129","r148","r149","r170","r171","r187","r191","r428","r431","r437","r439","r447","r448","r449","r450","r451","r452","r453","r801","r831","r832","r833","r834","r835","r836","r837","r838","r839","r840","r841","r846","r1568","r1571","r1572","r3456","r3459","r3460","r3461","r3462","r3470","r3471","r3483","r3484","r3485","r3486","r3487","r3488","r3490","r3491","r3493","r3495","r3496","r3497","r3498","r3499","r3500","r3503","r3504","r3506","r3509","r3510","r3511","r3613","r3614","r3615","r3616","r3617","r3618","r3619","r3620","r3621","r3622","r3623","r3624","r3626","r3627","r3628","r3630","r3631","r3632","r3633","r3634","r3635","r3636","r3637","r3638","r3639","r3640","r3641","r3642","r3643","r3644","r3645","r3646","r3647","r3648","r3649","r3650","r3651","r3652","r3653","r3654","r3655","r3656","r3657","r3658","r3659","r3660","r3661","r3662","r3663","r3664","r3665","r3666","r3667","r3668","r3669","r3670","r3671","r3672","r3673","r3674","r3675","r3678","r3679","r3680","r3682","r3683","r3684","r3685","r3686","r3687","r3688","r3689","r3690","r3691","r3692","r3693","r3694","r3695","r3696","r3697","r3698","r3699","r3700","r3701","r3704","r3705","r3731","r3732","r3733","r3734","r3735","r3736","r3737","r3738","r3739","r3741","r3742","r3745","r3848","r3871","r3991","r3992","r3993","r3996","r4008","r4023","r4024","r4034","r4040","r4136","r4137","r4139","r4140","r4142"]
       population: {
         total: 6000000,
         by_profession: { farmers: 2500000, craftsmen: 800000, merchants: 600000, sailors: 150000, clergy: 250000, soldiers: 300000, slaves: 400000 },
@@ -2822,7 +2822,7 @@ const INITIAL_GAME_STATE = {
         type: 'empire', legitimacy: 78, stability: 72,
         ruler: { type: 'person', name: 'Птолемей I Сотер', personal_power: 85 },
       },
-      regions: [],
+      regions: ["r3444","r3474","r3477","r3482"]
       population: {
         total: 7000000,
         by_profession: { farmers: 3000000, craftsmen: 900000, merchants: 700000, sailors: 300000, clergy: 400000, soldiers: 250000, slaves: 450000 },
@@ -2857,7 +2857,7 @@ const INITIAL_GAME_STATE = {
         type: 'empire', legitimacy: 65, stability: 58,
         ruler: { type: 'person', name: 'Кассандр', personal_power: 80 },
       },
-      regions: [],
+      regions: ["r250"]
       population: {
         total: 2500000,
         by_profession: { farmers: 1000000, craftsmen: 400000, merchants: 250000, sailors: 100000, clergy: 100000, soldiers: 150000, slaves: 500000 },
@@ -2892,7 +2892,7 @@ const INITIAL_GAME_STATE = {
         type: 'empire', legitimacy: 60, stability: 50,
         ruler: { type: 'person', name: 'Деметрий I Полиоркет', personal_power: 88 },
       },
-      regions: [],
+      regions: ["r3193","r3194","r3195","r3196","r3197","r3772","r3773","r3774","r3775","r3792","r3840","r3847","r3960","r3961"]
       population: {
         total: 4000000,
         by_profession: { farmers: 1600000, craftsmen: 600000, merchants: 400000, sailors: 200000, clergy: 150000, soldiers: 250000, slaves: 800000 },
@@ -2927,7 +2927,7 @@ const INITIAL_GAME_STATE = {
         type: 'empire', legitimacy: 68, stability: 60,
         ruler: { type: 'person', name: 'Лисимах', personal_power: 82 },
       },
-      regions: [],
+      regions: ["r1141","r1142","r1153","r1159","r1160","r3093","r3095","r3096","r3097","r3098","r3105","r3158","r3159","r3160","r3534","r3851","r3852","r3853","r3858","r3860","r3866","r3867","r3868","r3869","r3870","r3872","r3873","r3875","r3876","r3877","r3878","r3879","r3889","r3890","r3891","r3892","r3896","r3917","r3918","r3919","r3920","r3921","r3924","r3925","r3927","r3928","r3929","r3930","r3931","r3932","r3933","r3934","r3935","r3936","r3937","r3938","r3939","r3940","r3941","r3942","r3943","r3944","r3945","r3946","r3949","r3950","r3951","r3952","r3953","r3954","r3955","r3956","r3958"]
       population: {
         total: 1800000,
         by_profession: { farmers: 750000, craftsmen: 280000, merchants: 200000, sailors: 80000, clergy: 80000, soldiers: 130000, slaves: 280000 },
@@ -2963,7 +2963,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 70, stability: 65,
         ruler: { type: 'person', name: 'Митридат I', personal_power: 78 },
       },
-      regions: [],
+      regions: ["r805","r863","r864","r3986","r3987","r3988","r3989","r3994","r3995","r3997","r3998","r3999","r4000","r4001","r4002","r4007","r4009","r4010","r4011","r4012","r4013","r4014"]
       population: {
         total: 600000,
         by_profession: { farmers: 250000, craftsmen: 80000, merchants: 60000, sailors: 40000, clergy: 30000, soldiers: 60000, slaves: 80000 },
@@ -2997,7 +2997,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 68, stability: 60,
         ruler: { type: 'person', name: 'Ариарат II', personal_power: 72 },
       },
-      regions: [],
+      regions: ["r117","r128","r194","r196","r236","r417","r418","r419","r420","r421","r422","r423","r424","r425","r426","r427","r443","r445","r446","r458","r799","r800","r803","r804","r862","r1161","r3468","r3478","r3481","r3492","r3494","r3507","r3525","r3526","r3530","r3532","r3535","r3536","r3537","r3538","r3540","r3541","r3542","r3543","r3544","r3545","r3546","r3558","r3559","r3717","r3718","r3740","r3905","r3907","r3908","r3982","r3983","r3984","r3985","r3990","r4025","r4026","r4027","r4028","r4029","r4030","r4031","r4032","r4033"]
       population: {
         total: 800000,
         by_profession: { farmers: 350000, craftsmen: 80000, merchants: 50000, sailors: 5000, clergy: 40000, soldiers: 80000, slaves: 195000 },
@@ -3030,7 +3030,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 72, stability: 65,
         ruler: { type: 'person', name: 'Оронт II', personal_power: 70 },
       },
-      regions: [],
+      regions: ["r151","r3562","r3579","r3580","r3581","r3583","r3586","r3587","r3589","r3706","r3784","r3787","r3801","r3818","r4016","r4017","r4018","r4019","r4020","r4035","r4036","r4037","r4038","r4039","r4041","r4042","r4043","r4044","r4045","r4046","r4047","r4048","r4049","r4050","r4051","r4052","r4053","r4054","r4055","r4056","r4057","r4058","r4059","r4060","r4061","r4062","r4063","r4064","r4065","r4066","r4067","r4069","r4070","r4071","r4072","r4073","r4075","r4076","r4077","r4078","r4079","r4080","r4081","r4082","r4083","r4087","r4088","r4089","r4090","r4091","r4092","r4093","r4094","r4095","r4096","r4097","r4098","r4099","r4100","r4101","r4102","r4103","r4104","r4105","r4106","r4107","r4108","r4109","r4110","r4111","r4112","r4113","r4114","r4115","r4116","r4117","r4118","r4119","r4120","r4121","r4122","r4123","r4124","r4125","r4126","r4127","r4128","r4129","r4130","r4131","r4132","r4133","r4134","r4135","r4138","r4141","r4143","r4144","r4147","r4148"]
       population: {
         total: 1500000,
         by_profession: { farmers: 650000, craftsmen: 150000, merchants: 80000, sailors: 0, clergy: 80000, soldiers: 120000, slaves: 420000 },
@@ -3063,7 +3063,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 65, stability: 62,
         ruler: { type: 'person', name: 'Зипойт I', personal_power: 72 },
       },
-      regions: [],
+      regions: ["r152","r226","r1139","r3539","r3548","r3881","r3882","r3883","r3884","r3885","r3886","r3887","r3888","r3893","r3894"]
       population: {
         total: 250000,
         by_profession: { farmers: 100000, craftsmen: 35000, merchants: 25000, sailors: 20000, clergy: 15000, soldiers: 25000, slaves: 30000 },
@@ -3097,7 +3097,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 60, stability: 55,
         ruler: { type: 'person', name: 'Местный правитель', personal_power: 60 },
       },
-      regions: [],
+      regions: ["r861","r3962","r3964","r3965","r3966","r3967","r3969","r3970","r3971","r3972","r3973","r3974","r3978","r3980","r3981","r4003","r4004","r4005","r4006"]
       population: {
         total: 400000,
         by_profession: { farmers: 170000, craftsmen: 55000, merchants: 35000, sailors: 20000, clergy: 20000, soldiers: 40000, slaves: 60000 },
@@ -3130,7 +3130,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 75, stability: 70,
         ruler: { type: 'person', name: 'Царь набатеев', personal_power: 72 },
       },
-      regions: [],
+      regions: ["r3415","r3416","r3418","r3419","r3421","r3422","r3423","r3424","r3425","r3426","r3427","r3428","r3429","r3430","r3431","r3433","r3434","r3435","r3436","r3437","r3442","r3446","r3457","r3458"]
       population: {
         total: 300000,
         by_profession: { farmers: 80000, craftsmen: 50000, merchants: 80000, sailors: 15000, clergy: 20000, soldiers: 25000, slaves: 30000 },
@@ -3163,7 +3163,7 @@ const INITIAL_GAME_STATE = {
         type: 'theocracy', legitimacy: 78, stability: 70,
         ruler: { type: 'person', name: 'Первосвященник Симон I', personal_power: 72 },
       },
-      regions: [],
+      regions: ["r3447","r3448","r3449","r3450","r3451","r3452","r3472","r3475","r3476"]
       population: {
         total: 350000,
         by_profession: { farmers: 150000, craftsmen: 60000, merchants: 40000, sailors: 5000, clergy: 50000, soldiers: 15000, slaves: 30000 },
@@ -3197,7 +3197,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 62, stability: 55,
         ruler: { type: 'person', name: 'Севт III', personal_power: 72 },
       },
-      regions: [],
+      regions: ["r378","r379","r3087","r3088","r3099","r3100","r3101","r3102","r3103","r3104","r3108"]
       population: {
         total: 300000,
         by_profession: { farmers: 120000, craftsmen: 40000, merchants: 30000, sailors: 15000, clergy: 15000, soldiers: 50000, slaves: 30000 },
@@ -3231,7 +3231,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 62, stability: 58,
         ruler: { type: 'person', name: 'Сатрап Софены', personal_power: 62 },
       },
-      regions: [],
+      regions: ["r3549","r3550","r3551","r3561","r3563","r3564","r3575","r3576","r3577","r3578","r3584","r3585","r3707","r4022"]
       population: {
         total: 350000,
         by_profession: { farmers: 150000, craftsmen: 50000, merchants: 30000, sailors: 0, clergy: 20000, soldiers: 40000, slaves: 60000 },
@@ -3264,7 +3264,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 70, stability: 65,
         ruler: { type: 'person', name: 'Атропат', personal_power: 75 },
       },
-      regions: [],
+      regions: ["r159","r4084","r4085","r4086","r4145","r4146"]
       population: {
         total: 400000,
         by_profession: { farmers: 170000, craftsmen: 50000, merchants: 30000, sailors: 0, clergy: 30000, soldiers: 50000, slaves: 70000 },
@@ -3297,7 +3297,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 68, stability: 60,
         ruler: { type: 'person', name: 'Фратаферн', personal_power: 65 },
       },
-      regions: [],
+      regions: ["r160","r435","r844","r845"]
       population: {
         total: 500000,
         by_profession: { farmers: 200000, craftsmen: 80000, merchants: 60000, sailors: 5000, clergy: 50000, soldiers: 50000, slaves: 55000 },
@@ -3329,7 +3329,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 58, stability: 55,
         ruler: { type: 'person', name: 'Правитель Гордиены', personal_power: 60 },
       },
-      regions: [],
+      regions: ["r4021","r4074"]
       population: {
         total: 250000,
         by_profession: { farmers: 100000, craftsmen: 35000, merchants: 20000, sailors: 0, clergy: 15000, soldiers: 30000, slaves: 50000 },
@@ -3362,7 +3362,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 62, stability: 58,
         ruler: { type: 'person', name: 'Птолемей Коммагенский', personal_power: 62 },
       },
-      regions: [],
+      regions: ["r3552","r3555","r3556","r3557","r3560","r3681","r3702","r3703","r3708","r3709","r3710","r3711","r3712","r3713","r3714","r3715","r3716"]
       population: {
         total: 300000,
         by_profession: { farmers: 120000, craftsmen: 50000, merchants: 40000, sailors: 5000, clergy: 20000, soldiers: 30000, slaves: 35000 },
@@ -3395,7 +3395,7 @@ const INITIAL_GAME_STATE = {
         type: 'oligarchy', legitimacy: 52, stability: 48,
         ruler: { type: 'council', name: 'Совет Самарии', personal_power: 48 },
       },
-      regions: [],
+      regions: ["r3453","r3454","r3455","r3463","r3464","r3465","r3466","r3467","r3469","r3480"]
       population: {
         total: 200000,
         by_profession: { farmers: 90000, craftsmen: 35000, merchants: 25000, sailors: 5000, clergy: 20000, soldiers: 10000, slaves: 15000 },
@@ -3428,7 +3428,7 @@ const INITIAL_GAME_STATE = {
       name: 'Византий', adjective: 'византийское', color: '#C41E3A', flag_emoji: '⚓',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 72, stability: 68, ruler: { type: 'council', name: 'Совет Византия', personal_power: 60 } },
-      regions: [],
+      regions: ["r858","r3094"]
       population: { total: 45000, happiness: 65, growth_rate: 0.002 },
       economy: { treasury: 5000, tax_rate: 0.12, primary_exports: ['trade_goods', 'fish'], primary_imports: ['wheat', 'timber', 'iron'], trade_partners: ['bosporan_kingdom', 'athens', 'bithynia'], stockpile: { wheat: 6000 }, trade_routes: [] },
       military: { infantry: 2500, cavalry: 200, ships: 40, mercenaries: 500, morale: 70, loyalty: 72, at_war_with: [] },
@@ -3441,7 +3441,7 @@ const INITIAL_GAME_STATE = {
       name: 'Синопа', adjective: 'синопское', color: '#5B8B9B', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 65, stability: 62, ruler: { type: 'council', name: 'Совет Синопы', personal_power: 55 } },
-      regions: [],
+      regions: ["r3963"]
       population: { total: 30000, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 3000, tax_rate: 0.11, primary_exports: ['fish', 'trade_goods', 'iron'], primary_imports: ['wheat', 'timber'], trade_partners: ['pontus', 'bosporan_kingdom', 'byzantion'], stockpile: { wheat: 4000 }, trade_routes: [] },
       military: { infantry: 1500, cavalry: 100, ships: 25, mercenaries: 300, morale: 62, loyalty: 65, at_war_with: [] },
@@ -3454,7 +3454,7 @@ const INITIAL_GAME_STATE = {
       name: 'Трапезунт', adjective: 'трапезунтское', color: '#4B9B8B', flag_emoji: '⛰️',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 62, stability: 60, ruler: { type: 'council', name: 'Совет Трапезунта', personal_power: 52 } },
-      regions: [],
+      regions: ["r4015"]
       population: { total: 22000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 2200, tax_rate: 0.11, primary_exports: ['trade_goods', 'iron', 'furs'], primary_imports: ['wheat', 'wine'], trade_partners: ['sinope', 'pontus', 'bosporan_kingdom'], stockpile: { wheat: 2800 }, trade_routes: [] },
       military: { infantry: 1000, cavalry: 80, ships: 15, mercenaries: 200, morale: 60, loyalty: 62, at_war_with: [] },
@@ -3467,7 +3467,7 @@ const INITIAL_GAME_STATE = {
       name: 'Херсонес', adjective: 'херсонесское', color: '#4B8BAB', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'republic', legitimacy: 70, stability: 68, ruler: { type: 'council', name: 'Совет Херсонеса', personal_power: 58 } },
-      regions: [],
+      regions: ["r3133"]
       population: { total: 20000, happiness: 62, growth_rate: 0.002 },
       economy: { treasury: 2500, tax_rate: 0.11, primary_exports: ['wheat', 'fish', 'slaves'], primary_imports: ['trade_goods', 'wine', 'pottery'], trade_partners: ['bosporan_kingdom', 'scythians', 'athens'], stockpile: { wheat: 5000 }, trade_routes: [] },
       military: { infantry: 1500, cavalry: 100, ships: 20, mercenaries: 300, morale: 68, loyalty: 70, at_war_with: [] },
@@ -3480,7 +3480,7 @@ const INITIAL_GAME_STATE = {
       name: 'Ольвия', adjective: 'ольвийское', color: '#5B9BAB', flag_emoji: '🌾',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 62, stability: 58, ruler: { type: 'council', name: 'Совет Ольвии', personal_power: 50 } },
-      regions: [],
+      regions: ["r3125"]
       population: { total: 15000, happiness: 55, growth_rate: 0.001 },
       economy: { treasury: 1500, tax_rate: 0.10, primary_exports: ['wheat', 'fish', 'slaves', 'furs'], primary_imports: ['wine', 'pottery', 'trade_goods'], trade_partners: ['scythians', 'bosporan_kingdom', 'athens'], stockpile: { wheat: 3000 }, trade_routes: [] },
       military: { infantry: 700, cavalry: 50, ships: 15, mercenaries: 100, morale: 55, loyalty: 58, at_war_with: [] },
@@ -3493,7 +3493,7 @@ const INITIAL_GAME_STATE = {
       name: 'Оргаме', adjective: 'оргамское', color: '#6B9BAB', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 58, stability: 55, ruler: { type: 'council', name: 'Совет Оргаме', personal_power: 48 } },
-      regions: [],
+      regions: ["r3115","r3118","r3119"]
       population: { total: 18000, happiness: 56, growth_rate: 0.001 },
       economy: { treasury: 1200, tax_rate: 0.10, primary_exports: ['wheat', 'fish', 'furs'], primary_imports: ['wine', 'trade_goods'], trade_partners: ['scythians', 'istros', 'bosporan_kingdom'], stockpile: { wheat: 2500 }, trade_routes: [] },
       military: { infantry: 800, cavalry: 50, ships: 12, mercenaries: 100, morale: 55, loyalty: 58, at_war_with: [] },
@@ -3506,7 +3506,7 @@ const INITIAL_GAME_STATE = {
       name: 'Истрия', adjective: 'истрийское', color: '#5B8BAB', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 62, stability: 60, ruler: { type: 'council', name: 'Совет Истрии', personal_power: 52 } },
-      regions: [],
+      regions: ["r3117"]
       population: { total: 16000, happiness: 58, growth_rate: 0.001 },
       economy: { treasury: 1400, tax_rate: 0.10, primary_exports: ['wheat', 'fish', 'furs'], primary_imports: ['wine', 'pottery', 'trade_goods'], trade_partners: ['orgame', 'scythians', 'getae'], stockpile: { wheat: 2800 }, trade_routes: [] },
       military: { infantry: 800, cavalry: 50, ships: 15, mercenaries: 100, morale: 58, loyalty: 60, at_war_with: [] },
@@ -3519,7 +3519,7 @@ const INITIAL_GAME_STATE = {
       name: 'Аполлония Понтийская', adjective: 'аполлонийское', color: '#4B7B9B', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 65, stability: 62, ruler: { type: 'council', name: 'Совет Аполлонии', personal_power: 52 } },
-      regions: [],
+      regions: ["r3106","r3107"]
       population: { total: 14000, happiness: 60, growth_rate: 0.001 },
       economy: { treasury: 1500, tax_rate: 0.11, primary_exports: ['fish', 'wheat', 'trade_goods'], primary_imports: ['wine', 'pottery', 'iron'], trade_partners: ['byzantion', 'bosporan_kingdom', 'athens'], stockpile: { wheat: 2200 }, trade_routes: [] },
       military: { infantry: 700, cavalry: 40, ships: 18, mercenaries: 100, morale: 62, loyalty: 65, at_war_with: [] },
@@ -3532,7 +3532,7 @@ const INITIAL_GAME_STATE = {
       name: 'Милет', adjective: 'милетское', color: '#4169E1', flag_emoji: '🏛️',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 62, stability: 58, ruler: { type: 'council', name: 'Совет Милета', personal_power: 55 } },
-      regions: [],
+      regions: ["r3180","r3181"]
       population: { total: 35000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 4500, tax_rate: 0.12, primary_exports: ['trade_goods', 'wool', 'pottery'], primary_imports: ['wheat', 'timber', 'iron'], trade_partners: ['rhodes', 'seleukid_empire', 'bosporan_kingdom'], stockpile: { wheat: 5000 }, trade_routes: [] },
       military: { infantry: 2000, cavalry: 150, ships: 35, mercenaries: 500, morale: 60, loyalty: 62, at_war_with: [] },
@@ -3545,7 +3545,7 @@ const INITIAL_GAME_STATE = {
       name: 'Галикарнасс', adjective: 'галикарнасское', color: '#5B79C1', flag_emoji: '🏺',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 60, stability: 58, ruler: { type: 'council', name: 'Совет Галикарнасса', personal_power: 52 } },
-      regions: [],
+      regions: ["r3182","r3186"]
       population: { total: 25000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 2800, tax_rate: 0.11, primary_exports: ['trade_goods', 'marble', 'fish'], primary_imports: ['wheat', 'timber', 'iron'], trade_partners: ['rhodes', 'kos', 'seleukid_empire'], stockpile: { wheat: 3500 }, trade_routes: [] },
       military: { infantry: 1200, cavalry: 100, ships: 20, mercenaries: 300, morale: 58, loyalty: 60, at_war_with: [] },
@@ -3558,7 +3558,7 @@ const INITIAL_GAME_STATE = {
       name: 'Арад', adjective: 'арадское', color: '#8B7040', flag_emoji: '⚓',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 68, stability: 65, ruler: { type: 'council', name: 'Совет Арада', personal_power: 55 } },
-      regions: [],
+      regions: ["r3629"]
       population: { total: 20000, happiness: 62, growth_rate: 0.002 },
       economy: { treasury: 2500, tax_rate: 0.11, primary_exports: ['purple_dye', 'trade_goods', 'glass'], primary_imports: ['wheat', 'timber', 'iron'], trade_partners: ['seleukid_empire', 'sidon', 'ptolemaic_kingdom'], stockpile: { wheat: 2500 }, trade_routes: [] },
       military: { infantry: 1000, cavalry: 50, ships: 25, mercenaries: 200, morale: 65, loyalty: 65, at_war_with: [] },
@@ -3571,7 +3571,7 @@ const INITIAL_GAME_STATE = {
       name: 'Сидон', adjective: 'сидонское', color: '#9B5040', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 62, stability: 58, ruler: { type: 'council', name: 'Совет Сидона', personal_power: 55 } },
-      regions: [],
+      regions: ["r3505","r3508"]
       population: { total: 40000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 5000, tax_rate: 0.12, primary_exports: ['purple_dye', 'glass', 'trade_goods'], primary_imports: ['wheat', 'timber'], trade_partners: ['ptolemaic_kingdom', 'arados', 'byblos'], stockpile: { wheat: 5000 }, trade_routes: [] },
       military: { infantry: 2000, cavalry: 100, ships: 30, mercenaries: 500, morale: 60, loyalty: 58, at_war_with: [] },
@@ -3584,7 +3584,7 @@ const INITIAL_GAME_STATE = {
       name: 'Библ', adjective: 'библское', color: '#8B6040', flag_emoji: '📜',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 65, stability: 62, ruler: { type: 'council', name: 'Совет Библа', personal_power: 52 } },
-      regions: [],
+      regions: ["r3625"]
       population: { total: 18000, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 2200, tax_rate: 0.11, primary_exports: ['trade_goods', 'purple_dye', 'papyrus'], primary_imports: ['wheat', 'timber', 'iron'], trade_partners: ['sidon', 'arados', 'ptolemaic_kingdom'], stockpile: { wheat: 2500 }, trade_routes: [] },
       military: { infantry: 800, cavalry: 50, ships: 20, mercenaries: 200, morale: 60, loyalty: 62, at_war_with: [] },
@@ -3597,7 +3597,7 @@ const INITIAL_GAME_STATE = {
       name: 'Бамбика', adjective: 'бамбикское', color: '#9B7050', flag_emoji: '🌙',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'theocracy', legitimacy: 72, stability: 68, ruler: { type: 'council', name: 'Жречество Атаргатис', personal_power: 65 } },
-      regions: [],
+      regions: ["r3676","r3677"]
       population: { total: 25000, happiness: 65, growth_rate: 0.002 },
       economy: { treasury: 3000, tax_rate: 0.10, primary_exports: ['trade_goods', 'incense'], primary_imports: ['wheat', 'iron'], trade_partners: ['seleukid_empire', 'arados', 'palmyra_tribes'], stockpile: { wheat: 3000 }, trade_routes: [] },
       military: { infantry: 1200, cavalry: 200, ships: 0, mercenaries: 300, morale: 65, loyalty: 70, at_war_with: [] },
@@ -3612,7 +3612,7 @@ const INITIAL_GAME_STATE = {
       name: 'Кизик', adjective: 'кизикское', color: '#5B7BAB', flag_emoji: '⚓',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Кизика' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r796","r1121","r3168","r3865"]
       population: { total: 25000, happiness: 62 },
       economy: { treasury: 3000, stockpile: { wheat: 3500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1200, cavalry: 100, ships: 25, morale: 62, at_war_with: [] },
@@ -3625,7 +3625,7 @@ const INITIAL_GAME_STATE = {
       name: 'Кибиратия', adjective: 'кибиратийское', color: '#7B6B8B', flag_emoji: '🏔️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Правитель Кибиратии' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r3763","r3764","r3765","r3766","r3767","r3783","r3788","r3789","r3790","r3791","r3793","r3794"]
       population: { total: 35000, happiness: 56 },
       economy: { treasury: 1500, stockpile: { wheat: 3000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2500, cavalry: 300, ships: 5, morale: 60, at_war_with: [] },
@@ -3638,7 +3638,7 @@ const INITIAL_GAME_STATE = {
       name: 'Ойноанда', adjective: 'ойноандское', color: '#7B8B6B', flag_emoji: '🏔️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Ойноанды' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r3189","r3770","r3771","r3776","r3777","r3778","r3779","r3780","r3781","r3782"]
       population: { total: 15000, happiness: 58 },
       economy: { treasury: 700, stockpile: { wheat: 1500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1000, cavalry: 100, ships: 0, morale: 60, at_war_with: [] },
@@ -3651,7 +3651,7 @@ const INITIAL_GAME_STATE = {
       name: 'Ольба', adjective: 'ольбское', color: '#8B7B5B', flag_emoji: '🏛️',
       is_player: false, is_minor: true,
       government: { type: 'theocracy', ruler: { name: 'Жречество Зевса Ольбийского' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r3743","r3744","r3746","r3747","r3748","r3749","r3751","r3815","r3817"]
       population: { total: 25000, happiness: 60 },
       economy: { treasury: 1200, stockpile: { wheat: 2500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1500, cavalry: 150, ships: 5, morale: 60, at_war_with: [] },
@@ -3664,7 +3664,7 @@ const INITIAL_GAME_STATE = {
       name: 'Сагалассия', adjective: 'сагалассийское', color: '#7B9B6B', flag_emoji: '🏔️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Правитель Сагалассии' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r3785","r3786","r3795","r3796","r3797","r3798","r3799","r3800","r3802","r3803","r3804","r3805","r3947","r3948","r3957","r3959"]
       population: { total: 18000, happiness: 58 },
       economy: { treasury: 800, stockpile: { wheat: 1800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1500, cavalry: 150, ships: 0, morale: 65, at_war_with: [] },
@@ -3677,7 +3677,7 @@ const INITIAL_GAME_STATE = {
       name: 'Книд', adjective: 'книдское', color: '#4B8BAB', flag_emoji: '🏛️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Книда' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r789"]
       population: { total: 15000, happiness: 62 },
       economy: { treasury: 1500, stockpile: { wheat: 1800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 800, cavalry: 50, ships: 20, morale: 62, at_war_with: [] },
@@ -3690,7 +3690,7 @@ const INITIAL_GAME_STATE = {
       name: 'Кос', adjective: 'косское', color: '#5BAB9B', flag_emoji: '🐍',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Коса' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r1097"]
       population: { total: 20000, happiness: 65 },
       economy: { treasury: 2000, stockpile: { wheat: 2500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1000, cavalry: 50, ships: 20, morale: 62, at_war_with: [] },
@@ -3703,7 +3703,7 @@ const INITIAL_GAME_STATE = {
       name: 'Фасис', adjective: 'фасисское', color: '#4B9B6B', flag_emoji: '🌊',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Фасиса' } , legitimacy: 55, stability: 50},
-      regions: [],
+      regions: ["r120","r866"]
       population: { total: 8000, happiness: 56 },
       economy: { treasury: 600, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 400, cavalry: 30, ships: 8, morale: 58, at_war_with: [] },
@@ -3716,7 +3716,7 @@ const INITIAL_GAME_STATE = {
       name: 'Гениохи', adjective: 'гениохское', color: '#5B7B6B', flag_emoji: '⚓',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь гениохов' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r867"]
       population: { total: 12000, happiness: 58 },
       economy: { treasury: 400, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1000, cavalry: 100, ships: 15, morale: 65, at_war_with: [] },
@@ -3729,7 +3729,7 @@ const INITIAL_GAME_STATE = {
       name: 'Марианды', adjective: 'марианднское', color: '#6B8B7B', flag_emoji: '🌲',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь марианднов' } , legitimacy: 45, stability: 45},
-      regions: [],
+      regions: ["r859","r860","r3895","r3897","r3898","r3968"]
       population: { total: 35000, happiness: 52 },
       economy: { treasury: 700, stockpile: { wheat: 3000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2500, cavalry: 200, ships: 5, morale: 58, at_war_with: [] },
@@ -3753,7 +3753,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "raider",
     ai_priority: ["military", "expansion", "trade"],
     government: { type: "monarchy", stability: 55, corruption: 40 , legitimacy: 65, ruler: { type: "person", name: "Сайтафарн", character_ids: [], personal_power: 65 }},
-    regions: ["northern_pontic_steppe", "crimea_steppes", "dnieper_bend", "dniester_lower", "don_lower", "azov_coast", "kuban_steppe", "caucasus_foothills_north", "tanais_region", "zaporizhia_steppe"],
+    regions: ["r576","r1656","r1718","r1719","r1720","r1721","r1728","r1729","r1739","r1740","r1741","r3123","r3124","r3126","r3127","r3128","r3129","r3130","r3131","r3137","r3138","r3139","r3140","r3141"]
     population: {
       total: 158000,
       by_profession: {
@@ -3795,7 +3795,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "expansionist",
     ai_priority: ["expansion", "economy", "military"],
     government: { type: "monarchy", stability: 70, corruption: 35 , legitimacy: 65, ruler: { type: "person", name: "Чандрагупта Маурья", character_ids: [], personal_power: 90 }},
-    regions: ["magadha", "pataliputra_region", "anga", "videha", "kosala", "kashi", "vajji", "malla", "panchala", "avanti", "surashtra", "sindhu_lower", "taxila", "gandhara_core", "kalinga_coast", "deccan_north", "andhra_north"],
+    regions: ["r42","r59","r64","r71","r72","r76","r77","r85","r86","r182","r189","r192","r279","r281","r282","r283","r284","r285","r286","r287","r288","r290","r291","r292","r293","r294","r295","r296","r633","r639","r640","r642","r936","r937","r938","r965","r966","r967","r968","r969","r970","r971","r972","r973","r974","r975","r976","r977","r978","r979","r980"]
     population: {
       total: 3620000,
       by_profession: {
@@ -3838,7 +3838,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["economy", "military", "diplomacy"],
     government: { type: "satrapy", stability: 55, corruption: 40 , legitimacy: 55, ruler: { type: "person", name: "Андрагор", character_ids: [], personal_power: 55 }},
-    regions: ["parthiene", "hyrcania", "nisa_region", "margiana"],
+    regions: ["r438","r1570"]
     population: { total: 350000 },
     economy: {
       treasury: 1800,
@@ -3864,7 +3864,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["trade", "economy", "military"],
     government: { type: "satrapy", stability: 60, corruption: 35 , legitimacy: 55, ruler: { type: "person", name: "Стасанор", character_ids: [], personal_power: 60 }},
-    regions: ["bactria_core", "sogdia", "maracanda_region", "chorasmia_south", "ferghana_west"],
+    regions: ["r434","r441","r842"]
     population: { total: 500000 },
     economy: {
       treasury: 2500,
@@ -3890,7 +3890,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "raider",
     ai_priority: ["military", "expansion"],
     government: { type: "tribal", stability: 45, corruption: 20 , legitimacy: 45, ruler: { type: "council", name: "Совет вождей", character_ids: [], personal_power: 40 }},
-    regions: ["don_middle", "volga_lower", "caspian_steppe"],
+    regions: ["r402","r1624","r1625","r1633","r1635","r1637","r1638","r1639","r1640","r1641","r1653","r1655","r1657","r1670","r1672","r1673","r1694","r1695","r1696","r1697","r1698","r1699","r1702","r1703","r1704","r1709","r1710","r1711","r1712","r1713","r1714","r1715","r1716","r1722","r1754","r1755","r1759"]
     population: { total: 120000 },
     economy: {
       treasury: 600,
@@ -3916,7 +3916,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["trade", "economy"],
     government: { type: "tribal", stability: 50, corruption: 25 , legitimacy: 45, ruler: { type: "council", name: "Совет племён", character_ids: [], personal_power: 35 }},
-    regions: ["azov_east_coast", "kuban_lower", "taman_peninsula"],
+    regions: ["r408","r579","r1647","r1648","r1649","r1650","r1651","r1652","r1706","r1708","r3146","r3148","r3149","r3150","r3151"]
     population: { total: 80000 },
     economy: {
       treasury: 500,
@@ -3942,7 +3942,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "raider",
     ai_priority: ["military", "expansion"],
     government: { type: "tribal", stability: 40, corruption: 20 , legitimacy: 45, ruler: { type: "person", name: "Племенной вождь", character_ids: [], personal_power: 50 }},
-    regions: ["aral_steppe", "jaxartes_middle", "fergana_steppe", "pamir_foothills"],
+    regions: ["r41","r110","r409","r410","r411","r578","r1497","r1498","r1499","r1501","r1503","r1554","r1556","r1557","r1558","r1559","r1560","r1561","r1582"]
     population: { total: 200000 },
     economy: {
       treasury: 800,
@@ -3970,7 +3970,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "raider",
     ai_priority: ["military"],
     government: { type: "tribal", stability: 40, corruption: 15 , legitimacy: 45, ruler: { type: "person", name: "Племенной вождь", character_ids: [], personal_power: 45 }},
-    regions: ["dnieper_left", "desna_lower"],
+    regions: ["r1705","r1707","r1717","r1723","r1724","r1725","r1726","r1727","r1730","r1731","r1732","r1733","r1734","r1735","r1736","r1737","r1738","r1742","r1743","r1744","r1745","r1746","r1747","r1748","r1752","r1753"]
     population: { total: 60000 },
     economy: { gold: 30, income_per_turn: 8, trade_routes: [], stockpile: { horses: 400, cattle: 200 } , treasury: 300, tax_rate: 0.10},
     military: { infantry: 3000, cavalry: 8000, ships: 0, at_war_with: [] },
@@ -3989,7 +3989,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["military", "trade"],
     government: { type: "tribal", stability: 50, corruption: 20 , legitimacy: 45, ruler: { type: "person", name: "Племенной вождь", character_ids: [], personal_power: 45 }},
-    regions: ["kuban_middle", "stavropol_steppe"],
+    regions: ["r407","r1642","r1643","r1644","r1645","r1646","r1654"]
     population: { total: 70000 },
     economy: { gold: 40, income_per_turn: 12, trade_routes: ["bosporan_kingdom"], stockpile: { horses: 500, furs: 150 } , treasury: 400, tax_rate: 0.10},
     military: { infantry: 4000, cavalry: 10000, ships: 0, at_war_with: [] },
@@ -4008,7 +4008,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "raider",
     ai_priority: ["military"],
     government: { type: "tribal", stability: 45, corruption: 15 , legitimacy: 45, ruler: { type: "person", name: "Племенной вождь", character_ids: [], personal_power: 50 }},
-    regions: ["ural_lower", "caspian_north_coast"],
+    regions: ["r1578","r1583","r1584","r1593","r1612","r1613","r1629","r1630","r1631","r1632","r1634","r1636"]
     population: { total: 80000 },
     economy: { gold: 35, income_per_turn: 10, trade_routes: ["roxolani"], stockpile: { horses: 700, furs: 200 } , treasury: 350, tax_rate: 0.10},
     military: { infantry: 4000, cavalry: 15000, ships: 0, at_war_with: [] },
@@ -4027,7 +4027,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["trade", "economy"],
     government: { type: "monarchy", stability: 55, corruption: 30 , legitimacy: 65, ruler: { type: "person", name: "Сатрап Хорезма", character_ids: [], personal_power: 50 }},
-    regions: ["amu_darya_delta"],
+    regions: ["r1562","r1563","r1564","r1573"]
     population: { total: 120000 },
     economy: { gold: 90, income_per_turn: 22, trade_routes: ["bactria", "saka"], stockpile: { grain: 400, cotton: 300 } , treasury: 900, tax_rate: 0.10},
     military: { infantry: 5000, cavalry: 8000, ships: 0, at_war_with: [] },
@@ -4046,7 +4046,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["economy"],
     government: { type: "satrapy", stability: 45, corruption: 35 , legitimacy: 55, ruler: { type: "person", name: "Сатрап Гедросии", character_ids: [], personal_power: 45 }},
-    regions: ["gedrosia_desert"],
+    regions: ["r84"]
     population: { total: 90000 },
     economy: { gold: 60, income_per_turn: 15, trade_routes: ["maurya_empire", "parthia"], stockpile: { grain: 150, spices: 200 } , treasury: 600, tax_rate: 0.10},
     military: { infantry: 4000, cavalry: 3000, ships: 100, at_war_with: [] },
@@ -4065,7 +4065,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["trade", "economy"],
     government: { type: "satrapy", stability: 60, corruption: 30 , legitimacy: 55, ruler: { type: "person", name: "Наместник Гандхары", character_ids: [], personal_power: 55 }},
-    regions: ["taxila_region", "peshawar_valley"],
+    regions: ["r843"]
     population: { total: 200000 },
     economy: { gold: 120, income_per_turn: 35, trade_routes: ["maurya_empire", "bactria"], stockpile: { grain: 600, iron: 200, lapis_lazuli: 250 } , treasury: 1200, tax_rate: 0.10},
     military: { infantry: 8000, cavalry: 5000, ships: 0, at_war_with: [] },
@@ -4089,7 +4089,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "expansionist",
     ai_priority: ["expansion", "military", "economy"],
     government: { type: "monarchy", stability: 75, corruption: 30 , legitimacy: 65, ruler: { type: "person", name: "Циньский Чжаосян-ван", character_ids: [], personal_power: 80 }},
-    regions: ["guanzhong_plain", "wei_river_valley", "hanzhong", "sichuan_basin", "shaanxi_north", "gansu_corridor", "longxi", "northern_shaanxi", "southern_shanxi", "northwest_henan"],
+    regions: ["r320","r1066","r1071","r1538","r1540","r1541","r1542","r1544","r1545"]
     population: {
       total: 2675000,
       by_profession: {
@@ -4130,7 +4130,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["expansion", "military", "economy"],
     government: { type: "monarchy", stability: 55, corruption: 45 , legitimacy: 65, ruler: { type: "person", name: "Чуский Цинсян-ван", character_ids: [], personal_power: 65 }},
-    regions: ["yangtze_middle", "hubei_plain", "hunan_north", "jiangxi_north", "anhui_south", "henan_south", "jiangsu_north", "zhejiang_north", "guangdong_north", "guizhou_north"],
+    regions: ["r300","r312","r622","r874","r875","r878","r879","r880","r881","r882","r884","r885","r886","r887","r888","r889","r890","r891","r892","r894","r1552"]
     population: {
       total: 3225000,
       by_profession: {
@@ -4173,7 +4173,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "militarist",
     ai_priority: ["military", "expansion", "diplomacy"],
     government: { type: "monarchy", stability: 60, corruption: 40 , legitimacy: 65, ruler: { type: "person", name: "Чжаоский Хуйвэнь-ван", character_ids: [], personal_power: 70 }},
-    regions: ["hebei_south", "shanxi_north", "inner_mongolia_south", "shanxi_south"],
+    regions: ["r303","r304","r988","r1059","r1063","r1065","r1070","r1072","r1447"]
     population: { total: 1500000 },
     economy: {
       treasury: 6000,
@@ -4199,7 +4199,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["economy", "trade", "military"],
     government: { type: "monarchy", stability: 50, corruption: 45 , legitimacy: 65, ruler: { type: "person", name: "Вэйский Чжао-ван", character_ids: [], personal_power: 55 }},
-    regions: ["henan_north", "shanxi_southeast", "hebei_south_west"],
+    regions: ["r307","r308","r1061","r1062","r1068","r1069","r1514","r1515","r1516","r1517","r1518","r1519","r1520","r1521","r1522","r1523","r1524","r1525","r1526","r1527","r1528","r1529","r1530","r1531","r1532","r1533","r1534","r1535","r1536","r1537","r1539","r1543"]
     population: { total: 1200000 },
     economy: {
       treasury: 5500,
@@ -4225,7 +4225,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["economy", "trade", "diplomacy"],
     government: { type: "monarchy", stability: 65, corruption: 35 , legitimacy: 65, ruler: { type: "person", name: "Циский Минь-ван", character_ids: [], personal_power: 65 }},
-    regions: ["shandong_peninsula", "hebei_east", "jiangsu_north_coast"],
+    regions: ["r301","r1023","r1057","r1058","r1060"]
     population: { total: 1800000 },
     economy: {
       treasury: 8000,
@@ -4251,7 +4251,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["military", "economy", "diplomacy"],
     government: { type: "monarchy", stability: 50, corruption: 40 , legitimacy: 65, ruler: { type: "person", name: "Ханьский Сян-ван", character_ids: [], personal_power: 50 }},
-    regions: ["henan_central", "shanxi_south_east"],
+    regions: ["r893"]
     population: { total: 900000 },
     economy: {
       treasury: 4000,
@@ -4277,7 +4277,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["economy", "diplomacy", "military"],
     government: { type: "monarchy", stability: 55, corruption: 35 , legitimacy: 65, ruler: { type: "person", name: "Яньский Чжао-ван", character_ids: [], personal_power: 70 }},
-    regions: ["hebei_north", "liaoning_west", "beijing_region"],
+    regions: ["r617","r916","r1064","r1328","r1330","r1335","r1336","r1337","r1338","r1339","r1340","r1341","r1363","r1380","r1381","r1382","r1383","r1384","r1385","r1386","r1387","r1388","r1389","r1390","r1391","r1392","r1393","r1394","r1395","r1396"]
     population: { total: 1000000 },
     economy: {
       treasury: 4500,
@@ -4305,7 +4305,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "raider",
     ai_priority: ["military", "expansion"],
     government: { type: "tribal", stability: 45, corruption: 20 , legitimacy: 45, ruler: { type: "person", name: "Тумань", character_ids: [], personal_power: 60 }},
-    regions: ["outer_mongolia_central", "inner_mongolia_north", "gobi_steppe"],
+    regions: ["r83","r412","r413","r591","r599","r615","r1073","r1074","r1086","r1424","r1425","r1427","r1428","r1429","r1430","r1431","r1432","r1433","r1434","r1435","r1436","r1437","r1438","r1439","r1440","r1441","r1442","r1443","r1444","r1445","r1454","r1455","r1456","r1457","r1470","r2060","r2061","r2063","r2064","r2066","r2075","r2076","r2089"]
     population: { total: 300000 },
     economy: { gold: 100, income_per_turn: 25, trade_routes: ["qin", "zhao"], stockpile: { horses: 1500, cattle: 800, furs: 400 } , treasury: 1000, tax_rate: 0.10},
     military: { infantry: 10000, cavalry: 60000, ships: 0, at_war_with: [] },
@@ -4324,7 +4324,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "raider",
     ai_priority: ["military", "expansion"],
     government: { type: "tribal", stability: 40, corruption: 15 , legitimacy: 45, ruler: { type: "council", name: "Совет племён", character_ids: [], personal_power: 40 }},
-    regions: ["liaoning_north", "inner_mongolia_east"],
+    regions: ["r603","r604","r605","r606","r607","r608","r609","r610","r612","r614","r616","r1329","r1331","r1374","r1375","r1426"]
     population: { total: 150000 },
     economy: { gold: 50, income_per_turn: 12, trade_routes: ["yan"], stockpile: { horses: 800, furs: 300 } , treasury: 500, tax_rate: 0.10},
     military: { infantry: 8000, cavalry: 25000, ships: 0, at_war_with: [] },
@@ -4343,7 +4343,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["trade", "military"],
     government: { type: "tribal", stability: 50, corruption: 20 , legitimacy: 45, ruler: { type: "person", name: "Племенной вождь", character_ids: [], personal_power: 50 }},
-    regions: ["gansu_west", "qilian_mountains"],
+    regions: ["r646","r910","r1449","r1452","r1453"]
     population: { total: 200000 },
     economy: { gold: 70, income_per_turn: 18, trade_routes: ["bactria", "qin", "xiongnu"], stockpile: { horses: 1000, jade: 300, furs: 200 } , treasury: 700, tax_rate: 0.10},
     military: { infantry: 10000, cavalry: 30000, ships: 0, at_war_with: [] },
@@ -4362,7 +4362,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["economy", "diplomacy"],
     government: { type: "monarchy", stability: 60, corruption: 30 , legitimacy: 65, ruler: { type: "person", name: "Ван Чжун", character_ids: [], personal_power: 55 }},
-    regions: ["korea_northwest", "manchuria_south"],
+    regions: ["r321","r600","r1286","r1287","r1306","r1307","r1308","r1309","r1314","r1315","r1316","r1317","r1318","r1319","r1320","r1321","r1322","r1323","r1324","r1325","r1326","r1327","r1332","r1333","r1334","r1342","r1343","r1344","r1345","r1346","r1347","r1348","r1349","r1350","r1351","r1352","r1353","r1354","r1355","r1356","r1357","r1358","r1359","r1360","r1364","r1365","r1366","r1367","r1368","r1369","r1370","r1371","r1372","r1373","r1376","r1377","r1378","r1379"]
     population: { total: 400000 },
     economy: { gold: 150, income_per_turn: 30, trade_routes: ["yan", "qi"], stockpile: { grain: 1000, bronze: 400, iron: 200 } , treasury: 1500, tax_rate: 0.10},
     military: { infantry: 15000, cavalry: 3000, ships: 100, at_war_with: [] },
@@ -4381,7 +4381,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["economy"],
     government: { type: "tribal", stability: 55, corruption: 10 , legitimacy: 45, ruler: { type: "council", name: "Совет старейшин", character_ids: [], personal_power: 30 }},
-    regions: ["northern_kyushu", "western_honshu"],
+    regions: ["r56","r621","r1029","r1056","r1123","r1125","r1172","r1173","r1174","r1175","r1176","r1177","r1178","r1291","r1293","r1294","r1298","r1299","r1300","r1301","r1303"]
     population: { total: 200000 },
     economy: { gold: 30, income_per_turn: 10, trade_routes: [], stockpile: { grain: 500, bronze: 150 } , treasury: 300, tax_rate: 0.10},
     military: { infantry: 8000, cavalry: 0, ships: 200, at_war_with: [] },
@@ -4405,7 +4405,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "militarist",
     ai_priority: ["expansion", "military", "trade"],
     government: { type: "tribal", stability: 50, corruption: 25 , legitimacy: 45, ruler: { type: "council", name: "Совет вождей", character_ids: [], personal_power: 35 }},
-    regions: ["gallia_lugdunensis", "gallia_belgica", "gallia_narbonensis", "gallia_aquitania", "armorica", "gallia_celtica"],
+    regions: ["r172","r173","r174","r175","r176","r177","r178","r198","r266","r276","r277","r327","r328","r331","r332","r333","r337","r339","r533","r2288","r2289","r2290","r2291"]
     population: { total: 2000000 },
     economy: {
       treasury: 4000,
@@ -4431,7 +4431,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["military", "economy"],
     government: { type: "tribal", stability: 55, corruption: 30 , legitimacy: 45, ruler: { type: "person", name: "Дромихет", character_ids: [], personal_power: 60 }},
-    regions: ["transylvania", "moldavia_north", "wallachia_east", "dacian_highlands"],
+    regions: ["r168","r373","r385","r386","r388","r390","r393"]
     population: { total: 700000 },
     economy: {
       treasury: 2000,
@@ -4457,7 +4457,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "raider",
     ai_priority: ["military", "trade", "expansion"],
     government: { type: "monarchy", stability: 50, corruption: 35 , legitimacy: 65, ruler: { type: "person", name: "Главкий", character_ids: [], personal_power: 65 }},
-    regions: ["dalmatia", "albania_north", "bosnia", "montenegro"],
+    regions: ["r346","r347","r348","r359","r361","r362","r364","r365","r366","r370","r769","r3024","r3025"]
     population: { total: 500000 },
     economy: {
       treasury: 1800,
@@ -4483,7 +4483,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["military", "economy"],
     government: { type: "tribal", stability: 50, corruption: 25 , legitimacy: 45, ruler: { type: "council", name: "Совет вождей", character_ids: [], personal_power: 35 }},
-    regions: ["meseta_central", "aragon_interior", "castile_old", "cantabria"],
+    regions: ["r258","r259","r263","r267"]
     population: { total: 800000 },
     economy: {
       treasury: 2500,
@@ -4511,7 +4511,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "militarist",
     ai_priority: ["military", "expansion"],
     government: { type: "tribal", stability: 45, corruption: 20 , legitimacy: 45, ruler: { type: "council", name: "Союз вождей", character_ids: [], personal_power: 40 }},
-    regions: ["gallia_belgica_north", "rhine_lower_west"],
+    regions: ["r98","r199","r334","r336","r476","r480","r1087","r1088","r1089","r1090","r1091","r1092","r1093","r1094","r1864"]
     population: { total: 400000 },
     economy: { gold: 100, income_per_turn: 20, trade_routes: ["gaul", "germani"], stockpile: { grain: 800, iron: 300 } , treasury: 1000, tax_rate: 0.10},
     military: { infantry: 30000, cavalry: 8000, ships: 50, at_war_with: [] },
@@ -4530,7 +4530,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["economy", "military"],
     government: { type: "tribal", stability: 50, corruption: 20 , legitimacy: 45, ruler: { type: "council", name: "Совет вождей", character_ids: [], personal_power: 30 }},
-    regions: ["britannia_south", "britannia_central"],
+    regions: ["r40","r97","r200","r531","r532","r534","r535","r536","r537","r538","r539","r540","r541","r542","r543","r544","r545","r546","r549","r552","r555"]
     population: { total: 600000 },
     economy: { gold: 150, income_per_turn: 28, trade_routes: ["gaul", "belgae"], stockpile: { grain: 1200, tin: 500, iron: 300 } , treasury: 1500, tax_rate: 0.10},
     military: { infantry: 30000, cavalry: 5000, ships: 150, at_war_with: [] },
@@ -4549,7 +4549,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "raider",
     ai_priority: ["expansion", "military"],
     government: { type: "tribal", stability: 40, corruption: 15 , legitimacy: 45, ruler: { type: "council", name: "Совет воинов", character_ids: [], personal_power: 35 }},
-    regions: ["germania_west", "germania_north", "elbe_valley"],
+    regions: ["r232","r399","r477","r478","r479","r481","r482","r483","r484","r485","r486","r487","r488","r489","r490","r504","r505","r506","r507","r508","r509","r510","r511","r512","r513","r514","r1095","r1865","r1866","r1867","r1868","r1869","r1872","r1873","r1874","r1875","r1876","r1877","r1878","r1879","r1880","r1881","r1882","r1883","r1884","r1885","r1886","r1888","r1889","r1890","r1891","r1892","r1893","r1894","r1895","r1896","r1897","r1898","r1899","r1900","r1901","r1902","r1903","r1904","r1905","r1909","r1911","r1913","r1914","r1915","r1916","r1917","r1918","r1919","r1920","r1923","r2366","r2370"]
     population: { total: 800000 },
     economy: { gold: 80, income_per_turn: 18, trade_routes: ["gaul", "belgae"], stockpile: { wood: 1000, furs: 600, iron: 200 } , treasury: 800, tax_rate: 0.10},
     military: { infantry: 60000, cavalry: 10000, ships: 100, at_war_with: [] },
@@ -4568,7 +4568,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["military", "trade"],
     government: { type: "tribal", stability: 55, corruption: 20 , legitimacy: 45, ruler: { type: "council", name: "Союз племён", character_ids: [], personal_power: 35 }},
-    regions: ["helvetia_plateau"],
+    regions: ["r335","r2306","r2339","r2341","r2344","r2345","r2346","r2347","r2348","r2349","r2350","r2351","r2352","r2353","r2354","r2355","r2356","r2357"]
     population: { total: 250000 },
     economy: { gold: 80, income_per_turn: 18, trade_routes: ["gaul", "rome"], stockpile: { grain: 500, iron: 200 } , treasury: 800, tax_rate: 0.10},
     military: { infantry: 20000, cavalry: 3000, ships: 0, at_war_with: [] },
@@ -4587,7 +4587,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["military", "economy"],
     government: { type: "tribal", stability: 50, corruption: 25 , legitimacy: 45, ruler: { type: "person", name: "Дромихет", character_ids: [], personal_power: 60 }},
-    regions: ["lower_danube_plain", "dobrudja"],
+    regions: ["r376","r384","r401","r3109","r3110","r3111","r3112","r3113","r3114","r3116","r3120","r3121","r3122"]
     population: { total: 300000 },
     economy: { gold: 90, income_per_turn: 22, trade_routes: ["macedon", "scythians", "dacia"], stockpile: { grain: 800, horses: 300 } , treasury: 900, tax_rate: 0.10},
     military: { infantry: 15000, cavalry: 10000, ships: 50, at_war_with: [] },
@@ -4606,7 +4606,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["economy", "trade"],
     government: { type: "tribal", stability: 50, corruption: 15 , legitimacy: 45, ruler: { type: "council", name: "Совет старейшин", character_ids: [], personal_power: 30 }},
-    regions: ["vistula_valley", "oder_valley"],
+    regions: ["r474","r493","r494","r495","r496","r497","r498","r499","r500","r501","r502","r503","r521","r524","r525","r526","r527","r528","r530","r1761","r1762","r1763","r1764","r1765","r1766","r1767","r1921","r1922","r1924","r1925","r1926","r1927","r1928","r1929","r1931","r1932","r1936","r1937","r1938","r1939","r1940","r1941","r1942","r1944","r1945","r1946","r1947","r1948","r1949","r1951","r1952","r1953","r1976","r1977","r1978","r1979","r1980"]
     population: { total: 300000 },
     economy: { gold: 50, income_per_turn: 12, trade_routes: ["germani", "balts"], stockpile: { grain: 600, amber: 300, furs: 400 } , treasury: 500, tax_rate: 0.10},
     military: { infantry: 15000, cavalry: 2000, ships: 50, at_war_with: [] },
@@ -4625,7 +4625,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["economy", "trade"],
     government: { type: "tribal", stability: 55, corruption: 10 , legitimacy: 45, ruler: { type: "council", name: "Совет племён", character_ids: [], personal_power: 30 }},
-    regions: ["prussia_region", "latvia_region", "lithuania_region"],
+    regions: ["r519","r522","r523","r529","r1768","r1769","r1770","r1771","r1772","r1773","r1774","r1775","r1776","r1777","r1778","r1779","r1780","r1781","r1782","r1783","r1784","r1785","r1786","r1787","r1788","r1789","r1790","r1791","r1792","r1793","r1794","r1795","r1796","r1797","r1798","r1799","r1800","r1801","r1803","r1804","r1805","r1806","r1807","r1808","r1809","r1810","r1811","r1816","r1817","r1818","r1819","r1821","r1833","r1834","r1835","r1934","r1935","r1954","r1955","r1956","r1957","r1958","r1959","r1960","r1961","r1962","r1963","r1964","r1965","r1966","r1967","r1968","r1969","r1970","r1973","r1975","r1982"]
     population: { total: 200000 },
     economy: { gold: 40, income_per_turn: 10, trade_routes: ["venedia", "germani"], stockpile: { amber: 800, furs: 500, honey: 200 } , treasury: 400, tax_rate: 0.10},
     military: { infantry: 10000, cavalry: 1000, ships: 80, at_war_with: [] },
@@ -4644,7 +4644,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["military"],
     government: { type: "tribal", stability: 50, corruption: 10 , legitimacy: 45, ruler: { type: "council", name: "Совет вождей", character_ids: [], personal_power: 30 }},
-    regions: ["caledonia", "pictland"],
+    regions: ["r547","r548"]
     population: { total: 150000 },
     economy: { gold: 25, income_per_turn: 8, trade_routes: ["britannia"], stockpile: { furs: 300, cattle: 400 } , treasury: 250, tax_rate: 0.10},
     military: { infantry: 12000, cavalry: 500, ships: 50, at_war_with: [] },
@@ -4663,7 +4663,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["trade", "economy"],
     government: { type: "tribal", stability: 55, corruption: 30 , legitimacy: 45, ruler: { type: "council", name: "Совет торговцев", character_ids: [], personal_power: 40 }},
-    regions: ["valencia_coast", "catalonia_coast", "andalusia_coast"],
+    regions: ["r268","r269","r270","r271","r272","r274","r275","r806","r807","r821","r2457","r2458","r2459","r2488","r2562","r2563","r2564","r2565","r2568","r2569","r2570","r2571","r2572","r2573","r2574","r2580","r2586","r2587","r2589","r2590","r2591","r2679"]
     population: { total: 500000 },
     economy: { gold: 200, income_per_turn: 42, trade_routes: ["carthage", "massalia", "celtiberia"], stockpile: { grain: 1000, silver: 400, fish: 600 } , treasury: 2000, tax_rate: 0.10},
     military: { infantry: 20000, cavalry: 8000, ships: 200, at_war_with: [] },

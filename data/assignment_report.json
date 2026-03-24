@@ -1,0 +1,1662 @@
+{
+  "generated": "2026-03-24T15:18:05.951Z",
+  "summary": {
+    "total_regions": 3808,
+    "assigned": 2684,
+    "neutral": 1124,
+    "unique_nations": 186,
+    "issues_count": 37
+  },
+  "issues": [
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "qataban",
+      "msg": "Нация \"qataban\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "meroe",
+      "msg": "Нация \"meroe\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "massylii",
+      "msg": "Нация \"massylii\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gedrosia",
+      "msg": "Нация \"gedrosia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "massilia",
+      "msg": "Нация \"massilia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "argos",
+      "msg": "Нация \"argos\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "rhodes",
+      "msg": "Нация \"rhodes\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "antipatrid_kingdom",
+      "msg": "Нация \"antipatrid_kingdom\" получила только 1 регион(а), priority=8"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "parthia",
+      "msg": "Нация \"parthia\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "hadramaut",
+      "msg": "Нация \"hadramaut\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ma_in",
+      "msg": "Нация \"ma_in\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "picts",
+      "msg": "Нация \"picts\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "taras",
+      "msg": "Нация \"taras\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "cyrene",
+      "msg": "Нация \"cyrene\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gandhara",
+      "msg": "Нация \"gandhara\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "saba",
+      "msg": "Нация \"saba\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "byzantion",
+      "msg": "Нация \"byzantion\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "han",
+      "msg": "Нация \"han\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "marsi",
+      "msg": "Нация \"marsi\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "croton",
+      "msg": "Нация \"croton\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "cenomanni",
+      "msg": "Нация \"cenomanni\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "messenia",
+      "msg": "Нация \"messenia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "corinth",
+      "msg": "Нация \"corinth\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "miletos",
+      "msg": "Нация \"miletos\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sinope",
+      "msg": "Нация \"sinope\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gordyene",
+      "msg": "Нация \"gordyene\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "OUT_OF_BBOX_TOTAL",
+      "nationId": null,
+      "msg": "19 регионов назначены нации, чей bbox их не содержит"
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "massylii",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "massilia",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "mantinea",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "antipatrid_kingdom",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "ancona",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "taras",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "locri",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "tegea",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "cyrene",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "saba",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    }
+  ],
+  "nation_stats": {
+    "qataban": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "britannia": {
+      "count": 21,
+      "terrain": {
+        "coastal_city": 21
+      }
+    },
+    "saka": {
+      "count": 19,
+      "terrain": {
+        "hills": 5,
+        "mountains": 6,
+        "river_valley": 3,
+        "plains": 2,
+        "coastal_city": 3
+      }
+    },
+    "maurya_empire": {
+      "count": 51,
+      "terrain": {
+        "mountains": 12,
+        "river_valley": 10,
+        "plains": 12,
+        "hills": 11,
+        "coastal_city": 6
+      }
+    },
+    "sembritia": {
+      "count": 4,
+      "terrain": {
+        "plains": 3,
+        "river_valley": 1
+      }
+    },
+    "meroe": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "carthage": {
+      "count": 37,
+      "terrain": {
+        "coastal_city": 20,
+        "mountains": 6,
+        "river_valley": 5,
+        "plains": 4,
+        "hills": 2
+      }
+    },
+    "massylii": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "yayoi_japan": {
+      "count": 21,
+      "terrain": {
+        "coastal_city": 15,
+        "river_valley": 2,
+        "plains": 2,
+        "mountains": 2
+      }
+    },
+    "axum": {
+      "count": 4,
+      "terrain": {
+        "coastal_city": 1,
+        "river_valley": 1,
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "xiongnu": {
+      "count": 43,
+      "terrain": {
+        "river_valley": 12,
+        "plains": 11,
+        "hills": 11,
+        "mountains": 9
+      }
+    },
+    "gedrosia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "seleukid_empire": {
+      "count": 179,
+      "terrain": {
+        "plains": 42,
+        "hills": 36,
+        "mountains": 37,
+        "coastal_city": 22,
+        "river_valley": 42
+      }
+    },
+    "daphnitaea": {
+      "count": 45,
+      "terrain": {
+        "coastal_city": 21,
+        "river_valley": 6,
+        "plains": 8,
+        "mountains": 6,
+        "hills": 4
+      }
+    },
+    "massilia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "numidia": {
+      "count": 59,
+      "terrain": {
+        "plains": 13,
+        "hills": 14,
+        "river_valley": 13,
+        "mountains": 13,
+        "coastal_city": 6
+      }
+    },
+    "belgae": {
+      "count": 15,
+      "terrain": {
+        "mountains": 4,
+        "coastal_city": 2,
+        "plains": 6,
+        "hills": 2,
+        "river_valley": 1
+      }
+    },
+    "utica": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "etruscan_conf": {
+      "count": 21,
+      "terrain": {
+        "coastal_city": 10,
+        "mountains": 6,
+        "hills": 2,
+        "river_valley": 2,
+        "plains": 1
+      }
+    },
+    "umbrians": {
+      "count": 12,
+      "terrain": {
+        "mountains": 3,
+        "plains": 4,
+        "hills": 2,
+        "river_valley": 2,
+        "coastal_city": 1
+      }
+    },
+    "lucani": {
+      "count": 15,
+      "terrain": {
+        "river_valley": 4,
+        "coastal_city": 5,
+        "plains": 2,
+        "hills": 2,
+        "mountains": 2
+      }
+    },
+    "leponti": {
+      "count": 10,
+      "terrain": {
+        "hills": 2,
+        "plains": 4,
+        "river_valley": 2,
+        "mountains": 2
+      }
+    },
+    "frentani": {
+      "count": 4,
+      "terrain": {
+        "mountains": 1,
+        "coastal_city": 2,
+        "hills": 1
+      }
+    },
+    "cappadocia": {
+      "count": 69,
+      "terrain": {
+        "hills": 17,
+        "plains": 18,
+        "mountains": 20,
+        "river_valley": 14
+      }
+    },
+    "phasis": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "egypt": {
+      "count": 170,
+      "terrain": {
+        "river_valley": 35,
+        "plains": 35,
+        "hills": 36,
+        "coastal_city": 35,
+        "mountains": 29
+      }
+    },
+    "thamud": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "vestini": {
+      "count": 4,
+      "terrain": {
+        "hills": 1,
+        "coastal_city": 2,
+        "mountains": 1
+      }
+    },
+    "sabinia": {
+      "count": 7,
+      "terrain": {
+        "plains": 3,
+        "mountains": 3,
+        "river_valley": 1
+      }
+    },
+    "samnites": {
+      "count": 8,
+      "terrain": {
+        "coastal_city": 1,
+        "hills": 3,
+        "river_valley": 2,
+        "plains": 1,
+        "mountains": 1
+      }
+    },
+    "picentes": {
+      "count": 4,
+      "terrain": {
+        "hills": 2,
+        "plains": 1,
+        "coastal_city": 1
+      }
+    },
+    "armenia": {
+      "count": 120,
+      "terrain": {
+        "river_valley": 33,
+        "mountains": 28,
+        "plains": 26,
+        "hills": 28,
+        "coastal_city": 5
+      }
+    },
+    "bithynia": {
+      "count": 15,
+      "terrain": {
+        "coastal_city": 6,
+        "river_valley": 3,
+        "plains": 2,
+        "hills": 2,
+        "mountains": 2
+      }
+    },
+    "atropatene": {
+      "count": 6,
+      "terrain": {
+        "river_valley": 1,
+        "plains": 1,
+        "hills": 2,
+        "mountains": 2
+      }
+    },
+    "persis": {
+      "count": 4,
+      "terrain": {
+        "plains": 1,
+        "river_valley": 1,
+        "coastal_city": 2
+      }
+    },
+    "greek_states": {
+      "count": 98,
+      "terrain": {
+        "river_valley": 9,
+        "coastal_city": 60,
+        "plains": 7,
+        "mountains": 11,
+        "hills": 11
+      }
+    },
+    "dacia": {
+      "count": 7,
+      "terrain": {
+        "plains": 2,
+        "hills": 3,
+        "mountains": 2
+      }
+    },
+    "gaul": {
+      "count": 23,
+      "terrain": {
+        "coastal_city": 16,
+        "mountains": 1,
+        "river_valley": 3,
+        "plains": 2,
+        "hills": 1
+      }
+    },
+    "scordisci": {
+      "count": 4,
+      "terrain": {
+        "plains": 2,
+        "river_valley": 2
+      }
+    },
+    "stymphalia": {
+      "count": 2,
+      "terrain": {
+        "river_valley": 1,
+        "plains": 1
+      }
+    },
+    "argos": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "mantinea": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "troizen": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "pellene": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "athens": {
+      "count": 7,
+      "terrain": {
+        "coastal_city": 7
+      }
+    },
+    "machyles": {
+      "count": 11,
+      "terrain": {
+        "river_valley": 2,
+        "mountains": 1,
+        "hills": 2,
+        "plains": 4,
+        "coastal_city": 2
+      }
+    },
+    "aetolia": {
+      "count": 4,
+      "terrain": {
+        "hills": 2,
+        "coastal_city": 1,
+        "river_valley": 1
+      }
+    },
+    "musulamii": {
+      "count": 73,
+      "terrain": {
+        "mountains": 18,
+        "river_valley": 13,
+        "plains": 15,
+        "hills": 16,
+        "coastal_city": 11
+      }
+    },
+    "gyzantia": {
+      "count": 43,
+      "terrain": {
+        "river_valley": 7,
+        "plains": 7,
+        "hills": 7,
+        "coastal_city": 16,
+        "mountains": 6
+      }
+    },
+    "gindania": {
+      "count": 14,
+      "terrain": {
+        "mountains": 3,
+        "plains": 4,
+        "hills": 4,
+        "river_valley": 3
+      }
+    },
+    "macedon": {
+      "count": 29,
+      "terrain": {
+        "coastal_city": 11,
+        "plains": 5,
+        "hills": 5,
+        "river_valley": 5,
+        "mountains": 3
+      }
+    },
+    "rhodes": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "germani": {
+      "count": 78,
+      "terrain": {
+        "plains": 15,
+        "river_valley": 17,
+        "coastal_city": 13,
+        "mountains": 18,
+        "hills": 15
+      }
+    },
+    "brundisium": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "messapians": {
+      "count": 5,
+      "terrain": {
+        "coastal_city": 5
+      }
+    },
+    "antipatrid_kingdom": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "carni": {
+      "count": 15,
+      "terrain": {
+        "coastal_city": 3,
+        "river_valley": 4,
+        "mountains": 4,
+        "plains": 2,
+        "hills": 2
+      }
+    },
+    "liburnians": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "celtiberia": {
+      "count": 4,
+      "terrain": {
+        "mountains": 1,
+        "river_valley": 2,
+        "coastal_city": 1
+      }
+    },
+    "iberian_coast": {
+      "count": 32,
+      "terrain": {
+        "plains": 3,
+        "hills": 4,
+        "coastal_city": 21,
+        "river_valley": 2,
+        "mountains": 2
+      }
+    },
+    "chu": {
+      "count": 21,
+      "terrain": {
+        "plains": 7,
+        "coastal_city": 5,
+        "river_valley": 3,
+        "hills": 3,
+        "mountains": 3
+      }
+    },
+    "qi": {
+      "count": 5,
+      "terrain": {
+        "hills": 1,
+        "coastal_city": 4
+      }
+    },
+    "zhao": {
+      "count": 9,
+      "terrain": {
+        "river_valley": 3,
+        "plains": 3,
+        "coastal_city": 1,
+        "hills": 1,
+        "mountains": 1
+      }
+    },
+    "wei": {
+      "count": 32,
+      "terrain": {
+        "river_valley": 9,
+        "plains": 8,
+        "hills": 8,
+        "mountains": 7
+      }
+    },
+    "qin": {
+      "count": 9,
+      "terrain": {
+        "plains": 3,
+        "mountains": 3,
+        "river_valley": 1,
+        "hills": 2
+      }
+    },
+    "gojoseon": {
+      "count": 58,
+      "terrain": {
+        "hills": 8,
+        "plains": 11,
+        "coastal_city": 25,
+        "river_valley": 7,
+        "mountains": 7
+      }
+    },
+    "lingones": {
+      "count": 17,
+      "terrain": {
+        "hills": 3,
+        "mountains": 9,
+        "river_valley": 3,
+        "plains": 2
+      }
+    },
+    "helvetii": {
+      "count": 18,
+      "terrain": {
+        "river_valley": 5,
+        "mountains": 4,
+        "hills": 5,
+        "plains": 4
+      }
+    },
+    "illyria": {
+      "count": 13,
+      "terrain": {
+        "mountains": 4,
+        "coastal_city": 5,
+        "river_valley": 1,
+        "hills": 2,
+        "plains": 1
+      }
+    },
+    "taulantii": {
+      "count": 4,
+      "terrain": {
+        "coastal_city": 2,
+        "hills": 1,
+        "plains": 1
+      }
+    },
+    "acarnania": {
+      "count": 6,
+      "terrain": {
+        "plains": 1,
+        "coastal_city": 3,
+        "mountains": 1,
+        "river_valley": 1
+      }
+    },
+    "dardani": {
+      "count": 5,
+      "terrain": {
+        "mountains": 2,
+        "river_valley": 1,
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "getae": {
+      "count": 13,
+      "terrain": {
+        "plains": 4,
+        "coastal_city": 7,
+        "hills": 1,
+        "mountains": 1
+      }
+    },
+    "odrysian_kingdom": {
+      "count": 11,
+      "terrain": {
+        "mountains": 1,
+        "river_valley": 4,
+        "plains": 3,
+        "coastal_city": 3
+      }
+    },
+    "roxolani": {
+      "count": 37,
+      "terrain": {
+        "mountains": 10,
+        "plains": 7,
+        "hills": 10,
+        "river_valley": 10
+      }
+    },
+    "siraces": {
+      "count": 7,
+      "terrain": {
+        "river_valley": 2,
+        "mountains": 3,
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "maeotae": {
+      "count": 15,
+      "terrain": {
+        "plains": 4,
+        "river_valley": 3,
+        "hills": 1,
+        "coastal_city": 7
+      }
+    },
+    "bactria": {
+      "count": 3,
+      "terrain": {
+        "mountains": 2,
+        "hills": 1
+      }
+    },
+    "parthia": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 1,
+        "mountains": 1
+      }
+    },
+    "gerrah": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "blemmyes": {
+      "count": 21,
+      "terrain": {
+        "coastal_city": 5,
+        "mountains": 5,
+        "plains": 4,
+        "hills": 5,
+        "river_valley": 2
+      }
+    },
+    "hadramaut": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "ma_in": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "venedia": {
+      "count": 57,
+      "terrain": {
+        "coastal_city": 4,
+        "mountains": 13,
+        "river_valley": 11,
+        "plains": 14,
+        "hills": 15
+      }
+    },
+    "balts": {
+      "count": 77,
+      "terrain": {
+        "river_valley": 17,
+        "mountains": 15,
+        "hills": 15,
+        "plains": 13,
+        "coastal_city": 17
+      }
+    },
+    "picts": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "scythians": {
+      "count": 24,
+      "terrain": {
+        "plains": 5,
+        "mountains": 1,
+        "river_valley": 2,
+        "hills": 4,
+        "coastal_city": 12
+      }
+    },
+    "donghu": {
+      "count": 16,
+      "terrain": {
+        "river_valley": 4,
+        "plains": 4,
+        "hills": 3,
+        "mountains": 5
+      }
+    },
+    "yan": {
+      "count": 30,
+      "terrain": {
+        "hills": 4,
+        "plains": 7,
+        "coastal_city": 13,
+        "river_valley": 3,
+        "mountains": 3
+      }
+    },
+    "yuezhi": {
+      "count": 5,
+      "terrain": {
+        "mountains": 2,
+        "hills": 2,
+        "plains": 1
+      }
+    },
+    "ancona": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "azania": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "taras": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "brutii": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 3
+      }
+    },
+    "locri": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "rhegium": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "metapontum": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "iapygia": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 3
+      }
+    },
+    "senones": {
+      "count": 3,
+      "terrain": {
+        "plains": 1,
+        "coastal_city": 2
+      }
+    },
+    "dyme": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 1,
+        "mountains": 1
+      }
+    },
+    "tegea": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "megalopolis": {
+      "count": 2,
+      "terrain": {
+        "river_valley": 1,
+        "plains": 1
+      }
+    },
+    "epidauros": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "eretria": {
+      "count": 6,
+      "terrain": {
+        "coastal_city": 6
+      }
+    },
+    "boeotian_states": {
+      "count": 4,
+      "terrain": {
+        "mountains": 1,
+        "coastal_city": 2,
+        "river_valley": 1
+      }
+    },
+    "knidos": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "cyrene": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "kyzikios": {
+      "count": 4,
+      "terrain": {
+        "coastal_city": 4
+      }
+    },
+    "pontus": {
+      "count": 22,
+      "terrain": {
+        "coastal_city": 7,
+        "mountains": 5,
+        "river_valley": 4,
+        "plains": 2,
+        "hills": 4
+      }
+    },
+    "rusadir": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "masaesyli": {
+      "count": 23,
+      "terrain": {
+        "coastal_city": 7,
+        "river_valley": 5,
+        "plains": 3,
+        "hills": 4,
+        "mountains": 4
+      }
+    },
+    "gandhara": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "saba": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "qohaito": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "byzantion": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "mariandynia": {
+      "count": 6,
+      "terrain": {
+        "coastal_city": 3,
+        "river_valley": 1,
+        "hills": 1,
+        "mountains": 1
+      }
+    },
+    "paphlagonia": {
+      "count": 19,
+      "terrain": {
+        "coastal_city": 6,
+        "hills": 4,
+        "mountains": 4,
+        "river_valley": 2,
+        "plains": 3
+      }
+    },
+    "heniochia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "nasamonia": {
+      "count": 4,
+      "terrain": {
+        "coastal_city": 2,
+        "hills": 1,
+        "mountains": 1
+      }
+    },
+    "han": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "kindah": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "kos": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "lysimachus_kingdom": {
+      "count": 73,
+      "terrain": {
+        "hills": 18,
+        "mountains": 16,
+        "river_valley": 16,
+        "plains": 18,
+        "coastal_city": 5
+      }
+    },
+    "chorasmia": {
+      "count": 4,
+      "terrain": {
+        "mountains": 1,
+        "river_valley": 1,
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "aorsi": {
+      "count": 12,
+      "terrain": {
+        "coastal_city": 6,
+        "plains": 3,
+        "hills": 2,
+        "river_valley": 1
+      }
+    },
+    "iazyges": {
+      "count": 26,
+      "terrain": {
+        "coastal_city": 3,
+        "river_valley": 7,
+        "hills": 6,
+        "plains": 5,
+        "mountains": 5
+      }
+    },
+    "marsi": {
+      "count": 2,
+      "terrain": {
+        "plains": 1,
+        "mountains": 1
+      }
+    },
+    "marrucini": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "paeligni": {
+      "count": 4,
+      "terrain": {
+        "river_valley": 2,
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "sipontum": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "apulians": {
+      "count": 6,
+      "terrain": {
+        "hills": 1,
+        "coastal_city": 4,
+        "plains": 1
+      }
+    },
+    "croton": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "ravenna": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "spina": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "boii": {
+      "count": 4,
+      "terrain": {
+        "mountains": 1,
+        "river_valley": 1,
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "insubri": {
+      "count": 24,
+      "terrain": {
+        "plains": 7,
+        "hills": 6,
+        "mountains": 4,
+        "river_valley": 7
+      }
+    },
+    "cenomanni": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "veneti": {
+      "count": 15,
+      "terrain": {
+        "mountains": 4,
+        "coastal_city": 4,
+        "plains": 3,
+        "hills": 2,
+        "river_valley": 2
+      }
+    },
+    "tridentini": {
+      "count": 12,
+      "terrain": {
+        "river_valley": 4,
+        "plains": 3,
+        "hills": 3,
+        "mountains": 2
+      }
+    },
+    "taurini": {
+      "count": 8,
+      "terrain": {
+        "mountains": 1,
+        "plains": 3,
+        "river_valley": 2,
+        "hills": 2
+      }
+    },
+    "genua": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "salassi": {
+      "count": 3,
+      "terrain": {
+        "hills": 2,
+        "river_valley": 1
+      }
+    },
+    "vagiennia": {
+      "count": 5,
+      "terrain": {
+        "mountains": 1,
+        "coastal_city": 2,
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "histri": {
+      "count": 5,
+      "terrain": {
+        "coastal_city": 4,
+        "plains": 1
+      }
+    },
+    "kerkouane": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "mauretania": {
+      "count": 123,
+      "terrain": {
+        "mountains": 30,
+        "plains": 27,
+        "coastal_city": 15,
+        "river_valley": 26,
+        "hills": 25
+      }
+    },
+    "lixus": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 3
+      }
+    },
+    "takapes": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "phazania": {
+      "count": 33,
+      "terrain": {
+        "plains": 9,
+        "hills": 9,
+        "river_valley": 9,
+        "mountains": 6
+      }
+    },
+    "psyllia": {
+      "count": 17,
+      "terrain": {
+        "river_valley": 2,
+        "hills": 3,
+        "mountains": 2,
+        "coastal_city": 10
+      }
+    },
+    "garamantes": {
+      "count": 9,
+      "terrain": {
+        "hills": 2,
+        "mountains": 3,
+        "river_valley": 2,
+        "plains": 2
+      }
+    },
+    "sparta": {
+      "count": 5,
+      "terrain": {
+        "plains": 1,
+        "coastal_city": 4
+      }
+    },
+    "messenia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "amphissa": {
+      "count": 2,
+      "terrain": {
+        "river_valley": 1,
+        "plains": 1
+      }
+    },
+    "elatea": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "corinth": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "patrai": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "epirus": {
+      "count": 11,
+      "terrain": {
+        "coastal_city": 3,
+        "river_valley": 3,
+        "mountains": 3,
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "apollonia_pontica": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "orgame": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 3
+      }
+    },
+    "istros": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "olbia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "chersonesus": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "bosporan_kingdom": {
+      "count": 5,
+      "terrain": {
+        "coastal_city": 5
+      }
+    },
+    "pergamon": {
+      "count": 10,
+      "terrain": {
+        "coastal_city": 3,
+        "mountains": 3,
+        "river_valley": 2,
+        "hills": 1,
+        "plains": 1
+      }
+    },
+    "miletos": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "halikarnassos": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "oinoandia": {
+      "count": 10,
+      "terrain": {
+        "coastal_city": 2,
+        "mountains": 3,
+        "river_valley": 2,
+        "plains": 2,
+        "hills": 1
+      }
+    },
+    "antigonid_kingdom": {
+      "count": 14,
+      "terrain": {
+        "coastal_city": 8,
+        "plains": 4,
+        "river_valley": 1,
+        "hills": 1
+      }
+    },
+    "dodekaschoinos": {
+      "count": 8,
+      "terrain": {
+        "mountains": 2,
+        "plains": 2,
+        "hills": 2,
+        "river_valley": 2
+      }
+    },
+    "nabataea": {
+      "count": 24,
+      "terrain": {
+        "coastal_city": 5,
+        "mountains": 7,
+        "river_valley": 5,
+        "plains": 3,
+        "hills": 4
+      }
+    },
+    "ptolemaic_kingdom": {
+      "count": 4,
+      "terrain": {
+        "plains": 1,
+        "coastal_city": 3
+      }
+    },
+    "judea": {
+      "count": 9,
+      "terrain": {
+        "river_valley": 2,
+        "plains": 3,
+        "hills": 1,
+        "mountains": 1,
+        "coastal_city": 2
+      }
+    },
+    "samaria": {
+      "count": 10,
+      "terrain": {
+        "hills": 3,
+        "mountains": 2,
+        "river_valley": 3,
+        "plains": 1,
+        "coastal_city": 1
+      }
+    },
+    "sidon": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "sophene": {
+      "count": 14,
+      "terrain": {
+        "hills": 4,
+        "mountains": 3,
+        "river_valley": 4,
+        "plains": 3
+      }
+    },
+    "commagene": {
+      "count": 17,
+      "terrain": {
+        "plains": 6,
+        "river_valley": 4,
+        "hills": 4,
+        "mountains": 3
+      }
+    },
+    "byblos": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "arados": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "bambyce": {
+      "count": 2,
+      "terrain": {
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "olbe": {
+      "count": 9,
+      "terrain": {
+        "river_valley": 4,
+        "coastal_city": 3,
+        "hills": 2
+      }
+    },
+    "kibyratia": {
+      "count": 12,
+      "terrain": {
+        "coastal_city": 4,
+        "river_valley": 3,
+        "plains": 1,
+        "hills": 2,
+        "mountains": 2
+      }
+    },
+    "sagallasia": {
+      "count": 16,
+      "terrain": {
+        "hills": 4,
+        "mountains": 3,
+        "river_valley": 5,
+        "plains": 4
+      }
+    },
+    "sinope": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "trapezous": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "gordyene": {
+      "count": 2,
+      "terrain": {
+        "hills": 1,
+        "mountains": 1
+      }
+    }
+  },
+  "missing_nations": []
+}

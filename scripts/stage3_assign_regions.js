@@ -128,21 +128,7 @@ const nationCounts = {};  // Сколько регионов получила к
 const contestedDetails = [];  // Для отчёта
 
 for (const [regionId, region] of Object.entries(REGION_CENTROIDS)) {
-  // Пропускаем уже обработанные
-  if (existing[regionId] !== undefined) {
-    stats.skipped_existing++;
-    continue;
-  }
-
-  // Регионы уже принадлежащие нации — сохраняем как есть
-  if (region.nation !== 'neutral') {
-    assignments[regionId] = region.nation;
-    stats.already_owned++;
-    nationCounts[region.nation] = (nationCounts[region.nation] ?? 0) + 1;
-    continue;
-  }
-
-  // Регионы вне исторического мира — neutral
+  // Регионы вне исторического мира — neutral (не переназначаем)
   if (!region.in_historical_world) {
     assignments[regionId] = 'neutral';
     stats.out_of_world++;
@@ -177,6 +163,93 @@ for (const [regionId, region] of Object.entries(REGION_CENTROIDS)) {
   assignments[regionId] = winner.nationId;
   nationCounts[winner.nationId] = (nationCounts[winner.nationId] ?? 0) + 1;
   stats.assigned++;
+}
+
+// ── Fallback: нации с 0 регионов → ближайший нейтральный регион ──
+console.log('\nFallback: нации с 0 регионов...');
+const nationAssigned = new Set(Object.values(assignments).filter(v => v !== 'neutral'));
+const regionsWithNation = new Set(
+  Object.entries(assignments).filter(([,v]) => v !== 'neutral').map(([k]) => k)
+);
+
+// Список наций с 0 регионами
+const nationsWithZero = Object.keys(NATION_GEO).filter(id => !(nationCounts[id] > 0));
+const fallbackClaimed = new Set();  // регионы уже взятые в этом проходе
+
+for (const nationId of nationsWithZero) {
+  const geo = NATION_GEO[nationId];
+  if (!geo?.capital) continue;
+  const { lat: cLat, lon: cLon } = geo.capital;
+
+  // Ищем ближайший регион в историческом мире (не обязательно neutral)
+  // Предпочитаем незанятые, но допускаем перезапись менее специфичных
+  let bestRegion = null;
+  let bestDist = Infinity;
+  let bestIsNeutral = false;
+
+  for (const [regionId, region] of Object.entries(REGION_CENTROIDS)) {
+    if (!region.in_historical_world) continue;
+    const dist = Math.sqrt((region.lat - cLat) ** 2 + (region.lon - cLon) ** 2);
+    if (dist > 8) continue;  // Ограничиваем поиск ~800 км
+
+    const currentNation = assignments[regionId];
+    if (fallbackClaimed.has(regionId)) continue;  // уже занят другим fallback
+    const isNeutral = currentNation === 'neutral';
+    const currentPriority = currentNation && currentNation !== 'neutral'
+      ? (NATION_GEO[currentNation]?.priority ?? 10)
+      : 10;
+    const myPriority = geo.priority ?? 5;
+
+    // Берём регион если он нейтральный ИЛИ мы специфичнее текущего владельца
+    if (dist < bestDist && (isNeutral || myPriority < currentPriority)) {
+      bestDist = dist;
+      bestRegion = regionId;
+      bestIsNeutral = isNeutral;
+    }
+  }
+
+  if (bestRegion) {
+    const prev = assignments[bestRegion];
+    assignments[bestRegion] = nationId;
+    fallbackClaimed.add(bestRegion);
+    nationCounts[nationId] = (nationCounts[nationId] ?? 0) + 1;
+    console.log(`  ${nationId}: r=${bestRegion} dist=${bestDist.toFixed(1)}° (было: ${prev})`);
+  } else {
+    console.log(`  ${nationId}: нет подходящего региона в радиусе 800 км`);
+  }
+}
+
+// ── Второй проход: нации с 0 регионов после всех шагов ───────────
+// Проверяем реальные assignments (не nationCounts который мог устареть)
+const finalCounts = {};
+for (const v of Object.values(assignments)) {
+  if (v !== 'neutral') finalCounts[v] = (finalCounts[v] ?? 0) + 1;
+}
+const stillZero = Object.keys(NATION_GEO).filter(id => !(finalCounts[id] > 0));
+
+if (stillZero.length > 0) {
+  console.log(`\nВторой fallback (${stillZero.length} наций)...`);
+  for (const nationId of stillZero) {
+    const geo = NATION_GEO[nationId];
+    if (!geo?.capital) { console.log(`  ${nationId}: нет capital, пропуск`); continue; }
+    const { lat: cLat, lon: cLon } = geo.capital;
+
+    let bestRegion = null;
+    let bestDist = Infinity;
+    for (const [regionId, region] of Object.entries(REGION_CENTROIDS)) {
+      if (!region.in_historical_world) continue;
+      if (fallbackClaimed.has(regionId)) continue;
+      const dist = Math.sqrt((region.lat - cLat) ** 2 + (region.lon - cLon) ** 2);
+      if (dist < bestDist) { bestDist = dist; bestRegion = regionId; }
+    }
+    if (bestRegion) {
+      const prev = assignments[bestRegion];
+      assignments[bestRegion] = nationId;
+      fallbackClaimed.add(bestRegion);
+      finalCounts[nationId] = 1;
+      console.log(`  ${nationId}: r=${bestRegion} dist=${bestDist.toFixed(1)}° (было: ${prev})`);
+    }
+  }
 }
 
 // ── Сохранение результатов ────────────────────────────────────────
