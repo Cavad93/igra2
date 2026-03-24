@@ -7,6 +7,63 @@ const SYSTEM_BASE = `Ты архитектор игровой экономики
 Используй только реальные исторические данные из контекста.
 Отвечай ТОЛЬКО валидным JSON. Никакого текста вне JSON.`;
 
+// ─── Вспомогательные функции для фильтрации регионов ─────────────────────────
+
+// Компактное представление региона
+function compactReg(r) {
+  const entry = { n: r.nation, t: r.terrain ?? r.type ?? '' };
+  if (r.deposits && Object.keys(r.deposits).length > 0) entry.d = r.deposits;
+  return entry;
+}
+
+// Выбрать не более maxPerNation регионов от каждой нации
+function sampleByNation(entries, maxPerNation) {
+  const buckets = {};
+  for (const [id, r] of entries) {
+    const n = r.nation;
+    if (!buckets[n]) buckets[n] = [];
+    if (buckets[n].length < maxPerNation) buckets[n].push([id, r]);
+  }
+  const result = {};
+  for (const arr of Object.values(buckets)) {
+    for (const [id, r] of arr) result[id] = compactReg(r);
+  }
+  return result;
+}
+
+// Отфильтровать регионы по типу ресурса товара
+// Цель: сократить размер промпта с ~140KB до ~5-30KB
+function filterRegions(goodId, goodMeta, regionsData) {
+  const resourceType    = goodMeta.resource_type ?? 'unknown';
+  const allowedTerrains = new Set(goodMeta.allowed_terrains ?? []);
+
+  const all = Object.entries(regionsData)
+    .filter(([, r]) => r.nation && r.nation !== 'neutral');
+
+  // import_only: локального производства нет — регионы не нужны
+  if (resourceType === 'import_only') return {};
+
+  // deposit / hybrid: сначала ищем регионы с этим депозитом
+  if (resourceType === 'deposit' || resourceType === 'hybrid') {
+    const withDeposit = all.filter(([, r]) => r.deposits?.[goodId]);
+    if (withDeposit.length > 0) {
+      return Object.fromEntries(withDeposit.map(([id, r]) => [id, compactReg(r)]));
+    }
+    // Fallback: по разрешённым terrain (max 3 на нацию)
+    if (allowedTerrains.size > 0) {
+      return sampleByNation(all.filter(([, r]) => allowedTerrains.has(r.terrain ?? r.type ?? '')), 3);
+    }
+  }
+
+  // biome: фильтр по allowed_terrains, не более 3 регионов на нацию
+  if (allowedTerrains.size > 0) {
+    return sampleByNation(all.filter(([, r]) => allowedTerrains.has(r.terrain ?? r.type ?? '')), 3);
+  }
+
+  // processed / livestock / unknown: по 2 представителя от каждой нации
+  return sampleByNation(all, 2);
+}
+
 // ─── ПРОМПТ 1: Аналитик производства ────────────────────────────────────────
 
 export function buildAnalystPrompt(ctx) {
@@ -16,30 +73,17 @@ export function buildAnalystPrompt(ctx) {
   const pdfChains  = Object.values(allData.PDF_CHAINS)
     .filter(c => Array.isArray(c.inputs) && c.inputs.includes(goodId));
 
-  // Все регионы принадлежащие нациям/государствам (neutral = пустые территории — исключаем)
-  // Компактный формат: n=nation, t=terrain(=биом), d=deposits (только если есть)
-  const nationRegions = {};
-  for (const [rId, rData] of Object.entries(allData.REGIONS_DATA)) {
-    if (!rData.nation || rData.nation === 'neutral') continue;
-    const entry = {
-      n: rData.nation,
-      t: rData.terrain ?? rData.type ?? '',
-    };
-    if (rData.deposits && Object.keys(rData.deposits).length > 0) {
-      entry.d = rData.deposits;
-    }
-    nationRegions[rId] = entry;
-  }
+  // Фильтруем регионы по типу ресурса — сокращаем промпт с ~140KB до ~5-30KB
+  const nationRegions = filterRegions(goodId, goodMeta, allData.REGIONS_DATA);
 
   // Бонус производства этого конкретного товара по каждому биому
-  // + общая пригодность для сельского хозяйства
   const biomeGoodBonus = {};
   for (const [biomeId, bData] of Object.entries(allData.BIOME_META ?? {})) {
     if (typeof bData !== 'object' || bData === null || Array.isArray(bData)) continue;
     biomeGoodBonus[biomeId] = {
-      good_bonus:    bData.goods_bonus?.[goodId]           ?? 1.0,
-      agri_suit:     bData.agriculture?.suitability        ?? null,
-      prod_bonus:    bData.production_bonus?.[goodId]      ?? null,
+      good_bonus:    bData.goods_bonus?.[goodId]  ?? 1.0,
+      agri_suit:     bData.agriculture?.suitability ?? null,
+      prod_bonus:    bData.production_bonus?.[goodId] ?? null,
     };
   }
 
@@ -47,17 +91,16 @@ export function buildAnalystPrompt(ctx) {
     good_id:   goodId,
     good_data: goodData,
     good_meta: goodMeta,
+    resource_type: goodMeta.resource_type ?? 'unknown',
     nation_regions_total: Object.keys(nationRegions).length,
-    // Для каждого биома: бонус именно для этого товара + пригодность под с/х
     biome_bonuses_for_this_good: biomeGoodBonus,
     pdf_chains_using_this_good: pdfChains.slice(0, 10),
   };
 
   const system = SYSTEM_BASE;
-  // nation_regions передаём без отступов чтобы сократить размер
   const user = `${JSON.stringify(ctxMeta, null, 2)}
 
-nation_regions (n=nation, t=terrain/биом, d=deposits):
+nation_regions (n=nation, t=terrain, d=deposits; отфильтровано по resource_type="${goodMeta.resource_type ?? 'unknown'}"):
 ${JSON.stringify(nationRegions)}
 
 Задача: проанализируй производство товара "${goodId}" и верни JSON:
@@ -70,12 +113,11 @@ ${JSON.stringify(nationRegions)}
 }
 
 Поля:
-- production_possible: можно ли производить локально в регионах карты
-- production_locations: список ID регионов из nation_regions где есть нужный deposit (d) или подходящий terrain (t) для этого товара согласно good_meta.allowed_terrains
-- import_required: нужен ли импорт если нет локального производства
+- production_possible: можно ли производить локально (false если resource_type="import_only")
+- production_locations: список ID регионов из nation_regions где есть нужный deposit (d) или подходящий terrain (t)
+- import_required: нужен ли импорт если нет достаточного локального производства
 - import_sources: ID наций-поставщиков из good_meta.import_sources или исторических данных
-- relevant_pdf_chain_ids: ID цепочек из pdf_chains_using_this_good плюс цепочки где этот товар в output
-Примечание: nation_regions — формат {regionId: {n: nation, t: terrain/биом, d?: deposits}}`;
+- relevant_pdf_chain_ids: ID цепочек из pdf_chains_using_this_good плюс цепочки где этот товар в output`;
 
   return { system, user };
 }

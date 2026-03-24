@@ -5,8 +5,8 @@ import fs   from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { loadExistingChains } from './file_io.js';
-import { runBuilder }         from './chain_builder.js';
+import { loadExistingChains, loadAllInputs } from './file_io.js';
+import { runBuilder }                        from './chain_builder.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const UI_DIR    = path.join(__dirname, 'ui');
@@ -106,8 +106,8 @@ async function router(req, res) {
   // ── POST /api/key ──
   if (req.method === 'POST' && url.pathname === '/api/key') {
     const body = await readBody(req);
-    if (!body.key || !body.key.startsWith('sk-ant-')) {
-      return json(res, 400, { error: 'Неверный формат ключа (должен начинаться с sk-ant-)' });
+    if (!body.key || body.key.trim().length < 20) {
+      return json(res, 400, { error: 'Ключ слишком короткий' });
     }
     state.apiKey = body.key;
     return json(res, 200, { ok: true });
@@ -173,11 +173,12 @@ async function router(req, res) {
 
     // Отправляем текущий статус сразу
     const chains = loadExistingChains();
+    const total  = Object.keys(loadAllInputs().GOODS).length;
     res.write(`event: agent\ndata: ${JSON.stringify({
       type: 'status',
-      total:  41,
+      total,
       done:   Object.keys(chains).length,
-      queue:  41 - Object.keys(chains).length,
+      queue:  total - Object.keys(chains).length,
     })}\n\n`);
 
     state.sseClients.add(res);

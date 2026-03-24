@@ -342,21 +342,17 @@ async function processGood(apiKey, goodId, allData, existingChains, emit, histor
   const { system: s1, user: u1 } = buildAnalystPrompt({ goodId, allData });
   const analystResult = await callClaude(apiKey, s1, u1, { maxTokens: 2000 });
 
-  // ── Шаг 2: Производственная механика ──────────────────────────────────────
-  emit({ type: 'step', goodId, step: 2, label: 'механика производства' });
-  const { system: s2a, user: u2a } = buildQuantityPrompt({
-    goodId, allData, analystResult,
-    historicalCtx: historicalCtx?.[goodId] ?? null,
-  });
-  const quantityResult = await callClaude(apiKey, s2a, u2a);
-
-  // ── Шаг 3: Трудовые отношения ─────────────────────────────────────────────
+  // ── Шаги 2+3: Производственная механика и трудовые отношения (параллельно) ─
+  // Оба зависят только от analystResult — запускаем одновременно
+  emit({ type: 'step', goodId, step: 2, label: 'механика + труд (параллельно)' });
+  const hCtx = historicalCtx?.[goodId] ?? null;
+  const { system: s2a, user: u2a } = buildQuantityPrompt({ goodId, allData, analystResult, historicalCtx: hCtx });
+  const { system: s2b, user: u2b } = buildLaborPrompt({ goodId, allData, analystResult, quantityResult: null, historicalCtx: hCtx });
+  const [quantityResult, laborResult] = await Promise.all([
+    callClaude(apiKey, s2a, u2a),
+    callClaude(apiKey, s2b, u2b),
+  ]);
   emit({ type: 'step', goodId, step: 3, label: 'трудовые отношения' });
-  const { system: s2b, user: u2b } = buildLaborPrompt({
-    goodId, allData, analystResult, quantityResult,
-    historicalCtx: historicalCtx?.[goodId] ?? null,
-  });
-  const laborResult = await callClaude(apiKey, s2b, u2b);
 
   // ── Шаг 4: Связи между цепочками ──────────────────────────────────────────
   emit({ type: 'step', goodId, step: 4, label: 'связи' });
