@@ -319,13 +319,27 @@ const logPanel     = document.getElementById('logPanel');
 let totalNations = 0;
 let pleiadesCnt  = 0;
 let wikiCnt      = 0;
+let startTime    = null;
+let doneSoFar    = 0;
 
 function updateProgress(done) {
+  doneSoFar = done;
   statDone.textContent = done;
   if (totalNations > 0) {
     const pct = Math.round(done / totalNations * 100);
     progressFill.style.width = pct + '%';
-    statLeft.textContent = totalNations - done;
+    const left = totalNations - done;
+    statLeft.textContent = left;
+    // Оценка времени
+    if (startTime && done > 0) {
+      const elapsed = (Date.now() - startTime) / 1000;
+      const rate = done / elapsed;          // наций/сек
+      const eta  = rate > 0 ? Math.round(left / rate) : null;
+      if (eta !== null) {
+        const m = Math.floor(eta / 60), s = eta % 60;
+        document.getElementById('batchInfo').dataset.eta = `⏱ ~${m}м ${s}с`;
+      }
+    }
   }
 }
 
@@ -387,6 +401,7 @@ function connectSSE() {
 
     if (ev.type === 'start') {
       totalNations = ev.total + ev.already;
+      startTime    = Date.now();
       statBatch.textContent = `0/${ev.batches}`;
       addLog(`▶ Запуск: ${ev.total} наций, ${ev.batches} батчей`, 'batch');
       updateProgress(ev.already);
@@ -394,7 +409,8 @@ function connectSSE() {
 
     if (ev.type === 'batch_start') {
       statBatch.textContent = `${ev.batch_idx}/${ev.total_batches}`;
-      batchInfo.textContent = `Батч ${ev.batch_idx}/${ev.total_batches}: ${ev.ids.slice(0,3).join(', ')}${ev.ids.length > 3 ? '...' : ''}`;
+      const eta = batchInfo.dataset.eta ? ` · ${batchInfo.dataset.eta}` : '';
+      batchInfo.textContent = `Батч ${ev.batch_idx}/${ev.total_batches}: ${ev.ids.slice(0,3).join(', ')}${ev.ids.length > 3 ? '...' : ''}${eta}`;
       addLog(`══ Батч ${ev.batch_idx}/${ev.total_batches}: ${ev.ids.join(', ')}`, 'batch');
     }
 
