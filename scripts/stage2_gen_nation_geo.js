@@ -30,7 +30,7 @@ if (!API_KEY) {
   process.exit(1);
 }
 
-const MODEL      = 'claude-sonnet-4-6-20260218';
+const MODEL      = 'claude-sonnet-4-6';
 const MAX_TOKENS = 8000;
 const BATCH_SIZE = 10;   // Меньше батч — лучше качество с web-данными
 const DELAY_MS   = 1500;
@@ -81,20 +81,38 @@ if (todo.length === 0) {
 // WEB SEARCH: Pleiades + Wikipedia
 // ════════════════════════════════════════════════════════════════
 
-// Преобразует ID нации в поисковые запросы
+// Регионы для азиатских наций — Wikipedia будет искать с правильным контекстом
+const ASIA_PREFIXES = ['japan','japanese','korea','korean','china','chinese',
+  'india','indian','burma','myanmar','thailand','vietnam','malay','indonesia'];
+
 function getSearchTerms(nation) {
   const base = nation.id.replace(/_/g, ' ');
-  // Из historical_note извлекаем ключевые слова (если они латиницей)
+  const nameLower = (nation.name ?? '').toLowerCase();
+
+  // Определяем регион по имени нации для более точного поиска
+  const isJapan   = /awa|harima|kii|ise|owari|yamato|musasi|tanba|hida|kai|iga|iki|izu|kaga|noto|suwa|toki|suo|oki|dewa|esan|ebetsu|sunazawa|kitami/.test(nation.id);
+  const isKorea   = /baekje|goguryeo|gojoseon|okjeo|yeodam|yeomhae|gijeo/.test(nation.id);
+  const isChina   = /chu|qin|wei|yan|zhao|qi|han|song|zhou|zuo|zou|lu|xi|teng|xue|dian|yelang|yuezhi|xiongnu/.test(nation.id);
+  const isIndia   = /maurya|magadha|kalinga|pandya|chola|chera|andhra|bhoja|paurava|naga/.test(nation.id);
+  const isSE_Asia = /pegu|thaton|beikthano|arakan|tagaung|van_lang|chansen|kedah|langkashuka|fuyu/.test(nation.id);
+
+  const regionHint = isJapan ? ' Japan ancient province'
+    : isKorea  ? ' Korea ancient kingdom'
+    : isChina  ? ' China ancient state Warring States'
+    : isIndia  ? ' India ancient kingdom'
+    : isSE_Asia ? ' Southeast Asia ancient'
+    : ' ancient history';
+
   const noteWords = (nation.historical_note ?? '')
     .match(/[A-Za-z]{4,}/g)
-    ?.filter(w => !['that','this','were','with','from','have','their'].includes(w.toLowerCase()))
+    ?.filter(w => !['that','this','were','with','from','have','their','ancient','nation'].includes(w.toLowerCase()))
     ?.slice(0, 3) ?? [];
 
   return [
-    base,
-    `${base} ancient`,
-    noteWords.length ? noteWords.join(' ') : null,
-    `${base} 300 BC`,
+    base + regionHint,
+    base + ' ancient',
+    noteWords.length ? noteWords.join(' ') + ' ancient' : null,
+    base + ' 300 BC',
   ].filter(Boolean);
 }
 
@@ -123,9 +141,13 @@ async function searchPleiades(query) {
 // Wikipedia — энциклопедическая статья
 async function searchWikipedia(query) {
   try {
+    const WIKI_UA = 'PaxHistoriaBot/1.0 (igra2 game map generator; contact: igra2@example.com)';
     // 1) Поиск статьи
-    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query + ' ancient history')}&format=json&origin=*&srlimit=3`;
-    const sResp = await fetch(searchUrl, { signal: AbortSignal.timeout(8000) });
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*&srlimit=3`;
+    const sResp = await fetch(searchUrl, {
+      signal: AbortSignal.timeout(8000),
+      headers: { 'User-Agent': WIKI_UA },
+    });
     if (!sResp.ok) return null;
 
     const sData = await sResp.json();
@@ -134,7 +156,10 @@ async function searchWikipedia(query) {
 
     // 2) Краткое описание + координаты
     const sumUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
-    const sumResp = await fetch(sumUrl, { signal: AbortSignal.timeout(8000) });
+    const sumResp = await fetch(sumUrl, {
+      signal: AbortSignal.timeout(8000),
+      headers: { 'User-Agent': WIKI_UA },
+    });
     if (!sumResp.ok) return null;
 
     const summ = await sumResp.json();
@@ -146,17 +171,28 @@ async function searchWikipedia(query) {
   } catch { return null; }
 }
 
-// Собирает web-данные для одной нации
+// Собирает web-данные для одной нации — Pleiades и Wikipedia параллельно
 async function gatherWebData(nation) {
   const terms = getSearchTerms(nation);
-  let pleiades = null;
-  let wikipedia = null;
 
-  for (const term of terms) {
-    if (!pleiades) pleiades = await searchPleiades(term);
-    if (!wikipedia) wikipedia = await searchWikipedia(term);
-    if (pleiades && wikipedia) break;
-    if (terms.indexOf(term) < terms.length - 1) await sleep(300);
+  // Запускаем оба поиска параллельно по первому термину
+  const [pleiades1, wikipedia1] = await Promise.all([
+    searchPleiades(terms[0]),
+    searchWikipedia(terms[0]),
+  ]);
+
+  let pleiades = pleiades1;
+  let wikipedia = wikipedia1;
+
+  // Если что-то не нашлось — пробуем следующие термины (тоже параллельно)
+  for (let i = 1; i < terms.length && (!pleiades || !wikipedia); i++) {
+    const [pl, wi] = await Promise.all([
+      pleiades  ? Promise.resolve(null) : searchPleiades(terms[i]),
+      wikipedia ? Promise.resolve(null) : searchWikipedia(terms[i]),
+    ]);
+    if (pl) pleiades = pl;
+    if (wi) wikipedia = wi;
+    await sleep(200);
   }
 
   return { pleiades, wikipedia };
@@ -166,16 +202,43 @@ async function gatherWebData(nation) {
 // PROMPT BUILDER
 // ════════════════════════════════════════════════════════════════
 
+// Определяет примерный регион мира по bbox
+function getWorldRegion(geo) {
+  const lat = (geo.bbox.latMin + geo.bbox.latMax) / 2;
+  const lon = (geo.bbox.lonMin + geo.bbox.lonMax) / 2;
+  if (lon > 60 && lon < 150 && lat > 0)  return 'asia';
+  if (lon > 100 && lat < 20)             return 'se_asia';
+  if (lon > -15 && lon < 45 && lat > 30) return 'europe';
+  if (lon > -15 && lon < 60 && lat < 30) return 'africa_me';
+  return 'other';
+}
+
 function buildPrompt(nations, webDataMap, alreadyPlaced) {
-  // Контекст уже обработанных наций (последние 40 — для проверки перекрытий)
-  const placedEntries = Object.entries(alreadyPlaced).slice(-40);
-  const placedContext = placedEntries.length
-    ? '\n\nУЖЕ РАЗМЕЩЁННЫЕ НАЦИИ (избегай перекрытий):\n' +
-      placedEntries.map(([id, g]) =>
-        `  ${id}: bbox=[${g.bbox.latMin},${g.bbox.latMax},${g.bbox.lonMin},${g.bbox.lonMax}] cap=[${g.capital?.lat},${g.capital?.lon}]`
+  // Контекст соседей — берём нации из того же региона мира (макс 30)
+  // плюс последние 10 обработанных (для временной близости)
+  const allPlaced = Object.entries(alreadyPlaced);
+  const recentIds = new Set(allPlaced.slice(-10).map(([id]) => id));
+
+  // Угадываем регион текущего батча по именам наций
+  const batchRegion = nations[0]
+    ? (() => {
+        const id = nations[0].id;
+        if (/awa|harima|kii|yamato|chu|qin|wei|yan|baekje|goguryeo|pegu|kedah/.test(id)) return 'asia';
+        if (/rome|carthage|greek|macedon|sparta|athens|gaul|celt/.test(id)) return 'europe';
+        return 'other';
+      })()
+    : 'other';
+
+  const neighbors = allPlaced
+    .filter(([id, geo]) => recentIds.has(id) || getWorldRegion(geo) === batchRegion)
+    .slice(-30);
+
+  const placedContext = neighbors.length
+    ? '\n\nУЖЕ РАЗМЕЩЁННЫЕ СОСЕДНИЕ НАЦИИ (избегай перекрытий):\n' +
+      neighbors.map(([id, g]) =>
+        `  ${id}: bbox=[${g.bbox.latMin},${g.bbox.latMax},${g.bbox.lonMin},${g.bbox.lonMax}]`
       ).join('\n')
     : '';
-
   // Список наций с web-данными
   const natList = nations.map(n => {
     const web = webDataMap[n.id] ?? {};
@@ -294,7 +357,11 @@ async function callClaude(system, user) {
 
       const data = await resp.json();
       const raw  = data?.content?.[0]?.text ?? '';
-      const cleaned = raw.replace(/^```json\s*/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+      // Убираем markdown-блоки и однострочные комментарии // ...
+      const cleaned = raw
+        .replace(/^```json\s*/i, '').replace(/^```/, '').replace(/```$/, '')
+        .replace(/\/\/[^\n]*/g, '')   // убираем // комментарии внутри JSON
+        .trim();
       return JSON.parse(cleaned);
     } catch (e) {
       if (attempt === 2) throw e;
@@ -304,6 +371,13 @@ async function callClaude(system, user) {
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── Лог-файл прогресса ────────────────────────────────────────────
+const LOG_PATH = path.join(ROOT, 'data', 'nation_geo_log.txt');
+function logProgress(msg) {
+  const line = `[${new Date().toISOString()}] ${msg}\n`;
+  fs.appendFileSync(LOG_PATH, line, 'utf8');
+}
 
 // ════════════════════════════════════════════════════════════════
 // СОХРАНЕНИЕ
@@ -340,7 +414,9 @@ let webHits = { pleiades: 0, wikipedia: 0, none: 0 };
 for (let bi = 0; bi < batches.length; bi++) {
   const batch = batches[bi];
   const ids = batch.map(n => n.id);
+  const batchStart = Date.now();
   console.log(`\nБатч ${bi + 1}/${batches.length}: ${ids.join(', ')}`);
+  logProgress(`Батч ${bi + 1}/${batches.length} START: ${ids.join(', ')}`);
 
   // ── 1) Сбор web-данных ────────────────────────────────────────
   console.log('  Поиск в Pleiades + Wikipedia...');
@@ -374,22 +450,35 @@ for (let bi = 0; bi < batches.length; bi++) {
       }
       const { latMin, latMax, lonMin, lonMax } = geo.bbox;
       if (latMin >= latMax || lonMin >= lonMax) {
-        console.warn(`  ⚠ ${id}: некорректный bbox — пропускаю`);
+        console.warn(`  ⚠ ${id}: перевёрнутый bbox (min>=max) — пропускаю`);
+        continue;
+      }
+      if (latMin < -90 || latMax > 90 || lonMin < -180 || lonMax > 180) {
+        console.warn(`  ⚠ ${id}: bbox вне планеты [${latMin},${latMax},${lonMin},${lonMax}] — пропускаю`);
+        continue;
+      }
+      if ((latMax - latMin) > 80 || (lonMax - lonMin) > 120) {
+        console.warn(`  ⚠ ${id}: bbox подозрительно большой — пропускаю`);
         continue;
       }
       results[id] = geo;
       added++;
     }
-    console.log(`  ✓ Получено: ${added}/${batch.length} наций`);
+    const elapsed = ((Date.now() - batchStart) / 1000).toFixed(1);
+    console.log(`  ✓ Получено: ${added}/${batch.length} наций (${elapsed}s)`);
+    logProgress(`Батч ${bi + 1} DONE: ${added}/${batch.length} за ${elapsed}s`);
 
     saveResults(results);
-    console.log(`  Сохранено: ${Object.keys(results).length} наций суммарно`);
+    const total = Object.keys(results).length;
+    const remaining = todo.length - (bi + 1) * BATCH_SIZE;
+    console.log(`  Сохранено: ${total} наций | Осталось батчей: ${batches.length - bi - 1}`);
 
   } catch (e) {
     console.error(`  ✗ Батч ${bi + 1} не удался: ${e.message}`);
-    console.error('  Промежуточные результаты сохранены. Перезапусти скрипт.');
+    console.error('  Пропускаю батч, продолжаю дальше...');
+    logProgress(`БАТЧ ${bi + 1} ОШИБКА: ${e.message}`);
     saveResults(results);
-    process.exit(1);
+    // Не останавливаемся — идём к следующему батчу
   }
 
   if (bi < batches.length - 1) await sleep(DELAY_MS);
