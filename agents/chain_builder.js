@@ -20,7 +20,7 @@ const DATA_DIR  = path.join(__dirname, '..', 'data');
 
 // ─── Константы ───────────────────────────────────────────────────────────────
 
-const MODEL       = 'claude-sonnet-4-20250514';
+const MODEL       = 'claude-sonnet-4-6-20260218';
 const MAX_TOKENS  = 2000;
 const TEMPERATURE = 0;
 const DELAY_MS    = 600;
