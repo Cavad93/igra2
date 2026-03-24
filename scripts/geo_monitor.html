@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geo Monitor — Pax Historia</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  background: #16213e;
+  border-bottom: 1px solid #0f3460;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+header h1 { font-size: 16px; color: #e94560; letter-spacing: 1px; flex: 1; }
+
+.api-row { display: flex; align-items: center; gap: 8px; }
+#apiKey {
+  background: #0f3460;
+  border: 1px solid #e94560;
+  color: #e0e0e0;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  width: 280px;
+  font-family: monospace;
+}
+#apiKey::placeholder { color: #666; }
+
+button {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+button:hover { opacity: 0.85; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+#btnStart { background: #e94560; color: white; }
+#btnStop  { background: #444; color: #ccc; }
+
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+#map {
+  flex: 1;
+  background: #0d1117;
+}
+
+.sidebar {
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  background: #16213e;
+  border-left: 1px solid #0f3460;
+  overflow: hidden;
+}
+
+.stats-panel {
+  padding: 12px;
+  border-bottom: 1px solid #0f3460;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.stat-box {
+  background: #0f3460;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+.stat-box .label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-box .value { font-size: 20px; font-weight: 700; color: #e94560; }
+
+.progress-bar-wrap {
+  padding: 8px 12px;
+  border-bottom: 1px solid #0f3460;
+}
+.progress-bar-wrap .label { font-size: 11px; color: #888; margin-bottom: 4px; }
+.progress-bar {
+  height: 8px;
+  background: #0f3460;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #e94560, #ff6b6b);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+  width: 0%;
+}
+
+.batch-info {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #aaa;
+  border-bottom: 1px solid #0f3460;
+  min-height: 32px;
+}
+
+.log-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.log-line { margin-bottom: 1px; }
+.log-line.info    { color: #8bc34a; }
+.log-line.warn    { color: #ffc107; }
+.log-line.error   { color: #f44336; }
+.log-line.search  { color: #64b5f6; }
+.log-line.nation  { color: #e0e0e0; }
+.log-line.batch   { color: #ce93d8; font-weight: 600; }
+.log-line.done    { color: #ffd700; font-weight: 700; }
+
+.nation-list {
+  max-height: 180px;
+  overflow-y: auto;
+  border-top: 1px solid #0f3460;
+  padding: 6px 8px;
+}
+.nation-item {
+  font-size: 11px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  animation: flash 0.8s ease;
+  cursor: pointer;
+}
+.nation-item:hover { background: #1a3a6e; }
+@keyframes flash {
+  0%   { background: rgba(233, 69, 96, 0.5); }
+  100% { background: transparent; }
+}
+.nation-item .nat-id   { color: #aaa; }
+.nation-item .nat-name { color: #fff; font-weight: 600; }
+.nation-item .nat-src  { color: #64b5f6; font-size: 10px; }
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #0a0a1a; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🗺 GEO MONITOR — PAX HISTORIA</h1>
+  <div class="api-row">
+    <input id="apiKey" type="password" placeholder="sk-ant-api...  (ANTHROPIC_API_KEY)"/>
+    <button id="btnStart" onclick="startGen()">▶ Старт</button>
+    <button id="btnStop"  onclick="stopGen()" disabled>⏹ Стоп</button>
+  </div>
+</header>
+
+<div class="main">
+  <div id="map"></div>
+
+  <div class="sidebar">
+    <div class="stats-panel">
+      <div class="stat-box">
+        <div class="label">Обработано</div>
+        <div class="value" id="statDone">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="label">Осталось</div>
+        <div class="value" id="statLeft">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="label">Батч</div>
+        <div class="value" id="statBatch">0/0</div>
+      </div>
+      <div class="stat-box">
+        <div class="label">Pleiades/Wiki</div>
+        <div class="value" id="statSrc">0/0</div>
+      </div>
+    </div>
+
+    <div class="progress-bar-wrap">
+      <div class="label">Прогресс</div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+
+    <div class="batch-info" id="batchInfo">Ожидание запуска…</div>
+
+    <div class="nation-list" id="nationList"></div>
+
+    <div class="log-panel" id="logPanel"></div>
+  </div>
+</div>
+
+<script>
+// ─── Leaflet карта ─────────────────────────────────────────────────
+const map = L.map('map', { center: [35, 25], zoom: 3 });
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap',
+  className: 'map-tiles',
+}).addTo(map);
+
+// Тёмный фильтр для тайлов
+const style = document.createElement('style');
+style.textContent = '.map-tiles { filter: brightness(0.4) saturate(0.5) hue-rotate(180deg); }';
+document.head.appendChild(style);
+
+// Слои для наций
+const nationLayers = {};       // id → L.rectangle
+const nationData   = {};       // id → geo data
+
+function colorByPriority(priority) {
+  if (priority >= 8) return '#e94560';   // великая держава — красный
+  if (priority >= 5) return '#ffa726';   // царство — оранжевый
+  if (priority >= 3) return '#66bb6a';   // полис — зелёный
+  return '#42a5f5';                       // полис/город — синий
+}
+
+function addNationToMap(id, name, geo) {
+  if (!geo?.bbox) return;
+  const { latMin, latMax, lonMin, lonMax } = geo.bbox;
+  const color = colorByPriority(geo.priority ?? 3);
+  if (nationLayers[id]) map.removeLayer(nationLayers[id]);
+  const rect = L.rectangle([[latMin, lonMin], [latMax, lonMax]], {
+    color,
+    weight: 1,
+    fillOpacity: 0.25,
+    fillColor: color,
+  }).addTo(map);
+  rect.bindTooltip(`<b>${name}</b><br/>P:${geo.priority ?? '?'}<br/>${geo.notes?.slice(0,80) ?? ''}`, { sticky: true });
+  rect.on('click', () => {
+    document.getElementById('batchInfo').textContent = `${name} (${id}): ${geo.notes ?? ''}`;
+  });
+  nationLayers[id] = rect;
+  nationData[id]   = geo;
+}
+
+// Загружаем уже существующие данные
+fetch('/nation_geo.js').then(r => r.text()).then(code => {
+  try {
+    const match = code.match(/var NATION_GEO\s*=\s*(\{[\s\S]*\});/);
+    if (!match) return;
+    const data = JSON.parse(match[1]);
+    let count = 0;
+    for (const [id, geo] of Object.entries(data)) {
+      addNationToMap(id, id, geo);
+      count++;
+    }
+    addLog(`Загружено ${count} уже обработанных наций`, 'info');
+    statDone.textContent = count;
+  } catch(e) { addLog('Ошибка загрузки nation_geo.js: ' + e.message, 'warn'); }
+}).catch(() => addLog('nation_geo.js не найден — начинаем с нуля', 'info'));
+
+// Загружаем области карты
+fetch('/map_areas.json').then(r => r.json()).then(areas => {
+  for (const [name, v] of Object.entries(areas)) {
+    if (v.count < 10) continue;
+    L.rectangle([[v.latMin, v.lonMin], [v.latMax, v.lonMax]], {
+      color: '#334',
+      weight: 1,
+      fillOpacity: 0.03,
+      dashArray: '4 4',
+    }).addTo(map).bindTooltip(name, { sticky: false, permanent: false });
+  }
+}).catch(() => {});
+
+// ─── Статистика ────────────────────────────────────────────────────
+const statDone  = document.getElementById('statDone');
+const statLeft  = document.getElementById('statLeft');
+const statBatch = document.getElementById('statBatch');
+const statSrc   = document.getElementById('statSrc');
+const progressFill = document.getElementById('progressFill');
+const batchInfo    = document.getElementById('batchInfo');
+const nationList   = document.getElementById('nationList');
+const logPanel     = document.getElementById('logPanel');
+
+let totalNations = 0;
+let pleiadesCnt  = 0;
+let wikiCnt      = 0;
+
+function updateProgress(done) {
+  statDone.textContent = done;
+  if (totalNations > 0) {
+    const pct = Math.round(done / totalNations * 100);
+    progressFill.style.width = pct + '%';
+    statLeft.textContent = totalNations - done;
+  }
+}
+
+function addLog(msg, cls = 'nation') {
+  const div = document.createElement('div');
+  div.className = 'log-line ' + cls;
+  div.textContent = msg;
+  logPanel.appendChild(div);
+  logPanel.scrollTop = logPanel.scrollHeight;
+  // Лимит строк
+  while (logPanel.children.length > 500) logPanel.removeChild(logPanel.firstChild);
+}
+
+function addNationItem(id, name, geo) {
+  const div = document.createElement('div');
+  div.className = 'nation-item';
+  div.innerHTML = `<span class="nat-name">${name}</span> <span class="nat-id">${id}</span>
+    <span class="nat-src">[P:${geo.priority ?? '?'}]</span>`;
+  div.onclick = () => {
+    if (nationLayers[id]) map.fitBounds(nationLayers[id].getBounds().pad(0.5));
+  };
+  nationList.insertBefore(div, nationList.firstChild);
+  while (nationList.children.length > 50) nationList.removeChild(nationList.lastChild);
+}
+
+// ─── SSE ───────────────────────────────────────────────────────────
+let evtSource = null;
+
+function connectSSE() {
+  if (evtSource) { evtSource.close(); }
+  evtSource = new EventSource('/events');
+
+  evtSource.onmessage = (e) => {
+    const ev = JSON.parse(e.data);
+
+    if (ev.type === 'connected') {
+      addLog('Подключено к серверу', 'info');
+    }
+
+    if (ev.type === 'status') {
+      if (ev.running) {
+        document.getElementById('btnStart').disabled = true;
+        document.getElementById('btnStop').disabled  = false;
+        addLog('Генерация уже запущена на сервере', 'info');
+      }
+    }
+
+    if (ev.type === 'existing') {
+      // Уже обработанные нации (загружены из файла)
+      let count = 0;
+      for (const [id, geo] of Object.entries(ev.data)) {
+        addNationToMap(id, id, geo);
+        count++;
+      }
+      if (count > 0) addLog(`Восстановлено ${count} ранее обработанных наций`, 'info');
+      updateProgress(count);
+    }
+
+    if (ev.type === 'start') {
+      totalNations = ev.total + ev.already;
+      statBatch.textContent = `0/${ev.batches}`;
+      addLog(`▶ Запуск: ${ev.total} наций, ${ev.batches} батчей`, 'batch');
+      updateProgress(ev.already);
+    }
+
+    if (ev.type === 'batch_start') {
+      statBatch.textContent = `${ev.batch_idx}/${ev.total_batches}`;
+      batchInfo.textContent = `Батч ${ev.batch_idx}/${ev.total_batches}: ${ev.ids.slice(0,3).join(', ')}${ev.ids.length > 3 ? '...' : ''}`;
+      addLog(`══ Батч ${ev.batch_idx}/${ev.total_batches}: ${ev.ids.join(', ')}`, 'batch');
+    }
+
+    if (ev.type === 'web_search') {
+      if (ev.pleiades) pleiadesCnt++;
+      if (ev.wikipedia) wikiCnt++;
+      statSrc.textContent = `${pleiadesCnt}/${wikiCnt}`;
+      const src = (ev.pleiades ? '🏛' : '✗') + (ev.wikipedia ? '📖' : '✗');
+      addLog(`  ${src} ${ev.name} (${ev.id})`, 'search');
+    }
+
+    if (ev.type === 'batch_done') {
+      for (const { id, name, geo } of ev.results) {
+        addNationToMap(id, name, geo);
+        addNationItem(id, name, geo);
+        addLog(`  ✓ ${name} [${geo.bbox.latMin.toFixed(1)},${geo.bbox.latMax.toFixed(1)}]×[${geo.bbox.lonMin.toFixed(1)},${geo.bbox.lonMax.toFixed(1)}]`, 'info');
+        // Панорамируем к последней нации
+        if (nationLayers[id]) map.panTo([(geo.bbox.latMin + geo.bbox.latMax) / 2, (geo.bbox.lonMin + geo.bbox.lonMax) / 2]);
+      }
+      updateProgress(ev.total_so_far);
+    }
+
+    if (ev.type === 'batch_error') {
+      addLog(`  ✗ Батч ${ev.batch_idx} ошибка: ${ev.error}`, 'error');
+    }
+
+    if (ev.type === 'log') {
+      const cls = ev.msg.includes('✓') ? 'info' : ev.msg.includes('⚠') ? 'warn' : ev.msg.includes('✗') ? 'error' : 'nation';
+      addLog(ev.msg, cls);
+    }
+
+    if (ev.type === 'done') {
+      updateProgress(ev.total);
+      progressFill.style.width = '100%';
+      batchInfo.textContent = `✅ Готово! Обработано ${ev.total} наций`;
+      addLog(`✅ ГОТОВО! Обработано ${ev.total} наций. Pleiades: ${ev.web_hits.pleiades}, Wiki: ${ev.web_hits.wikipedia}`, 'done');
+      document.getElementById('btnStart').disabled = false;
+      document.getElementById('btnStop').disabled  = true;
+    }
+
+    if (ev.type === 'fatal') {
+      addLog(`💥 КРИТИЧЕСКАЯ ОШИБКА: ${ev.error}`, 'error');
+      document.getElementById('btnStart').disabled = false;
+      document.getElementById('btnStop').disabled  = true;
+    }
+  };
+
+  evtSource.onerror = () => {
+    addLog('Соединение с сервером прервано. Переподключение…', 'warn');
+    setTimeout(connectSSE, 3000);
+  };
+}
+
+connectSSE();
+
+// ─── Управление ────────────────────────────────────────────────────
+async function startGen() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey || !apiKey.startsWith('sk-')) {
+    alert('Введи корректный ANTHROPIC_API_KEY (начинается с sk-)');
+    return;
+  }
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnStop').disabled  = false;
+  pleiadesCnt = 0; wikiCnt = 0;
+
+  try {
+    const resp = await fetch('/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: apiKey }),
+    });
+    const data = await resp.json();
+    if (!data.ok) {
+      addLog('Ошибка запуска: ' + (data.error ?? 'неизвестно'), 'error');
+      document.getElementById('btnStart').disabled = false;
+      document.getElementById('btnStop').disabled  = true;
+    }
+  } catch(e) {
+    addLog('Ошибка соединения: ' + e.message, 'error');
+    document.getElementById('btnStart').disabled = false;
+    document.getElementById('btnStop').disabled  = true;
+  }
+}
+
+async function stopGen() {
+  await fetch('/stop', { method: 'POST' });
+  document.getElementById('btnStop').disabled = true;
+  addLog('⏹ Запрос на остановку отправлен…', 'warn');
+}
+
+// Легенда
+const legend = L.control({ position: 'bottomleft' });
+legend.onAdd = () => {
+  const div = L.DomUtil.create('div');
+  div.style.cssText = 'background:rgba(0,0,0,0.7);padding:8px;border-radius:4px;font-size:11px;color:#eee;line-height:1.8';
+  div.innerHTML = `
+    <b>Приоритет</b><br>
+    <span style="color:#e94560">■</span> 8-10 Великая держава<br>
+    <span style="color:#ffa726">■</span> 5-7 Царство<br>
+    <span style="color:#66bb6a">■</span> 3-4 Полис<br>
+    <span style="color:#42a5f5">■</span> 1-2 Город<br>
+    <span style="color:#334;opacity:.5">□</span> Зона карты
+  `;
+  return div;
+};
+legend.addTo(map);
+</script>
+
+</body>
+</html>

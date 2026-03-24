@@ -5,7 +5,8 @@
   "scripts": {
     "build": "node agents/chain_builder.js",
     "ui": "node agents/server.js",
-    "validate": "node agents/validate_inputs.js"
+    "validate": "node agents/validate_inputs.js",
+    "geo": "node scripts/geo_server.js"
   },
   "engines": {
     "node": ">=18.0.0"
