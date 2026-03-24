@@ -300,16 +300,20 @@ async function callClaude(system, user, API_KEY) {
   }
 }
 
+function atomicWrite(filePath, content) {
+  const tmp = filePath + '.tmp';
+  fs.writeFileSync(tmp, content, 'utf8');
+  fs.renameSync(tmp, filePath);
+}
+
 function saveResults(data) {
   const OUT_PATH = path.join(ROOT, 'data', 'nation_geo.js');
-  const content = `// AUTO-GENERATED: исторические границы наций 304 BC\nvar NATION_GEO = ${JSON.stringify(data, null, 2)};\n`;
-  fs.writeFileSync(OUT_PATH, content, 'utf8');
+  atomicWrite(OUT_PATH, `// AUTO-GENERATED: исторические границы наций 304 BC\nvar NATION_GEO = ${JSON.stringify(data, null, 2)};\n`);
 }
 
 function saveEnriched(data) {
   const OUT_PATH = path.join(ROOT, 'data', 'nation_enriched.js');
-  const content = `// AUTO-GENERATED: исторические данные наций 304 BC\n// color, culture, religion, ruler, government_type, population, military_style\nvar NATION_ENRICHED = ${JSON.stringify(data, null, 2)};\n`;
-  fs.writeFileSync(OUT_PATH, content, 'utf8');
+  atomicWrite(OUT_PATH, `// AUTO-GENERATED: исторические данные наций 304 BC\n// color, culture, religion, ruler, government_type, population, military_style\nvar NATION_ENRICHED = ${JSON.stringify(data, null, 2)};\n`);
 }
 
 // Поля которые идут в nation_enriched.js (не в nation_geo.js)
