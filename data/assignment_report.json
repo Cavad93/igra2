@@ -1,17 +1,127 @@
 {
-  "generated": "2026-03-24T15:18:05.951Z",
+  "generated": "2026-03-24T23:23:26.075Z",
   "summary": {
     "total_regions": 3808,
-    "assigned": 2684,
-    "neutral": 1124,
-    "unique_nations": 186,
-    "issues_count": 37
+    "assigned": 3338,
+    "neutral": 470,
+    "unique_nations": 842,
+    "issues_count": 644
   },
   "issues": [
+    {
+      "type": "NO_REGIONS",
+      "nationId": "agathyrsi",
+      "msg": "Нация \"agathyrsi\" получила 0 регионов"
+    },
+    {
+      "type": "NO_REGIONS",
+      "nationId": "ambronia",
+      "msg": "Нация \"ambronia\" получила 0 регионов"
+    },
+    {
+      "type": "NO_REGIONS",
+      "nationId": "breganti",
+      "msg": "Нация \"breganti\" получила 0 регионов"
+    },
+    {
+      "type": "NO_REGIONS",
+      "nationId": "carnutes",
+      "msg": "Нация \"carnutes\" получила 0 регионов"
+    },
+    {
+      "type": "NO_REGIONS",
+      "nationId": "conii",
+      "msg": "Нация \"conii\" получила 0 регионов"
+    },
+    {
+      "type": "NO_REGIONS",
+      "nationId": "gulbal",
+      "msg": "Нация \"gulbal\" получила 0 регионов"
+    },
+    {
+      "type": "NO_REGIONS",
+      "nationId": "guyan",
+      "msg": "Нация \"guyan\" получила 0 регионов"
+    },
+    {
+      "type": "NO_REGIONS",
+      "nationId": "namnetes",
+      "msg": "Нация \"namnetes\" получила 0 регионов"
+    },
+    {
+      "type": "NO_REGIONS",
+      "nationId": "oaymaannadu",
+      "msg": "Нация \"oaymaannadu\" получила 0 регионов"
+    },
+    {
+      "type": "NO_REGIONS",
+      "nationId": "orcadia",
+      "msg": "Нация \"orcadia\" получила 0 регионов"
+    },
+    {
+      "type": "NO_REGIONS",
+      "nationId": "palada",
+      "msg": "Нация \"palada\" получила 0 регионов"
+    },
+    {
+      "type": "NO_REGIONS",
+      "nationId": "pingu",
+      "msg": "Нация \"pingu\" получила 0 регионов"
+    },
+    {
+      "type": "NO_REGIONS",
+      "nationId": "punanadu",
+      "msg": "Нация \"punanadu\" получила 0 регионов"
+    },
+    {
+      "type": "NO_REGIONS",
+      "nationId": "selgovia",
+      "msg": "Нация \"selgovia\" получила 0 регионов"
+    },
+    {
+      "type": "NO_REGIONS",
+      "nationId": "trinovantia",
+      "msg": "Нация \"trinovantia\" получила 0 регионов"
+    },
+    {
+      "type": "NO_REGIONS",
+      "nationId": "dumnonia",
+      "msg": "Нация \"dumnonia\" получила 0 регионов"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "pandya",
+      "msg": "Нация \"pandya\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "coritania",
+      "msg": "Нация \"coritania\" получила только 1 регион(а), priority=5"
+    },
     {
       "type": "FEW_REGIONS",
       "nationId": "qataban",
       "msg": "Нация \"qataban\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "matsura",
+      "msg": "Нация \"matsura\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "iki",
+      "msg": "Нация \"iki\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yeodam",
+      "msg": "Нация \"yeodam\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gojamidong",
+      "msg": "Нация \"gojamidong\" получила только 1 регион(а), priority=4"
     },
     {
       "type": "FEW_REGIONS",
@@ -20,8 +130,28 @@
     },
     {
       "type": "FEW_REGIONS",
-      "nationId": "massylii",
-      "msg": "Нация \"massylii\" получила только 1 регион(а), priority=5"
+      "nationId": "kaya",
+      "msg": "Нация \"kaya\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "pong_manao",
+      "msg": "Нация \"pong_manao\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "mudhirmali",
+      "msg": "Нация \"mudhirmali\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "makae",
+      "msg": "Нация \"makae\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "tenasserim",
+      "msg": "Нация \"tenasserim\" получила только 1 регион(а), priority=4"
     },
     {
       "type": "FEW_REGIONS",
@@ -30,8 +160,188 @@
     },
     {
       "type": "FEW_REGIONS",
+      "nationId": "khasa",
+      "msg": "Нация \"khasa\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sab_champa_jurcae",
+      "msg": "Нация \"sab_champa_jurcae\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "polyrrhenia",
+      "msg": "Нация \"polyrrhenia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
       "nationId": "massilia",
       "msg": "Нация \"massilia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "vesubia",
+      "msg": "Нация \"vesubia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "britannia",
+      "msg": "Нация \"britannia\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "parisia",
+      "msg": "Нация \"parisia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "astures",
+      "msg": "Нация \"astures\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "osimii",
+      "msg": "Нация \"osimii\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "teuria",
+      "msg": "Нация \"teuria\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "zygia",
+      "msg": "Нация \"zygia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "lepcis_parva",
+      "msg": "Нация \"lepcis_parva\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "thapsus",
+      "msg": "Нация \"thapsus\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "suaneti",
+      "msg": "Нация \"suaneti\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "lapicinia",
+      "msg": "Нация \"lapicinia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "legae",
+      "msg": "Нация \"legae\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "aigion",
+      "msg": "Нация \"aigion\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "celtici",
+      "msg": "Нация \"celtici\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "vaccaei",
+      "msg": "Нация \"vaccaei\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "cosuaneti",
+      "msg": "Нация \"cosuaneti\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "xiangkhoang",
+      "msg": "Нация \"xiangkhoang\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "cadurici",
+      "msg": "Нация \"cadurici\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "helisia",
+      "msg": "Нация \"helisia\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "pictones",
+      "msg": "Нация \"pictones\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "venetii",
+      "msg": "Нация \"venetii\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "menapia",
+      "msg": "Нация \"menapia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "focunati",
+      "msg": "Нация \"focunati\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "venelli",
+      "msg": "Нация \"venelli\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kalinga",
+      "msg": "Нация \"kalinga\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "pinglin",
+      "msg": "Нация \"pinglin\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "haria",
+      "msg": "Нация \"haria\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "samatata",
+      "msg": "Нация \"samatata\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "nabhaka",
+      "msg": "Нация \"nabhaka\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "isindia",
+      "msg": "Нация \"isindia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "biturges",
+      "msg": "Нация \"biturges\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "viromanduia",
+      "msg": "Нация \"viromanduia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kaukonia",
+      "msg": "Нация \"kaukonia\" получила только 2 регион(а), priority=3"
     },
     {
       "type": "FEW_REGIONS",
@@ -40,13 +350,318 @@
     },
     {
       "type": "FEW_REGIONS",
+      "nationId": "thuria",
+      "msg": "Нация \"thuria\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
       "nationId": "rhodes",
       "msg": "Нация \"rhodes\" получила только 1 регион(а), priority=4"
     },
     {
       "type": "FEW_REGIONS",
-      "nationId": "antipatrid_kingdom",
-      "msg": "Нация \"antipatrid_kingdom\" получила только 1 регион(а), priority=8"
+      "nationId": "germani",
+      "msg": "Нация \"germani\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "knossos",
+      "msg": "Нация \"knossos\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "dalmati",
+      "msg": "Нация \"dalmati\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "picentes",
+      "msg": "Нация \"picentes\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "catenati",
+      "msg": "Нация \"catenati\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "veltia",
+      "msg": "Нация \"veltia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "astigi",
+      "msg": "Нация \"astigi\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "lusitanii",
+      "msg": "Нация \"lusitanii\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "celtiberia",
+      "msg": "Нация \"celtiberia\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "celtiberi",
+      "msg": "Нация \"celtiberi\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gallaeci",
+      "msg": "Нация \"gallaeci\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ibericus",
+      "msg": "Нация \"ibericus\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "nectiberia",
+      "msg": "Нация \"nectiberia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "cantabri",
+      "msg": "Нация \"cantabri\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "aquetanians",
+      "msg": "Нация \"aquetanians\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gaucoenses",
+      "msg": "Нация \"gaucoenses\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "vascones",
+      "msg": "Нация \"vascones\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "llergetes",
+      "msg": "Нация \"llergetes\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "oretani",
+      "msg": "Нация \"oretani\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "celesitani",
+      "msg": "Нация \"celesitani\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "belgae",
+      "msg": "Нация \"belgae\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "vanavasi",
+      "msg": "Нация \"vanavasi\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "pitinika",
+      "msg": "Нация \"pitinika\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "pullinadu",
+      "msg": "Нация \"pullinadu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "zhangzhung",
+      "msg": "Нация \"zhangzhung\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kamarupa",
+      "msg": "Нация \"kamarupa\" получила только 2 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "anhou",
+      "msg": "Нация \"anhou\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "qi",
+      "msg": "Нация \"qi\" получила только 1 регион(а), priority=7"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "zhao",
+      "msg": "Нация \"zhao\" получила только 1 регион(а), priority=7"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "juding",
+      "msg": "Нация \"juding\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "xiru",
+      "msg": "Нация \"xiru\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gaul",
+      "msg": "Нация \"gaul\" получила только 1 регион(а), priority=7"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "helvi",
+      "msg": "Нация \"helvi\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "voconii",
+      "msg": "Нация \"voconii\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "latobrigi",
+      "msg": "Нация \"latobrigi\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "fosia",
+      "msg": "Нация \"fosia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "parisii",
+      "msg": "Нация \"parisii\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "lingoni",
+      "msg": "Нация \"lingoni\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "treveria",
+      "msg": "Нация \"treveria\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "saluvii",
+      "msg": "Нация \"saluvii\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sorbones",
+      "msg": "Нация \"sorbones\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "narensi",
+      "msg": "Нация \"narensi\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "melcumani",
+      "msg": "Нация \"melcumani\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "illyria",
+      "msg": "Нация \"illyria\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "uperaci",
+      "msg": "Нация \"uperaci\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "andizeti",
+      "msg": "Нация \"andizeti\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sevaci",
+      "msg": "Нация \"sevaci\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "dectuninia",
+      "msg": "Нация \"dectuninia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "rucinatia",
+      "msg": "Нация \"rucinatia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "eravisci",
+      "msg": "Нация \"eravisci\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ossi",
+      "msg": "Нация \"ossi\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "anartes",
+      "msg": "Нация \"anartes\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "bastarnia",
+      "msg": "Нация \"bastarnia\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "atavia",
+      "msg": "Нация \"atavia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "breuci",
+      "msg": "Нация \"breuci\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "quadia",
+      "msg": "Нация \"quadia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "boi",
+      "msg": "Нация \"boi\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "xihai",
+      "msg": "Нация \"xihai\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "juyan",
+      "msg": "Нация \"juyan\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "mazun",
+      "msg": "Нация \"mazun\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "bactria",
+      "msg": "Нация \"bactria\" получила только 1 регион(а), priority=5"
     },
     {
       "type": "FEW_REGIONS",
@@ -55,8 +670,33 @@
     },
     {
       "type": "FEW_REGIONS",
+      "nationId": "derbices",
+      "msg": "Нация \"derbices\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sogdia",
+      "msg": "Нация \"sogdia\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "shule",
+      "msg": "Нация \"shule\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "main",
+      "msg": "Нация \"main\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
       "nationId": "hadramaut",
       "msg": "Нация \"hadramaut\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ansanemes",
+      "msg": "Нация \"ansanemes\" получила только 1 регион(а), priority=4"
     },
     {
       "type": "FEW_REGIONS",
@@ -65,8 +705,458 @@
     },
     {
       "type": "FEW_REGIONS",
+      "nationId": "buma",
+      "msg": "Нация \"buma\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "chamavia",
+      "msg": "Нация \"chamavia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "bructeria",
+      "msg": "Нация \"bructeria\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "eburani",
+      "msg": "Нация \"eburani\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "chaucia",
+      "msg": "Нация \"chaucia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "cheruscia",
+      "msg": "Нация \"cheruscia\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "hermunduria",
+      "msg": "Нация \"hermunduria\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "teutonia",
+      "msg": "Нация \"teutonia\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "semnonia",
+      "msg": "Нация \"semnonia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gryphia",
+      "msg": "Нация \"gryphia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "esan",
+      "msg": "Нация \"esan\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "cimbria",
+      "msg": "Нация \"cimbria\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "marcomannia",
+      "msg": "Нация \"marcomannia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "burgundia",
+      "msg": "Нация \"burgundia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "rugia",
+      "msg": "Нация \"rugia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gothania",
+      "msg": "Нация \"gothania\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "goutia",
+      "msg": "Нация \"goutia\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gautigoths",
+      "msg": "Нация \"gautigoths\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "nuithonia",
+      "msg": "Нация \"nuithonia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "santones",
+      "msg": "Нация \"santones\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "cantiacia",
+      "msg": "Нация \"cantiacia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "damnonia",
+      "msg": "Нация \"damnonia\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "durotrigia",
+      "msg": "Нация \"durotrigia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "siluria",
+      "msg": "Нация \"siluria\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "demetia",
+      "msg": "Нация \"demetia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ordovicia",
+      "msg": "Нация \"ordovicia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "icenia",
+      "msg": "Нация \"icenia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "carvetia",
+      "msg": "Нация \"carvetia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "votadinia",
+      "msg": "Нация \"votadinia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "novantia",
+      "msg": "Нация \"novantia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "eblania",
+      "msg": "Нация \"eblania\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
       "nationId": "picts",
       "msg": "Нация \"picts\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "cornovia",
+      "msg": "Нация \"cornovia\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "caledonia",
+      "msg": "Нация \"caledonia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "veniconia",
+      "msg": "Нация \"veniconia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "votodronia",
+      "msg": "Нация \"votodronia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "monapia",
+      "msg": "Нация \"monapia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "cornavia",
+      "msg": "Нация \"cornavia\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "caerosia",
+      "msg": "Нация \"caerosia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "cotinia",
+      "msg": "Нация \"cotinia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "leunia",
+      "msg": "Нация \"leunia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "costobaces",
+      "msg": "Нация \"costobaces\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "borusci",
+      "msg": "Нация \"borusci\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "rubrensians",
+      "msg": "Нация \"rubrensians\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "reudignia",
+      "msg": "Нация \"reudignia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "athagausia",
+      "msg": "Нация \"athagausia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "aestia",
+      "msg": "Нация \"aestia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "issedones",
+      "msg": "Нация \"issedones\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "damna",
+      "msg": "Нация \"damna\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "daqiuyuan",
+      "msg": "Нация \"daqiuyuan\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "goguryeo",
+      "msg": "Нация \"goguryeo\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "fuyu",
+      "msg": "Нация \"fuyu\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "xi",
+      "msg": "Нация \"xi\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yue",
+      "msg": "Нация \"yue\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "nam_cuong",
+      "msg": "Нация \"nam_cuong\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "lu",
+      "msg": "Нация \"lu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "fulou",
+      "msg": "Нация \"fulou\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "hanben",
+      "msg": "Нация \"hanben\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "van_lang",
+      "msg": "Нация \"van_lang\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "chansen",
+      "msg": "Нация \"chansen\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "anya",
+      "msg": "Нация \"anya\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yulimo",
+      "msg": "Нация \"yulimo\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "xitu",
+      "msg": "Нация \"xitu\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "mahisamandala",
+      "msg": "Нация \"mahisamandala\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "asmaka",
+      "msg": "Нация \"asmaka\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ruhunu",
+      "msg": "Нация \"ruhunu\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "anuradhapura",
+      "msg": "Нация \"anuradhapura\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "indravana",
+      "msg": "Нация \"indravana\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gandhara",
+      "msg": "Нация \"gandhara\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "punginadu",
+      "msg": "Нация \"punginadu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "naga",
+      "msg": "Нация \"naga\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yarlung",
+      "msg": "Нация \"yarlung\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "nuomuhong",
+      "msg": "Нация \"nuomuhong\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "khuan_lukpad",
+      "msg": "Нация \"khuan_lukpad\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "khao_sam_kaeo",
+      "msg": "Нация \"khao_sam_kaeo\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "thaton",
+      "msg": "Нация \"thaton\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "shan",
+      "msg": "Нация \"shan\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "chi_tu",
+      "msg": "Нация \"chi_tu\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ywa_htin_kon",
+      "msg": "Нация \"ywa_htin_kon\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "arakan",
+      "msg": "Нация \"arakan\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "halin",
+      "msg": "Нация \"halin\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kaandhalkuranadu",
+      "msg": "Нация \"kaandhalkuranadu\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "satiyaputa",
+      "msg": "Нация \"satiyaputa\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "hadrametum",
+      "msg": "Нация \"hadrametum\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "bulsa",
+      "msg": "Нация \"bulsa\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "arambys",
+      "msg": "Нация \"arambys\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "fugandulu",
+      "msg": "Нация \"fugandulu\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "lamuri",
+      "msg": "Нация \"lamuri\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "manimia",
+      "msg": "Нация \"manimia\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "avalitia",
+      "msg": "Нация \"avalitia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "socosia",
+      "msg": "Нация \"socosia\" получила только 1 регион(а), priority=3"
     },
     {
       "type": "FEW_REGIONS",
@@ -75,13 +1165,98 @@
     },
     {
       "type": "FEW_REGIONS",
-      "nationId": "cyrene",
-      "msg": "Нация \"cyrene\" получила только 1 регион(а), priority=6"
+      "nationId": "hipponion",
+      "msg": "Нация \"hipponion\" получила только 2 регион(а), priority=3"
     },
     {
       "type": "FEW_REGIONS",
-      "nationId": "gandhara",
-      "msg": "Нация \"gandhara\" получила только 1 регион(а), priority=4"
+      "nationId": "heraia",
+      "msg": "Нация \"heraia\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "boeotian_states",
+      "msg": "Нация \"boeotian_states\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "eleutherna",
+      "msg": "Нация \"eleutherna\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "lappa",
+      "msg": "Нация \"lappa\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "emporion",
+      "msg": "Нация \"emporion\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "hemeroskopeion",
+      "msg": "Нация \"hemeroskopeion\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "korkyra",
+      "msg": "Нация \"korkyra\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "onuba",
+      "msg": "Нация \"onuba\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "lascutaia",
+      "msg": "Нация \"lascutaia\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kartuba",
+      "msg": "Нация \"kartuba\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "pissuri",
+      "msg": "Нация \"pissuri\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "hari",
+      "msg": "Нация \"hari\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "aspisia",
+      "msg": "Нация \"aspisia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sanu",
+      "msg": "Нация \"sanu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "adiabene",
+      "msg": "Нация \"adiabene\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "daamat",
+      "msg": "Нация \"daamat\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "adoulia",
+      "msg": "Нация \"adoulia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "mai_adrasha",
+      "msg": "Нация \"mai_adrasha\" получила только 1 регион(а), priority=3"
     },
     {
       "type": "FEW_REGIONS",
@@ -95,13 +1270,973 @@
     },
     {
       "type": "FEW_REGIONS",
+      "nationId": "guya",
+      "msg": "Нация \"guya\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "shenli",
+      "msg": "Нация \"shenli\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "zuo",
+      "msg": "Нация \"zuo\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ouyue",
+      "msg": "Нация \"ouyue\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "jiuxianlan",
+      "msg": "Нация \"jiuxianlan\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "bie",
+      "msg": "Нация \"bie\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ni",
+      "msg": "Нация \"ni\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gui",
+      "msg": "Нация \"gui\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "xiaowan",
+      "msg": "Нация \"xiaowan\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "chu",
+      "msg": "Нация \"chu\" получила только 1 регион(а), priority=8"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "teng",
+      "msg": "Нация \"teng\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "cangwu",
+      "msg": "Нация \"cangwu\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yangyue",
+      "msg": "Нация \"yangyue\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "lamap",
+      "msg": "Нация \"lamap\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "lai",
+      "msg": "Нация \"lai\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "qielan",
+      "msg": "Нация \"qielan\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "louwo",
+      "msg": "Нация \"louwo\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "loeu",
+      "msg": "Нация \"loeu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "panpan",
+      "msg": "Нация \"panpan\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ranmang",
+      "msg": "Нация \"ranmang\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "uyu",
+      "msg": "Нация \"uyu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "beikthano",
+      "msg": "Нация \"beikthano\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sinaga",
+      "msg": "Нация \"sinaga\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "qiongdu",
+      "msg": "Нация \"qiongdu\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kandis",
+      "msg": "Нация \"kandis\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gangga_negara",
+      "msg": "Нация \"gangga_negara\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "selangor",
+      "msg": "Нация \"selangor\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yaudheya",
+      "msg": "Нация \"yaudheya\" получила только 2 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "chera",
+      "msg": "Нация \"chera\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ollaiyur",
+      "msg": "Нация \"ollaiyur\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "mukkaavalnadu",
+      "msg": "Нация \"mukkaavalnadu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "mazhamphulanadu",
+      "msg": "Нация \"mazhamphulanadu\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kudanadu",
+      "msg": "Нация \"kudanadu\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "vellimalai",
+      "msg": "Нация \"vellimalai\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "vaanarnadu",
+      "msg": "Нация \"vaanarnadu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "mullurnadu",
+      "msg": "Нация \"mullurnadu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kuntala",
+      "msg": "Нация \"kuntala\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "pothigainadu",
+      "msg": "Нация \"pothigainadu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "darinia",
+      "msg": "Нация \"darinia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "karkanadu",
+      "msg": "Нация \"karkanadu\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "tondainadu",
+      "msg": "Нация \"tondainadu\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "athigannadu",
+      "msg": "Нация \"athigannadu\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "andhra",
+      "msg": "Нация \"andhra\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "chola",
+      "msg": "Нация \"chola\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kaankezhunadu",
+      "msg": "Нация \"kaankezhunadu\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "lumbini",
+      "msg": "Нация \"lumbini\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "chausaria",
+      "msg": "Нация \"chausaria\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "nabhapakti",
+      "msg": "Нация \"nabhapakti\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "arachosia",
+      "msg": "Нация \"arachosia\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "khotan",
+      "msg": "Нация \"khotan\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "qiemo",
+      "msg": "Нация \"qiemo\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "hujie",
+      "msg": "Нация \"hujie\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "charklik",
+      "msg": "Нация \"charklik\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yanqi",
+      "msg": "Нация \"yanqi\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "loulan",
+      "msg": "Нация \"loulan\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "qushi",
+      "msg": "Нация \"qushi\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kucha",
+      "msg": "Нация \"kucha\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "pishan",
+      "msg": "Нация \"pishan\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kina",
+      "msg": "Нация \"kina\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "hnaw_kan",
+      "msg": "Нация \"hnaw_kan\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kunming",
+      "msg": "Нация \"kunming\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "langkashuka",
+      "msg": "Нация \"langkashuka\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "jubbah",
+      "msg": "Нация \"jubbah\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "qeddar",
+      "msg": "Нация \"qeddar\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "langyayue",
+      "msg": "Нация \"langyayue\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "pahang",
+      "msg": "Нация \"pahang\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "tayuan",
+      "msg": "Нация \"tayuan\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "xue",
+      "msg": "Нация \"xue\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "nanhe",
+      "msg": "Нация \"nanhe\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "loufan",
+      "msg": "Нация \"loufan\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "hezongshi",
+      "msg": "Нация \"hezongshi\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "weili",
+      "msg": "Нация \"weili\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "minyue",
+      "msg": "Нация \"minyue\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "morinia",
+      "msg": "Нация \"morinia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "remi",
+      "msg": "Нация \"remi\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ubia",
+      "msg": "Нация \"ubia\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "tougeni",
+      "msg": "Нация \"tougeni\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "praisos",
+      "msg": "Нация \"praisos\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kydonia",
+      "msg": "Нация \"kydonia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "iboshim",
+      "msg": "Нация \"iboshim\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "hermione",
+      "msg": "Нация \"hermione\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "andros",
+      "msg": "Нация \"andros\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "dian",
+      "msg": "Нация \"dian\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yeomhae",
+      "msg": "Нация \"yeomhae\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "oki",
+      "msg": "Нация \"oki\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "toyo",
+      "msg": "Нация \"toyo\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "hinokuni",
+      "msg": "Нация \"hinokuni\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "wakasa",
+      "msg": "Нация \"wakasa\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yasu",
+      "msg": "Нация \"yasu\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "shihsanhang",
+      "msg": "Нация \"shihsanhang\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "awa",
+      "msg": "Нация \"awa\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "tosu",
+      "msg": "Нация \"tosu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "himuka",
+      "msg": "Нация \"himuka\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kumaso",
+      "msg": "Нация \"kumaso\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "houki",
+      "msg": "Нация \"houki\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kaga",
+      "msg": "Нация \"kaga\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "futakata",
+      "msg": "Нация \"futakata\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sinano",
+      "msg": "Нация \"sinano\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "owari",
+      "msg": "Нация \"owari\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ohmi",
+      "msg": "Нация \"ohmi\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "honokuni",
+      "msg": "Нация \"honokuni\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "titibu",
+      "msg": "Нация \"titibu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kumano",
+      "msg": "Нация \"kumano\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yamato",
+      "msg": "Нация \"yamato\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ise",
+      "msg": "Нация \"ise\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "nukata",
+      "msg": "Нация \"nukata\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "imizu",
+      "msg": "Нация \"imizu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "mugetu",
+      "msg": "Нация \"mugetu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yama",
+      "msg": "Нация \"yama\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "musasi",
+      "msg": "Нация \"musasi\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "motosu",
+      "msg": "Нация \"motosu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "simobusa",
+      "msg": "Нация \"simobusa\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "aki",
+      "msg": "Нация \"aki\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "soga",
+      "msg": "Нация \"soga\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "igo",
+      "msg": "Нация \"igo\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ohkita",
+      "msg": "Нация \"ohkita\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "toki",
+      "msg": "Нация \"toki\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kii",
+      "msg": "Нация \"kii\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "mikuni",
+      "msg": "Нация \"mikuni\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kubiki",
+      "msg": "Нация \"kubiki\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "hitati",
+      "msg": "Нация \"hitati\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "simotuke",
+      "msg": "Нация \"simotuke\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "nasu",
+      "msg": "Нация \"nasu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sirakawa",
+      "msg": "Нация \"sirakawa\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kitami",
+      "msg": "Нация \"kitami\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "nivkhgu",
+      "msg": "Нация \"nivkhgu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "weii",
+      "msg": "Нация \"weii\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yulou",
+      "msg": "Нация \"yulou\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yan",
+      "msg": "Нация \"yan\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "haoshi",
+      "msg": "Нация \"haoshi\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "zhongshan",
+      "msg": "Нация \"zhongshan\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "boduo",
+      "msg": "Нация \"boduo\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "xiqiemi",
+      "msg": "Нация \"xiqiemi\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "jushi",
+      "msg": "Нация \"jushi\" получила только 2 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "wulei",
+      "msg": "Нация \"wulei\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "bugu",
+      "msg": "Нация \"bugu\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "wusun",
+      "msg": "Нация \"wusun\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yumi",
+      "msg": "Нация \"yumi\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "xi_zhou",
+      "msg": "Нация \"xi_zhou\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "wei",
+      "msg": "Нация \"wei\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "zou",
+      "msg": "Нация \"zou\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "song",
+      "msg": "Нация \"song\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
       "nationId": "han",
       "msg": "Нация \"han\" получила только 1 регион(а), priority=6"
     },
     {
       "type": "FEW_REGIONS",
+      "nationId": "zhou",
+      "msg": "Нация \"zhou\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "qin",
+      "msg": "Нация \"qin\" получила только 1 регион(а), priority=7"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yiqu",
+      "msg": "Нация \"yiqu\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yelang",
+      "msg": "Нация \"yelang\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "tigrakhauda",
+      "msg": "Нация \"tigrakhauda\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "apasiacae",
+      "msg": "Нация \"apasiacae\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "adagaiman",
+      "msg": "Нация \"adagaiman\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "daze",
+      "msg": "Нация \"daze\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "bekhyria",
+      "msg": "Нация \"bekhyria\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sabiri",
+      "msg": "Нация \"sabiri\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "yancai",
+      "msg": "Нация \"yancai\" получила только 2 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "magyars",
+      "msg": "Нация \"magyars\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "geungi",
+      "msg": "Нация \"geungi\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kharazm",
+      "msg": "Нация \"kharazm\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "thyssagetae",
+      "msg": "Нация \"thyssagetae\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "scythians",
+      "msg": "Нация \"scythians\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "melanchlaeni",
+      "msg": "Нация \"melanchlaeni\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "budini",
+      "msg": "Нация \"budini\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gelonii",
+      "msg": "Нация \"gelonii\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "odessa",
+      "msg": "Нация \"odessa\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "borysthenes",
+      "msg": "Нация \"borysthenes\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "carpi",
+      "msg": "Нация \"carpi\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "iasi",
+      "msg": "Нация \"iasi\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "avionia",
+      "msg": "Нация \"avionia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "galindia",
+      "msg": "Нация \"galindia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "estioni",
+      "msg": "Нация \"estioni\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gothoscandza",
+      "msg": "Нация \"gothoscandza\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "lemovia",
+      "msg": "Нация \"lemovia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "mediomatricia",
+      "msg": "Нация \"mediomatricia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "bellovaci",
+      "msg": "Нация \"bellovaci\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "aedui",
+      "msg": "Нация \"aedui\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "vangiona",
+      "msg": "Нация \"vangiona\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "frisians",
+      "msg": "Нация \"frisians\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "condrusia",
+      "msg": "Нация \"condrusia\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "breuni",
+      "msg": "Нация \"breuni\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "brigantia",
+      "msg": "Нация \"brigantia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "licati",
+      "msg": "Нация \"licati\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "bures",
+      "msg": "Нация \"bures\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "weitou",
+      "msg": "Нация \"weitou\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "huifa",
+      "msg": "Нация \"huifa\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "issa",
+      "msg": "Нация \"issa\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "aequi_remnants",
+      "msg": "Нация \"aequi_remnants\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
       "nationId": "marsi",
-      "msg": "Нация \"marsi\" получила только 2 регион(а), priority=3"
+      "msg": "Нация \"marsi\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "samnites",
+      "msg": "Нация \"samnites\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "caraceni",
+      "msg": "Нация \"caraceni\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "praetutii",
+      "msg": "Нация \"praetutii\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "iadatinia",
+      "msg": "Нация \"iadatinia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "autenia",
+      "msg": "Нация \"autenia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "cochis",
+      "msg": "Нация \"cochis\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "colapiani",
+      "msg": "Нация \"colapiani\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "brutii",
+      "msg": "Нация \"brutii\" получила только 1 регион(а), priority=4"
     },
     {
       "type": "FEW_REGIONS",
@@ -110,8 +2245,353 @@
     },
     {
       "type": "FEW_REGIONS",
+      "nationId": "etruscan_conf",
+      "msg": "Нация \"etruscan_conf\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ilvatia_coeba",
+      "msg": "Нация \"ilvatia_coeba\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "tibulati",
+      "msg": "Нация \"tibulati\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "statiellia",
+      "msg": "Нация \"statiellia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ilvatia",
+      "msg": "Нация \"ilvatia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sabinia",
+      "msg": "Нация \"sabinia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "tigurini",
+      "msg": "Нация \"tigurini\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "latovici",
+      "msg": "Нация \"latovici\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "langobardia",
+      "msg": "Нация \"langobardia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "rugusci",
+      "msg": "Нация \"rugusci\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "rauraci",
+      "msg": "Нация \"rauraci\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "nemetia",
+      "msg": "Нация \"nemetia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "caluconi",
+      "msg": "Нация \"caluconi\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "apuania",
+      "msg": "Нация \"apuania\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
       "nationId": "cenomanni",
       "msg": "Нация \"cenomanni\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "camuni",
+      "msg": "Нация \"camuni\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "genauni",
+      "msg": "Нация \"genauni\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sequani",
+      "msg": "Нация \"sequani\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "roman_republic",
+      "msg": "Нация \"roman_republic\" получила только 1 регион(а), priority=8"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "etruscan_confederation",
+      "msg": "Нация \"etruscan_confederation\" получила только 1 регион(а), priority=7"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "nervia",
+      "msg": "Нация \"nervia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "albosenses",
+      "msg": "Нация \"albosenses\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "insubri",
+      "msg": "Нация \"insubri\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "trumpili",
+      "msg": "Нация \"trumpili\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "feltrini",
+      "msg": "Нация \"feltrini\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "segnia",
+      "msg": "Нация \"segnia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "tigullia",
+      "msg": "Нация \"tigullia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "vertamocorii",
+      "msg": "Нация \"vertamocorii\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ingaunia",
+      "msg": "Нация \"ingaunia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "intimilia",
+      "msg": "Нация \"intimilia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "caturigi",
+      "msg": "Нация \"caturigi\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "vediantia",
+      "msg": "Нация \"vediantia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "orobia",
+      "msg": "Нация \"orobia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "noricum",
+      "msg": "Нация \"noricum\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "belgites",
+      "msg": "Нация \"belgites\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "isarci",
+      "msg": "Нация \"isarci\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "anauni",
+      "msg": "Нация \"anauni\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "uberi",
+      "msg": "Нация \"uberi\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "venosti",
+      "msg": "Нация \"venosti\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "karbonia",
+      "msg": "Нация \"karbonia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "massylii",
+      "msg": "Нация \"massylii\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sardeati",
+      "msg": "Нация \"sardeati\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "careoti",
+      "msg": "Нация \"careoti\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "longonenses",
+      "msg": "Нация \"longonenses\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "luquidonenses",
+      "msg": "Нация \"luquidonenses\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "coracenses",
+      "msg": "Нация \"coracenses\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "carenses",
+      "msg": "Нация \"carenses\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sciria",
+      "msg": "Нация \"sciria\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "seduni",
+      "msg": "Нация \"seduni\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "arverni",
+      "msg": "Нация \"arverni\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "allobriges",
+      "msg": "Нация \"allobriges\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "graioceli",
+      "msg": "Нация \"graioceli\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "carthage",
+      "msg": "Нация \"carthage\" получила только 1 регион(а), priority=9"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "valentini",
+      "msg": "Нация \"valentini\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "indiketia",
+      "msg": "Нация \"indiketia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "iol",
+      "msg": "Нация \"iol\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "edetani",
+      "msg": "Нация \"edetani\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gadir",
+      "msg": "Нация \"gadir\" получила только 2 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "majos",
+      "msg": "Нация \"majos\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "bimbaches",
+      "msg": "Нация \"bimbaches\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "benahoaritas",
+      "msg": "Нация \"benahoaritas\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "canaria",
+      "msg": "Нация \"canaria\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "canarios",
+      "msg": "Нация \"canarios\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "guanches",
+      "msg": "Нация \"guanches\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "bastetani",
+      "msg": "Нация \"bastetani\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "contestani",
+      "msg": "Нация \"contestani\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "karmo",
+      "msg": "Нация \"karmo\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "cyrene",
+      "msg": "Нация \"cyrene\" получила только 1 регион(а), priority=6"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "lepreon",
+      "msg": "Нация \"lepreon\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "antipatrid_kingdom",
+      "msg": "Нация \"antipatrid_kingdom\" получила только 1 регион(а), priority=8"
     },
     {
       "type": "FEW_REGIONS",
@@ -120,8 +2600,168 @@
     },
     {
       "type": "FEW_REGIONS",
+      "nationId": "oreos",
+      "msg": "Нация \"oreos\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "aetolia",
+      "msg": "Нация \"aetolia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "opus",
+      "msg": "Нация \"opus\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
       "nationId": "corinth",
       "msg": "Нация \"corinth\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "elis",
+      "msg": "Нация \"elis\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "daorsi",
+      "msg": "Нация \"daorsi\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "astakos",
+      "msg": "Нация \"astakos\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "epirus",
+      "msg": "Нация \"epirus\" получила только 2 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ambrakia",
+      "msg": "Нация \"ambrakia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "messapains",
+      "msg": "Нация \"messapains\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "maezaei",
+      "msg": "Нация \"maezaei\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "libuia",
+      "msg": "Нация \"libuia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "glinditioni",
+      "msg": "Нация \"glinditioni\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sicyon",
+      "msg": "Нация \"sicyon\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "megaris",
+      "msg": "Нация \"megaris\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "oroanadia",
+      "msg": "Нация \"oroanadia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "pirusti",
+      "msg": "Нация \"pirusti\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "cedu",
+      "msg": "Нация \"cedu\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sithonia",
+      "msg": "Нация \"sithonia\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "varagria",
+      "msg": "Нация \"varagria\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "triballi",
+      "msg": "Нация \"triballi\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "dacia",
+      "msg": "Нация \"dacia\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "saurdonia",
+      "msg": "Нация \"saurdonia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "varinia",
+      "msg": "Нация \"varinia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "tomis",
+      "msg": "Нация \"tomis\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "odrysian_kingdom",
+      "msg": "Нация \"odrysian_kingdom\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "zanthi",
+      "msg": "Нация \"zanthi\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "maricia",
+      "msg": "Нация \"maricia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "chaidinia",
+      "msg": "Нация \"chaidinia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "firaesia",
+      "msg": "Нация \"firaesia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "kallipolis",
+      "msg": "Нация \"kallipolis\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "krounoi",
+      "msg": "Нация \"krounoi\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "callatis",
+      "msg": "Нация \"callatis\" получила только 1 регион(а), priority=3"
     },
     {
       "type": "FEW_REGIONS",
@@ -130,8 +2770,88 @@
     },
     {
       "type": "FEW_REGIONS",
+      "nationId": "apollonia",
+      "msg": "Нация \"apollonia\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "lyktos",
+      "msg": "Нация \"lyktos\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "gortyna",
+      "msg": "Нация \"gortyna\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "ierapetra",
+      "msg": "Нация \"ierapetra\" получила только 2 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "noto",
+      "msg": "Нация \"noto\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "lihyan",
+      "msg": "Нация \"lihyan\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "cabalian_city_states",
+      "msg": "Нация \"cabalian_city_states\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "calchedon",
+      "msg": "Нация \"calchedon\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "bithynia",
+      "msg": "Нация \"bithynia\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "herakleia_pontica",
+      "msg": "Нация \"herakleia_pontica\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "lysimachus_kingdom",
+      "msg": "Нация \"lysimachus_kingdom\" получила только 2 регион(а), priority=8"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "phyrnia",
+      "msg": "Нация \"phyrnia\" получила только 2 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "pisidian_city_states",
+      "msg": "Нация \"pisidian_city_states\" получила только 1 регион(а), priority=5"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "eudosia",
+      "msg": "Нация \"eudosia\" получила только 1 регион(а), priority=4"
+    },
+    {
+      "type": "FEW_REGIONS",
       "nationId": "sinope",
       "msg": "Нация \"sinope\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "teion",
+      "msg": "Нация \"teion\" получила только 1 регион(а), priority=3"
+    },
+    {
+      "type": "FEW_REGIONS",
+      "nationId": "sindi",
+      "msg": "Нация \"sindi\" получила только 1 регион(а), priority=4"
     },
     {
       "type": "FEW_REGIONS",
@@ -141,11 +2861,59 @@
     {
       "type": "OUT_OF_BBOX_TOTAL",
       "nationId": null,
-      "msg": "19 регионов назначены нации, чей bbox их не содержит"
+      "msg": "321 регионов назначены нации, чей bbox их не содержит"
     },
     {
       "type": "OUT_OF_BBOX",
-      "nationId": "massylii",
+      "nationId": "pandya",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "coritania",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "matsura",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "iki",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "yeodam",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "gojamidong",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "kaya",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "pong_manao",
+      "msg": "1 регионов вне bbox",
+      "count": 1
+    },
+    {
+      "type": "OUT_OF_BBOX",
+      "nationId": "makae",
       "msg": "1 регионов вне bbox",
       "count": 1
     },
@@ -156,85 +2924,462 @@
       "count": 1
     },
     {
-      "type": "OUT_OF_BBOX",
-      "nationId": "mantinea",
-      "msg": "1 регионов вне bbox",
-      "count": 1
+      "type": "CAPITAL_DISTANT",
+      "nationId": "antigonid_kingdom",
+      "msg": "Столица [39.36,22.93] далеко от ближайшего региона нации (dist=7.0°)",
+      "dist": "7.0"
     },
     {
-      "type": "OUT_OF_BBOX",
-      "nationId": "antipatrid_kingdom",
-      "msg": "1 регионов вне bbox",
-      "count": 1
+      "type": "CAPITAL_DISTANT",
+      "nationId": "scythians",
+      "msg": "Столица [47,34] далеко от ближайшего региона нации (dist=9.9°)",
+      "dist": "9.9"
     },
     {
-      "type": "OUT_OF_BBOX",
-      "nationId": "ancona",
-      "msg": "1 регионов вне bbox",
-      "count": 1
+      "type": "CAPITAL_DISTANT",
+      "nationId": "aedui",
+      "msg": "Столица [46.9,4.3] далеко от ближайшего региона нации (dist=5.9°)",
+      "dist": "5.9"
     },
     {
-      "type": "OUT_OF_BBOX",
-      "nationId": "taras",
-      "msg": "1 регионов вне bbox",
-      "count": 1
+      "type": "CAPITAL_DISTANT",
+      "nationId": "arachosia",
+      "msg": "Столица [31.5,65.5] далеко от ближайшего региона нации (dist=5.1°)",
+      "dist": "5.1"
     },
     {
-      "type": "OUT_OF_BBOX",
-      "nationId": "locri",
-      "msg": "1 регионов вне bbox",
-      "count": 1
+      "type": "CAPITAL_DISTANT",
+      "nationId": "arambys",
+      "msg": "Столица [10,-14] далеко от ближайшего региона нации (dist=18.7°)",
+      "dist": "18.7"
     },
     {
-      "type": "OUT_OF_BBOX",
-      "nationId": "tegea",
-      "msg": "1 регионов вне bbox",
-      "count": 1
+      "type": "CAPITAL_DISTANT",
+      "nationId": "arverni",
+      "msg": "Столица [45.8,3.1] далеко от ближайшего региона нации (dist=6.7°)",
+      "dist": "6.7"
     },
     {
-      "type": "OUT_OF_BBOX",
-      "nationId": "cyrene",
-      "msg": "1 регионов вне bbox",
-      "count": 1
+      "type": "CAPITAL_DISTANT",
+      "nationId": "bastetani",
+      "msg": "Столица [37.8,-1.5] далеко от ближайшего региона нации (dist=5.1°)",
+      "dist": "5.1"
     },
     {
-      "type": "OUT_OF_BBOX",
-      "nationId": "saba",
-      "msg": "1 регионов вне bbox",
-      "count": 1
+      "type": "CAPITAL_DISTANT",
+      "nationId": "bellovaci",
+      "msg": "Столица [49.4,2.5] далеко от ближайшего региона нации (dist=7.0°)",
+      "dist": "7.0"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "benahoaritas",
+      "msg": "Столица [28.7,-17.8] далеко от ближайшего региона нации (dist=8.4°)",
+      "dist": "8.4"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "bimbaches",
+      "msg": "Столица [27.9,-18] далеко от ближайшего региона нации (dist=8.8°)",
+      "dist": "8.8"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "borusci",
+      "msg": "Столица [53.5,19] далеко от ближайшего региона нации (dist=6.4°)",
+      "dist": "6.4"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "caerosia",
+      "msg": "Столица [51.1,19] далеко от ближайшего региона нации (dist=6.4°)",
+      "dist": "6.4"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "canaria",
+      "msg": "Столица [27.967,-15.6] далеко от ближайшего региона нации (dist=6.0°)",
+      "dist": "6.0"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "canarios",
+      "msg": "Столица [28.3,-15.8] далеко от ближайшего региона нации (dist=6.5°)",
+      "dist": "6.5"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "celtiberi",
+      "msg": "Столица [41.5,-1.8] далеко от ближайшего региона нации (dist=6.8°)",
+      "dist": "6.8"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "colapiani",
+      "msg": "Столица [45.8,16.5] далеко от ближайшего региона нации (dist=5.2°)",
+      "dist": "5.2"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "contestani",
+      "msg": "Столица [38.5,-0.5] далеко от ближайшего региона нации (dist=5.2°)",
+      "dist": "5.2"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "coritania",
+      "msg": "Столица [52.6,-1.1] далеко от ближайшего региона нации (dist=5.6°)",
+      "dist": "5.6"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "cornovia",
+      "msg": "Столица [52.9,-2.1] далеко от ближайшего региона нации (dist=6.1°)",
+      "dist": "6.1"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "cotinia",
+      "msg": "Столица [49.5,19] далеко от ближайшего региона нации (dist=7.4°)",
+      "dist": "7.4"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "daorsi",
+      "msg": "Столица [43.2,17.9] далеко от ближайшего региона нации (dist=5.3°)",
+      "dist": "5.3"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "frisians",
+      "msg": "Столица [53.5,6.5] далеко от ближайшего региона нации (dist=5.4°)",
+      "dist": "5.4"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "gothoscandza",
+      "msg": "Столица [54.5,19] далеко от ближайшего региона нации (dist=6.7°)",
+      "dist": "6.7"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "guanches",
+      "msg": "Столица [28.3,-16.5] далеко от ближайшего региона нации (dist=7.4°)",
+      "dist": "7.4"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "hezongshi",
+      "msg": "Столица [36,111] далеко от ближайшего региона нации (dist=6.6°)",
+      "dist": "6.6"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "huifa",
+      "msg": "Столица [43.2,126.5] далеко от ближайшего региона нации (dist=5.8°)",
+      "dist": "5.8"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "indiketia",
+      "msg": "Столица [42.15,3.2] далеко от ближайшего региона нации (dist=5.4°)",
+      "dist": "5.4"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "kharazm",
+      "msg": "Столица [42.5,59.5] далеко от ближайшего региона нации (dist=5.1°)",
+      "dist": "5.1"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "kualaddungun",
+      "msg": "Столица [6.5,117.2] далеко от ближайшего региона нации (dist=5.9°)",
+      "dist": "5.9"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "langkashuka",
+      "msg": "Столица [6.5,100.5] далеко от ближайшего региона нации (dist=5.6°)",
+      "dist": "5.6"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "latobrigi",
+      "msg": "Столица [48.5,8.5] далеко от ближайшего региона нации (dist=5.2°)",
+      "dist": "5.2"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "latovici",
+      "msg": "Столица [46.5,15.5] далеко от ближайшего региона нации (dist=5.1°)",
+      "dist": "5.1"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "lemovia",
+      "msg": "Столица [54.2,19.2] далеко от ближайшего региона нации (dist=7.4°)",
+      "dist": "7.4"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "libuia",
+      "msg": "Столица [44.5,16.7] далеко от ближайшего региона нации (dist=5.1°)",
+      "dist": "5.1"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "maezaei",
+      "msg": "Столица [44.5,17.5] далеко от ближайшего региона нации (dist=5.2°)",
+      "dist": "5.2"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "majos",
+      "msg": "Столица [29.05,-13.65] далеко от ближайшего региона нации (dist=6.0°)",
+      "dist": "6.0"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "marcomannia",
+      "msg": "Столица [51,14] далеко от ближайшего региона нации (dist=7.4°)",
+      "dist": "7.4"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "nectiberia",
+      "msg": "Столица [42,-2.2] далеко от ближайшего региона нации (dist=5.8°)",
+      "dist": "5.8"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "nemetia",
+      "msg": "Столица [49.2,8.4] далеко от ближайшего региона нации (dist=6.1°)",
+      "dist": "6.1"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "nuithonia",
+      "msg": "Столица [52.5,10.8] далеко от ближайшего региона нации (dist=7.0°)",
+      "dist": "7.0"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "odessa",
+      "msg": "Столица [46.5,30.8] далеко от ближайшего региона нации (dist=5.5°)",
+      "dist": "5.5"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "pahang",
+      "msg": "Столица [3.75,102.5] далеко от ближайшего региона нации (dist=7.3°)",
+      "dist": "7.3"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "rauraci",
+      "msg": "Столица [47.55,7.6] далеко от ближайшего региона нации (dist=5.2°)",
+      "dist": "5.2"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "reudignia",
+      "msg": "Столица [54,10.5] далеко от ближайшего региона нации (dist=6.2°)",
+      "dist": "6.2"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "rubrensians",
+      "msg": "Столица [54.8,14] далеко от ближайшего региона нации (dist=5.3°)",
+      "dist": "5.3"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "santones",
+      "msg": "Столица [45.75,-0.63] далеко от ближайшего региона нации (dist=5.6°)",
+      "dist": "5.6"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "satiyaputa",
+      "msg": "Столица [12.5,76.5] далеко от ближайшего региона нации (dist=7.4°)",
+      "dist": "7.4"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "sequani",
+      "msg": "Столица [47.2,6] далеко от ближайшего региона нации (dist=6.4°)",
+      "dist": "6.4"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "shihsanhang",
+      "msg": "Столица [25.1,121.5] далеко от ближайшего региона нации (dist=5.4°)",
+      "dist": "5.4"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "tayuan",
+      "msg": "Столица [40.5,71.8] далеко от ближайшего региона нации (dist=5.8°)",
+      "dist": "5.8"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "titibu",
+      "msg": "Столица [35.99,139.09] далеко от ближайшего региона нации (dist=5.5°)",
+      "dist": "5.5"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "van_lang",
+      "msg": "Столица [21.5,105] далеко от ближайшего региона нации (dist=6.3°)",
+      "dist": "6.3"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "vanavasi",
+      "msg": "Столица [14.98,75.37] далеко от ближайшего региона нации (dist=5.6°)",
+      "dist": "5.6"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "vesubia",
+      "msg": "Столица [44.1,7.4] далеко от ближайшего региона нации (dist=7.4°)",
+      "dist": "7.4"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "viromanduia",
+      "msg": "Столица [49.9,3.3] далеко от ближайшего региона нации (dist=5.1°)",
+      "dist": "5.1"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "wakasa",
+      "msg": "Столица [35.5,135.9] далеко от ближайшего региона нации (dist=7.0°)",
+      "dist": "7.0"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "weili",
+      "msg": "Столица [36.6,114.5] далеко от ближайшего региона нации (dist=6.5°)",
+      "dist": "6.5"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "weitou",
+      "msg": "Столица [44.5,124] далеко от ближайшего региона нации (dist=6.7°)",
+      "dist": "6.7"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "xihai",
+      "msg": "Столица [40,102.5] далеко от ближайшего региона нации (dist=5.7°)",
+      "dist": "5.7"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "yasu",
+      "msg": "Столица [35.1,136] далеко от ближайшего региона нации (dist=7.2°)",
+      "dist": "7.2"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "zanthi",
+      "msg": "Столица [45,28.5] далеко от ближайшего региона нации (dist=5.1°)",
+      "dist": "5.1"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "zhongshan",
+      "msg": "Столица [38.5,115] далеко от ближайшего региона нации (dist=5.9°)",
+      "dist": "5.9"
+    },
+    {
+      "type": "CAPITAL_DISTANT",
+      "nationId": "zuo",
+      "msg": "Столица [23.5,108] далеко от ближайшего региона нации (dist=5.2°)",
+      "dist": "5.2"
     }
   ],
   "nation_stats": {
+    "malaya": {
+      "count": 4,
+      "terrain": {
+        "coastal_city": 3,
+        "plains": 1
+      }
+    },
+    "pandya": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "coritania": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "non_nok_that": {
+      "count": 3,
+      "terrain": {
+        "mountains": 2,
+        "plains": 1
+      }
+    },
     "qataban": {
       "count": 1,
       "terrain": {
         "coastal_city": 1
       }
     },
-    "britannia": {
-      "count": 21,
+    "deceanglia": {
+      "count": 3,
       "terrain": {
-        "coastal_city": 21
-      }
-    },
-    "saka": {
-      "count": 19,
-      "terrain": {
-        "hills": 5,
-        "mountains": 6,
-        "river_valley": 3,
-        "plains": 2,
         "coastal_city": 3
       }
     },
-    "maurya_empire": {
-      "count": 51,
+    "saka": {
+      "count": 12,
       "terrain": {
-        "mountains": 12,
-        "river_valley": 10,
-        "plains": 12,
-        "hills": 11,
-        "coastal_city": 6
+        "hills": 5,
+        "river_valley": 3,
+        "mountains": 2,
+        "plains": 1,
+        "coastal_city": 1
+      }
+    },
+    "tilataloi": {
+      "count": 3,
+      "terrain": {
+        "mountains": 1,
+        "river_valley": 2
+      }
+    },
+    "matsura": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "iki": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "yeodam": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "gojamidong": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
       }
     },
     "sembritia": {
@@ -250,20 +3395,20 @@
         "hills": 1
       }
     },
-    "carthage": {
-      "count": 37,
+    "cetiana": {
+      "count": 4,
       "terrain": {
-        "coastal_city": 20,
-        "mountains": 6,
-        "river_valley": 5,
-        "plains": 4,
-        "hills": 2
+        "coastal_city": 3,
+        "river_valley": 1
       }
     },
-    "massylii": {
-      "count": 1,
+    "syracuse": {
+      "count": 18,
       "terrain": {
-        "coastal_city": 1
+        "coastal_city": 11,
+        "mountains": 4,
+        "river_valley": 1,
+        "plains": 2
       }
     },
     "yayoi_japan": {
@@ -275,22 +3420,93 @@
         "mountains": 2
       }
     },
-    "axum": {
-      "count": 4,
+    "karusa": {
+      "count": 6,
       "terrain": {
-        "coastal_city": 1,
+        "river_valley": 1,
+        "plains": 3,
+        "hills": 2
+      }
+    },
+    "acinippo": {
+      "count": 7,
+      "terrain": {
+        "mountains": 1,
+        "coastal_city": 4,
+        "plains": 2
+      }
+    },
+    "aru": {
+      "count": 3,
+      "terrain": {
+        "plains": 2,
+        "river_valley": 1
+      }
+    },
+    "mirimidong": {
+      "count": 10,
+      "terrain": {
+        "coastal_city": 6,
+        "mountains": 1,
         "river_valley": 1,
         "plains": 1,
         "hills": 1
       }
     },
-    "xiongnu": {
-      "count": 43,
+    "kaya": {
+      "count": 1,
       "terrain": {
-        "river_valley": 12,
-        "plains": 11,
-        "hills": 11,
-        "mountains": 9
+        "coastal_city": 1
+      }
+    },
+    "iohara": {
+      "count": 6,
+      "terrain": {
+        "plains": 1,
+        "coastal_city": 4,
+        "river_valley": 1
+      }
+    },
+    "pong_manao": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "mudhirmali": {
+      "count": 2,
+      "terrain": {
+        "hills": 1,
+        "river_valley": 1
+      }
+    },
+    "makae": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "axum": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 1,
+        "river_valley": 1,
+        "hills": 1
+      }
+    },
+    "tenasserim": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "xiongnu": {
+      "count": 31,
+      "terrain": {
+        "river_valley": 10,
+        "mountains": 7,
+        "plains": 8,
+        "hills": 6
       }
     },
     "gedrosia": {
@@ -299,14 +3515,34 @@
         "coastal_city": 1
       }
     },
-    "seleukid_empire": {
-      "count": 179,
+    "hippasii": {
+      "count": 5,
       "terrain": {
-        "plains": 42,
-        "hills": 36,
-        "mountains": 37,
-        "coastal_city": 22,
-        "river_valley": 42
+        "hills": 2,
+        "river_valley": 2,
+        "mountains": 1
+      }
+    },
+    "khasa": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "sab_champa_jurcae": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "seleukid_empire": {
+      "count": 113,
+      "terrain": {
+        "plains": 28,
+        "mountains": 22,
+        "coastal_city": 19,
+        "river_valley": 27,
+        "hills": 17
       }
     },
     "daphnitaea": {
@@ -319,30 +3555,43 @@
         "hills": 4
       }
     },
+    "polyrrhenia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "abannaea": {
+      "count": 30,
+      "terrain": {
+        "hills": 10,
+        "plains": 8,
+        "mountains": 6,
+        "river_valley": 6
+      }
+    },
     "massilia": {
       "count": 1,
       "terrain": {
         "coastal_city": 1
       }
     },
-    "numidia": {
-      "count": 59,
+    "vesubia": {
+      "count": 1,
       "terrain": {
-        "plains": 13,
-        "hills": 14,
-        "river_valley": 13,
-        "mountains": 13,
-        "coastal_city": 6
+        "plains": 1
       }
     },
-    "belgae": {
-      "count": 15,
+    "britannia": {
+      "count": 1,
       "terrain": {
-        "mountains": 4,
-        "coastal_city": 2,
-        "plains": 6,
-        "hills": 2,
-        "river_valley": 1
+        "coastal_city": 1
+      }
+    },
+    "parisia": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
       }
     },
     "utica": {
@@ -351,34 +3600,45 @@
         "coastal_city": 1
       }
     },
-    "etruscan_conf": {
-      "count": 21,
+    "rome": {
+      "count": 26,
       "terrain": {
-        "coastal_city": 10,
+        "coastal_city": 8,
+        "plains": 7,
         "mountains": 6,
-        "hills": 2,
-        "river_valley": 2,
+        "river_valley": 3,
+        "hills": 2
+      }
+    },
+    "kumi": {
+      "count": 10,
+      "terrain": {
+        "hills": 4,
+        "river_valley": 3,
+        "coastal_city": 1,
+        "mountains": 2
+      }
+    },
+    "astures": {
+      "count": 1,
+      "terrain": {
         "plains": 1
       }
     },
-    "umbrians": {
-      "count": 12,
+    "osimii": {
+      "count": 1,
       "terrain": {
-        "mountains": 3,
-        "plains": 4,
-        "hills": 2,
-        "river_valley": 2,
-        "coastal_city": 1
+        "mountains": 1
       }
     },
     "lucani": {
-      "count": 15,
+      "count": 11,
       "terrain": {
         "river_valley": 4,
-        "coastal_city": 5,
-        "plains": 2,
-        "hills": 2,
-        "mountains": 2
+        "coastal_city": 4,
+        "plains": 1,
+        "hills": 1,
+        "mountains": 1
       }
     },
     "leponti": {
@@ -390,21 +3650,55 @@
         "mountains": 2
       }
     },
-    "frentani": {
-      "count": 4,
+    "teuria": {
+      "count": 1,
       "terrain": {
-        "mountains": 1,
-        "coastal_city": 2,
-        "hills": 1
+        "mountains": 1
       }
     },
-    "cappadocia": {
-      "count": 69,
+    "zygia": {
+      "count": 1,
       "terrain": {
-        "hills": 17,
-        "plains": 18,
-        "mountains": 20,
-        "river_valley": 14
+        "coastal_city": 1
+      }
+    },
+    "achola": {
+      "count": 16,
+      "terrain": {
+        "plains": 2,
+        "hills": 3,
+        "mountains": 4,
+        "coastal_city": 6,
+        "river_valley": 1
+      }
+    },
+    "frentani": {
+      "count": 3,
+      "terrain": {
+        "mountains": 1,
+        "coastal_city": 2
+      }
+    },
+    "lepcis_parva": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "anamaria": {
+      "count": 8,
+      "terrain": {
+        "hills": 2,
+        "plains": 3,
+        "mountains": 1,
+        "coastal_city": 1,
+        "river_valley": 1
+      }
+    },
+    "thapsus": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
       }
     },
     "phasis": {
@@ -413,19 +3707,43 @@
         "coastal_city": 2
       }
     },
-    "egypt": {
-      "count": 170,
+    "suaneti": {
+      "count": 1,
       "terrain": {
-        "river_valley": 35,
-        "plains": 35,
-        "hills": 36,
-        "coastal_city": 35,
-        "mountains": 29
+        "hills": 1
+      }
+    },
+    "egypt": {
+      "count": 119,
+      "terrain": {
+        "river_valley": 23,
+        "plains": 25,
+        "hills": 27,
+        "coastal_city": 24,
+        "mountains": 20
       }
     },
     "thamud": {
       "count": 1,
       "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "nuceria": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 1,
+        "river_valley": 1,
+        "mountains": 1
+      }
+    },
+    "somun": {
+      "count": 38,
+      "terrain": {
+        "hills": 10,
+        "mountains": 11,
+        "plains": 9,
+        "river_valley": 7,
         "coastal_city": 1
       }
     },
@@ -437,50 +3755,43 @@
         "mountains": 1
       }
     },
-    "sabinia": {
-      "count": 7,
+    "lapicinia": {
+      "count": 1,
       "terrain": {
-        "plains": 3,
-        "mountains": 3,
-        "river_valley": 1
+        "coastal_city": 1
       }
     },
-    "samnites": {
-      "count": 8,
+    "caucasian_albania": {
+      "count": 4,
       "terrain": {
         "coastal_city": 1,
-        "hills": 3,
-        "river_valley": 2,
+        "river_valley": 1,
         "plains": 1,
         "mountains": 1
       }
     },
-    "picentes": {
-      "count": 4,
+    "legae": {
+      "count": 1,
       "terrain": {
-        "hills": 2,
-        "plains": 1,
         "coastal_city": 1
       }
     },
     "armenia": {
-      "count": 120,
+      "count": 101,
       "terrain": {
-        "river_valley": 33,
-        "mountains": 28,
-        "plains": 26,
-        "hills": 28,
+        "river_valley": 28,
+        "mountains": 24,
+        "hills": 22,
+        "plains": 22,
         "coastal_city": 5
       }
     },
-    "bithynia": {
-      "count": 15,
+    "kios": {
+      "count": 3,
       "terrain": {
-        "coastal_city": 6,
-        "river_valley": 3,
-        "plains": 2,
-        "hills": 2,
-        "mountains": 2
+        "coastal_city": 1,
+        "mountains": 1,
+        "river_valley": 1
       }
     },
     "atropatene": {
@@ -500,32 +3811,78 @@
         "coastal_city": 2
       }
     },
-    "greek_states": {
-      "count": 98,
+    "aigion": {
+      "count": 2,
       "terrain": {
-        "river_valley": 9,
-        "coastal_city": 60,
-        "plains": 7,
-        "mountains": 11,
-        "hills": 11
+        "river_valley": 1,
+        "plains": 1
       }
     },
-    "dacia": {
-      "count": 7,
+    "celtici": {
+      "count": 1,
       "terrain": {
-        "plains": 2,
-        "hills": 3,
-        "mountains": 2
+        "coastal_city": 1
       }
     },
-    "gaul": {
-      "count": 23,
+    "vaccaei": {
+      "count": 1,
       "terrain": {
-        "coastal_city": 16,
-        "mountains": 1,
-        "river_valley": 3,
-        "plains": 2,
+        "coastal_city": 1
+      }
+    },
+    "cosuaneti": {
+      "count": 2,
+      "terrain": {
+        "plains": 1,
+        "river_valley": 1
+      }
+    },
+    "xiangkhoang": {
+      "count": 1,
+      "terrain": {
         "hills": 1
+      }
+    },
+    "cadurici": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "helisia": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "pictones": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "venetii": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "menapia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "focunati": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "venelli": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
       }
     },
     "scordisci": {
@@ -533,6 +3890,85 @@
       "terrain": {
         "plains": 2,
         "river_valley": 2
+      }
+    },
+    "kalinga": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "pinglin": {
+      "count": 2,
+      "terrain": {
+        "plains": 2
+      }
+    },
+    "haria": {
+      "count": 2,
+      "terrain": {
+        "hills": 1,
+        "coastal_city": 1
+      }
+    },
+    "samatata": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "nabhaka": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "isindia": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "kok_charoen": {
+      "count": 3,
+      "terrain": {
+        "hills": 1,
+        "plains": 2
+      }
+    },
+    "biturges": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "salii": {
+      "count": 4,
+      "terrain": {
+        "coastal_city": 3,
+        "plains": 1
+      }
+    },
+    "viromanduia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "numidia": {
+      "count": 31,
+      "terrain": {
+        "hills": 7,
+        "mountains": 6,
+        "river_valley": 10,
+        "plains": 7,
+        "coastal_city": 1
+      }
+    },
+    "kaukonia": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
       }
     },
     "stymphalia": {
@@ -566,10 +4002,10 @@
         "coastal_city": 1
       }
     },
-    "athens": {
-      "count": 7,
+    "thuria": {
+      "count": 1,
       "terrain": {
-        "coastal_city": 7
+        "coastal_city": 1
       }
     },
     "machyles": {
@@ -582,12 +4018,10 @@
         "coastal_city": 2
       }
     },
-    "aetolia": {
-      "count": 4,
+    "delphi": {
+      "count": 2,
       "terrain": {
-        "hills": 2,
-        "coastal_city": 1,
-        "river_valley": 1
+        "hills": 2
       }
     },
     "musulamii": {
@@ -620,13 +4054,30 @@
       }
     },
     "macedon": {
-      "count": 29,
+      "count": 5,
       "terrain": {
-        "coastal_city": 11,
-        "plains": 5,
-        "hills": 5,
-        "river_valley": 5,
-        "mountains": 3
+        "coastal_city": 4,
+        "hills": 1
+      }
+    },
+    "serones": {
+      "count": 26,
+      "terrain": {
+        "coastal_city": 1,
+        "mountains": 6,
+        "river_valley": 7,
+        "plains": 7,
+        "hills": 5
+      }
+    },
+    "greek_states": {
+      "count": 26,
+      "terrain": {
+        "coastal_city": 18,
+        "mountains": 3,
+        "river_valley": 1,
+        "plains": 2,
+        "hills": 2
       }
     },
     "rhodes": {
@@ -636,13 +4087,48 @@
       }
     },
     "germani": {
-      "count": 78,
+      "count": 1,
       "terrain": {
-        "plains": 15,
-        "river_valley": 17,
-        "coastal_city": 13,
-        "mountains": 18,
-        "hills": 15
+        "plains": 1
+      }
+    },
+    "knossos": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "nesiotic_league": {
+      "count": 11,
+      "terrain": {
+        "coastal_city": 11
+      }
+    },
+    "homonadia": {
+      "count": 16,
+      "terrain": {
+        "plains": 5,
+        "river_valley": 3,
+        "hills": 6,
+        "mountains": 2
+      }
+    },
+    "dalmati": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "picentes": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "catenati": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
       }
     },
     "brundisium": {
@@ -657,10 +4143,20 @@
         "coastal_city": 5
       }
     },
-    "antipatrid_kingdom": {
-      "count": 1,
+    "gela": {
+      "count": 7,
       "terrain": {
-        "mountains": 1
+        "coastal_city": 4,
+        "mountains": 1,
+        "river_valley": 1,
+        "plains": 1
+      }
+    },
+    "kotennia": {
+      "count": 2,
+      "terrain": {
+        "mountains": 1,
+        "plains": 1
       }
     },
     "carni": {
@@ -679,113 +4175,379 @@
         "coastal_city": 2
       }
     },
-    "celtiberia": {
-      "count": 4,
+    "veltia": {
+      "count": 1,
       "terrain": {
-        "mountains": 1,
-        "river_valley": 2,
+        "mountains": 1
+      }
+    },
+    "astigi": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "lusitanii": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "celtiberia": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "carpetani": {
+      "count": 3,
+      "terrain": {
+        "mountains": 2,
+        "river_valley": 1
+      }
+    },
+    "celtiberi": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "gallaeci": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "ibericus": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "nectiberia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "cantabri": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "aquetanians": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "gaucoenses": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "vascones": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "llergetes": {
+      "count": 2,
+      "terrain": {
+        "hills": 1,
         "coastal_city": 1
       }
     },
     "iberian_coast": {
-      "count": 32,
+      "count": 22,
       "terrain": {
-        "plains": 3,
-        "hills": 4,
-        "coastal_city": 21,
+        "coastal_city": 13,
+        "hills": 3,
         "river_valley": 2,
+        "plains": 2,
         "mountains": 2
       }
     },
-    "chu": {
-      "count": 21,
+    "oretani": {
+      "count": 1,
       "terrain": {
-        "plains": 7,
-        "coastal_city": 5,
-        "river_valley": 3,
-        "hills": 3,
-        "mountains": 3
+        "hills": 1
       }
     },
-    "qi": {
-      "count": 5,
+    "celesitani": {
+      "count": 1,
       "terrain": {
-        "hills": 1,
-        "coastal_city": 4
+        "coastal_city": 1
       }
     },
-    "zhao": {
-      "count": 9,
+    "belgae": {
+      "count": 1,
       "terrain": {
-        "river_valley": 3,
+        "coastal_city": 1
+      }
+    },
+    "maurya_empire": {
+      "count": 10,
+      "terrain": {
+        "hills": 2,
+        "mountains": 2,
+        "river_valley": 2,
         "plains": 3,
-        "coastal_city": 1,
-        "hills": 1,
+        "coastal_city": 1
+      }
+    },
+    "bhoja": {
+      "count": 4,
+      "terrain": {
+        "plains": 2,
+        "mountains": 1,
+        "hills": 1
+      }
+    },
+    "vanavasi": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "pitinika": {
+      "count": 1,
+      "terrain": {
         "mountains": 1
       }
     },
-    "wei": {
-      "count": 32,
+    "pullinadu": {
+      "count": 1,
       "terrain": {
-        "river_valley": 9,
-        "plains": 8,
-        "hills": 8,
-        "mountains": 7
+        "coastal_city": 1
       }
     },
-    "qin": {
+    "charudia": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 2,
+        "plains": 1
+      }
+    },
+    "rathika": {
+      "count": 3,
+      "terrain": {
+        "river_valley": 1,
+        "coastal_city": 2
+      }
+    },
+    "zhangzhung": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "kamarupa": {
+      "count": 2,
+      "terrain": {
+        "mountains": 1,
+        "plains": 1
+      }
+    },
+    "anhou": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "qi": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "shanma": {
+      "count": 3,
+      "terrain": {
+        "river_valley": 2,
+        "plains": 1
+      }
+    },
+    "zhao": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "junji": {
       "count": 9,
       "terrain": {
-        "plains": 3,
+        "river_valley": 3,
+        "plains": 1,
+        "hills": 3,
+        "mountains": 2
+      }
+    },
+    "bi": {
+      "count": 9,
+      "terrain": {
+        "plains": 2,
+        "hills": 2,
         "mountains": 3,
+        "coastal_city": 1,
+        "river_valley": 1
+      }
+    },
+    "neuri": {
+      "count": 15,
+      "terrain": {
+        "hills": 2,
+        "plains": 7,
+        "mountains": 3,
+        "river_valley": 3
+      }
+    },
+    "yangyu": {
+      "count": 6,
+      "terrain": {
+        "mountains": 3,
+        "hills": 1,
         "river_valley": 1,
-        "hills": 2
+        "plains": 1
+      }
+    },
+    "juding": {
+      "count": 2,
+      "terrain": {
+        "river_valley": 1,
+        "plains": 1
+      }
+    },
+    "xiru": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
       }
     },
     "gojoseon": {
-      "count": 58,
+      "count": 49,
       "terrain": {
         "hills": 8,
-        "plains": 11,
-        "coastal_city": 25,
+        "plains": 10,
+        "coastal_city": 18,
         "river_valley": 7,
-        "mountains": 7
+        "mountains": 6
+      }
+    },
+    "gaul": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "helvi": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "voconii": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
       }
     },
     "lingones": {
-      "count": 17,
+      "count": 15,
       "terrain": {
-        "hills": 3,
         "mountains": 9,
-        "river_valley": 3,
-        "plains": 2
+        "plains": 2,
+        "hills": 2,
+        "river_valley": 2
       }
     },
-    "helvetii": {
-      "count": 18,
+    "latobrigi": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "fosia": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "parisii": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "lingoni": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "helveconia": {
+      "count": 16,
       "terrain": {
         "river_valley": 5,
         "mountains": 4,
-        "hills": 5,
-        "plains": 4
+        "plains": 4,
+        "hills": 3
       }
     },
-    "illyria": {
-      "count": 13,
+    "treveria": {
+      "count": 1,
       "terrain": {
-        "mountains": 4,
-        "coastal_city": 5,
-        "river_valley": 1,
-        "hills": 2,
         "plains": 1
+      }
+    },
+    "saluvii": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "sorbones": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "ardiei": {
+      "count": 3,
+      "terrain": {
+        "mountains": 1,
+        "plains": 1,
+        "coastal_city": 1
+      }
+    },
+    "narensi": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "melcumani": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 1,
+        "mountains": 1
       }
     },
     "taulantii": {
-      "count": 4,
+      "count": 3,
       "terrain": {
-        "coastal_city": 2,
+        "coastal_city": 1,
         "hills": 1,
         "plains": 1
+      }
+    },
+    "illyria": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
       }
     },
     "acarnania": {
@@ -806,31 +4568,132 @@
         "hills": 1
       }
     },
-    "getae": {
-      "count": 13,
+    "oseriati": {
+      "count": 7,
       "terrain": {
-        "plains": 4,
-        "coastal_city": 7,
+        "plains": 3,
+        "hills": 2,
+        "mountains": 1,
+        "river_valley": 1
+      }
+    },
+    "dindari": {
+      "count": 3,
+      "terrain": {
+        "river_valley": 1,
         "hills": 1,
         "mountains": 1
       }
     },
-    "odrysian_kingdom": {
-      "count": 11,
+    "uperaci": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "andizeti": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "sevaci": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "getae": {
+      "count": 7,
+      "terrain": {
+        "plains": 4,
+        "coastal_city": 1,
+        "hills": 1,
+        "mountains": 1
+      }
+    },
+    "sporioi": {
+      "count": 5,
       "terrain": {
         "mountains": 1,
-        "river_valley": 4,
-        "plains": 3,
-        "coastal_city": 3
+        "river_valley": 2,
+        "plains": 2
+      }
+    },
+    "dectuninia": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "rucinatia": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "danciona": {
+      "count": 3,
+      "terrain": {
+        "plains": 1,
+        "river_valley": 2
+      }
+    },
+    "eravisci": {
+      "count": 2,
+      "terrain": {
+        "hills": 2
+      }
+    },
+    "ossi": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "anartes": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "bastarnia": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "atavia": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "breuci": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "quadia": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "boi": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
       }
     },
     "roxolani": {
-      "count": 37,
+      "count": 32,
       "terrain": {
-        "mountains": 10,
-        "plains": 7,
-        "hills": 10,
-        "river_valley": 10
+        "mountains": 8,
+        "plains": 6,
+        "hills": 9,
+        "river_valley": 9
       }
     },
     "siraces": {
@@ -851,11 +4714,45 @@
         "coastal_city": 7
       }
     },
-    "bactria": {
+    "siljig": {
       "count": 3,
       "terrain": {
-        "mountains": 2,
+        "mountains": 1,
+        "coastal_city": 1,
+        "plains": 1
+      }
+    },
+    "xihai": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "juyan": {
+      "count": 1,
+      "terrain": {
         "hills": 1
+      }
+    },
+    "cappadocia": {
+      "count": 31,
+      "terrain": {
+        "mountains": 10,
+        "river_valley": 6,
+        "plains": 8,
+        "hills": 7
+      }
+    },
+    "mazun": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "bactria": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
       }
     },
     "parthia": {
@@ -863,6 +4760,30 @@
       "terrain": {
         "coastal_city": 1,
         "mountains": 1
+      }
+    },
+    "derbices": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "sogdia": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "shule": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "main": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
       }
     },
     "gerrah": {
@@ -887,6 +4808,12 @@
         "coastal_city": 1
       }
     },
+    "ansanemes": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
     "ma_in": {
       "count": 1,
       "terrain": {
@@ -894,13 +4821,158 @@
       }
     },
     "venedia": {
-      "count": 57,
+      "count": 38,
       "terrain": {
         "coastal_city": 4,
-        "mountains": 13,
-        "river_valley": 11,
-        "plains": 14,
-        "hills": 15
+        "river_valley": 8,
+        "hills": 10,
+        "mountains": 7,
+        "plains": 9
+      }
+    },
+    "buma": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "chamavia": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "bructeria": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "eburani": {
+      "count": 2,
+      "terrain": {
+        "plains": 2
+      }
+    },
+    "chaucia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "chattia": {
+      "count": 6,
+      "terrain": {
+        "mountains": 2,
+        "hills": 3,
+        "plains": 1
+      }
+    },
+    "naharvalia": {
+      "count": 4,
+      "terrain": {
+        "river_valley": 1,
+        "plains": 2,
+        "coastal_city": 1
+      }
+    },
+    "cheruscia": {
+      "count": 2,
+      "terrain": {
+        "hills": 1,
+        "river_valley": 1
+      }
+    },
+    "hermunduria": {
+      "count": 2,
+      "terrain": {
+        "mountains": 1,
+        "plains": 1
+      }
+    },
+    "teutonia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "semnonia": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "gryphia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "esan": {
+      "count": 2,
+      "terrain": {
+        "mountains": 1,
+        "plains": 1
+      }
+    },
+    "angles": {
+      "count": 4,
+      "terrain": {
+        "coastal_city": 4
+      }
+    },
+    "cimbria": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "marcomannia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "burgundia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "rugia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "gothania": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "suionia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "goutia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "gautigoths": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "nuithonia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
       }
     },
     "balts": {
@@ -913,50 +4985,506 @@
         "coastal_city": 17
       }
     },
+    "santones": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "cantiacia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "damnonia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "durotrigia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "siluria": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "demetia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "ordovicia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "icenia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "carvetia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "votadinia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "novantia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "eblania": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "epidia": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 3
+      }
+    },
     "picts": {
       "count": 2,
       "terrain": {
         "coastal_city": 2
       }
     },
-    "scythians": {
-      "count": 24,
+    "cornovia": {
+      "count": 1,
       "terrain": {
-        "plains": 5,
-        "mountains": 1,
+        "coastal_city": 1
+      }
+    },
+    "caledonia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "veniconia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "votodronia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "monapia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "cornavia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "ivernia": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "androphagi": {
+      "count": 12,
+      "terrain": {
+        "plains": 4,
+        "hills": 3,
         "river_valley": 2,
-        "hills": 4,
-        "coastal_city": 12
+        "mountains": 3
+      }
+    },
+    "caerosia": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "cotinia": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "leunia": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "costobaces": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "borusci": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "rubrensians": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "reudignia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "athagausia": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "aestia": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "korgantas": {
+      "count": 4,
+      "terrain": {
+        "plains": 1,
+        "mountains": 2,
+        "river_valley": 1
+      }
+    },
+    "issedones": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "damna": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "daqiuyuan": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "goguryeo": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "funie": {
+      "count": 3,
+      "terrain": {
+        "mountains": 2,
+        "river_valley": 1
       }
     },
     "donghu": {
-      "count": 16,
+      "count": 15,
       "terrain": {
-        "river_valley": 4,
+        "river_valley": 3,
         "plains": 4,
         "hills": 3,
         "mountains": 5
       }
     },
-    "yan": {
-      "count": 30,
+    "fuyu": {
+      "count": 1,
       "terrain": {
-        "hills": 4,
-        "plains": 7,
-        "coastal_city": 13,
-        "river_valley": 3,
-        "mountains": 3
+        "river_valley": 1
       }
     },
-    "yuezhi": {
-      "count": 5,
+    "xi": {
+      "count": 1,
       "terrain": {
-        "mountains": 2,
-        "hills": 2,
+        "hills": 1
+      }
+    },
+    "yue": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "nam_cuong": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "lu": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "fulou": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "hanben": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 1,
+        "river_valley": 1
+      }
+    },
+    "van_lang": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "chansen": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "anya": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "yulimo": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "xitu": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "mahisamandala": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "asmaka": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "ruhunu": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "anuradhapura": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "indravana": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "gandhara": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "punginadu": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "naga": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "yarlung": {
+      "count": 1,
+      "terrain": {
         "plains": 1
       }
     },
+    "gumo": {
+      "count": 4,
+      "terrain": {
+        "hills": 3,
+        "mountains": 1
+      }
+    },
+    "nuomuhong": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "khuan_lukpad": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "khao_sam_kaeo": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "thaton": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "shan": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "chi_tu": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "ywa_htin_kon": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "arakan": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "halin": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "nyanggaun": {
+      "count": 4,
+      "terrain": {
+        "hills": 2,
+        "mountains": 1,
+        "river_valley": 1
+      }
+    },
+    "kaandhalkuranadu": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "satiyaputa": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "hadrametum": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "bulsa": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "arambys": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "fugandulu": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "lamuri": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
     "ancona": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "kualaddungun": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "manimia": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "avalitia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "socosia": {
       "count": 1,
       "terrain": {
         "coastal_city": 1
@@ -968,16 +5496,25 @@
         "coastal_city": 1
       }
     },
+    "umbrians": {
+      "count": 5,
+      "terrain": {
+        "mountains": 2,
+        "river_valley": 1,
+        "plains": 1,
+        "coastal_city": 1
+      }
+    },
     "taras": {
       "count": 1,
       "terrain": {
         "coastal_city": 1
       }
     },
-    "brutii": {
-      "count": 3,
+    "hipponion": {
+      "count": 2,
       "terrain": {
-        "coastal_city": 3
+        "coastal_city": 2
       }
     },
     "locri": {
@@ -1018,6 +5555,13 @@
         "mountains": 1
       }
     },
+    "heraia": {
+      "count": 2,
+      "terrain": {
+        "river_valley": 1,
+        "mountains": 1
+      }
+    },
     "tegea": {
       "count": 1,
       "terrain": {
@@ -1044,11 +5588,10 @@
       }
     },
     "boeotian_states": {
-      "count": 4,
+      "count": 2,
       "terrain": {
         "mountains": 1,
-        "coastal_city": 2,
-        "river_valley": 1
+        "coastal_city": 1
       }
     },
     "knidos": {
@@ -1057,10 +5600,16 @@
         "coastal_city": 1
       }
     },
-    "cyrene": {
-      "count": 1,
+    "eleutherna": {
+      "count": 2,
       "terrain": {
-        "coastal_city": 1
+        "coastal_city": 2
+      }
+    },
+    "lappa": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
       }
     },
     "kyzikios": {
@@ -1069,14 +5618,59 @@
         "coastal_city": 4
       }
     },
-    "pontus": {
-      "count": 22,
+    "keramos": {
+      "count": 7,
       "terrain": {
-        "coastal_city": 7,
-        "mountains": 5,
+        "coastal_city": 4,
+        "river_valley": 1,
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "tectosages": {
+      "count": 19,
+      "terrain": {
+        "river_valley": 6,
+        "plains": 6,
+        "hills": 4,
+        "mountains": 3
+      }
+    },
+    "trocmia": {
+      "count": 11,
+      "terrain": {
         "river_valley": 4,
         "plains": 2,
-        "hills": 4
+        "mountains": 3,
+        "hills": 2
+      }
+    },
+    "amisos": {
+      "count": 10,
+      "terrain": {
+        "coastal_city": 3,
+        "mountains": 3,
+        "river_valley": 2,
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "emporion": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "hemeroskopeion": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "korkyra": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
       }
     },
     "rusadir": {
@@ -1086,19 +5680,86 @@
       }
     },
     "masaesyli": {
-      "count": 23,
+      "count": 11,
       "terrain": {
-        "coastal_city": 7,
-        "river_valley": 5,
-        "plains": 3,
-        "hills": 4,
-        "mountains": 4
+        "coastal_city": 3,
+        "river_valley": 2,
+        "plains": 2,
+        "hills": 2,
+        "mountains": 2
       }
     },
-    "gandhara": {
+    "onuba": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "orippo": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "lascutaia": {
+      "count": 2,
+      "terrain": {
+        "river_valley": 1,
+        "mountains": 1
+      }
+    },
+    "kartuba": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "pissuri": {
       "count": 1,
       "terrain": {
         "river_valley": 1
+      }
+    },
+    "hari": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "aspisia": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "sanu": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "adiabene": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "daamat": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "adoulia": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "mai_adrasha": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
       }
     },
     "saba": {
@@ -1128,14 +5789,21 @@
         "mountains": 1
       }
     },
-    "paphlagonia": {
-      "count": 19,
+    "sesamos": {
+      "count": 10,
       "terrain": {
-        "coastal_city": 6,
-        "hills": 4,
-        "mountains": 4,
-        "river_valley": 2,
-        "plains": 3
+        "coastal_city": 5,
+        "hills": 3,
+        "river_valley": 1,
+        "plains": 1
+      }
+    },
+    "kotyora": {
+      "count": 5,
+      "terrain": {
+        "coastal_city": 3,
+        "river_valley": 1,
+        "hills": 1
       }
     },
     "heniochia": {
@@ -1152,10 +5820,447 @@
         "mountains": 1
       }
     },
-    "han": {
+    "guya": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "shenli": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "zuo": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "jin_confederacy": {
+      "count": 25,
+      "terrain": {
+        "coastal_city": 5,
+        "river_valley": 8,
+        "hills": 4,
+        "plains": 6,
+        "mountains": 2
+      }
+    },
+    "ouyue": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "jiuxianlan": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "bie": {
+      "count": 2,
+      "terrain": {
+        "river_valley": 1,
+        "mountains": 1
+      }
+    },
+    "ni": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "gui": {
+      "count": 2,
+      "terrain": {
+        "hills": 1,
+        "plains": 1
+      }
+    },
+    "xiaowan": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "chu": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "teng": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "cangwu": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "yangyue": {
       "count": 1,
       "terrain": {
         "hills": 1
+      }
+    },
+    "lamap": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "ailao": {
+      "count": 7,
+      "terrain": {
+        "plains": 2,
+        "hills": 2,
+        "river_valley": 2,
+        "mountains": 1
+      }
+    },
+    "lai": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "qielan": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "louwo": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "loeu": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "panpan": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "ranmang": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "uyu": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "beikthano": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "sinaga": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "qiongdu": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "kedah": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 3
+      }
+    },
+    "kandis": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "gangga_negara": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "panai": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 1,
+        "river_valley": 2
+      }
+    },
+    "selangor": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "yaudheya": {
+      "count": 2,
+      "terrain": {
+        "mountains": 2
+      }
+    },
+    "chera": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "ollaiyur": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "mukkaavalnadu": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "kosar": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "mazhamphulanadu": {
+      "count": 2,
+      "terrain": {
+        "river_valley": 1,
+        "coastal_city": 1
+      }
+    },
+    "kudanadu": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "vellimalai": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "vaanarnadu": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "mullurnadu": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "kuntala": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "pothigainadu": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "darinia": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "karkanadu": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "vaengadanadu": {
+      "count": 4,
+      "terrain": {
+        "coastal_city": 3,
+        "mountains": 1
+      }
+    },
+    "tondainadu": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "athigannadu": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "andhra": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "chola": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "kaankezhunadu": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "lumbini": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "chausaria": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "nabhapakti": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "arachosia": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "khotan": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "qiemo": {
+      "count": 2,
+      "terrain": {
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "miran": {
+      "count": 3,
+      "terrain": {
+        "mountains": 1,
+        "river_valley": 1,
+        "hills": 1
+      }
+    },
+    "hujie": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "charklik": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "yanqi": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "loulan": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "qushi": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "kucha": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "pishan": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "kina": {
+      "count": 2,
+      "terrain": {
+        "mountains": 1,
+        "hills": 1
+      }
+    },
+    "hnaw_kan": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "kunming": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "langkashuka": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "jubbah": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "qeddar": {
+      "count": 2,
+      "terrain": {
+        "mountains": 1,
+        "plains": 1
       }
     },
     "kindah": {
@@ -1164,20 +6269,789 @@
         "plains": 1
       }
     },
+    "langyayue": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "pahang": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "tayuan": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "kota_gelanggi": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "linhue": {
+      "count": 9,
+      "terrain": {
+        "coastal_city": 9
+      }
+    },
+    "xue": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "nanhe": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 1,
+        "plains": 1
+      }
+    },
+    "shoumi": {
+      "count": 4,
+      "terrain": {
+        "hills": 1,
+        "mountains": 1,
+        "river_valley": 1,
+        "plains": 1
+      }
+    },
+    "loufan": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "hezongshi": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "weili": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "minyue": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "fengbitou": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 3
+      }
+    },
+    "fanzaiyuan": {
+      "count": 7,
+      "terrain": {
+        "coastal_city": 5,
+        "mountains": 1,
+        "hills": 1
+      }
+    },
+    "hunyu": {
+      "count": 4,
+      "terrain": {
+        "mountains": 1,
+        "hills": 2,
+        "plains": 1
+      }
+    },
+    "morinia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "remi": {
+      "count": 2,
+      "terrain": {
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "eburonia": {
+      "count": 3,
+      "terrain": {
+        "mountains": 1,
+        "river_valley": 1,
+        "plains": 1
+      }
+    },
+    "ubia": {
+      "count": 2,
+      "terrain": {
+        "hills": 1,
+        "plains": 1
+      }
+    },
+    "tougeni": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "triboccia": {
+      "count": 3,
+      "terrain": {
+        "river_valley": 1,
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "praisos": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
     "kos": {
       "count": 1,
       "terrain": {
         "coastal_city": 1
       }
     },
-    "lysimachus_kingdom": {
-      "count": 73,
+    "amyrgia": {
+      "count": 22,
       "terrain": {
-        "hills": 18,
-        "mountains": 16,
-        "river_valley": 16,
-        "plains": 18,
+        "coastal_city": 7,
+        "hills": 4,
+        "mountains": 5,
+        "river_valley": 3,
+        "plains": 3
+      }
+    },
+    "kydonia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "iboshim": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "athens": {
+      "count": 5,
+      "terrain": {
         "coastal_city": 5
+      }
+    },
+    "hermione": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "andros": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "dian": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "yeomhae": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "amakusa": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 3
+      }
+    },
+    "oki": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "toyo": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "hinokuni": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "wakasa": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "yasu": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "skirithfinia": {
+      "count": 20,
+      "terrain": {
+        "river_valley": 3,
+        "hills": 5,
+        "mountains": 4,
+        "plains": 6,
+        "coastal_city": 2
+      }
+    },
+    "shihsanhang": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "liukiu": {
+      "count": 6,
+      "terrain": {
+        "coastal_city": 6
+      }
+    },
+    "awa": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "awaji": {
+      "count": 4,
+      "terrain": {
+        "river_valley": 2,
+        "mountains": 1,
+        "hills": 1
+      }
+    },
+    "tosu": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "himuka": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "kumaso": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "houki": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "kaga": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "futakata": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "sinano": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "harima": {
+      "count": 6,
+      "terrain": {
+        "coastal_city": 1,
+        "hills": 1,
+        "plains": 2,
+        "river_valley": 1,
+        "mountains": 1
+      }
+    },
+    "owari": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "ohmi": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "hata": {
+      "count": 9,
+      "terrain": {
+        "coastal_city": 4,
+        "river_valley": 3,
+        "hills": 1,
+        "plains": 1
+      }
+    },
+    "honokuni": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "titibu": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "kosinofukae": {
+      "count": 2,
+      "terrain": {
+        "mountains": 1,
+        "plains": 1
+      }
+    },
+    "kumano": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "yamato": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "ise": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "nukata": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "imizu": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "mugetu": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "shima": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "yama": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "kai": {
+      "count": 4,
+      "terrain": {
+        "coastal_city": 1,
+        "mountains": 1,
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "musasi": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "kazusa": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 3
+      }
+    },
+    "kaminotuke": {
+      "count": 5,
+      "terrain": {
+        "coastal_city": 1,
+        "plains": 2,
+        "hills": 2
+      }
+    },
+    "hida": {
+      "count": 4,
+      "terrain": {
+        "coastal_city": 3,
+        "mountains": 1
+      }
+    },
+    "motosu": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "simobusa": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "aki": {
+      "count": 2,
+      "terrain": {
+        "river_valley": 1,
+        "hills": 1
+      }
+    },
+    "soga": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "igo": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "ohkita": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "toki": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "kii": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "mikuni": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 1,
+        "river_valley": 1
+      }
+    },
+    "kubiki": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "mitinooku": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 2,
+        "mountains": 1
+      }
+    },
+    "hitati": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "dewa": {
+      "count": 5,
+      "terrain": {
+        "coastal_city": 2,
+        "plains": 1,
+        "mountains": 1,
+        "river_valley": 1
+      }
+    },
+    "simotuke": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "nasu": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "sirakawa": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "ebetsu": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 2,
+        "mountains": 1
+      }
+    },
+    "kitami": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "nivkhgu": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "gijeo": {
+      "count": 4,
+      "terrain": {
+        "plains": 1,
+        "mountains": 1,
+        "coastal_city": 2
+      }
+    },
+    "okjeo": {
+      "count": 4,
+      "terrain": {
+        "coastal_city": 2,
+        "mountains": 1,
+        "plains": 1
+      }
+    },
+    "weii": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "yulou": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "musu": {
+      "count": 5,
+      "terrain": {
+        "coastal_city": 5
+      }
+    },
+    "anchegu": {
+      "count": 6,
+      "terrain": {
+        "coastal_city": 3,
+        "river_valley": 1,
+        "plains": 2
+      }
+    },
+    "weixu": {
+      "count": 8,
+      "terrain": {
+        "plains": 3,
+        "coastal_city": 2,
+        "mountains": 2,
+        "hills": 1
+      }
+    },
+    "yan": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "haoshi": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 1,
+        "hills": 1
+      }
+    },
+    "zhongshan": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "boduo": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "xiqiemi": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "yuezhi": {
+      "count": 3,
+      "terrain": {
+        "hills": 2,
+        "plains": 1
+      }
+    },
+    "jushi": {
+      "count": 2,
+      "terrain": {
+        "river_valley": 1,
+        "plains": 1
+      }
+    },
+    "wulei": {
+      "count": 2,
+      "terrain": {
+        "plains": 1,
+        "mountains": 1
+      }
+    },
+    "bugu": {
+      "count": 2,
+      "terrain": {
+        "river_valley": 1,
+        "mountains": 1
+      }
+    },
+    "wusun": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "yumi": {
+      "count": 2,
+      "terrain": {
+        "mountains": 1,
+        "hills": 1
+      }
+    },
+    "xi_zhou": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "dong_zhou": {
+      "count": 6,
+      "terrain": {
+        "hills": 3,
+        "river_valley": 2,
+        "plains": 1
+      }
+    },
+    "wei": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "zou": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "song": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "han": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "zhou": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "shajing": {
+      "count": 3,
+      "terrain": {
+        "plains": 2,
+        "hills": 1
+      }
+    },
+    "qin": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "yiqu": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "sui": {
+      "count": 3,
+      "terrain": {
+        "river_valley": 1,
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "yelang": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "tigrakhauda": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "apasiacae": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
       }
     },
     "chorasmia": {
@@ -1189,6 +7063,24 @@
         "hills": 1
       }
     },
+    "adagaiman": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "daze": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "bekhyria": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
     "aorsi": {
       "count": 12,
       "terrain": {
@@ -1196,6 +7088,104 @@
         "plains": 3,
         "hills": 2,
         "river_valley": 1
+      }
+    },
+    "sabiri": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "yancai": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 1,
+        "mountains": 1
+      }
+    },
+    "magyars": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "geungi": {
+      "count": 2,
+      "terrain": {
+        "river_valley": 2
+      }
+    },
+    "kharazm": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "argippaeans": {
+      "count": 4,
+      "terrain": {
+        "mountains": 2,
+        "river_valley": 1,
+        "hills": 1
+      }
+    },
+    "thyssagetae": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "jurcae": {
+      "count": 4,
+      "terrain": {
+        "mountains": 2,
+        "river_valley": 1,
+        "hills": 1
+      }
+    },
+    "arismaspians": {
+      "count": 4,
+      "terrain": {
+        "plains": 1,
+        "mountains": 1,
+        "river_valley": 1,
+        "hills": 1
+      }
+    },
+    "scythians": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "snay": {
+      "count": 5,
+      "terrain": {
+        "hills": 1,
+        "mountains": 2,
+        "river_valley": 1,
+        "plains": 1
+      }
+    },
+    "mordvins": {
+      "count": 4,
+      "terrain": {
+        "hills": 2,
+        "mountains": 1,
+        "plains": 1
+      }
+    },
+    "melanchlaeni": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "budini": {
+      "count": 2,
+      "terrain": {
+        "plains": 1,
+        "hills": 1
       }
     },
     "iazyges": {
@@ -1208,11 +7198,209 @@
         "mountains": 5
       }
     },
-    "marsi": {
-      "count": 2,
+    "gelonii": {
+      "count": 1,
       "terrain": {
-        "plains": 1,
         "mountains": 1
+      }
+    },
+    "odessa": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "borysthenes": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "armphaeians": {
+      "count": 5,
+      "terrain": {
+        "coastal_city": 5
+      }
+    },
+    "carpi": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "iasi": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "avionia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "galindia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "estioni": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "gothoscandza": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "lemovia": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "oyat": {
+      "count": 10,
+      "terrain": {
+        "hills": 3,
+        "coastal_city": 3,
+        "river_valley": 2,
+        "plains": 2
+      }
+    },
+    "mediomatricia": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "bellovaci": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "aedui": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "vangiona": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "alauni": {
+      "count": 7,
+      "terrain": {
+        "hills": 2,
+        "mountains": 2,
+        "river_valley": 2,
+        "plains": 1
+      }
+    },
+    "frisians": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "condrusia": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "breuni": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "brigantia": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "boiihami": {
+      "count": 13,
+      "terrain": {
+        "mountains": 7,
+        "river_valley": 3,
+        "plains": 2,
+        "hills": 1
+      }
+    },
+    "naristia": {
+      "count": 20,
+      "terrain": {
+        "hills": 8,
+        "mountains": 3,
+        "river_valley": 5,
+        "plains": 4
+      }
+    },
+    "licati": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "verbigeni": {
+      "count": 3,
+      "terrain": {
+        "plains": 2,
+        "river_valley": 1
+      }
+    },
+    "ambisonti": {
+      "count": 11,
+      "terrain": {
+        "mountains": 4,
+        "river_valley": 3,
+        "plains": 2,
+        "hills": 2
+      }
+    },
+    "osii": {
+      "count": 8,
+      "terrain": {
+        "mountains": 3,
+        "river_valley": 1,
+        "plains": 2,
+        "hills": 2
+      }
+    },
+    "bures": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "weitou": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "huifa": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "issa": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
       }
     },
     "marrucini": {
@@ -1221,11 +7409,22 @@
         "river_valley": 1
       }
     },
+    "aequi_remnants": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
     "paeligni": {
-      "count": 4,
+      "count": 3,
       "terrain": {
         "river_valley": 2,
-        "plains": 1,
+        "plains": 1
+      }
+    },
+    "marsi": {
+      "count": 1,
+      "terrain": {
         "hills": 1
       }
     },
@@ -1243,7 +7442,191 @@
         "plains": 1
       }
     },
+    "samnites": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "caraceni": {
+      "count": 2,
+      "terrain": {
+        "river_valley": 1,
+        "hills": 1
+      }
+    },
+    "praetutii": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "iadatinia": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "autenia": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "cochis": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "colapiani": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "elea": {
+      "count": 6,
+      "terrain": {
+        "coastal_city": 3,
+        "mountains": 1,
+        "hills": 1,
+        "plains": 1
+      }
+    },
+    "brutii": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
     "croton": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "etruscan_conf": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "ilvatia_coeba": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "tibulati": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "statiellia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "ilvatia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "sabinia": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "tigurini": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "latovici": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "langobardia": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "rugusci": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "rauraci": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "nemetia": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "caluconi": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "apuania": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "cenomanni": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "camuni": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "genauni": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "sequani": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "roman_republic": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "etruscan_confederation": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "nervia": {
       "count": 1,
       "terrain": {
         "coastal_city": 1
@@ -1270,29 +7653,63 @@
         "hills": 1
       }
     },
-    "insubri": {
-      "count": 24,
+    "ormelia": {
+      "count": 14,
       "terrain": {
-        "plains": 7,
-        "hills": 6,
-        "mountains": 4,
-        "river_valley": 7
+        "plains": 4,
+        "hills": 3,
+        "mountains": 3,
+        "river_valley": 4
       }
     },
-    "cenomanni": {
+    "laevi": {
+      "count": 5,
+      "terrain": {
+        "plains": 2,
+        "mountains": 2,
+        "river_valley": 1
+      }
+    },
+    "hasta": {
+      "count": 7,
+      "terrain": {
+        "hills": 3,
+        "river_valley": 2,
+        "plains": 2
+      }
+    },
+    "albosenses": {
       "count": 1,
       "terrain": {
         "plains": 1
       }
     },
-    "veneti": {
-      "count": 15,
+    "insubri": {
+      "count": 1,
       "terrain": {
-        "mountains": 4,
-        "coastal_city": 4,
-        "plains": 3,
-        "hills": 2,
-        "river_valley": 2
+        "river_valley": 1
+      }
+    },
+    "veneti": {
+      "count": 9,
+      "terrain": {
+        "coastal_city": 3,
+        "plains": 1,
+        "hills": 1,
+        "mountains": 3,
+        "river_valley": 1
+      }
+    },
+    "trumpili": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "feltrini": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
       }
     },
     "tridentini": {
@@ -1304,6 +7721,12 @@
         "mountains": 2
       }
     },
+    "segnia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
     "taurini": {
       "count": 8,
       "terrain": {
@@ -1313,10 +7736,22 @@
         "hills": 2
       }
     },
+    "tigullia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
     "genua": {
       "count": 2,
       "terrain": {
         "coastal_city": 2
+      }
+    },
+    "vertamocorii": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
       }
     },
     "salassi": {
@@ -1335,10 +7770,210 @@
         "hills": 1
       }
     },
+    "ingaunia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "intimilia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "caturigi": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "vediantia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "orobia": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "noricum": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "ambidravi": {
+      "count": 18,
+      "terrain": {
+        "river_valley": 5,
+        "plains": 5,
+        "hills": 5,
+        "mountains": 3
+      }
+    },
+    "belgites": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "uperacii": {
+      "count": 3,
+      "terrain": {
+        "plains": 2,
+        "mountains": 1
+      }
+    },
+    "isarci": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "anauni": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "helvetii": {
+      "count": 3,
+      "terrain": {
+        "plains": 1,
+        "river_valley": 1,
+        "hills": 1
+      }
+    },
+    "uberi": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "venosti": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
     "histri": {
       "count": 5,
       "terrain": {
         "coastal_city": 4,
+        "plains": 1
+      }
+    },
+    "acragas": {
+      "count": 5,
+      "terrain": {
+        "river_valley": 1,
+        "plains": 1,
+        "coastal_city": 1,
+        "mountains": 1,
+        "hills": 1
+      }
+    },
+    "karbonia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "massylii": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "capariensa": {
+      "count": 14,
+      "terrain": {
+        "coastal_city": 7,
+        "plains": 1,
+        "hills": 1,
+        "river_valley": 3,
+        "mountains": 2
+      }
+    },
+    "sardeati": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "careoti": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "longonenses": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "luquidonenses": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "coracenses": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "carenses": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "sciria": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "seduni": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "arverni": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "allobriges": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "graioceli": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "gymnaesians": {
+      "count": 5,
+      "terrain": {
+        "coastal_city": 5
+      }
+    },
+    "carthage": {
+      "count": 1,
+      "terrain": {
         "plains": 1
       }
     },
@@ -1348,20 +7983,165 @@
         "hills": 1
       }
     },
-    "mauretania": {
-      "count": 123,
+    "herakleia_minoa": {
+      "count": 1,
       "terrain": {
-        "mountains": 30,
-        "plains": 27,
-        "coastal_city": 15,
-        "river_valley": 26,
-        "hills": 25
+        "mountains": 1
+      }
+    },
+    "valentini": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "selinous": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "indiketia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "iol": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "edetani": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "autolalia": {
+      "count": 31,
+      "terrain": {
+        "hills": 6,
+        "mountains": 8,
+        "river_valley": 8,
+        "plains": 6,
+        "coastal_city": 3
+      }
+    },
+    "lixitae": {
+      "count": 28,
+      "terrain": {
+        "river_valley": 3,
+        "plains": 6,
+        "coastal_city": 6,
+        "hills": 6,
+        "mountains": 7
+      }
+    },
+    "kouass": {
+      "count": 4,
+      "terrain": {
+        "coastal_city": 2,
+        "mountains": 1,
+        "hills": 1
       }
     },
     "lixus": {
       "count": 3,
       "terrain": {
         "coastal_city": 3
+      }
+    },
+    "gadir": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "gomeritas": {
+      "count": 7,
+      "terrain": {
+        "coastal_city": 4,
+        "hills": 2,
+        "mountains": 1
+      }
+    },
+    "mauretania": {
+      "count": 49,
+      "terrain": {
+        "hills": 11,
+        "mountains": 12,
+        "river_valley": 12,
+        "plains": 11,
+        "coastal_city": 3
+      }
+    },
+    "majos": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "agadir": {
+      "count": 20,
+      "terrain": {
+        "river_valley": 4,
+        "plains": 6,
+        "coastal_city": 3,
+        "hills": 3,
+        "mountains": 4
+      }
+    },
+    "bimbaches": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "benahoaritas": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "canaria": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "canarios": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "guanches": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "gaetulia": {
+      "count": 9,
+      "terrain": {
+        "river_valley": 3,
+        "plains": 2,
+        "hills": 2,
+        "mountains": 2
+      }
+    },
+    "bastetani": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "contestani": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
       }
     },
     "takapes": {
@@ -1404,7 +8184,43 @@
         "coastal_city": 4
       }
     },
+    "karmo": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "cyrene": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "lepreon": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "antipatrid_kingdom": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
     "messenia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "oreos": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "aetolia": {
       "count": 1,
       "terrain": {
         "coastal_city": 1
@@ -1423,10 +8239,29 @@
         "coastal_city": 1
       }
     },
+    "opus": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 1,
+        "river_valley": 1
+      }
+    },
     "corinth": {
       "count": 1,
       "terrain": {
         "plains": 1
+      }
+    },
+    "elis": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "daorsi": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
       }
     },
     "patrai": {
@@ -1435,20 +8270,242 @@
         "coastal_city": 1
       }
     },
+    "astakos": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
     "epirus": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 1,
+        "mountains": 1
+      }
+    },
+    "ambrakia": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "messapains": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "maezaei": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "libuia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "glinditioni": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "sicyon": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "megaris": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "paemania": {
       "count": 11,
       "terrain": {
-        "coastal_city": 3,
+        "hills": 3,
         "river_valley": 3,
-        "mountains": 3,
+        "coastal_city": 3,
+        "mountains": 1,
+        "plains": 1
+      }
+    },
+    "oroanadia": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "oxybia": {
+      "count": 4,
+      "terrain": {
+        "river_valley": 2,
         "plains": 1,
+        "mountains": 1
+      }
+    },
+    "pirusti": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "osumi": {
+      "count": 4,
+      "terrain": {
+        "plains": 1,
+        "hills": 1,
+        "mountains": 2
+      }
+    },
+    "cedu": {
+      "count": 1,
+      "terrain": {
         "hills": 1
+      }
+    },
+    "sithonia": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "varagria": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "triballi": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "dacia": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "saurdonia": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "varinia": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "tomis": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "odrysian_kingdom": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "zanthi": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "maricia": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "chaidinia": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "firaesia": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "saro": {
+      "count": 6,
+      "terrain": {
+        "coastal_city": 4,
+        "mountains": 1,
+        "river_valley": 1
+      }
+    },
+    "kallipolis": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "herakleia": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 3
+      }
+    },
+    "biephes": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 2,
+        "river_valley": 1
+      }
+    },
+    "attasia": {
+      "count": 7,
+      "terrain": {
+        "hills": 2,
+        "river_valley": 2,
+        "plains": 1,
+        "mountains": 1,
+        "coastal_city": 1
       }
     },
     "apollonia_pontica": {
       "count": 2,
       "terrain": {
         "coastal_city": 2
+      }
+    },
+    "mesembria": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 3
+      }
+    },
+    "krounoi": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "callatis": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "krobyzni": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
       }
     },
     "orgame": {
@@ -1469,6 +8526,14 @@
         "coastal_city": 1
       }
     },
+    "aroteres": {
+      "count": 14,
+      "terrain": {
+        "coastal_city": 11,
+        "hills": 2,
+        "plains": 1
+      }
+    },
     "chersonesus": {
       "count": 1,
       "terrain": {
@@ -1482,13 +8547,10 @@
       }
     },
     "pergamon": {
-      "count": 10,
+      "count": 3,
       "terrain": {
-        "coastal_city": 3,
-        "mountains": 3,
-        "river_valley": 2,
-        "hills": 1,
-        "plains": 1
+        "coastal_city": 2,
+        "river_valley": 1
       }
     },
     "miletos": {
@@ -1503,6 +8565,14 @@
         "coastal_city": 2
       }
     },
+    "kaounos": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 1,
+        "plains": 1,
+        "mountains": 1
+      }
+    },
     "oinoandia": {
       "count": 10,
       "terrain": {
@@ -1513,13 +8583,40 @@
         "hills": 1
       }
     },
-    "antigonid_kingdom": {
-      "count": 14,
+    "apollonia": {
+      "count": 1,
       "terrain": {
-        "coastal_city": 8,
-        "plains": 4,
-        "river_valley": 1,
-        "hills": 1
+        "coastal_city": 1
+      }
+    },
+    "lyktos": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "gortyna": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "arkades": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "ierapetra": {
+      "count": 2,
+      "terrain": {
+        "coastal_city": 2
+      }
+    },
+    "noto": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
       }
     },
     "dodekaschoinos": {
@@ -1529,6 +8626,25 @@
         "plains": 2,
         "hills": 2,
         "river_valley": 2
+      }
+    },
+    "soknobulsa": {
+      "count": 40,
+      "terrain": {
+        "river_valley": 8,
+        "plains": 8,
+        "hills": 7,
+        "mountains": 6,
+        "coastal_city": 11
+      }
+    },
+    "thebes": {
+      "count": 10,
+      "terrain": {
+        "river_valley": 3,
+        "plains": 2,
+        "hills": 2,
+        "mountains": 3
       }
     },
     "nabataea": {
@@ -1541,11 +8657,10 @@
         "hills": 4
       }
     },
-    "ptolemaic_kingdom": {
-      "count": 4,
+    "lihyan": {
+      "count": 1,
       "terrain": {
-        "plains": 1,
-        "coastal_city": 3
+        "river_valley": 1
       }
     },
     "judea": {
@@ -1568,6 +8683,12 @@
         "coastal_city": 1
       }
     },
+    "ptolemaic_kingdom": {
+      "count": 3,
+      "terrain": {
+        "coastal_city": 3
+      }
+    },
     "sidon": {
       "count": 2,
       "terrain": {
@@ -1575,21 +8696,30 @@
       }
     },
     "sophene": {
-      "count": 14,
+      "count": 13,
       "terrain": {
         "hills": 4,
-        "mountains": 3,
+        "mountains": 2,
         "river_valley": 4,
         "plains": 3
       }
     },
     "commagene": {
-      "count": 17,
+      "count": 8,
       "terrain": {
-        "plains": 6,
-        "river_valley": 4,
-        "hills": 4,
-        "mountains": 3
+        "plains": 2,
+        "mountains": 2,
+        "river_valley": 2,
+        "hills": 2
+      }
+    },
+    "sudinoia": {
+      "count": 20,
+      "terrain": {
+        "mountains": 5,
+        "river_valley": 5,
+        "plains": 4,
+        "hills": 6
       }
     },
     "byblos": {
@@ -1611,6 +8741,15 @@
         "hills": 1
       }
     },
+    "ana": {
+      "count": 9,
+      "terrain": {
+        "river_valley": 2,
+        "hills": 3,
+        "mountains": 3,
+        "plains": 1
+      }
+    },
     "olbe": {
       "count": 9,
       "terrain": {
@@ -1619,14 +8758,42 @@
         "hills": 2
       }
     },
-    "kibyratia": {
-      "count": 12,
+    "solymia": {
+      "count": 5,
+      "terrain": {
+        "plains": 1,
+        "coastal_city": 3,
+        "mountains": 1
+      }
+    },
+    "kerausous": {
+      "count": 5,
       "terrain": {
         "coastal_city": 4,
+        "mountains": 1
+      }
+    },
+    "kibyratia": {
+      "count": 8,
+      "terrain": {
+        "coastal_city": 1,
         "river_valley": 3,
         "plains": 1,
         "hills": 2,
-        "mountains": 2
+        "mountains": 1
+      }
+    },
+    "cabalian_city_states": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "antigonid_kingdom": {
+      "count": 4,
+      "terrain": {
+        "plains": 1,
+        "coastal_city": 3
       }
     },
     "sagallasia": {
@@ -1638,7 +8805,123 @@
         "plains": 4
       }
     },
+    "selgia": {
+      "count": 13,
+      "terrain": {
+        "mountains": 4,
+        "river_valley": 3,
+        "hills": 3,
+        "plains": 3
+      }
+    },
+    "ambladia": {
+      "count": 16,
+      "terrain": {
+        "river_valley": 4,
+        "hills": 4,
+        "mountains": 6,
+        "plains": 2
+      }
+    },
+    "soma": {
+      "count": 10,
+      "terrain": {
+        "river_valley": 3,
+        "plains": 2,
+        "hills": 3,
+        "mountains": 2
+      }
+    },
+    "physkos": {
+      "count": 3,
+      "terrain": {
+        "plains": 1,
+        "hills": 1,
+        "river_valley": 1
+      }
+    },
+    "calchedon": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "bithynia": {
+      "count": 1,
+      "terrain": {
+        "plains": 1
+      }
+    },
+    "herakleia_pontica": {
+      "count": 1,
+      "terrain": {
+        "hills": 1
+      }
+    },
+    "lysimachus_kingdom": {
+      "count": 2,
+      "terrain": {
+        "river_valley": 1,
+        "mountains": 1
+      }
+    },
+    "phyrnia": {
+      "count": 2,
+      "terrain": {
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "pisidian_city_states": {
+      "count": 1,
+      "terrain": {
+        "river_valley": 1
+      }
+    },
+    "arykandia": {
+      "count": 7,
+      "terrain": {
+        "plains": 2,
+        "hills": 3,
+        "mountains": 2
+      }
+    },
+    "eudosia": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
     "sinope": {
+      "count": 1,
+      "terrain": {
+        "coastal_city": 1
+      }
+    },
+    "paphlagonia": {
+      "count": 4,
+      "terrain": {
+        "mountains": 2,
+        "plains": 1,
+        "hills": 1
+      }
+    },
+    "teion": {
+      "count": 1,
+      "terrain": {
+        "mountains": 1
+      }
+    },
+    "pontus": {
+      "count": 5,
+      "terrain": {
+        "mountains": 2,
+        "plains": 1,
+        "hills": 1,
+        "river_valley": 1
+      }
+    },
+    "sindi": {
       "count": 1,
       "terrain": {
         "coastal_city": 1
@@ -1658,5 +8941,22 @@
       }
     }
   },
-  "missing_nations": []
+  "missing_nations": [
+    "agathyrsi",
+    "ambronia",
+    "breganti",
+    "carnutes",
+    "conii",
+    "gulbal",
+    "guyan",
+    "namnetes",
+    "oaymaannadu",
+    "orcadia",
+    "palada",
+    "pingu",
+    "punanadu",
+    "selgovia",
+    "trinovantia",
+    "dumnonia"
+  ]
 }
