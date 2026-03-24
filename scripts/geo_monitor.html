@@ -216,15 +216,48 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 <script>
 // ─── Leaflet карта ─────────────────────────────────────────────────
-const map = L.map('map', { center: [35, 25], zoom: 3 });
-L.tileLayer('/tiles/{z}/{x}/{y}.png', {
-  attribution: '© <a href="https://cawm.lib.uiowa.edu/" target="_blank">CAWM</a> · CC BY 4.0',
-  maxZoom: 10,
-  maxNativeZoom: 8,
-  minZoom: 2,
-  tileSize: 256,
-  errorTileUrl: '',
-}).addTo(map);
+const map = L.map('map', { center: [35, 25], zoom: 3, preferCanvas: true });
+
+// Рендерим игровую карту из map.js (те же полигоны что в игре)
+const gameMapLayer = L.layerGroup().addTo(map);
+const canvasRenderer = L.canvas({ padding: 0.5 });
+
+fetch('/map.js').then(r => r.text()).then(code => {
+  // Извлекаем MAP_REGIONS из файла
+  const match = code.match(/const MAP_REGIONS\s*=\s*\{([\s\S]*)\};?\s*$/m);
+  if (!match) { addLog('Не удалось загрузить map.js', 'warn'); return; }
+  let regions;
+  try {
+    // Используем Function чтобы безопасно выполнить код
+    const fn = new Function(`const MAP_REGIONS = {${match[1]}}; return MAP_REGIONS;`);
+    regions = fn();
+  } catch(e) { addLog('Ошибка парсинга map.js: ' + e.message, 'warn'); return; }
+
+  const terrainColors = {
+    ocean: '#1a3a5c', sea: '#1e4060', lake: '#1e4060',
+    plains: '#2d3a1e', farmland: '#2d3a1e', steppe: '#3a3520',
+    forest: '#1e2d1a', mountains: '#3a3028', hills: '#2d2820',
+    desert: '#3a3020', coast: '#2a3828', coastal_city: '#2a3828',
+    river_valley: '#252d18', swamp: '#202820',
+    default: '#252820',
+  };
+
+  let count = 0;
+  for (const [id, r] of Object.entries(regions)) {
+    if (!r.coords || r.coords.length < 3) continue;
+    if (r.nation === 'ocean') continue; // океан не рисуем
+    const color = terrainColors[r.terrain] ?? terrainColors.default;
+    L.polygon(r.coords, {
+      color: '#444',
+      weight: 0.3,
+      fillColor: color,
+      fillOpacity: 0.9,
+      renderer: canvasRenderer,
+    }).addTo(gameMapLayer);
+    count++;
+  }
+  addLog(`Игровая карта: ${count} регионов загружено`, 'info');
+}).catch(() => addLog('map.js не найден', 'warn'));
 
 // Слои для наций
 const nationLayers = {};       // id → L.rectangle
