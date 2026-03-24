@@ -316,7 +316,7 @@ async function runGeneration(API_KEY) {
 
     function hasRRegions(nation) { return (nation.regions ?? []).some(r => /^r\d+$/.test(r)); }
     const todo = Object.entries(NATIONS)
-      .filter(([id, n]) => !hasRRegions(n) && !existing[id] && id !== 'neutral')
+      .filter(([id, n]) => !hasRRegions(n) && (!existing[id] || !existingEnriched[id]) && id !== 'neutral')
       .map(([id, n]) => ({
         id,
         name:             n.name ?? id,
