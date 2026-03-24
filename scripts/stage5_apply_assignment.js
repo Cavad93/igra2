@@ -129,7 +129,8 @@ for (const [nationId, newRegions] of Object.entries(nationToRegions)) {
   for (let i = nationLineIdx + 1; i < searchEnd; i++) {
     const m = regionsRe.exec(nationsLines[i]);
     if (m) {
-      nationsLines[i] = `${m[1]}${JSON.stringify(newRegions)}`;
+      const trailingComma = nationsLines[i].trimEnd().endsWith(',') ? ',' : '';
+      nationsLines[i] = `${m[1]}${JSON.stringify(newRegions)}${trailingComma}`;
       patched = true;
       natChanged++;
       break;
