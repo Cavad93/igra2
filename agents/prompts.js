@@ -28,18 +28,27 @@ export function buildAnalystPrompt(ctx) {
     nationRegions[rId] = entry;
   }
 
-  // Краткий biome_meta: только fertility_modifier по типу terrain
-  const biomeSummary = {};
+  // Бонус производства этого конкретного товара по каждому биому
+  // + общая пригодность для сельского хозяйства
+  const biomeGoodBonus = {};
   for (const [biomeId, bData] of Object.entries(allData.BIOME_META ?? {})) {
-    if (typeof bData === 'object' && bData !== null && !Array.isArray(bData)) {
-      biomeSummary[biomeId] = bData.fertility_modifier ?? bData.base_fertility ?? 1.0;
-    }
+    if (typeof bData !== 'object' || bData === null || Array.isArray(bData)) continue;
+    biomeGoodBonus[biomeId] = {
+      good_bonus:    bData.goods_bonus?.[goodId]           ?? 1.0,
+      agri_suit:     bData.agriculture?.suitability        ?? null,
+      prod_bonus:    bData.production_bonus?.[goodId]      ?? null,
+    };
   }
 
-  const ctxMeta = { good_id: goodId, good_data: goodData, good_meta: goodMeta,
+  const ctxMeta = {
+    good_id:   goodId,
+    good_data: goodData,
+    good_meta: goodMeta,
     nation_regions_total: Object.keys(nationRegions).length,
-    biome_fertility: biomeSummary,
-    pdf_chains_using_this_good: pdfChains.slice(0, 10) };
+    // Для каждого биома: бонус именно для этого товара + пригодность под с/х
+    biome_bonuses_for_this_good: biomeGoodBonus,
+    pdf_chains_using_this_good: pdfChains.slice(0, 10),
+  };
 
   const system = SYSTEM_BASE;
   // nation_regions передаём без отступов чтобы сократить размер
@@ -89,24 +98,46 @@ export function buildChainPrompt(ctx) {
   // Краткий список всех ID зданий для справки
   const allBuildingIds = Object.keys(allData.BUILDINGS);
 
-  // Только ID и названия классов (не полная структура)
-  const classIds = Object.keys(allData.SOCIAL_CLASSES);
+  // Классы: id → {name, wealth_level, typical_work} — достаточно для выбора workers
+  const classesSummary = {};
+  for (const [cId, cData] of Object.entries(allData.SOCIAL_CLASSES ?? {})) {
+    classesSummary[cId] = {
+      name:         cData.name,
+      wealth_level: cData.wealth_level,
+      // потребность в этом товаре (есть ли у класса needs на него)
+      needs_this_good: !!(cData.needs?.[goodId]),
+    };
+  }
 
-  // Только основные типы труда из labor_laws
-  const laborSummary = {
+  // Бонус этого товара по биомам — для biome_modifiers в ответе
+  const biomeGoodBonus = {};
+  for (const [biomeId, bData] of Object.entries(allData.BIOME_META ?? {})) {
+    if (typeof bData !== 'object' || bData === null || Array.isArray(bData)) continue;
+    const bonus = bData.goods_bonus?.[goodId] ?? 1.0;
+    if (bonus !== 1.0) biomeGoodBonus[biomeId] = bonus; // передаём только не-единичные бонусы
+  }
+
+  // Ключевые законы о труде: рабство + детский труд
+  const laborKey = {
     slavery_allowed: allData.LAWS_LABOR?.slavery?.default?.slaves_allowed ?? true,
-    typical_slave_ratio: 0.3,
+    typical_slave_ratio_by_class: {
+      farmers_class:   0.3,
+      craftsmen_class: 0.4,
+      merchants_class: 0.1,
+      aristocrats:     0.0,
+    },
   };
 
   const context = {
-    good_id:            goodId,
-    good_data:          allData.GOODS[goodId] ?? {},
-    good_meta:          allData.GOODS_META[goodId] ?? {},
-    analyst_result:     analystResult,
-    relevant_buildings: relevantBuildings,
-    all_building_ids:   allBuildingIds,
-    valid_class_ids:    classIds,
-    labor_summary:      laborSummary,
+    good_id:             goodId,
+    good_data:           allData.GOODS[goodId] ?? {},
+    good_meta:           allData.GOODS_META[goodId] ?? {},
+    analyst_result:      analystResult,
+    relevant_buildings:  relevantBuildings,
+    all_building_ids:    allBuildingIds,
+    social_classes:      classesSummary,
+    biome_modifiers_ref: biomeGoodBonus,   // готовые значения для поля biome_modifiers
+    labor_laws_summary:  laborKey,
     relevant_pdf_chains: relevantChains,
   };
 
@@ -136,9 +167,10 @@ export function buildChainPrompt(ctx) {
   "alternative_good": string | null
 }
 
-Используй только ID зданий из relevant_buildings или all_buildings.
-Используй только ID классов из social_classes.
-slave_ratio: 0.0–1.0`;
+Используй только ID зданий из relevant_buildings или all_building_ids.
+Используй только ID классов из social_classes (ключи объекта).
+biome_modifiers: используй значения из biome_modifiers_ref (биомы с бонусом ≠ 1.0).
+slave_ratio: бери из labor_laws_summary.typical_slave_ratio_by_class для primary_class.`;
 
   return { system, user };
 }
