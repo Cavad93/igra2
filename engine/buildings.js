@@ -261,7 +261,7 @@ function processAllRecipes(nationId) {
             const bName = (typeof BUILDINGS !== 'undefined' ? BUILDINGS[slot.building_id]?.name : null)
                          || slot.building_id;
             addEventLog(
-              `⚠ ${bName}: нехватка (${missingInputs}), производство ${good} — ${Math.round(ratio * 100)}%`,
+              `⚠ ${bName}: нехватка (${missingInputs}), производство ${(typeof GOODS !== 'undefined' ? GOODS[good]?.name : null) || good} — ${Math.round(ratio * 100)}%`,
               'warning'
             );
           }
