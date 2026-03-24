@@ -102,24 +102,62 @@ function getSearchTerms(nation) {
   ].filter(Boolean);
 }
 
+// Wikidata — структурированные данные: координаты, даты, правители
+async function searchWikidata(query) {
+  try {
+    const UA = 'PaxHistoriaBot/1.0 (igra2 game map generator)';
+    // Поиск entity по названию
+    const sUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(query)}&language=en&limit=3&format=json&origin=*`;
+    const sResp = await fetch(sUrl, { signal: AbortSignal.timeout(8000), headers: { 'User-Agent': UA } });
+    if (!sResp.ok) return null;
+    const sData = await sResp.json();
+    const entity = sData?.search?.[0];
+    if (!entity) return null;
+
+    // Получаем координаты и даты из entity
+    const eUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${entity.id}&props=claims&format=json&origin=*`;
+    const eResp = await fetch(eUrl, { signal: AbortSignal.timeout(8000), headers: { 'User-Agent': UA } });
+    if (!eResp.ok) return null;
+    const eData = await eResp.json();
+    const claims = eData?.entities?.[entity.id]?.claims ?? {};
+
+    // P625 = координаты, P571 = дата основания, P576 = дата роспуска
+    const coordClaim = claims['P625']?.[0]?.mainsnak?.datavalue?.value;
+    const coordinates = coordClaim
+      ? { lat: coordClaim.latitude, lon: coordClaim.longitude }
+      : null;
+
+    return {
+      id:          entity.id,
+      label:       entity.label,
+      description: entity.description?.slice(0, 150),
+      coordinates,
+    };
+  } catch { return null; }
+}
+
 async function gatherWebData(nation) {
   const terms = getSearchTerms(nation);
-  const [pleiades1, wikipedia1] = await Promise.all([
+  const [pleiades1, wikipedia1, wikidata1] = await Promise.all([
     searchPleiades(terms[0]),
     searchWikipedia(terms[0]),
+    searchWikidata(terms[0]),
   ]);
   let pleiades = pleiades1;
   let wikipedia = wikipedia1;
-  for (let i = 1; i < terms.length && (!pleiades || !wikipedia); i++) {
-    const [pl, wi] = await Promise.all([
+  let wikidata = wikidata1;
+  for (let i = 1; i < terms.length && (!pleiades || !wikipedia || !wikidata); i++) {
+    const [pl, wi, wd] = await Promise.all([
       pleiades  ? Promise.resolve(null) : searchPleiades(terms[i]),
       wikipedia ? Promise.resolve(null) : searchWikipedia(terms[i]),
+      wikidata  ? Promise.resolve(null) : searchWikidata(terms[i]),
     ]);
     if (pl) pleiades = pl;
     if (wi) wikipedia = wi;
+    if (wd) wikidata = wd;
     await sleep(200);
   }
-  return { pleiades, wikipedia };
+  return { pleiades, wikipedia, wikidata };
 }
 
 function getWorldRegion(geo) {
@@ -171,6 +209,11 @@ function buildPrompt(nations, webDataMap, alreadyPlaced, MAP_AREAS_HINT) {
       lines.push(`    [WIKIPEDIA] "${w.title}": ${w.extract}`);
       if (w.coordinates) lines.push(`    [WIKIPEDIA] coords=[lat=${w.coordinates.lat}, lon=${w.coordinates.lon}]`);
     } else { lines.push(`    [WIKIPEDIA] нет данных`); }
+    if (web.wikidata) {
+      const wd = web.wikidata;
+      lines.push(`    [WIKIDATA] ${wd.id} "${wd.label}": ${wd.description}`);
+      if (wd.coordinates) lines.push(`    [WIKIDATA] coords=[lat=${wd.coordinates.lat}, lon=${wd.coordinates.lon}]`);
+    } else { lines.push(`    [WIKIDATA] нет данных`); }
     return lines.join('\n');
   }).join('\n\n');
 
@@ -366,8 +409,9 @@ async function runGeneration(API_KEY) {
         if (hasPl) webHits.pleiades++;
         if (hasWi) webHits.wikipedia++;
         if (!hasPl && !hasWi) webHits.none++;
-        emit({ type: 'web_search', id: nation.id, name: nation.name, pleiades: hasPl, wikipedia: hasWi });
-        log(`    ${nation.id}: ${hasPl ? 'Pleiades✓' : 'Pleiades✗'} ${hasWi ? 'Wiki✓' : 'Wiki✗'}`);
+        const hasWd = !!web.wikidata;
+        emit({ type: 'web_search', id: nation.id, name: nation.name, pleiades: hasPl, wikipedia: hasWi, wikidata: hasWd });
+        log(`    ${nation.id}: ${hasPl ? 'Pleiades✓' : 'Pleiades✗'} ${hasWi ? 'Wiki✓' : 'Wiki✗'} ${hasWd ? 'Wikidata✓' : 'Wikidata✗'}`);
       }
 
       // 2) Claude
