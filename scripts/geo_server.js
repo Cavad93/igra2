@@ -22,7 +22,7 @@ const clients = new Set();
 function emit(event) {
   const data = `data: ${JSON.stringify(event)}\n\n`;
   for (const res of clients) {
-    try { res.write(data); } catch {}
+    try { res.write(data); } catch { clients.delete(res); }
   }
 }
 
