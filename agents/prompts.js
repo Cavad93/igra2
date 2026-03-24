@@ -286,6 +286,85 @@ export function buildValidatorPrompt(ctx) {
 
 // ─── ПРОМПТ 5: Граф всех цепочек ─────────────────────────────────────────────
 
+// ─── ПРОМПТ 6: Исправление ошибок валидации ──────────────────────────────────
+// Вызывается когда validateChain или validateCrossChains находят ERR-ошибки.
+// ctx содержит:
+//   chain      — исходная цепочка с ошибками
+//   issues     — массив ошибок из validator.js
+//   allData    — справочные данные
+//   crossMode  — true если это межцепочечное исправление
+//   allChains  — (только при crossMode) все существующие цепочки
+
+export function buildFixPrompt(ctx) {
+  const { chain, issues, allData, crossMode = false, allChains = {} } = ctx;
+
+  // Только ERR-ошибки (WARN не требуют исправления)
+  const errors = issues.filter(i => i.severity === 'ERR');
+  const warnings = issues.filter(i => i.severity === 'WARN');
+
+  // Справочные данные для исправления
+  const refs = {
+    valid_building_ids: Object.keys(allData.BUILDINGS),
+    valid_good_ids:     Object.keys(allData.GOODS),
+    valid_class_ids:    Object.keys(allData.SOCIAL_CLASSES),
+    valid_biome_ids:    Object.keys(allData.BIOME_META).filter(k => k !== '_region_biomes'),
+    valid_nation_ids:   Object.keys(allData.NATIONS),
+    // Здания производящие этот товар
+    producing_buildings: Object.fromEntries(
+      Object.entries(allData.BUILDINGS).filter(([, b]) => {
+        const out = b.outputs ?? b.output ?? b.production_output ?? {};
+        return out[chain.good_id] !== undefined;
+      }).map(([id, b]) => [id, { name: b.name, worker_profession: b.worker_profession }])
+    ),
+    // biome_modifiers для этого товара
+    biome_modifiers_ref: Object.fromEntries(
+      Object.entries(allData.BIOME_META)
+        .filter(([k, v]) => k !== '_region_biomes' && typeof v === 'object')
+        .map(([k, v]) => [k, v.goods_bonus?.[chain.good_id] ?? 1.0])
+        .filter(([, v]) => v !== 1.0)
+    ),
+  };
+
+  // При межцепочечном исправлении добавляем сводку соседних цепочек
+  const crossContext = crossMode ? {
+    all_chain_ids: Object.keys(allChains),
+    chains_that_use_this_as_input: Object.entries(allChains)
+      .filter(([, c]) => (c.inputs ?? []).some(i => i.good === chain.good_id))
+      .map(([id]) => id),
+    chains_this_uses_as_input: (chain.inputs ?? []).map(i => i.good).filter(g => allChains[g]),
+  } : null;
+
+  const context = {
+    good_id:       chain.good_id,
+    current_chain: chain,
+    errors:        errors.map(e => ({ code: e.code, msg: e.msg })),
+    warnings:      warnings.map(w => ({ code: w.code, msg: w.msg })),
+    refs,
+    ...(crossContext ? { cross_chain_context: crossContext } : {}),
+  };
+
+  const system = SYSTEM_BASE;
+  const user = `${JSON.stringify(context, null, 2)}
+
+Задача: исправь ошибки в цепочке "${chain.good_id}" и верни ПОЛНЫЙ исправленный объект цепочки в JSON.
+
+ПРАВИЛА ИСПРАВЛЕНИЯ:
+- Исправляй ТОЛЬКО поля указанные в errors, остальные поля оставь без изменений
+- building должен быть из refs.valid_building_ids (предпочтительно из producing_buildings)
+- inputs[].good должны быть из refs.valid_good_ids
+- output.good должно совпадать с good_id
+- workers.primary_class и secondary_class должны быть из refs.valid_class_ids
+- workers.slave_ratio: число от 0.0 до 1.0
+- output_per_turn: положительное число
+- biome_modifiers: ключи только из refs.valid_biome_ids, значения из refs.biome_modifiers_ref
+- alternative_good: null или существующий good_id из refs.valid_good_ids (не равный good_id)
+- Верни ПОЛНЫЙ объект цепочки со всеми полями (не только исправленные)`;
+
+  return { system, user };
+}
+
+// ─── ПРОМПТ 5: Граф всех цепочек ─────────────────────────────────────────────
+
 export function buildGraphPrompt(ctx) {
   const { completeChainsData } = ctx;
 
