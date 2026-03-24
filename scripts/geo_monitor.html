@@ -217,15 +217,14 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 <script>
 // ─── Leaflet карта ─────────────────────────────────────────────────
 const map = L.map('map', { center: [35, 25], zoom: 3 });
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap',
-  className: 'map-tiles',
+L.tileLayer('https://cawm.lib.uiowa.edu/tiles/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://cawm.lib.uiowa.edu/" target="_blank">CAWM</a> · CC BY 4.0',
+  maxZoom: 10,
+  maxNativeZoom: 8,
+  minZoom: 2,
+  tileSize: 256,
+  errorTileUrl: '',
 }).addTo(map);
-
-// Тёмный фильтр для тайлов
-const style = document.createElement('style');
-style.textContent = '.map-tiles { filter: brightness(0.4) saturate(0.5) hue-rotate(180deg); }';
-document.head.appendChild(style);
 
 // Слои для наций
 const nationLayers = {};       // id → L.rectangle
