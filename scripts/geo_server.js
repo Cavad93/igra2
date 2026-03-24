@@ -598,3 +598,18 @@ server.listen(PORT, () => {
   console.log(`\n🗺  Geo Monitor запущен: http://localhost:${PORT}`);
   console.log('   Открой в браузере, введи API ключ и нажми "Старт"\n');
 });
+
+// Graceful shutdown — сохраняем результаты перед выходом
+function shutdown(signal) {
+  console.log(`\n${signal} получен — завершаем работу...`);
+  stopFlag = true;
+  // Закрываем все SSE соединения
+  for (const res of clients) { try { res.end(); } catch {} }
+  server.close(() => {
+    console.log('Сервер остановлен.');
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(0), 3000); // force exit через 3 сек
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT',  () => shutdown('SIGINT'));
