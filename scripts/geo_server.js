@@ -580,6 +580,23 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // ─── Прокси тайлов CAWM (обход CORS с localhost) ─────────────
+  if (url.pathname.startsWith('/tiles/')) {
+    const tilePath = url.pathname.replace('/tiles/', '');
+    const tileUrl  = `https://cawm.lib.uiowa.edu/tiles/${tilePath}`;
+    try {
+      const resp = await fetch(tileUrl, {
+        signal: AbortSignal.timeout(10000),
+        headers: { 'Referer': 'https://cawm.lib.uiowa.edu/' },
+      });
+      if (!resp.ok) { res.writeHead(resp.status); res.end(); return; }
+      const buf = Buffer.from(await resp.arrayBuffer());
+      res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' });
+      res.end(buf);
+    } catch { res.writeHead(502); res.end(); }
+    return;
+  }
+
   // ─── HTML страница ────────────────────────────────────────────
   if (url.pathname === '/') {
     if (fs.existsSync(HTML_PATH)) {

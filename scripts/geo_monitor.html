@@ -217,7 +217,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 <script>
 // ─── Leaflet карта ─────────────────────────────────────────────────
 const map = L.map('map', { center: [35, 25], zoom: 3 });
-L.tileLayer('https://cawm.lib.uiowa.edu/tiles/{z}/{x}/{y}.png', {
+L.tileLayer('/tiles/{z}/{x}/{y}.png', {
   attribution: '© <a href="https://cawm.lib.uiowa.edu/" target="_blank">CAWM</a> · CC BY 4.0',
   maxZoom: 10,
   maxNativeZoom: 8,
