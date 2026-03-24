@@ -244,7 +244,9 @@ function patchNationRegions(lines, nationId, newRegions) {
   for (let i = lineIdx + 1; i < searchEnd; i++) {
     const m = regionsRe.exec(lines[i]);
     if (m) {
-      lines[i] = `${m[1]}${JSON.stringify(newRegions)}`;
+      // Preserve trailing comma if original line had one
+      const trailingComma = lines[i].trimEnd().endsWith(',') ? ',' : '';
+      lines[i] = `${m[1]}${JSON.stringify(newRegions)}${trailingComma}`;
       return true;
     }
   }
