@@ -231,47 +231,67 @@ document.head.appendChild(style);
 const nationLayers = {};       // id → L.rectangle
 const nationData   = {};       // id → geo data
 
+// Fallback цвет по приоритету если enriched нет
 function colorByPriority(priority) {
-  if (priority >= 8) return '#e94560';   // великая держава — красный
-  if (priority >= 5) return '#ffa726';   // царство — оранжевый
-  if (priority >= 3) return '#66bb6a';   // полис — зелёный
-  return '#42a5f5';                       // полис/город — синий
+  if (priority >= 8) return '#e94560';
+  if (priority >= 5) return '#ffa726';
+  if (priority >= 3) return '#66bb6a';
+  return '#42a5f5';
 }
 
-function addNationToMap(id, name, geo) {
+function addNationToMap(id, name, geo, enriched) {
   if (!geo?.bbox) return;
   const { latMin, latMax, lonMin, lonMax } = geo.bbox;
-  const color = colorByPriority(geo.priority ?? 3);
+  const color = enriched?.color ?? colorByPriority(geo.priority ?? 3);
   if (nationLayers[id]) map.removeLayer(nationLayers[id]);
   const rect = L.rectangle([[latMin, lonMin], [latMax, lonMax]], {
     color,
     weight: 1,
-    fillOpacity: 0.25,
+    fillOpacity: 0.3,
     fillColor: color,
   }).addTo(map);
-  rect.bindTooltip(`<b>${name}</b><br/>P:${geo.priority ?? '?'}<br/>${geo.notes?.slice(0,80) ?? ''}`, { sticky: true });
+
+  const tip = [
+    `<b>${name}</b>`,
+    enriched?.ruler    ? `👑 ${enriched.ruler}` : null,
+    enriched?.culture  ? `🏛 ${enriched.culture}` : null,
+    enriched?.religion ? `✝ ${enriched.religion}` : null,
+    enriched?.population ? `👥 ${enriched.population.toLocaleString()}` : null,
+    enriched?.military_style ? `⚔ ${enriched.military_style}` : null,
+  ].filter(Boolean).join('<br/>');
+  rect.bindTooltip(tip, { sticky: true });
+
   rect.on('click', () => {
-    document.getElementById('batchInfo').textContent = `${name} (${id}): ${geo.notes ?? ''}`;
+    const info = [name, enriched?.ruler, enriched?.culture, enriched?.religion].filter(Boolean).join(' · ');
+    document.getElementById('batchInfo').textContent = info;
   });
   nationLayers[id] = rect;
-  nationData[id]   = geo;
+  nationData[id]   = { geo, enriched };
 }
 
-// Загружаем уже существующие данные
-fetch('/nation_geo.js').then(r => r.text()).then(code => {
+// Загружаем уже существующие данные (geo + enriched)
+Promise.all([
+  fetch('/nation_geo.js').then(r => r.text()).catch(() => ''),
+  fetch('/nation_enriched.js').then(r => r.text()).catch(() => ''),
+]).then(([geoCode, enrichedCode]) => {
   try {
-    const match = code.match(/var NATION_GEO\s*=\s*(\{[\s\S]*\});/);
-    if (!match) return;
-    const data = JSON.parse(match[1]);
+    const geoMatch = geoCode.match(/var NATION_GEO\s*=\s*(\{[\s\S]*?\});\s*$/m);
+    const encMatch = enrichedCode.match(/var NATION_ENRICHED\s*=\s*(\{[\s\S]*?\});\s*$/m);
+    const geoData  = geoMatch  ? JSON.parse(geoMatch[1])  : {};
+    const encData  = encMatch  ? JSON.parse(encMatch[1])  : {};
     let count = 0;
-    for (const [id, geo] of Object.entries(data)) {
-      addNationToMap(id, id, geo);
+    for (const [id, geo] of Object.entries(geoData)) {
+      addNationToMap(id, id, geo, encData[id]);
       count++;
     }
-    addLog(`Загружено ${count} уже обработанных наций`, 'info');
-    statDone.textContent = count;
-  } catch(e) { addLog('Ошибка загрузки nation_geo.js: ' + e.message, 'warn'); }
-}).catch(() => addLog('nation_geo.js не найден — начинаем с нуля', 'info'));
+    if (count > 0) {
+      addLog(`Загружено ${count} уже обработанных наций`, 'info');
+      statDone.textContent = count;
+    } else {
+      addLog('nation_geo.js не найден — начинаем с нуля', 'info');
+    }
+  } catch(e) { addLog('Ошибка загрузки: ' + e.message, 'warn'); }
+});
 
 // Загружаем области карты
 fetch('/map_areas.json').then(r => r.json()).then(areas => {
@@ -319,11 +339,13 @@ function addLog(msg, cls = 'nation') {
   while (logPanel.children.length > 500) logPanel.removeChild(logPanel.firstChild);
 }
 
-function addNationItem(id, name, geo) {
+function addNationItem(id, name, geo, enriched) {
   const div = document.createElement('div');
   div.className = 'nation-item';
-  div.innerHTML = `<span class="nat-name">${name}</span> <span class="nat-id">${id}</span>
-    <span class="nat-src">[P:${geo.priority ?? '?'}]</span>`;
+  const color  = enriched?.color ?? '#888';
+  const cult   = enriched?.culture   ? `<span class="nat-src">${enriched.culture}</span>` : '';
+  const rel    = enriched?.religion  ? `<span class="nat-src"> · ${enriched.religion}</span>` : '';
+  div.innerHTML = `<span class="nat-color" style="display:inline-block;width:10px;height:10px;background:${color};border-radius:2px;margin-right:4px"></span><span class="nat-name">${name}</span> ${cult}${rel}`;
   div.onclick = () => {
     if (nationLayers[id]) map.fitBounds(nationLayers[id].getBounds().pad(0.5));
   };
@@ -354,10 +376,9 @@ function connectSSE() {
     }
 
     if (ev.type === 'existing') {
-      // Уже обработанные нации (загружены из файла)
       let count = 0;
       for (const [id, geo] of Object.entries(ev.data)) {
-        addNationToMap(id, id, geo);
+        addNationToMap(id, id, geo, ev.enriched?.[id]);
         count++;
       }
       if (count > 0) addLog(`Восстановлено ${count} ранее обработанных наций`, 'info');
@@ -386,11 +407,12 @@ function connectSSE() {
     }
 
     if (ev.type === 'batch_done') {
-      for (const { id, name, geo } of ev.results) {
-        addNationToMap(id, name, geo);
-        addNationItem(id, name, geo);
-        addLog(`  ✓ ${name} [${geo.bbox.latMin.toFixed(1)},${geo.bbox.latMax.toFixed(1)}]×[${geo.bbox.lonMin.toFixed(1)},${geo.bbox.lonMax.toFixed(1)}]`, 'info');
-        // Панорамируем к последней нации
+      for (const { id, name, geo, enriched } of ev.results) {
+        addNationToMap(id, name, geo, enriched);
+        addNationItem(id, name, geo, enriched);
+        const coords = `[${geo.bbox.latMin.toFixed(1)},${geo.bbox.latMax.toFixed(1)}]×[${geo.bbox.lonMin.toFixed(1)},${geo.bbox.lonMax.toFixed(1)}]`;
+        const cult = enriched?.culture ? ` | ${enriched.culture}` : '';
+        addLog(`  ✓ ${name} ${coords}${cult}`, 'info');
         if (nationLayers[id]) map.panTo([(geo.bbox.latMin + geo.bbox.latMax) / 2, (geo.bbox.lonMin + geo.bbox.lonMax) / 2]);
       }
       updateProgress(ev.total_so_far);
@@ -471,11 +493,15 @@ legend.onAdd = () => {
   const div = L.DomUtil.create('div');
   div.style.cssText = 'background:rgba(0,0,0,0.7);padding:8px;border-radius:4px;font-size:11px;color:#eee;line-height:1.8';
   div.innerHTML = `
-    <b>Приоритет</b><br>
-    <span style="color:#e94560">■</span> 8-10 Великая держава<br>
-    <span style="color:#ffa726">■</span> 5-7 Царство<br>
-    <span style="color:#66bb6a">■</span> 3-4 Полис<br>
-    <span style="color:#42a5f5">■</span> 1-2 Город<br>
+    <b>Культурные группы</b><br>
+    <span style="color:#4E7FA0">■</span> Эллинский<br>
+    <span style="color:#A04E4E">■</span> Римский/Италийский<br>
+    <span style="color:#A07A2E">■</span> Персидский<br>
+    <span style="color:#A09A2E">■</span> Египетский<br>
+    <span style="color:#3E7A3E">■</span> Кельтский<br>
+    <span style="color:#7A3E8A">■</span> Индийский<br>
+    <span style="color:#8A7A2E">■</span> Степной<br>
+    <span style="color:#2E6A3E">■</span> Китайский<br>
     <span style="color:#334;opacity:.5">□</span> Зона карты
   `;
   return div;

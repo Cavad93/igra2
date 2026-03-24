@@ -495,6 +495,18 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // ─── Данные nation_enriched.js ───────────────────────────────
+  if (url.pathname === '/nation_enriched.js') {
+    const fpath = path.join(ROOT, 'data', 'nation_enriched.js');
+    if (fs.existsSync(fpath)) {
+      res.writeHead(200, { 'Content-Type': 'application/javascript' });
+      res.end(fs.readFileSync(fpath, 'utf8'));
+    } else {
+      res.writeHead(404); res.end();
+    }
+    return;
+  }
+
   // ─── Данные map_areas.json ────────────────────────────────────
   if (url.pathname === '/map_areas.json') {
     const fpath = path.join(ROOT, 'data', 'map_areas.json');
