@@ -348,11 +348,15 @@ async function runGeneration(API_KEY) {
       emit({ type: 'batch_start', batch_idx: bi + 1, total_batches: batches.length, ids });
       log(`\nБатч ${bi + 1}/${batches.length}: ${ids.join(', ')}`);
 
-      // 1) Web-поиск
+      // 1) Web-поиск — весь батч параллельно
+      log(`  Поиск Pleiades+Wikipedia (${batch.length} наций параллельно)...`);
+      const webResults = await Promise.all(batch.map(n => gatherWebData(n)));
+      if (stopFlag) break;
+
       const webDataMap = {};
-      for (const nation of batch) {
-        if (stopFlag) break;
-        const web = await gatherWebData(nation);
+      for (let wi = 0; wi < batch.length; wi++) {
+        const nation = batch[wi];
+        const web = webResults[wi];
         webDataMap[nation.id] = web;
         const hasPl = !!web.pleiades;
         const hasWi = !!web.wikipedia;
@@ -361,9 +365,7 @@ async function runGeneration(API_KEY) {
         if (!hasPl && !hasWi) webHits.none++;
         emit({ type: 'web_search', id: nation.id, name: nation.name, pleiades: hasPl, wikipedia: hasWi });
         log(`    ${nation.id}: ${hasPl ? 'Pleiades✓' : 'Pleiades✗'} ${hasWi ? 'Wiki✓' : 'Wiki✗'}`);
-        await sleep(200);
       }
-      if (stopFlag) break;
 
       // 2) Claude
       try {
