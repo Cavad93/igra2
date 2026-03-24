@@ -244,7 +244,8 @@ async function callClaude(system, user, API_KEY) {
       const data = await resp.json();
       const raw  = data?.content?.[0]?.text ?? '';
       const cleaned = raw.replace(/^```json\s*/i, '').replace(/^```/, '').replace(/```$/, '')
-        .replace(/\/\/[^\n]*/g, '').trim();
+        .replace(/^\s*\/\/[^\n]*/gm, '')  // только // в начале строки (не внутри URL)
+        .trim();
       return JSON.parse(cleaned);
     } catch (e) {
       if (attempt === 2) throw e;
