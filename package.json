@@ -1,0 +1,12 @@
+{
+  "name": "pax-historia-chain-builder",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "node agents/chain_builder.js",
+    "validate": "node agents/validate_inputs.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
