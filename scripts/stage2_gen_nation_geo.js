@@ -24,6 +24,19 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
 
+// ── Загрузка географических областей из игровой карты ─────────────
+const MAP_AREAS_PATH = path.join(ROOT, 'data', 'map_areas.json');
+const MAP_AREAS = fs.existsSync(MAP_AREAS_PATH)
+  ? JSON.parse(fs.readFileSync(MAP_AREAS_PATH, 'utf8'))
+  : {};
+/// Строка для промпта: все области с bbox
+const MAP_AREAS_HINT = Object.entries(MAP_AREAS)
+  .filter(([, v]) => v.count >= 3) // только значимые области
+  .map(([name, v]) =>
+    `  ${name}: lat[${v.latMin}..${v.latMax}] lon[${v.lonMin}..${v.lonMax}]`
+  ).join('\n');
+console.log(`Загружено ${Object.keys(MAP_AREAS).length} географических областей из map.js`);
+
 const API_KEY = process.env.ANTHROPIC_API_KEY;
 if (!API_KEY) {
   console.error('Установи ANTHROPIC_API_KEY');
@@ -310,14 +323,18 @@ ${placedContext}
   }
 }
 
+ГЕОГРАФИЧЕСКИЕ ОБЛАСТИ ИГРОВОЙ КАРТЫ (реальные координаты из map.js):
+${MAP_AREAS_HINT}
+
 ПРАВИЛА:
+- bbox нации ДОЛЖЕН попадать в соответствующую область карты выше
 - Если есть данные Pleiades с reprPoint — используй их как координаты столицы
 - Если есть данные Pleiades с bbox — используй как основу для bbox нации
 - Если есть Wikipedia coords — используй как дополнительную проверку
 - НЕ перекрывай bbox уже размещённых наций (список выше)
 - Для мелких полисов bbox ~0.5-2 градуса, для племён ~2-5, для царств ~5-15, для империй ~15-30
 - priority: маленький город=1-2, полис=3-4, царство=5-7, великая держава=8-10
-- В поле notes укажи: "Pleiades" если использовал Pleiades, "Wikipedia" если Wikipedia, "history" если только знания
+- В поле notes укажи область карты (Греция/Малая Азия/...) и источник (Pleiades/Wikipedia/history)
 
 Ориентиры:
 - Афины: lat 37.5-38.5, lon 22.5-24.5

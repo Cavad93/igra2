@@ -1,0 +1,461 @@
+{
+  "Китай": {
+    "latMin": 20.39,
+    "latMax": 54.95,
+    "lonMin": 100.65,
+    "lonMax": 144.81,
+    "centerLat": 37.88,
+    "centerLon": 123.93,
+    "count": 534
+  },
+  "Малая Азия": {
+    "latMin": 36.03,
+    "latMax": 41.89,
+    "lonMin": 26.1,
+    "lonMax": 39.94,
+    "centerLat": 38.68,
+    "centerLon": 32.79,
+    "count": 517
+  },
+  "Европа": {
+    "latMin": 48.39,
+    "latMax": 67.95,
+    "lonMin": 16.12,
+    "lonMax": 39.99,
+    "centerLat": 55.69,
+    "centerLon": 27.51,
+    "count": 250
+  },
+  "Египет": {
+    "latMin": 22.14,
+    "latMax": 31.49,
+    "lonMin": 25.11,
+    "lonMax": 36.41,
+    "centerLat": 28.16,
+    "centerLon": 31.64,
+    "count": 247
+  },
+  "Нумидия": {
+    "latMin": 32.12,
+    "latMax": 36.96,
+    "lonMin": -1.98,
+    "lonMax": 9.98,
+    "centerLat": 35.26,
+    "centerLon": 6.35,
+    "count": 192
+  },
+  "Германия": {
+    "latMin": 47.01,
+    "latMax": 57.55,
+    "lonMin": 6.05,
+    "lonMax": 17.99,
+    "centerLat": 49.96,
+    "centerLon": 12.15,
+    "count": 161
+  },
+  "Центральная Азия": {
+    "latMin": 36.11,
+    "latMax": 54.79,
+    "lonMin": 55.08,
+    "lonMax": 99.67,
+    "centerLat": 45.88,
+    "centerLon": 75.57,
+    "count": 158
+  },
+  "Мавритания": {
+    "latMin": 30.03,
+    "latMax": 35.41,
+    "lonMin": -9.69,
+    "lonMax": -2.12,
+    "centerLat": 32.74,
+    "centerLon": -5.83,
+    "count": 141
+  },
+  "Скифия": {
+    "latMin": 42.01,
+    "latMax": 51.99,
+    "lonMin": 29.07,
+    "lonMax": 49.9,
+    "centerLat": 47.44,
+    "centerLon": 38.12,
+    "count": 133
+  },
+  "Греция": {
+    "latMin": 36.64,
+    "latMax": 40.45,
+    "lonMin": 20.57,
+    "lonMax": 26.49,
+    "centerLat": 38.46,
+    "centerLon": 23.07,
+    "count": 133
+  },
+  "Ливия": {
+    "latMin": 27.05,
+    "latMax": 33.06,
+    "lonMin": 10.11,
+    "lonMax": 21.9,
+    "centerLat": 30.53,
+    "centerLon": 16,
+    "count": 132
+  },
+  "Африка": {
+    "latMin": -30.12,
+    "latMax": 37.15,
+    "lonMin": -18,
+    "lonMax": 50.45,
+    "centerLat": 23.77,
+    "centerLon": 20.78,
+    "count": 124
+  },
+  "Индия": {
+    "latMin": 8.25,
+    "latMax": 35.47,
+    "lonMin": 61.49,
+    "lonMax": 99.75,
+    "centerLat": 22.11,
+    "centerLon": 81.76,
+    "count": 121
+  },
+  "Армения": {
+    "latMin": 37.98,
+    "latMax": 41.14,
+    "lonMin": 42.1,
+    "lonMax": 47.61,
+    "centerLat": 39.45,
+    "centerLon": 44.65,
+    "count": 107
+  },
+  "Иберия": {
+    "latMin": 35.53,
+    "latMax": 43.84,
+    "lonMin": -8.43,
+    "lonMax": 3.82,
+    "centerLat": 37.92,
+    "centerLon": -1.6,
+    "count": 92
+  },
+  "Цизальпийская Галлия": {
+    "latMin": 44.27,
+    "latMax": 46.86,
+    "lonMin": 8.03,
+    "lonMax": 13.92,
+    "centerLat": 45.57,
+    "centerLon": 10.87,
+    "count": 86
+  },
+  "Сирия": {
+    "latMin": 33,
+    "latMax": 37.43,
+    "lonMin": 35.54,
+    "lonMax": 42.35,
+    "centerLat": 34.77,
+    "centerLon": 37.68,
+    "count": 82
+  },
+  "Галлия": {
+    "latMin": 43.45,
+    "latMax": 50.98,
+    "lonMin": -3.89,
+    "lonMax": 8.37,
+    "centerLat": 47.01,
+    "centerLon": 5.42,
+    "count": 74
+  },
+  "Американский континент": {
+    "latMin": -51.68,
+    "latMax": 75.76,
+    "lonMin": -170.64,
+    "lonMax": -21.94,
+    "centerLat": 17.43,
+    "centerLon": -86.04,
+    "count": 64
+  },
+  "Карфаген": {
+    "latMin": 33.05,
+    "latMax": 37.37,
+    "lonMin": 9.49,
+    "lonMax": 11.57,
+    "centerLat": 35.36,
+    "centerLon": 10.52,
+    "count": 41
+  },
+  "Сибирь": {
+    "latMin": 50.58,
+    "latMax": 72.54,
+    "lonMin": 61,
+    "lonMax": 167.01,
+    "centerLat": 60.21,
+    "centerLon": 97.23,
+    "count": 41
+  },
+  "Иудея": {
+    "latMin": 31.51,
+    "latMax": 32.96,
+    "lonMin": 34.63,
+    "lonMax": 36.46,
+    "centerLat": 32.24,
+    "centerLon": 35.41,
+    "count": 39
+  },
+  "Апулия": {
+    "latMin": 39.92,
+    "latMax": 41.74,
+    "lonMin": 15.03,
+    "lonMax": 18.37,
+    "centerLat": 40.75,
+    "centerLon": 16.41,
+    "count": 37
+  },
+  "Македония": {
+    "latMin": 40.52,
+    "latMax": 42.31,
+    "lonMin": 20.69,
+    "lonMax": 24.22,
+    "centerLat": 41.04,
+    "centerLon": 22.49,
+    "count": 33
+  },
+  "Иллирия": {
+    "latMin": 40.1,
+    "latMax": 45.48,
+    "lonMin": 13.67,
+    "lonMax": 20.41,
+    "centerLat": 43,
+    "centerLon": 17.52,
+    "count": 29
+  },
+  "Лаций": {
+    "latMin": 41.39,
+    "latMax": 42.74,
+    "lonMin": 11.93,
+    "lonMax": 13.88,
+    "centerLat": 42.15,
+    "centerLon": 12.97,
+    "count": 28
+  },
+  "Этрурия": {
+    "latMin": 42.5,
+    "latMax": 44.14,
+    "lonMin": 10.16,
+    "lonMax": 12.42,
+    "centerLat": 43.34,
+    "centerLon": 11.35,
+    "count": 28
+  },
+  "Аравия": {
+    "latMin": 15.03,
+    "latMax": 28.6,
+    "lonMin": 34.14,
+    "lonMax": 55.74,
+    "centerLat": 21.1,
+    "centerLon": 43.64,
+    "count": 27
+  },
+  "Британия": {
+    "latMin": 51.14,
+    "latMax": 58.95,
+    "lonMin": -5.12,
+    "lonMax": 2.45,
+    "centerLat": 54.28,
+    "centerLon": -2.36,
+    "count": 27
+  },
+  "Сардиния": {
+    "latMin": 39.04,
+    "latMax": 41.14,
+    "lonMin": 8.24,
+    "lonMax": 9.63,
+    "centerLat": 40.11,
+    "centerLon": 9.02,
+    "count": 27
+  },
+  "Дакия": {
+    "latMin": 43.1,
+    "latMax": 47.69,
+    "lonMin": 22.08,
+    "lonMax": 29.61,
+    "centerLat": 45.02,
+    "centerLon": 26.78,
+    "count": 27
+  },
+  "Фракия": {
+    "latMin": 41.06,
+    "latMax": 42.84,
+    "lonMin": 24.56,
+    "lonMax": 28.87,
+    "centerLat": 41.62,
+    "centerLon": 26.83,
+    "count": 25
+  },
+  "Месопотамия": {
+    "latMin": 29.81,
+    "latMax": 37.49,
+    "lonMin": 40.04,
+    "lonMax": 49.43,
+    "centerLat": 34.55,
+    "centerLon": 45.13,
+    "count": 20
+  },
+  "Киренаика": {
+    "latMin": 29.73,
+    "latMax": 32.76,
+    "lonMin": 22.04,
+    "lonMax": 25.05,
+    "centerLat": 31.55,
+    "centerLon": 23.44,
+    "count": 20
+  },
+  "Персия": {
+    "latMin": 26.63,
+    "latMax": 37.67,
+    "lonMin": 50.36,
+    "lonMax": 59.2,
+    "centerLat": 32.45,
+    "centerLon": 54.79,
+    "count": 18
+  },
+  "Кампания": {
+    "latMin": 40.63,
+    "latMax": 41.77,
+    "lonMin": 13.51,
+    "lonMax": 14.98,
+    "centerLat": 41.27,
+    "centerLon": 14.34,
+    "count": 17
+  },
+  "Лигурия": {
+    "latMin": 43.91,
+    "latMax": 44.75,
+    "lonMin": 7.63,
+    "lonMax": 9.99,
+    "centerLat": 44.45,
+    "centerLon": 8.65,
+    "count": 15
+  },
+  "Паннония": {
+    "latMin": 45.88,
+    "latMax": 48.44,
+    "lonMin": 15.19,
+    "lonMax": 20.48,
+    "centerLat": 46.81,
+    "centerLon": 17.74,
+    "count": 13
+  },
+  "Умбрия": {
+    "latMin": 42.84,
+    "latMax": 43.92,
+    "lonMin": 12.59,
+    "lonMax": 13.47,
+    "centerLat": 43.33,
+    "centerLon": 12.99,
+    "count": 10
+  },
+  "Корсика": {
+    "latMin": 41.59,
+    "latMax": 42.86,
+    "lonMin": 8.78,
+    "lonMax": 9.45,
+    "centerLat": 42.2,
+    "centerLon": 9.12,
+    "count": 10
+  },
+  "Норик": {
+    "latMin": 46.01,
+    "latMax": 46.94,
+    "lonMin": 14.03,
+    "lonMax": 14.99,
+    "centerLat": 46.42,
+    "centerLon": 14.51,
+    "count": 9
+  },
+  "Калабрия": {
+    "latMin": 38.48,
+    "latMax": 39.95,
+    "lonMin": 15.92,
+    "lonMax": 16.58,
+    "centerLat": 39.21,
+    "centerLon": 16.28,
+    "count": 9
+  },
+  "Понт": {
+    "latMin": 40.24,
+    "latMax": 41.15,
+    "lonMin": 40,
+    "lonMax": 41.43,
+    "centerLat": 40.75,
+    "centerLon": 40.59,
+    "count": 9
+  },
+  "Скандинавия": {
+    "latMin": 58.07,
+    "latMax": 63.71,
+    "lonMin": 7.74,
+    "lonMax": 15.37,
+    "centerLat": 60.51,
+    "centerLon": 12.2,
+    "count": 7
+  },
+  "Сицилия": {
+    "latMin": 36.78,
+    "latMax": 38.11,
+    "lonMin": 12.01,
+    "lonMax": 15.74,
+    "centerLat": 37.68,
+    "centerLon": 14.57,
+    "count": 4
+  },
+  "Австралия": {
+    "latMin": -42.27,
+    "latMax": -16.14,
+    "lonMin": 132.17,
+    "lonMax": 150.01,
+    "centerLat": -27.15,
+    "centerLon": 142.88,
+    "count": 3
+  },
+  "Финикия": {
+    "latMin": 33.11,
+    "latMax": 33.33,
+    "lonMin": 35.2,
+    "lonMax": 35.36,
+    "centerLat": 33.19,
+    "centerLon": 35.3,
+    "count": 3
+  },
+  "Эпир": {
+    "latMin": 39.58,
+    "latMax": 39.88,
+    "lonMin": 19.77,
+    "lonMax": 20.33,
+    "centerLat": 39.73,
+    "centerLon": 20.08,
+    "count": 3
+  },
+  "Антарктида": {
+    "latMin": -78.04,
+    "latMax": -65.57,
+    "lonMin": -42.77,
+    "lonMax": 103.51,
+    "centerLat": -71.8,
+    "centerLon": 30.37,
+    "count": 2
+  },
+  "Япония": {
+    "latMin": 44.37,
+    "latMax": 45.19,
+    "lonMin": 146.17,
+    "lonMax": 147.99,
+    "centerLat": 44.78,
+    "centerLon": 147.08,
+    "count": 2
+  },
+  "Самний": {
+    "latMin": 41.89,
+    "latMax": 41.89,
+    "lonMin": 14.94,
+    "lonMax": 14.94,
+    "centerLat": 41.89,
+    "centerLon": 14.94,
+    "count": 1
+  }
+}
