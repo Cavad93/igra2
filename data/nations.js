@@ -306,7 +306,7 @@ const INITIAL_GAME_STATE = {
         active_transition: null,
       },
 
-      regions: ['r62', 'r96', 'r99', 'r101', 'r112', 'r113', 'r116', 'r119', 'r201', 'r210', 'r211', 'r214', 'r215', 'r216', 'r217', 'r218', 'r219', 'r220', 'r221', 'r222', 'r223', 'r225', 'r228', 'r229', 'r230', 'r280', 'r342', 'r349', 'r664', 'r665', 'r666', 'r667', 'r668', 'r669', 'r670', 'r671', 'r672', 'r673', 'r674', 'r675', 'r676', 'r677', 'r678', 'r679', 'r680', 'r811', 'r812', 'r813', 'r815', 'r816', 'r817', 'r818', 'r819', 'r820', 'r821', 'r822', 'r823', 'r826', 'r828', 'r2460', 'r2461', 'r2462', 'r2463', 'r2464', 'r2465', 'r2466', 'r2467', 'r2468', 'r2470', 'r2471', 'r2472', 'r2473', 'r2474', 'r2475', 'r2476', 'r2477', 'r2478', 'r2479', 'r2480', 'r2481', 'r2482', 'r2505', 'r2506', 'r2507', 'r2508', 'r2509', 'r2510', 'r2511', 'r2512', 'r2513', 'r2514', 'r2515', 'r2516', 'r2517', 'r2518', 'r2519', 'r2520', 'r2521', 'r2522', 'r2523', 'r2524', 'r2525', 'r2526', 'r2527', 'r2528', 'r2529', 'r2530', 'r2531', 'r2532', 'r2533', 'r2534', 'r2535', 'r2536', 'r2537', 'r2538', 'r2539', 'r2540', 'r2541', 'r2542', 'r2543', 'r2544', 'r2545', 'r2546', 'r2547', 'r2548', 'r2549', 'r2550', 'r2551', 'r2552', 'r2553', 'r2554', 'r2555', 'r2556', 'r2557', 'r2559', 'r2560', 'r2561', 'r2562', 'r2563', 'r2564', 'r2565', 'r2568', 'r2569', 'r2570', 'r2571', 'r2572', 'r2573', 'r2574', 'r2575', 'r2576', 'r2577', 'r2578', 'r2579', 'r2580', 'r2581', 'r2582', 'r2583', 'r2584', 'r2585', 'r2586', 'r2587', 'r2588', 'r2589', 'r2590', 'r2591', 'r2592', 'r2593', 'r2594', 'r2595', 'r2596', 'r2597', 'r2598', 'r2599', 'r2600', 'r2601', 'r2602', 'r2603', 'r2604', 'r2605', 'r2606', 'r2607', 'r2608', 'r2609', 'r2610', 'r2611', 'r2614', 'r2616', 'r2617', 'r2618', 'r2619', 'r2620', 'r2621', 'r2622', 'r2623', 'r2624', 'r2625', 'r2626', 'r2627', 'r2628', 'r2629', 'r2630', 'r2631', 'r2632', 'r2633', 'r2634', 'r2635', 'r2636', 'r2637', 'r2638', 'r2639', 'r2640', 'r2641', 'r2642', 'r2643', 'r2644', 'r2645', 'r2646', 'r2647', 'r2648', 'r2649', 'r2650', 'r2651', 'r2652', 'r2653', 'r2654', 'r2655', 'r2656', 'r2657', 'r2658', 'r2659', 'r2660', 'r2661', 'r2662', 'r2663', 'r2664', 'r2665', 'r2666', 'r2667', 'r2668', 'r2669', 'r2670', 'r2671', 'r2672', 'r2673', 'r2674', 'r2675', 'r2676', 'r2677', 'r2678', 'r2679', 'r2680', 'r2684', 'r2685', 'r2686', 'r2687', 'r2688', 'r2689', 'r2690', 'r2691', 'r2692', 'r2693', 'r2694', 'r2695', 'r2696', 'r2697', 'r2698', 'r2699', 'r2700', 'r2701', 'r2702', 'r2707', 'r2708', 'r2709', 'r2710', 'r2711', 'r2712', 'r2713', 'r2714', 'r2715', 'r2716', 'r2717', 'r2718', 'r2720', 'r2721', 'r2722', 'r2723', 'r2724', 'r2725', 'r2726', 'r2727', 'r2728', 'r2729', 'r2730', 'r2731', 'r2732', 'r2733', 'r2734', 'r2735', 'r2736', 'r2737', 'r2738', 'r2739', 'r2740', 'r2741', 'r2742', 'r2743', 'r2744', 'r2745', 'r2746', 'r2747', 'r2748', 'r2749', 'r2750', 'r2751', 'r2752', 'r2753', 'r2754', 'r2755', 'r2756', 'r2757', 'r2758', 'r2759', 'r2760', 'r2761', 'r2762', 'r2763', 'r2764', 'r2765', 'r2766', 'r2767', 'r2768', 'r2769', 'r2770', 'r2771', 'r2772', 'r2773', 'r2774', 'r2775', 'r2776', 'r2777', 'r2778', 'r2779', 'r2780', 'r2781', 'r2782', 'r2783', 'r2784', 'r2785', 'r2786', 'r2787', 'r2788', 'r2789', 'r2790', 'r2791', 'r2792', 'r2793', 'r2794', 'r2795', 'r2796', 'r2797', 'r2798', 'r2799', 'r2800', 'r2801', 'r2802', 'r2803', 'r2804', 'r2805', 'r2806', 'r2807', 'r2808', 'r2809', 'r2810', 'r2811', 'r2812', 'r2813', 'r2814', 'r2815', 'r2816', 'r2817', 'r2818', 'r2819', 'r2820', 'r2821', 'r2822', 'r2823', 'r2824', 'r2825', 'r2826', 'r2827', 'r2828', 'r2829', 'r2830', 'r2831', 'r2832', 'r2833', 'r2834', 'r2835', 'r2838', 'r2839', 'r2840', 'r2841', 'r2842', 'r2843', 'r2844', 'r2846', 'r2847', 'r2919'],
+      regions: []
 
       population: {
         total: 210000,
@@ -472,7 +472,7 @@ const INITIAL_GAME_STATE = {
         active_transition: null,
       },
 
-      regions: ["r52","r54","r55","r102","r245","r246","r249","r2402","r2409","r2410","r2411","r2412","r2413","r2414","r2415","r2416","r2417","r2418","r2419","r2420","r2422","r2423","r2424","r2425","r2427","r2428","r2429","r2431","r2432","r2433","r2434","r2435","r2436","r2450","r2462","r2463","r2464"],
+      regions: ["r55","r246","r249","r2402","r2409","r2410","r2411","r2412","r2413","r2414","r2415","r2416","r2417","r2418","r2419","r2420","r2422","r2423","r2424","r2425"]
 
       population: {
         total: 470000,
@@ -595,7 +595,7 @@ const INITIAL_GAME_STATE = {
         active_transition: null,
       },
 
-      regions: ["r123","r124","r193","r195","r455","r456","r457","r1011","r2961","r3221","r3222","r3223","r3228","r3229","r3230","r3231","r3232","r3233","r3234","r3235","r3236","r3237","r3238","r3239","r3240","r3241","r3242","r3243","r3244","r3245","r3246","r3247","r3248","r3249","r3250","r3251","r3252","r3253","r3254","r3255","r3256","r3257","r3258","r3259","r3260","r3261","r3262","r3263","r3264","r3265","r3266","r3267","r3268","r3269","r3283","r3284","r3285","r3286","r3287","r3288","r3289","r3290","r3291","r3292","r3293","r3294","r3295","r3296","r3297","r3298","r3299","r3300","r3301","r3308","r3309","r3310","r3311","r3312","r3313","r3314","r3315","r3316","r3317","r3318","r3319","r3320","r3321","r3322","r3323","r3324","r3325","r3326","r3327","r3328","r3329","r3330","r3331","r3332","r3333","r3334","r3335","r3336","r3337","r3338","r3339","r3340","r3341","r3342","r3343","r3344","r3345","r3346","r3347","r3348","r3349","r3350","r3351","r3352","r3353","r3354","r3355","r3356","r3357","r3358","r3359","r3360","r3361","r3362","r3363","r3364","r3365","r3366","r3367","r3368","r3369","r3370","r3371","r3372","r3373","r3374","r3375","r3376","r3377","r3379","r3380","r3381","r3382","r3383","r3394","r3395","r3403","r3404","r3405","r3406","r3407","r3408","r3409","r3410","r3411","r3412","r3413","r3414","r3417","r3420","r3432","r3438","r3439","r3440","r3441","r3443"],
+      regions: ["r123","r124","r193","r195","r455","r456","r457","r1011","r2961","r3221","r3222","r3223","r3228","r3229","r3230","r3231","r3232","r3233","r3234","r3235","r3236","r3237","r3238","r3239","r3240","r3241","r3242","r3243","r3244","r3245","r3246","r3247","r3248","r3249","r3250","r3251","r3252","r3253","r3254","r3255","r3256","r3257","r3258","r3259","r3260","r3261","r3262","r3263","r3264","r3265","r3266","r3267","r3268","r3269","r3283","r3284","r3285","r3286","r3287","r3288","r3289","r3290","r3293","r3294","r3295","r3296","r3297","r3298","r3299","r3300","r3301","r3344","r3345","r3346","r3347","r3348","r3349","r3350","r3351","r3352","r3353","r3354","r3355","r3356","r3357","r3358","r3359","r3360","r3361","r3362","r3367","r3368","r3369","r3370","r3376","r3377","r3379","r3380","r3381","r3383","r3394","r3395","r3404","r3405","r3407","r3408","r3409","r3410","r3411","r3412","r3413","r3414","r3417","r3420","r3432","r3438","r3439","r3440","r3441"]
 
       population: {
         total: 4800000,   // Египет — самая населённая страна
@@ -718,7 +718,7 @@ const INITIAL_GAME_STATE = {
         active_transition: null,
       },
 
-      regions: ["r224","r380","r3037","r3044","r3045","r3046","r3047","r3048","r3049","r3050","r3051","r3052","r3053","r3054","r3055","r3060","r3061","r3066","r3067","r3068","r3069","r3070","r3072","r3073","r3074","r3075","r3076","r3078","r3079"],
+      regions: ["r224","r3052","r3066","r3069","r3074"]
 
       population: {
         total: 380000,
@@ -842,7 +842,7 @@ const INITIAL_GAME_STATE = {
         custom_mechanics: [], active_transition: null,
       },
 
-      regions: ["r163","r202","r227","r233","r234","r235","r772","r775","r776","r778","r797","r810","r1096","r1098","r1099","r1101","r1103","r1104","r1105","r1106","r1107","r1108","r1109","r1110","r1111","r1114","r1115","r1116","r1117","r1118","r1119","r1120","r2973","r2976","r2977","r2990","r2991","r2992","r3006","r3007","r3008","r3033","r3034","r3035","r3036","r3038","r3039","r3040","r3041","r3042","r3043","r3083","r3084","r3085","r3086","r3089","r3090","r3091","r3092","r3161","r3162","r3163","r3164","r3165","r3166","r3167","r3169","r3173","r3174","r3175","r3176","r3177","r3178","r3179","r3183","r3184","r3185","r3188","r3831","r3832","r3833","r3834","r3835","r3836","r3837","r3838","r3839","r3841","r3842","r3843","r3844","r3845","r3846","r3849","r3850","r3855","r3856","r3857"],
+      regions: ["r227","r235","r1109","r1110","r1111","r1114","r1115","r1119","r1120","r2990","r2991","r3007","r3008","r3035","r3036","r3038","r3039","r3040","r3041","r3042","r3084","r3161","r3162","r3164","r3165","r3166","r3167","r3169"]
       population: { total: 120000, by_profession: { farmers: 50000, craftsmen: 25000, merchants: 20000, sailors: 10000, clergy: 5000, soldiers: 5000, slaves: 5000 }, happiness: 65, growth_rate: 0.001 },
       economy: { treasury: 15000, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.10, stockpile: { wheat: 30000, fish: 8000, cloth: 5000, horses: 200, cattle: 400 }, trade_routes: [] },
       military: { infantry: 5000, cavalry: 500, ships: 40, mercenaries: 0, morale: 70, loyalty: 75, at_war_with: [] },
@@ -861,7 +861,7 @@ const INITIAL_GAME_STATE = {
       is_minor: true,
 
       government: { type: 'monarchy', custom_name: 'Царство Эпира', legitimacy: 70, stability: 60, ruler: { type: 'person', name: 'Пирр', character_ids: [], personal_power: 80 }, institutions: [], power_resource: { type: 'prestige', current: 70, decay_per_turn: 1, restored_by: ['victories', 'personal_combat', 'diplomatic_marriages'] }, elections: null, succession: { tracked: true, heir: null, crisis_if_no_heir: true, claim_types: ['blood', 'conquest'] }, conspiracies: null, transition_history: [], custom_mechanics: [], active_transition: null },
-      regions: ["r3018","r3019","r3020","r3021","r3022","r3023","r3056","r3057","r3058","r3059","r3062"],
+      regions: ["r3018","r3020","r3022"]
       population: { total: 95000, by_profession: { farmers: 55000, craftsmen: 10000, merchants: 8000, sailors: 4000, clergy: 3000, soldiers: 12000, slaves: 3000 }, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 5500, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.11, stockpile: { wheat: 22000, timber: 8000, iron: 3000, horses: 350, cattle: 300 }, trade_routes: [] },
       military: { infantry: 12000, cavalry: 1200, ships: 20, mercenaries: 0, morale: 80, loyalty: 85, at_war_with: [] },
@@ -880,7 +880,7 @@ const INITIAL_GAME_STATE = {
       is_minor: true,
 
       government: { type: 'monarchy', custom_name: 'Пергамское царство', legitimacy: 68, stability: 65, ruler: { type: 'person', name: 'Филетер', character_ids: [], personal_power: 72 }, institutions: [], power_resource: { type: 'wealth', current: 68, decay_per_turn: 0.5, restored_by: ['trade_profits', 'victories'] }, elections: null, succession: { tracked: true, heir: null, crisis_if_no_heir: true, claim_types: ['blood', 'appointment'] }, conspiracies: null, transition_history: [], custom_mechanics: [], active_transition: null },
-      regions: ["r3170","r3171","r3172","r3854","r3859","r3861","r3862","r3863","r3864","r3874"],
+      regions: ["r3170","r3171","r3863"]
       population: { total: 85000, by_profession: { farmers: 45000, craftsmen: 18000, merchants: 12000, sailors: 3000, clergy: 4000, soldiers: 2000, slaves: 1000 }, happiness: 70, growth_rate: 0.002 },
       economy: { treasury: 12000, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.11, stockpile: { wheat: 20000, cloth: 6000, wine: 4000, horses: 200, cattle: 300 }, trade_routes: [] },
       military: { infantry: 3000, cavalry: 400, ships: 15, mercenaries: 500, morale: 65, loyalty: 70, at_war_with: [] },
@@ -899,7 +899,7 @@ const INITIAL_GAME_STATE = {
       is_minor: true,
 
       government: { type: 'tribal', custom_name: 'Нумидийское вождество', legitimacy: 78, stability: 55, ruler: { type: 'person', name: 'Айлимас', character_ids: ['NUM_ELD_001','NUM_ELD_002','NUM_ELD_003','NUM_ELD_004'], personal_power: 75 }, institutions: [{ id: 'INST_elder_council', name: 'Совет старейшин', type: 'advisory', size: 4, character_ids: ['NUM_ELD_001','NUM_ELD_002','NUM_ELD_003','NUM_ELD_004'], decision_method: 'unanimous', quorum: 100, powers: ['approve_war', 'tribal_laws', 'choose_successor'], limitations: ['cannot_override_chieftain_in_battle'], factions: [] }], power_resource: { type: 'prestige', current: 78, decay_per_turn: 1.5, restored_by: ['raids', 'personal_combat', 'generous_feasts'] }, elections: null, succession: null, conspiracies: null, transition_history: [], custom_mechanics: [], active_transition: null },
-      regions: ["r96","r101","r112","r113","r116","r119","r201","r210","r342","r664","r665","r666","r667","r668","r669","r670","r671","r672","r673","r674","r811","r816","r817","r2460","r2465","r2466","r2468","r2471","r2475","r2477","r2478","r2479","r2482","r2552","r2555","r2559","r2560","r2561","r2575","r2576","r2577","r2578","r2581","r2582","r2583","r2584","r2702","r2807","r2808","r2809","r2810","r2811","r2812","r2813","r2815","r2816","r2817","r2818","r2819"],
+      regions: ["r96","r119","r201","r210","r2471","r2475","r2477","r2479","r2482","r2552","r2555","r2559","r2560","r2575","r2576","r2577","r2581","r2582","r2583","r2584","r2702","r2807","r2808","r2809","r2810","r2811","r2812","r2813","r2815","r2816","r2817","r2818","r2819"]
       population: { total: 320000, by_profession: { farmers: 200000, craftsmen: 20000, merchants: 15000, sailors: 5000, clergy: 10000, soldiers: 35000, slaves: 35000 }, happiness: 55, growth_rate: 0.003 },
       economy: { treasury: 4200, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.08, stockpile: { wheat: 80000, horses: 5000, cattle: 1000 }, trade_routes: [] },
       military: { infantry: 20000, cavalry: 8000, ships: 5, mercenaries: 0, morale: 75, loyalty: 88, at_war_with: [] },
@@ -917,7 +917,7 @@ const INITIAL_GAME_STATE = {
       is_player: false,
       is_minor: true,
       government: { type: 'oligarchy', custom_name: null, legitimacy: 60, stability: 55, ruler: { type: 'council', name: 'Совет Гелы', character_ids: [], personal_power: 40 }, institutions: [], power_resource: { type: 'legitimacy', current: 60, decay_per_turn: 0.5, restored_by: ['trade_prosperity', 'peace'] }, elections: null, succession: null, conspiracies: null, transition_history: [], custom_mechanics: [], active_transition: null },
-      regions: ['r2404'],
+      regions: []
       population: { total: 18000, by_profession: { farmers: 8500, craftsmen: 3500, merchants: 2500, sailors: 1500, clergy: 500, soldiers: 700, slaves: 800 }, happiness: 60, growth_rate: 0.001 },
       economy: { treasury: 2000, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.10, stockpile: { wheat: 5000, fish: 1500, horses: 50, cattle: 100 }, trade_routes: [] },
       military: { infantry: 600, cavalry: 60, ships: 8, mercenaries: 0, morale: 55, loyalty: 60, at_war_with: [] },
@@ -935,7 +935,7 @@ const INITIAL_GAME_STATE = {
       is_player: false,
       is_minor: true,
       government: { type: 'oligarchy', custom_name: null, legitimacy: 65, stability: 58, ruler: { type: 'council', name: 'Совет Акрагаса', character_ids: [], personal_power: 45 }, institutions: [], power_resource: { type: 'legitimacy', current: 65, decay_per_turn: 0.5, restored_by: ['trade_prosperity', 'peace'] }, elections: null, succession: null, conspiracies: null, transition_history: [], custom_mechanics: [], active_transition: null },
-      regions: ['r2409'],
+      regions: []
       population: { total: 25000, by_profession: { farmers: 11000, craftsmen: 5000, merchants: 4000, sailors: 2000, clergy: 1000, soldiers: 800, slaves: 1200 }, happiness: 62, growth_rate: 0.001 },
       economy: { treasury: 2500, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.10, stockpile: { wheat: 6000, fish: 1500, horses: 80, cattle: 150 }, trade_routes: [] },
       military: { infantry: 700, cavalry: 80, ships: 10, mercenaries: 0, morale: 58, loyalty: 62, at_war_with: [] },
@@ -953,7 +953,7 @@ const INITIAL_GAME_STATE = {
       is_player: false,
       is_minor: true,
       government: { type: 'oligarchy', custom_name: null, legitimacy: 55, stability: 50, ruler: { type: 'council', name: 'Совет Гераклеи', character_ids: [], personal_power: 35 }, institutions: [], power_resource: { type: 'legitimacy', current: 55, decay_per_turn: 0.5, restored_by: ['trade_prosperity', 'peace'] }, elections: null, succession: null, conspiracies: null, transition_history: [], custom_mechanics: [], active_transition: null },
-      regions: ['r2410'],
+      regions: []
       population: { total: 5000, by_profession: { farmers: 2200, craftsmen: 800, merchants: 600, sailors: 500, clergy: 200, soldiers: 200, slaves: 500 }, happiness: 55, growth_rate: 0.001 },
       economy: { treasury: 1200, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.10, stockpile: { wheat: 3000, fish: 1000, horses: 30, cattle: 60 }, trade_routes: [] },
       military: { infantry: 300, cavalry: 30, ships: 5, mercenaries: 0, morale: 50, loyalty: 55, at_war_with: [] },
@@ -971,7 +971,7 @@ const INITIAL_GAME_STATE = {
       is_player: false,
       is_minor: true,
       government: { type: 'oligarchy', custom_name: null, legitimacy: 60, stability: 55, ruler: { type: 'council', name: 'Совет Селинунта', character_ids: [], personal_power: 40 }, institutions: [], power_resource: { type: 'legitimacy', current: 60, decay_per_turn: 0.5, restored_by: ['trade_prosperity', 'peace'] }, elections: null, succession: null, conspiracies: null, transition_history: [], custom_mechanics: [], active_transition: null },
-      regions: ['r2411'],
+      regions: []
       population: { total: 15000, by_profession: { farmers: 6000, craftsmen: 2250, merchants: 1500, sailors: 1800, clergy: 750, soldiers: 1200, slaves: 1500 }, happiness: 58, growth_rate: 0.001 },
       economy: { treasury: 1800, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.10, stockpile: { wheat: 4000, fish: 1200, horses: 40, cattle: 80 }, trade_routes: [] },
       military: { infantry: 400, cavalry: 40, ships: 6, mercenaries: 0, morale: 55, loyalty: 58, at_war_with: [] },
@@ -989,7 +989,7 @@ const INITIAL_GAME_STATE = {
       is_player: false,
       is_minor: true,
       government: { type: 'tribal', custom_name: 'Элимское вождество', legitimacy: 65, stability: 58, ruler: { type: 'person', name: 'Вождь Элимов', character_ids: [], personal_power: 60 }, institutions: [], power_resource: { type: 'prestige', current: 65, decay_per_turn: 1, restored_by: ['raids', 'personal_combat'] }, elections: null, succession: null, conspiracies: null, transition_history: [], custom_mechanics: [], active_transition: null },
-      regions: ['r2413', 'r2414'],
+      regions: []
       population: { total: 55000, by_profession: { farmers: 19300, craftsmen: 5500, merchants: 2200, sailors: 1650, clergy: 6600, soldiers: 9900, slaves: 9850 }, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 800, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.08, stockpile: { wheat: 2000, timber: 1000, horses: 80, cattle: 200 }, trade_routes: [] },
       military: { infantry: 1300, cavalry: 130, ships: 3, mercenaries: 0, morale: 65, loyalty: 70, at_war_with: [] },
@@ -1007,7 +1007,7 @@ const INITIAL_GAME_STATE = {
       is_player: false,
       is_minor: true,
       government: { type: 'tribal', custom_name: 'Союз Сикелов', legitimacy: 58, stability: 50, ruler: { type: 'person', name: 'Вождь Сикелов', character_ids: [], personal_power: 60 }, institutions: [], power_resource: { type: 'prestige', current: 55, decay_per_turn: 1, restored_by: ['raids', 'personal_combat'] }, elections: null, succession: null, conspiracies: null, transition_history: [], custom_mechanics: [], active_transition: null },
-      regions: ['r2420', 'r2422'],
+      regions: []
       population: { total: 30000, by_profession: { farmers: 14000, craftsmen: 3500, merchants: 1400, sailors: 200, clergy: 2100, soldiers: 5300, slaves: 3500 }, happiness: 52, growth_rate: 0.002 },
       economy: { treasury: 700, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.07, stockpile: { wheat: 2500, iron: 1200, horses: 100, cattle: 300 }, trade_routes: [] },
       military: { infantry: 3500, cavalry: 350, ships: 0, mercenaries: 0, morale: 62, loyalty: 70, at_war_with: [] },
@@ -1025,7 +1025,7 @@ const INITIAL_GAME_STATE = {
       is_player: false,
       is_minor: true,
       government: { type: 'tribal', custom_name: 'Союз Сиканов', legitimacy: 60, stability: 52, ruler: { type: 'person', name: 'Вождь Сиканов', character_ids: [], personal_power: 55 }, institutions: [], power_resource: { type: 'prestige', current: 60, decay_per_turn: 1, restored_by: ['raids', 'personal_combat'] }, elections: null, succession: null, conspiracies: null, transition_history: [], custom_mechanics: [], active_transition: null },
-      regions: ['r2423', 'r2424', 'r2425'],
+      regions: []
       population: { total: 14500, by_profession: { farmers: 6800, craftsmen: 1800, merchants: 700, sailors: 100, clergy: 1300, soldiers: 2300, slaves: 1500 }, happiness: 55, growth_rate: 0.002 },
       economy: { treasury: 600, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.07, stockpile: { wheat: 3000, iron: 500, horses: 80, cattle: 200 }, trade_routes: [] },
       military: { infantry: 2200, cavalry: 220, ships: 0, mercenaries: 0, morale: 60, loyalty: 68, at_war_with: [] },
@@ -1043,7 +1043,7 @@ const INITIAL_GAME_STATE = {
       is_player: false,
       is_minor: true,
       government: { type: 'oligarchy', custom_name: null, legitimacy: 55, stability: 50, ruler: { type: 'council', name: 'Совет Калактеи', character_ids: [], personal_power: 35 }, institutions: [], power_resource: { type: 'legitimacy', current: 55, decay_per_turn: 0.5, restored_by: ['trade_prosperity', 'peace'] }, elections: null, succession: null, conspiracies: null, transition_history: [], custom_mechanics: [], active_transition: null },
-      regions: ['r2417', 'r2418'],
+      regions: []
       population: { total: 9000, by_profession: { farmers: 3800, craftsmen: 1500, merchants: 1200, sailors: 800, clergy: 400, soldiers: 300, slaves: 1000 }, happiness: 55, growth_rate: 0.001 },
       economy: { treasury: 1000, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.10, stockpile: { wheat: 2500, fish: 800, horses: 40, cattle: 80 }, trade_routes: [] },
       military: { infantry: 300, cavalry: 30, ships: 4, mercenaries: 0, morale: 50, loyalty: 55, at_war_with: [] },
@@ -1061,7 +1061,7 @@ const INITIAL_GAME_STATE = {
       is_player: false,
       is_minor: true,
       government: { type: 'oligarchy', custom_name: null, legitimacy: 58, stability: 52, ruler: { type: 'council', name: 'Совет Тиндариса', character_ids: [], personal_power: 38 }, institutions: [], power_resource: { type: 'legitimacy', current: 58, decay_per_turn: 0.5, restored_by: ['trade_prosperity', 'peace'] }, elections: null, succession: null, conspiracies: null, transition_history: [], custom_mechanics: [], active_transition: null },
-      regions: ['r2419', 'r3199'],
+      regions: []
       population: { total: 8000, by_profession: { farmers: 2400, craftsmen: 1200, merchants: 800, sailors: 2000, clergy: 400, soldiers: 400, slaves: 800 }, happiness: 58, growth_rate: 0.001 },
       economy: { treasury: 1400, income_per_turn: 0, expense_per_turn: 0, tax_rate: 0.10, stockpile: { wheat: 3500, fish: 1000, horses: 30, cattle: 60 }, trade_routes: [] },
       military: { infantry: 400, cavalry: 40, ships: 6, mercenaries: 0, morale: 52, loyalty: 57, at_war_with: [] },
@@ -1101,7 +1101,7 @@ const INITIAL_GAME_STATE = {
         type: 'oligarchy', legitimacy: 65, stability: 60,
         ruler: { type: 'person', name: 'Клеомен II', personal_power: 55 },
       },
-      regions: ["r2972","r2974","r2975","r2979","r2981"],
+      regions: ["r2972","r2974","r2975","r2979","r2981"]
       population: {
         total: 42000,
         by_profession: { farmers: 12000, craftsmen: 4000, merchants: 2000, sailors: 1000, clergy: 2000, soldiers: 8000, slaves: 13000 },
@@ -1134,7 +1134,7 @@ const INITIAL_GAME_STATE = {
         type: 'oligarchy', legitimacy: 55, stability: 50,
         ruler: { type: 'person', name: 'Деметрий Фалерский', personal_power: 70 },
       },
-      regions: ["r209","r1112","r1113","r2982","r2983","r2984","r2985"],
+      regions: ["r1112","r2982","r2983","r2984","r2985"]
       population: {
         total: 155000,
         by_profession: { farmers: 40000, craftsmen: 30000, merchants: 25000, sailors: 15000, clergy: 5000, soldiers: 6000, slaves: 34000 },
@@ -1168,7 +1168,7 @@ const INITIAL_GAME_STATE = {
         type: 'republic', legitimacy: 80, stability: 75,
         ruler: { type: 'council', name: 'Совет родосских навархов', personal_power: 65 },
       },
-      regions: ["r231"],
+      regions: ["r231"]
       population: {
         total: 82000,
         by_profession: { farmers: 15000, craftsmen: 18000, merchants: 22000, sailors: 12000, clergy: 3000, soldiers: 3000, slaves: 9000 },
@@ -1201,7 +1201,7 @@ const INITIAL_GAME_STATE = {
         type: 'republic', legitimacy: 75, stability: 70,
         ruler: { type: 'council', name: 'Совет шестисот', personal_power: 60 },
       },
-      regions: ["r94"],
+      regions: ["r94"]
       population: {
         total: 26000,
         by_profession: { farmers: 5000, craftsmen: 6000, merchants: 7000, sailors: 4000, clergy: 1000, soldiers: 1000, slaves: 2000 },
@@ -1234,7 +1234,7 @@ const INITIAL_GAME_STATE = {
         type: 'oligarchy', legitimacy: 40, stability: 35,
         ruler: { type: 'council', name: 'Македонский гарнизон', personal_power: 50 },
       },
-      regions: ["r3004"],
+      regions: ["r3004"]
       population: {
         total: 18000,
         by_profession: { farmers: 4000, craftsmen: 5000, merchants: 4000, sailors: 2000, clergy: 1000, soldiers: 500, slaves: 1500 },
@@ -1267,7 +1267,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 72, stability: 65,
         ruler: { type: 'person', name: 'Спарток III', personal_power: 75 },
       },
-      regions: ["r3142","r3143","r3144","r3145","r3147"],
+      regions: ["r3142","r3143","r3144","r3145","r3147"]
       population: {
         total: 180000,
         by_profession: { farmers: 70000, craftsmen: 25000, merchants: 30000, sailors: 15000, clergy: 5000, soldiers: 10000, slaves: 25000 },
@@ -1296,7 +1296,7 @@ const INITIAL_GAME_STATE = {
       name: 'Акарнания', adjective: 'акарнанское', color: '#6B8E6B', flag_emoji: '🏛️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'federation', legitimacy: 60, stability: 58, ruler: { type: 'council', name: 'Акарнанский союз', personal_power: 50 } },
-      regions: ["r352","r3009","r3010","r3011","r3013","r3017"],
+      regions: ["r352","r3009","r3010","r3011","r3013","r3017"]
       population: { total: 55000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 1800, tax_rate: 0.09, primary_exports: ['cattle', 'fish'], primary_imports: ['trade_goods', 'wheat'], trade_partners: ['epirus', 'aetolia'], stockpile: { wheat: 4000 }, trade_routes: [] },
       military: { infantry: 3500, cavalry: 300, ships: 15, mercenaries: 500, morale: 65, loyalty: 70, at_war_with: [] },
@@ -1309,7 +1309,7 @@ const INITIAL_GAME_STATE = {
       name: 'Этолийский союз', adjective: 'этолийское', color: '#8B6914', flag_emoji: '⚡',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'federation', legitimacy: 65, stability: 60, ruler: { type: 'council', name: 'Стратег Этолийского союза', personal_power: 60 } },
-      regions: ["r213","r785","r2996","r3015"],
+      regions: ["r2996"]
       population: { total: 80000, happiness: 62, growth_rate: 0.002 },
       economy: { treasury: 2500, tax_rate: 0.10, primary_exports: ['slaves', 'cattle', 'furs'], primary_imports: ['trade_goods', 'iron'], trade_partners: ['epirus', 'macedon', 'acarnania'], stockpile: { wheat: 5000 }, trade_routes: [] },
       military: { infantry: 7000, cavalry: 500, ships: 10, mercenaries: 1000, morale: 78, loyalty: 75, at_war_with: [] },
@@ -1322,7 +1322,7 @@ const INITIAL_GAME_STATE = {
       name: 'Беотийский союз', adjective: 'беотийское', color: '#A0522D', flag_emoji: '🐂',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'federation', legitimacy: 45, stability: 42, ruler: { type: 'council', name: 'Беотархи', personal_power: 45 } },
-      regions: ["r786","r2993","r3002","r3003"],
+      regions: ["r786","r2993"]
       population: { total: 60000, happiness: 44, growth_rate: 0.001 },
       economy: { treasury: 1500, tax_rate: 0.10, primary_exports: ['wheat', 'cattle'], primary_imports: ['trade_goods', 'timber'], trade_partners: ['athens', 'corinth'], stockpile: { wheat: 6000 }, trade_routes: [] },
       military: { infantry: 5000, cavalry: 800, ships: 5, mercenaries: 300, morale: 55, loyalty: 50, at_war_with: [] },
@@ -1348,7 +1348,7 @@ const INITIAL_GAME_STATE = {
       name: 'Эретрия', adjective: 'эретрийское', color: '#6495ED', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 55, stability: 52, ruler: { type: 'council', name: 'Совет Эретрии', personal_power: 50 } },
-      regions: ["r783","r788","r2986","r2988","r2989","r3005"],
+      regions: ["r783","r788","r2986","r2988","r2989","r3005"]
       population: { total: 38000, happiness: 55, growth_rate: 0.002 },
       economy: { treasury: 2000, tax_rate: 0.10, primary_exports: ['trade_goods', 'pottery'], primary_imports: ['wheat', 'timber'], trade_partners: ['athens', 'macedon'], stockpile: { wheat: 3500 }, trade_routes: [] },
       military: { infantry: 2500, cavalry: 200, ships: 30, mercenaries: 300, morale: 60, loyalty: 60, at_war_with: [] },
@@ -1361,7 +1361,7 @@ const INITIAL_GAME_STATE = {
       name: 'Мегалополь', adjective: 'мегалопольское', color: '#708090', flag_emoji: '🏔️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 50, stability: 48, ruler: { type: 'council', name: 'Совет Мегалополя', personal_power: 40 } },
-      regions: ["r779","r780"],
+      regions: ["r779","r780"]
       population: { total: 22000, happiness: 50, growth_rate: 0.001 },
       economy: { treasury: 800, tax_rate: 0.09, primary_exports: ['cattle', 'timber'], primary_imports: ['wheat', 'trade_goods'], trade_partners: ['sparta', 'argos'], stockpile: { wheat: 2000 }, trade_routes: [] },
       military: { infantry: 1800, cavalry: 200, ships: 0, mercenaries: 100, morale: 55, loyalty: 55, at_war_with: [] },
@@ -1374,7 +1374,7 @@ const INITIAL_GAME_STATE = {
       name: 'Тегея', adjective: 'тегейское', color: '#7B7B5A', flag_emoji: '⚔️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 55, stability: 55, ruler: { type: 'council', name: 'Совет Тегеи', personal_power: 45 } },
-      regions: ["r777"],
+      regions: ["r777"]
       population: { total: 18000, happiness: 55, growth_rate: 0.001 },
       economy: { treasury: 600, tax_rate: 0.08, primary_exports: ['cattle'], primary_imports: ['wheat'], trade_partners: ['sparta', 'megalopolis'], stockpile: { wheat: 2000 }, trade_routes: [] },
       military: { infantry: 1500, cavalry: 150, ships: 0, mercenaries: 100, morale: 65, loyalty: 65, at_war_with: [] },
@@ -1387,7 +1387,7 @@ const INITIAL_GAME_STATE = {
       name: 'Мантинея', adjective: 'мантинейское', color: '#7B6B5A', flag_emoji: '🏛️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 52, stability: 50, ruler: { type: 'council', name: 'Совет Мантинеи', personal_power: 42 } },
-      regions: ["r206"],
+      regions: ["r206"]
       population: { total: 16000, happiness: 53, growth_rate: 0.001 },
       economy: { treasury: 500, tax_rate: 0.08, primary_exports: ['cattle'], primary_imports: ['wheat', 'iron'], trade_partners: ['sparta', 'argos'], stockpile: { wheat: 1800 }, trade_routes: [] },
       military: { infantry: 1200, cavalry: 120, ships: 0, mercenaries: 0, morale: 60, loyalty: 60, at_war_with: [] },
@@ -1400,7 +1400,7 @@ const INITIAL_GAME_STATE = {
       name: 'Трезен', adjective: 'трезенское', color: '#7B8B6B', flag_emoji: '🏛️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 55, stability: 55, ruler: { type: 'council', name: 'Совет Трезена', personal_power: 40 } },
-      regions: ["r207","r782"],
+      regions: ["r207","r782"]
       population: { total: 12000, happiness: 58, growth_rate: 0.001 },
       economy: { treasury: 400, tax_rate: 0.08, primary_exports: ['olive_oil', 'fish'], primary_imports: ['wheat'], trade_partners: ['athens', 'sparta'], stockpile: { wheat: 1200 }, trade_routes: [] },
       military: { infantry: 900, cavalry: 80, ships: 10, mercenaries: 0, morale: 62, loyalty: 65, at_war_with: [] },
@@ -1413,7 +1413,7 @@ const INITIAL_GAME_STATE = {
       name: 'Мессения', adjective: 'мессенское', color: '#5F7A5F', flag_emoji: '🌾',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 62, stability: 58, ruler: { type: 'council', name: 'Совет Мессены', personal_power: 50 } },
-      regions: ["r2980"],
+      regions: ["r2980"]
       population: { total: 50000, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 1400, tax_rate: 0.09, primary_exports: ['wheat', 'cattle'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['epirus', 'athens', 'sparta'], stockpile: { wheat: 7000 }, trade_routes: [] },
       military: { infantry: 4000, cavalry: 300, ships: 5, mercenaries: 200, morale: 72, loyalty: 70, at_war_with: [] },
@@ -1426,7 +1426,7 @@ const INITIAL_GAME_STATE = {
       name: 'Локры Эпизефирские', adjective: 'локрийское', color: '#8FAF8F', flag_emoji: '🏛️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 55, stability: 55, ruler: { type: 'council', name: 'Совет Локров', personal_power: 45 } },
-      regions: ["r760"],
+      regions: ["r760"]
       population: { total: 15000, happiness: 55, growth_rate: 0.001 },
       economy: { treasury: 700, tax_rate: 0.10, primary_exports: ['olive_oil', 'trade_goods'], primary_imports: ['wheat', 'iron'], trade_partners: ['rhegium', 'taras', 'corinth'], stockpile: { wheat: 1500 }, trade_routes: [] },
       military: { infantry: 1000, cavalry: 80, ships: 12, mercenaries: 100, morale: 60, loyalty: 62, at_war_with: [] },
@@ -1439,7 +1439,7 @@ const INITIAL_GAME_STATE = {
       name: 'Кротон', adjective: 'кротонское', color: '#9F8FAF', flag_emoji: '🏃',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 50, stability: 48, ruler: { type: 'council', name: 'Совет Кротона', personal_power: 44 } },
-      regions: ["r2177"],
+      regions: ["r2177"]
       population: { total: 20000, happiness: 50, growth_rate: 0.001 },
       economy: { treasury: 900, tax_rate: 0.10, primary_exports: ['olive_oil', 'cattle'], primary_imports: ['wheat', 'iron'], trade_partners: ['taras', 'locri', 'rhegium'], stockpile: { wheat: 2000 }, trade_routes: [] },
       military: { infantry: 1200, cavalry: 100, ships: 15, mercenaries: 200, morale: 55, loyalty: 55, at_war_with: [] },
@@ -1452,7 +1452,7 @@ const INITIAL_GAME_STATE = {
       name: 'Метапонт', adjective: 'метапонтское', color: '#AF9F6F', flag_emoji: '🌾',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'survival',
       government: { type: 'oligarchy', legitimacy: 52, stability: 50, ruler: { type: 'council', name: 'Совет Метапонта', personal_power: 42 } },
-      regions: ["r765","r766"],
+      regions: ["r765","r766"]
       population: { total: 18000, happiness: 52, growth_rate: 0.001 },
       economy: { treasury: 1000, tax_rate: 0.10, primary_exports: ['wheat', 'cattle'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['taras', 'croton'], stockpile: { wheat: 3000 }, trade_routes: [] },
       military: { infantry: 1000, cavalry: 120, ships: 10, mercenaries: 100, morale: 55, loyalty: 55, at_war_with: [] },
@@ -1465,7 +1465,7 @@ const INITIAL_GAME_STATE = {
       name: 'Брундизий', adjective: 'брундизийское', color: '#7FAF9F', flag_emoji: '⚓',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 55, stability: 55, ruler: { type: 'council', name: 'Совет Брундизия', personal_power: 48 } },
-      regions: ["r243","r2169"],
+      regions: ["r243","r2169"]
       population: { total: 16000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 1200, tax_rate: 0.10, primary_exports: ['trade_goods', 'fish'], primary_imports: ['wheat', 'timber'], trade_partners: ['taras', 'rome', 'epirus'], stockpile: { wheat: 2000 }, trade_routes: [] },
       military: { infantry: 800, cavalry: 80, ships: 20, mercenaries: 100, morale: 60, loyalty: 62, at_war_with: [] },
@@ -1480,7 +1480,7 @@ const INITIAL_GAME_STATE = {
       name: 'Тавлантии', adjective: 'тавлантийское', color: '#8B7355', flag_emoji: '⚔️',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 65, stability: 60, ruler: { type: 'tribal_chief', name: 'Главин', personal_power: 70 } },
-      regions: ["r350","r351","r353","r3016"],
+      regions: ["r350","r351","r353","r3016"]
       population: { total: 60000, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 1200, tax_rate: 0.07, primary_exports: ['slaves', 'cattle', 'furs'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['epirus', 'macedon'], stockpile: { wheat: 3000 }, trade_routes: [] },
       military: { infantry: 6000, cavalry: 800, ships: 5, mercenaries: 0, morale: 72, loyalty: 75, at_war_with: [] },
@@ -1493,7 +1493,7 @@ const INITIAL_GAME_STATE = {
       name: 'Гистры', adjective: 'гистрское', color: '#7B7B8B', flag_emoji: '🗡️',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 60, stability: 58, ruler: { type: 'tribal_chief', name: 'Вождь гистров', personal_power: 65 } },
-      regions: ["r2381","r2382","r2383","r2384","r2484"],
+      regions: ["r2381","r2382","r2383","r2384","r2484"]
       population: { total: 45000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 800, tax_rate: 0.06, primary_exports: ['furs', 'amber', 'slaves'], primary_imports: ['iron', 'salt'], trade_partners: ['veneti', 'taulantii'], stockpile: { wheat: 2500 }, trade_routes: [] },
       military: { infantry: 5000, cavalry: 400, ships: 20, mercenaries: 0, morale: 68, loyalty: 70, at_war_with: [] },
@@ -1506,7 +1506,7 @@ const INITIAL_GAME_STATE = {
       name: 'Скордиски', adjective: 'скордискское', color: '#6B5B3B', flag_emoji: '🪓',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 60, stability: 55, ruler: { type: 'tribal_chief', name: 'Вождь скордисков', personal_power: 65 } },
-      regions: ["r180","r360","r371","r387"],
+      regions: ["r180","r360","r371","r387"]
       population: { total: 50000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 900, tax_rate: 0.07, primary_exports: ['slaves', 'cattle', 'iron'], primary_imports: ['trade_goods', 'wine'], trade_partners: ['macedon', 'dardani'], stockpile: { wheat: 2800 }, trade_routes: [] },
       military: { infantry: 6000, cavalry: 600, ships: 0, mercenaries: 0, morale: 72, loyalty: 70, at_war_with: [] },
@@ -1519,7 +1519,7 @@ const INITIAL_GAME_STATE = {
       name: 'Дарданцы', adjective: 'дарданское', color: '#5B4B3B', flag_emoji: '⚔️',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 62, stability: 58, ruler: { type: 'tribal_chief', name: 'Вождь дарданцев', personal_power: 68 } },
-      regions: ["r354","r363","r374","r3064","r3065"],
+      regions: ["r354","r363","r374","r3064","r3065"]
       population: { total: 40000, happiness: 56, growth_rate: 0.002 },
       economy: { treasury: 700, tax_rate: 0.07, primary_exports: ['slaves', 'cattle'], primary_imports: ['iron', 'salt'], trade_partners: ['macedon', 'scordisci'], stockpile: { wheat: 2200 }, trade_routes: [] },
       military: { infantry: 5000, cavalry: 500, ships: 0, mercenaries: 0, morale: 70, loyalty: 72, at_war_with: [] },
@@ -1532,7 +1532,7 @@ const INITIAL_GAME_STATE = {
       name: 'Либурны', adjective: 'либурнское', color: '#4F7F9F', flag_emoji: '⛵',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'tribal', legitimacy: 58, stability: 55, ruler: { type: 'tribal_chief', name: 'Вождь либурнов', personal_power: 60 } },
-      regions: ["r253","r345"],
+      regions: ["r253","r345"]
       population: { total: 25000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 900, tax_rate: 0.08, primary_exports: ['fish', 'trade_goods', 'slaves'], primary_imports: ['iron', 'wheat'], trade_partners: ['histri', 'veneti', 'taulantii'], stockpile: { wheat: 1500 }, trade_routes: [] },
       military: { infantry: 1500, cavalry: 100, ships: 30, mercenaries: 0, morale: 65, loyalty: 65, at_war_with: [] },
@@ -1547,7 +1547,7 @@ const INITIAL_GAME_STATE = {
       name: 'Стимфалия', color: '#9B9B8B', flag_emoji: '🏛️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Стимфалии' } , legitimacy: 55, stability: 50},
-      regions: ["r203","r204"],
+      regions: ["r203","r204","r205"]
       population: { total: 8000, happiness: 54 },
       economy: { treasury: 300, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 600, cavalry: 40, ships: 0, morale: 58, at_war_with: [] },
@@ -1560,7 +1560,7 @@ const INITIAL_GAME_STATE = {
       name: 'Пеллена', color: '#9B8B7B', flag_emoji: '🏛️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Пеллены' } , legitimacy: 55, stability: 50},
-      regions: ["r208"],
+      regions: ["r208"]
       population: { total: 10000, happiness: 55 },
       economy: { treasury: 350, stockpile: { wheat: 1000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 700, cavalry: 50, ships: 5, morale: 60, at_war_with: [] },
@@ -1573,7 +1573,7 @@ const INITIAL_GAME_STATE = {
       name: 'Диме', color: '#8B9B8B', flag_emoji: '🏛️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Диме' } , legitimacy: 55, stability: 50},
-      regions: ["r773","r774"],
+      regions: ["r773","r774"]
       population: { total: 9000, happiness: 55 },
       economy: { treasury: 320, stockpile: { wheat: 900 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 600, cavalry: 40, ships: 8, morale: 58, at_war_with: [] },
@@ -1586,7 +1586,7 @@ const INITIAL_GAME_STATE = {
       name: 'Патры', color: '#7B8B9B', flag_emoji: '⚓',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Патр' } , legitimacy: 55, stability: 50},
-      regions: ["r3012"],
+      regions: ["r3012"]
       population: { total: 12000, happiness: 56 },
       economy: { treasury: 500, stockpile: { wheat: 1200 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 800, cavalry: 50, ships: 12, morale: 60, at_war_with: [] },
@@ -1599,7 +1599,7 @@ const INITIAL_GAME_STATE = {
       name: 'Эпидавр', color: '#9BAF8B', flag_emoji: '🐍',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Эпидавра' } , legitimacy: 55, stability: 50},
-      regions: ["r781"],
+      regions: ["r781"]
       population: { total: 14000, happiness: 65 },
       economy: { treasury: 800, stockpile: { wheat: 1200 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 800, cavalry: 60, ships: 10, morale: 60, at_war_with: [] },
@@ -1612,7 +1612,7 @@ const INITIAL_GAME_STATE = {
       name: 'Элатея', color: '#8BAF9B', flag_emoji: '🏛️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Элатеи' } , legitimacy: 55, stability: 50},
-      regions: ["r3001"],
+      regions: ["r3001"]
       population: { total: 10000, happiness: 48 },
       economy: { treasury: 400, stockpile: { wheat: 900 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 700, cavalry: 50, ships: 0, morale: 55, at_war_with: [] },
@@ -1625,7 +1625,7 @@ const INITIAL_GAME_STATE = {
       name: 'Амфисса', color: '#AF9B7B', flag_emoji: '🏛️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Амфиссы' } , legitimacy: 55, stability: 50},
-      regions: ["r2999","r3000"],
+      regions: ["r2999","r3000"]
       population: { total: 8000, happiness: 50 },
       economy: { treasury: 350, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 600, cavalry: 30, ships: 0, morale: 55, at_war_with: [] },
@@ -1648,7 +1648,7 @@ const INITIAL_GAME_STATE = {
         type: 'federation', legitimacy: 52, stability: 45,
         ruler: { type: 'council', name: 'Совет двенадцати городов', personal_power: 40 },
       },
-      regions: ["r100","r126","r131","r134","r143","r154","r2178","r2179","r2180","r2181","r2182","r2189","r2190","r2191","r2192","r2193","r2194","r2195","r2197","r2198","r2199"],
+      regions: ["r100","r126","r131","r134"]
       population: {
         total: 500000,
         by_profession: { farmers: 180000, craftsmen: 100000, merchants: 70000, sailors: 30000, clergy: 30000, soldiers: 30000, slaves: 60000 },
@@ -1715,7 +1715,7 @@ const INITIAL_GAME_STATE = {
         type: 'tribal', legitimacy: 60, stability: 55,
         ruler: { type: 'tribal_chief', name: 'Совет луканских вождей', personal_power: 55 },
       },
-      regions: ["r107","r115","r155","r764","r2152","r2153","r2154","r2155","r2157","r2158","r2161","r2162","r2163","r2164","r2174"],
+      regions: ["r107","r115","r155","r764","r2152","r2153","r2158","r2161","r2162","r2163","r2174"]
       population: {
         total: 250000,
         by_profession: { farmers: 100000, craftsmen: 35000, merchants: 15000, sailors: 8000, clergy: 12000, soldiers: 40000, slaves: 40000 },
@@ -1749,7 +1749,7 @@ const INITIAL_GAME_STATE = {
         type: 'tribal', legitimacy: 50, stability: 45,
         ruler: { type: 'council', name: 'Совет умбрийских городов', personal_power: 42 },
       },
-      regions: ["r106","r108","r132","r241","r750","r770","r2183","r2184","r2185","r2187","r2188","r2209"],
+      regions: ["r132","r750","r770","r2183","r2184","r2185","r2187","r2188","r2209"]
       population: {
         total: 200000,
         by_profession: { farmers: 90000, craftsmen: 35000, merchants: 20000, sailors: 5000, clergy: 12000, soldiers: 18000, slaves: 20000 },
@@ -1782,7 +1782,7 @@ const INITIAL_GAME_STATE = {
         type: 'oligarchy', legitimacy: 62, stability: 55,
         ruler: { type: 'council', name: 'Совет Тарента', personal_power: 55 },
       },
-      regions: ["r757"],
+      regions: ["r757"]
       population: {
         total: 85000,
         by_profession: { farmers: 18000, craftsmen: 20000, merchants: 18000, sailors: 12000, clergy: 4000, soldiers: 5000, slaves: 8000 },
@@ -1817,7 +1817,7 @@ const INITIAL_GAME_STATE = {
         type: 'oligarchy', legitimacy: 58, stability: 52,
         ruler: { type: 'council', name: 'Совет Регия', personal_power: 50 },
       },
-      regions: ["r763"],
+      regions: ["r763"]
       population: {
         total: 28000,
         by_profession: { farmers: 6000, craftsmen: 7000, merchants: 6000, sailors: 4000, clergy: 1500, soldiers: 1000, slaves: 2500 },
@@ -1850,7 +1850,7 @@ const INITIAL_GAME_STATE = {
       name: 'Бруттии', adjective: 'бруттийское', color: '#6B5B3B', flag_emoji: '🗡️',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 58, stability: 55, ruler: { type: 'tribal_chief', name: 'Совет бруттийских вождей', personal_power: 60 } },
-      regions: ["r759","r2175","r2176"],
+      regions: ["r2175"]
       population: { total: 120000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 2500, tax_rate: 0.08, primary_exports: ['timber', 'cattle', 'slaves'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['lucani', 'locri', 'rhegium'], stockpile: { wheat: 8000 }, trade_routes: [] },
       military: { infantry: 10000, cavalry: 800, ships: 5, mercenaries: 500, morale: 70, loyalty: 68, at_war_with: [] },
@@ -1863,7 +1863,7 @@ const INITIAL_GAME_STATE = {
       name: 'Френтаны', adjective: 'френтанское', color: '#7B6B4B', flag_emoji: '⚔️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 55, stability: 52, ruler: { type: 'tribal_chief', name: 'Вождь френтанов', personal_power: 55 } },
-      regions: ["r114","r251","r2141","r2142"],
+      regions: ["r114","r251","r2141","r2142"]
       population: { total: 60000, happiness: 55, growth_rate: 0.002 },
       economy: { treasury: 1200, tax_rate: 0.08, primary_exports: ['cattle', 'wool', 'slaves'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['samnites', 'rome'], stockpile: { wheat: 5000 }, trade_routes: [] },
       military: { infantry: 5000, cavalry: 500, ships: 0, mercenaries: 0, morale: 65, loyalty: 65, at_war_with: [] },
@@ -1876,7 +1876,7 @@ const INITIAL_GAME_STATE = {
       name: 'Пиценты', adjective: 'пицентское', color: '#8B7B5B', flag_emoji: '🌾',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 55, stability: 52, ruler: { type: 'tribal_chief', name: 'Вождь пиценов', personal_power: 55 } },
-      regions: ["r141","r240","r2133","r2135"],
+      regions: ["r141","r240","r2133","r2135"]
       population: { total: 80000, happiness: 54, growth_rate: 0.002 },
       economy: { treasury: 1800, tax_rate: 0.09, primary_exports: ['wheat', 'cattle', 'fish'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['rome', 'samnites', 'umbrians'], stockpile: { wheat: 8000 }, trade_routes: [] },
       military: { infantry: 6000, cavalry: 400, ships: 10, mercenaries: 0, morale: 62, loyalty: 60, at_war_with: [] },
@@ -1889,7 +1889,7 @@ const INITIAL_GAME_STATE = {
       name: 'Марсы', adjective: 'марсийское', color: '#5B6B3B', flag_emoji: '🐍',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 60, stability: 58, ruler: { type: 'tribal_chief', name: 'Вождь марсов', personal_power: 60 } },
-      regions: ["r2116","r2126"],
+      regions: ["r2116","r2126"]
       population: { total: 70000, happiness: 56, growth_rate: 0.002 },
       economy: { treasury: 1500, tax_rate: 0.08, primary_exports: ['cattle', 'iron', 'slaves'], primary_imports: ['trade_goods', 'salt'], trade_partners: ['rome', 'samnites', 'umbrians'], stockpile: { wheat: 5000 }, trade_routes: [] },
       military: { infantry: 6500, cavalry: 600, ships: 0, mercenaries: 0, morale: 72, loyalty: 70, at_war_with: [] },
@@ -1902,7 +1902,7 @@ const INITIAL_GAME_STATE = {
       name: 'Сабины', adjective: 'сабинское', color: '#6B5B2B', flag_emoji: '🌾',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 55, stability: 52, ruler: { type: 'council', name: 'Сенат сабинских городов', personal_power: 48 } },
-      regions: ["r136","r138","r139","r140","r142","r144","r146"],
+      regions: ["r136","r138","r139","r140","r142","r144","r146"]
       population: { total: 90000, happiness: 50, growth_rate: 0.002 },
       economy: { treasury: 1800, tax_rate: 0.09, primary_exports: ['cattle', 'wheat', 'wool'], primary_imports: ['trade_goods', 'salt'], trade_partners: ['rome', 'umbrians'], stockpile: { wheat: 8000 }, trade_routes: [] },
       military: { infantry: 7000, cavalry: 600, ships: 0, mercenaries: 0, morale: 60, loyalty: 55, at_war_with: [] },
@@ -1915,7 +1915,7 @@ const INITIAL_GAME_STATE = {
       name: 'Апулийцы', adjective: 'апулийское', color: '#9B8B5B', flag_emoji: '🌾',
       is_player: false, is_minor: true, ai_personality: 'opportunist', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 52, stability: 50, ruler: { type: 'council', name: 'Вожди Апулии', personal_power: 45 } },
-      regions: ["r2137","r2138","r2139","r2148","r2165","r2166"],
+      regions: ["r2137","r2138","r2139","r2148","r2165","r2166"]
       population: { total: 130000, happiness: 52, growth_rate: 0.002 },
       economy: { treasury: 3000, tax_rate: 0.09, primary_exports: ['wheat', 'cattle', 'olive_oil'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['taras', 'rome', 'samnites'], stockpile: { wheat: 12000 }, trade_routes: [] },
       military: { infantry: 9000, cavalry: 1500, ships: 5, mercenaries: 500, morale: 60, loyalty: 58, at_war_with: [] },
@@ -1928,7 +1928,7 @@ const INITIAL_GAME_STATE = {
       name: 'Мессапы', adjective: 'мессапское', color: '#7B8B6B', flag_emoji: '⚔️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 58, stability: 55, ruler: { type: 'tribal_chief', name: 'Вождь мессапов', personal_power: 60 } },
-      regions: ["r244","r2170","r2171","r2172","r2173"],
+      regions: ["r244","r2170","r2171","r2172","r2173"]
       population: { total: 100000, happiness: 56, growth_rate: 0.002 },
       economy: { treasury: 2200, tax_rate: 0.08, primary_exports: ['cattle', 'olive_oil', 'fish'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['taras', 'brundisium', 'apulians'], stockpile: { wheat: 8000 }, trade_routes: [] },
       military: { infantry: 8000, cavalry: 1200, ships: 10, mercenaries: 0, morale: 65, loyalty: 65, at_war_with: [] },
@@ -1941,7 +1941,7 @@ const INITIAL_GAME_STATE = {
       name: 'Венеты', adjective: 'венетское', color: '#5B7B9B', flag_emoji: '🐴',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'economy',
       government: { type: 'federation', legitimacy: 65, stability: 62, ruler: { type: 'council', name: 'Совет венетских городов', personal_power: 55 } },
-      regions: ["r2222","r2227","r2228","r2229","r2230","r2232","r2233","r2234","r2235","r2236","r2237","r2238","r2241","r2247","r2248"],
+      regions: ["r2227","r2228","r2229","r2230","r2232","r2234","r2235","r2237","r2238"]
       population: { total: 200000, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 5000, tax_rate: 0.09, primary_exports: ['horses', 'amber', 'trade_goods'], primary_imports: ['iron', 'wine', 'salt'], trade_partners: ['rome', 'histri', 'massilia'], stockpile: { wheat: 15000 }, trade_routes: [] },
       military: { infantry: 12000, cavalry: 3000, ships: 20, mercenaries: 0, morale: 65, loyalty: 68, at_war_with: [] },
@@ -1954,7 +1954,7 @@ const INITIAL_GAME_STATE = {
       name: 'Инсубры', adjective: 'инсубрское', color: '#3B6B3B', flag_emoji: '🪓',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 65, stability: 60, ruler: { type: 'tribal_chief', name: 'Вождь инсубров', personal_power: 70 } },
-      regions: ["r2212","r2213","r2214","r2215","r2216","r2217","r2218","r2219","r2223","r2249","r2250","r2251","r2252","r2253","r2254","r2255","r2256","r2257","r2260","r2263","r2267","r2268","r2269","r2304"],
+      regions: ["r2223"]
       population: { total: 150000, happiness: 62, growth_rate: 0.002 },
       economy: { treasury: 3500, tax_rate: 0.07, primary_exports: ['iron', 'amber', 'furs', 'slaves'], primary_imports: ['wine', 'trade_goods', 'salt'], trade_partners: ['cenomanni', 'rome', 'massilia'], stockpile: { wheat: 10000 }, trade_routes: [] },
       military: { infantry: 18000, cavalry: 2000, ships: 0, mercenaries: 0, morale: 78, loyalty: 75, at_war_with: [] },
@@ -1967,7 +1967,7 @@ const INITIAL_GAME_STATE = {
       name: 'Ценоманны', adjective: 'ценоманнское', color: '#4B7B4B', flag_emoji: '🛡️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 60, stability: 58, ruler: { type: 'tribal_chief', name: 'Вождь ценоманнов', personal_power: 65 } },
-      regions: ["r2220"],
+      regions: ["r2197"]
       population: { total: 130000, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 3000, tax_rate: 0.07, primary_exports: ['amber', 'furs', 'cattle'], primary_imports: ['iron', 'salt', 'wine'], trade_partners: ['insubri', 'veneti', 'boii'], stockpile: { wheat: 9000 }, trade_routes: [] },
       military: { infantry: 15000, cavalry: 1500, ships: 0, mercenaries: 0, morale: 72, loyalty: 70, at_war_with: [] },
@@ -1980,7 +1980,7 @@ const INITIAL_GAME_STATE = {
       name: 'Бойи', adjective: 'бойское', color: '#2B5B2B', flag_emoji: '🪓',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 65, stability: 60, ruler: { type: 'tribal_chief', name: 'Вождь бойев', personal_power: 72 } },
-      regions: ["r2210","r2211","r2224","r2225"],
+      regions: ["r2210","r2211","r2224","r2225"]
       population: { total: 160000, happiness: 62, growth_rate: 0.002 },
       economy: { treasury: 3200, tax_rate: 0.07, primary_exports: ['furs', 'slaves', 'amber', 'cattle'], primary_imports: ['iron', 'wine', 'salt'], trade_partners: ['insubri', 'lingones', 'senones'], stockpile: { wheat: 10000 }, trade_routes: [] },
       military: { infantry: 20000, cavalry: 2500, ships: 0, mercenaries: 0, morale: 78, loyalty: 75, at_war_with: [] },
@@ -1993,7 +1993,7 @@ const INITIAL_GAME_STATE = {
       name: 'Сеноны', adjective: 'сенонское', color: '#1B4B1B', flag_emoji: '🔥',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 62, stability: 58, ruler: { type: 'tribal_chief', name: 'Вождь сенонов', personal_power: 70 } },
-      regions: ["r768","r2205","r2206"],
+      regions: ["r768","r2205","r2206"]
       population: { total: 80000, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 2000, tax_rate: 0.07, primary_exports: ['slaves', 'furs', 'cattle'], primary_imports: ['iron', 'wine'], trade_partners: ['boii', 'umbrians', 'rome'], stockpile: { wheat: 6000 }, trade_routes: [] },
       military: { infantry: 12000, cavalry: 1500, ships: 0, mercenaries: 0, morale: 78, loyalty: 72, at_war_with: [] },
@@ -2006,7 +2006,7 @@ const INITIAL_GAME_STATE = {
       name: 'Лингоны', adjective: 'лингонское', color: '#4B6B2B', flag_emoji: '🌲',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 58, stability: 55, ruler: { type: 'tribal_chief', name: 'Вождь лингонов', personal_power: 58 } },
-      regions: ["r329","r330","r338","r2270","r2271","r2274","r2282","r2286","r2292","r2293","r2294","r2295","r2296","r2298","r2301","r2342","r2343"],
+      regions: ["r329","r330","r338","r2270","r2271","r2274","r2282","r2286","r2292","r2293","r2294","r2295","r2296","r2298","r2301","r2342","r2343"]
       population: { total: 100000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 2200, tax_rate: 0.07, primary_exports: ['furs', 'amber', 'cattle'], primary_imports: ['iron', 'salt', 'wine'], trade_partners: ['boii', 'sequani', 'senones'], stockpile: { wheat: 7000 }, trade_routes: [] },
       military: { infantry: 12000, cavalry: 1500, ships: 0, mercenaries: 0, morale: 68, loyalty: 65, at_war_with: [] },
@@ -2021,7 +2021,7 @@ const INITIAL_GAME_STATE = {
       name: 'Вестины', color: '#7B6B4B', flag_emoji: '⚔️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь вестинов' } , legitimacy: 45, stability: 45},
-      regions: ["r133","r135","r2130","r2134"],
+      regions: ["r133","r135","r2130","r2134"]
       population: { total: 35000, happiness: 55 },
       economy: { treasury: 700, stockpile: { wheat: 3000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 3000, cavalry: 250, ships: 0, morale: 65, at_war_with: [] },
@@ -2034,7 +2034,7 @@ const INITIAL_GAME_STATE = {
       name: 'Пелигны', color: '#6B5B3B', flag_emoji: '⚔️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь пелигнов' } , legitimacy: 45, stability: 45},
-      regions: ["r2127","r2128","r2129","r2131"],
+      regions: ["r2127","r2128","r2129","r2131"]
       population: { total: 30000, happiness: 55 },
       economy: { treasury: 600, stockpile: { wheat: 2500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2500, cavalry: 200, ships: 0, morale: 65, at_war_with: [] },
@@ -2047,7 +2047,7 @@ const INITIAL_GAME_STATE = {
       name: 'Марруцины', color: '#7B7B4B', flag_emoji: '⚔️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь марруцинов' } , legitimacy: 45, stability: 45},
-      regions: ["r2123"],
+      regions: ["r2123"]
       population: { total: 25000, happiness: 54 },
       economy: { treasury: 500, stockpile: { wheat: 2000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2000, cavalry: 180, ships: 5, morale: 63, at_war_with: [] },
@@ -2060,7 +2060,7 @@ const INITIAL_GAME_STATE = {
       name: 'Япигия', color: '#8B8B5B', flag_emoji: '🌾',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь япигов' } , legitimacy: 45, stability: 45},
-      regions: ["r767","r2167","r2168"],
+      regions: ["r767","r2167","r2168"]
       population: { total: 40000, happiness: 53 },
       economy: { treasury: 800, stockpile: { wheat: 3500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 3500, cavalry: 400, ships: 5, morale: 60, at_war_with: [] },
@@ -2073,7 +2073,7 @@ const INITIAL_GAME_STATE = {
       name: 'Сипонт', color: '#9B9B6B', flag_emoji: '⚓',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Сипонта' } , legitimacy: 55, stability: 50},
-      regions: ["r2136","r2140"],
+      regions: ["r2136","r2140"]
       population: { total: 12000, happiness: 55 },
       economy: { treasury: 600, stockpile: { wheat: 1200 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 700, cavalry: 50, ships: 15, morale: 58, at_war_with: [] },
@@ -2086,7 +2086,7 @@ const INITIAL_GAME_STATE = {
       name: 'Спина', color: '#7B9B9B', flag_emoji: '⚓',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Спины' } , legitimacy: 55, stability: 50},
-      regions: ["r2208","r2226"],
+      regions: ["r2208","r2226"]
       population: { total: 10000, happiness: 55 },
       economy: { treasury: 800, stockpile: { wheat: 1000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 500, cavalry: 30, ships: 20, morale: 58, at_war_with: [] },
@@ -2099,7 +2099,7 @@ const INITIAL_GAME_STATE = {
       name: 'Анкона', color: '#6B9B9B', flag_emoji: '⚓',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Анконы' } , legitimacy: 55, stability: 50},
-      regions: ["r711"],
+      regions: ["r711"]
       population: { total: 12000, happiness: 57 },
       economy: { treasury: 700, stockpile: { wheat: 1200 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 700, cavalry: 40, ships: 18, morale: 60, at_war_with: [] },
@@ -2112,7 +2112,7 @@ const INITIAL_GAME_STATE = {
       name: 'Генуя', color: '#5B8B8B', flag_emoji: '⚓',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь лигурийцев Генуи' } , legitimacy: 45, stability: 45},
-      regions: ["r2265","r2266"],
+      regions: ["r2265","r2266"]
       population: { total: 8000, happiness: 55 },
       economy: { treasury: 400, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 600, cavalry: 30, ships: 10, morale: 60, at_war_with: [] },
@@ -2125,7 +2125,7 @@ const INITIAL_GAME_STATE = {
       name: 'Равенна', color: '#8B8B7B', flag_emoji: '🌿',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Равенны' } , legitimacy: 55, stability: 50},
-      regions: ["r2207"],
+      regions: ["r2207"]
       population: { total: 9000, happiness: 55 },
       economy: { treasury: 400, stockpile: { wheat: 900 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 500, cavalry: 20, ships: 12, morale: 55, at_war_with: [] },
@@ -2138,7 +2138,7 @@ const INITIAL_GAME_STATE = {
       name: 'Тридентинцы', color: '#6B7B6B', flag_emoji: '🏔️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь тридентинцев' } , legitimacy: 45, stability: 45},
-      regions: ["r2239","r2240","r2305","r2307","r2308","r2309","r2310","r2311","r2312","r2313","r2314","r2315"],
+      regions: ["r2239","r2240","r2305","r2307","r2308","r2309","r2310","r2311","r2312","r2313","r2314","r2315"]
       population: { total: 18000, happiness: 58 },
       economy: { treasury: 500, stockpile: { wheat: 1500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1500, cavalry: 100, ships: 0, morale: 65, at_war_with: [] },
@@ -2151,7 +2151,7 @@ const INITIAL_GAME_STATE = {
       name: 'Карны', color: '#6B6B7B', flag_emoji: '🏔️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь карнов' } , legitimacy: 45, stability: 45},
-      regions: ["r252","r355","r394","r2242","r2243","r2244","r2245","r2246","r2316","r2317","r2318","r2319","r2320","r2331","r2333"],
+      regions: ["r252","r355","r394","r2242","r2243","r2244","r2245","r2246","r2316","r2317","r2318","r2319","r2320","r2331","r2333"]
       population: { total: 22000, happiness: 58 },
       economy: { treasury: 600, stockpile: { wheat: 1800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2000, cavalry: 150, ships: 0, morale: 65, at_war_with: [] },
@@ -2164,7 +2164,7 @@ const INITIAL_GAME_STATE = {
       name: 'Лепонты', color: '#7B6B7B', flag_emoji: '🏔️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь лепонтов' } , legitimacy: 45, stability: 45},
-      regions: ["r109","r344","r400","r2259","r2261","r2262","r2300","r2302","r2303","r2340"],
+      regions: ["r109","r344","r400","r2259","r2261","r2262","r2300","r2302","r2303","r2340"]
       population: { total: 15000, happiness: 57 },
       economy: { treasury: 400, stockpile: { wheat: 1200 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1200, cavalry: 80, ships: 0, morale: 62, at_war_with: [] },
@@ -2177,7 +2177,7 @@ const INITIAL_GAME_STATE = {
       name: 'Саласси', color: '#8B7B6B', flag_emoji: '⛏️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь саласси' } , legitimacy: 45, stability: 45},
-      regions: ["r2273","r2297","r2299"],
+      regions: ["r2273","r2297","r2299"]
       population: { total: 20000, happiness: 58 },
       economy: { treasury: 600, stockpile: { wheat: 1500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2000, cavalry: 100, ships: 0, morale: 68, at_war_with: [] },
@@ -2190,7 +2190,7 @@ const INITIAL_GAME_STATE = {
       name: 'Таврины', color: '#7B8B6B', flag_emoji: '🐂',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь тавринов' } , legitimacy: 45, stability: 45},
-      regions: ["r2258","r2272","r2275","r2276","r2277","r2281","r2283","r2284"],
+      regions: ["r2258","r2272","r2275","r2276","r2277","r2281","r2283","r2284"]
       population: { total: 25000, happiness: 58 },
       economy: { treasury: 700, stockpile: { wheat: 2000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2500, cavalry: 200, ships: 0, morale: 65, at_war_with: [] },
@@ -2203,7 +2203,7 @@ const INITIAL_GAME_STATE = {
       name: 'Вагиенны', color: '#8B7B7B', flag_emoji: '🗡️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь вагиеннов' } , legitimacy: 45, stability: 45},
-      regions: ["r2278","r2279","r2280","r2285","r2287"],
+      regions: ["r2278","r2279","r2280","r2285","r2287"]
       population: { total: 18000, happiness: 57 },
       economy: { treasury: 500, stockpile: { wheat: 1500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1800, cavalry: 120, ships: 0, morale: 63, at_war_with: [] },
@@ -2226,7 +2226,7 @@ const INITIAL_GAME_STATE = {
         type: 'oligarchy', legitimacy: 65, stability: 60,
         ruler: { type: 'person', name: 'Офелла', personal_power: 70 },
       },
-      regions: ["r794"],
+      regions: ["r2976"]
       population: {
         total: 300000,
         by_profession: { farmers: 100000, craftsmen: 40000, merchants: 50000, sailors: 20000, clergy: 15000, soldiers: 15000, slaves: 60000 },
@@ -2259,7 +2259,7 @@ const INITIAL_GAME_STATE = {
         type: 'tribal', legitimacy: 60, stability: 55,
         ruler: { type: 'tribal_chief', name: 'Вождь мавров', personal_power: 65 },
       },
-      regions: ["r2610","r2614","r2616","r2617","r2618","r2619","r2620","r2621","r2622","r2623","r2624","r2625","r2626","r2629","r2630","r2631","r2633","r2634","r2635","r2636","r2637","r2638","r2639","r2640","r2641","r2642","r2643","r2644","r2645","r2646","r2647","r2648","r2649","r2650","r2651","r2652","r2653","r2654","r2655","r2667","r2668","r2669","r2670","r2707","r2708","r2709","r2710","r2711","r2712","r2713","r2714","r2715","r2716","r2717","r2718","r2720","r2721","r2722","r2723","r2724","r2725","r2726","r2727","r2728","r2729","r2731","r2732","r2734","r2735","r2736","r2737","r2738","r2739","r2740","r2746","r2747","r2751","r2752","r2761","r2762","r2763","r2764","r2765","r2766","r2767","r2768","r2769","r2770","r2771","r2772","r2773","r2774","r2775","r2776","r2777","r2778","r2779","r2780","r2781","r2782","r2783","r2784","r2785","r2786","r2787","r2788","r2789","r2790","r2791","r2792","r2793","r2794","r2795","r2796","r2797","r2798","r2799","r2800","r2801","r2802","r2820","r2821","r2822"],
+      regions: ["r2709","r2710","r2711","r2712","r2713","r2714","r2715","r2716","r2721","r2723","r2724","r2725","r2726","r2727","r2728","r2734","r2735","r2736","r2737","r2738","r2739","r2740","r2747","r2765","r2766","r2767","r2768","r2769","r2770","r2771","r2772","r2773","r2774","r2775","r2776","r2777","r2778","r2779","r2780","r2781","r2782","r2783","r2784","r2785","r2786","r2802","r2820","r2821","r2822"]
       population: {
         total: 350000,
         by_profession: { farmers: 120000, craftsmen: 30000, merchants: 20000, sailors: 15000, clergy: 15000, soldiers: 50000, slaves: 100000 },
@@ -2291,7 +2291,7 @@ const INITIAL_GAME_STATE = {
         type: 'tribal', legitimacy: 65, stability: 60,
         ruler: { type: 'tribal_chief', name: 'Вождь масилиев', personal_power: 68 },
       },
-      regions: ["r53"],
+      regions: ["r2428"]
       population: {
         total: 450000,
         by_profession: { farmers: 160000, craftsmen: 40000, merchants: 30000, sailors: 10000, clergy: 20000, soldiers: 60000, slaves: 130000 },
@@ -2324,7 +2324,7 @@ const INITIAL_GAME_STATE = {
         type: 'tribal', legitimacy: 62, stability: 58,
         ruler: { type: 'tribal_chief', name: 'Вождь масэсилиев', personal_power: 65 },
       },
-      regions: ["r823","r2579","r2588","r2592","r2593","r2594","r2595","r2596","r2597","r2598","r2599","r2600","r2601","r2602","r2603","r2604","r2605","r2606","r2607","r2608","r2609","r2611","r2680"],
+      regions: ["r823","r2579","r2592","r2593","r2594","r2595","r2596","r2597","r2598","r2599","r2600"]
       population: {
         total: 500000,
         by_profession: { farmers: 180000, craftsmen: 40000, merchants: 25000, sailors: 10000, clergy: 20000, soldiers: 70000, slaves: 155000 },
@@ -2357,7 +2357,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 80, stability: 75,
         ruler: { type: 'person', name: 'Царица-кандака Нахирсан', personal_power: 72 },
       },
-      regions: ["r49"],
+      regions: ["r49"]
       population: {
         total: 250000,
         by_profession: { farmers: 90000, craftsmen: 40000, merchants: 30000, sailors: 10000, clergy: 30000, soldiers: 20000, slaves: 30000 },
@@ -2389,7 +2389,7 @@ const INITIAL_GAME_STATE = {
         type: 'tribal', legitimacy: 62, stability: 58,
         ruler: { type: 'tribal_chief', name: 'Верховный вождь гарамантов', personal_power: 70 },
       },
-      regions: ["r2917","r2918","r2919","r2925","r2926","r2930","r2931","r2932","r2936"],
+      regions: ["r2917","r2918","r2919","r2925","r2926","r2930","r2931","r2932","r2936"]
       population: {
         total: 300000,
         by_profession: { farmers: 80000, craftsmen: 30000, merchants: 20000, sailors: 0, clergy: 20000, soldiers: 60000, slaves: 90000 },
@@ -2421,7 +2421,7 @@ const INITIAL_GAME_STATE = {
         type: 'tribal', legitimacy: 58, stability: 55,
         ruler: { type: 'tribal_chief', name: 'Вождь насамонов', personal_power: 62 },
       },
-      regions: ["r868","r869","r2881","r2886"],
+      regions: ["r868","r869","r2881","r2886"]
       population: {
         total: 150000,
         by_profession: { farmers: 50000, craftsmen: 15000, merchants: 10000, sailors: 5000, clergy: 10000, soldiers: 30000, slaves: 30000 },
@@ -2451,7 +2451,7 @@ const INITIAL_GAME_STATE = {
       name: 'Ликсус', adjective: 'ликсусское', color: '#C8A04A', flag_emoji: '⚓',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 65, stability: 62, ruler: { type: 'council', name: 'Совет Ликсуса', personal_power: 55 } },
-      regions: ["r2627","r2628","r2632"],
+      regions: ["r2627","r2628","r2632"]
       population: { total: 22000, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 2200, tax_rate: 0.10, primary_exports: ['fish', 'trade_goods', 'ivory'], primary_imports: ['iron', 'wheat', 'pottery'], trade_partners: ['carthage', 'mauretania'], stockpile: { wheat: 2500 }, trade_routes: [] },
       military: { infantry: 1000, cavalry: 100, ships: 20, mercenaries: 200, morale: 60, loyalty: 62, at_war_with: [] },
@@ -2464,7 +2464,7 @@ const INITIAL_GAME_STATE = {
       name: 'Утика', adjective: 'утикийское', color: '#B8902A', flag_emoji: '🏛️',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 70, stability: 65, ruler: { type: 'council', name: 'Совет Утики', personal_power: 58 } },
-      regions: ["r99"],
+      regions: ["r99"]
       population: { total: 30000, happiness: 62, growth_rate: 0.002 },
       economy: { treasury: 3500, tax_rate: 0.11, primary_exports: ['trade_goods', 'pottery', 'purple_dye'], primary_imports: ['wheat', 'iron', 'timber'], trade_partners: ['carthage', 'massylii'], stockpile: { wheat: 4000 }, trade_routes: [] },
       military: { infantry: 1500, cavalry: 100, ships: 25, mercenaries: 300, morale: 62, loyalty: 65, at_war_with: [] },
@@ -2477,7 +2477,7 @@ const INITIAL_GAME_STATE = {
       name: 'Керкуан', adjective: 'керкуанское', color: '#C8B040', flag_emoji: '🏺',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 62, stability: 60, ruler: { type: 'council', name: 'Совет Керкуана', personal_power: 50 } },
-      regions: ["r2461"],
+      regions: ["r2461"]
       population: { total: 15000, happiness: 62, growth_rate: 0.002 },
       economy: { treasury: 1800, tax_rate: 0.11, primary_exports: ['purple_dye', 'fish', 'trade_goods'], primary_imports: ['wheat', 'timber'], trade_partners: ['carthage', 'utica'], stockpile: { wheat: 1800 }, trade_routes: [] },
       military: { infantry: 700, cavalry: 50, ships: 15, mercenaries: 100, morale: 58, loyalty: 60, at_war_with: [] },
@@ -2490,7 +2490,7 @@ const INITIAL_GAME_STATE = {
       name: 'Фазания', adjective: 'фазанийское', color: '#D4A060', flag_emoji: '🏜️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 55, stability: 52, ruler: { type: 'tribal_chief', name: 'Верховный вождь фазанов', personal_power: 62 } },
-      regions: ["r2872","r2873","r2879","r2885","r2887","r2888","r2889","r2890","r2891","r2892","r2910","r2911","r2912","r2913","r2914","r2915","r2916","r2920","r2921","r2922","r2923","r2924","r2927","r2928","r2929","r2933","r2934","r2935","r2937","r2938","r2939","r2940","r2941"],
+      regions: ["r2872","r2873","r2879","r2885","r2887","r2888","r2889","r2890","r2891","r2892","r2910","r2911","r2912","r2913","r2914","r2915","r2916","r2920","r2921","r2922","r2923","r2924","r2927","r2928","r2929","r2933","r2934","r2935","r2937","r2938","r2939","r2940","r2941"]
       population: { total: 80000, happiness: 56, growth_rate: 0.001 },
       economy: { treasury: 1500, tax_rate: 0.06, primary_exports: ['slaves', 'ivory', 'cattle'], primary_imports: ['iron', 'salt', 'trade_goods'], trade_partners: ['garamantes', 'nasamonia'], stockpile: { wheat: 4000 }, trade_routes: [] },
       military: { infantry: 5000, cavalry: 3000, ships: 0, mercenaries: 0, morale: 65, loyalty: 65, at_war_with: [] },
@@ -2503,7 +2503,7 @@ const INITIAL_GAME_STATE = {
       name: 'Гизантия', adjective: 'гизантийское', color: '#E0B060', flag_emoji: '🍯',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 55, stability: 52, ruler: { type: 'tribal_chief', name: 'Вождь гизантов', personal_power: 58 } },
-      regions: ["r219","r220","r221","r229","r230","r278","r280","r349","r372","r377","r381","r382","r383","r414","r818","r819","r822","r1010","r2467","r2486","r2662","r2663","r2664","r2665","r2823","r2824","r2825","r2826","r2827","r2828","r2829","r2830","r2831","r2832","r2833","r2834","r2835","r2836","r2837","r2846","r2847","r2848","r2849"],
+      regions: ["r219","r220","r221","r229","r230","r278","r280","r349","r372","r377","r381","r382","r383","r414","r818","r819","r822","r1010","r2467","r2486","r2662","r2663","r2664","r2665","r2823","r2824","r2825","r2826","r2827","r2828","r2829","r2830","r2831","r2832","r2833","r2834","r2835","r2836","r2837","r2846","r2847","r2848","r2849"]
       population: { total: 90000, happiness: 56, growth_rate: 0.001 },
       economy: { treasury: 1500, tax_rate: 0.06, primary_exports: ['cattle', 'furs', 'slaves'], primary_imports: ['salt', 'iron'], trade_partners: ['nasamonia', 'phazania'], stockpile: { wheat: 5000 }, trade_routes: [] },
       military: { infantry: 6000, cavalry: 2500, ships: 0, mercenaries: 0, morale: 62, loyalty: 62, at_war_with: [] },
@@ -2516,7 +2516,7 @@ const INITIAL_GAME_STATE = {
       name: 'Гинданцы', adjective: 'гинданское', color: '#D8A850', flag_emoji: '🏜️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 55, stability: 52, ruler: { type: 'tribal_chief', name: 'Вождь гинданцев', personal_power: 60 } },
-      regions: ["r222","r2656","r2657","r2658","r2659","r2660","r2661","r2684","r2691","r2692","r2697","r2698","r2699","r2701"],
+      regions: ["r222","r2656","r2657","r2658","r2659","r2660","r2661","r2684","r2691","r2692","r2697","r2698","r2699","r2701"]
       population: { total: 75000, happiness: 56, growth_rate: 0.001 },
       economy: { treasury: 1200, tax_rate: 0.06, primary_exports: ['cattle', 'ivory', 'slaves'], primary_imports: ['salt', 'iron'], trade_partners: ['nasamonia', 'masaesyli'], stockpile: { wheat: 4000 }, trade_routes: [] },
       military: { infantry: 5000, cavalry: 2000, ships: 0, mercenaries: 0, morale: 62, loyalty: 62, at_war_with: [] },
@@ -2529,7 +2529,7 @@ const INITIAL_GAME_STATE = {
       name: 'Махлии', adjective: 'махлийское', color: '#C8A040', flag_emoji: '🏜️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 55, stability: 52, ruler: { type: 'tribal_chief', name: 'Вождь махлиев', personal_power: 58 } },
-      regions: ["r211","r218","r223","r225","r228","r678","r680","r813","r820","r2545","r2700"],
+      regions: ["r211","r218","r223","r225","r228","r678","r680","r813","r820","r2545","r2700"]
       population: { total: 60000, happiness: 55, growth_rate: 0.001 },
       economy: { treasury: 1000, tax_rate: 0.06, primary_exports: ['cattle', 'slaves'], primary_imports: ['salt', 'iron'], trade_partners: ['garamantes', 'cyrene'], stockpile: { wheat: 3500 }, trade_routes: [] },
       military: { infantry: 4000, cavalry: 1500, ships: 0, mercenaries: 0, morale: 60, loyalty: 60, at_war_with: [] },
@@ -2542,7 +2542,7 @@ const INITIAL_GAME_STATE = {
       name: 'Мусуламии', adjective: 'мусуламийское', color: '#B89030', flag_emoji: '⚔️',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 58, stability: 55, ruler: { type: 'tribal_chief', name: 'Вождь мусуламиев', personal_power: 65 } },
-      regions: ["r214","r215","r216","r217","r2470","r2472","r2473","r2474","r2476","r2480","r2481","r2505","r2506","r2507","r2508","r2509","r2510","r2511","r2512","r2513","r2514","r2515","r2516","r2517","r2518","r2519","r2520","r2521","r2522","r2523","r2524","r2525","r2526","r2527","r2528","r2529","r2530","r2531","r2532","r2533","r2534","r2535","r2536","r2537","r2538","r2539","r2540","r2541","r2542","r2543","r2544","r2546","r2547","r2548","r2549","r2550","r2551","r2553","r2554","r2556","r2557","r2585","r2685","r2686","r2687","r2688","r2689","r2690","r2693","r2694","r2695","r2696","r2814"],
+      regions: ["r214","r215","r216","r217","r2470","r2472","r2473","r2474","r2476","r2480","r2481","r2505","r2506","r2507","r2508","r2509","r2510","r2511","r2512","r2513","r2514","r2515","r2516","r2517","r2518","r2519","r2520","r2521","r2522","r2523","r2524","r2525","r2526","r2527","r2528","r2529","r2530","r2531","r2532","r2533","r2534","r2535","r2536","r2537","r2538","r2539","r2540","r2541","r2542","r2543","r2544","r2546","r2547","r2548","r2549","r2550","r2551","r2553","r2554","r2556","r2557","r2585","r2685","r2686","r2687","r2688","r2689","r2690","r2693","r2694","r2695","r2696","r2814"]
       population: { total: 120000, happiness: 57, growth_rate: 0.002 },
       economy: { treasury: 2000, tax_rate: 0.07, primary_exports: ['cattle', 'slaves', 'horses'], primary_imports: ['iron', 'salt'], trade_partners: ['massylii', 'masaesyli'], stockpile: { wheat: 7000 }, trade_routes: [] },
       military: { infantry: 8000, cavalry: 4000, ships: 0, mercenaries: 0, morale: 68, loyalty: 65, at_war_with: [] },
@@ -2555,7 +2555,7 @@ const INITIAL_GAME_STATE = {
       name: 'Дафнитеи', adjective: 'дафнитейское', color: '#C8B840', flag_emoji: '🏜️',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 52, stability: 50, ruler: { type: 'tribal_chief', name: 'Вождь дафнитеев', personal_power: 55 } },
-      regions: ["r89","r95","r459","r460","r461","r462","r463","r464","r465","r466","r467","r468","r870","r871","r872","r873","r1102","r2504","r2882","r2883","r2884","r2893","r2894","r2895","r2896","r2897","r2898","r2899","r2900","r2901","r2902","r2903","r2904","r2905","r2906","r2908","r3063","r3200","r3201","r3202","r3203","r3204","r3206","r3207","r3208"],
+      regions: ["r89","r95","r459","r460","r461","r462","r463","r464","r465","r466","r467","r468","r870","r871","r872","r873","r1102","r2504","r2882","r2883","r2884","r2893","r2894","r2895","r2896","r2897","r2898","r2899","r2900","r2901","r2902","r2903","r2904","r2905","r2906","r2908","r3063","r3200","r3201","r3202","r3203","r3204","r3206","r3207","r3208"]
       population: { total: 80000, happiness: 54, growth_rate: 0.001 },
       economy: { treasury: 1200, tax_rate: 0.06, primary_exports: ['cattle', 'slaves'], primary_imports: ['salt', 'iron'], trade_partners: ['nasamonia', 'garamantes'], stockpile: { wheat: 4000 }, trade_routes: [] },
       military: { infantry: 5000, cavalry: 2000, ships: 0, mercenaries: 0, morale: 60, loyalty: 60, at_war_with: [] },
@@ -2568,7 +2568,7 @@ const INITIAL_GAME_STATE = {
       name: 'Блеммии', adjective: 'блеммийское', color: '#A07040', flag_emoji: '⚔️',
       is_player: false, is_minor: true, ai_personality: 'aggressive', ai_priority: 'military',
       government: { type: 'tribal', legitimacy: 58, stability: 55, ruler: { type: 'tribal_chief', name: 'Вождь блеммиев', personal_power: 62 } },
-      regions: ["r469","r3278","r3280","r3281","r3282","r3378","r3384","r3385","r3386","r3387","r3388","r3389","r3390","r3391","r3392","r3393","r3396","r3397","r3398","r3399","r3400"],
+      regions: ["r469","r3278","r3280","r3281","r3282","r3378","r3384","r3385","r3386","r3387","r3388","r3389","r3390","r3391","r3392","r3393","r3396","r3397","r3398","r3399","r3400"]
       population: { total: 40000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 800, tax_rate: 0.06, primary_exports: ['ivory', 'slaves', 'gold'], primary_imports: ['iron', 'trade_goods'], trade_partners: ['meroe', 'ptolemaic_kingdom'], stockpile: { wheat: 2000 }, trade_routes: [] },
       military: { infantry: 4000, cavalry: 500, ships: 0, mercenaries: 0, morale: 70, loyalty: 70, at_war_with: [] },
@@ -2581,7 +2581,7 @@ const INITIAL_GAME_STATE = {
       name: 'Додекасхойнос', adjective: 'додекасхойносское', color: '#B09050', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 50, stability: 48, ruler: { type: 'tribal_chief', name: 'Местный правитель', personal_power: 45 } },
-      regions: ["r3270","r3272","r3273","r3274","r3275","r3276","r3277","r3279"],
+      regions: ["r3270","r3272","r3273","r3274","r3275","r3276","r3277","r3279"]
       population: { total: 60000, happiness: 52, growth_rate: 0.001 },
       economy: { treasury: 1000, tax_rate: 0.08, primary_exports: ['ivory', 'cattle', 'slaves'], primary_imports: ['wheat', 'trade_goods'], trade_partners: ['meroe', 'ptolemaic_kingdom'], stockpile: { wheat: 3500 }, trade_routes: [] },
       military: { infantry: 3000, cavalry: 500, ships: 10, mercenaries: 0, morale: 55, loyalty: 52, at_war_with: [] },
@@ -2594,7 +2594,7 @@ const INITIAL_GAME_STATE = {
       name: 'Сембриты', adjective: 'сембритское', color: '#905030', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 50, stability: 48, ruler: { type: 'tribal_chief', name: 'Вождь сембритов', personal_power: 52 } },
-      regions: ["r48","r851","r852","r856"],
+      regions: ["r48","r851","r852","r856"]
       population: { total: 20000, happiness: 54 },
       economy: { treasury: 500, stockpile: { wheat: 1500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1500, cavalry: 200, ships: 5, morale: 60, at_war_with: [] },
@@ -2607,7 +2607,7 @@ const INITIAL_GAME_STATE = {
       name: 'Азания', adjective: 'азанийское', color: '#608050', flag_emoji: '🌴',
       is_player: false, is_minor: true, ai_personality: 'isolationist', ai_priority: 'survival',
       government: { type: 'tribal', legitimacy: 52, stability: 52, ruler: { type: 'tribal_chief', name: 'Вождь азанийцев', personal_power: 55 } },
-      regions: ["r746"],
+      regions: ["r746"]
       population: { total: 15000, happiness: 58 },
       economy: { treasury: 400, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1000, cavalry: 0, ships: 5, morale: 60, at_war_with: [] },
@@ -2620,7 +2620,7 @@ const INITIAL_GAME_STATE = {
       name: 'Аксум', adjective: 'аксумское', color: '#507040', flag_emoji: '🌟',
       is_player: false, is_minor: true, ai_personality: 'isolationist', ai_priority: 'survival',
       government: { type: 'monarchy', legitimacy: 62, stability: 60, ruler: { type: 'person', name: 'Вождь аксумитов', personal_power: 60 } },
-      regions: ["r80","r847","r848","r849"],
+      regions: ["r80","r847","r848","r849"]
       population: { total: 25000, happiness: 60 },
       economy: { treasury: 600, stockpile: { wheat: 2000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1500, cavalry: 200, ships: 5, morale: 65, at_war_with: [] },
@@ -2635,7 +2635,7 @@ const INITIAL_GAME_STATE = {
       name: 'Русадир', color: '#B89040', flag_emoji: '⚓',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Русадира' } , legitimacy: 55, stability: 50},
-      regions: ["r815"],
+      regions: ["r815"]
       population: { total: 8000, happiness: 58 },
       economy: { treasury: 500, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 400, cavalry: 30, ships: 12, morale: 58, at_war_with: [] },
@@ -2648,7 +2648,7 @@ const INITIAL_GAME_STATE = {
       name: 'Псиллы', color: '#D8C870', flag_emoji: '🐍',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь псиллов' } , legitimacy: 45, stability: 45},
-      regions: ["r2907","r3205","r3209","r3210","r3211","r3212","r3213","r3214","r3215","r3216","r3217","r3218","r3219","r3220","r3225","r3226","r3227"],
+      regions: ["r2907","r3205","r3209","r3210","r3211","r3212","r3213","r3214","r3215","r3216","r3217","r3218","r3219","r3220","r3225","r3226","r3227"]
       population: { total: 30000, happiness: 54 },
       economy: { treasury: 600, stockpile: { wheat: 2000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2500, cavalry: 1000, ships: 0, morale: 62, at_war_with: [] },
@@ -2661,7 +2661,7 @@ const INITIAL_GAME_STATE = {
       name: 'Тапакы', color: '#C8B050', flag_emoji: '🏜️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь тапаков' } , legitimacy: 45, stability: 45},
-      regions: ["r2838"],
+      regions: ["r2838"]
       population: { total: 40000, happiness: 55 },
       economy: { treasury: 800, stockpile: { wheat: 3000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 3000, cavalry: 1500, ships: 0, morale: 62, at_war_with: [] },
@@ -2674,7 +2674,7 @@ const INITIAL_GAME_STATE = {
       name: 'Кохайто', color: '#806040', flag_emoji: '🌄',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь кохайто' } , legitimacy: 45, stability: 45},
-      regions: ["r857"],
+      regions: ["r857"]
       population: { total: 12000, happiness: 58 },
       economy: { treasury: 300, stockpile: { wheat: 1000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 800, cavalry: 100, ships: 0, morale: 60, at_war_with: [] },
@@ -2687,7 +2687,7 @@ const INITIAL_GAME_STATE = {
       name: 'Саба', color: '#C8A030', flag_emoji: '👑',
       is_player: false, is_minor: true,
       government: { type: 'monarchy', ruler: { name: 'Мукарриб Сабы' } , legitimacy: 65, stability: 60},
-      regions: ["r855"],
+      regions: ["r855"]
       population: { total: 40000, happiness: 65 },
       economy: { treasury: 2000, stockpile: { wheat: 2000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 3000, cavalry: 500, ships: 10, morale: 65, at_war_with: [] },
@@ -2700,7 +2700,7 @@ const INITIAL_GAME_STATE = {
       name: 'Маин', color: '#D8B040', flag_emoji: '🌿',
       is_player: false, is_minor: true,
       government: { type: 'monarchy', ruler: { name: 'Царь Маина' } , legitimacy: 65, stability: 60},
-      regions: ["r472"],
+      regions: ["r472"]
       population: { total: 35000, happiness: 62 },
       economy: { treasury: 1500, stockpile: { wheat: 1500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2500, cavalry: 300, ships: 8, morale: 62, at_war_with: [] },
@@ -2713,7 +2713,7 @@ const INITIAL_GAME_STATE = {
       name: 'Катабан', color: '#E0C050', flag_emoji: '🌿',
       is_player: false, is_minor: true,
       government: { type: 'monarchy', ruler: { name: 'Царь Катабана' } , legitimacy: 65, stability: 60},
-      regions: ["r39"],
+      regions: ["r39"]
       population: { total: 30000, happiness: 62 },
       economy: { treasury: 1200, stockpile: { wheat: 1200 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2000, cavalry: 300, ships: 5, morale: 62, at_war_with: [] },
@@ -2726,7 +2726,7 @@ const INITIAL_GAME_STATE = {
       name: 'Хадрамаут', color: '#D8B838', flag_emoji: '🌴',
       is_player: false, is_minor: true,
       government: { type: 'monarchy', ruler: { name: 'Царь Хадрамаута' } , legitimacy: 65, stability: 60},
-      regions: ["r470"],
+      regions: ["r470"]
       population: { total: 25000, happiness: 60 },
       economy: { treasury: 1000, stockpile: { wheat: 1000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1800, cavalry: 200, ships: 8, morale: 60, at_war_with: [] },
@@ -2739,7 +2739,7 @@ const INITIAL_GAME_STATE = {
       name: 'Тамуд', color: '#D0A840', flag_emoji: '🐪',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь тамудян' } , legitimacy: 45, stability: 45},
-      regions: ["r125"],
+      regions: ["r125"]
       population: { total: 20000, happiness: 58 },
       economy: { treasury: 500, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1500, cavalry: 600, ships: 0, morale: 62, at_war_with: [] },
@@ -2752,7 +2752,7 @@ const INITIAL_GAME_STATE = {
       name: 'Кинда', color: '#C89030', flag_emoji: '⚔️',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь Кинды' } , legitimacy: 45, stability: 45},
-      regions: ["r1016"],
+      regions: ["r1016"]
       population: { total: 18000, happiness: 58 },
       economy: { treasury: 400, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1200, cavalry: 500, ships: 0, morale: 62, at_war_with: [] },
@@ -2765,7 +2765,7 @@ const INITIAL_GAME_STATE = {
       name: 'Герра', color: '#E0C060', flag_emoji: '🌊',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Герры' } , legitimacy: 55, stability: 50},
-      regions: ["r454"],
+      regions: ["r454"]
       population: { total: 20000, happiness: 62 },
       economy: { treasury: 1500, stockpile: { wheat: 1000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1000, cavalry: 300, ships: 15, morale: 60, at_war_with: [] },
@@ -2788,7 +2788,7 @@ const INITIAL_GAME_STATE = {
         type: 'empire', legitimacy: 72, stability: 62,
         ruler: { type: 'person', name: 'Селевк I Никатор', personal_power: 90 },
       },
-      regions: ["r88","r93","r118","r129","r148","r149","r170","r171","r187","r191","r428","r431","r437","r439","r447","r448","r449","r450","r451","r452","r453","r801","r831","r832","r833","r834","r835","r836","r837","r838","r839","r840","r841","r846","r1568","r1571","r1572","r3456","r3459","r3460","r3461","r3462","r3470","r3471","r3483","r3484","r3485","r3486","r3487","r3488","r3490","r3491","r3493","r3495","r3496","r3497","r3498","r3499","r3500","r3503","r3504","r3506","r3509","r3510","r3511","r3613","r3614","r3615","r3616","r3617","r3618","r3619","r3620","r3621","r3622","r3623","r3624","r3626","r3627","r3628","r3630","r3631","r3632","r3633","r3634","r3635","r3636","r3637","r3638","r3639","r3640","r3641","r3642","r3643","r3644","r3645","r3646","r3647","r3648","r3649","r3650","r3651","r3652","r3653","r3654","r3655","r3656","r3657","r3658","r3659","r3660","r3661","r3662","r3663","r3664","r3665","r3666","r3667","r3668","r3669","r3670","r3671","r3672","r3673","r3674","r3675","r3678","r3679","r3680","r3682","r3683","r3684","r3685","r3686","r3687","r3688","r3689","r3690","r3691","r3692","r3693","r3694","r3695","r3696","r3697","r3698","r3699","r3700","r3701","r3704","r3705","r3731","r3732","r3733","r3734","r3735","r3736","r3737","r3738","r3739","r3741","r3742","r3745","r3848","r3871","r3991","r3992","r3993","r3996","r4008","r4023","r4024","r4034","r4040","r4136","r4137","r4139","r4140","r4142"],
+      regions: ["r88","r118","r148","r170","r171","r187","r428","r431","r437","r447","r448","r450","r451","r452","r801","r831","r832","r833","r834","r835","r836","r837","r838","r840","r1571","r1572","r3456","r3459","r3460","r3461","r3462","r3470","r3471","r3483","r3484","r3485","r3486","r3487","r3488","r3490","r3491","r3493","r3495","r3496","r3497","r3498","r3499","r3500","r3503","r3504","r3506","r3509","r3510","r3511","r3613","r3614","r3615","r3616","r3617","r3618","r3619","r3626","r3627","r3628","r3630","r3631","r3632","r3633","r3634","r3635","r3638","r3643","r3644","r3647","r3649","r3650","r3651","r3652","r3653","r3654","r3655","r3656","r3657","r3668","r3674","r3675","r3682","r3684","r3687","r3688","r3695","r3696","r3697","r3698","r3699","r3700","r3701","r3704","r3705","r3731","r3733","r3745","r3848","r3871","r3991","r3996","r4008","r4023","r4024","r4034","r4040","r4136","r4137"]
       population: {
         total: 6000000,
         by_profession: { farmers: 2500000, craftsmen: 800000, merchants: 600000, sailors: 150000, clergy: 250000, soldiers: 300000, slaves: 400000 },
@@ -2822,7 +2822,7 @@ const INITIAL_GAME_STATE = {
         type: 'empire', legitimacy: 78, stability: 72,
         ruler: { type: 'person', name: 'Птолемей I Сотер', personal_power: 85 },
       },
-      regions: ["r3444","r3474","r3477","r3482"],
+      regions: ["r3474","r3477","r3482"]
       population: {
         total: 7000000,
         by_profession: { farmers: 3000000, craftsmen: 900000, merchants: 700000, sailors: 300000, clergy: 400000, soldiers: 250000, slaves: 450000 },
@@ -2857,7 +2857,7 @@ const INITIAL_GAME_STATE = {
         type: 'empire', legitimacy: 65, stability: 58,
         ruler: { type: 'person', name: 'Кассандр', personal_power: 80 },
       },
-      regions: ["r250"],
+      regions: ["r2978"]
       population: {
         total: 2500000,
         by_profession: { farmers: 1000000, craftsmen: 400000, merchants: 250000, sailors: 100000, clergy: 100000, soldiers: 150000, slaves: 500000 },
@@ -2892,7 +2892,7 @@ const INITIAL_GAME_STATE = {
         type: 'empire', legitimacy: 60, stability: 50,
         ruler: { type: 'person', name: 'Деметрий I Полиоркет', personal_power: 88 },
       },
-      regions: ["r3193","r3194","r3195","r3196","r3197","r3772","r3773","r3774","r3775","r3792","r3840","r3847","r3960","r3961"],
+      regions: ["r3772","r3773","r3774","r3775"]
       population: {
         total: 4000000,
         by_profession: { farmers: 1600000, craftsmen: 600000, merchants: 400000, sailors: 200000, clergy: 150000, soldiers: 250000, slaves: 800000 },
@@ -2927,7 +2927,7 @@ const INITIAL_GAME_STATE = {
         type: 'empire', legitimacy: 68, stability: 60,
         ruler: { type: 'person', name: 'Лисимах', personal_power: 82 },
       },
-      regions: ["r1141","r1142","r1153","r1159","r1160","r3093","r3095","r3096","r3097","r3098","r3105","r3158","r3159","r3160","r3534","r3851","r3852","r3853","r3858","r3860","r3866","r3867","r3868","r3869","r3870","r3872","r3873","r3875","r3876","r3877","r3878","r3879","r3889","r3890","r3891","r3892","r3896","r3917","r3918","r3919","r3920","r3921","r3924","r3925","r3927","r3928","r3929","r3930","r3931","r3932","r3933","r3934","r3935","r3936","r3937","r3938","r3939","r3940","r3941","r3942","r3943","r3944","r3945","r3946","r3949","r3950","r3951","r3952","r3953","r3954","r3955","r3956","r3958"],
+      regions: ["r3935","r3938"]
       population: {
         total: 1800000,
         by_profession: { farmers: 750000, craftsmen: 280000, merchants: 200000, sailors: 80000, clergy: 80000, soldiers: 130000, slaves: 280000 },
@@ -2963,7 +2963,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 70, stability: 65,
         ruler: { type: 'person', name: 'Митридат I', personal_power: 78 },
       },
-      regions: ["r805","r863","r864","r3986","r3987","r3988","r3989","r3994","r3995","r3997","r3998","r3999","r4000","r4001","r4002","r4007","r4009","r4010","r4011","r4012","r4013","r4014"],
+      regions: ["r3986","r3988","r3989","r3994","r3995"]
       population: {
         total: 600000,
         by_profession: { farmers: 250000, craftsmen: 80000, merchants: 60000, sailors: 40000, clergy: 30000, soldiers: 60000, slaves: 80000 },
@@ -2997,7 +2997,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 68, stability: 60,
         ruler: { type: 'person', name: 'Ариарат II', personal_power: 72 },
       },
-      regions: ["r117","r128","r194","r196","r236","r417","r418","r419","r420","r421","r422","r423","r424","r425","r426","r427","r443","r445","r446","r458","r799","r800","r803","r804","r862","r1161","r3468","r3478","r3481","r3492","r3494","r3507","r3525","r3526","r3530","r3532","r3535","r3536","r3537","r3538","r3540","r3541","r3542","r3543","r3544","r3545","r3546","r3558","r3559","r3717","r3718","r3740","r3905","r3907","r3908","r3982","r3983","r3984","r3985","r3990","r4025","r4026","r4027","r4028","r4029","r4030","r4031","r4032","r4033"],
+      regions: ["r422","r423","r424","r443","r446","r458","r800","r1161","r3468","r3478","r3481","r3492","r3494","r3507","r3540","r3541","r3542","r3546","r3983","r3984","r3985","r3990","r4025","r4026","r4027","r4028","r4029","r4030","r4031","r4032","r4033"]
       population: {
         total: 800000,
         by_profession: { farmers: 350000, craftsmen: 80000, merchants: 50000, sailors: 5000, clergy: 40000, soldiers: 80000, slaves: 195000 },
@@ -3030,7 +3030,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 72, stability: 65,
         ruler: { type: 'person', name: 'Оронт II', personal_power: 70 },
       },
-      regions: ["r151","r3562","r3579","r3580","r3581","r3583","r3586","r3587","r3589","r3706","r3784","r3787","r3801","r3818","r4016","r4017","r4018","r4019","r4020","r4035","r4036","r4037","r4038","r4039","r4041","r4042","r4043","r4044","r4045","r4046","r4047","r4048","r4049","r4050","r4051","r4052","r4053","r4054","r4055","r4056","r4057","r4058","r4059","r4060","r4061","r4062","r4063","r4064","r4065","r4066","r4067","r4069","r4070","r4071","r4072","r4073","r4075","r4076","r4077","r4078","r4079","r4080","r4081","r4082","r4083","r4087","r4088","r4089","r4090","r4091","r4092","r4093","r4094","r4095","r4096","r4097","r4098","r4099","r4100","r4101","r4102","r4103","r4104","r4105","r4106","r4107","r4108","r4109","r4110","r4111","r4112","r4113","r4114","r4115","r4116","r4117","r4118","r4119","r4120","r4121","r4122","r4123","r4124","r4125","r4126","r4127","r4128","r4129","r4130","r4131","r4132","r4133","r4134","r4135","r4138","r4141","r4143","r4144","r4147","r4148"],
+      regions: ["r151","r3562","r3587","r3589","r3706","r3784","r3818","r4016","r4017","r4018","r4019","r4020","r4035","r4036","r4037","r4038","r4039","r4041","r4042","r4044","r4045","r4046","r4047","r4055","r4059","r4060","r4061","r4062","r4063","r4064","r4065","r4066","r4067","r4070","r4071","r4072","r4073","r4075","r4076","r4077","r4078","r4079","r4080","r4081","r4082","r4083","r4087","r4088","r4089","r4090","r4091","r4092","r4093","r4094","r4095","r4096","r4097","r4098","r4099","r4100","r4101","r4102","r4103","r4104","r4105","r4106","r4107","r4108","r4109","r4110","r4111","r4112","r4113","r4114","r4115","r4116","r4117","r4118","r4119","r4120","r4121","r4122","r4123","r4124","r4125","r4126","r4127","r4128","r4129","r4130","r4131","r4132","r4133","r4134","r4135","r4138","r4141","r4143","r4144","r4147","r4148"]
       population: {
         total: 1500000,
         by_profession: { farmers: 650000, craftsmen: 150000, merchants: 80000, sailors: 0, clergy: 80000, soldiers: 120000, slaves: 420000 },
@@ -3063,7 +3063,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 65, stability: 62,
         ruler: { type: 'person', name: 'Зипойт I', personal_power: 72 },
       },
-      regions: ["r152","r226","r1139","r3539","r3548","r3881","r3882","r3883","r3884","r3885","r3886","r3887","r3888","r3893","r3894"],
+      regions: ["r3928"]
       population: {
         total: 250000,
         by_profession: { farmers: 100000, craftsmen: 35000, merchants: 25000, sailors: 20000, clergy: 15000, soldiers: 25000, slaves: 30000 },
@@ -3097,7 +3097,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 60, stability: 55,
         ruler: { type: 'person', name: 'Местный правитель', personal_power: 60 },
       },
-      regions: ["r861","r3962","r3964","r3965","r3966","r3967","r3969","r3970","r3971","r3972","r3973","r3974","r3978","r3980","r3981","r4003","r4004","r4005","r4006"],
+      regions: ["r3970","r4004","r4005","r4006"]
       population: {
         total: 400000,
         by_profession: { farmers: 170000, craftsmen: 55000, merchants: 35000, sailors: 20000, clergy: 20000, soldiers: 40000, slaves: 60000 },
@@ -3130,7 +3130,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 75, stability: 70,
         ruler: { type: 'person', name: 'Царь набатеев', personal_power: 72 },
       },
-      regions: ["r3415","r3416","r3418","r3419","r3421","r3422","r3423","r3424","r3425","r3426","r3427","r3428","r3429","r3430","r3431","r3433","r3434","r3435","r3436","r3437","r3442","r3446","r3457","r3458"],
+      regions: ["r3415","r3416","r3418","r3419","r3421","r3422","r3423","r3424","r3425","r3426","r3427","r3428","r3429","r3430","r3431","r3433","r3434","r3435","r3436","r3437","r3442","r3446","r3457","r3458"]
       population: {
         total: 300000,
         by_profession: { farmers: 80000, craftsmen: 50000, merchants: 80000, sailors: 15000, clergy: 20000, soldiers: 25000, slaves: 30000 },
@@ -3163,7 +3163,7 @@ const INITIAL_GAME_STATE = {
         type: 'theocracy', legitimacy: 78, stability: 70,
         ruler: { type: 'person', name: 'Первосвященник Симон I', personal_power: 72 },
       },
-      regions: ["r3447","r3448","r3449","r3450","r3451","r3452","r3472","r3475","r3476"],
+      regions: ["r3447","r3448","r3449","r3450","r3451","r3452","r3472","r3475","r3476"]
       population: {
         total: 350000,
         by_profession: { farmers: 150000, craftsmen: 60000, merchants: 40000, sailors: 5000, clergy: 50000, soldiers: 15000, slaves: 30000 },
@@ -3231,7 +3231,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 62, stability: 58,
         ruler: { type: 'person', name: 'Сатрап Софены', personal_power: 62 },
       },
-      regions: ["r3549","r3550","r3551","r3561","r3563","r3564","r3575","r3576","r3577","r3578","r3584","r3585","r3707","r4022"],
+      regions: ["r3549","r3550","r3551","r3561","r3563","r3564","r3575","r3576","r3577","r3584","r3585","r3707","r4022"]
       population: {
         total: 350000,
         by_profession: { farmers: 150000, craftsmen: 50000, merchants: 30000, sailors: 0, clergy: 20000, soldiers: 40000, slaves: 60000 },
@@ -3264,7 +3264,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 70, stability: 65,
         ruler: { type: 'person', name: 'Атропат', personal_power: 75 },
       },
-      regions: ["r159","r4084","r4085","r4086","r4145","r4146"],
+      regions: ["r159","r4084","r4085","r4086","r4145","r4146"]
       population: {
         total: 400000,
         by_profession: { farmers: 170000, craftsmen: 50000, merchants: 30000, sailors: 0, clergy: 30000, soldiers: 50000, slaves: 70000 },
@@ -3297,7 +3297,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 68, stability: 60,
         ruler: { type: 'person', name: 'Фратаферн', personal_power: 65 },
       },
-      regions: ["r160","r435","r844","r845"],
+      regions: ["r160","r435","r844","r845"]
       population: {
         total: 500000,
         by_profession: { farmers: 200000, craftsmen: 80000, merchants: 60000, sailors: 5000, clergy: 50000, soldiers: 50000, slaves: 55000 },
@@ -3329,7 +3329,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 58, stability: 55,
         ruler: { type: 'person', name: 'Правитель Гордиены', personal_power: 60 },
       },
-      regions: ["r4021","r4074"],
+      regions: ["r4021","r4074"]
       population: {
         total: 250000,
         by_profession: { farmers: 100000, craftsmen: 35000, merchants: 20000, sailors: 0, clergy: 15000, soldiers: 30000, slaves: 50000 },
@@ -3362,7 +3362,7 @@ const INITIAL_GAME_STATE = {
         type: 'monarchy', legitimacy: 62, stability: 58,
         ruler: { type: 'person', name: 'Птолемей Коммагенский', personal_power: 62 },
       },
-      regions: ["r3552","r3555","r3556","r3557","r3560","r3681","r3702","r3703","r3708","r3709","r3710","r3711","r3712","r3713","r3714","r3715","r3716"],
+      regions: ["r3560","r3702","r3703","r3708","r3709","r3710","r3711","r3713"]
       population: {
         total: 300000,
         by_profession: { farmers: 120000, craftsmen: 50000, merchants: 40000, sailors: 5000, clergy: 20000, soldiers: 30000, slaves: 35000 },
@@ -3395,7 +3395,7 @@ const INITIAL_GAME_STATE = {
         type: 'oligarchy', legitimacy: 52, stability: 48,
         ruler: { type: 'council', name: 'Совет Самарии', personal_power: 48 },
       },
-      regions: ["r3453","r3454","r3455","r3463","r3464","r3465","r3466","r3467","r3469","r3480"],
+      regions: ["r3453","r3454","r3455","r3463","r3464","r3465","r3466","r3467","r3469","r3480"]
       population: {
         total: 200000,
         by_profession: { farmers: 90000, craftsmen: 35000, merchants: 25000, sailors: 5000, clergy: 20000, soldiers: 10000, slaves: 15000 },
@@ -3428,7 +3428,7 @@ const INITIAL_GAME_STATE = {
       name: 'Византий', adjective: 'византийское', color: '#C41E3A', flag_emoji: '⚓',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 72, stability: 68, ruler: { type: 'council', name: 'Совет Византия', personal_power: 60 } },
-      regions: ["r858","r3094"],
+      regions: ["r858","r3094"]
       population: { total: 45000, happiness: 65, growth_rate: 0.002 },
       economy: { treasury: 5000, tax_rate: 0.12, primary_exports: ['trade_goods', 'fish'], primary_imports: ['wheat', 'timber', 'iron'], trade_partners: ['bosporan_kingdom', 'athens', 'bithynia'], stockpile: { wheat: 6000 }, trade_routes: [] },
       military: { infantry: 2500, cavalry: 200, ships: 40, mercenaries: 500, morale: 70, loyalty: 72, at_war_with: [] },
@@ -3441,7 +3441,7 @@ const INITIAL_GAME_STATE = {
       name: 'Синопа', adjective: 'синопское', color: '#5B8B9B', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 65, stability: 62, ruler: { type: 'council', name: 'Совет Синопы', personal_power: 55 } },
-      regions: ["r3963"],
+      regions: ["r3963"]
       population: { total: 30000, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 3000, tax_rate: 0.11, primary_exports: ['fish', 'trade_goods', 'iron'], primary_imports: ['wheat', 'timber'], trade_partners: ['pontus', 'bosporan_kingdom', 'byzantion'], stockpile: { wheat: 4000 }, trade_routes: [] },
       military: { infantry: 1500, cavalry: 100, ships: 25, mercenaries: 300, morale: 62, loyalty: 65, at_war_with: [] },
@@ -3454,7 +3454,7 @@ const INITIAL_GAME_STATE = {
       name: 'Трапезунт', adjective: 'трапезунтское', color: '#4B9B8B', flag_emoji: '⛰️',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 62, stability: 60, ruler: { type: 'council', name: 'Совет Трапезунта', personal_power: 52 } },
-      regions: ["r4015"],
+      regions: ["r4015"]
       population: { total: 22000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 2200, tax_rate: 0.11, primary_exports: ['trade_goods', 'iron', 'furs'], primary_imports: ['wheat', 'wine'], trade_partners: ['sinope', 'pontus', 'bosporan_kingdom'], stockpile: { wheat: 2800 }, trade_routes: [] },
       military: { infantry: 1000, cavalry: 80, ships: 15, mercenaries: 200, morale: 60, loyalty: 62, at_war_with: [] },
@@ -3467,7 +3467,7 @@ const INITIAL_GAME_STATE = {
       name: 'Херсонес', adjective: 'херсонесское', color: '#4B8BAB', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'republic', legitimacy: 70, stability: 68, ruler: { type: 'council', name: 'Совет Херсонеса', personal_power: 58 } },
-      regions: ["r3133"],
+      regions: ["r3133"]
       population: { total: 20000, happiness: 62, growth_rate: 0.002 },
       economy: { treasury: 2500, tax_rate: 0.11, primary_exports: ['wheat', 'fish', 'slaves'], primary_imports: ['trade_goods', 'wine', 'pottery'], trade_partners: ['bosporan_kingdom', 'scythians', 'athens'], stockpile: { wheat: 5000 }, trade_routes: [] },
       military: { infantry: 1500, cavalry: 100, ships: 20, mercenaries: 300, morale: 68, loyalty: 70, at_war_with: [] },
@@ -3480,7 +3480,7 @@ const INITIAL_GAME_STATE = {
       name: 'Ольвия', adjective: 'ольвийское', color: '#5B9BAB', flag_emoji: '🌾',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 62, stability: 58, ruler: { type: 'council', name: 'Совет Ольвии', personal_power: 50 } },
-      regions: ["r3125"],
+      regions: ["r3125"]
       population: { total: 15000, happiness: 55, growth_rate: 0.001 },
       economy: { treasury: 1500, tax_rate: 0.10, primary_exports: ['wheat', 'fish', 'slaves', 'furs'], primary_imports: ['wine', 'pottery', 'trade_goods'], trade_partners: ['scythians', 'bosporan_kingdom', 'athens'], stockpile: { wheat: 3000 }, trade_routes: [] },
       military: { infantry: 700, cavalry: 50, ships: 15, mercenaries: 100, morale: 55, loyalty: 58, at_war_with: [] },
@@ -3493,7 +3493,7 @@ const INITIAL_GAME_STATE = {
       name: 'Оргаме', adjective: 'оргамское', color: '#6B9BAB', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 58, stability: 55, ruler: { type: 'council', name: 'Совет Оргаме', personal_power: 48 } },
-      regions: ["r3115","r3118","r3119"],
+      regions: ["r3115","r3118","r3119"]
       population: { total: 18000, happiness: 56, growth_rate: 0.001 },
       economy: { treasury: 1200, tax_rate: 0.10, primary_exports: ['wheat', 'fish', 'furs'], primary_imports: ['wine', 'trade_goods'], trade_partners: ['scythians', 'istros', 'bosporan_kingdom'], stockpile: { wheat: 2500 }, trade_routes: [] },
       military: { infantry: 800, cavalry: 50, ships: 12, mercenaries: 100, morale: 55, loyalty: 58, at_war_with: [] },
@@ -3506,7 +3506,7 @@ const INITIAL_GAME_STATE = {
       name: 'Истрия', adjective: 'истрийское', color: '#5B8BAB', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 62, stability: 60, ruler: { type: 'council', name: 'Совет Истрии', personal_power: 52 } },
-      regions: ["r3117"],
+      regions: ["r3117"]
       population: { total: 16000, happiness: 58, growth_rate: 0.001 },
       economy: { treasury: 1400, tax_rate: 0.10, primary_exports: ['wheat', 'fish', 'furs'], primary_imports: ['wine', 'pottery', 'trade_goods'], trade_partners: ['orgame', 'scythians', 'getae'], stockpile: { wheat: 2800 }, trade_routes: [] },
       military: { infantry: 800, cavalry: 50, ships: 15, mercenaries: 100, morale: 58, loyalty: 60, at_war_with: [] },
@@ -3519,7 +3519,7 @@ const INITIAL_GAME_STATE = {
       name: 'Аполлония Понтийская', adjective: 'аполлонийское', color: '#4B7B9B', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 65, stability: 62, ruler: { type: 'council', name: 'Совет Аполлонии', personal_power: 52 } },
-      regions: ["r3106","r3107"],
+      regions: ["r3106","r3107"]
       population: { total: 14000, happiness: 60, growth_rate: 0.001 },
       economy: { treasury: 1500, tax_rate: 0.11, primary_exports: ['fish', 'wheat', 'trade_goods'], primary_imports: ['wine', 'pottery', 'iron'], trade_partners: ['byzantion', 'bosporan_kingdom', 'athens'], stockpile: { wheat: 2200 }, trade_routes: [] },
       military: { infantry: 700, cavalry: 40, ships: 18, mercenaries: 100, morale: 62, loyalty: 65, at_war_with: [] },
@@ -3532,7 +3532,7 @@ const INITIAL_GAME_STATE = {
       name: 'Милет', adjective: 'милетское', color: '#4169E1', flag_emoji: '🏛️',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 62, stability: 58, ruler: { type: 'council', name: 'Совет Милета', personal_power: 55 } },
-      regions: ["r3180","r3181"],
+      regions: ["r3180","r3181"]
       population: { total: 35000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 4500, tax_rate: 0.12, primary_exports: ['trade_goods', 'wool', 'pottery'], primary_imports: ['wheat', 'timber', 'iron'], trade_partners: ['rhodes', 'seleukid_empire', 'bosporan_kingdom'], stockpile: { wheat: 5000 }, trade_routes: [] },
       military: { infantry: 2000, cavalry: 150, ships: 35, mercenaries: 500, morale: 60, loyalty: 62, at_war_with: [] },
@@ -3545,7 +3545,7 @@ const INITIAL_GAME_STATE = {
       name: 'Галикарнасс', adjective: 'галикарнасское', color: '#5B79C1', flag_emoji: '🏺',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 60, stability: 58, ruler: { type: 'council', name: 'Совет Галикарнасса', personal_power: 52 } },
-      regions: ["r3182","r3186"],
+      regions: ["r3182","r3186"]
       population: { total: 25000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 2800, tax_rate: 0.11, primary_exports: ['trade_goods', 'marble', 'fish'], primary_imports: ['wheat', 'timber', 'iron'], trade_partners: ['rhodes', 'kos', 'seleukid_empire'], stockpile: { wheat: 3500 }, trade_routes: [] },
       military: { infantry: 1200, cavalry: 100, ships: 20, mercenaries: 300, morale: 58, loyalty: 60, at_war_with: [] },
@@ -3558,7 +3558,7 @@ const INITIAL_GAME_STATE = {
       name: 'Арад', adjective: 'арадское', color: '#8B7040', flag_emoji: '⚓',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 68, stability: 65, ruler: { type: 'council', name: 'Совет Арада', personal_power: 55 } },
-      regions: ["r3629"],
+      regions: ["r3629"]
       population: { total: 20000, happiness: 62, growth_rate: 0.002 },
       economy: { treasury: 2500, tax_rate: 0.11, primary_exports: ['purple_dye', 'trade_goods', 'glass'], primary_imports: ['wheat', 'timber', 'iron'], trade_partners: ['seleukid_empire', 'sidon', 'ptolemaic_kingdom'], stockpile: { wheat: 2500 }, trade_routes: [] },
       military: { infantry: 1000, cavalry: 50, ships: 25, mercenaries: 200, morale: 65, loyalty: 65, at_war_with: [] },
@@ -3571,7 +3571,7 @@ const INITIAL_GAME_STATE = {
       name: 'Сидон', adjective: 'сидонское', color: '#9B5040', flag_emoji: '🌊',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 62, stability: 58, ruler: { type: 'council', name: 'Совет Сидона', personal_power: 55 } },
-      regions: ["r3505","r3508"],
+      regions: ["r3505","r3508"]
       population: { total: 40000, happiness: 58, growth_rate: 0.002 },
       economy: { treasury: 5000, tax_rate: 0.12, primary_exports: ['purple_dye', 'glass', 'trade_goods'], primary_imports: ['wheat', 'timber'], trade_partners: ['ptolemaic_kingdom', 'arados', 'byblos'], stockpile: { wheat: 5000 }, trade_routes: [] },
       military: { infantry: 2000, cavalry: 100, ships: 30, mercenaries: 500, morale: 60, loyalty: 58, at_war_with: [] },
@@ -3584,7 +3584,7 @@ const INITIAL_GAME_STATE = {
       name: 'Библ', adjective: 'библское', color: '#8B6040', flag_emoji: '📜',
       is_player: false, is_minor: true, ai_personality: 'mercantile', ai_priority: 'economy',
       government: { type: 'oligarchy', legitimacy: 65, stability: 62, ruler: { type: 'council', name: 'Совет Библа', personal_power: 52 } },
-      regions: ["r3625"],
+      regions: ["r3625"]
       population: { total: 18000, happiness: 60, growth_rate: 0.002 },
       economy: { treasury: 2200, tax_rate: 0.11, primary_exports: ['trade_goods', 'purple_dye', 'papyrus'], primary_imports: ['wheat', 'timber', 'iron'], trade_partners: ['sidon', 'arados', 'ptolemaic_kingdom'], stockpile: { wheat: 2500 }, trade_routes: [] },
       military: { infantry: 800, cavalry: 50, ships: 20, mercenaries: 200, morale: 60, loyalty: 62, at_war_with: [] },
@@ -3597,7 +3597,7 @@ const INITIAL_GAME_STATE = {
       name: 'Бамбика', adjective: 'бамбикское', color: '#9B7050', flag_emoji: '🌙',
       is_player: false, is_minor: true, ai_personality: 'defensive', ai_priority: 'survival',
       government: { type: 'theocracy', legitimacy: 72, stability: 68, ruler: { type: 'council', name: 'Жречество Атаргатис', personal_power: 65 } },
-      regions: ["r3676","r3677"],
+      regions: ["r3676","r3677"]
       population: { total: 25000, happiness: 65, growth_rate: 0.002 },
       economy: { treasury: 3000, tax_rate: 0.10, primary_exports: ['trade_goods', 'incense'], primary_imports: ['wheat', 'iron'], trade_partners: ['seleukid_empire', 'arados', 'palmyra_tribes'], stockpile: { wheat: 3000 }, trade_routes: [] },
       military: { infantry: 1200, cavalry: 200, ships: 0, mercenaries: 300, morale: 65, loyalty: 70, at_war_with: [] },
@@ -3612,7 +3612,7 @@ const INITIAL_GAME_STATE = {
       name: 'Кизик', adjective: 'кизикское', color: '#5B7BAB', flag_emoji: '⚓',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Кизика' } , legitimacy: 55, stability: 50},
-      regions: ["r796","r1121","r3168","r3865"],
+      regions: ["r796","r1121","r3168","r3865"]
       population: { total: 25000, happiness: 62 },
       economy: { treasury: 3000, stockpile: { wheat: 3500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1200, cavalry: 100, ships: 25, morale: 62, at_war_with: [] },
@@ -3625,7 +3625,7 @@ const INITIAL_GAME_STATE = {
       name: 'Кибиратия', adjective: 'кибиратийское', color: '#7B6B8B', flag_emoji: '🏔️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Правитель Кибиратии' } , legitimacy: 55, stability: 50},
-      regions: ["r3763","r3764","r3765","r3766","r3767","r3783","r3788","r3789","r3790","r3791","r3793","r3794"],
+      regions: ["r3766","r3767","r3783","r3788","r3789","r3790","r3791","r3793"]
       population: { total: 35000, happiness: 56 },
       economy: { treasury: 1500, stockpile: { wheat: 3000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2500, cavalry: 300, ships: 5, morale: 60, at_war_with: [] },
@@ -3638,7 +3638,7 @@ const INITIAL_GAME_STATE = {
       name: 'Ойноанда', adjective: 'ойноандское', color: '#7B8B6B', flag_emoji: '🏔️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Ойноанды' } , legitimacy: 55, stability: 50},
-      regions: ["r3189","r3770","r3771","r3776","r3777","r3778","r3779","r3780","r3781","r3782"],
+      regions: ["r3189","r3770","r3771","r3776","r3777","r3778","r3779","r3780","r3781","r3782"]
       population: { total: 15000, happiness: 58 },
       economy: { treasury: 700, stockpile: { wheat: 1500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1000, cavalry: 100, ships: 0, morale: 60, at_war_with: [] },
@@ -3651,7 +3651,7 @@ const INITIAL_GAME_STATE = {
       name: 'Ольба', adjective: 'ольбское', color: '#8B7B5B', flag_emoji: '🏛️',
       is_player: false, is_minor: true,
       government: { type: 'theocracy', ruler: { name: 'Жречество Зевса Ольбийского' } , legitimacy: 55, stability: 50},
-      regions: ["r3743","r3744","r3746","r3747","r3748","r3749","r3751","r3815","r3817"],
+      regions: ["r3743","r3744","r3746","r3747","r3748","r3749","r3751","r3815","r3817"]
       population: { total: 25000, happiness: 60 },
       economy: { treasury: 1200, stockpile: { wheat: 2500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1500, cavalry: 150, ships: 5, morale: 60, at_war_with: [] },
@@ -3664,7 +3664,7 @@ const INITIAL_GAME_STATE = {
       name: 'Сагалассия', adjective: 'сагалассийское', color: '#7B9B6B', flag_emoji: '🏔️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Правитель Сагалассии' } , legitimacy: 55, stability: 50},
-      regions: ["r3785","r3786","r3795","r3796","r3797","r3798","r3799","r3800","r3802","r3803","r3804","r3805","r3947","r3948","r3957","r3959"],
+      regions: ["r3785","r3786","r3795","r3796","r3797","r3798","r3799","r3800","r3802","r3803","r3804","r3805","r3947","r3948","r3957","r3959"]
       population: { total: 18000, happiness: 58 },
       economy: { treasury: 800, stockpile: { wheat: 1800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1500, cavalry: 150, ships: 0, morale: 65, at_war_with: [] },
@@ -3677,7 +3677,7 @@ const INITIAL_GAME_STATE = {
       name: 'Книд', adjective: 'книдское', color: '#4B8BAB', flag_emoji: '🏛️',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Книда' } , legitimacy: 55, stability: 50},
-      regions: ["r789"],
+      regions: ["r789"]
       population: { total: 15000, happiness: 62 },
       economy: { treasury: 1500, stockpile: { wheat: 1800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 800, cavalry: 50, ships: 20, morale: 62, at_war_with: [] },
@@ -3690,7 +3690,7 @@ const INITIAL_GAME_STATE = {
       name: 'Кос', adjective: 'косское', color: '#5BAB9B', flag_emoji: '🐍',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Коса' } , legitimacy: 55, stability: 50},
-      regions: ["r1097"],
+      regions: ["r1097"]
       population: { total: 20000, happiness: 65 },
       economy: { treasury: 2000, stockpile: { wheat: 2500 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1000, cavalry: 50, ships: 20, morale: 62, at_war_with: [] },
@@ -3703,7 +3703,7 @@ const INITIAL_GAME_STATE = {
       name: 'Фасис', adjective: 'фасисское', color: '#4B9B6B', flag_emoji: '🌊',
       is_player: false, is_minor: true,
       government: { type: 'oligarchy', ruler: { name: 'Совет Фасиса' } , legitimacy: 55, stability: 50},
-      regions: ["r120","r866"],
+      regions: ["r120","r866"]
       population: { total: 8000, happiness: 56 },
       economy: { treasury: 600, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 400, cavalry: 30, ships: 8, morale: 58, at_war_with: [] },
@@ -3716,7 +3716,7 @@ const INITIAL_GAME_STATE = {
       name: 'Гениохи', adjective: 'гениохское', color: '#5B7B6B', flag_emoji: '⚓',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь гениохов' } , legitimacy: 45, stability: 45},
-      regions: ["r867"],
+      regions: ["r867"]
       population: { total: 12000, happiness: 58 },
       economy: { treasury: 400, stockpile: { wheat: 800 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 1000, cavalry: 100, ships: 15, morale: 65, at_war_with: [] },
@@ -3729,7 +3729,7 @@ const INITIAL_GAME_STATE = {
       name: 'Марианды', adjective: 'марианднское', color: '#6B8B7B', flag_emoji: '🌲',
       is_player: false, is_minor: true,
       government: { type: 'tribal', ruler: { name: 'Вождь марианднов' } , legitimacy: 45, stability: 45},
-      regions: ["r859","r860","r3895","r3897","r3898","r3968"],
+      regions: ["r859","r860","r3895","r3897","r3898","r3968"]
       population: { total: 35000, happiness: 52 },
       economy: { treasury: 700, stockpile: { wheat: 3000 }, trade_routes: [] , tax_rate: 0.10},
       military: { infantry: 2500, cavalry: 200, ships: 5, morale: 58, at_war_with: [] },
@@ -3753,7 +3753,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "raider",
     ai_priority: ["military", "expansion", "trade"],
     government: { type: "monarchy", stability: 55, corruption: 40 , legitimacy: 65, ruler: { type: "person", name: "Сайтафарн", character_ids: [], personal_power: 65 }},
-    regions: ["r576","r1656","r1718","r1719","r1720","r1721","r1728","r1729","r1739","r1740","r1741","r3123","r3124","r3126","r3127","r3128","r3129","r3130","r3131","r3137","r3138","r3139","r3140","r3141"],
+    regions: ["r1656"]
     population: {
       total: 158000,
       by_profession: {
@@ -3795,7 +3795,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "expansionist",
     ai_priority: ["expansion", "economy", "military"],
     government: { type: "monarchy", stability: 70, corruption: 35 , legitimacy: 65, ruler: { type: "person", name: "Чандрагупта Маурья", character_ids: [], personal_power: 90 }},
-    regions: ["r42","r59","r64","r71","r72","r76","r77","r85","r86","r182","r189","r192","r279","r281","r282","r283","r284","r285","r286","r287","r288","r290","r291","r292","r293","r294","r295","r296","r633","r639","r640","r642","r936","r937","r938","r965","r966","r967","r968","r969","r970","r971","r972","r973","r974","r975","r976","r977","r978","r979","r980"],
+    regions: ["r281","r282","r283","r288","r292","r642","r972","r976","r977","r979"]
     population: {
       total: 3620000,
       by_profession: {
@@ -3838,7 +3838,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["economy", "military", "diplomacy"],
     government: { type: "satrapy", stability: 55, corruption: 40 , legitimacy: 55, ruler: { type: "person", name: "Андрагор", character_ids: [], personal_power: 55 }},
-    regions: ["r438","r1570"],
+    regions: ["r438","r1570"]
     population: { total: 350000 },
     economy: {
       treasury: 1800,
@@ -3864,7 +3864,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["trade", "economy", "military"],
     government: { type: "satrapy", stability: 60, corruption: 35 , legitimacy: 55, ruler: { type: "person", name: "Стасанор", character_ids: [], personal_power: 60 }},
-    regions: ["r434","r441","r842"],
+    regions: ["r434"]
     population: { total: 500000 },
     economy: {
       treasury: 2500,
@@ -3890,7 +3890,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "raider",
     ai_priority: ["military", "expansion"],
     government: { type: "tribal", stability: 45, corruption: 20 , legitimacy: 45, ruler: { type: "council", name: "Совет вождей", character_ids: [], personal_power: 40 }},
-    regions: ["r402","r1624","r1625","r1633","r1635","r1637","r1638","r1639","r1640","r1641","r1653","r1655","r1657","r1670","r1672","r1673","r1694","r1695","r1696","r1697","r1698","r1699","r1702","r1703","r1704","r1709","r1710","r1711","r1712","r1713","r1714","r1715","r1716","r1722","r1754","r1755","r1759"],
+    regions: ["r402","r1624","r1625","r1633","r1635","r1637","r1638","r1639","r1640","r1641","r1653","r1655","r1670","r1672","r1673","r1694","r1695","r1696","r1697","r1698","r1699","r1703","r1704","r1709","r1713","r1714","r1715","r1716","r1722","r1754","r1755","r1759"]
     population: { total: 120000 },
     economy: {
       treasury: 600,
@@ -3916,7 +3916,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["trade", "economy"],
     government: { type: "tribal", stability: 50, corruption: 25 , legitimacy: 45, ruler: { type: "council", name: "Совет племён", character_ids: [], personal_power: 35 }},
-    regions: ["r408","r579","r1647","r1648","r1649","r1650","r1651","r1652","r1706","r1708","r3146","r3148","r3149","r3150","r3151"],
+    regions: ["r408","r579","r1647","r1648","r1649","r1650","r1651","r1652","r1706","r1708","r3146","r3148","r3149","r3150","r3151"]
     population: { total: 80000 },
     economy: {
       treasury: 500,
@@ -3942,7 +3942,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "raider",
     ai_priority: ["military", "expansion"],
     government: { type: "tribal", stability: 40, corruption: 20 , legitimacy: 45, ruler: { type: "person", name: "Племенной вождь", character_ids: [], personal_power: 50 }},
-    regions: ["r41","r110","r409","r410","r411","r578","r1497","r1498","r1499","r1501","r1503","r1554","r1556","r1557","r1558","r1559","r1560","r1561","r1582"],
+    regions: ["r41","r409","r411","r578","r1497","r1499","r1501","r1503","r1554","r1556","r1557","r1582"]
     population: { total: 200000 },
     economy: {
       treasury: 800,
@@ -3970,7 +3970,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "raider",
     ai_priority: ["military"],
     government: { type: "tribal", stability: 40, corruption: 15 , legitimacy: 45, ruler: { type: "person", name: "Племенной вождь", character_ids: [], personal_power: 45 }},
-    regions: ["r1705","r1707","r1717","r1723","r1724","r1725","r1726","r1727","r1730","r1731","r1732","r1733","r1734","r1735","r1736","r1737","r1738","r1742","r1743","r1744","r1745","r1746","r1747","r1748","r1752","r1753"],
+    regions: ["r1705","r1707","r1717","r1723","r1724","r1725","r1726","r1727","r1730","r1731","r1732","r1733","r1734","r1735","r1736","r1737","r1738","r1742","r1743","r1744","r1745","r1746","r1747","r1748","r1752","r1753"]
     population: { total: 60000 },
     economy: { gold: 30, income_per_turn: 8, trade_routes: [], stockpile: { horses: 400, cattle: 200 } , treasury: 300, tax_rate: 0.10},
     military: { infantry: 3000, cavalry: 8000, ships: 0, at_war_with: [] },
@@ -3989,7 +3989,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["military", "trade"],
     government: { type: "tribal", stability: 50, corruption: 20 , legitimacy: 45, ruler: { type: "person", name: "Племенной вождь", character_ids: [], personal_power: 45 }},
-    regions: ["r407","r1642","r1643","r1644","r1645","r1646","r1654"],
+    regions: ["r407","r1642","r1643","r1644","r1645","r1646","r1654"]
     population: { total: 70000 },
     economy: { gold: 40, income_per_turn: 12, trade_routes: ["bosporan_kingdom"], stockpile: { horses: 500, furs: 150 } , treasury: 400, tax_rate: 0.10},
     military: { infantry: 4000, cavalry: 10000, ships: 0, at_war_with: [] },
@@ -4008,7 +4008,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "raider",
     ai_priority: ["military"],
     government: { type: "tribal", stability: 45, corruption: 15 , legitimacy: 45, ruler: { type: "person", name: "Племенной вождь", character_ids: [], personal_power: 50 }},
-    regions: ["r1578","r1583","r1584","r1593","r1612","r1613","r1629","r1630","r1631","r1632","r1634","r1636"],
+    regions: ["r1578","r1583","r1584","r1593","r1612","r1613","r1629","r1630","r1631","r1632","r1634","r1636"]
     population: { total: 80000 },
     economy: { gold: 35, income_per_turn: 10, trade_routes: ["roxolani"], stockpile: { horses: 700, furs: 200 } , treasury: 350, tax_rate: 0.10},
     military: { infantry: 4000, cavalry: 15000, ships: 0, at_war_with: [] },
@@ -4027,7 +4027,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["trade", "economy"],
     government: { type: "monarchy", stability: 55, corruption: 30 , legitimacy: 65, ruler: { type: "person", name: "Сатрап Хорезма", character_ids: [], personal_power: 50 }},
-    regions: ["r1562","r1563","r1564","r1573"],
+    regions: ["r1562","r1563","r1564","r1573"]
     population: { total: 120000 },
     economy: { gold: 90, income_per_turn: 22, trade_routes: ["bactria", "saka"], stockpile: { grain: 400, cotton: 300 } , treasury: 900, tax_rate: 0.10},
     military: { infantry: 5000, cavalry: 8000, ships: 0, at_war_with: [] },
@@ -4046,7 +4046,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["economy"],
     government: { type: "satrapy", stability: 45, corruption: 35 , legitimacy: 55, ruler: { type: "person", name: "Сатрап Гедросии", character_ids: [], personal_power: 45 }},
-    regions: ["r84"],
+    regions: ["r84"]
     population: { total: 90000 },
     economy: { gold: 60, income_per_turn: 15, trade_routes: ["maurya_empire", "parthia"], stockpile: { grain: 150, spices: 200 } , treasury: 600, tax_rate: 0.10},
     military: { infantry: 4000, cavalry: 3000, ships: 100, at_war_with: [] },
@@ -4065,7 +4065,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["trade", "economy"],
     government: { type: "satrapy", stability: 60, corruption: 30 , legitimacy: 55, ruler: { type: "person", name: "Наместник Гандхары", character_ids: [], personal_power: 55 }},
-    regions: ["r843"],
+    regions: ["r639"]
     population: { total: 200000 },
     economy: { gold: 120, income_per_turn: 35, trade_routes: ["maurya_empire", "bactria"], stockpile: { grain: 600, iron: 200, lapis_lazuli: 250 } , treasury: 1200, tax_rate: 0.10},
     military: { infantry: 8000, cavalry: 5000, ships: 0, at_war_with: [] },
@@ -4130,7 +4130,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["expansion", "military", "economy"],
     government: { type: "monarchy", stability: 55, corruption: 45 , legitimacy: 65, ruler: { type: "person", name: "Чуский Цинсян-ван", character_ids: [], personal_power: 65 }},
-    regions: ["r300","r312","r622","r874","r875","r878","r879","r880","r881","r882","r884","r885","r886","r887","r888","r889","r890","r891","r892","r894","r1552"],
+    regions: ["r879","r884"]
     population: {
       total: 3225000,
       by_profession: {
@@ -4173,7 +4173,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "militarist",
     ai_priority: ["military", "expansion", "diplomacy"],
     government: { type: "monarchy", stability: 60, corruption: 40 , legitimacy: 65, ruler: { type: "person", name: "Чжаоский Хуйвэнь-ван", character_ids: [], personal_power: 70 }},
-    regions: ["r303","r304","r988","r1059","r1063","r1065","r1070","r1072","r1447"],
+    regions: ["r988","r1447"]
     population: { total: 1500000 },
     economy: {
       treasury: 6000,
@@ -4225,7 +4225,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["economy", "trade", "diplomacy"],
     government: { type: "monarchy", stability: 65, corruption: 35 , legitimacy: 65, ruler: { type: "person", name: "Циский Минь-ван", character_ids: [], personal_power: 65 }},
-    regions: ["r301","r1023","r1057","r1058","r1060"],
+    regions: ["r883"]
     population: { total: 1800000 },
     economy: {
       treasury: 8000,
@@ -4251,7 +4251,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["military", "economy", "diplomacy"],
     government: { type: "monarchy", stability: 50, corruption: 40 , legitimacy: 65, ruler: { type: "person", name: "Ханьский Сян-ван", character_ids: [], personal_power: 50 }},
-    regions: ["r893"],
+    regions: ["r1538"]
     population: { total: 900000 },
     economy: {
       treasury: 4000,
@@ -4277,7 +4277,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["economy", "diplomacy", "military"],
     government: { type: "monarchy", stability: 55, corruption: 35 , legitimacy: 65, ruler: { type: "person", name: "Яньский Чжао-ван", character_ids: [], personal_power: 70 }},
-    regions: ["r617","r916","r1064","r1328","r1330","r1335","r1336","r1337","r1338","r1339","r1340","r1341","r1363","r1380","r1381","r1382","r1383","r1384","r1385","r1386","r1387","r1388","r1389","r1390","r1391","r1392","r1393","r1394","r1395","r1396"],
+    regions: ["r916","r1363","r1391","r1392"]
     population: { total: 1000000 },
     economy: {
       treasury: 4500,
@@ -4305,7 +4305,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "raider",
     ai_priority: ["military", "expansion"],
     government: { type: "tribal", stability: 45, corruption: 20 , legitimacy: 45, ruler: { type: "person", name: "Тумань", character_ids: [], personal_power: 60 }},
-    regions: ["r83","r412","r413","r591","r599","r615","r1073","r1074","r1086","r1424","r1425","r1427","r1428","r1429","r1430","r1431","r1432","r1433","r1434","r1435","r1436","r1437","r1438","r1439","r1440","r1441","r1442","r1443","r1444","r1445","r1454","r1455","r1456","r1457","r1470","r2060","r2061","r2063","r2064","r2066","r2075","r2076","r2089"],
+    regions: ["r83","r412","r599","r615","r1073","r1074","r1424","r1427","r1430","r1431","r1432","r1433","r1434","r1435","r1436","r1437","r1438","r1439","r1440","r1441","r1442","r1444","r1454","r1455","r1456","r1457","r1470","r2060","r2061","r2063","r2064","r2066","r2075","r2076","r2089"]
     population: { total: 300000 },
     economy: { gold: 100, income_per_turn: 25, trade_routes: ["qin", "zhao"], stockpile: { horses: 1500, cattle: 800, furs: 400 } , treasury: 1000, tax_rate: 0.10},
     military: { infantry: 10000, cavalry: 60000, ships: 0, at_war_with: [] },
@@ -4324,7 +4324,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "raider",
     ai_priority: ["military", "expansion"],
     government: { type: "tribal", stability: 40, corruption: 15 , legitimacy: 45, ruler: { type: "council", name: "Совет племён", character_ids: [], personal_power: 40 }},
-    regions: ["r603","r604","r605","r606","r607","r608","r609","r610","r612","r614","r616","r1329","r1331","r1374","r1375","r1426"],
+    regions: ["r603","r604","r605","r606","r607","r608","r609","r610","r612","r614","r616","r1329","r1331","r1374","r1375","r1426"]
     population: { total: 150000 },
     economy: { gold: 50, income_per_turn: 12, trade_routes: ["yan"], stockpile: { horses: 800, furs: 300 } , treasury: 500, tax_rate: 0.10},
     military: { infantry: 8000, cavalry: 25000, ships: 0, at_war_with: [] },
@@ -4343,7 +4343,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["trade", "military"],
     government: { type: "tribal", stability: 50, corruption: 20 , legitimacy: 45, ruler: { type: "person", name: "Племенной вождь", character_ids: [], personal_power: 50 }},
-    regions: ["r646","r910","r1449","r1452","r1453"],
+    regions: ["r1449","r1452","r1453"]
     population: { total: 200000 },
     economy: { gold: 70, income_per_turn: 18, trade_routes: ["bactria", "qin", "xiongnu"], stockpile: { horses: 1000, jade: 300, furs: 200 } , treasury: 700, tax_rate: 0.10},
     military: { infantry: 10000, cavalry: 30000, ships: 0, at_war_with: [] },
@@ -4362,7 +4362,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["economy", "diplomacy"],
     government: { type: "monarchy", stability: 60, corruption: 30 , legitimacy: 65, ruler: { type: "person", name: "Ван Чжун", character_ids: [], personal_power: 55 }},
-    regions: ["r321","r600","r1286","r1287","r1306","r1307","r1308","r1309","r1314","r1315","r1316","r1317","r1318","r1319","r1320","r1321","r1322","r1323","r1324","r1325","r1326","r1327","r1332","r1333","r1334","r1342","r1343","r1344","r1345","r1346","r1347","r1348","r1349","r1350","r1351","r1352","r1353","r1354","r1355","r1356","r1357","r1358","r1359","r1360","r1364","r1365","r1366","r1367","r1368","r1369","r1370","r1371","r1372","r1373","r1376","r1377","r1378","r1379"],
+    regions: ["r321","r600","r1286","r1287","r1306","r1307","r1309","r1314","r1315","r1316","r1317","r1318","r1319","r1320","r1321","r1322","r1323","r1324","r1325","r1326","r1327","r1332","r1333","r1334","r1342","r1343","r1344","r1347","r1348","r1349","r1350","r1351","r1352","r1353","r1354","r1355","r1356","r1357","r1358","r1368","r1369","r1370","r1371","r1372","r1373","r1376","r1377","r1378","r1379"]
     population: { total: 400000 },
     economy: { gold: 150, income_per_turn: 30, trade_routes: ["yan", "qi"], stockpile: { grain: 1000, bronze: 400, iron: 200 } , treasury: 1500, tax_rate: 0.10},
     military: { infantry: 15000, cavalry: 3000, ships: 100, at_war_with: [] },
@@ -4381,7 +4381,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["economy"],
     government: { type: "tribal", stability: 55, corruption: 10 , legitimacy: 45, ruler: { type: "council", name: "Совет старейшин", character_ids: [], personal_power: 30 }},
-    regions: ["r56","r621","r1029","r1056","r1123","r1125","r1172","r1173","r1174","r1175","r1176","r1177","r1178","r1291","r1293","r1294","r1298","r1299","r1300","r1301","r1303"],
+    regions: ["r56","r621","r1029","r1056","r1123","r1125","r1172","r1173","r1174","r1175","r1176","r1177","r1178","r1291","r1293","r1294","r1298","r1299","r1300","r1301","r1303"]
     population: { total: 200000 },
     economy: { gold: 30, income_per_turn: 10, trade_routes: [], stockpile: { grain: 500, bronze: 150 } , treasury: 300, tax_rate: 0.10},
     military: { infantry: 8000, cavalry: 0, ships: 200, at_war_with: [] },
@@ -4431,7 +4431,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["military", "economy"],
     government: { type: "tribal", stability: 55, corruption: 30 , legitimacy: 45, ruler: { type: "person", name: "Дромихет", character_ids: [], personal_power: 60 }},
-    regions: ["r168","r373","r385","r386","r388","r390","r393"],
+    regions: ["r3075"]
     population: { total: 700000 },
     economy: {
       treasury: 2000,
@@ -4483,7 +4483,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["military", "economy"],
     government: { type: "tribal", stability: 50, corruption: 25 , legitimacy: 45, ruler: { type: "council", name: "Совет вождей", character_ids: [], personal_power: 35 }},
-    regions: ["r258","r259","r263","r267"],
+    regions: ["r257"]
     population: { total: 800000 },
     economy: {
       treasury: 2500,
@@ -4511,7 +4511,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "militarist",
     ai_priority: ["military", "expansion"],
     government: { type: "tribal", stability: 45, corruption: 20 , legitimacy: 45, ruler: { type: "council", name: "Союз вождей", character_ids: [], personal_power: 40 }},
-    regions: ["r98","r199","r334","r336","r476","r480","r1087","r1088","r1089","r1090","r1091","r1092","r1093","r1094","r1864"],
+    regions: ["r277"]
     population: { total: 400000 },
     economy: { gold: 100, income_per_turn: 20, trade_routes: ["gaul", "germani"], stockpile: { grain: 800, iron: 300 } , treasury: 1000, tax_rate: 0.10},
     military: { infantry: 30000, cavalry: 8000, ships: 50, at_war_with: [] },
@@ -4568,7 +4568,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["military", "trade"],
     government: { type: "tribal", stability: 55, corruption: 20 , legitimacy: 45, ruler: { type: "council", name: "Союз племён", character_ids: [], personal_power: 35 }},
-    regions: ["r335","r2306","r2339","r2341","r2344","r2345","r2346","r2347","r2348","r2349","r2350","r2351","r2352","r2353","r2354","r2355","r2356","r2357"],
+    regions: ["r2344","r2355","r2357"]
     population: { total: 250000 },
     economy: { gold: 80, income_per_turn: 18, trade_routes: ["gaul", "rome"], stockpile: { grain: 500, iron: 200 } , treasury: 800, tax_rate: 0.10},
     military: { infantry: 20000, cavalry: 3000, ships: 0, at_war_with: [] },
@@ -4587,7 +4587,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["military", "economy"],
     government: { type: "tribal", stability: 50, corruption: 25 , legitimacy: 45, ruler: { type: "person", name: "Дромихет", character_ids: [], personal_power: 60 }},
-    regions: ["r376","r384","r401","r3109","r3110","r3111","r3112","r3113","r3114","r3116","r3120","r3121","r3122"],
+    regions: ["r376","r384","r401","r3116","r3120","r3121","r3122"]
     population: { total: 300000 },
     economy: { gold: 90, income_per_turn: 22, trade_routes: ["macedon", "scythians", "dacia"], stockpile: { grain: 800, horses: 300 } , treasury: 900, tax_rate: 0.10},
     military: { infantry: 15000, cavalry: 10000, ships: 50, at_war_with: [] },
@@ -4606,7 +4606,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["economy", "trade"],
     government: { type: "tribal", stability: 50, corruption: 15 , legitimacy: 45, ruler: { type: "council", name: "Совет старейшин", character_ids: [], personal_power: 30 }},
-    regions: ["r474","r493","r494","r495","r496","r497","r498","r499","r500","r501","r502","r503","r521","r524","r525","r526","r527","r528","r530","r1761","r1762","r1763","r1764","r1765","r1766","r1767","r1921","r1922","r1924","r1925","r1926","r1927","r1928","r1929","r1931","r1932","r1936","r1937","r1938","r1939","r1940","r1941","r1942","r1944","r1945","r1946","r1947","r1948","r1949","r1951","r1952","r1953","r1976","r1977","r1978","r1979","r1980"],
+    regions: ["r474","r493","r495","r497","r498","r499","r500","r501","r502","r503","r521","r524","r525","r526","r527","r528","r530","r1761","r1762","r1763","r1764","r1765","r1766","r1767","r1931","r1932","r1936","r1937","r1944","r1945","r1946","r1947","r1948","r1949","r1952","r1953","r1976","r1979"]
     population: { total: 300000 },
     economy: { gold: 50, income_per_turn: 12, trade_routes: ["germani", "balts"], stockpile: { grain: 600, amber: 300, furs: 400 } , treasury: 500, tax_rate: 0.10},
     military: { infantry: 15000, cavalry: 2000, ships: 50, at_war_with: [] },
@@ -4625,7 +4625,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["economy", "trade"],
     government: { type: "tribal", stability: 55, corruption: 10 , legitimacy: 45, ruler: { type: "council", name: "Совет племён", character_ids: [], personal_power: 30 }},
-    regions: ["r519","r522","r523","r529","r1768","r1769","r1770","r1771","r1772","r1773","r1774","r1775","r1776","r1777","r1778","r1779","r1780","r1781","r1782","r1783","r1784","r1785","r1786","r1787","r1788","r1789","r1790","r1791","r1792","r1793","r1794","r1795","r1796","r1797","r1798","r1799","r1800","r1801","r1803","r1804","r1805","r1806","r1807","r1808","r1809","r1810","r1811","r1816","r1817","r1818","r1819","r1821","r1833","r1834","r1835","r1934","r1935","r1954","r1955","r1956","r1957","r1958","r1959","r1960","r1961","r1962","r1963","r1964","r1965","r1966","r1967","r1968","r1969","r1970","r1973","r1975","r1982"],
+    regions: ["r519","r522","r523","r529","r1768","r1769","r1770","r1771","r1772","r1773","r1774","r1775","r1776","r1777","r1778","r1779","r1780","r1781","r1782","r1783","r1784","r1785","r1786","r1787","r1788","r1789","r1790","r1791","r1792","r1793","r1794","r1795","r1796","r1797","r1798","r1799","r1800","r1801","r1803","r1804","r1805","r1806","r1807","r1808","r1809","r1810","r1811","r1816","r1817","r1818","r1819","r1821","r1833","r1834","r1835","r1934","r1935","r1954","r1955","r1956","r1957","r1958","r1959","r1960","r1961","r1962","r1963","r1964","r1965","r1966","r1967","r1968","r1969","r1970","r1973","r1975","r1982"]
     population: { total: 200000 },
     economy: { gold: 40, income_per_turn: 10, trade_routes: ["venedia", "germani"], stockpile: { amber: 800, furs: 500, honey: 200 } , treasury: 400, tax_rate: 0.10},
     military: { infantry: 10000, cavalry: 1000, ships: 80, at_war_with: [] },
@@ -4644,7 +4644,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "defensive",
     ai_priority: ["military"],
     government: { type: "tribal", stability: 50, corruption: 10 , legitimacy: 45, ruler: { type: "council", name: "Совет вождей", character_ids: [], personal_power: 30 }},
-    regions: ["r547","r548"],
+    regions: ["r547","r548"]
     population: { total: 150000 },
     economy: { gold: 25, income_per_turn: 8, trade_routes: ["britannia"], stockpile: { furs: 300, cattle: 400 } , treasury: 250, tax_rate: 0.10},
     military: { infantry: 12000, cavalry: 500, ships: 50, at_war_with: [] },
@@ -4663,7 +4663,7 @@ const INITIAL_GAME_STATE = {
     ai_personality: "balanced",
     ai_priority: ["trade", "economy"],
     government: { type: "tribal", stability: 55, corruption: 30 , legitimacy: 45, ruler: { type: "council", name: "Совет торговцев", character_ids: [], personal_power: 40 }},
-    regions: ["r268","r269","r270","r271","r272","r274","r275","r806","r807","r821","r2457","r2458","r2459","r2488","r2562","r2563","r2564","r2565","r2568","r2569","r2570","r2571","r2572","r2573","r2574","r2580","r2586","r2587","r2589","r2590","r2591","r2679"],
+    regions: ["r271","r272","r274","r821","r2562","r2563","r2564","r2565","r2568","r2569","r2570","r2571","r2572","r2573","r2574","r2580","r2586","r2587","r2589","r2590","r2591","r2679"]
     population: { total: 500000 },
     economy: { gold: 200, income_per_turn: 42, trade_routes: ["carthage", "massalia", "celtiberia"], stockpile: { grain: 1000, silver: 400, fish: 600 } , treasury: 2000, tax_rate: 0.10},
     military: { infantry: 20000, cavalry: 8000, ships: 200, at_war_with: [] },
@@ -4678,7 +4678,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Abannaea Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1847'],
+    regions: ["r93","r449","r3620","r3621","r3622","r3623","r3624","r3636","r3637","r3639","r3640","r3641","r3642","r3645","r3646","r3648","r3659","r3660","r3661","r3662","r3663","r3664","r3665","r3666","r3667","r3669","r3670","r3671","r3672","r3673"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4692,7 +4692,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Achola Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1848'],
+    regions: ["r112","r113","r342","r664","r666","r669","r670","r671","r672","r673","r674","r675","r676","r677","r679","r816"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4706,7 +4706,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Acinippo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1849'],
+    regions: ["r62","r812","r824","r828","r2671","r2672","r2674"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4720,7 +4720,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Adagaiman Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1850'],
+    regions: ["r1567"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4734,7 +4734,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Adiabene Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1851'],
+    regions: ["r846"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4748,7 +4748,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Adoulia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1852'],
+    regions: ["r850"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4762,7 +4762,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Aedui Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1853'],
+    regions: ["r1875"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4776,7 +4776,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Aequi Remnants Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1854'],
+    regions: ["r2119"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4790,7 +4790,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Aestia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1855'],
+    regions: ["r577"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4804,7 +4804,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Agadir Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1856'],
+    regions: ["r2731","r2732","r2741","r2742","r2743","r2744","r2745","r2746","r2748","r2749","r2750","r2751","r2752","r2758","r2759","r2760","r2761","r2762","r2763","r2764"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4818,7 +4818,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Agathyrsi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1857'],
+    regions: ["r393"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4832,7 +4832,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Aigion Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1858'],
+    regions: ["r163","r776"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4846,7 +4846,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ailao Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1859'],
+    regions: ["r900","r901","r903","r904","r905","r906","r907"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4860,7 +4860,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Aki Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1860'],
+    regions: ["r1231","r1237"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4874,7 +4874,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Alauni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1861'],
+    regions: ["r336","r1877","r1890","r1891","r1892","r1894","r1895","r1913"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4888,7 +4888,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Albosenses Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1862'],
+    regions: ["r2220"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4902,7 +4902,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Allobriges Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1863'],
+    regions: ["r2454"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4916,7 +4916,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Amakusa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1906'],
+    regions: ["r1126","r1164","r1165","r1171"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4930,7 +4930,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ambidravi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1907'],
+    regions: ["r2323","r2324","r2325","r2327","r2334","r2335","r2368","r2369","r2371","r2372","r2373","r2374","r2375","r2376","r2377","r2378","r2379","r2380","r2385"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4944,7 +4944,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ambisonti Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1908'],
+    regions: ["r1910","r2338","r2358","r2359","r2360","r2361","r2362","r2363","r2364","r2365","r2367"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4958,7 +4958,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ambladia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1910'],
+    regions: ["r3827","r3829","r3830","r3914","r3919","r3920","r3921","r3922","r3923","r3934","r3942","r3943","r3944","r3945","r3946","r3949"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4972,7 +4972,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ambrakia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1912'],
+    regions: ["r3019"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -4986,7 +4986,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ambronia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1943'],
+    regions: ["r172","r337"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5000,7 +5000,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Amisos Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1950'],
+    regions: ["r805","r3998","r3999","r4000","r4001","r4002","r4007","r4009","r4010","r4011"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5014,7 +5014,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Amyrgia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1971'],
+    regions: ["r1098","r3172","r3173","r3174","r3175","r3177","r3178","r3179","r3834","r3835","r3836","r3837","r3838","r3842","r3853","r3854","r3855","r3856","r3857","r3858","r3859","r3860"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5028,7 +5028,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ana Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1972'],
+    regions: ["r3683","r3685","r3686","r3689","r3690","r3691","r3692","r3693","r3694"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5042,7 +5042,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Anamaria Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1974'],
+    regions: ["r117","r128","r157","r194","r196","r3734","r3735","r3736"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5056,7 +5056,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Anartes Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1981'],
+    regions: ["r392"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5070,7 +5070,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Anauni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1983'],
+    regions: ["r2337"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5084,7 +5084,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Anchegu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1984'],
+    regions: ["r1362","r1409","r1410","r1411","r1412","r1416"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5112,7 +5112,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Andizeti Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1986'],
+    regions: ["r366"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5126,7 +5126,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Androphagi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1987'],
+    regions: ["r560","r561","r1675","r1686","r1688","r1689","r1690","r1691","r1692","r1756","r1757","r1758"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5140,7 +5140,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Andros Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1988'],
+    regions: ["r1116"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5154,7 +5154,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Angles Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1989'],
+    regions: ["r504","r506","r508","r509","r510"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5182,7 +5182,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ansanemes Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1991'],
+    regions: ["r471"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5210,7 +5210,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Anya Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1994'],
+    regions: ["r630"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5224,7 +5224,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Apasiacae Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1995'],
+    regions: ["r1561"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5238,7 +5238,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Apollonia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1996'],
+    regions: ["r3191"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5252,7 +5252,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Apuania Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1997'],
+    regions: ["r2196"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5266,7 +5266,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Aquetanians Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1998'],
+    regions: ["r266"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5280,7 +5280,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Arachosia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1999'],
+    regions: ["r971"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5294,7 +5294,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Arakan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2000'],
+    regions: ["r655"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5308,7 +5308,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Arambys Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2001'],
+    regions: ["r683"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5322,7 +5322,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ardiei Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2002'],
+    regions: ["r346","r364","r769"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5336,7 +5336,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Argippaeans Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2003'],
+    regions: ["r1594","r1595","r1597","r1598"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5350,7 +5350,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Arismaspians Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2004'],
+    regions: ["r1604","r1606","r1607","r1609"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5364,7 +5364,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Arkades Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2005'],
+    regions: ["r3193","r3194","r3195"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5378,7 +5378,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Armphaeians Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2006'],
+    regions: ["r1728","r1729","r3123","r3124","r3126"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5392,7 +5392,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Aroteres Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2007'],
+    regions: ["r3127","r3128","r3129","r3130","r3131","r3132","r3134","r3135","r3136","r3137","r3138","r3139","r3140","r3141"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5406,7 +5406,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Aru Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2008'],
+    regions: ["r64","r279","r640"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5420,7 +5420,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Arverni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2009'],
+    regions: ["r2453"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5434,7 +5434,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Arykandia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2010'],
+    regions: ["r3940","r3941","r3950","r3953","r3956","r3958","r3961"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5462,7 +5462,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Aspisia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2012'],
+    regions: ["r842"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5476,7 +5476,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Astakos Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2013'],
+    regions: ["r3015"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5490,7 +5490,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Astigi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2014'],
+    regions: ["r255"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5518,7 +5518,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Atavia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2016'],
+    regions: ["r395"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5532,7 +5532,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Athagausia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2017'],
+    regions: ["r573"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5546,7 +5546,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Athigannadu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2018'],
+    regions: ["r959"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5560,7 +5560,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Attasia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2019'],
+    regions: ["r3105","r3159","r3160","r3866","r3867","r3884","r3929"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5574,7 +5574,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Autenia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2021'],
+    regions: ["r2147"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5588,7 +5588,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Autolalia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2022'],
+    regions: ["r2601","r2602","r2603","r2604","r2605","r2606","r2607","r2608","r2609","r2610","r2611","r2614","r2616","r2617","r2618","r2647","r2649","r2650","r2651","r2652","r2653","r2654","r2655","r2707","r2708","r2796","r2797","r2798","r2799","r2800","r2801"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5602,7 +5602,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Avalitia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2023'],
+    regions: ["r741"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5616,7 +5616,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Avionia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2025'],
+    regions: ["r1820"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5644,7 +5644,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Awaji Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2027'],
+    regions: ["r1167","r1190","r1191","r1193"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5658,7 +5658,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ay Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2028'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5672,7 +5672,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Azali Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2029'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5686,7 +5686,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Azalo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2030'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5700,7 +5700,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Baekje Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2031'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5714,7 +5714,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Baima Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2032'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5728,7 +5728,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Baishan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2033'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5742,7 +5742,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ballo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2034'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5756,7 +5756,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ban Chiang Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2035'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5770,7 +5770,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Barduli Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2036'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5784,7 +5784,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Barus Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2037'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5812,7 +5812,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Bastetani Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2039'],
+    regions: ["r2805"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5826,7 +5826,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Beikthano Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2040'],
+    regions: ["r922"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5840,7 +5840,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Bekhyria Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2041'],
+    regions: ["r1577"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5854,7 +5854,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Belgites Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2042'],
+    regions: ["r2326"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5868,7 +5868,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Bellovaci Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2043'],
+    regions: ["r1874"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5882,7 +5882,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Benahoaritas Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2044'],
+    regions: ["r2754"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5896,7 +5896,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Bhoja Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2045'],
+    regions: ["r284","r294","r969","r980"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5910,7 +5910,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Bi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2046'],
+    regions: ["r304","r308","r1061","r1062","r1063","r1068","r1069","r1517","r1518","r1522","r1523","r1524"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5924,7 +5924,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Bie Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2047'],
+    regions: ["r887","r950"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5938,7 +5938,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Biephes Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2048'],
+    regions: ["r3101","r3102","r3103"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5952,7 +5952,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Bimbaches Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2049'],
+    regions: ["r2753"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5980,7 +5980,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Boduo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2051'],
+    regions: ["r1429"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -5994,7 +5994,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Boi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2052'],
+    regions: ["r399"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6008,7 +6008,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Boiihami Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2053'],
+    regions: ["r1882","r1883","r1886","r1898","r1899","r1900","r1902","r1903","r1904","r1909","r1918","r2366","r2370"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6022,7 +6022,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Borusci Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2054'],
+    regions: ["r567"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6036,7 +6036,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Borysthenes Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2055'],
+    regions: ["r1721"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6050,7 +6050,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Breganti Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2056'],
+    regions: ["r541"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6064,7 +6064,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Breuci Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2057'],
+    regions: ["r397"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6078,7 +6078,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Breuni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2058'],
+    regions: ["r1880"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6092,7 +6092,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Brigantia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2059'],
+    regions: ["r1881"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6106,7 +6106,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Bructeria Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2062'],
+    regions: ["r479"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6120,7 +6120,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Budini Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2067'],
+    regions: ["r1700","r1701"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6134,7 +6134,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Bugu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2068'],
+    regions: ["r1491","r1498"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6148,7 +6148,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Bulsa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2069'],
+    regions: ["r682"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6162,7 +6162,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Buma Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2070'],
+    regions: ["r477","r505"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6176,7 +6176,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Bures Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2071'],
+    regions: ["r1950"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6190,7 +6190,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Burgundia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2072'],
+    regions: ["r511","r514"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6204,7 +6204,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'republic', ruler: { name: 'Cabalian City States Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2073'],
+    regions: ["r3768"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6232,7 +6232,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Caerosia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2077'],
+    regions: ["r563"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6246,7 +6246,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Calchedon Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2078'],
+    regions: ["r3885"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6260,7 +6260,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Caledonia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2079'],
+    regions: ["r552"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6274,7 +6274,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Callatis Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2080'],
+    regions: ["r3112"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6288,7 +6288,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Caluconi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2081'],
+    regions: ["r2195"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6302,7 +6302,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Camuni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2082'],
+    regions: ["r2198"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6316,7 +6316,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Canaria Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2083'],
+    regions: ["r2755"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6330,7 +6330,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Canarios Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2084'],
+    regions: ["r2756"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6344,7 +6344,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Cangwu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2085'],
+    regions: ["r896"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6358,7 +6358,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Cantabri Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2086'],
+    regions: ["r265"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6372,7 +6372,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Cantiacia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2087'],
+    regions: ["r532"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6386,7 +6386,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Capariensa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2088'],
+    regions: ["r2429","r2432","r2433","r2434","r2435","r2436","r2437","r2438","r2439","r2442","r2443","r2444","r2446","r2447"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6400,7 +6400,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Caraceni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2090'],
+    regions: ["r2143","r2144","r2145"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6414,7 +6414,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Carenses Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2091'],
+    regions: ["r2450"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6428,7 +6428,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Careoti Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2092'],
+    regions: ["r2441"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6442,7 +6442,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Carnutes Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2093'],
+    regions: ["r198"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6456,7 +6456,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Carpetani Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2094'],
+    regions: ["r258","r259","r262"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6470,7 +6470,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Carpi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2095'],
+    regions: ["r1749"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6484,7 +6484,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Carvetia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2096'],
+    regions: ["r542"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6498,7 +6498,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Catenati Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2097'],
+    regions: ["r241"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6512,7 +6512,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Caturigi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2098'],
+    regions: ["r2290"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6526,7 +6526,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Caucasian Albania Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2099'],
+    regions: ["r149","r4139","r4140","r4142"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6540,7 +6540,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Cedu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2100'],
+    regions: ["r3061"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6554,7 +6554,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Celesitani Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2101'],
+    regions: ["r275"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6568,7 +6568,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Celtiberi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2102'],
+    regions: ["r260"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6596,7 +6596,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Cetiana Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2104'],
+    regions: ["r52","r53","r54","r2431"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6610,7 +6610,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Chaidinia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2105'],
+    regions: ["r3087"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6624,7 +6624,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Chamavia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2106'],
+    regions: ["r478"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6638,7 +6638,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Chansen Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2107'],
+    regions: ["r629"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6652,7 +6652,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Charklik Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2108'],
+    regions: ["r990"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6666,7 +6666,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Charudia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2109'],
+    regions: ["r290","r967","r968"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6680,7 +6680,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Chattia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2110'],
+    regions: ["r232","r482","r1865","r1866","r1868","r1869","r1873"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6694,7 +6694,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Chaucia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2111'],
+    regions: ["r481"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6708,7 +6708,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Chausaria Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2112'],
+    regions: ["r966"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6722,7 +6722,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Chera Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2113'],
+    regions: ["r939"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6736,7 +6736,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Cheruscia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2114'],
+    regions: ["r485","r487"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6750,7 +6750,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Chi Tu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2115'],
+    regions: ["r652"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6764,7 +6764,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Chola Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2117'],
+    regions: ["r961"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6792,7 +6792,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Cochis Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2119'],
+    regions: ["r2149"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6806,7 +6806,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Colapiani Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2122'],
+    regions: ["r2150"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6820,7 +6820,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Condrusia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2149'],
+    regions: ["r1879"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6834,7 +6834,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Conii Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2150'],
+    regions: ["r164"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6848,7 +6848,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Contestani Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2151'],
+    regions: ["r2806"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6862,7 +6862,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Coracenses Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2156'],
+    regions: ["r2449"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6876,7 +6876,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Coritania Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2196'],
+    regions: ["r22"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6904,7 +6904,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Cornovia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2202'],
+    regions: ["r556"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6918,7 +6918,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Costobaces Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2203'],
+    regions: ["r566"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6932,7 +6932,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Cosuaneti Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2204'],
+    regions: ["r168","r375"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6946,7 +6946,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Cotinia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2264'],
+    regions: ["r564"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6974,7 +6974,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Dalmati Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2323'],
+    regions: ["r239"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -6988,7 +6988,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Damna Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2324'],
+    regions: ["r588"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7002,7 +7002,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Damnonia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2325'],
+    regions: ["r558"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7016,7 +7016,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Danciona Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2326'],
+    regions: ["r388","r391","r1943"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7030,7 +7030,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Daorsi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2327'],
+    regions: ["r2118"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7044,7 +7044,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Daqiuyuan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2328'],
+    regions: ["r591"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7058,7 +7058,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Darinia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2330'],
+    regions: ["r953","r954"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7072,7 +7072,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Daze Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2332'],
+    regions: ["r1568"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7086,7 +7086,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Deceanglia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2334'],
+    regions: ["r40","r538","r540"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7100,7 +7100,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Dectuninia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2335'],
+    regions: ["r385"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7114,7 +7114,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Delphi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2336'],
+    regions: ["r213","r785"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7128,7 +7128,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Demetia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2337'],
+    regions: ["r537"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7142,7 +7142,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Derbices Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2338'],
+    regions: ["r439"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7156,7 +7156,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Dewa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2358'],
+    regions: ["r1247","r1248","r1249","r1250","r1251"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7170,7 +7170,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Dian Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2359'],
+    regions: ["r1122"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7184,7 +7184,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Dindari Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2360'],
+    regions: ["r359","r361","r370"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7198,7 +7198,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Dingling Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2361'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7212,7 +7212,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Dobbunia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2362'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7226,7 +7226,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Docilia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2363'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7240,7 +7240,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Dong Zhou Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2364'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7254,7 +7254,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Donghue Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2365'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7268,7 +7268,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Dongno Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2367'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7282,7 +7282,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Dongqiemi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2368'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7296,7 +7296,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Dongye Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2369'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7310,7 +7310,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Drangiana Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2371'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7324,7 +7324,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Dumnonia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2372'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7338,7 +7338,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Durotrigia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2373'],
+    regions: ["r534"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7352,7 +7352,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ebetsu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2374'],
+    regions: ["r1260","r1261","r1262"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7366,7 +7366,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Eblania Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2375'],
+    regions: ["r545"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7380,7 +7380,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Eburani Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2376'],
+    regions: ["r480","r1872"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7394,7 +7394,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Eburonia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2377'],
+    regions: ["r1090","r1091","r1092"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7408,7 +7408,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Edetani Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2378'],
+    regions: ["r2588"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7422,7 +7422,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Elea Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2379'],
+    regions: ["r2151","r2154","r2155","r2156","r2157","r2164"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7436,7 +7436,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Eleutherna Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2380'],
+    regions: ["r793","r3190"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7450,7 +7450,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Elis Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2385'],
+    regions: ["r3006"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7464,7 +7464,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Emporion Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2403'],
+    regions: ["r806"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7478,7 +7478,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Epidia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2404'],
+    regions: ["r546","r549","r550"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7492,7 +7492,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Eravisci Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2406'],
+    regions: ["r389","r1981"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7506,7 +7506,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Esan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2407'],
+    regions: ["r494","r496"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7520,7 +7520,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Estioni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2408'],
+    regions: ["r1823"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7534,7 +7534,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Etruscan Confederation Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2437'],
+    regions: ["r2203"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7548,7 +7548,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Eudosia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2438'],
+    regions: ["r3962"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7562,7 +7562,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Fanzaiyuan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2439'],
+    regions: ["r1077","r1078","r1081","r1082","r1083","r1084","r1085"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7576,7 +7576,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Feltrini Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2440'],
+    regions: ["r2236"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7590,7 +7590,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Fengbitou Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2441'],
+    regions: ["r1076","r1079","r1080"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7604,7 +7604,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Firaesia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2442'],
+    regions: ["r3088"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7618,7 +7618,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Focunati Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2443'],
+    regions: ["r177"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7632,7 +7632,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Fosia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2444'],
+    regions: ["r327","r332"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7646,7 +7646,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Frisians Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2445'],
+    regions: ["r1878"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7660,7 +7660,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Fugandulu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2446'],
+    regions: ["r687"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7674,7 +7674,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Fulou Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2447'],
+    regions: ["r625"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7688,7 +7688,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Funie Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2448'],
+    regions: ["r602","r1418","r2071"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7702,7 +7702,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Futakata Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2449'],
+    regions: ["r1181"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7716,7 +7716,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Fuyu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2451'],
+    regions: ["r611"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7730,7 +7730,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Gadir Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2452'],
+    regions: ["r2667","r2668"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7744,7 +7744,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Gaetulia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2453'],
+    regions: ["r2787","r2788","r2789","r2790","r2791","r2792","r2793","r2794","r2795"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7758,7 +7758,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Galindia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2454'],
+    regions: ["r1822"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7786,7 +7786,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Gangga Negara Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2485'],
+    regions: ["r932"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7800,7 +7800,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Gaucoenses Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2489'],
+    regions: ["r104","r267"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7814,7 +7814,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Gautigoths Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2666'],
+    regions: ["r515","r516"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7828,7 +7828,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Gelonii Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2671'],
+    regions: ["r1718"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7842,7 +7842,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Genauni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2672'],
+    regions: ["r2199"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7856,7 +7856,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Geungi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2673'],
+    regions: ["r1587","r1591"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7870,7 +7870,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Gijeo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2674'],
+    regions: ["r1288","r1302","r1304","r1305"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7884,7 +7884,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Glinditioni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2675'],
+    regions: ["r3025"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7898,7 +7898,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Goguryeo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2676'],
+    regions: ["r601"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7912,7 +7912,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Gojamidong Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2677'],
+    regions: ["r47"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7926,7 +7926,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Gomeritas Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2678'],
+    regions: ["r2670","r2673","r2675","r2676","r2677","r2678","r2680"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7968,7 +7968,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Gothoscandza Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2741'],
+    regions: ["r1824"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -7996,7 +7996,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Graioceli Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2743'],
+    regions: ["r2455"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8010,7 +8010,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Gryphia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2744'],
+    regions: ["r491"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8024,7 +8024,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Guanches Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2745'],
+    regions: ["r2757"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8038,7 +8038,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Gui Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2748'],
+    regions: ["r889","r891","r892"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8052,7 +8052,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Gulbal Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2749'],
+    regions: ["r635","r949","r960"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8066,7 +8066,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Gumo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2750'],
+    regions: ["r645","r981","r997","r998"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8080,7 +8080,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Guya Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2753'],
+    regions: ["r874"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8094,7 +8094,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Guyan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2754'],
+    regions: ["r888"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8108,7 +8108,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Gymnaesians Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2755'],
+    regions: ["r2457","r2458","r2459","r2488","r2489"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8122,7 +8122,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hadrametum Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2756'],
+    regions: ["r668"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8136,7 +8136,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Halin Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2757'],
+    regions: ["r656"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8150,7 +8150,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hanben Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2758'],
+    regions: ["r626","r897","r899"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8164,7 +8164,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Haoshi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2759'],
+    regions: ["r1414","r1417"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8178,7 +8178,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hari Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2760'],
+    regions: ["r841"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8192,7 +8192,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Haria Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2803'],
+    regions: ["r189","r295"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8206,7 +8206,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Harima Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2804'],
+    regions: ["r1166","r1183","r1189","r1192","r1195","r1200","r1202"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8220,7 +8220,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hasta Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2805'],
+    regions: ["r2217","r2255","r2257","r2260","r2267","r2268","r2269"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8234,7 +8234,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hata Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2806'],
+    regions: ["r1186","r1199","r1201","r1203","r1205","r1206","r1222","r1227","r1228"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8248,7 +8248,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Helisia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2839'],
+    regions: ["r173","r276"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8262,7 +8262,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Helveconia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2840'],
+    regions: ["r335","r1906","r1907","r1912","r2339","r2341","r2346","r2347","r2348","r2349","r2350","r2351","r2352","r2353","r2354","r2356"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8276,7 +8276,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Helvi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2841'],
+    regions: ["r328"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8290,7 +8290,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hemeroskopeion Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2842'],
+    regions: ["r807"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8304,7 +8304,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Heraia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2843'],
+    regions: ["r775","r778"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8318,7 +8318,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Herakleia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2844'],
+    regions: ["r3096","r3097","r3098"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8332,7 +8332,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Herakleia Pontica Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2850'],
+    regions: ["r3933"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8346,7 +8346,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hermione Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2851'],
+    regions: ["r1113"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8360,7 +8360,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hermunduria Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2852'],
+    regions: ["r486","r1884"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8374,7 +8374,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hezongshi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2853'],
+    regions: ["r1519","r1532","r1533","r1541"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8388,7 +8388,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hida Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2855'],
+    regions: ["r1223","r1224","r1225","r1226"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8402,7 +8402,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Himuka Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2856'],
+    regions: ["r1169","r1170"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8416,7 +8416,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hinokuni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2857'],
+    regions: ["r1131"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8430,7 +8430,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hippasii Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2858'],
+    regions: ["r85","r287","r973","r974","r975"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8444,7 +8444,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hipponion Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2860'],
+    regions: ["r759","r2176"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8458,7 +8458,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hitati Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2861'],
+    regions: ["r1246"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8472,7 +8472,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hnaw Kan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2862'],
+    regions: ["r1003"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8486,7 +8486,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Homonadia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2863'],
+    regions: ["r236","r419","r420","r421","r425","r426","r427","r429","r445","r3761","r3808","r3810","r3811","r3828","r3912","r3913"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8500,7 +8500,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Honokuni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2864'],
+    regions: ["r1187"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8514,7 +8514,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Houki Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2866'],
+    regions: ["r1179"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8528,7 +8528,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Huifa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2867'],
+    regions: ["r1336"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8542,7 +8542,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hujie Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2868'],
+    regions: ["r989"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8556,7 +8556,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Hunyu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2869'],
+    regions: ["r1086","r1425","r1428","r1445"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8570,7 +8570,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Iadatinia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2870'],
+    regions: ["r2146"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8584,7 +8584,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Iasi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2871'],
+    regions: ["r1751"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8598,7 +8598,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ibericus Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2874'],
+    regions: ["r263"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8612,7 +8612,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Iboshim Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2876'],
+    regions: ["r1107"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8640,7 +8640,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ierapetra Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2878'],
+    regions: ["r3196","r3197"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8654,7 +8654,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Igo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2880'],
+    regions: ["r1233"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8668,7 +8668,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Iki Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r2978'],
+    regions: ["r45"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8682,7 +8682,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ilvatia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3132'],
+    regions: ["r2182"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8696,7 +8696,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ilvatia Coeba Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3134'],
+    regions: ["r2179"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8710,7 +8710,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Imizu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3135'],
+    regions: ["r1209"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8724,7 +8724,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Indiketia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3136'],
+    regions: ["r2561"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8738,7 +8738,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Indravana Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3198'],
+    regions: ["r638"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8752,7 +8752,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ingaunia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3199'],
+    regions: ["r2288"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8766,7 +8766,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Intimilia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3271'],
+    regions: ["r2289"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8780,7 +8780,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Iohara Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3719'],
+    regions: ["r68","r69","r75","r299","r620","r1285"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8794,7 +8794,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Iol Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3720'],
+    regions: ["r2578"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8808,7 +8808,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Isarci Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3721'],
+    regions: ["r2336"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8822,7 +8822,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ise Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3722'],
+    regions: ["r1204","r1208"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8836,7 +8836,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Isindia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3723'],
+    regions: ["r192"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8850,7 +8850,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Issa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3724'],
+    regions: ["r2121"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8864,7 +8864,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Issedones Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3725'],
+    regions: ["r585"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8878,7 +8878,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ito Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3726'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8892,7 +8892,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ivernia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3727'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8906,7 +8906,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Iwa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3728'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8920,7 +8920,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Iwami Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3729'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8934,7 +8934,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Iya Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3730'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8948,7 +8948,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Izu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3752'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8962,7 +8962,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Jadis Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3756'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8976,7 +8976,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Jiankun Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3758'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -8990,7 +8990,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Jin Confederacy Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3761'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9004,7 +9004,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Jingjue Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3806'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9018,7 +9018,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Jiuxianlan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3807'],
+    regions: ["r886","r890"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9032,7 +9032,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Jubbah Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3808'],
+    regions: ["r1013"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9046,7 +9046,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Juding Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3809'],
+    regions: ["r319","r908"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9060,7 +9060,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Junji Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3810'],
+    regions: ["r307","r312","r893","r894","r895","r1525","r1526","r1527","r1528","r1529","r1530","r1534","r1535","r1536"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9074,7 +9074,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Jurcae Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3811'],
+    regions: ["r1602","r1603","r2054","r2057"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9088,7 +9088,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Jushi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3812'],
+    regions: ["r1467","r1468"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9102,7 +9102,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Juyan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3813'],
+    regions: ["r413"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9116,7 +9116,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kaandhalkuranadu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3814'],
+    regions: ["r661"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9130,7 +9130,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kaankezhunadu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3816'],
+    regions: ["r962"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9144,7 +9144,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kaga Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3819'],
+    regions: ["r1180"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9158,7 +9158,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kai Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3820'],
+    regions: ["r1212","r1213","r1214","r1244","r1245"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9172,7 +9172,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kalinga Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3821'],
+    regions: ["r182"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9186,7 +9186,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kallipolis Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3822'],
+    regions: ["r3091","r3092"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9200,7 +9200,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kamarupa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3823'],
+    regions: ["r298","r1040"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9214,7 +9214,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kaminotuke Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3824'],
+    regions: ["r1219","r1220","r1221","r1240","r1241"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9242,7 +9242,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kaounos Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3826'],
+    regions: ["r3188","r3792","r3846"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9256,7 +9256,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Karbonia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3827'],
+    regions: ["r2427"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9284,7 +9284,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Karmo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3829'],
+    regions: ["r2973"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9298,7 +9298,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kartuba Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3830'],
+    regions: ["r829"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9312,7 +9312,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Karusa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3899'],
+    regions: ["r59","r72","r76","r77","r936","r937"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9326,7 +9326,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kaukonia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3900'],
+    regions: ["r202","r772"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9340,7 +9340,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kaya Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3901'],
+    regions: ["r67"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9354,7 +9354,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kazusa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3902'],
+    regions: ["r1216","r1217","r1218"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9368,7 +9368,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kedah Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3903'],
+    regions: ["r925","r926","r927"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9382,7 +9382,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Keramos Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3904'],
+    regions: ["r797","r3183","r3184","r3185","r3831","r3832","r3833"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9396,7 +9396,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kerausous Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3906'],
+    regions: ["r3762","r3763","r3764","r3765","r3794"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9424,7 +9424,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kharazm Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3910'],
+    regions: ["r1589"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9438,7 +9438,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Khasa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3911'],
+    regions: ["r86"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9452,7 +9452,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Khotan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3912'],
+    regions: ["r982"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9466,7 +9466,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Khuan Lukpad Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3913'],
+    regions: ["r647"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9480,7 +9480,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kii Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3914'],
+    regions: ["r1236"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9494,7 +9494,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kina Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3915'],
+    regions: ["r1002","r1041"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9508,7 +9508,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kios Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3916'],
+    regions: ["r152","r3882","r3883"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9522,7 +9522,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kitami Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3922'],
+    regions: ["r1263"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9536,7 +9536,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Knossos Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3923'],
+    regions: ["r233"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9550,7 +9550,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kok Charoen Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3975'],
+    regions: ["r197","r432","r628"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9564,7 +9564,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Korgantas Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3976'],
+    regions: ["r580","r582","r583","r594"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9578,7 +9578,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Korkyra Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3977'],
+    regions: ["r809","r3021"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9592,7 +9592,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kosar Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r3979'],
+    regions: ["r637","r942"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9606,7 +9606,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kosinofukae Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r7', 'r9'],
+    regions: ["r1194","r1196","r1198"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9620,7 +9620,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kota Gelanggi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r11', 'r15'],
+    regions: ["r1055"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9634,7 +9634,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kotennia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r22', 'r24'],
+    regions: ["r250","r380"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9648,7 +9648,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kotyora Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r25', 'r26'],
+    regions: ["r863","r864","r3987","r4012","r4013"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9662,7 +9662,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kouass Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r27', 'r28'],
+    regions: ["r2624","r2625","r2626","r2669"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9676,7 +9676,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Krobyzni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r32', 'r33'],
+    regions: ["r3114"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9690,7 +9690,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Krounoi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r34', 'r35'],
+    regions: ["r3111","r3113"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9704,7 +9704,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kualaddungun Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r36', 'r37'],
+    regions: ["r733"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9718,7 +9718,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kubiki Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r38', 'r43'],
+    regions: ["r1239"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9732,7 +9732,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kucha Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r44', 'r45'],
+    regions: ["r994"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9760,7 +9760,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kumano Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r50', 'r51'],
+    regions: ["r1197"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9788,7 +9788,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kumi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r65', 'r67'],
+    regions: ["r101","r665","r667","r811","r817","r2460","r2462","r2463","r2464","r2465","r2466","r2478"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9802,7 +9802,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kunming Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r68', 'r69'],
+    regions: ["r1004"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9830,7 +9830,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Kydonia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r74', 'r75'],
+    regions: ["r1104"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9844,7 +9844,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Laevi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r78', 'r81'],
+    regions: ["r2216","r2218","r2254","r2256","r2263"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9858,7 +9858,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Lai Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r87', 'r104'],
+    regions: ["r902"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9872,7 +9872,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Lamap Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r111', 'r121'],
+    regions: ["r898"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9886,7 +9886,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Lamuri Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r127', 'r145'],
+    regions: ["r695"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9900,7 +9900,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Langkashuka Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r150', 'r157'],
+    regions: ["r1006"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9914,7 +9914,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Langobardia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r164', 'r165'],
+    regions: ["r2191"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9928,7 +9928,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Langyayue Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r169', 'r179'],
+    regions: ["r1023"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9942,7 +9942,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Lapicinia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r186', 'r188'],
+    regions: ["r137"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9956,7 +9956,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Lappa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r190', 'r197'],
+    regions: ["r794","r795"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9970,7 +9970,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Lascutaia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r212', 'r239'],
+    regions: ["r827","r2666"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9984,7 +9984,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Latobrigi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r247', 'r248'],
+    regions: ["r331"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -9998,7 +9998,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Latovici Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r254', 'r255'],
+    regions: ["r2190"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10012,7 +10012,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Legae Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r256', 'r257'],
+    regions: ["r150"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10026,7 +10026,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Lemovia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r260', 'r261'],
+    regions: ["r517"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10040,7 +10040,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Lepcis Parva Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r262', 'r264'],
+    regions: ["r116"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10054,7 +10054,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Lepreon Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r265', 'r273'],
+    regions: ["r2977"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10068,7 +10068,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Leunia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r289', 'r297'],
+    regions: ["r565"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10082,7 +10082,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Libuia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r298', 'r299'],
+    regions: ["r2125"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10096,7 +10096,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Licati Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r306', 'r309'],
+    regions: ["r1893"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10110,7 +10110,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Lihyan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r310', 'r311'],
+    regions: ["r3443"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10124,7 +10124,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Lingoni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r313', 'r314'],
+    regions: ["r334"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10138,7 +10138,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Linhue Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r315', 'r316'],
+    regions: ["r301","r1057","r1058","r1060","r1338","r1339","r1340","r1341","r1382","r1383"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10152,7 +10152,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Liukiu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r317', 'r318'],
+    regions: ["r1155","r1156","r1157","r1158","r1162","r1163"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10166,7 +10166,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Lixitae Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r319', 'r322'],
+    regions: ["r2619","r2620","r2621","r2622","r2623","r2629","r2630","r2631","r2633","r2634","r2635","r2636","r2637","r2638","r2639","r2640","r2641","r2642","r2643","r2644","r2645","r2646","r2648","r2717","r2718","r2720","r2722","r2729"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10180,7 +10180,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Llergetes Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r323', 'r324'],
+    regions: ["r269","r270"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10194,7 +10194,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Loeu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r325', 'r326'],
+    regions: ["r917"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10208,7 +10208,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Longonenses Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r356', 'r357'],
+    regions: ["r2445"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10222,7 +10222,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Loufan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r358', 'r367'],
+    regions: ["r1070"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10236,7 +10236,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Loulan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r368', 'r369'],
+    regions: ["r992"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10250,7 +10250,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Louwo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r375', 'r389'],
+    regions: ["r914"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10264,7 +10264,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Lu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r391', 'r392'],
+    regions: ["r624"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10278,7 +10278,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Lumbini Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r395', 'r396'],
+    regions: ["r965"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10292,7 +10292,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Luquidonenses Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r397', 'r398'],
+    regions: ["r2448"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10306,7 +10306,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Lusitanii Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r404', 'r405'],
+    regions: ["r256","r261"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10320,7 +10320,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Lyktos Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r406', 'r415'],
+    regions: ["r3192"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10334,7 +10334,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ma\'in Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r416', 'r429'],
+    regions: ["r453"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10348,7 +10348,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Maezaei Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r432', 'r433'],
+    regions: ["r3024"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10362,7 +10362,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Magyars Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r436', 'r440'],
+    regions: ["r1585"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10376,7 +10376,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Mahisamandala Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r442', 'r471'],
+    regions: ["r634"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10390,7 +10390,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Mai Adrasha Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r473', 'r475'],
+    regions: ["r854"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10404,7 +10404,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Majos Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r491', 'r492'],
+    regions: ["r2730"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10418,7 +10418,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Makae Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r515', 'r516'],
+    regions: ["r78"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10432,7 +10432,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Malaya Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r517', 'r518'],
+    regions: ["r7","r928","r929","r930","r931"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10446,7 +10446,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Manimia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r520', 'r550'],
+    regions: ["r740","r853"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10460,7 +10460,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Marcomannia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r551', 'r553'],
+    regions: ["r507"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10474,7 +10474,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Maricia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r554', 'r556'],
+    regions: ["r3086"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10488,7 +10488,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Matsura Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r557', 'r558'],
+    regions: ["r44"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10502,7 +10502,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Mazhamphulanadu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r560', 'r561'],
+    regions: ["r943","r946"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10516,7 +10516,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Mazun Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r563', 'r564'],
+    regions: ["r433"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10530,7 +10530,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Mediomatricia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r565', 'r566'],
+    regions: ["r1867","r1876"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10544,7 +10544,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Megaris Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r567', 'r568'],
+    regions: ["r3034"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10558,7 +10558,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Melanchlaeni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r569', 'r570'],
+    regions: ["r1685"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10572,7 +10572,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Melcumani Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r571', 'r572'],
+    regions: ["r348","r362"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10586,7 +10586,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Menapia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r573', 'r574'],
+    regions: ["r533"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10600,7 +10600,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Mesembria Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r575', 'r577'],
+    regions: ["r3108","r3109","r3110"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10614,7 +10614,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Messapains Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r580', 'r581'],
+    regions: ["r3023"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10628,7 +10628,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Mikuni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r582', 'r583'],
+    regions: ["r1238","r1243"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10642,7 +10642,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Minyue Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r584', 'r585'],
+    regions: ["r1075"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10656,7 +10656,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Miran Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r586', 'r587'],
+    regions: ["r986","r987","r1001"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10670,7 +10670,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Mirimidong Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r588', 'r589'],
+    regions: ["r65","r74","r618","r619","r1289","r1290","r1292","r1295","r1296","r1297"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10684,7 +10684,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Mitinooku Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r590', 'r594'],
+    regions: ["r1242","r1252","r1254"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10698,7 +10698,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Monapia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r595', 'r596'],
+    regions: ["r555"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10712,7 +10712,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Mordvins Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r597', 'r601'],
+    regions: ["r1665","r1666","r1668","r1669"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10726,7 +10726,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Morinia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r602', 'r611'],
+    regions: ["r1087"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10740,7 +10740,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Motosu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r618', 'r619'],
+    regions: ["r1229"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10754,7 +10754,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Mudhirmali Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r620', 'r623'],
+    regions: ["r73","r951"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10768,7 +10768,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Mugetu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r624', 'r625'],
+    regions: ["r1210"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10782,7 +10782,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Mukkaavalnadu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r626', 'r627'],
+    regions: ["r941"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10796,7 +10796,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Mullurnadu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r628', 'r629'],
+    regions: ["r948"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10810,7 +10810,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Musasi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r630', 'r631'],
+    regions: ["r1215"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10824,7 +10824,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Musu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r632', 'r634'],
+    regions: ["r1345","r1364","r1365","r1366","r1367"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10838,7 +10838,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Nabhaka Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r635', 'r636'],
+    regions: ["r191"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10852,7 +10852,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Nabhapakti Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r637', 'r638'],
+    regions: ["r970"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10866,7 +10866,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Naga Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r641', 'r643'],
+    regions: ["r643"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10880,7 +10880,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Naharvalia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r644', 'r645'],
+    regions: ["r483","r484","r488","r513"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10894,7 +10894,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Nam Cuong Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r647', 'r648'],
+    regions: ["r623"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10908,7 +10908,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Namnetes Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r649', 'r650'],
+    regions: ["r175"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10922,7 +10922,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Nanhe Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r651', 'r652'],
+    regions: ["r1064","r1396"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10936,7 +10936,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Narensi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r653', 'r654'],
+    regions: ["r347"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10950,7 +10950,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Naristia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r655', 'r656'],
+    regions: ["r1885","r1897","r1901","r1905","r1914","r1915","r1916","r1917","r1919","r1920","r1921","r1922","r1923","r1924","r1925","r1926","r1927","r1928","r1929","r1951"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10964,7 +10964,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Nasu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r657', 'r658'],
+    regions: ["r1255"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10978,7 +10978,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Nectiberia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r659', 'r660'],
+    regions: ["r264"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -10992,7 +10992,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Nemetia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r661', 'r662'],
+    regions: ["r2194"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11006,7 +11006,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Nervia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r663', 'r675'],
+    regions: ["r2204"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11020,7 +11020,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'republic', ruler: { name: 'Nesiotic League Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r676', 'r677'],
+    regions: ["r234","r810","r1099","r1101","r1103","r1105","r1106","r1108","r1117","r1118","r3176"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11034,7 +11034,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Neuri Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r679', 'r681'],
+    regions: ["r313","r492","r574","r575","r576","r1720","r1739","r1740","r1741","r1750","r1760","r1986","r1988","r1991","r1992"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11048,7 +11048,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r682', 'r683'],
+    regions: ["r1542"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11062,7 +11062,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Nivkhgu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r684', 'r685'],
+    regions: ["r1283"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11076,7 +11076,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Non Nok That Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r686', 'r687'],
+    regions: ["r38","r186","r648"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11104,7 +11104,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Noto Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r690', 'r691'],
+    regions: ["r102","r245","r247","r248","r2407","r2408"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11118,7 +11118,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Novantia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r692', 'r693'],
+    regions: ["r544"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11132,7 +11132,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Nuceria Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r694', 'r695'],
+    regions: ["r127","r755","r2122"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11146,7 +11146,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Nuithonia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r696', 'r697'],
+    regions: ["r518"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11160,7 +11160,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Nukata Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r698', 'r699'],
+    regions: ["r1207"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11174,7 +11174,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Nuomuhong Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r700', 'r701'],
+    regions: ["r646"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11188,7 +11188,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Nyanggaun Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r702', 'r703'],
+    regions: ["r657","r658","r659","r913","r920"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11202,7 +11202,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Oaymaannadu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r704', 'r705'],
+    regions: ["r636"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11216,7 +11216,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Odessa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r706', 'r707'],
+    regions: ["r1719"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11230,7 +11230,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ohkita Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r708', 'r709'],
+    regions: ["r1234"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11244,7 +11244,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ohmi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r710', 'r712'],
+    regions: ["r1185"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11258,7 +11258,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Oki Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r713', 'r714'],
+    regions: ["r1127","r1128"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11272,7 +11272,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Okjeo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r715', 'r716'],
+    regions: ["r1308","r1346","r1359","r1360"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11286,7 +11286,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ollaiyur Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r717', 'r718'],
+    regions: ["r940"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11300,7 +11300,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Onuba Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r719', 'r720'],
+    regions: ["r825"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11314,7 +11314,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Opus Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r721', 'r722'],
+    regions: ["r3002","r3003"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11342,7 +11342,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ordovicia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r725', 'r726'],
+    regions: ["r539"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11356,7 +11356,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Oreos Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r727', 'r728'],
+    regions: ["r2992"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11370,7 +11370,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Oretani Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r729', 'r730'],
+    regions: ["r273"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11384,7 +11384,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Orippo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r731', 'r732'],
+    regions: ["r826"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11398,7 +11398,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ormelia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r733', 'r734'],
+    regions: ["r2212","r2213","r2214","r2215","r2219","r2222","r2247","r2248","r2249","r2250","r2251","r2252","r2253","r2304"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11412,7 +11412,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Oroanadia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r735', 'r736'],
+    regions: ["r3048"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11426,7 +11426,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Orobia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r737', 'r738'],
+    regions: ["r2306"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11440,7 +11440,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Oseriati Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r739', 'r740'],
+    regions: ["r356","r357","r358","r367","r368","r369","r396"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11454,7 +11454,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Osii Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r741', 'r742'],
+    regions: ["r1938","r1939","r1940","r1941","r1942","r1977","r1978","r1980"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11468,7 +11468,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Osimii Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r743', 'r744'],
+    regions: ["r106"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11482,7 +11482,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ossi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r745', 'r747'],
+    regions: ["r390"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11496,7 +11496,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Osumi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r748', 'r749'],
+    regions: ["r3056","r3057","r3058","r3062"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11510,7 +11510,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ouyue Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r751', 'r752'],
+    regions: ["r880"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11524,7 +11524,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Owari Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r753', 'r754'],
+    regions: ["r1184"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11538,7 +11538,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Oxybia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r755', 'r756'],
+    regions: ["r3051","r3055","r3072","r3078"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11552,7 +11552,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Oyat Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r758', 'r761'],
+    regions: ["r1845","r1846","r1847","r1852","r1856","r1857","r2019","r2021","r2022","r2023"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11566,7 +11566,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Paemania Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r762', 'r771'],
+    regions: ["r3037","r3043","r3044","r3045","r3046","r3047","r3049","r3050","r3053","r3059","r3060"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11580,7 +11580,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Pahang Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r784', 'r787'],
+    regions: ["r1030"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11608,7 +11608,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Panai Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r792', 'r798'],
+    regions: ["r933","r935","r1031"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11622,7 +11622,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Pandya Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r809', 'r812'],
+    regions: ["r15"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11636,7 +11636,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Panpan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r824', 'r825'],
+    regions: ["r919"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11650,7 +11650,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Parisia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r826', 'r827'],
+    regions: ["r98"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11664,7 +11664,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Parisii Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r828', 'r829'],
+    regions: ["r333"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11678,7 +11678,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Parni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r850', 'r853'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11692,7 +11692,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Patulatenses Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r854', 'r876'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11706,7 +11706,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Paurava Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r877', 'r883'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11720,7 +11720,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Pednelissia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r895', 'r896'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11734,7 +11734,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Pegu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r897', 'r898'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11748,7 +11748,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Permani Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r899', 'r900'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11762,7 +11762,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Perorsia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r901', 'r902'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11776,7 +11776,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Petchabun Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r903', 'r904'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11790,7 +11790,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Phnom Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r905', 'r906'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11804,7 +11804,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Phu Lon Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r907', 'r908'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11818,7 +11818,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Phyrnia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r909', 'r911'],
+    regions: ["r3936","r3937"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11832,7 +11832,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Physkos Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r912', 'r913'],
+    regions: ["r3844","r3845","r3847"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11846,7 +11846,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Pictones Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r914', 'r915'],
+    regions: ["r174"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11860,7 +11860,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Pinglin Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r917', 'r918'],
+    regions: ["r188","r1552"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11874,7 +11874,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Pingu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r919', 'r920'],
+    regions: ["r1059"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11888,7 +11888,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Pirusti Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r921', 'r922'],
+    regions: ["r3054"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11902,7 +11902,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Pishan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r923', 'r924'],
+    regions: ["r999"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11916,7 +11916,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'republic', ruler: { name: 'Pisidian City States Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r925', 'r926'],
+    regions: ["r3939"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11930,7 +11930,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Pissuri Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r927', 'r928'],
+    regions: ["r839"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11944,7 +11944,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Pitinika Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r929', 'r930'],
+    regions: ["r286"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11958,7 +11958,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Polyrrhenia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r931', 'r932'],
+    regions: ["r92"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11972,7 +11972,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Pong Manao Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r933', 'r934'],
+    regions: ["r70"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -11986,7 +11986,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Pothigainadu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r935', 'r939'],
+    regions: ["r952"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12000,7 +12000,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Praetutii Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r940', 'r941'],
+    regions: ["r108"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12014,7 +12014,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Praisos Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r942', 'r943'],
+    regions: ["r1096"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12028,7 +12028,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Pullinadu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r944', 'r945'],
+    regions: ["r289"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12042,7 +12042,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Punanadu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r946', 'r947'],
+    regions: ["r944"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12056,7 +12056,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Punginadu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r948', 'r949'],
+    regions: ["r641"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12070,7 +12070,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Qeddar Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r950', 'r951'],
+    regions: ["r1014","r3444"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12084,7 +12084,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Qielan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r952', 'r953'],
+    regions: ["r910"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12098,7 +12098,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Qiemo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r954', 'r955'],
+    regions: ["r984","r985"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12112,7 +12112,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Qiongdu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r956', 'r957'],
+    regions: ["r924"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12126,7 +12126,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Quadia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r958', 'r959'],
+    regions: ["r398"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12140,7 +12140,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Qushi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r960', 'r961'],
+    regions: ["r993"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12168,7 +12168,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Rathika Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r964', 'r981'],
+    regions: ["r291","r296","r633"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12182,7 +12182,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Rauraci Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r982', 'r983'],
+    regions: ["r2193"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12196,7 +12196,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Remi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r984', 'r985'],
+    regions: ["r1088","r1089"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12210,7 +12210,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Reudignia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r986', 'r987'],
+    regions: ["r570"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12224,7 +12224,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'republic', ruler: { name: 'Roman Republic Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r989', 'r990'],
+    regions: ["r145","r2117"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12238,7 +12238,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Rubrensians Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r991', 'r992'],
+    regions: ["r568"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12252,7 +12252,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Rucinatia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r993', 'r994'],
+    regions: ["r386"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12266,7 +12266,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Rugia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r995', 'r996'],
+    regions: ["r512"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12280,7 +12280,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Rugusci Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r997', 'r998'],
+    regions: ["r2192"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12308,7 +12308,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sab Champa Jurcae Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1001', 'r1002'],
+    regions: ["r87"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12322,7 +12322,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sabiri Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1003', 'r1004'],
+    regions: ["r1579"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12336,7 +12336,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Salii Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1006', 'r1007'],
+    regions: ["r199","r473","r475","r476"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12364,7 +12364,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Samatata Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1015', 'r1017'],
+    regions: ["r190"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12378,7 +12378,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Santones Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1018', 'r1019'],
+    regions: ["r176"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12392,7 +12392,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sanu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1026', 'r1027'],
+    regions: ["r843"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12406,7 +12406,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sardeati Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1028', 'r1030'],
+    regions: ["r2440"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12420,7 +12420,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Saro Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1031', 'r1032'],
+    regions: ["r3089","r3090","r3093","r3095","r3158","r3163"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12434,7 +12434,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Satiyaputa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1039', 'r1040'],
+    regions: ["r662"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12448,7 +12448,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Saurdonia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1041', 'r1042'],
+    regions: ["r3076"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12462,7 +12462,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sciria Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1044', 'r1045'],
+    regions: ["r2451"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12476,7 +12476,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Seduni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1046', 'r1047'],
+    regions: ["r2452"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12490,7 +12490,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Segnia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1048', 'r1049'],
+    regions: ["r2241"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12504,7 +12504,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Selangor Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1055', 'r1075'],
+    regions: ["r934"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12518,7 +12518,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Selgia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1076', 'r1077'],
+    regions: ["r3806","r3807","r3809","r3814","r3816","r3819","r3820","r3821","r3822","r3823","r3824","r3825","r3826"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12532,7 +12532,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Selgovia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1078', 'r1079'],
+    regions: ["r543"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12546,7 +12546,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Semnonia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1080', 'r1081'],
+    regions: ["r490"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12560,7 +12560,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sequani Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1082', 'r1083'],
+    regions: ["r2202"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12574,7 +12574,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Serones Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1084', 'r1085'],
+    regions: ["r226","r3534","r3851","r3852","r3862","r3864","r3868","r3869","r3870","r3872","r3873","r3874","r3875","r3876","r3877","r3878","r3879","r3881","r3889","r3891","r3927","r3930","r3931","r3932","r3951","r3952"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12588,7 +12588,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sesamos Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1122', 'r1124'],
+    regions: ["r861","r3964","r3965","r3966","r3967","r3969","r3971","r3972","r3973","r3981"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12602,7 +12602,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sevaci Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1126', 'r1127'],
+    regions: ["r373"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12616,7 +12616,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Shajing Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1128', 'r1129'],
+    regions: ["r1540","r1544","r1545"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12630,7 +12630,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Shan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1131', 'r1132'],
+    regions: ["r651"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12644,7 +12644,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Shanma Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1133', 'r1134'],
+    regions: ["r303","r1072","r1451"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12658,7 +12658,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Shenli Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1135', 'r1136'],
+    regions: ["r622","r875"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12672,7 +12672,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Shihsanhang Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1137', 'r1138'],
+    regions: ["r1154"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12686,7 +12686,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Shima Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1140', 'r1143'],
+    regions: ["r1211"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12700,7 +12700,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Shoumi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1144', 'r1145'],
+    regions: ["r1065","r1066","r1515","r1520"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12714,7 +12714,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Shule Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1146', 'r1147'],
+    regions: ["r442"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12728,7 +12728,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sicyon Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1148', 'r1149'],
+    regions: ["r3033"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12742,7 +12742,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Siljig Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1150', 'r1151'],
+    regions: ["r410","r1559","r1560"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12756,7 +12756,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Siluria Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1152', 'r1154'],
+    regions: ["r535","r536"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12770,7 +12770,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Simobusa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1155', 'r1156'],
+    regions: ["r1230"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12784,7 +12784,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Simotuke Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1157', 'r1158'],
+    regions: ["r1253"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12798,7 +12798,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sinaga Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1162', 'r1163'],
+    regions: ["r923"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12812,7 +12812,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sinano Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1164', 'r1165'],
+    regions: ["r1182"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12826,7 +12826,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sindi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1166', 'r1167'],
+    regions: ["r4014"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12840,7 +12840,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sirakawa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1168', 'r1169'],
+    regions: ["r1256"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12854,7 +12854,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sithonia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1170', 'r1171'],
+    regions: ["r3067","r3068"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12868,7 +12868,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Skirithfinia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1179', 'r1180'],
+    regions: ["r1139","r1141","r1142","r1153","r1159","r1160","r3539","r3548","r3886","r3887","r3888","r3890","r3892","r3893","r3894","r3896","r3917","r3918","r3924","r3925"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12882,7 +12882,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Snay Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1181', 'r1182'],
+    regions: ["r1657","r1702","r1710","r1711","r1712"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12896,7 +12896,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Socosia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1183', 'r1184'],
+    regions: ["r742"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12910,7 +12910,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Soga Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1185', 'r1186'],
+    regions: ["r1232"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12924,7 +12924,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sogdia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1187', 'r1188'],
+    regions: ["r441"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12938,7 +12938,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Soknobulsa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1189', 'r1190'],
+    regions: ["r3291","r3292","r3308","r3309","r3310","r3311","r3312","r3313","r3314","r3315","r3316","r3317","r3318","r3319","r3320","r3321","r3322","r3323","r3324","r3325","r3326","r3327","r3328","r3329","r3330","r3331","r3332","r3333","r3334","r3335","r3336","r3337","r3338","r3339","r3340","r3341","r3342","r3343","r3403","r3406"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12952,7 +12952,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Solymia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1191', 'r1192'],
+    regions: ["r3756","r3757","r3758","r3759","r3760"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12966,7 +12966,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Soma Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1193', 'r1194'],
+    regions: ["r3839","r3840","r3841","r3843","r3849","r3850","r3861","r3954","r3955","r3960"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12980,7 +12980,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Somun Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1195', 'r1196'],
+    regions: ["r129","r417","r418","r3525","r3526","r3530","r3532","r3535","r3536","r3537","r3538","r3543","r3544","r3545","r3552","r3555","r3556","r3557","r3558","r3559","r3658","r3678","r3679","r3680","r3681","r3712","r3714","r3715","r3716","r3717","r3718","r3732","r3737","r3738","r3739","r3740","r3741","r3742"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -12994,7 +12994,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Song Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1197', 'r1198'],
+    regions: ["r882"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13008,7 +13008,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sorbones Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1199', 'r1200'],
+    regions: ["r339"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13022,7 +13022,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sporioi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1201', 'r1202'],
+    regions: ["r378","r379","r3099","r3100","r3104"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13036,7 +13036,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Statiellia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1203', 'r1204'],
+    regions: ["r2181"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13050,7 +13050,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Suaneti Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1205', 'r1206'],
+    regions: ["r121"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13064,7 +13064,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sudinoia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1207', 'r1208'],
+    regions: ["r3578","r3579","r3580","r3581","r3583","r3586","r3787","r3801","r4043","r4048","r4049","r4050","r4051","r4052","r4053","r4054","r4056","r4057","r4058","r4069"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13078,7 +13078,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sugambria Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1209', 'r1210'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13092,7 +13092,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sui Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1211', 'r1212'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13106,7 +13106,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Suionia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1213', 'r1214'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13120,7 +13120,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sumo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1215', 'r1216'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13134,7 +13134,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sumpa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1217', 'r1218'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13148,7 +13148,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sunazawa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1219', 'r1220'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13162,7 +13162,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Suo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1221', 'r1222'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13176,7 +13176,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Sushen Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1223', 'r1224'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13190,7 +13190,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Susuya Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1225', 'r1226'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13204,7 +13204,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Suwa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1227', 'r1228'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13218,7 +13218,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Taexalia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1229', 'r1230'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13232,7 +13232,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tagaung Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1231', 'r1232'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13246,7 +13246,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tahu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1233', 'r1234'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13260,7 +13260,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tamusida Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1235', 'r1236'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13274,7 +13274,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tanba Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1237', 'r1238'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13288,7 +13288,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tangara Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1239', 'r1240'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13302,7 +13302,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tarrha Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1241', 'r1242'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13316,7 +13316,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tasm Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1243', 'r1244'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13330,7 +13330,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Taungthaman Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1245', 'r1246'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13344,7 +13344,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tauriscia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1247', 'r1248'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13358,7 +13358,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tayuan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1249', 'r1250'],
+    regions: ["r1032"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13372,7 +13372,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tectosages Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1251', 'r1252'],
+    regions: ["r799","r3899","r3900","r3901","r3902","r3903","r3904","r3905","r3908","r3909","r3910","r3911","r3915","r3916","r3974","r3976","r3977","r3979","r3980"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13386,7 +13386,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Teion Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1253', 'r1254'],
+    regions: ["r3978"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13400,7 +13400,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tenasserim Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1255', 'r1256'],
+    regions: ["r81","r649","r650"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13414,7 +13414,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Teng Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1257', 'r1258'],
+    regions: ["r300"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13428,7 +13428,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Teuria Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1259', 'r1260'],
+    regions: ["r110"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13442,7 +13442,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Teutonia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1261', 'r1262'],
+    regions: ["r489"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13456,7 +13456,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Thapsus Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1263', 'r1264'],
+    regions: ["r2485"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13484,7 +13484,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Thebes Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1267', 'r1268'],
+    regions: ["r3363","r3364","r3365","r3366","r3371","r3372","r3373","r3374","r3375","r3382"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13498,7 +13498,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Thuria Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1269', 'r1270'],
+    regions: ["r209"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13512,7 +13512,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Thyssagetae Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1271', 'r1272'],
+    regions: ["r1600"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13526,7 +13526,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tibulati Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1273', 'r1274'],
+    regions: ["r2201"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13540,7 +13540,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tigrakhauda Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1275', 'r1276'],
+    regions: ["r1558"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13554,7 +13554,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tigullia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1277', 'r1278'],
+    regions: ["r2264"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13568,7 +13568,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tigurini Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1279', 'r1280'],
+    regions: ["r2180"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13582,7 +13582,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tilataloi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1281', 'r1282'],
+    regions: ["r42","r71","r1039"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13596,7 +13596,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Titibu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1283', 'r1284'],
+    regions: ["r1188"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13610,7 +13610,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Toki Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1285', 'r1288'],
+    regions: ["r1235"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13624,7 +13624,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tomis Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1289', 'r1290'],
+    regions: ["r3083"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13652,7 +13652,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tosu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1296', 'r1297'],
+    regions: ["r1168"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13666,7 +13666,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tougeni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1302', 'r1304'],
+    regions: ["r531"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13680,7 +13680,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Toyo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1305', 'r1362'],
+    regions: ["r1129"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13694,7 +13694,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Treveria Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1409', 'r1410'],
+    regions: ["r1094"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13708,7 +13708,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Triballi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1411', 'r1412'],
+    regions: ["r3073"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13722,7 +13722,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Triboccia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1413', 'r1414'],
+    regions: ["r1095","r1888","r1889"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13736,7 +13736,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Trinovantia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1415', 'r1416'],
+    regions: ["r97"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13750,7 +13750,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Trocmia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1417', 'r1418'],
+    regions: ["r803","r804","r862","r3906","r3907","r3975","r3982","r3992","r3993","r3997","r4003"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13764,7 +13764,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Trumpili Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1419', 'r1420'],
+    regions: ["r2233"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13778,7 +13778,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tsang Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1421', 'r1422'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13792,7 +13792,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tsuma Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1448', 'r1451'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13806,7 +13806,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tukusi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1458', 'r1459'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13820,7 +13820,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tulingi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1460', 'r1461'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13834,7 +13834,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Turdulia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1462', 'r1463'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13848,7 +13848,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Turritani Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1464', 'r1465'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13862,7 +13862,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tusima Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1467', 'r1468'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13876,7 +13876,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tymandia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1471', 'r1472'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13890,7 +13890,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tyras Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1476', 'r1477'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13904,7 +13904,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Tyrgetae Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1478', 'r1479'],
+    regions: []
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13918,7 +13918,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Uberi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1483', 'r1484'],
+    regions: ["r2345"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13932,7 +13932,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ubia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1485', 'r1486'],
+    regions: ["r1093","r1864"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13946,7 +13946,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Uperaci Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1487', 'r1488'],
+    regions: ["r365"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13960,7 +13960,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Uperacii Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1489', 'r1490'],
+    regions: ["r2322","r2328","r2330","r2332"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13974,7 +13974,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Uyu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1491', 'r1492'],
+    regions: ["r921"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -13988,7 +13988,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Vaanarnadu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1493', 'r1502'],
+    regions: ["r947"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14002,7 +14002,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Vaccaei Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1504', 'r1505'],
+    regions: ["r165"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14016,7 +14016,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Vaengadanadu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1506', 'r1507'],
+    regions: ["r955","r956","r957","r958","r963"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14030,7 +14030,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Valentini Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1508', 'r1509'],
+    regions: ["r2468"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14044,7 +14044,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Van Lang Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1510', 'r1511'],
+    regions: ["r627"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14058,7 +14058,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Vanavasi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1512', 'r1513'],
+    regions: ["r285"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14072,7 +14072,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Vangiona Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1546', 'r1547'],
+    regions: ["r2189"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14086,7 +14086,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Varagria Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1548', 'r1549'],
+    regions: ["r3070"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14100,7 +14100,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Varinia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1550', 'r1567'],
+    regions: ["r3079"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14114,7 +14114,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Vascones Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1575', 'r1576'],
+    regions: ["r268"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14128,7 +14128,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Vediantia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1577', 'r1579'],
+    regions: ["r2291"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14142,7 +14142,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Vellimalai Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1581', 'r1585'],
+    regions: ["r945"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14156,7 +14156,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Veltia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1586', 'r1587'],
+    regions: ["r254"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14170,7 +14170,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Venelli Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1588', 'r1589'],
+    regions: ["r178"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14198,7 +14198,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Veniconia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1592', 'r1594'],
+    regions: ["r551"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14212,7 +14212,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Venosti Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1595', 'r1596'],
+    regions: ["r2178"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14226,7 +14226,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Verbigeni Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1597', 'r1598'],
+    regions: ["r1896","r1908","r1911"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14240,7 +14240,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Vertamocorii Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1599', 'r1600'],
+    regions: ["r154"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14254,7 +14254,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Vesubia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1601', 'r1602'],
+    regions: ["r143"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14268,7 +14268,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Viromanduia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1603', 'r1604'],
+    regions: ["r200"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14296,7 +14296,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Votadinia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1607', 'r1608'],
+    regions: ["r553"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14310,7 +14310,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Votodronia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1609', 'r1610'],
+    regions: ["r554"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14324,7 +14324,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Wakasa Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1611', 'r1614'],
+    regions: ["r1132"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14338,7 +14338,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Weii Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1615', 'r1616'],
+    regions: ["r1328","r1330"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14352,7 +14352,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Weili Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1617', 'r1618'],
+    regions: ["r1516"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14366,7 +14366,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Weitou Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1619', 'r1620'],
+    regions: ["r1335"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14380,7 +14380,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Weixu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1621', 'r1622'],
+    regions: ["r1380","r1384","r1385","r1386","r1387","r1388","r1389","r1390","r1393"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14394,7 +14394,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Wulei Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1623', 'r1626'],
+    regions: ["r1472","r1506"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14408,7 +14408,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Wusun Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1627', 'r1628'],
+    regions: ["r1502"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14422,7 +14422,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Xi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1658', 'r1659'],
+    regions: ["r617"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14436,7 +14436,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Xi Zhou Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1660', 'r1661'],
+    regions: ["r1537"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14450,7 +14450,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Xiangkhoang Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1662', 'r1663'],
+    regions: ["r169"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14464,7 +14464,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Xiaowan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1664', 'r1665'],
+    regions: ["r1539"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14478,7 +14478,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Xihai Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1666', 'r1667'],
+    regions: ["r1448"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14492,7 +14492,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Xiqiemi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1668', 'r1669'],
+    regions: ["r1443"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14506,7 +14506,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Xiru Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1671', 'r1674'],
+    regions: ["r320","r1543"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14520,7 +14520,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Xitu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1675', 'r1676'],
+    regions: ["r632"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14534,7 +14534,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Xue Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1677', 'r1678'],
+    regions: ["r1395"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14576,7 +14576,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Yancai Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1683', 'r1684'],
+    regions: ["r1581","r1586"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14590,7 +14590,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Yangyu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1685', 'r1686'],
+    regions: ["r318","r322","r909","r911","r912","r1546"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14604,7 +14604,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Yangyue Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1687', 'r1688'],
+    regions: ["r885"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14618,7 +14618,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Yanqi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1689', 'r1690'],
+    regions: ["r991"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14632,7 +14632,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Yarlung Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1691', 'r1692'],
+    regions: ["r644"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14646,7 +14646,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Yasu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1693', 'r1700'],
+    regions: ["r1136"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14660,7 +14660,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Yaudheya Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1701', 'r1749'],
+    regions: ["r938","r978"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14674,7 +14674,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Yelang Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1750', 'r1751'],
+    regions: ["r1550"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14688,7 +14688,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Yeodam Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1756', 'r1757'],
+    regions: ["r46"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14702,7 +14702,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Yeomhae Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1758', 'r1760'],
+    regions: ["r1124"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14716,7 +14716,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Yiqu Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1802', 'r1812'],
+    regions: ["r1071"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14730,7 +14730,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Yue Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1813', 'r1814'],
+    regions: ["r878"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14744,7 +14744,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Yulimo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1815', 'r1820'],
+    regions: ["r631","r876"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14758,7 +14758,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Yulou Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1822', 'r1823'],
+    regions: ["r1337"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14772,7 +14772,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Yumi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1824', 'r1825'],
+    regions: ["r1514","r1521"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14786,7 +14786,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Ywa Htin Kon Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1826', 'r1828'],
+    regions: ["r654"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14800,7 +14800,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Zanthi Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1829', 'r1830'],
+    regions: ["r3085"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14814,7 +14814,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Zhangzhung Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1831', 'r1832'],
+    regions: ["r293"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14828,7 +14828,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Zhongshan Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1836', 'r1837'],
+    regions: ["r1381","r1394"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14842,7 +14842,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Zhou Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1838', 'r1839'],
+    regions: ["r881"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14856,7 +14856,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Zou Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1840', 'r1842'],
+    regions: ["r1531"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14870,7 +14870,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Zuo Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1843', 'r1844'],
+    regions: ["r877"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
@@ -14884,7 +14884,7 @@ const INITIAL_GAME_STATE = {
     is_player: false,
     is_minor: true,
     government: { type: 'tribal', ruler: { name: 'Zygia Leader' }, legitimacy: 50, stability: 50 },
-    regions: ['r1845', 'r1846'],
+    regions: ["r111"]
     population: { total: 30000, happiness: 50 },
     economy: { treasury: 100, stockpile: {}, trade_routes: [], tax_rate: 0.1 },
     military: { infantry: 1000, cavalry: 100, ships: 0, morale: 50, at_war_with: [] },
