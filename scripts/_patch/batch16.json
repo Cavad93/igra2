@@ -1,0 +1,32 @@
+{
+  "carni": {
+    "bbox": { "latMin": 45.5, "latMax": 47.0, "lonMin": 12.8, "lonMax": 15.2 },
+    "priority": 2,
+    "capital": { "lat": 46.0, "lon": 14.0 },
+    "notes": "Карны — кельтское племя Юлийских Альп, контролируют торговые пути в Паннонию"
+  },
+  "leponti": {
+    "bbox": { "latMin": 45.8, "latMax": 47.1, "lonMin": 7.8, "lonMax": 9.6 },
+    "priority": 2,
+    "capital": { "lat": 46.1, "lon": 8.7 },
+    "notes": "Лепонты — кельто-лигурийское племя Тичино, умелые кузнецы альпийских долин"
+  },
+  "salassi": {
+    "bbox": { "latMin": 45.4, "latMax": 46.1, "lonMin": 6.9, "lonMax": 8.1 },
+    "priority": 2,
+    "capital": { "lat": 45.74, "lon": 7.32 },
+    "notes": "Салассы — горное племя Долины Аосты, контролируют перевал Большой Сен-Бернар и золотые россыпи"
+  },
+  "taurini": {
+    "bbox": { "latMin": 44.7, "latMax": 45.5, "lonMin": 7.1, "lonMax": 8.3 },
+    "priority": 2,
+    "capital": { "lat": 45.07, "lon": 7.69 },
+    "notes": "Тауринцы — лигурийское племя у подножия Альп, место будущего Турина (Augusta Taurinorum)"
+  },
+  "vagiennia": {
+    "bbox": { "latMin": 44.0, "latMax": 44.75, "lonMin": 7.3, "lonMax": 8.4 },
+    "priority": 2,
+    "capital": { "lat": 44.4, "lon": 8.0 },
+    "notes": "Вагиенны — лигурийское племя Лигурийских Апеннин у истоков реки По"
+  }
+}

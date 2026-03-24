@@ -1,0 +1,38 @@
+{
+  "tegea": {
+    "bbox": { "latMin": 37.3, "latMax": 37.6, "lonMin": 22.3, "lonMax": 22.7 },
+    "priority": 2,
+    "capital": { "lat": 37.44, "lon": 22.42 },
+    "notes": "Тегея — аркадский союзник Спарты, юго-восточная Аркадия"
+  },
+  "mantinea": {
+    "bbox": { "latMin": 37.5, "latMax": 37.8, "lonMin": 22.3, "lonMax": 22.6 },
+    "priority": 2,
+    "capital": { "lat": 37.61, "lon": 22.38 },
+    "notes": "Мантинея — центральная Аркадия, место гибели Эпаминонда в 362 BC"
+  },
+  "troizen": {
+    "bbox": { "latMin": 37.3, "latMax": 37.65, "lonMin": 23.2, "lonMax": 23.6 },
+    "priority": 1,
+    "capital": { "lat": 37.5, "lon": 23.45 },
+    "notes": "Трезен — небольшой город на Арголидском полуострове, мифическая родина Тесея"
+  },
+  "messenia": {
+    "bbox": { "latMin": 36.8, "latMax": 37.3, "lonMin": 21.6, "lonMax": 22.3 },
+    "priority": 3,
+    "capital": { "lat": 37.04, "lon": 22.02 },
+    "notes": "Мессения — освобождена Эпаминондом в 369 BC, западный Пелопоннес"
+  },
+  "epidauros": {
+    "bbox": { "latMin": 37.5, "latMax": 37.8, "lonMin": 23.0, "lonMax": 23.4 },
+    "priority": 2,
+    "capital": { "lat": 37.63, "lon": 23.07 },
+    "notes": "Эпидавр — священный город Асклепия, Арголида"
+  },
+  "stymphalia": {
+    "bbox": { "latMin": 37.8, "latMax": 38.05, "lonMin": 22.3, "lonMax": 22.65 },
+    "priority": 1,
+    "capital": { "lat": 37.85, "lon": 22.45 },
+    "notes": "Стимфалия — аркадский городок у одноимённого озера, место 6-го подвига Геракла"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "sparta": {
+    "bbox": { "latMin": 36.5, "latMax": 37.3, "lonMin": 21.8, "lonMax": 22.8 },
+    "priority": 3,
+    "capital": { "lat": 37.07, "lon": 22.43 },
+    "notes": "Спарта 304 BC — Лакедемон с Лаконией, Пелопоннес, уже утратила Мессению"
+  },
+  "athens": {
+    "bbox": { "latMin": 37.6, "latMax": 38.3, "lonMin": 23.3, "lonMax": 24.2 },
+    "priority": 4,
+    "capital": { "lat": 37.97, "lon": 23.72 },
+    "notes": "Афины с Аттикой, под опекой Деметрия Фалерского — македонского ставленника"
+  },
+  "corinth": {
+    "bbox": { "latMin": 37.8, "latMax": 38.1, "lonMin": 22.7, "lonMax": 23.2 },
+    "priority": 3,
+    "capital": { "lat": 37.9, "lon": 22.93 },
+    "notes": "Коринф — стратегический перешеек, контролируется Македонией"
+  },
+  "argos": {
+    "bbox": { "latMin": 37.4, "latMax": 37.9, "lonMin": 22.5, "lonMax": 23.1 },
+    "priority": 3,
+    "capital": { "lat": 37.63, "lon": 22.72 },
+    "notes": "Аргос — северо-восточный Пелопоннес, традиционный соперник Спарты"
+  },
+  "eretria": {
+    "bbox": { "latMin": 38.2, "latMax": 38.7, "lonMin": 23.4, "lonMax": 24.2 },
+    "priority": 2,
+    "capital": { "lat": 38.39, "lon": 23.79 },
+    "notes": "Эретрия — главный город Эвбеи, под влиянием Македонии"
+  },
+  "megalopolis": {
+    "bbox": { "latMin": 37.2, "latMax": 37.6, "lonMin": 21.9, "lonMax": 22.4 },
+    "priority": 2,
+    "capital": { "lat": 37.4, "lon": 22.13 },
+    "notes": "Мегалополь — Аркадия, основан как противовес Спарте, к 304 BC приходит в упадок"
+  }
+}

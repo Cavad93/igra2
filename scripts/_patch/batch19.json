@@ -1,0 +1,31 @@
+{
+  "picentes": {
+    "bbox": { "latMin": 42.1, "latMax": 43.6, "lonMin": 13.1, "lonMax": 14.2 },
+    "priority": 3,
+    "capital": { "lat": 43.2, "lon": 13.5 },
+    "notes": "Пиценты — Пиценум на Адриатике, плодородный регион, в 304 BC под давлением Рима и Самния"
+  },
+  "sabinia": {
+    "bbox": { "latMin": 41.9, "latMax": 42.8, "lonMin": 12.2, "lonMax": 13.3 },
+    "priority": 3,
+    "capital": { "lat": 42.3, "lon": 12.7 },
+    "notes": "Сабины — горные долины к северо-востоку от Рима, в значительной мере уже романизированы"
+  },
+  "carthage": {
+    "bbox": { "latMin": 36.5, "latMax": 37.5, "lonMin": 9.8, "lonMax": 11.0 },
+    "polygons": [
+      { "latMin": 36.5, "latMax": 37.5, "lonMin": 9.8, "lonMax": 11.0 },
+      { "latMin": 37.3, "latMax": 38.3, "lonMin": 12.3, "lonMax": 15.7 },
+      { "latMin": 38.8, "latMax": 40.2, "lonMin": 8.5, "lonMax": 9.8 }
+    ],
+    "priority": 9,
+    "capital": { "lat": 36.85, "lon": 10.33 },
+    "notes": "Карфаген — торговая империя: Тунис + западная Сицилия + Сардиния + гарнизоны Испании"
+  },
+  "numidia": {
+    "bbox": { "latMin": 33.5, "latMax": 37.2, "lonMin": 2.5, "lonMax": 10.5 },
+    "priority": 5,
+    "capital": { "lat": 35.5, "lon": 6.0 },
+    "notes": "Нумидийские царства в Северной Африке к западу от Карфагена — лучшая лёгкая кавалерия мира"
+  }
+}

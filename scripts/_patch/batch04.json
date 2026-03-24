@@ -1,0 +1,42 @@
+{
+  "boeotian_states": {
+    "bbox": { "latMin": 38.1, "latMax": 38.8, "lonMin": 22.4, "lonMax": 23.5 },
+    "priority": 4,
+    "capital": { "lat": 38.32, "lon": 23.32 },
+    "notes": "Беотийский союз — Фивы разрушены Александром в 335 BC, союз восстановлен при диадохах"
+  },
+  "macedon": {
+    "bbox": { "latMin": 40.0, "latMax": 42.2, "lonMin": 21.2, "lonMax": 25.0 },
+    "priority": 6,
+    "capital": { "lat": 40.47, "lon": 22.4 },
+    "notes": "Македония при Кассандре, ядро государства диадохов на Балканском полуострове"
+  },
+  "epirus": {
+    "bbox": { "latMin": 39.0, "latMax": 41.2, "lonMin": 20.0, "lonMax": 21.5 },
+    "priority": 5,
+    "capital": { "lat": 39.83, "lon": 20.82 },
+    "notes": "Эпир при Пирре — западные Балканы, Амбракия как столица"
+  },
+  "greek_states": {
+    "bbox": { "latMin": 36.5, "latMax": 41.5, "lonMin": 20.0, "lonMax": 27.0 },
+    "polygons": [
+      { "latMin": 36.5, "latMax": 41.5, "lonMin": 20.0, "lonMax": 27.0 },
+      { "latMin": 35.5, "latMax": 38.5, "lonMin": 24.0, "lonMax": 29.0 }
+    ],
+    "priority": 7,
+    "capital": { "lat": 37.97, "lon": 23.72 },
+    "notes": "Греческие полисы коллективно — Балканская Греция и Эгейские острова, под влиянием диадохов"
+  },
+  "rhodes": {
+    "bbox": { "latMin": 35.85, "latMax": 36.55, "lonMin": 27.6, "lonMax": 28.35 },
+    "priority": 4,
+    "capital": { "lat": 36.44, "lon": 28.22 },
+    "notes": "Родос — главный торговый порт Восточного Средиземноморья, выдержал осаду Деметрия 305-304 BC"
+  },
+  "massilia": {
+    "bbox": { "latMin": 43.0, "latMax": 43.7, "lonMin": 4.8, "lonMax": 5.6 },
+    "priority": 3,
+    "capital": { "lat": 43.3, "lon": 5.37 },
+    "notes": "Массалия (Марсель) — греческая колония фокейцев, торговый форпост Западного Средиземноморья"
+  }
+}

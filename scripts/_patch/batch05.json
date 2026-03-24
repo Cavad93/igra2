@@ -1,0 +1,54 @@
+{
+  "bosporan_kingdom": {
+    "bbox": { "latMin": 44.5, "latMax": 47.2, "lonMin": 36.0, "lonMax": 40.5 },
+    "polygons": [
+      { "latMin": 44.5, "latMax": 46.0, "lonMin": 36.0, "lonMax": 37.5 },
+      { "latMin": 44.8, "latMax": 46.5, "lonMin": 37.0, "lonMax": 40.5 }
+    ],
+    "priority": 4,
+    "capital": { "lat": 45.35, "lon": 36.47 },
+    "notes": "Боспорское царство — обе стороны Киммерийского Боспора (Керченский пролив), контроль зернового экспорта"
+  },
+  "sinope": {
+    "bbox": { "latMin": 41.7, "latMax": 42.2, "lonMin": 34.8, "lonMax": 35.3 },
+    "priority": 3,
+    "capital": { "lat": 42.02, "lon": 35.15 },
+    "notes": "Синопа — главный греческий город Южного Причерноморья, родина Диогена"
+  },
+  "trapezous": {
+    "bbox": { "latMin": 40.9, "latMax": 41.35, "lonMin": 39.5, "lonMax": 40.1 },
+    "priority": 2,
+    "capital": { "lat": 41.0, "lon": 39.72 },
+    "notes": "Трапезунт — восточный форпост на Понте, ворота в Кавказ и Армению"
+  },
+  "chersonesus": {
+    "bbox": { "latMin": 44.5, "latMax": 44.95, "lonMin": 33.3, "lonMax": 33.9 },
+    "priority": 2,
+    "capital": { "lat": 44.61, "lon": 33.5 },
+    "notes": "Херсонес Таврический — греческий полис в Крыму, под постоянной угрозой скифов"
+  },
+  "olbia": {
+    "bbox": { "latMin": 46.5, "latMax": 47.1, "lonMin": 31.3, "lonMax": 32.3 },
+    "priority": 2,
+    "capital": { "lat": 46.87, "lon": 31.9 },
+    "notes": "Ольвия — греческая колония в устье Буга, торговля со скифами"
+  },
+  "orgame": {
+    "bbox": { "latMin": 44.7, "latMax": 45.25, "lonMin": 28.7, "lonMax": 29.6 },
+    "priority": 1,
+    "capital": { "lat": 44.93, "lon": 29.02 },
+    "notes": "Оргама — греческое поселение в дельте Дуная, посредник с гетами"
+  },
+  "istros": {
+    "bbox": { "latMin": 44.4, "latMax": 44.9, "lonMin": 28.5, "lonMax": 29.2 },
+    "priority": 1,
+    "capital": { "lat": 44.58, "lon": 28.82 },
+    "notes": "Истрос — греческая колония у Чёрного моря близ устья Дуная"
+  },
+  "apollonia_pontica": {
+    "bbox": { "latMin": 42.2, "latMax": 42.65, "lonMin": 27.4, "lonMax": 28.1 },
+    "priority": 1,
+    "capital": { "lat": 42.48, "lon": 27.7 },
+    "notes": "Аполлония Понтийская — милетская колония на болгарском черноморском берегу"
+  }
+}
