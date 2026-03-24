@@ -433,7 +433,8 @@ function updateGraph(chains) {
   const keys = Object.keys(chains);
   if (keys.length === 0) return;
 
-  $('graph-empty').style.display = 'none';
+  const emptyEl = $('graph-empty');
+  if (emptyEl) emptyEl.style.display = 'none';
 
   // Nodes
   const nodes = keys.map(id => {
