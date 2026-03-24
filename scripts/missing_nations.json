@@ -1,0 +1,2922 @@
+[
+  {
+    "name": "Abannaea",
+    "id": "abannaea"
+  },
+  {
+    "name": "Achola",
+    "id": "achola"
+  },
+  {
+    "name": "Acinippo",
+    "id": "acinippo"
+  },
+  {
+    "name": "Adagaiman",
+    "id": "adagaiman"
+  },
+  {
+    "name": "Adiabene",
+    "id": "adiabene"
+  },
+  {
+    "name": "Adoulia",
+    "id": "adoulia"
+  },
+  {
+    "name": "Aedui",
+    "id": "aedui"
+  },
+  {
+    "name": "Aequi Remnants",
+    "id": "aequi_remnants"
+  },
+  {
+    "name": "Aestia",
+    "id": "aestia"
+  },
+  {
+    "name": "Agadir",
+    "id": "agadir"
+  },
+  {
+    "name": "Agathyrsi",
+    "id": "agathyrsi"
+  },
+  {
+    "name": "Aigion",
+    "id": "aigion"
+  },
+  {
+    "name": "Ailao",
+    "id": "ailao"
+  },
+  {
+    "name": "Aki",
+    "id": "aki"
+  },
+  {
+    "name": "Alauni",
+    "id": "alauni"
+  },
+  {
+    "name": "Albosenses",
+    "id": "albosenses"
+  },
+  {
+    "name": "Allobriges",
+    "id": "allobriges"
+  },
+  {
+    "name": "Amakusa",
+    "id": "amakusa"
+  },
+  {
+    "name": "Ambidravi",
+    "id": "ambidravi"
+  },
+  {
+    "name": "Ambisonti",
+    "id": "ambisonti"
+  },
+  {
+    "name": "Ambladia",
+    "id": "ambladia"
+  },
+  {
+    "name": "Ambrakia",
+    "id": "ambrakia"
+  },
+  {
+    "name": "Ambronia",
+    "id": "ambronia"
+  },
+  {
+    "name": "Amisos",
+    "id": "amisos"
+  },
+  {
+    "name": "Amyrgia",
+    "id": "amyrgia"
+  },
+  {
+    "name": "Ana",
+    "id": "ana"
+  },
+  {
+    "name": "Anamaria",
+    "id": "anamaria"
+  },
+  {
+    "name": "Anartes",
+    "id": "anartes"
+  },
+  {
+    "name": "Anauni",
+    "id": "anauni"
+  },
+  {
+    "name": "Anchegu",
+    "id": "anchegu"
+  },
+  {
+    "name": "Andhra",
+    "id": "andhra"
+  },
+  {
+    "name": "Andizeti",
+    "id": "andizeti"
+  },
+  {
+    "name": "Androphagi",
+    "id": "androphagi"
+  },
+  {
+    "name": "Andros",
+    "id": "andros"
+  },
+  {
+    "name": "Angles",
+    "id": "angles"
+  },
+  {
+    "name": "Anhou",
+    "id": "anhou"
+  },
+  {
+    "name": "Ansanemes",
+    "id": "ansanemes"
+  },
+  {
+    "name": "Anuradhapura",
+    "id": "anuradhapura"
+  },
+  {
+    "name": "Anya",
+    "id": "anya"
+  },
+  {
+    "name": "Apasiacae",
+    "id": "apasiacae"
+  },
+  {
+    "name": "Apollonia",
+    "id": "apollonia"
+  },
+  {
+    "name": "Apuania",
+    "id": "apuania"
+  },
+  {
+    "name": "Aquetanians",
+    "id": "aquetanians"
+  },
+  {
+    "name": "Arachosia",
+    "id": "arachosia"
+  },
+  {
+    "name": "Arakan",
+    "id": "arakan"
+  },
+  {
+    "name": "Arambys",
+    "id": "arambys"
+  },
+  {
+    "name": "Ardiei",
+    "id": "ardiei"
+  },
+  {
+    "name": "Argippaeans",
+    "id": "argippaeans"
+  },
+  {
+    "name": "Arismaspians",
+    "id": "arismaspians"
+  },
+  {
+    "name": "Arkades",
+    "id": "arkades"
+  },
+  {
+    "name": "Armphaeians",
+    "id": "armphaeians"
+  },
+  {
+    "name": "Aroteres",
+    "id": "aroteres"
+  },
+  {
+    "name": "Aru",
+    "id": "aru"
+  },
+  {
+    "name": "Arverni",
+    "id": "arverni"
+  },
+  {
+    "name": "Arykandia",
+    "id": "arykandia"
+  },
+  {
+    "name": "Asmaka",
+    "id": "asmaka"
+  },
+  {
+    "name": "Aspisia",
+    "id": "aspisia"
+  },
+  {
+    "name": "Astakos",
+    "id": "astakos"
+  },
+  {
+    "name": "Astigi",
+    "id": "astigi"
+  },
+  {
+    "name": "Astures",
+    "id": "astures"
+  },
+  {
+    "name": "Atavia",
+    "id": "atavia"
+  },
+  {
+    "name": "Athagausia",
+    "id": "athagausia"
+  },
+  {
+    "name": "Athigannadu",
+    "id": "athigannadu"
+  },
+  {
+    "name": "Attasia",
+    "id": "attasia"
+  },
+  {
+    "name": "Autenia",
+    "id": "autenia"
+  },
+  {
+    "name": "Autolalia",
+    "id": "autolalia"
+  },
+  {
+    "name": "Avalitia",
+    "id": "avalitia"
+  },
+  {
+    "name": "Avionia",
+    "id": "avionia"
+  },
+  {
+    "name": "Awa",
+    "id": "awa"
+  },
+  {
+    "name": "Awaji",
+    "id": "awaji"
+  },
+  {
+    "name": "Ay",
+    "id": "ay"
+  },
+  {
+    "name": "Azali",
+    "id": "azali"
+  },
+  {
+    "name": "Azalo",
+    "id": "azalo"
+  },
+  {
+    "name": "Baekje",
+    "id": "baekje"
+  },
+  {
+    "name": "Baima",
+    "id": "baima"
+  },
+  {
+    "name": "Baishan",
+    "id": "baishan"
+  },
+  {
+    "name": "Ballo",
+    "id": "ballo"
+  },
+  {
+    "name": "Ban Chiang",
+    "id": "ban_chiang"
+  },
+  {
+    "name": "Barduli",
+    "id": "barduli"
+  },
+  {
+    "name": "Barus",
+    "id": "barus"
+  },
+  {
+    "name": "Bastarnia",
+    "id": "bastarnia"
+  },
+  {
+    "name": "Bastetani",
+    "id": "bastetani"
+  },
+  {
+    "name": "Beikthano",
+    "id": "beikthano"
+  },
+  {
+    "name": "Bekhyria",
+    "id": "bekhyria"
+  },
+  {
+    "name": "Belgites",
+    "id": "belgites"
+  },
+  {
+    "name": "Bellovaci",
+    "id": "bellovaci"
+  },
+  {
+    "name": "Benahoaritas",
+    "id": "benahoaritas"
+  },
+  {
+    "name": "Bhoja",
+    "id": "bhoja"
+  },
+  {
+    "name": "Bi",
+    "id": "bi"
+  },
+  {
+    "name": "Bie",
+    "id": "bie"
+  },
+  {
+    "name": "Biephes",
+    "id": "biephes"
+  },
+  {
+    "name": "Bimbaches",
+    "id": "bimbaches"
+  },
+  {
+    "name": "Biturges",
+    "id": "biturges"
+  },
+  {
+    "name": "Boduo",
+    "id": "boduo"
+  },
+  {
+    "name": "Boi",
+    "id": "boi"
+  },
+  {
+    "name": "Boiihami",
+    "id": "boiihami"
+  },
+  {
+    "name": "Borusci",
+    "id": "borusci"
+  },
+  {
+    "name": "Borysthenes",
+    "id": "borysthenes"
+  },
+  {
+    "name": "Breganti",
+    "id": "breganti"
+  },
+  {
+    "name": "Breuci",
+    "id": "breuci"
+  },
+  {
+    "name": "Breuni",
+    "id": "breuni"
+  },
+  {
+    "name": "Brigantia",
+    "id": "brigantia"
+  },
+  {
+    "name": "Bructeria",
+    "id": "bructeria"
+  },
+  {
+    "name": "Budini",
+    "id": "budini"
+  },
+  {
+    "name": "Bugu",
+    "id": "bugu"
+  },
+  {
+    "name": "Bulsa",
+    "id": "bulsa"
+  },
+  {
+    "name": "Buma",
+    "id": "buma"
+  },
+  {
+    "name": "Bures",
+    "id": "bures"
+  },
+  {
+    "name": "Burgundia",
+    "id": "burgundia"
+  },
+  {
+    "name": "Cabalian City States",
+    "id": "cabalian_city_states"
+  },
+  {
+    "name": "Cadurici",
+    "id": "cadurici"
+  },
+  {
+    "name": "Caerosia",
+    "id": "caerosia"
+  },
+  {
+    "name": "Calchedon",
+    "id": "calchedon"
+  },
+  {
+    "name": "Caledonia",
+    "id": "caledonia"
+  },
+  {
+    "name": "Callatis",
+    "id": "callatis"
+  },
+  {
+    "name": "Caluconi",
+    "id": "caluconi"
+  },
+  {
+    "name": "Camuni",
+    "id": "camuni"
+  },
+  {
+    "name": "Canaria",
+    "id": "canaria"
+  },
+  {
+    "name": "Canarios",
+    "id": "canarios"
+  },
+  {
+    "name": "Cangwu",
+    "id": "cangwu"
+  },
+  {
+    "name": "Cantabri",
+    "id": "cantabri"
+  },
+  {
+    "name": "Cantiacia",
+    "id": "cantiacia"
+  },
+  {
+    "name": "Capariensa",
+    "id": "capariensa"
+  },
+  {
+    "name": "Caraceni",
+    "id": "caraceni"
+  },
+  {
+    "name": "Carenses",
+    "id": "carenses"
+  },
+  {
+    "name": "Careoti",
+    "id": "careoti"
+  },
+  {
+    "name": "Carnutes",
+    "id": "carnutes"
+  },
+  {
+    "name": "Carpetani",
+    "id": "carpetani"
+  },
+  {
+    "name": "Carpi",
+    "id": "carpi"
+  },
+  {
+    "name": "Carvetia",
+    "id": "carvetia"
+  },
+  {
+    "name": "Catenati",
+    "id": "catenati"
+  },
+  {
+    "name": "Caturigi",
+    "id": "caturigi"
+  },
+  {
+    "name": "Caucasian Albania",
+    "id": "caucasian_albania"
+  },
+  {
+    "name": "Cedu",
+    "id": "cedu"
+  },
+  {
+    "name": "Celesitani",
+    "id": "celesitani"
+  },
+  {
+    "name": "Celtiberi",
+    "id": "celtiberi"
+  },
+  {
+    "name": "Celtici",
+    "id": "celtici"
+  },
+  {
+    "name": "Cetiana",
+    "id": "cetiana"
+  },
+  {
+    "name": "Chaidinia",
+    "id": "chaidinia"
+  },
+  {
+    "name": "Chamavia",
+    "id": "chamavia"
+  },
+  {
+    "name": "Chansen",
+    "id": "chansen"
+  },
+  {
+    "name": "Charklik",
+    "id": "charklik"
+  },
+  {
+    "name": "Charudia",
+    "id": "charudia"
+  },
+  {
+    "name": "Chattia",
+    "id": "chattia"
+  },
+  {
+    "name": "Chaucia",
+    "id": "chaucia"
+  },
+  {
+    "name": "Chausaria",
+    "id": "chausaria"
+  },
+  {
+    "name": "Chera",
+    "id": "chera"
+  },
+  {
+    "name": "Cheruscia",
+    "id": "cheruscia"
+  },
+  {
+    "name": "Chi Tu",
+    "id": "chi_tu"
+  },
+  {
+    "name": "Chola",
+    "id": "chola"
+  },
+  {
+    "name": "Cimbria",
+    "id": "cimbria"
+  },
+  {
+    "name": "Cochis",
+    "id": "cochis"
+  },
+  {
+    "name": "Colapiani",
+    "id": "colapiani"
+  },
+  {
+    "name": "Condrusia",
+    "id": "condrusia"
+  },
+  {
+    "name": "Conii",
+    "id": "conii"
+  },
+  {
+    "name": "Contestani",
+    "id": "contestani"
+  },
+  {
+    "name": "Coracenses",
+    "id": "coracenses"
+  },
+  {
+    "name": "Coritania",
+    "id": "coritania"
+  },
+  {
+    "name": "Cornavia",
+    "id": "cornavia"
+  },
+  {
+    "name": "Cornovia",
+    "id": "cornovia"
+  },
+  {
+    "name": "Costobaces",
+    "id": "costobaces"
+  },
+  {
+    "name": "Cosuaneti",
+    "id": "cosuaneti"
+  },
+  {
+    "name": "Cotinia",
+    "id": "cotinia"
+  },
+  {
+    "name": "Daamat",
+    "id": "daamat"
+  },
+  {
+    "name": "Dalmati",
+    "id": "dalmati"
+  },
+  {
+    "name": "Damna",
+    "id": "damna"
+  },
+  {
+    "name": "Damnonia",
+    "id": "damnonia"
+  },
+  {
+    "name": "Danciona",
+    "id": "danciona"
+  },
+  {
+    "name": "Daorsi",
+    "id": "daorsi"
+  },
+  {
+    "name": "Daqiuyuan",
+    "id": "daqiuyuan"
+  },
+  {
+    "name": "Darinia",
+    "id": "darinia"
+  },
+  {
+    "name": "Daze",
+    "id": "daze"
+  },
+  {
+    "name": "Deceanglia",
+    "id": "deceanglia"
+  },
+  {
+    "name": "Dectuninia",
+    "id": "dectuninia"
+  },
+  {
+    "name": "Delphi",
+    "id": "delphi"
+  },
+  {
+    "name": "Demetia",
+    "id": "demetia"
+  },
+  {
+    "name": "Derbices",
+    "id": "derbices"
+  },
+  {
+    "name": "Dewa",
+    "id": "dewa"
+  },
+  {
+    "name": "Dian",
+    "id": "dian"
+  },
+  {
+    "name": "Dindari",
+    "id": "dindari"
+  },
+  {
+    "name": "Dingling",
+    "id": "dingling"
+  },
+  {
+    "name": "Dobbunia",
+    "id": "dobbunia"
+  },
+  {
+    "name": "Docilia",
+    "id": "docilia"
+  },
+  {
+    "name": "Dong Zhou",
+    "id": "dong_zhou"
+  },
+  {
+    "name": "Donghue",
+    "id": "donghue"
+  },
+  {
+    "name": "Dongno",
+    "id": "dongno"
+  },
+  {
+    "name": "Dongqiemi",
+    "id": "dongqiemi"
+  },
+  {
+    "name": "Dongye",
+    "id": "dongye"
+  },
+  {
+    "name": "Drangiana",
+    "id": "drangiana"
+  },
+  {
+    "name": "Dumnonia",
+    "id": "dumnonia"
+  },
+  {
+    "name": "Durotrigia",
+    "id": "durotrigia"
+  },
+  {
+    "name": "Ebetsu",
+    "id": "ebetsu"
+  },
+  {
+    "name": "Eblania",
+    "id": "eblania"
+  },
+  {
+    "name": "Eburani",
+    "id": "eburani"
+  },
+  {
+    "name": "Eburonia",
+    "id": "eburonia"
+  },
+  {
+    "name": "Edetani",
+    "id": "edetani"
+  },
+  {
+    "name": "Elea",
+    "id": "elea"
+  },
+  {
+    "name": "Eleutherna",
+    "id": "eleutherna"
+  },
+  {
+    "name": "Elis",
+    "id": "elis"
+  },
+  {
+    "name": "Emporion",
+    "id": "emporion"
+  },
+  {
+    "name": "Epidia",
+    "id": "epidia"
+  },
+  {
+    "name": "Eravisci",
+    "id": "eravisci"
+  },
+  {
+    "name": "Esan",
+    "id": "esan"
+  },
+  {
+    "name": "Estioni",
+    "id": "estioni"
+  },
+  {
+    "name": "Etruscan Confederation",
+    "id": "etruscan_confederation"
+  },
+  {
+    "name": "Eudosia",
+    "id": "eudosia"
+  },
+  {
+    "name": "Fanzaiyuan",
+    "id": "fanzaiyuan"
+  },
+  {
+    "name": "Feltrini",
+    "id": "feltrini"
+  },
+  {
+    "name": "Fengbitou",
+    "id": "fengbitou"
+  },
+  {
+    "name": "Firaesia",
+    "id": "firaesia"
+  },
+  {
+    "name": "Focunati",
+    "id": "focunati"
+  },
+  {
+    "name": "Fosia",
+    "id": "fosia"
+  },
+  {
+    "name": "Frisians",
+    "id": "frisians"
+  },
+  {
+    "name": "Fugandulu",
+    "id": "fugandulu"
+  },
+  {
+    "name": "Fulou",
+    "id": "fulou"
+  },
+  {
+    "name": "Funie",
+    "id": "funie"
+  },
+  {
+    "name": "Futakata",
+    "id": "futakata"
+  },
+  {
+    "name": "Fuyu",
+    "id": "fuyu"
+  },
+  {
+    "name": "Gadir",
+    "id": "gadir"
+  },
+  {
+    "name": "Gaetulia",
+    "id": "gaetulia"
+  },
+  {
+    "name": "Galindia",
+    "id": "galindia"
+  },
+  {
+    "name": "Gallaeci",
+    "id": "gallaeci"
+  },
+  {
+    "name": "Gangga Negara",
+    "id": "gangga_negara"
+  },
+  {
+    "name": "Gaucoenses",
+    "id": "gaucoenses"
+  },
+  {
+    "name": "Gautigoths",
+    "id": "gautigoths"
+  },
+  {
+    "name": "Gelonii",
+    "id": "gelonii"
+  },
+  {
+    "name": "Genauni",
+    "id": "genauni"
+  },
+  {
+    "name": "Geungi",
+    "id": "geungi"
+  },
+  {
+    "name": "Gijeo",
+    "id": "gijeo"
+  },
+  {
+    "name": "Glinditioni",
+    "id": "glinditioni"
+  },
+  {
+    "name": "Goguryeo",
+    "id": "goguryeo"
+  },
+  {
+    "name": "Gojamidong",
+    "id": "gojamidong"
+  },
+  {
+    "name": "Gomeritas",
+    "id": "gomeritas"
+  },
+  {
+    "name": "Gortyna",
+    "id": "gortyna"
+  },
+  {
+    "name": "Gothania",
+    "id": "gothania"
+  },
+  {
+    "name": "Gothoscandza",
+    "id": "gothoscandza"
+  },
+  {
+    "name": "Goutia",
+    "id": "goutia"
+  },
+  {
+    "name": "Graioceli",
+    "id": "graioceli"
+  },
+  {
+    "name": "Gryphia",
+    "id": "gryphia"
+  },
+  {
+    "name": "Guanches",
+    "id": "guanches"
+  },
+  {
+    "name": "Gui",
+    "id": "gui"
+  },
+  {
+    "name": "Gulbal",
+    "id": "gulbal"
+  },
+  {
+    "name": "Gumo",
+    "id": "gumo"
+  },
+  {
+    "name": "Guya",
+    "id": "guya"
+  },
+  {
+    "name": "Guyan",
+    "id": "guyan"
+  },
+  {
+    "name": "Gymnaesians",
+    "id": "gymnaesians"
+  },
+  {
+    "name": "Hadrametum",
+    "id": "hadrametum"
+  },
+  {
+    "name": "Halin",
+    "id": "halin"
+  },
+  {
+    "name": "Hanben",
+    "id": "hanben"
+  },
+  {
+    "name": "Haoshi",
+    "id": "haoshi"
+  },
+  {
+    "name": "Hari",
+    "id": "hari"
+  },
+  {
+    "name": "Haria",
+    "id": "haria"
+  },
+  {
+    "name": "Harima",
+    "id": "harima"
+  },
+  {
+    "name": "Hasta",
+    "id": "hasta"
+  },
+  {
+    "name": "Hata",
+    "id": "hata"
+  },
+  {
+    "name": "Helisia",
+    "id": "helisia"
+  },
+  {
+    "name": "Helveconia",
+    "id": "helveconia"
+  },
+  {
+    "name": "Helvi",
+    "id": "helvi"
+  },
+  {
+    "name": "Hemeroskopeion",
+    "id": "hemeroskopeion"
+  },
+  {
+    "name": "Heraia",
+    "id": "heraia"
+  },
+  {
+    "name": "Herakleia",
+    "id": "herakleia"
+  },
+  {
+    "name": "Herakleia Pontica",
+    "id": "herakleia_pontica"
+  },
+  {
+    "name": "Hermione",
+    "id": "hermione"
+  },
+  {
+    "name": "Hermunduria",
+    "id": "hermunduria"
+  },
+  {
+    "name": "Hezongshi",
+    "id": "hezongshi"
+  },
+  {
+    "name": "Hida",
+    "id": "hida"
+  },
+  {
+    "name": "Himuka",
+    "id": "himuka"
+  },
+  {
+    "name": "Hinokuni",
+    "id": "hinokuni"
+  },
+  {
+    "name": "Hippasii",
+    "id": "hippasii"
+  },
+  {
+    "name": "Hipponion",
+    "id": "hipponion"
+  },
+  {
+    "name": "Hitati",
+    "id": "hitati"
+  },
+  {
+    "name": "Hnaw Kan",
+    "id": "hnaw_kan"
+  },
+  {
+    "name": "Homonadia",
+    "id": "homonadia"
+  },
+  {
+    "name": "Honokuni",
+    "id": "honokuni"
+  },
+  {
+    "name": "Houki",
+    "id": "houki"
+  },
+  {
+    "name": "Huifa",
+    "id": "huifa"
+  },
+  {
+    "name": "Hujie",
+    "id": "hujie"
+  },
+  {
+    "name": "Hunyu",
+    "id": "hunyu"
+  },
+  {
+    "name": "Iadatinia",
+    "id": "iadatinia"
+  },
+  {
+    "name": "Iasi",
+    "id": "iasi"
+  },
+  {
+    "name": "Ibericus",
+    "id": "ibericus"
+  },
+  {
+    "name": "Iboshim",
+    "id": "iboshim"
+  },
+  {
+    "name": "Icenia",
+    "id": "icenia"
+  },
+  {
+    "name": "Ierapetra",
+    "id": "ierapetra"
+  },
+  {
+    "name": "Igo",
+    "id": "igo"
+  },
+  {
+    "name": "Iki",
+    "id": "iki"
+  },
+  {
+    "name": "Ilvatia",
+    "id": "ilvatia"
+  },
+  {
+    "name": "Ilvatia Coeba",
+    "id": "ilvatia_coeba"
+  },
+  {
+    "name": "Imizu",
+    "id": "imizu"
+  },
+  {
+    "name": "Indiketia",
+    "id": "indiketia"
+  },
+  {
+    "name": "Indravana",
+    "id": "indravana"
+  },
+  {
+    "name": "Ingaunia",
+    "id": "ingaunia"
+  },
+  {
+    "name": "Intimilia",
+    "id": "intimilia"
+  },
+  {
+    "name": "Iohara",
+    "id": "iohara"
+  },
+  {
+    "name": "Iol",
+    "id": "iol"
+  },
+  {
+    "name": "Isarci",
+    "id": "isarci"
+  },
+  {
+    "name": "Ise",
+    "id": "ise"
+  },
+  {
+    "name": "Isindia",
+    "id": "isindia"
+  },
+  {
+    "name": "Issa",
+    "id": "issa"
+  },
+  {
+    "name": "Issedones",
+    "id": "issedones"
+  },
+  {
+    "name": "Ito",
+    "id": "ito"
+  },
+  {
+    "name": "Ivernia",
+    "id": "ivernia"
+  },
+  {
+    "name": "Iwa",
+    "id": "iwa"
+  },
+  {
+    "name": "Iwami",
+    "id": "iwami"
+  },
+  {
+    "name": "Iya",
+    "id": "iya"
+  },
+  {
+    "name": "Izu",
+    "id": "izu"
+  },
+  {
+    "name": "Jadis",
+    "id": "jadis"
+  },
+  {
+    "name": "Jiankun",
+    "id": "jiankun"
+  },
+  {
+    "name": "Jin Confederacy",
+    "id": "jin_confederacy"
+  },
+  {
+    "name": "Jingjue",
+    "id": "jingjue"
+  },
+  {
+    "name": "Jiuxianlan",
+    "id": "jiuxianlan"
+  },
+  {
+    "name": "Jubbah",
+    "id": "jubbah"
+  },
+  {
+    "name": "Juding",
+    "id": "juding"
+  },
+  {
+    "name": "Junji",
+    "id": "junji"
+  },
+  {
+    "name": "Jurcae",
+    "id": "jurcae"
+  },
+  {
+    "name": "Jushi",
+    "id": "jushi"
+  },
+  {
+    "name": "Juyan",
+    "id": "juyan"
+  },
+  {
+    "name": "Kaandhalkuranadu",
+    "id": "kaandhalkuranadu"
+  },
+  {
+    "name": "Kaankezhunadu",
+    "id": "kaankezhunadu"
+  },
+  {
+    "name": "Kaga",
+    "id": "kaga"
+  },
+  {
+    "name": "Kai",
+    "id": "kai"
+  },
+  {
+    "name": "Kalinga",
+    "id": "kalinga"
+  },
+  {
+    "name": "Kallipolis",
+    "id": "kallipolis"
+  },
+  {
+    "name": "Kamarupa",
+    "id": "kamarupa"
+  },
+  {
+    "name": "Kaminotuke",
+    "id": "kaminotuke"
+  },
+  {
+    "name": "Kandis",
+    "id": "kandis"
+  },
+  {
+    "name": "Kaounos",
+    "id": "kaounos"
+  },
+  {
+    "name": "Karbonia",
+    "id": "karbonia"
+  },
+  {
+    "name": "Karkanadu",
+    "id": "karkanadu"
+  },
+  {
+    "name": "Karmo",
+    "id": "karmo"
+  },
+  {
+    "name": "Kartuba",
+    "id": "kartuba"
+  },
+  {
+    "name": "Karusa",
+    "id": "karusa"
+  },
+  {
+    "name": "Kaukonia",
+    "id": "kaukonia"
+  },
+  {
+    "name": "Kaya",
+    "id": "kaya"
+  },
+  {
+    "name": "Kazusa",
+    "id": "kazusa"
+  },
+  {
+    "name": "Kedah",
+    "id": "kedah"
+  },
+  {
+    "name": "Keramos",
+    "id": "keramos"
+  },
+  {
+    "name": "Kerausous",
+    "id": "kerausous"
+  },
+  {
+    "name": "Khao Sam Kaeo",
+    "id": "khao_sam_kaeo"
+  },
+  {
+    "name": "Kharazm",
+    "id": "kharazm"
+  },
+  {
+    "name": "Khasa",
+    "id": "khasa"
+  },
+  {
+    "name": "Khotan",
+    "id": "khotan"
+  },
+  {
+    "name": "Khuan Lukpad",
+    "id": "khuan_lukpad"
+  },
+  {
+    "name": "Kii",
+    "id": "kii"
+  },
+  {
+    "name": "Kina",
+    "id": "kina"
+  },
+  {
+    "name": "Kios",
+    "id": "kios"
+  },
+  {
+    "name": "Kitami",
+    "id": "kitami"
+  },
+  {
+    "name": "Knossos",
+    "id": "knossos"
+  },
+  {
+    "name": "Kok Charoen",
+    "id": "kok_charoen"
+  },
+  {
+    "name": "Korgantas",
+    "id": "korgantas"
+  },
+  {
+    "name": "Korkyra",
+    "id": "korkyra"
+  },
+  {
+    "name": "Kosar",
+    "id": "kosar"
+  },
+  {
+    "name": "Kosinofukae",
+    "id": "kosinofukae"
+  },
+  {
+    "name": "Kota Gelanggi",
+    "id": "kota_gelanggi"
+  },
+  {
+    "name": "Kotennia",
+    "id": "kotennia"
+  },
+  {
+    "name": "Kotyora",
+    "id": "kotyora"
+  },
+  {
+    "name": "Kouass",
+    "id": "kouass"
+  },
+  {
+    "name": "Krobyzni",
+    "id": "krobyzni"
+  },
+  {
+    "name": "Krounoi",
+    "id": "krounoi"
+  },
+  {
+    "name": "Kualaddungun",
+    "id": "kualaddungun"
+  },
+  {
+    "name": "Kubiki",
+    "id": "kubiki"
+  },
+  {
+    "name": "Kucha",
+    "id": "kucha"
+  },
+  {
+    "name": "Kudanadu",
+    "id": "kudanadu"
+  },
+  {
+    "name": "Kumano",
+    "id": "kumano"
+  },
+  {
+    "name": "Kumaso",
+    "id": "kumaso"
+  },
+  {
+    "name": "Kumi",
+    "id": "kumi"
+  },
+  {
+    "name": "Kunming",
+    "id": "kunming"
+  },
+  {
+    "name": "Kuntala",
+    "id": "kuntala"
+  },
+  {
+    "name": "Kydonia",
+    "id": "kydonia"
+  },
+  {
+    "name": "Laevi",
+    "id": "laevi"
+  },
+  {
+    "name": "Lai",
+    "id": "lai"
+  },
+  {
+    "name": "Lamap",
+    "id": "lamap"
+  },
+  {
+    "name": "Lamuri",
+    "id": "lamuri"
+  },
+  {
+    "name": "Langkashuka",
+    "id": "langkashuka"
+  },
+  {
+    "name": "Langobardia",
+    "id": "langobardia"
+  },
+  {
+    "name": "Langyayue",
+    "id": "langyayue"
+  },
+  {
+    "name": "Lapicinia",
+    "id": "lapicinia"
+  },
+  {
+    "name": "Lappa",
+    "id": "lappa"
+  },
+  {
+    "name": "Lascutaia",
+    "id": "lascutaia"
+  },
+  {
+    "name": "Latobrigi",
+    "id": "latobrigi"
+  },
+  {
+    "name": "Latovici",
+    "id": "latovici"
+  },
+  {
+    "name": "Legae",
+    "id": "legae"
+  },
+  {
+    "name": "Lemovia",
+    "id": "lemovia"
+  },
+  {
+    "name": "Lepcis Parva",
+    "id": "lepcis_parva"
+  },
+  {
+    "name": "Lepreon",
+    "id": "lepreon"
+  },
+  {
+    "name": "Leunia",
+    "id": "leunia"
+  },
+  {
+    "name": "Libuia",
+    "id": "libuia"
+  },
+  {
+    "name": "Licati",
+    "id": "licati"
+  },
+  {
+    "name": "Lihyan",
+    "id": "lihyan"
+  },
+  {
+    "name": "Lingoni",
+    "id": "lingoni"
+  },
+  {
+    "name": "Linhue",
+    "id": "linhue"
+  },
+  {
+    "name": "Liukiu",
+    "id": "liukiu"
+  },
+  {
+    "name": "Lixitae",
+    "id": "lixitae"
+  },
+  {
+    "name": "Llergetes",
+    "id": "llergetes"
+  },
+  {
+    "name": "Loeu",
+    "id": "loeu"
+  },
+  {
+    "name": "Longonenses",
+    "id": "longonenses"
+  },
+  {
+    "name": "Loufan",
+    "id": "loufan"
+  },
+  {
+    "name": "Loulan",
+    "id": "loulan"
+  },
+  {
+    "name": "Louwo",
+    "id": "louwo"
+  },
+  {
+    "name": "Lu",
+    "id": "lu"
+  },
+  {
+    "name": "Lumbini",
+    "id": "lumbini"
+  },
+  {
+    "name": "Luquidonenses",
+    "id": "luquidonenses"
+  },
+  {
+    "name": "Lusitanii",
+    "id": "lusitanii"
+  },
+  {
+    "name": "Lyktos",
+    "id": "lyktos"
+  },
+  {
+    "name": "Ma'in",
+    "id": "main"
+  },
+  {
+    "name": "Maezaei",
+    "id": "maezaei"
+  },
+  {
+    "name": "Magyars",
+    "id": "magyars"
+  },
+  {
+    "name": "Mahisamandala",
+    "id": "mahisamandala"
+  },
+  {
+    "name": "Mai Adrasha",
+    "id": "mai_adrasha"
+  },
+  {
+    "name": "Majos",
+    "id": "majos"
+  },
+  {
+    "name": "Makae",
+    "id": "makae"
+  },
+  {
+    "name": "Malaya",
+    "id": "malaya"
+  },
+  {
+    "name": "Manimia",
+    "id": "manimia"
+  },
+  {
+    "name": "Marcomannia",
+    "id": "marcomannia"
+  },
+  {
+    "name": "Maricia",
+    "id": "maricia"
+  },
+  {
+    "name": "Matsura",
+    "id": "matsura"
+  },
+  {
+    "name": "Mazhamphulanadu",
+    "id": "mazhamphulanadu"
+  },
+  {
+    "name": "Mazun",
+    "id": "mazun"
+  },
+  {
+    "name": "Mediomatricia",
+    "id": "mediomatricia"
+  },
+  {
+    "name": "Megaris",
+    "id": "megaris"
+  },
+  {
+    "name": "Melanchlaeni",
+    "id": "melanchlaeni"
+  },
+  {
+    "name": "Melcumani",
+    "id": "melcumani"
+  },
+  {
+    "name": "Menapia",
+    "id": "menapia"
+  },
+  {
+    "name": "Mesembria",
+    "id": "mesembria"
+  },
+  {
+    "name": "Messapains",
+    "id": "messapains"
+  },
+  {
+    "name": "Mikuni",
+    "id": "mikuni"
+  },
+  {
+    "name": "Minyue",
+    "id": "minyue"
+  },
+  {
+    "name": "Miran",
+    "id": "miran"
+  },
+  {
+    "name": "Mirimidong",
+    "id": "mirimidong"
+  },
+  {
+    "name": "Mitinooku",
+    "id": "mitinooku"
+  },
+  {
+    "name": "Monapia",
+    "id": "monapia"
+  },
+  {
+    "name": "Mordvins",
+    "id": "mordvins"
+  },
+  {
+    "name": "Morinia",
+    "id": "morinia"
+  },
+  {
+    "name": "Motosu",
+    "id": "motosu"
+  },
+  {
+    "name": "Mudhirmali",
+    "id": "mudhirmali"
+  },
+  {
+    "name": "Mugetu",
+    "id": "mugetu"
+  },
+  {
+    "name": "Mukkaavalnadu",
+    "id": "mukkaavalnadu"
+  },
+  {
+    "name": "Mullurnadu",
+    "id": "mullurnadu"
+  },
+  {
+    "name": "Musasi",
+    "id": "musasi"
+  },
+  {
+    "name": "Musu",
+    "id": "musu"
+  },
+  {
+    "name": "Nabhaka",
+    "id": "nabhaka"
+  },
+  {
+    "name": "Nabhapakti",
+    "id": "nabhapakti"
+  },
+  {
+    "name": "Naga",
+    "id": "naga"
+  },
+  {
+    "name": "Naharvalia",
+    "id": "naharvalia"
+  },
+  {
+    "name": "Nam Cuong",
+    "id": "nam_cuong"
+  },
+  {
+    "name": "Namnetes",
+    "id": "namnetes"
+  },
+  {
+    "name": "Nanhe",
+    "id": "nanhe"
+  },
+  {
+    "name": "Narensi",
+    "id": "narensi"
+  },
+  {
+    "name": "Naristia",
+    "id": "naristia"
+  },
+  {
+    "name": "Nasu",
+    "id": "nasu"
+  },
+  {
+    "name": "Nectiberia",
+    "id": "nectiberia"
+  },
+  {
+    "name": "Nemetia",
+    "id": "nemetia"
+  },
+  {
+    "name": "Nervia",
+    "id": "nervia"
+  },
+  {
+    "name": "Nesiotic League",
+    "id": "nesiotic_league"
+  },
+  {
+    "name": "Neuri",
+    "id": "neuri"
+  },
+  {
+    "name": "Ni",
+    "id": "ni"
+  },
+  {
+    "name": "Nivkhgu",
+    "id": "nivkhgu"
+  },
+  {
+    "name": "Non Nok That",
+    "id": "non_nok_that"
+  },
+  {
+    "name": "Noricum",
+    "id": "noricum"
+  },
+  {
+    "name": "Noto",
+    "id": "noto"
+  },
+  {
+    "name": "Novantia",
+    "id": "novantia"
+  },
+  {
+    "name": "Nuceria",
+    "id": "nuceria"
+  },
+  {
+    "name": "Nuithonia",
+    "id": "nuithonia"
+  },
+  {
+    "name": "Nukata",
+    "id": "nukata"
+  },
+  {
+    "name": "Nuomuhong",
+    "id": "nuomuhong"
+  },
+  {
+    "name": "Nyanggaun",
+    "id": "nyanggaun"
+  },
+  {
+    "name": "Oaymaannadu",
+    "id": "oaymaannadu"
+  },
+  {
+    "name": "Odessa",
+    "id": "odessa"
+  },
+  {
+    "name": "Ohkita",
+    "id": "ohkita"
+  },
+  {
+    "name": "Ohmi",
+    "id": "ohmi"
+  },
+  {
+    "name": "Oki",
+    "id": "oki"
+  },
+  {
+    "name": "Okjeo",
+    "id": "okjeo"
+  },
+  {
+    "name": "Ollaiyur",
+    "id": "ollaiyur"
+  },
+  {
+    "name": "Onuba",
+    "id": "onuba"
+  },
+  {
+    "name": "Opus",
+    "id": "opus"
+  },
+  {
+    "name": "Orcadia",
+    "id": "orcadia"
+  },
+  {
+    "name": "Ordovicia",
+    "id": "ordovicia"
+  },
+  {
+    "name": "Oreos",
+    "id": "oreos"
+  },
+  {
+    "name": "Oretani",
+    "id": "oretani"
+  },
+  {
+    "name": "Orippo",
+    "id": "orippo"
+  },
+  {
+    "name": "Ormelia",
+    "id": "ormelia"
+  },
+  {
+    "name": "Oroanadia",
+    "id": "oroanadia"
+  },
+  {
+    "name": "Orobia",
+    "id": "orobia"
+  },
+  {
+    "name": "Oseriati",
+    "id": "oseriati"
+  },
+  {
+    "name": "Osii",
+    "id": "osii"
+  },
+  {
+    "name": "Osimii",
+    "id": "osimii"
+  },
+  {
+    "name": "Ossi",
+    "id": "ossi"
+  },
+  {
+    "name": "Osumi",
+    "id": "osumi"
+  },
+  {
+    "name": "Ouyue",
+    "id": "ouyue"
+  },
+  {
+    "name": "Owari",
+    "id": "owari"
+  },
+  {
+    "name": "Oxybia",
+    "id": "oxybia"
+  },
+  {
+    "name": "Oyat",
+    "id": "oyat"
+  },
+  {
+    "name": "Paemania",
+    "id": "paemania"
+  },
+  {
+    "name": "Pahang",
+    "id": "pahang"
+  },
+  {
+    "name": "Palada",
+    "id": "palada"
+  },
+  {
+    "name": "Panai",
+    "id": "panai"
+  },
+  {
+    "name": "Pandya",
+    "id": "pandya"
+  },
+  {
+    "name": "Panpan",
+    "id": "panpan"
+  },
+  {
+    "name": "Parisia",
+    "id": "parisia"
+  },
+  {
+    "name": "Parisii",
+    "id": "parisii"
+  },
+  {
+    "name": "Parni",
+    "id": "parni"
+  },
+  {
+    "name": "Patulatenses",
+    "id": "patulatenses"
+  },
+  {
+    "name": "Paurava",
+    "id": "paurava"
+  },
+  {
+    "name": "Pednelissia",
+    "id": "pednelissia"
+  },
+  {
+    "name": "Pegu",
+    "id": "pegu"
+  },
+  {
+    "name": "Permani",
+    "id": "permani"
+  },
+  {
+    "name": "Perorsia",
+    "id": "perorsia"
+  },
+  {
+    "name": "Petchabun",
+    "id": "petchabun"
+  },
+  {
+    "name": "Phnom",
+    "id": "phnom"
+  },
+  {
+    "name": "Phu Lon",
+    "id": "phu_lon"
+  },
+  {
+    "name": "Phyrnia",
+    "id": "phyrnia"
+  },
+  {
+    "name": "Physkos",
+    "id": "physkos"
+  },
+  {
+    "name": "Pictones",
+    "id": "pictones"
+  },
+  {
+    "name": "Pinglin",
+    "id": "pinglin"
+  },
+  {
+    "name": "Pingu",
+    "id": "pingu"
+  },
+  {
+    "name": "Pirusti",
+    "id": "pirusti"
+  },
+  {
+    "name": "Pishan",
+    "id": "pishan"
+  },
+  {
+    "name": "Pisidian City States",
+    "id": "pisidian_city_states"
+  },
+  {
+    "name": "Pissuri",
+    "id": "pissuri"
+  },
+  {
+    "name": "Pitinika",
+    "id": "pitinika"
+  },
+  {
+    "name": "Polyrrhenia",
+    "id": "polyrrhenia"
+  },
+  {
+    "name": "Pong Manao",
+    "id": "pong_manao"
+  },
+  {
+    "name": "Pothigainadu",
+    "id": "pothigainadu"
+  },
+  {
+    "name": "Praetutii",
+    "id": "praetutii"
+  },
+  {
+    "name": "Praisos",
+    "id": "praisos"
+  },
+  {
+    "name": "Pullinadu",
+    "id": "pullinadu"
+  },
+  {
+    "name": "Punanadu",
+    "id": "punanadu"
+  },
+  {
+    "name": "Punginadu",
+    "id": "punginadu"
+  },
+  {
+    "name": "Qeddar",
+    "id": "qeddar"
+  },
+  {
+    "name": "Qielan",
+    "id": "qielan"
+  },
+  {
+    "name": "Qiemo",
+    "id": "qiemo"
+  },
+  {
+    "name": "Qiongdu",
+    "id": "qiongdu"
+  },
+  {
+    "name": "Quadia",
+    "id": "quadia"
+  },
+  {
+    "name": "Qushi",
+    "id": "qushi"
+  },
+  {
+    "name": "Ranmang",
+    "id": "ranmang"
+  },
+  {
+    "name": "Rathika",
+    "id": "rathika"
+  },
+  {
+    "name": "Rauraci",
+    "id": "rauraci"
+  },
+  {
+    "name": "Remi",
+    "id": "remi"
+  },
+  {
+    "name": "Reudignia",
+    "id": "reudignia"
+  },
+  {
+    "name": "Roman Republic",
+    "id": "roman_republic"
+  },
+  {
+    "name": "Rubrensians",
+    "id": "rubrensians"
+  },
+  {
+    "name": "Rucinatia",
+    "id": "rucinatia"
+  },
+  {
+    "name": "Rugia",
+    "id": "rugia"
+  },
+  {
+    "name": "Rugusci",
+    "id": "rugusci"
+  },
+  {
+    "name": "Ruhunu",
+    "id": "ruhunu"
+  },
+  {
+    "name": "Sab Champa Jurcae",
+    "id": "sab_champa_jurcae"
+  },
+  {
+    "name": "Sabiri",
+    "id": "sabiri"
+  },
+  {
+    "name": "Salii",
+    "id": "salii"
+  },
+  {
+    "name": "Saluvii",
+    "id": "saluvii"
+  },
+  {
+    "name": "Samatata",
+    "id": "samatata"
+  },
+  {
+    "name": "Santones",
+    "id": "santones"
+  },
+  {
+    "name": "Sanu",
+    "id": "sanu"
+  },
+  {
+    "name": "Sardeati",
+    "id": "sardeati"
+  },
+  {
+    "name": "Saro",
+    "id": "saro"
+  },
+  {
+    "name": "Satiyaputa",
+    "id": "satiyaputa"
+  },
+  {
+    "name": "Saurdonia",
+    "id": "saurdonia"
+  },
+  {
+    "name": "Sciria",
+    "id": "sciria"
+  },
+  {
+    "name": "Seduni",
+    "id": "seduni"
+  },
+  {
+    "name": "Segnia",
+    "id": "segnia"
+  },
+  {
+    "name": "Selangor",
+    "id": "selangor"
+  },
+  {
+    "name": "Selgia",
+    "id": "selgia"
+  },
+  {
+    "name": "Selgovia",
+    "id": "selgovia"
+  },
+  {
+    "name": "Semnonia",
+    "id": "semnonia"
+  },
+  {
+    "name": "Sequani",
+    "id": "sequani"
+  },
+  {
+    "name": "Serones",
+    "id": "serones"
+  },
+  {
+    "name": "Sesamos",
+    "id": "sesamos"
+  },
+  {
+    "name": "Sevaci",
+    "id": "sevaci"
+  },
+  {
+    "name": "Shajing",
+    "id": "shajing"
+  },
+  {
+    "name": "Shan",
+    "id": "shan"
+  },
+  {
+    "name": "Shanma",
+    "id": "shanma"
+  },
+  {
+    "name": "Shenli",
+    "id": "shenli"
+  },
+  {
+    "name": "Shihsanhang",
+    "id": "shihsanhang"
+  },
+  {
+    "name": "Shima",
+    "id": "shima"
+  },
+  {
+    "name": "Shoumi",
+    "id": "shoumi"
+  },
+  {
+    "name": "Shule",
+    "id": "shule"
+  },
+  {
+    "name": "Sicyon",
+    "id": "sicyon"
+  },
+  {
+    "name": "Siljig",
+    "id": "siljig"
+  },
+  {
+    "name": "Siluria",
+    "id": "siluria"
+  },
+  {
+    "name": "Simobusa",
+    "id": "simobusa"
+  },
+  {
+    "name": "Simotuke",
+    "id": "simotuke"
+  },
+  {
+    "name": "Sinaga",
+    "id": "sinaga"
+  },
+  {
+    "name": "Sinano",
+    "id": "sinano"
+  },
+  {
+    "name": "Sindi",
+    "id": "sindi"
+  },
+  {
+    "name": "Sirakawa",
+    "id": "sirakawa"
+  },
+  {
+    "name": "Sithonia",
+    "id": "sithonia"
+  },
+  {
+    "name": "Skirithfinia",
+    "id": "skirithfinia"
+  },
+  {
+    "name": "Snay",
+    "id": "snay"
+  },
+  {
+    "name": "Socosia",
+    "id": "socosia"
+  },
+  {
+    "name": "Soga",
+    "id": "soga"
+  },
+  {
+    "name": "Sogdia",
+    "id": "sogdia"
+  },
+  {
+    "name": "Soknobulsa",
+    "id": "soknobulsa"
+  },
+  {
+    "name": "Solymia",
+    "id": "solymia"
+  },
+  {
+    "name": "Soma",
+    "id": "soma"
+  },
+  {
+    "name": "Somun",
+    "id": "somun"
+  },
+  {
+    "name": "Song",
+    "id": "song"
+  },
+  {
+    "name": "Sorbones",
+    "id": "sorbones"
+  },
+  {
+    "name": "Sporioi",
+    "id": "sporioi"
+  },
+  {
+    "name": "Statiellia",
+    "id": "statiellia"
+  },
+  {
+    "name": "Suaneti",
+    "id": "suaneti"
+  },
+  {
+    "name": "Sudinoia",
+    "id": "sudinoia"
+  },
+  {
+    "name": "Sugambria",
+    "id": "sugambria"
+  },
+  {
+    "name": "Sui",
+    "id": "sui"
+  },
+  {
+    "name": "Suionia",
+    "id": "suionia"
+  },
+  {
+    "name": "Sumo",
+    "id": "sumo"
+  },
+  {
+    "name": "Sumpa",
+    "id": "sumpa"
+  },
+  {
+    "name": "Sunazawa",
+    "id": "sunazawa"
+  },
+  {
+    "name": "Suo",
+    "id": "suo"
+  },
+  {
+    "name": "Sushen",
+    "id": "sushen"
+  },
+  {
+    "name": "Susuya",
+    "id": "susuya"
+  },
+  {
+    "name": "Suwa",
+    "id": "suwa"
+  },
+  {
+    "name": "Taexalia",
+    "id": "taexalia"
+  },
+  {
+    "name": "Tagaung",
+    "id": "tagaung"
+  },
+  {
+    "name": "Tahu",
+    "id": "tahu"
+  },
+  {
+    "name": "Tamusida",
+    "id": "tamusida"
+  },
+  {
+    "name": "Tanba",
+    "id": "tanba"
+  },
+  {
+    "name": "Tangara",
+    "id": "tangara"
+  },
+  {
+    "name": "Tarrha",
+    "id": "tarrha"
+  },
+  {
+    "name": "Tasm",
+    "id": "tasm"
+  },
+  {
+    "name": "Taungthaman",
+    "id": "taungthaman"
+  },
+  {
+    "name": "Tauriscia",
+    "id": "tauriscia"
+  },
+  {
+    "name": "Tayuan",
+    "id": "tayuan"
+  },
+  {
+    "name": "Tectosages",
+    "id": "tectosages"
+  },
+  {
+    "name": "Teion",
+    "id": "teion"
+  },
+  {
+    "name": "Tenasserim",
+    "id": "tenasserim"
+  },
+  {
+    "name": "Teng",
+    "id": "teng"
+  },
+  {
+    "name": "Teuria",
+    "id": "teuria"
+  },
+  {
+    "name": "Teutonia",
+    "id": "teutonia"
+  },
+  {
+    "name": "Thapsus",
+    "id": "thapsus"
+  },
+  {
+    "name": "Thaton",
+    "id": "thaton"
+  },
+  {
+    "name": "Thebes",
+    "id": "thebes"
+  },
+  {
+    "name": "Thuria",
+    "id": "thuria"
+  },
+  {
+    "name": "Thyssagetae",
+    "id": "thyssagetae"
+  },
+  {
+    "name": "Tibulati",
+    "id": "tibulati"
+  },
+  {
+    "name": "Tigrakhauda",
+    "id": "tigrakhauda"
+  },
+  {
+    "name": "Tigullia",
+    "id": "tigullia"
+  },
+  {
+    "name": "Tigurini",
+    "id": "tigurini"
+  },
+  {
+    "name": "Tilataloi",
+    "id": "tilataloi"
+  },
+  {
+    "name": "Titibu",
+    "id": "titibu"
+  },
+  {
+    "name": "Toki",
+    "id": "toki"
+  },
+  {
+    "name": "Tomis",
+    "id": "tomis"
+  },
+  {
+    "name": "Tondainadu",
+    "id": "tondainadu"
+  },
+  {
+    "name": "Tosu",
+    "id": "tosu"
+  },
+  {
+    "name": "Tougeni",
+    "id": "tougeni"
+  },
+  {
+    "name": "Toyo",
+    "id": "toyo"
+  },
+  {
+    "name": "Treveria",
+    "id": "treveria"
+  },
+  {
+    "name": "Triballi",
+    "id": "triballi"
+  },
+  {
+    "name": "Triboccia",
+    "id": "triboccia"
+  },
+  {
+    "name": "Trinovantia",
+    "id": "trinovantia"
+  },
+  {
+    "name": "Trocmia",
+    "id": "trocmia"
+  },
+  {
+    "name": "Trumpili",
+    "id": "trumpili"
+  },
+  {
+    "name": "Tsang",
+    "id": "tsang"
+  },
+  {
+    "name": "Tsuma",
+    "id": "tsuma"
+  },
+  {
+    "name": "Tukusi",
+    "id": "tukusi"
+  },
+  {
+    "name": "Tulingi",
+    "id": "tulingi"
+  },
+  {
+    "name": "Turdulia",
+    "id": "turdulia"
+  },
+  {
+    "name": "Turritani",
+    "id": "turritani"
+  },
+  {
+    "name": "Tusima",
+    "id": "tusima"
+  },
+  {
+    "name": "Tymandia",
+    "id": "tymandia"
+  },
+  {
+    "name": "Tyras",
+    "id": "tyras"
+  },
+  {
+    "name": "Tyrgetae",
+    "id": "tyrgetae"
+  },
+  {
+    "name": "Uberi",
+    "id": "uberi"
+  },
+  {
+    "name": "Ubia",
+    "id": "ubia"
+  },
+  {
+    "name": "Uperaci",
+    "id": "uperaci"
+  },
+  {
+    "name": "Uperacii",
+    "id": "uperacii"
+  },
+  {
+    "name": "Uyu",
+    "id": "uyu"
+  },
+  {
+    "name": "Vaanarnadu",
+    "id": "vaanarnadu"
+  },
+  {
+    "name": "Vaccaei",
+    "id": "vaccaei"
+  },
+  {
+    "name": "Vaengadanadu",
+    "id": "vaengadanadu"
+  },
+  {
+    "name": "Valentini",
+    "id": "valentini"
+  },
+  {
+    "name": "Van Lang",
+    "id": "van_lang"
+  },
+  {
+    "name": "Vanavasi",
+    "id": "vanavasi"
+  },
+  {
+    "name": "Vangiona",
+    "id": "vangiona"
+  },
+  {
+    "name": "Varagria",
+    "id": "varagria"
+  },
+  {
+    "name": "Varinia",
+    "id": "varinia"
+  },
+  {
+    "name": "Vascones",
+    "id": "vascones"
+  },
+  {
+    "name": "Vediantia",
+    "id": "vediantia"
+  },
+  {
+    "name": "Vellimalai",
+    "id": "vellimalai"
+  },
+  {
+    "name": "Veltia",
+    "id": "veltia"
+  },
+  {
+    "name": "Venelli",
+    "id": "venelli"
+  },
+  {
+    "name": "Venetii",
+    "id": "venetii"
+  },
+  {
+    "name": "Veniconia",
+    "id": "veniconia"
+  },
+  {
+    "name": "Venosti",
+    "id": "venosti"
+  },
+  {
+    "name": "Verbigeni",
+    "id": "verbigeni"
+  },
+  {
+    "name": "Vertamocorii",
+    "id": "vertamocorii"
+  },
+  {
+    "name": "Vesubia",
+    "id": "vesubia"
+  },
+  {
+    "name": "Viromanduia",
+    "id": "viromanduia"
+  },
+  {
+    "name": "Voconii",
+    "id": "voconii"
+  },
+  {
+    "name": "Votadinia",
+    "id": "votadinia"
+  },
+  {
+    "name": "Votodronia",
+    "id": "votodronia"
+  },
+  {
+    "name": "Wakasa",
+    "id": "wakasa"
+  },
+  {
+    "name": "Weii",
+    "id": "weii"
+  },
+  {
+    "name": "Weili",
+    "id": "weili"
+  },
+  {
+    "name": "Weitou",
+    "id": "weitou"
+  },
+  {
+    "name": "Weixu",
+    "id": "weixu"
+  },
+  {
+    "name": "Wulei",
+    "id": "wulei"
+  },
+  {
+    "name": "Wusun",
+    "id": "wusun"
+  },
+  {
+    "name": "Xi",
+    "id": "xi"
+  },
+  {
+    "name": "Xi Zhou",
+    "id": "xi_zhou"
+  },
+  {
+    "name": "Xiangkhoang",
+    "id": "xiangkhoang"
+  },
+  {
+    "name": "Xiaowan",
+    "id": "xiaowan"
+  },
+  {
+    "name": "Xihai",
+    "id": "xihai"
+  },
+  {
+    "name": "Xiqiemi",
+    "id": "xiqiemi"
+  },
+  {
+    "name": "Xiru",
+    "id": "xiru"
+  },
+  {
+    "name": "Xitu",
+    "id": "xitu"
+  },
+  {
+    "name": "Xue",
+    "id": "xue"
+  },
+  {
+    "name": "Yama",
+    "id": "yama"
+  },
+  {
+    "name": "Yamato",
+    "id": "yamato"
+  },
+  {
+    "name": "Yancai",
+    "id": "yancai"
+  },
+  {
+    "name": "Yangyu",
+    "id": "yangyu"
+  },
+  {
+    "name": "Yangyue",
+    "id": "yangyue"
+  },
+  {
+    "name": "Yanqi",
+    "id": "yanqi"
+  },
+  {
+    "name": "Yarlung",
+    "id": "yarlung"
+  },
+  {
+    "name": "Yasu",
+    "id": "yasu"
+  },
+  {
+    "name": "Yaudheya",
+    "id": "yaudheya"
+  },
+  {
+    "name": "Yelang",
+    "id": "yelang"
+  },
+  {
+    "name": "Yeodam",
+    "id": "yeodam"
+  },
+  {
+    "name": "Yeomhae",
+    "id": "yeomhae"
+  },
+  {
+    "name": "Yiqu",
+    "id": "yiqu"
+  },
+  {
+    "name": "Yue",
+    "id": "yue"
+  },
+  {
+    "name": "Yulimo",
+    "id": "yulimo"
+  },
+  {
+    "name": "Yulou",
+    "id": "yulou"
+  },
+  {
+    "name": "Yumi",
+    "id": "yumi"
+  },
+  {
+    "name": "Ywa Htin Kon",
+    "id": "ywa_htin_kon"
+  },
+  {
+    "name": "Zanthi",
+    "id": "zanthi"
+  },
+  {
+    "name": "Zhangzhung",
+    "id": "zhangzhung"
+  },
+  {
+    "name": "Zhongshan",
+    "id": "zhongshan"
+  },
+  {
+    "name": "Zhou",
+    "id": "zhou"
+  },
+  {
+    "name": "Zou",
+    "id": "zou"
+  },
+  {
+    "name": "Zuo",
+    "id": "zuo"
+  },
+  {
+    "name": "Zygia",
+    "id": "zygia"
+  }
+]
