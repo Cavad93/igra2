@@ -429,9 +429,16 @@ async function runGeneration(API_KEY) {
           if ((latMax - latMin) > 80 || (lonMax - lonMin) > 120) { log(`  ⚠ ${id}: bbox слишком большой`); continue; }
 
           // Разделяем geo и enriched поля
-          const geoEntry = { bbox: raw.bbox, capital: raw.capital, priority: raw.priority, notes: raw.notes };
+          const capital = (raw.capital?.lat != null && raw.capital?.lon != null) ? raw.capital : null;
+          const geoEntry = { bbox: raw.bbox, capital, priority: raw.priority ?? 3, notes: raw.notes ?? '' };
+
           const enrichedEntry = {};
           for (const f of ENRICHED_FIELDS) { if (raw[f] !== undefined) enrichedEntry[f] = raw[f]; }
+          // Валидация enriched полей
+          if (enrichedEntry.color && !/^#[0-9A-Fa-f]{6}$/.test(enrichedEntry.color)) delete enrichedEntry.color;
+          if (enrichedEntry.population && (typeof enrichedEntry.population !== 'number' || enrichedEntry.population < 0)) delete enrichedEntry.population;
+          if (enrichedEntry.culture    && typeof enrichedEntry.culture    !== 'string') delete enrichedEntry.culture;
+          if (enrichedEntry.religion   && typeof enrichedEntry.religion   !== 'string') delete enrichedEntry.religion;
 
           results[id]  = geoEntry;
           enriched[id] = enrichedEntry;
