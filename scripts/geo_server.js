@@ -79,7 +79,10 @@ async function searchWikipedia(query) {
 }
 
 function getSearchTerms(nation) {
-  const base = nation.id.replace(/_/g, ' ');
+  // Предпочитаем nation.name (например "Antigonid Kingdom"), fallback на id
+  const base = (nation.name && nation.name !== nation.id)
+    ? nation.name
+    : nation.id.replace(/_/g, ' ');
   const isJapan   = /awa|harima|kii|ise|owari|yamato|musasi|tanba|hida|kai|iga|iki|izu|kaga|noto|suwa|toki|suo|oki|dewa/.test(nation.id);
   const isKorea   = /baekje|goguryeo|gojoseon|okjeo|yeodam|yeomhae|gijeo/.test(nation.id);
   const isChina   = /chu|qin|wei|yan|zhao|qi|han|song|zhou|zuo|zou|lu|xi|teng|xue|dian|yelang|yuezhi|xiongnu/.test(nation.id);
