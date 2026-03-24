@@ -468,18 +468,35 @@ export async function runBuilder(apiKey, emit = () => {}) {
   emit({ type: 'status', total: allGoods.length, done: done.size, queue: queue.length });
   log(`  Товаров: ${allGoods.length} | готово: ${done.size} | в очереди: ${queue.length}`);
 
-  // ── Промпт 0: Исторический исследователь (один раз, перед циклом) ─────────
+  // ── Промпт 0: Исторический исследователь (батчами по 15 товаров) ──────────
   let historicalCtx = null;
   if (queue.length > 0) {
-    emit({ type: 'log', level: 'log', msg: 'Исторический исследователь...' });
-    try {
-      const { system: sh, user: uh } = buildHistoricalPrompt({ allData });
-      historicalCtx = await callClaude(apiKey, sh, uh, { maxTokens: MAX_TOKENS_LARGE });
-      const coveredGoods = Object.keys(historicalCtx).length;
+    const BATCH_SIZE = 15;
+    const batches = [];
+    for (let i = 0; i < allGoods.length; i += BATCH_SIZE) {
+      batches.push(allGoods.slice(i, i + BATCH_SIZE));
+    }
+    historicalCtx = {};
+    let batchFailed = 0;
+    for (let b = 0; b < batches.length; b++) {
+      emit({ type: 'log', level: 'log', msg: `Исторический исследователь [${b + 1}/${batches.length}]...` });
+      try {
+        const { system: sh, user: uh } = buildHistoricalPrompt({ allData }, batches[b]);
+        const part = await callClaude(apiKey, sh, uh, { maxTokens: MAX_TOKENS_LARGE });
+        Object.assign(historicalCtx, part);
+      } catch (e) {
+        batchFailed++;
+        warn(`  Исторический батч ${b + 1} не удался: ${e.message}`);
+      }
+      if (b < batches.length - 1) await sleep(DELAY_MS);
+    }
+    const coveredGoods = Object.keys(historicalCtx).length;
+    if (coveredGoods > 0) {
       emit({ type: 'log', level: 'ok',
         msg: `Исторический контекст: ${coveredGoods}/${allGoods.length} товаров` });
-    } catch (e) {
-      warn(`  Исторический промпт не удался: ${e.message} — продолжаю без него`);
+    } else {
+      warn('  Все батчи не удались — продолжаю без исторического контекста');
+      historicalCtx = null;
     }
     await sleep(DELAY_MS);
   }

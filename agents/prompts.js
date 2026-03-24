@@ -126,12 +126,15 @@ ${JSON.stringify(nationRegions)}
 // Генерирует исторический контекст для всех товаров разом.
 // ctx: { allData }
 
-export function buildHistoricalPrompt(ctx) {
+export function buildHistoricalPrompt(ctx, goodsSlice = null) {
   const { allData } = ctx;
 
-  const goodsSummary = Object.entries(allData.GOODS).map(([id, g]) => ({
+  const goodsSummary = (goodsSlice
+    ? goodsSlice.map(id => ({ id, ...allData.GOODS[id] && { category: allData.GOODS[id].category } }))
+    : Object.entries(allData.GOODS).map(([id, g]) => ({ id, category: g.category }))
+  ).map(({ id }) => ({
     id,
-    category: g.category,
+    category: allData.GOODS[id]?.category,
     resource_type: allData.GOODS_META?.[id]?.resource_type ?? 'unknown',
     is_strategic: allData.GOODS_META?.[id]?.is_strategic ?? false,
     import_sources: allData.GOODS_META?.[id]?.import_sources ?? [],
