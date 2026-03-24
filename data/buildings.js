@@ -2318,8 +2318,8 @@ function canBuildInRegion(buildingId, region) {
 
   const terrain = region.terrain || region.type || 'plains';
 
-  // Ограничение по местности
-  if (b.terrain_restriction && !b.terrain_restriction.includes(terrain)) {
+  // Ограничение по местности (пустой массив = нет ограничений)
+  if (b.terrain_restriction?.length && !b.terrain_restriction.includes(terrain)) {
     return { ok: false, reason: `Не подходит для типа местности «${terrain}»` };
   }
 
@@ -2374,6 +2374,20 @@ function canBuildInRegion(buildingId, region) {
     .some(e => e.building_id === buildingId && !e.is_upgrade);
   if (newBuildInQueue) {
     return { ok: false, reason: 'Это здание уже строится' };
+  }
+
+  // Ограничение max_per_region (например, port: 1)
+  if (b.max_per_region != null) {
+    const countInRegion =
+      (region.building_slots || []).filter(
+        s => s.building_id === buildingId && s.status !== 'demolished'
+      ).length +
+      (region.construction_queue || []).filter(
+        e => e.building_id === buildingId && !e.is_upgrade
+      ).length;
+    if (countInRegion >= b.max_per_region) {
+      return { ok: false, reason: `Максимум ${b.max_per_region} здание(й) этого типа в регионе` };
+    }
   }
 
   // Свободные слоты (улучшения в очереди не занимают новый слот)

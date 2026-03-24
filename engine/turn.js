@@ -630,6 +630,16 @@ function loadGame() {
       _sanitizeInstitutions();
       _migrateSenateConfig();
       _migrateCharacterSenateFields();
+
+      // Совместимость: применяем REGION_BIOMES к регионам из сохранений
+      // созданных до того как region.biome был введён.
+      if (typeof REGION_BIOMES !== 'undefined') {
+        for (const [rid, biomeId] of Object.entries(REGION_BIOMES)) {
+          const r = GAME_STATE.regions[rid];
+          if (r && !r.biome) r.biome = biomeId;
+        }
+      }
+
       addEventLog('Игра загружена из сохранения.', 'info');
       return true;
     }
@@ -753,6 +763,15 @@ function initGame() {
   if (typeof initReligions === 'function') initReligions();
   if (typeof initRegionReligions === 'function') initRegionReligions();
 
+  // Проставляем region.biome из REGION_BIOMES — используется в движке производства
+  // для корректного применения BIOME_META.goods_bonus (bonus > 1.0 / < 1.0).
+  if (typeof REGION_BIOMES !== 'undefined') {
+    for (const [rid, biomeId] of Object.entries(REGION_BIOMES)) {
+      const r = GAME_STATE.regions[rid];
+      if (r && !r.biome) r.biome = biomeId;
+    }
+  }
+
   // Инициализируем собственность зданий по классам (70/30 для латифундий и т.д.)
   // Вызываем ДО loadGame, чтобы новые игры стартовали с корректным распределением.
   // При наличии сохранения loadGame() перезапишет значения сохранёнными.
@@ -770,11 +789,21 @@ function initGame() {
   // Используем Math.max — не уменьшаем склад у наций которые уже имеют больше.
   if (!hasSave) {
     const STARTING_STOCKPILE = {
-      wheat:    500,   // семена: 1 ферма потребляет 400/тик
-      barley:   400,   // семена: 1 ферма потребляет 360/тик
-      tools:    250,   // кирки/плуги: шахты и фермы потребляют ~10-15/тик каждая
-      iron:     150,   // запас для кузницы: forge потребляет 54/тик
-      charcoal: 80,    // запас для плавки: iron_mine потребляет 28/тик
+      // Еда
+      wheat:      500,   // семена: ферма потребляет ~0.20/ед. выхода
+      barley:     400,   // семена: аналогично пшенице
+      fish:       200,   // быстрый источник белка
+      salt:       150,   // консервирование рыбы и мяса
+      // Производственная цепочка
+      tools:      250,   // кирки/плуги
+      iron:       150,   // запас для кузницы
+      charcoal:   100,   // плавка + отопление
+      timber:     120,   // строительство, плавка
+      // Животноводство
+      cattle:     80,    // тягловая сила для ферм (capital_input)
+      // Ремёсла
+      pottery:    100,   // тара для вина, рыбы, масла
+      leather:    60,    // упряжь, обувь
     };
     for (const nation of Object.values(GAME_STATE.nations)) {
       const sp = nation.economy?.stockpile;
@@ -783,6 +812,12 @@ function initGame() {
         sp[good] = Math.max(sp[good] || 0, min);
       }
     }
+  }
+
+  // Гарантируем обязательные поля для всех регионов (lazy init для старых данных)
+  for (const region of Object.values(GAME_STATE.regions)) {
+    if (!Array.isArray(region.building_slots))    region.building_slots    = [];
+    if (!Array.isArray(region.construction_queue)) region.construction_queue = [];
   }
 
   // Пересчёт занятости по building_slots (данные в regions_data.js могут быть устаревшими)

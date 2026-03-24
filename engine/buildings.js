@@ -131,14 +131,19 @@ function _calcSlotBaseOutput(slot, region, nation) {
   // Задаётся в определении здания; отсутствие поля = 1.0 (не влияет).
   const effMult = bDef.efficiency_mult ?? 1.0;
 
+  // Бонус от месторождений (deposits): регион с iron:1.8 даёт +80% к добыче железа.
+  const deposits = region.deposits || {};
+
   const output = {};
   for (const { good, base_rate } of bDef.production_output) {
-    const terrainBonus = _terrainGoodBonus(terrain, good);
+    const terrainBonus  = _terrainGoodBonus(terrain, good);
+    const depositBonus  = deposits[good] ?? 1.0;  // 1.0 = нет месторождения (нейтрально)
     // base_rate: канонический выход на 1000 рабочих (без масштабного коэф.)
     // effMult: умножитель эффективности за счёт масштаба хозяйства
     // capitalRatio: снижение при нехватке инструментов/тягловых животных
+    // depositBonus: множитель месторождения (>1 = богатое, <1 = бедное)
     const amount = (workers / 1000) * base_rate * effMult * fertility * satMod
-                 * terrainBonus * eff * popEff * capitalRatio;
+                 * terrainBonus * eff * popEff * capitalRatio * depositBonus;
     if (amount > 0.1) output[good] = (output[good] || 0) + amount;
   }
 
@@ -2242,6 +2247,38 @@ function initBuildingOwnership() {
         nation: nId, cls: 'Земледельцы', type: 'Семейная ферма',
         pct: '100%', count: data.farms.length,
       });
+    }
+  }
+
+  // ── 2d. Прочие здания — собственность по autonomous_builder или типу ────────
+  // Правила из OWNER_RULES генератора (дублируем здесь для единообразия):
+  //   horse_ranch, cattle_farm    → soldiers_class / farmers_class
+  //   olive_grove, hemp_field     → farmers_class
+  //   apiary, ranch               → farmers_class
+  // Здания которым уже проставлен owner (пшеничные) — не трогаем.
+  const EXTRA_OWNERS = {
+    horse_ranch:   'soldiers_class',
+    cattle_farm:   'farmers_class',
+    olive_grove:   'farmers_class',
+    hemp_field:    'farmers_class',
+    apiary:        'farmers_class',
+    ranch:         'farmers_class',
+  };
+  // Сбрасываем счётчики убытков на сгенерированных зданиях (founded_turn=0)
+  // чтобы они не закрылись в первый же ход из-за нулевой выручки при старте.
+  for (const region of Object.values(regions)) {
+    if (!Array.isArray(region.building_slots)) continue;
+    for (const slot of region.building_slots) {
+      if (slot.owner === undefined) {
+        const newOwner = EXTRA_OWNERS[slot.building_id];
+        if (newOwner) slot.owner = newOwner;
+      }
+      // Сброс счётчиков для свежих зданий (founded_turn=0 = стартовые)
+      if (slot.founded_turn === 0) {
+        slot.loss_streak     = 0;
+        slot._recovery_accum = 0;
+        slot.production_eff  = 1.0;
+      }
     }
   }
 
