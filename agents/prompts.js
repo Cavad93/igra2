@@ -13,41 +13,40 @@ export function buildAnalystPrompt(ctx) {
   const pdfChains  = Object.values(allData.PDF_CHAINS)
     .filter(c => Array.isArray(c.inputs) && c.inputs.includes(goodId));
 
-  // Фильтруем только регионы с deposit для этого товара (или, для biome-ресурсов, с нужным биомом)
-  const allowedBiomes = new Set(goodMeta.allowed_terrains ?? []);
-  const REGION_BIOMES = allData.BIOME_META?._region_biomes ?? {};
-  const relevantRegions = {};
+  // Все регионы принадлежащие нациям/государствам (neutral = пустые территории — исключаем)
+  // Компактный формат: n=nation, t=terrain(=биом), d=deposits (только если есть)
+  const nationRegions = {};
   for (const [rId, rData] of Object.entries(allData.REGIONS_DATA)) {
-    const hasDeposit = rData.deposits && rData.deposits[goodId] !== undefined;
-    const biome = REGION_BIOMES[rId] ?? rData.biome ?? rData.terrain ?? '';
-    const matchesBiome = allowedBiomes.size > 0 && allowedBiomes.has(biome);
-    if (hasDeposit || matchesBiome) {
-      relevantRegions[rId] = {
-        nation: rData.nation,
-        terrain: rData.terrain ?? rData.type,
-        deposit: rData.deposits?.[goodId],
-        biome,
-      };
+    if (!rData.nation || rData.nation === 'neutral') continue;
+    const entry = {
+      n: rData.nation,
+      t: rData.terrain ?? rData.type ?? '',
+    };
+    if (rData.deposits && Object.keys(rData.deposits).length > 0) {
+      entry.d = rData.deposits;
+    }
+    nationRegions[rId] = entry;
+  }
+
+  // Краткий biome_meta: только fertility_modifier по типу terrain
+  const biomeSummary = {};
+  for (const [biomeId, bData] of Object.entries(allData.BIOME_META ?? {})) {
+    if (typeof bData === 'object' && bData !== null && !Array.isArray(bData)) {
+      biomeSummary[biomeId] = bData.fertility_modifier ?? bData.base_fertility ?? 1.0;
     }
   }
-  // Ограничиваем до 50 регионов (приоритет — с deposit)
-  const depositRegions = Object.entries(relevantRegions).filter(([, r]) => r.deposit);
-  const biomeRegions   = Object.entries(relevantRegions).filter(([, r]) => !r.deposit);
-  const trimmedEntries = [...depositRegions, ...biomeRegions].slice(0, 50);
-  const trimmedRegions = Object.fromEntries(trimmedEntries);
 
-  const context = {
-    good_id:      goodId,
-    good_data:    goodData,
-    good_meta:    goodMeta,
-    relevant_regions: trimmedRegions,
-    relevant_regions_count: Object.keys(relevantRegions).length,
-    biome_meta:   allData.BIOME_META,
-    pdf_chains_using_this_good: pdfChains.slice(0, 10),
-  };
+  const ctxMeta = { good_id: goodId, good_data: goodData, good_meta: goodMeta,
+    nation_regions_total: Object.keys(nationRegions).length,
+    biome_fertility: biomeSummary,
+    pdf_chains_using_this_good: pdfChains.slice(0, 10) };
 
   const system = SYSTEM_BASE;
-  const user = `${JSON.stringify(context, null, 2)}
+  // nation_regions передаём без отступов чтобы сократить размер
+  const user = `${JSON.stringify(ctxMeta, null, 2)}
+
+nation_regions (n=nation, t=terrain/биом, d=deposits):
+${JSON.stringify(nationRegions)}
 
 Задача: проанализируй производство товара "${goodId}" и верни JSON:
 {
@@ -60,10 +59,11 @@ export function buildAnalystPrompt(ctx) {
 
 Поля:
 - production_possible: можно ли производить локально в регионах карты
-- production_locations: список ID регионов где есть подходящий deposit или биом
+- production_locations: список ID регионов из nation_regions где есть нужный deposit (d) или подходящий terrain (t) для этого товара согласно good_meta.allowed_terrains
 - import_required: нужен ли импорт если нет локального производства
 - import_sources: ID наций-поставщиков из good_meta.import_sources или исторических данных
-- relevant_pdf_chain_ids: ID цепочек из pdf_chains_using_this_good плюс цепочки где этот товар в output`;
+- relevant_pdf_chain_ids: ID цепочек из pdf_chains_using_this_good плюс цепочки где этот товар в output
+Примечание: nation_regions — формат {regionId: {n: nation, t: terrain/биом, d?: deposits}}`;
 
   return { system, user };
 }
