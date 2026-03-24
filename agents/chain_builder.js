@@ -340,7 +340,7 @@ async function processGood(apiKey, goodId, allData, existingChains, emit, histor
   // ── Шаг 1: Аналитик ───────────────────────────────────────────────────────
   emit({ type: 'step', goodId, step: 1, label: 'аналитик' });
   const { system: s1, user: u1 } = buildAnalystPrompt({ goodId, allData });
-  const analystResult = await callClaude(apiKey, s1, u1, { maxTokens: 2000 });
+  const analystResult = await callClaude(apiKey, s1, u1, { maxTokens: 4000 });
 
   // ── Шаги 2+3: Производственная механика и трудовые отношения (параллельно) ─
   // Оба зависят только от analystResult — запускаем одновременно
