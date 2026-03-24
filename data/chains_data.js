@@ -10742,13 +10742,13 @@ var CHAINS_DATA = {
 // ══════════════════════════════════════════════════════════════
 
 var RECIPE_DATA = {
-  wheat         : { inputs: [ { good: 'wheat', amount: 0.2 } ], labor: 3 },
-  barley        : { inputs: [], labor: 3 },
+  wheat         : { inputs: [ { good: 'wheat', amount: 0.20 }, { good: 'tools', amount: 0.005 } ], labor: 3 },
+  barley        : { inputs: [ { good: 'barley', amount: 0.20 }, { good: 'tools', amount: 0.005 } ], labor: 3 },
   fish          : { inputs: [], labor: 5 },
   tuna          : { inputs: [ { good: 'salt', amount: 0.2 }, { good: 'pottery', amount: 0.1 } ], labor: 6 },
   garum         : { inputs: [ { good: 'fish', amount: 0.6 }, { good: 'salt', amount: 0.2 } ], labor: 8 },
   meat          : { inputs: [ { good: 'cattle', amount: 0.25 } ], labor: 4 },
-  olives        : { inputs: [], labor: 3 },
+  olives        : { inputs: [ { good: 'tools', amount: 0.01 } ], labor: 3 },
   olive_oil     : { inputs: [ { good: 'olives', amount: 0.8 } ], labor: 5 },
   wine          : { inputs: [ { good: 'barley', amount: 0.15 } ], labor: 7 },
   honey         : { inputs: [], labor: 2 },
@@ -10777,9 +10777,9 @@ var RECIPE_DATA = {
   hemp          : { inputs: [], labor: 3 },
   pitch         : { inputs: [ { good: 'timber', amount: 0.4 } ], labor: 5 },
   purple_dye    : { inputs: [ { good: 'salt', amount: 0.1 }, { good: 'charcoal', amount: 0.05 } ], labor: 10 },
-  war_elephants : { inputs: [ { good: 'wheat', amount: 0.8 }, { good: 'timber', amount: 0.2 } ], labor: 15 },
+  war_elephants : { inputs: [ { good: 'wheat', amount: 0.8 }, { good: 'timber', amount: 0.2 }, { good: 'slaves', amount: 0.01 } ], labor: 15 },
   horses        : { inputs: [ { good: 'barley', amount: 0.4 }, { good: 'wheat', amount: 0.2 } ], labor: 5 },
-  cattle        : { inputs: [ { good: 'wheat', amount: 0.3 } ], labor: 4 },
+  cattle        : { inputs: [ { good: 'wheat', amount: 0.3 }, { good: 'barley', amount: 0.10 } ], labor: 4 },
   slaves        : { inputs: [], labor: 8 },
   armor         : { inputs: [ { good: 'iron', amount: 0.8 }, { good: 'leather', amount: 0.2 } ], labor: 12 },
   trade_goods   : { inputs: [ { good: 'silver', amount: 0.05 } ], labor: 10 },
