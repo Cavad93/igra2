@@ -4461,12 +4461,593 @@
     .dt-archive-status { color: var(--text-dim); white-space: nowrap; }
     .dt-archive-turn  { color: var(--text-dim); font-size: 9px; white-space: nowrap; }
 
-    /* Вкладка дипломатии */
+    /* Вкладка дипломатии (маленькая — только кнопка-редирект) */
     #region-tab-diplomacy {
       overflow-y: auto;
       flex: 1;
       min-height: 0;
     }
+
+    /* Блок-редирект в маленькой панели */
+    .dp-redir-box {
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .dp-redir-nation {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dp-redir-flag { font-size: 26px; }
+    .dp-redir-name { font-size: 14px; font-weight: bold; color: var(--text-light); }
+    .dp-redir-ruler { font-size: 11px; color: var(--text-dim); }
+    .dp-redir-rel { display: flex; align-items: center; gap: 8px; }
+    .dp-redir-bar {
+      flex: 1;
+      height: 5px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .dp-redir-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+    .dp-redir-rlabel { font-size: 11px; white-space: nowrap; }
+    .dp-redir-treaties { display: flex; flex-wrap: wrap; gap: 4px; }
+    .dp-mini-tag {
+      font-size: 10px;
+      background: rgba(139,90,43,.2);
+      border: 1px solid rgba(139,90,43,.35);
+      border-radius: 3px;
+      padding: 2px 5px;
+      color: var(--text-gold);
+    }
+    .dp-mini-none { font-size: 10px; color: var(--text-dim); }
+    .dp-redir-btn {
+      width: 100%;
+      padding: 9px;
+      background: linear-gradient(135deg, rgba(139,90,43,.35), rgba(89,50,10,.25));
+      border: 1px solid var(--border-gold);
+      border-radius: 4px;
+      color: var(--text-gold);
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background .15s;
+      letter-spacing: 0.02em;
+    }
+    .dp-redir-btn:hover {
+      background: linear-gradient(135deg, rgba(139,90,43,.55), rgba(89,50,10,.4));
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       БОЛЬШОЕ ДИПЛОМАТИЧЕСКОЕ ОКНО — overlay
+       ══════════════════════════════════════════════════════════ */
+    #diplomacy-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 3200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+    }
+    #diplomacy-overlay.hidden { display: none !important; }
+
+    .dp-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.80);
+    }
+    .dp-panel {
+      position: relative;
+      width: min(980px, 97vw);
+      height: min(88vh, 820px);
+      background: var(--bg-panel);
+      border: 1px solid var(--border-gold);
+      box-shadow: 0 12px 48px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,210,100,0.08);
+      display: flex;
+      flex-direction: column;
+      border-radius: 2px;
+    }
+
+    /* ── Шапка ── */
+    .dp-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-gold);
+      background: linear-gradient(180deg, rgba(139,90,43,.18) 0%, transparent 100%);
+      flex-shrink: 0;
+    }
+    .dp-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .dp-header-icon { font-size: 22px; }
+    .dp-header-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--text-gold);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .dp-header-sub { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
+    .dp-header-tabs {
+      display: flex;
+      gap: 4px;
+      margin: 0 auto;
+    }
+    .dp-htab {
+      background: none;
+      border: 1px solid rgba(139,90,43,.35);
+      border-radius: 3px;
+      color: var(--text-dim);
+      font-size: 12px;
+      padding: 5px 14px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .15s, color .15s;
+    }
+    .dp-htab:hover { background: rgba(139,90,43,.2); color: var(--text-light); }
+    .dp-htab--active {
+      background: rgba(139,90,43,.35);
+      border-color: var(--text-gold);
+      color: var(--text-gold);
+    }
+    .dp-close-btn {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 3px;
+      color: var(--text-dim);
+      font-size: 14px;
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: color .15s, border-color .15s;
+    }
+    .dp-close-btn:hover { color: #ef9a9a; border-color: #ef9a9a44; }
+
+    /* ── Тело (2 колонки) ── */
+    .dp-body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ── Левая колонка: список наций ── */
+    .dp-sidebar {
+      width: 210px;
+      flex-shrink: 0;
+      border-right: 1px solid rgba(139,90,43,.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .dp-sidebar-title {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-gold);
+      padding: 10px 12px 6px;
+      border-bottom: 1px solid rgba(139,90,43,.2);
+      flex-shrink: 0;
+    }
+    .dp-nations-list {
+      overflow-y: auto;
+      flex: 1;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(139,90,43,.4) transparent;
+    }
+    .dp-no-nations {
+      padding: 20px 12px;
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: center;
+    }
+    .dp-nation-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background .12s;
+    }
+    .dp-nation-row:hover { background: rgba(139,90,43,.15); }
+    .dp-nation-row--active {
+      background: rgba(139,90,43,.28);
+      border-left: 2px solid var(--text-gold);
+    }
+    .dp-nflag { font-size: 18px; flex-shrink: 0; }
+    .dp-ninfo { flex: 1; min-width: 0; }
+    .dp-nname {
+      font-size: 12px;
+      color: var(--text-light);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .dp-treaty-badge {
+      background: rgba(139,90,43,.4);
+      color: var(--text-gold);
+      font-size: 9px;
+      padding: 0 4px;
+      border-radius: 9px;
+      min-width: 14px;
+      text-align: center;
+    }
+    .dp-nrelbar {
+      height: 3px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 3px 0 2px;
+    }
+    .dp-nrelbar-fill { height: 100%; border-radius: 2px; }
+    .dp-nrel-label { font-size: 9px; color: var(--text-dim); }
+
+    /* ── Правая часть ── */
+    .dp-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Placeholder когда нация не выбрана */
+    .dp-placeholder {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+    .dp-placeholder-icon { font-size: 40px; opacity: .5; }
+    .dp-placeholder-sub  { font-size: 11px; opacity: .6; }
+
+    /* ── Шапка нации ── */
+    .dp-nation-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 18px;
+      flex-shrink: 0;
+    }
+    .dp-nflag-lg { font-size: 38px; flex-shrink: 0; }
+    .dp-nation-header-info { flex: 1; min-width: 0; }
+    .dp-nation-header-name {
+      font-size: 17px;
+      font-weight: bold;
+      color: var(--text-gold);
+    }
+    .dp-nation-header-ruler { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+    .dp-active-treaties {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .dp-active-tag {
+      font-size: 10px;
+      background: rgba(76,175,80,.12);
+      border: 1px solid rgba(76,175,80,.3);
+      border-radius: 3px;
+      padding: 2px 6px;
+      color: #81c784;
+    }
+    .dp-nation-header-rel { flex-shrink: 0; min-width: 170px; }
+    .dp-relbar-wrap { display: flex; flex-direction: column; gap: 4px; }
+    .dp-relbar-track {
+      height: 6px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .dp-relbar-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+    .dp-rellabel { font-size: 11px; }
+    .dp-nation-stats {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    /* ── Секции правой части ── */
+    .dp-section {
+      padding: 10px 18px;
+      border-top: 1px solid rgba(139,90,43,.18);
+      flex-shrink: 0;
+    }
+    .dp-section--chat {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .dp-section-title {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-gold);
+      margin-bottom: 8px;
+    }
+    .dp-section-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .dp-clear-chat {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 10px;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      padding: 0;
+    }
+    .dp-clear-chat:hover { color: #ef9a9a; }
+
+    /* ── Кнопки типов договоров ── */
+    .dp-treaty-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .dp-treaty-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(139,90,43,.3);
+      border-radius: 3px;
+      color: var(--text-dim);
+      font-size: 10px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .12s, border-color .12s, color .12s;
+      white-space: nowrap;
+    }
+    .dp-treaty-btn:hover {
+      background: rgba(139,90,43,.22);
+      color: var(--text-light);
+      border-color: rgba(139,90,43,.55);
+    }
+    .dp-treaty-btn--active {
+      background: rgba(139,90,43,.38);
+      border-color: var(--text-gold);
+      color: var(--text-gold);
+    }
+    .dp-tbtn-icon { font-size: 13px; }
+    .dp-tbtn-label { }
+
+    .dp-selected-proposal {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-gold);
+      background: rgba(139,90,43,.15);
+      border: 1px solid rgba(139,90,43,.35);
+      border-radius: 4px;
+      padding: 5px 10px;
+    }
+    .dp-sel-clear {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .dp-sel-clear:hover { color: #ef9a9a; }
+
+    /* ── Чат ── */
+    .dp-chat {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 2px 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(139,90,43,.35) transparent;
+    }
+    .dp-chat-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text-dim);
+      font-size: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .dp-chat-empty-icon { font-size: 32px; opacity: .5; }
+    .dp-msg {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .dp-msg--player { flex-direction: row-reverse; }
+    .dp-msg-avatar {
+      font-size: 20px;
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dp-msg-bubble { max-width: 75%; display: flex; flex-direction: column; gap: 3px; }
+    .dp-msg--player .dp-msg-bubble { align-items: flex-end; }
+    .dp-msg-name {
+      font-size: 9px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .dp-msg-text {
+      font-size: 12px;
+      line-height: 1.5;
+      padding: 7px 11px;
+      border-radius: 4px;
+    }
+    .dp-msg--player .dp-msg-text {
+      background: rgba(139,90,43,.28);
+      border: 1px solid rgba(139,90,43,.45);
+      color: var(--text-light);
+      border-radius: 4px 4px 0 4px;
+    }
+    .dp-msg--ai .dp-msg-text {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-light);
+      border-radius: 4px 4px 4px 0;
+    }
+    .dp-msg--system .dp-msg-text {
+      background: rgba(239,154,154,.07);
+      border: 1px solid rgba(239,154,154,.18);
+      color: #ef9a9a;
+      font-size: 11px;
+      border-radius: 4px;
+    }
+
+    /* ── Поле ввода ── */
+    .dp-input-area {
+      padding: 10px 18px 14px;
+      border-top: 1px solid rgba(139,90,43,.2);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .dp-textarea {
+      width: 100%;
+      box-sizing: border-box;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(139,90,43,.35);
+      border-radius: 4px;
+      color: var(--text-light);
+      font-size: 12px;
+      padding: 8px 10px;
+      resize: none;
+      font-family: inherit;
+      line-height: 1.5;
+      transition: border-color .15s;
+    }
+    .dp-textarea:focus {
+      outline: none;
+      border-color: var(--text-gold);
+    }
+    @keyframes dpShake {
+      0%,100% { transform: translateX(0); }
+      25%      { transform: translateX(-5px); }
+      75%      { transform: translateX(5px); }
+    }
+    .dp-shake { animation: dpShake 0.35s ease; }
+    .dp-input-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .dp-input-hint { font-size: 9px; color: var(--text-dim); }
+    .dp-send-btn {
+      background: linear-gradient(135deg, rgba(139,90,43,.45), rgba(89,50,10,.3));
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+      color: var(--text-gold);
+      font-size: 12px;
+      padding: 7px 20px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .15s;
+      letter-spacing: 0.03em;
+    }
+    .dp-send-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, rgba(139,90,43,.65), rgba(89,50,10,.5));
+    }
+    .dp-send-btn:disabled { opacity: 0.5; cursor: default; }
+
+    /* ── Вкладка архива договоров ── */
+    .dp-treaties-view {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(139,90,43,.35) transparent;
+    }
+    .dp-treaties-section {}
+    .dp-treaties-section-title {
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--text-gold);
+      border-bottom: 1px solid rgba(139,90,43,.25);
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+    .dp-arc-row {
+      display: flex;
+      gap: 10px;
+      padding: 9px 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 4px;
+      margin-bottom: 5px;
+    }
+    .dp-arc-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .dp-arc-body { flex: 1; min-width: 0; }
+    .dp-arc-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .dp-arc-label { font-size: 13px; color: var(--text-light); font-weight: bold; }
+    .dp-arc-nation { font-size: 11px; color: var(--text-dim); }
+    .dp-arc-status { font-size: 10px; }
+    .status--active   { color: #81c784; }
+    .status--expired  { color: var(--text-dim); }
+    .status--broken   { color: #ef9a9a; }
+    .status--rejected { color: #ff9800; }
+    .status--pending  { color: #ffc107; }
+    .dp-arc-turn  { font-size: 10px; color: var(--text-dim); margin-left: auto; }
+    .dp-arc-desc  { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+    .dp-arc-notes { font-size: 11px; color: var(--accent); margin-top: 4px; font-style: italic; }
+    .dp-break-btn {
+      background: none;
+      border: 1px solid rgba(239,154,154,.4);
+      border-radius: 3px;
+      color: #ef9a9a;
+      font-size: 10px;
+      padding: 2px 7px;
+      cursor: pointer;
+      transition: background .12s;
+    }
+    .dp-break-btn:hover { background: rgba(239,154,154,.12); }
   </style>
 </head>
 <body>
@@ -4612,6 +5193,9 @@
 
   <!-- Оверлей казны -->
   <div id="treasury-overlay" class="hidden"></div>
+
+  <!-- Оверлей дипломатии -->
+  <div id="diplomacy-overlay" class="hidden"></div>
 
   <!-- Модал: ввод API ключа при первом запуске или смене ключа -->
   <div id="api-key-modal">
