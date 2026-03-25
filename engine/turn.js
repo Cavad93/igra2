@@ -29,6 +29,16 @@ async function processTurn() {
     const date = GAME_STATE.date;
     addEventLog(`── Ход ${GAME_STATE.turn}: ${MONTH_NAMES[date.month]} ${Math.abs(date.year)} г. до н.э. ──`, 'turn');
 
+    // 0.8. Договоры — сброс флагов, финансовые потоки (дань, контрибуции), истечение
+    if (typeof processAllTreatyTicks === 'function') {
+      try { processAllTreatyTicks(); } catch (e) { console.warn('[treaty_effects]', e); }
+    }
+
+    // 0.85. Научная конвергенция дипломатических отношений (α-drift)
+    if (typeof DiplomacyEngine !== 'undefined' && typeof DiplomacyEngine.processGlobalTick === 'function') {
+      try { DiplomacyEngine.processGlobalTick(); } catch (e) { console.warn('[diplomacy_tick]', e); }
+    }
+
     // 0.9. Строительство зданий — продвигаем очередь, завершаем готовые
     if (typeof processBuildingConstruction === 'function') {
       try { processBuildingConstruction(); } catch (e) { console.warn('[buildings]', e); }

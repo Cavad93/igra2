@@ -183,9 +183,14 @@ function getRelation(nationA, nationB) {
   if (!GAME_STATE.diplomacy) initDiplomacy();
   const key = _relKey(nationA, nationB);
   if (!GAME_STATE.diplomacy.relations[key]) {
-    GAME_STATE.diplomacy.relations[key] = { score: 0, war: false, truces: [], last_interaction: null };
+    GAME_STATE.diplomacy.relations[key] = {
+      score: 0, war: false, truces: [], events: [], flags: {}, last_interaction: null,
+    };
   }
-  return GAME_STATE.diplomacy.relations[key];
+  // Backward compat: add flags if missing
+  const rel = GAME_STATE.diplomacy.relations[key];
+  if (!rel.flags) rel.flags = {};
+  return rel;
 }
 
 function getRelationScore(nationA, nationB) {
@@ -267,13 +272,21 @@ function breakTreaty(treatyId, breakerNation) {
   if (!GAME_STATE.diplomacy) return;
   const t = GAME_STATE.diplomacy.treaties.find(x => x.id === treatyId);
   if (!t) return;
-  t.status   = 'broken';
-  t.breaker  = breakerNation;
+  t.status      = 'broken';
+  t.breaker     = breakerNation;
   t.turn_broken = GAME_STATE.turn;
 
-  // Штраф к отношениям за разрыв
+  // Снятие эффектов договора (флаги, бонусы)
+  if (typeof removeTreatyEffects === 'function') {
+    try { removeTreatyEffects(t); } catch (_) {}
+  }
+
+  // Штраф к отношениям за разрыв (уже внутри removeTreatyEffects, но добавим событие памяти)
   const rel = getRelation(t.parties[0], t.parties[1]);
-  rel.score = Math.max(-100, rel.score - 25);
+  rel.score = Math.max(-100, rel.score - 20);
+  if (typeof addDiplomacyEvent === 'function') {
+    addDiplomacyEvent(t.parties[0], t.parties[1], -20, 'treaty_broken');
+  }
 }
 
 // ──────────────────────────────────────────────────────────────

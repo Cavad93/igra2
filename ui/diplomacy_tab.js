@@ -497,10 +497,10 @@ function dtBreakTreaty(treatyId) {
 // ──────────────────────────────────────────────────────────────────────────────
 
 function _dtFinalizeTreaty(playerNationId, aiNationId, treaty, dialogueLog) {
-  if (typeof DiplomacyEngine === 'undefined') return;
+  if (typeof DiplomacyEngine === 'undefined') return null;
   const dur = treaty.conditions?.duration
     ?? TREATY_TYPES?.[treaty.treaty_type]?.default_duration ?? 10;
-  DiplomacyEngine.createTreaty(
+  const created = DiplomacyEngine.createTreaty(
     playerNationId, aiNationId, treaty.treaty_type,
     { ...treaty.conditions, duration: dur },
     dialogueLog,
@@ -509,9 +509,14 @@ function _dtFinalizeTreaty(playerNationId, aiNationId, treaty, dialogueLog) {
   if (typeof addLogEntry === 'function') {
     const pName = GAME_STATE.nations[playerNationId]?.name ?? 'вами';
     const aName = GAME_STATE.nations[aiNationId]?.name ?? aiNationId;
-    addLogEntry('diplomacy', `${def?.icon ?? '📜'} Подписан "${def?.label ?? treaty.treaty_type}" между ${pName} и ${aName}.`);
+    addLogEntry('diplomacy', `${def?.icon ?? '📜'} Подписан «${def?.label ?? treaty.treaty_type}» между ${pName} и ${aName}.`);
+  } else if (typeof addEventLog === 'function') {
+    const pName = GAME_STATE.nations[playerNationId]?.name ?? 'вами';
+    const aName = GAME_STATE.nations[aiNationId]?.name ?? aiNationId;
+    addEventLog(`${def?.icon ?? '📜'} Подписан «${def?.label ?? treaty.treaty_type}» между ${pName} и ${aName}.`, 'diplomacy');
   }
   _getDtState(aiNationId).selectedTreaty = null;
+  return created; // возвращаем для applyTreatyEffects
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -1003,29 +1008,94 @@ async function dpFinalizeSend(aiNationId) {
   }
 }
 
-// ── Подписать договор ─────────────────────────────────────────
-function dpSignTreaty(aiNationId) {
+// ── Подписать договор (с валидацией и AI интерпретацией) ─────
+async function dpSignTreaty(aiNationId) {
   const playerNationId = GAME_STATE.player_nation;
   const st = _getDtState(aiNationId);
   if (!st.agreedTreaty || !st.draftText) return;
 
-  const dialogue = typeof DiplomacyEngine !== 'undefined'
-    ? DiplomacyEngine.getDialogue(playerNationId, aiNationId) : [];
+  // Показываем статус проверки
+  st.isFinLoading = true;
+  st.finDialogue.push({ role: 'system', text: '⚙ Проверка условий договора...' });
+  _renderChatModal();
 
-  const conditions = {
-    ...st.agreedTreaty.conditions,
-    notes: st.draftText.slice(0, 500),
+  const treatyObj = {
+    type:       st.agreedTreaty.type,
+    conditions: { ...st.agreedTreaty.conditions, notes: st.draftText.slice(0, 600) },
+    parties:    [playerNationId, aiNationId],
   };
 
-  _dtFinalizeTreaty(playerNationId, aiNationId, {
-    agreed: true,
-    treaty_type: st.agreedTreaty.type,
-    conditions,
-  }, dialogue);
+  try {
+    // ── 1. Правило-базированная валидация ──
+    const validation = typeof validateTreaty === 'function'
+      ? validateTreaty(treatyObj, playerNationId, aiNationId)
+      : { ok: true, blocked: false, issues: [], warnings: [], modified: {} };
 
-  st.phase = 'signed';
-  _renderChatModal();
-  _dpRender(); // Обновить основное окно
+    if (validation.blocked) {
+      st.finDialogue.push({ role: 'system', text: `🚫 Договор отклонён: ${validation.reason}` });
+      st.isFinLoading = false;
+      _renderChatModal();
+      return;
+    }
+
+    // Применяем исправленные условия
+    if (Object.keys(validation.modified).length) {
+      Object.assign(treatyObj.conditions, validation.modified);
+      const issueText = validation.issues.map(i => `• ${i}`).join('\n');
+      st.finDialogue.push({ role: 'system', text: `⚖ Условия скорректированы системой баланса:\n${issueText}` });
+    }
+
+    // ── 2. AI контент-фильтр для сложных условий ──
+    const notes = treatyObj.conditions.notes ?? '';
+    if (notes.length > 30 && typeof aiContentFilter === 'function') {
+      const filter = await aiContentFilter(notes);
+      if (!filter.safe) {
+        st.finDialogue.push({ role: 'system', text: `🚫 Условия отклонены фильтром содержания: ${filter.reason}` });
+        st.isFinLoading = false;
+        _renderChatModal();
+        return;
+      }
+    }
+
+    // ── 3. AI интерпретация условий (custom + сложные notes) ──
+    if ((treatyObj.type === 'custom' || notes.length > 50)
+        && typeof interpretCustomTreaty === 'function') {
+      const interp = await interpretCustomTreaty(treatyObj, playerNationId, aiNationId);
+      if (!interp.ok) {
+        st.finDialogue.push({ role: 'system', text: `🚫 ${interp.humanSummary}` });
+        st.isFinLoading = false;
+        _renderChatModal();
+        return;
+      }
+      if (interp.humanSummary) {
+        st.finDialogue.push({ role: 'system', text: `✅ Применено: ${interp.humanSummary}` });
+      }
+    }
+
+    // ── 4. Подписание и применение эффектов ──
+    const dialogue = typeof DiplomacyEngine !== 'undefined'
+      ? DiplomacyEngine.getDialogue(playerNationId, aiNationId) : [];
+
+    const treaty = _dtFinalizeTreaty(playerNationId, aiNationId, {
+      agreed:      true,
+      treaty_type: treatyObj.type,
+      conditions:  treatyObj.conditions,
+    }, dialogue);
+
+    // Применяем эффекты немедленно
+    if (treaty && typeof applyTreatyEffects === 'function') {
+      try { applyTreatyEffects(treaty); } catch (e) { console.warn('[applyTreatyEffects]', e); }
+    }
+
+    st.phase = 'signed';
+  } catch (err) {
+    console.error('[dpSignTreaty]', err);
+    st.finDialogue.push({ role: 'system', text: `⚠ Ошибка при подписании: ${err.message}` });
+  } finally {
+    st.isFinLoading = false;
+    _renderChatModal();
+    _dpRender();
+  }
 }
 
 function _getForeignNations(playerNationId) {
