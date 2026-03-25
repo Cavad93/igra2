@@ -1098,15 +1098,29 @@ async function dpSignTreaty(aiNationId) {
   }
 }
 
+// Максимальное число иностранных наций в списке дипломатии.
+// Больше 150 рядов в DOM — уже лагово; с 1920 нациями нужен жёсткий лимит.
+const _DP_NATIONS_LIMIT = 150;
+
 function _getForeignNations(playerNationId) {
+  const diplomacy = GAME_STATE.diplomacy;
+
   return Object.entries(GAME_STATE.nations ?? {})
     .filter(([id]) => id !== playerNationId)
-    .map(([id, n]) => ({ id, name: n.name, flag: n.flag_emoji ?? '🏛' }))
+    .map(([id, n]) => {
+      // Читаем score напрямую из relations — НЕ вызываем getRelationScore,
+      // чтобы не провоцировать ленивую инициализацию 1900+ пар при открытии UI.
+      const key   = [id, playerNationId].sort().join('_');
+      const score = diplomacy?.relations?.[key]?.score ?? 0;
+      const atWar = diplomacy?.relations?.[key]?.war ?? false;
+      return { id, name: n.name, flag: n.flag_emoji ?? '🏛', score, atWar };
+    })
+    // Сначала союзники/дружественные, потом враги, потом нейтральные
     .sort((a, b) => {
-      if (typeof DiplomacyEngine === 'undefined') return 0;
-      return DiplomacyEngine.getRelationScore(playerNationId, b.id)
-           - DiplomacyEngine.getRelationScore(playerNationId, a.id);
-    });
+      if (a.atWar !== b.atWar) return a.atWar ? 1 : -1;
+      return b.score - a.score;
+    })
+    .slice(0, _DP_NATIONS_LIMIT);
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

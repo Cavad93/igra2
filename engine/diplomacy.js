@@ -129,6 +129,10 @@ const TREATY_TYPES = {
 // ИНИЦИАЛИЗАЦИЯ
 // ──────────────────────────────────────────────────────────────
 
+// Пороговое количество наций: при > MAX_NATIONS_FULL_INIT используем ленивый режим.
+// 200 наций → 19,900 пар — допустимо. 1920 наций → 1,843,680 пар → freeze браузера.
+const _INIT_NATION_LIMIT = 200;
+
 function initDiplomacy() {
   if (!GAME_STATE.diplomacy) {
     GAME_STATE.diplomacy = {
@@ -137,8 +141,12 @@ function initDiplomacy() {
       dialogues: {},
     };
   }
-  // Инициализация отношений для всех пар наций (два прохода)
+
   const nids = Object.keys(GAME_STATE.nations || {});
+
+  // Для больших карт (> лимита) пары создаются лениво в getRelation().
+  // Проводим полную инициализацию только для малых карт.
+  if (nids.length > _INIT_NATION_LIMIT) return;
 
   // Проход 1: создаём все пары с нулевым score
   for (let i = 0; i < nids.length; i++) {
@@ -149,22 +157,23 @@ function initDiplomacy() {
           score:            0,
           war:              false,
           truces:           [],
-          events:           [],   // история событий для memory decay
+          events:           [],
+          flags:            {},
           last_interaction: null,
         };
       }
     }
   }
 
-  // Проход 2: рассчитываем начальный score по научной модели
-  // (теперь все пары существуют → _calcTriangularBalance корректно работает)
+  // Проход 2: рассчитываем начальный score (все пары уже созданы → triangular OK)
   for (let i = 0; i < nids.length; i++) {
     for (let j = i + 1; j < nids.length; j++) {
       const key = _relKey(nids[i], nids[j]);
       const rel = GAME_STATE.diplomacy.relations[key];
-      if (rel && rel.score === 0) {  // только если ещё не задан вручную
+      if (rel && !rel._score_calculated) {
         try {
-          rel.score = calcBaseRelation(nids[i], nids[j]);
+          rel.score            = calcBaseRelation(nids[i], nids[j]);
+          rel._score_calculated = true;
         } catch (_) {}
       }
     }
@@ -183,11 +192,18 @@ function getRelation(nationA, nationB) {
   if (!GAME_STATE.diplomacy) initDiplomacy();
   const key = _relKey(nationA, nationB);
   if (!GAME_STATE.diplomacy.relations[key]) {
+    const nids = Object.keys(GAME_STATE.nations || {});
+    let score = 0;
+    let calculated = false;
+    // Для малых карт рассчитываем score при первом доступе к паре
+    if (nids.length <= _INIT_NATION_LIMIT) {
+      try { score = calcBaseRelation(nationA, nationB); calculated = true; } catch (_) {}
+    }
     GAME_STATE.diplomacy.relations[key] = {
-      score: 0, war: false, truces: [], events: [], flags: {}, last_interaction: null,
+      score, war: false, truces: [], events: [], flags: {},
+      last_interaction: null, _score_calculated: calculated,
     };
   }
-  // Backward compat: add flags if missing
   const rel = GAME_STATE.diplomacy.relations[key];
   if (!rel.flags) rel.flags = {};
   return rel;
@@ -571,20 +587,33 @@ function _calcEconInterdep(nationA, nationB, treaties) {
 // Взвешенная сумма знаков парных произведений через третьи страны
 function _calcTriangularBalance(nationA, nationB) {
   if (!GAME_STATE.diplomacy) return 0;
+
+  // Для больших карт итерируем только по СУЩЕСТВУЮЩИМ отношениям (не создаём новые),
+  // что позволяет избежать O(N) обхода тысяч наций.
   const nids = Object.keys(GAME_STATE.nations || {});
+  const largMap = nids.length > _INIT_NATION_LIMIT;
+
+  // На большой карте берём только нации, с которыми уже есть ненулевые отношения
+  const candidates = largMap
+    ? Object.keys(GAME_STATE.diplomacy.relations)
+        .filter(k => k.includes(nationA) || k.includes(nationB))
+        .flatMap(k => k.split('_'))
+        .filter(id => id !== nationA && id !== nationB && GAME_STATE.nations?.[id])
+        // уникальные
+        .filter((id, i, arr) => arr.indexOf(id) === i)
+    : nids.filter(id => id !== nationA && id !== nationB);
+
   let balance = 0;
   let count   = 0;
 
-  for (const c of nids) {
-    if (c === nationA || c === nationB) continue;
-    const scoreAC = getRelationScore(nationA, c);
-    const scoreBC = getRelationScore(nationB, c);
+  for (const c of candidates) {
+    // Читаем score напрямую без lazy-создания пар (избегаем рекурсии на больших картах)
+    const keyAC = _relKey(nationA, c);
+    const keyBC = _relKey(nationB, c);
+    const scoreAC = GAME_STATE.diplomacy.relations[keyAC]?.score ?? 0;
+    const scoreBC = GAME_STATE.diplomacy.relations[keyBC]?.score ?? 0;
 
-    // Учитываем только значимые связи (≥ 20 по модулю)
     if (Math.abs(scoreAC) < 20 || Math.abs(scoreBC) < 20) continue;
-
-    // Произведение знаков: одинаковые → +1, противоположные → -1
-    // Нормируем через tanh
     balance += Math.tanh((scoreAC * scoreBC) / 4000);
     count++;
   }
@@ -665,12 +694,26 @@ function processDiplomacyGlobalTick() {
   const ALPHA = 0.04;
   const nids  = Object.keys(GAME_STATE.nations || {});
 
+  // На больших картах конвергируем только СУЩЕСТВУЮЩИЕ пары (не O(N²) обход)
+  if (nids.length > _INIT_NATION_LIMIT) {
+    for (const [key, rel] of Object.entries(GAME_STATE.diplomacy.relations)) {
+      if (!rel || rel.war) continue;
+      const parts = key.split('_');
+      if (parts.length < 2) continue;
+      const [a, b] = parts;
+      if (!GAME_STATE.nations?.[a] || !GAME_STATE.nations?.[b]) continue;
+      const base = calcBaseRelation(a, b);
+      rel.score  = Math.round(rel.score + ALPHA * (base - rel.score));
+      rel.score  = Math.max(-100, Math.min(100, rel.score));
+    }
+    return;
+  }
+
   for (let i = 0; i < nids.length; i++) {
     for (let j = i + 1; j < nids.length; j++) {
       const a = nids[i], b = nids[j];
       const rel = getRelation(a, b);
-      if (rel.war) continue;  // в войне score не дрейфует (управляется событиями)
-
+      if (rel.war) continue;
       const base = calcBaseRelation(a, b);
       rel.score  = Math.round(rel.score + ALPHA * (base - rel.score));
       rel.score  = Math.max(-100, Math.min(100, rel.score));
