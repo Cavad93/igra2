@@ -412,7 +412,8 @@ function _processFinancialTick(treaty, a, b, cond, turn) {
       const vasNat   = GAME_STATE.nations[vasNatId];
       const suzNat   = GAME_STATE.nations[suzNatId];
       if (vasNat?.economy && suzNat?.economy) {
-        const income  = vasNat.economy.income ?? vasNat.economy.treasury * 0.1 ?? 50;
+        const income  = vasNat.economy.income
+          ?? (vasNat.economy.treasury > 0 ? vasNat.economy.treasury * 0.1 : 0);
         const tribute = income * (cond.tribute_pct ?? 0.10);
         vasNat.economy.treasury -= tribute;
         suzNat.economy.treasury += tribute;

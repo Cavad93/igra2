@@ -36,9 +36,9 @@ function renderLeftPanel() {
       <div class="legitimacy-bar">
         <span class="stat-label">Легитимность</span>
         <div class="bar-container">
-          <div class="bar-fill legitimacy-fill" style="width:${gov.legitimacy}%"></div>
+          <div class="bar-fill legitimacy-fill" style="width:${gov.legitimacy ?? 0}%"></div>
         </div>
-        <span class="stat-value">${+gov.legitimacy.toFixed(2)}%</span>
+        <span class="stat-value">${(gov.legitimacy ?? 0).toFixed(1)}%</span>
       </div>
       <button class="gov-open-btn" onclick="showGovernmentOverlay()">
         🏛 Управление государством ▸

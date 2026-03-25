@@ -265,7 +265,8 @@ function applyPopSatisfiedToBuildings(nationId) {
 
   for (const rid of (nation.regions || [])) {
     const region = GAME_STATE.regions[rid];
-    if (!region?.building_slots?.length) continue;
+    if (!region) continue;
+    if (!region.building_slots?.length) continue;
 
     for (const slot of region.building_slots) {
       if (slot.status !== 'active') {

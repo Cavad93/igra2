@@ -344,6 +344,7 @@ function applyFallbackDecision(nationId) {
   const pop = nation.population;
 
   // Приоритет 1: если мало армии относительно населения — рекрутируем
+  // cavalry * 3: cavalry units count as 3x for military strength purposes (mounted troops are ~3x more effective)
   const armyRatio = (military.infantry + military.cavalry * 3) / Math.max(1, pop.total);
   if (armyRatio < 0.01 && treasury > 2000) {
     const recruits = Math.min(Math.floor(treasury / 10), Math.floor(pop.total * 0.005));

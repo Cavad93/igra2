@@ -185,7 +185,7 @@ function _dpNationRow(n, playerNationId) {
   const rel     = _dpRelObj(playerNationId, n.id);
   const atWar   = typeof DiplomacyEngine !== 'undefined'
     && DiplomacyEngine.isAtWar?.(playerNationId, n.id);
-  const pct     = Math.round(((rel.score ?? 0) + 100) / 2);
+  const pct     = Math.max(0, Math.min(100, Math.round(((Number(rel.score) || 0) + 100) / 2)));
   const active  = _dpSelectedNation === n.id;
 
   const treaties = typeof DiplomacyEngine !== 'undefined'
@@ -334,7 +334,7 @@ function _dpRenderNegotiation(playerNationId, foreign) {
           <div class="dp-nh-relfill" style="width:${pct}%"></div>
         </div>
         <div class="dp-nh-rellabel ${atWar ? 'dp-at-war' : ''}">
-          ${atWar ? '⚔ ВОЙНА' : (rel.icon ?? '') + ' ' + (rel.label ?? '') + ' (' + (rel.score >= 0 ? '+' : '') + rel.score + ')'}
+          ${atWar ? '⚔ ВОЙНА' : (rel.icon ?? '') + ' ' + (rel.label ?? '') + ' (' + (rel.score >= 0 ? '+' : '') + (rel.score ?? 0) + ')'}
         </div>
         <div class="dp-nh-stats">
           <span title="Население">👥 ${aiPop > 0 ? aiPop.toLocaleString() : '?'}</span>
@@ -567,7 +567,7 @@ function _renderChatModal() {
   const rel     = _dpRelObj(playerNationId, aiId);
   const atWar   = typeof DiplomacyEngine !== 'undefined'
     && DiplomacyEngine.isAtWar?.(playerNationId, aiId);
-  const pct     = Math.round(((rel.score ?? 0) + 100) / 2);
+  const pct     = Math.max(0, Math.min(100, Math.round(((Number(rel.score) || 0) + 100) / 2)));
 
   const phaseBadge = st.phase === 'chat'
     ? `<span class="dp-cm-phase-badge dp-cm-phase-badge--chat">● Фаза I · Переговоры</span>`
@@ -608,7 +608,7 @@ function _renderChatModal() {
             <div class="dp-cm-hdr-relfill" style="width:${pct}%;background:${rel.color}"></div>
           </div>
           <div class="dp-cm-hdr-rellbl" style="color:${rel.color}">
-            ${atWar ? '⚔ ВОЙНА' : (rel.icon ?? '') + ' ' + (rel.label ?? '') + ' (' + (rel.score >= 0 ? '+' : '') + rel.score + ')'}
+            ${atWar ? '⚔ ВОЙНА' : (rel.icon ?? '') + ' ' + (rel.label ?? '') + ' (' + (rel.score >= 0 ? '+' : '') + (rel.score ?? 0) + ')'}
           </div>
         </div>
         <button class="dp-cm-close" onclick="hideDipChatModal()" title="Закрыть">✕</button>
@@ -1144,7 +1144,7 @@ function renderDiplomacyTab(regionId) {
   const rel     = _dpRelObj(playerNationId, aiId);
   const atWar   = typeof DiplomacyEngine !== 'undefined'
     && DiplomacyEngine.isAtWar?.(playerNationId, aiId);
-  const pct     = Math.round(((rel.score ?? 0) + 100) / 2);
+  const pct     = Math.max(0, Math.min(100, Math.round(((Number(rel.score) || 0) + 100) / 2)));
 
   const treaties = typeof DiplomacyEngine !== 'undefined'
     ? DiplomacyEngine.getActiveTreaties(playerNationId, aiId) : [];
@@ -1168,7 +1168,7 @@ function renderDiplomacyTab(regionId) {
         <div class="dp-redir-fill" style="width:${pct}%;background:${rel.color ?? '#9e9e9e'}"></div>
       </div>
       <span class="dp-redir-lbl" style="color:${rel.color ?? '#9e9e9e'}">
-        ${atWar ? '⚔ ВОЙНА' : (rel.label ?? 'Нейтральные') + ' (' + (rel.score >= 0 ? '+' : '') + rel.score + ')'}
+        ${atWar ? '⚔ ВОЙНА' : (rel.label ?? 'Нейтральные') + ' (' + (rel.score >= 0 ? '+' : '') + (rel.score ?? 0) + ')'}
       </span>
     </div>
     <div class="dp-redir-treaties">${tagsHtml}</div>
