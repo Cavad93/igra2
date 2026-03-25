@@ -796,15 +796,17 @@ function renderRegionSocialStructure(regionId, gameData) {
 
 // ──────────────────────────────────────────────────────────────
 
-// Активная вкладка панели региона: 'info' | 'build'
+// Активная вкладка панели региона: 'info' | 'build' | 'diplomacy'
 let _activeRegionTab = 'info';
 
 function switchRegionTab(tab) {
   _activeRegionTab = tab;
   const infoPane  = document.getElementById('region-tab-info');
   const buildPane = document.getElementById('region-tab-build');
+  const diplPane  = document.getElementById('region-tab-diplomacy');
   if (infoPane)  infoPane.classList.toggle('hidden', tab !== 'info');
   if (buildPane) buildPane.classList.toggle('hidden', tab !== 'build');
+  if (diplPane)  diplPane.classList.toggle('hidden', tab !== 'diplomacy');
   document.querySelectorAll('.ri-tab').forEach(b =>
     b.classList.toggle('ri-tab--active', b.dataset.tab === tab)
   );
@@ -858,7 +860,16 @@ function showRegionInfo(regionId) {
         buildTabHtml = renderConstructionTab(regionId);
     } catch (e) { console.warn('[showRegionInfo] build tab error:', e); }
 
-    const curTab = _activeRegionTab;
+    // ── Вкладка дипломатии (только для чужих регионов) ──
+    let diplTabHtml = '';
+    try {
+      if (!isPlayer && typeof renderDiplomacyTab === 'function')
+        diplTabHtml = renderDiplomacyTab(regionId);
+    } catch (e) { console.warn('[showRegionInfo] diplomacy tab error:', e); }
+
+    // Если текущая вкладка — дипломатия, но регион теперь игрока — сбрасываем
+    let curTab = _activeRegionTab;
+    if (curTab === 'diplomacy' && isPlayer) curTab = 'info';
 
     panel.innerHTML = `
       <div class="region-info-header" style="border-left: 4px solid ${nationColor}">
@@ -871,6 +882,8 @@ function showRegionInfo(regionId) {
           onclick="switchRegionTab('info')">Информация</button>
         <button class="ri-tab${curTab === 'build' ? ' ri-tab--active' : ''}" data-tab="build"
           onclick="switchRegionTab('build')">${isPlayer ? '🏗 Строительство' : 'Строительство'}</button>
+        ${!isPlayer ? `<button class="ri-tab${curTab === 'diplomacy' ? ' ri-tab--active' : ''}" data-tab="diplomacy"
+          onclick="switchRegionTab('diplomacy')">🤝 Дипломатия</button>` : ''}
       </div>
       <div id="region-tab-info" class="region-info-body${curTab !== 'info' ? ' hidden' : ''}">
         <div class="region-info-desc">${mapData.description}</div>
@@ -894,6 +907,9 @@ function showRegionInfo(regionId) {
       <div id="region-tab-build" class="region-tab-build${curTab !== 'build' ? ' hidden' : ''}">
         ${buildTabHtml}
       </div>
+      ${!isPlayer ? `<div id="region-tab-diplomacy" class="region-tab-diplomacy${curTab !== 'diplomacy' ? ' hidden' : ''}">
+        ${diplTabHtml}
+      </div>` : ''}
     `;
   } catch (e) {
     console.error('[showRegionInfo] Error:', e);

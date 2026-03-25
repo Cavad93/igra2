@@ -297,7 +297,8 @@
 
     /* Контент вкладок — скроллится */
     #region-tab-info,
-    #region-tab-build {
+    #region-tab-build,
+    #region-tab-diplomacy {
       overflow-y: auto;
       overflow-x: hidden;
       flex: 1;
@@ -306,9 +307,11 @@
       scrollbar-color: var(--border-gold) var(--bg-deep);
     }
     #region-tab-info::-webkit-scrollbar,
-    #region-tab-build::-webkit-scrollbar { width: 5px; }
+    #region-tab-build::-webkit-scrollbar,
+    #region-tab-diplomacy::-webkit-scrollbar { width: 5px; }
     #region-tab-info::-webkit-scrollbar-thumb,
-    #region-tab-build::-webkit-scrollbar-thumb { background: var(--border-gold); border-radius: 2px; }
+    #region-tab-build::-webkit-scrollbar-thumb,
+    #region-tab-diplomacy::-webkit-scrollbar-thumb { background: var(--border-gold); border-radius: 2px; }
 
     .region-info-header {
       display: flex;
@@ -3748,7 +3751,9 @@
       border-bottom: 2px solid var(--text-gold);
     }
     .region-tab-build { padding: 0; }
+    .region-tab-diplomacy { padding: 0; }
     .region-tab-build.hidden,
+    .region-tab-diplomacy.hidden,
     .region-info-body.hidden { display: none; }
 
     /* ── Строительная вкладка ── */
@@ -4200,6 +4205,268 @@
       50%      { box-shadow: 0 0 9px rgba(224,85,85,0.55); }
     }
     #eco-open-btn.eco-btn-alert { animation: eco-pulse 2s ease-in-out infinite; }
+
+    /* ══════════════════════════════════════════════════════════
+       ДИПЛОМАТИЯ — вкладка зала переговоров (diplomacy_tab.js)
+       ══════════════════════════════════════════════════════════ */
+    .dt-root {
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .dt-empty {
+      padding: 20px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 11px;
+    }
+
+    /* Шапка */
+    .dt-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 6px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+    .dt-flag { font-size: 22px; flex-shrink: 0; }
+    .dt-header-info { flex: 1; min-width: 0; }
+    .dt-nation-name { font-size: 13px; font-weight: bold; color: var(--text-light); }
+    .dt-ruler-name  { font-size: 10px; color: var(--text-dim); }
+    .dt-war-badge {
+      background: #b71c1c;
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    /* Полоса отношений */
+    .dt-relation {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dt-relation-bar {
+      flex: 1;
+      height: 5px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .dt-relation-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+    .dt-relation-label { font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+
+    /* Заголовки секций */
+    .dt-section-title {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-gold);
+      border-bottom: 1px solid rgba(139,90,43,.25);
+      padding-bottom: 3px;
+      margin-top: 2px;
+    }
+
+    /* Активные договоры */
+    .dt-active-treaties { display: flex; flex-direction: column; gap: 2px; }
+    .dt-treaty-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding: 3px 4px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 3px;
+    }
+    .dt-treaty-left { color: var(--text-dim); font-size: 10px; }
+
+    /* Выбор типа договора */
+    .dt-treaty-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .dt-treaty-btn {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(139,90,43,.3);
+      border-radius: 3px;
+      color: var(--text-dim);
+      font-size: 10px;
+      padding: 3px 6px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .dt-treaty-btn:hover { background: rgba(139,90,43,.2); color: var(--text-light); }
+    .dt-treaty-btn--active {
+      background: rgba(139,90,43,.35);
+      border-color: var(--text-gold);
+      color: var(--text-gold);
+    }
+    .dt-selected-tag {
+      font-size: 11px;
+      color: var(--text-gold);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 4px;
+      background: rgba(139,90,43,.15);
+      border-radius: 3px;
+    }
+    .dt-clear-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 0 2px;
+      margin-left: auto;
+    }
+    .dt-clear-btn:hover { color: #ef9a9a; }
+
+    /* Чат */
+    .dt-chat {
+      max-height: 200px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 4px 2px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(139,90,43,.3) transparent;
+    }
+    .dt-msg {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .dt-msg--player { flex-direction: row-reverse; }
+    .dt-msg-avatar {
+      font-size: 16px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .dt-msg-body {
+      max-width: 85%;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .dt-msg--player .dt-msg-body { align-items: flex-end; }
+    .dt-msg-name {
+      font-size: 9px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .dt-msg-text {
+      font-size: 11px;
+      line-height: 1.45;
+      padding: 5px 8px;
+      border-radius: 4px;
+      display: block;
+    }
+    .dt-msg--player .dt-msg-text {
+      background: rgba(139,90,43,.25);
+      border: 1px solid rgba(139,90,43,.35);
+      color: var(--text-light);
+    }
+    .dt-msg--ai .dt-msg-text {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-light);
+    }
+    .dt-msg--system .dt-msg-text {
+      background: rgba(239,154,154,.08);
+      border: 1px solid rgba(239,154,154,.2);
+      color: #ef9a9a;
+      font-size: 10px;
+    }
+    .dt-clear-chat-btn {
+      font-size: 9px;
+      color: var(--text-dim);
+      background: none;
+      border: none;
+      cursor: pointer;
+      align-self: flex-end;
+      padding: 2px 0;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .dt-clear-chat-btn:hover { color: #ef9a9a; }
+
+    /* Поле ввода */
+    .dt-input {
+      width: 100%;
+      box-sizing: border-box;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(139,90,43,.35);
+      border-radius: 4px;
+      color: var(--text-light);
+      font-size: 11px;
+      padding: 6px 8px;
+      resize: vertical;
+      font-family: inherit;
+      line-height: 1.4;
+    }
+    .dt-input:focus {
+      outline: none;
+      border-color: var(--text-gold);
+    }
+    @keyframes dtShake {
+      0%,100% { transform: translateX(0); }
+      25%      { transform: translateX(-4px); }
+      75%      { transform: translateX(4px); }
+    }
+    .dt-input--shake { animation: dtShake 0.35s ease; }
+    .dt-actions { display: flex; gap: 6px; }
+    .dt-send-btn {
+      flex: 1;
+      background: rgba(139,90,43,.3);
+      border: 1px solid rgba(139,90,43,.5);
+      border-radius: 3px;
+      color: var(--text-gold);
+      font-size: 11px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .dt-send-btn:hover:not(:disabled) { background: rgba(139,90,43,.5); }
+    .dt-send-btn:disabled { opacity: 0.55; cursor: default; }
+
+    /* Архив */
+    .dt-archive { display: flex; flex-direction: column; gap: 2px; }
+    .dt-archive-row {
+      display: grid;
+      grid-template-columns: 20px 1fr auto auto;
+      gap: 4px;
+      align-items: center;
+      font-size: 10px;
+      padding: 3px 4px;
+      background: rgba(255,255,255,0.02);
+      border-radius: 3px;
+    }
+    .dt-archive-icon  { font-size: 13px; text-align: center; }
+    .dt-archive-label { color: var(--text-light); }
+    .dt-archive-status { color: var(--text-dim); white-space: nowrap; }
+    .dt-archive-turn  { color: var(--text-dim); font-size: 9px; white-space: nowrap; }
+
+    /* Вкладка дипломатии */
+    #region-tab-diplomacy {
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
   </style>
 </head>
 <body>
@@ -4408,6 +4675,7 @@
   <script src="ui/log.js"></script>
   <script src="engine/pops.js"></script>
   <script src="engine/land_capacity.js"></script>
+  <script src="engine/diplomacy.js"></script>
   <script src="engine/buildings.js"></script>
   <script src="engine/market.js"></script>
   <script src="engine/provinces.js"></script>
@@ -4427,6 +4695,7 @@
   <script src="engine/turn.js"></script>
   <script src="ui/map.js"></script>
   <script src="ui/region_build_tab.js"></script>
+  <script src="ui/diplomacy_tab.js"></script>
   <script src="ui/panels.js"></script>
   <script src="ui/government_tab.js"></script>
   <script src="ui/population_tab.js"></script>
@@ -4438,6 +4707,7 @@
   <script src="ai/prompts.js"></script>
   <script src="ai/parser.js"></script>
   <script src="ai/claude.js"></script>
+  <script src="ai/diplomacy_ai.js"></script>
   <script src="ui/apikey.js"></script>
   <script src="ui/input.js"></script>
 
