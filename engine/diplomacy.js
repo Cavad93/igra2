@@ -137,18 +137,35 @@ function initDiplomacy() {
       dialogues: {},
     };
   }
-  // Инициализация отношений для всех пар наций
+  // Инициализация отношений для всех пар наций (два прохода)
   const nids = Object.keys(GAME_STATE.nations || {});
+
+  // Проход 1: создаём все пары с нулевым score
   for (let i = 0; i < nids.length; i++) {
     for (let j = i + 1; j < nids.length; j++) {
       const key = _relKey(nids[i], nids[j]);
       if (!GAME_STATE.diplomacy.relations[key]) {
         GAME_STATE.diplomacy.relations[key] = {
-          score: 0,         // -100 враждебно … +100 дружественно
-          war: false,
-          truces: [],       // [{until_turn}]
+          score:            0,
+          war:              false,
+          truces:           [],
+          events:           [],   // история событий для memory decay
           last_interaction: null,
         };
+      }
+    }
+  }
+
+  // Проход 2: рассчитываем начальный score по научной модели
+  // (теперь все пары существуют → _calcTriangularBalance корректно работает)
+  for (let i = 0; i < nids.length; i++) {
+    for (let j = i + 1; j < nids.length; j++) {
+      const key = _relKey(nids[i], nids[j]);
+      const rel = GAME_STATE.diplomacy.relations[key];
+      if (rel && rel.score === 0) {  // только если ещё не задан вручную
+        try {
+          rel.score = calcBaseRelation(nids[i], nids[j]);
+        } catch (_) {}
       }
     }
   }
@@ -415,6 +432,239 @@ function extractTreatyConditions(aiResponse) {
   return null;
 }
 
+// ══════════════════════════════════════════════════════════════
+// НАУЧНАЯ МОДЕЛЬ ФОРМИРОВАНИЯ ОТНОШЕНИЙ
+//
+// Основана на:
+//   • Walt (1987)           — Balance of Threat Theory
+//   • Bueno de Mesquita (1981) — Expected Utility Theory
+//   • Rosecrance (1986)     — Commercial Peace / Economic Interdependence
+//   • Heider (1958)         — Structural Balance (триады: враг врага — друг)
+//   • Doyle (1983)          — Democratic Peace Theory (сходство форм правления)
+//   • Memory Decay          — экспоненциальное затухание прошлых событий (λ = 0.10)
+//
+// Итоговый score = clamp(affinity + threat + econ + triangle + memory, −100, 100)
+// α-конвергенция за ход: score += 0.04 × (base − score)
+// ══════════════════════════════════════════════════════════════
+
+// ── Группировка форм правления (Doyle 1983) ──────────────────
+function _govGroupOf(type) {
+  if (['republic', 'democracy', 'oligarchy'].includes(type)) return 'civic';
+  if (['monarchy', 'absolute_monarchy', 'kingdom'].includes(type)) return 'monarchic';
+  if (['empire', 'hegemony', 'imperial'].includes(type)) return 'imperial';
+  return 'other';
+}
+
+// ── 1. АФФИНИТЕТ: культура + религия + правление (±25) ───────
+function _calcAffinity(natA, natB) {
+  let aff = 0;
+
+  // Культурная близость
+  if (natA.culture && natB.culture) {
+    if (natA.culture === natB.culture) {
+      aff += 12;
+    } else if (natA.culture_group && natB.culture_group
+               && natA.culture_group === natB.culture_group) {
+      aff += 5;
+    }
+  }
+
+  // Религиозная близость
+  if (natA.religion && natB.religion) {
+    if (natA.religion === natB.religion) {
+      aff += 12;
+    } else if (natA.religion_group && natB.religion_group
+               && natA.religion_group === natB.religion_group) {
+      aff += 4;
+    } else {
+      aff -= 3;  // разные религии — слабое напряжение
+    }
+  }
+
+  // Форма правления (Doyle 1983: «демократический мир»)
+  const govA = natA.government?.type ?? 'monarchy';
+  const govB = natB.government?.type ?? 'monarchy';
+  if (govA === govB) {
+    aff += 8;
+  } else if (_govGroupOf(govA) === _govGroupOf(govB)) {
+    aff += 3;
+  } else {
+    aff -= 4;
+  }
+
+  return Math.max(-20, Math.min(25, aff));
+}
+
+// ── 2. БАЛАНС УГРОЗ (Walt 1987) (±30) ────────────────────────
+// Угроза = f(мощь, наступ.потенциал, близость)
+// Высокая угроза → негативный вклад в отношения
+function _calcThreatBalance(natA, natB) {
+  const popA = natA.population?.total ?? 100_000;
+  const popB = natB.population?.total ?? 100_000;
+  const milA = natA.military?.size ?? natA.military?.total ?? 0;
+  const milB = natB.military?.size ?? natB.military?.total ?? 0;
+  const treA = Math.max(0, natA.economy?.treasury ?? 0);
+  const treB = Math.max(0, natB.economy?.treasury ?? 0);
+
+  // Composite Index of Power (упрощённый CINC)
+  const powerA = popA + milA * 800 + treA * 10 || 1;
+  const powerB = popB + milB * 800 + treB * 10 || 1;
+
+  // Логарифмическое соотношение мощи (0 = равные; +2 = B в 4× сильнее A)
+  const powerRatio = Math.log2(powerB / powerA);
+
+  // Географическая близость (общие регионы = граница)
+  const regA = new Set(natA.regions || []);
+  const regB = new Set(natB.regions || []);
+  const hasBorder = [...regA].some(r => regB.has(r));
+  const proximity = hasBorder ? 1.0 : 0.35;
+
+  // Наступательный потенциал = доля армии от населения
+  const offCapB = milB > 0 ? Math.min(1.0, (milB * 1000) / Math.max(popB, 1)) : 0.1;
+
+  // Threat = tanh(ratio × proximity × offCap × scale)
+  const threat = Math.tanh(powerRatio * proximity * offCapB * 1.8);
+
+  // Сильная угроза → недоверие (отрицательный вклад)
+  return Math.round(-threat * 30);
+}
+
+// ── 3. ЭКОНОМИЧЕСКАЯ ВЗАИМОЗАВИСИМОСТЬ (Rosecrance 1986) (0..20) ──
+function _calcEconInterdep(nationA, nationB, treaties) {
+  const natA = GAME_STATE.nations[nationA];
+  const natB = GAME_STATE.nations[nationB];
+  if (!natA || !natB) return 0;
+
+  let econ = 0;
+
+  // Активные торговые/союзнические договоры = высокая взаимозависимость
+  const tradeActive    = treaties.some(t => t.status === 'active'
+    && ['trade_agreement', 'joint_campaign', 'cultural_exchange'].includes(t.type));
+  const allianceActive = treaties.some(t => t.status === 'active'
+    && ['defensive_alliance', 'military_alliance', 'marriage_alliance'].includes(t.type));
+
+  if (tradeActive)    econ += 14;
+  if (allianceActive) econ += 9;
+
+  // Богатство соседа = потенциальная торговая выгода
+  const avgTreasury = ((natA.economy?.treasury ?? 0) + (natB.economy?.treasury ?? 0)) / 2;
+  if (avgTreasury > 500) econ += Math.min(7, Math.log10(Math.max(1, avgTreasury)));
+
+  return Math.min(20, Math.round(econ));
+}
+
+// ── 4. ТРЕУГОЛЬНЫЙ БАЛАНС (Heider 1958) (±15) ────────────────
+// «Враг врага — мой друг», «друг врага — мой враг»
+// Взвешенная сумма знаков парных произведений через третьи страны
+function _calcTriangularBalance(nationA, nationB) {
+  if (!GAME_STATE.diplomacy) return 0;
+  const nids = Object.keys(GAME_STATE.nations || {});
+  let balance = 0;
+  let count   = 0;
+
+  for (const c of nids) {
+    if (c === nationA || c === nationB) continue;
+    const scoreAC = getRelationScore(nationA, c);
+    const scoreBC = getRelationScore(nationB, c);
+
+    // Учитываем только значимые связи (≥ 20 по модулю)
+    if (Math.abs(scoreAC) < 20 || Math.abs(scoreBC) < 20) continue;
+
+    // Произведение знаков: одинаковые → +1, противоположные → -1
+    // Нормируем через tanh
+    balance += Math.tanh((scoreAC * scoreBC) / 4000);
+    count++;
+  }
+
+  if (count === 0) return 0;
+  return Math.round((balance / count) * 15);
+}
+
+// ── 5. ПАМЯТЬ СОБЫТИЙ — экспоненциальное затухание ───────────
+// Σ delta_i × e^(−λ × age_i),  λ = 0.10 за ход, ±30
+function _calcMemoryDecay(nationA, nationB) {
+  const rel    = getRelation(nationA, nationB);
+  const events = rel.events || [];
+  const now    = GAME_STATE.turn || 1;
+  const LAMBDA = 0.10;
+
+  let sum = 0;
+  for (const ev of events) {
+    const age = Math.max(0, now - ev.turn);
+    sum += ev.delta * Math.exp(-LAMBDA * age);
+  }
+  return Math.max(-30, Math.min(30, Math.round(sum)));
+}
+
+// ── ИТОГОВАЯ БАЗОВАЯ ОЦЕНКА ───────────────────────────────────
+/**
+ * Рассчитывает «базовые» отношения между двумя нациями
+ * по совокупности пяти научных компонент.
+ * @returns {number} — от -100 до +100
+ */
+function calcBaseRelation(nationA, nationB) {
+  const natA = GAME_STATE.nations?.[nationA];
+  const natB = GAME_STATE.nations?.[nationB];
+  if (!natA || !natB) return 0;
+
+  const treaties = GAME_STATE.diplomacy?.treaties?.filter(t =>
+    t.parties.includes(nationA) && t.parties.includes(nationB)
+  ) ?? [];
+
+  const affinity = _calcAffinity(natA, natB);
+  const threat   = _calcThreatBalance(natA, natB);
+  const econ     = _calcEconInterdep(nationA, nationB, treaties);
+  const triangle = _calcTriangularBalance(nationA, nationB);
+  const memory   = _calcMemoryDecay(nationA, nationB);
+
+  const raw = affinity + threat + econ + triangle + memory;
+  return Math.max(-100, Math.min(100, raw));
+}
+
+// ── Запись исторического события для памяти ───────────────────
+/**
+ * Добавляет дипломатическое событие в историю пары (memory decay).
+ * @param {string} nationA
+ * @param {string} nationB
+ * @param {number} delta      — изменение (−30…+30)
+ * @param {string} eventType  — 'war', 'gift', 'betrayal', 'aid', 'insult', ...
+ */
+function addDiplomacyEvent(nationA, nationB, delta, eventType) {
+  const rel = getRelation(nationA, nationB);
+  if (!rel.events) rel.events = [];
+  rel.events.push({
+    type:  eventType || 'generic',
+    delta: Math.max(-30, Math.min(30, delta)),
+    turn:  GAME_STATE.turn || 1,
+  });
+  // Оставляем последние 80 событий
+  if (rel.events.length > 80) rel.events.splice(0, rel.events.length - 80);
+}
+
+// ── Глобальный тик конвергенции (вызывать 1 раз за ход) ──────
+/**
+ * α-конвергенция: медленно тянет score каждой пары к базовому значению.
+ * α = 0.04 (≈ полная конвергенция за ~25 ходов).
+ * Должен вызываться один раз за ход (не per-nation).
+ */
+function processDiplomacyGlobalTick() {
+  if (!GAME_STATE.diplomacy) return;
+  const ALPHA = 0.04;
+  const nids  = Object.keys(GAME_STATE.nations || {});
+
+  for (let i = 0; i < nids.length; i++) {
+    for (let j = i + 1; j < nids.length; j++) {
+      const a = nids[i], b = nids[j];
+      const rel = getRelation(a, b);
+      if (rel.war) continue;  // в войне score не дрейфует (управляется событиями)
+
+      const base = calcBaseRelation(a, b);
+      rel.score  = Math.round(rel.score + ALPHA * (base - rel.score));
+      rel.score  = Math.max(-100, Math.min(100, rel.score));
+    }
+  }
+}
+
 // ──────────────────────────────────────────────────────────────
 // ПУБЛИЧНОЕ API
 // ──────────────────────────────────────────────────────────────
@@ -436,5 +686,9 @@ const DiplomacyEngine = {
   evalReceptiveness: evalAIReceptiveness,
   extractConditions: extractTreatyConditions,
   recordRejection,
+  // Научная модель отношений
+  calcBaseRelation,
+  addEvent:          addDiplomacyEvent,
+  processGlobalTick: processDiplomacyGlobalTick,
   TREATY_TYPES,
 };
