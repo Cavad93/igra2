@@ -3741,6 +3741,7 @@
     }
     .rbt-slots-lbl { font-size: 11px; color: var(--text-dim); }
     .rbt-slots-val { font-size: 12px; color: var(--text-gold); font-weight: bold; }
+    .rbt-slots-val--full { color: #ef9a9a; }
     .rbt-terrain-tag {
       margin-left: auto;
       font-size: 9.5px;
@@ -4027,6 +4028,108 @@
     .rbt-bc-land        { font-size: 9px; color: var(--text-dim); width: 100%; }
     .rbt-bc-land--ok    { color: #81c784; }
     .rbt-bc-land--bad   { color: #ef9a9a; font-weight: bold; }
+
+    /* ════════════════════════════════════════════════════════════════
+       АККОРДЕОН СТРОИТЕЛЬСТВА — Вариант B
+       ════════════════════════════════════════════════════════════════ */
+
+    /* Обёртка аккордеона */
+    .rbt-accordion { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
+
+    /* Категория */
+    .rbt-ac-cat { border: 1px solid rgba(107,79,26,.35); border-radius: 4px; overflow: hidden; }
+
+    /* Заголовок категории (кликабельный) */
+    .rbt-ac-hdr {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 8px; cursor: pointer;
+      background: rgba(30,20,5,.45);
+      user-select: none; transition: background .15s;
+    }
+    .rbt-ac-hdr:hover { background: rgba(107,79,26,.25); }
+    .rbt-ac-hdr--open { background: rgba(107,79,26,.2); }
+
+    .rbt-ac-icon  { font-size: 13px; flex-shrink: 0; }
+    .rbt-ac-title { font-size: 11px; color: var(--text-gold); flex: 1; font-weight: bold; letter-spacing: .3px; }
+    .rbt-ac-stats { font-size: 9.5px; color: var(--text-dim); }
+    .rbt-ac-stats b { color: var(--text-light); }
+    .rbt-ac-chevron { font-size: 9px; color: var(--text-dim); transition: transform .2s; flex-shrink: 0; }
+    .rbt-ac-hdr--open .rbt-ac-chevron { transform: rotate(90deg); }
+
+    /* Тело категории */
+    .rbt-ac-body { display: none; border-top: 1px solid rgba(107,79,26,.25); }
+    .rbt-ac-body--open { display: block; }
+
+    /* Строка здания */
+    .rbt-ac-row {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 8px; border-bottom: 1px solid rgba(107,79,26,.15);
+      min-height: 32px;
+    }
+    .rbt-ac-row:last-child { border-bottom: none; }
+    .rbt-ac-row--built   { background: rgba(20,15,5,.3); }
+    .rbt-ac-row--queue   { background: rgba(245,124,0,.06); }
+    .rbt-ac-row--avail   { background: transparent; opacity: .75; }
+    .rbt-ac-row--avail:hover { opacity: 1; background: rgba(107,79,26,.1); }
+    .rbt-ac-row--noafford { opacity: .4; }
+
+    /* Иконка здания */
+    .rbt-ac-bicon { font-size: 14px; flex-shrink: 0; width: 18px; text-align: center; }
+
+    /* Имя здания */
+    .rbt-ac-bname { font-size: 10.5px; color: var(--text-light); flex: 1; line-height: 1.2; }
+    .rbt-ac-row--avail .rbt-ac-bname { color: var(--text-dim); }
+
+    /* Бейдж уровня */
+    .rbt-ac-lvl {
+      font-size: 9px; padding: 1px 5px; border-radius: 8px;
+      background: rgba(30,136,229,.25); color: #90caf9;
+      border: 1px solid rgba(30,136,229,.4); flex-shrink: 0;
+    }
+    /* Бейдж «строится» */
+    .rbt-ac-building {
+      font-size: 9px; padding: 1px 5px; border-radius: 8px;
+      background: rgba(245,124,0,.25); color: #ffb74d;
+      border: 1px solid rgba(245,124,0,.4); flex-shrink: 0;
+    }
+
+    /* Работники */
+    .rbt-ac-workers { font-size: 9.5px; color: var(--text-dim); min-width: 52px; text-align: right; flex-shrink: 0; }
+    .rbt-ac-workers b { color: var(--text-light); }
+
+    /* Доход */
+    .rbt-ac-rev { font-size: 9.5px; color: #c8e6c9; min-width: 52px; text-align: right; flex-shrink: 0; }
+
+    /* Стоимость (для доступных) */
+    .rbt-ac-cost { font-size: 9.5px; min-width: 48px; text-align: right; flex-shrink: 0; }
+    .rbt-ac-cost--ok  { color: #a5d6a7; }
+    .rbt-ac-cost--low { color: #fff176; }
+    .rbt-ac-cost--no  { color: #ef9a9a; }
+
+    /* Кнопки действий */
+    .rbt-ac-actions { display: flex; gap: 3px; flex-shrink: 0; }
+    .rbt-ac-btn {
+      font-size: 9px; padding: 2px 6px; border-radius: 3px; cursor: pointer;
+      border: 1px solid rgba(107,79,26,.5); background: rgba(107,79,26,.15);
+      color: var(--text-dim); transition: all .15s;
+    }
+    .rbt-ac-btn:hover { color: var(--text-light); border-color: var(--border-gold); background: rgba(107,79,26,.3); }
+    .rbt-ac-btn--upg  { border-color: rgba(30,136,229,.4); color: #90caf9; }
+    .rbt-ac-btn--upg:hover { background: rgba(30,136,229,.2); }
+    .rbt-ac-btn--dem  { border-color: rgba(198,40,40,.35); color: #ef9a9a; }
+    .rbt-ac-btn--dem:hover { background: rgba(198,40,40,.2); }
+    .rbt-ac-btn--add  { border-color: rgba(56,142,60,.45); color: #81c784; }
+    .rbt-ac-btn--add:hover { background: rgba(56,142,60,.2); }
+    .rbt-ac-btn--cancel { border-color: rgba(245,124,0,.4); color: #ffb74d; }
+    .rbt-ac-btn--cancel:hover { background: rgba(245,124,0,.15); }
+    .rbt-ac-btn:disabled, .rbt-ac-btn[disabled] { opacity: .35; cursor: not-allowed; }
+
+    /* Прогресс-полоска в строке очереди */
+    .rbt-ac-prog { height: 2px; background: rgba(107,79,26,.3); border-radius: 1px; margin-top: 2px; }
+    .rbt-ac-prog-fill { height: 100%; background: #ffb74d; border-radius: 1px; }
+
+    /* Тултип причины недоступности */
+    .rbt-ac-reason { font-size: 8.5px; color: #ef9a9a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px; }
 
     /* ════════════════════════════════════════════════════════════════
        ЭКОНОМИЧЕСКИЙ ОБЗОР (React) — анимации и глобальные стили

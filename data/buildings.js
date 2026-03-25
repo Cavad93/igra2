@@ -2352,14 +2352,14 @@ const BUILDINGS = {
 // ══════════════════════════════════════════════════════════════
 
 const TERRAIN_MAX_SLOTS = {
-  coastal_city:  8,
-  river_valley:  7,
-  plains:        6,
-  hills:         5,
-  mountains:     4,
-  ocean:         0,
-  rural:         5,   // устаревший тип, fallback
-  default:       4,
+  coastal_city:  20,
+  river_valley:  18,
+  plains:        15,
+  hills:         12,
+  mountains:     10,
+  ocean:          0,
+  rural:         12,  // устаревший тип, fallback
+  default:       10,
 };
 
 // ══════════════════════════════════════════════════════════════

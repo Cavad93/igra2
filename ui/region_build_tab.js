@@ -1,13 +1,35 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// ВКЛАДКА СТРОИТЕЛЬСТВА — UI для управления зданиями региона
+// ВКЛАДКА СТРОИТЕЛЬСТВА — Аккордеон по категориям (Вариант B)
 //
 // Публичные функции:
 //   renderConstructionTab(regionId)            — строит HTML вкладки
-//   toggleBuildingChooser(regionId)            — показать/скрыть список зданий
-//   uiOrderConstruction(regionId, buildingId)  — заказать строительство
+//   rbtToggleCategory(regionId, catId)         — раскрыть/свернуть категорию
+//   uiOrderConstruction(regionId, buildingId)  — заказать строительство / улучшение
 //   uiCancelConstruction(regionId, slotId)     — отменить строительство (50% возврат)
-//   uiDemolishBuilding(regionId, slotId)       — снести построенное здание
+//   uiDemolishBuilding(regionId, slotId)       — снести здание
 // ═══════════════════════════════════════════════════════════════════════════
+
+// ──────────────────────────────────────────────────────────────
+// КОНФИГУРАЦИЯ КАТЕГОРИЙ
+// ──────────────────────────────────────────────────────────────
+
+const RBT_CATEGORIES = [
+  { id: 'agriculture',    label: 'Сельское хозяйство', icon: '🌾' },
+  { id: 'production',     label: 'Производство',        icon: '⚒' },
+  { id: 'infrastructure', label: 'Инфраструктура',      icon: '🏛' },
+  { id: 'commerce',       label: 'Торговля',             icon: '💰' },
+  { id: 'military',       label: 'Военные',              icon: '⚔' },
+  { id: 'culture',        label: 'Культура',             icon: '🎭' },
+];
+
+// Состояние открытых категорий: { regionId -> Set<catId> }
+// По умолчанию открыты категории, в которых есть здания
+const _rbtOpenCats = {};
+
+function _getRbtOpenCats(regionId) {
+  if (!_rbtOpenCats[regionId]) _rbtOpenCats[regionId] = new Set();
+  return _rbtOpenCats[regionId];
+}
 
 // ──────────────────────────────────────────────────────────────
 // ГЛАВНАЯ ФУНКЦИЯ — возвращает HTML всей вкладки
@@ -25,55 +47,264 @@ function renderConstructionTab(regionId) {
     </div>`;
   }
 
-  // Биом имеет приоритет над terrain (как в engine/buildings.js).
-  // REGION_BIOMES хранит более точную классификацию (mediterranean_coast и т.д.)
-  const _biome   = (typeof REGION_BIOMES !== 'undefined' && REGION_BIOMES[parseInt(regionId)]) || null;
-  const terrain  = _biome || region.terrain || 'plains';
-  const maxSlots = (typeof getRegionMaxSlots === 'function') ? getRegionMaxSlots(terrain) : 4;
+  // Биом → тип местности
+  const _biome  = (typeof REGION_BIOMES !== 'undefined' && REGION_BIOMES[parseInt(regionId)]) || null;
+  const terrain = _biome || region.terrain || 'plains';
+  const maxSlots = (typeof getRegionMaxSlots === 'function') ? getRegionMaxSlots(terrain) : 10;
 
   const activeSlots = (region.building_slots || []).filter(s => s.status !== 'demolished');
   const queue       = region.construction_queue || [];
   const newInQueue  = queue.filter(e => !e.is_upgrade);
   const usedSlots   = activeSlots.length + newInQueue.length;
-  const emptyCount  = Math.max(0, maxSlots - usedSlots);
+  const slotsLeft   = Math.max(0, maxSlots - usedSlots);
 
   const nation = GAME_STATE.nations[nationId];
 
-  let cards = '';
+  // Все доступные для постройки здания (совместимые с биомом/terrain)
+  const compatible = (typeof getBuildingsForTerrain === 'function')
+    ? getBuildingsForTerrain(terrain, region)
+    : [];
 
-  // Активные здания
-  for (const slot of activeSlots) {
-    cards += _rbtActiveCard(slot, regionId, nation, region);
+  // Открываем категории с активными зданиями при первом показе
+  const openCats = _getRbtOpenCats(regionId);
+  if (openCats.size === 0) {
+    const builtCats = new Set(
+      activeSlots.map(s => (typeof BUILDINGS !== 'undefined' && BUILDINGS[s.building_id]?.category) || 'production')
+    );
+    builtCats.forEach(c => openCats.add(c));
+    // Если совсем пусто — открыть первую категорию
+    if (openCats.size === 0) openCats.add('agriculture');
   }
 
-  // Здания в процессе строительства
-  for (const entry of queue) {
-    cards += _rbtQueueCard(entry, regionId);
-  }
+  // Строим аккордеон
+  const terrainName = typeof getTerrainName === 'function' ? getTerrainName(terrain) : terrain;
+  const slotsTierCls = usedSlots >= maxSlots ? 'rbt-slots-val--full' : '';
 
-  // Пустые слоты
-  for (let i = 0; i < emptyCount; i++) {
-    cards += _rbtEmptyCard(regionId);
+  let accordion = '';
+  for (const cat of RBT_CATEGORIES) {
+    accordion += _rbtCategoryBlock(cat, regionId, region, nation, activeSlots, queue, compatible, slotsLeft, openCats);
   }
-
-  const chooserHtml = _rbtBuildingChooser(regionId, region, terrain, nation);
 
   return `
     <div class="rbt-wrap">
       ${_rbtLandBar(region)}
       <div class="rbt-hdr">
         <span class="rbt-slots-lbl">Слоты:</span>
-        <span class="rbt-slots-val">${usedSlots}/${maxSlots}</span>
-        <span class="rbt-terrain-tag">${typeof getTerrainName === 'function' ? getTerrainName(terrain) : terrain}</span>
+        <span class="rbt-slots-val ${slotsTierCls}">${usedSlots}/${maxSlots}</span>
+        <span class="rbt-terrain-tag">${terrainName}</span>
       </div>
-      <div class="rbt-grid">${cards}</div>
-      ${chooserHtml}
+      <div class="rbt-accordion">${accordion}</div>
     </div>
   `;
 }
 
 // ──────────────────────────────────────────────────────────────
-// ЗЕМЕЛЬНАЯ ПОЛОСА
+// РЕНДЕР ОДНОЙ КАТЕГОРИИ-АККОРДЕОНА
+// ──────────────────────────────────────────────────────────────
+
+function _rbtCategoryBlock(cat, regionId, region, nation, activeSlots, queue, compatible, slotsLeft, openCats) {
+  const catId = cat.id;
+
+  // Активные здания этой категории
+  const builtSlots = activeSlots.filter(s => {
+    const bDef = typeof BUILDINGS !== 'undefined' ? BUILDINGS[s.building_id] : null;
+    return (bDef?.category || 'production') === catId;
+  });
+
+  // Здания в очереди этой категории
+  const queuedEntries = queue.filter(e => {
+    const bDef = typeof BUILDINGS !== 'undefined' ? BUILDINGS[e.building_id] : null;
+    return (bDef?.category || 'production') === catId;
+  });
+
+  // Доступные для постройки в этой категории (ещё не построены)
+  const builtIds    = new Set(builtSlots.map(s => s.building_id));
+  const inQueueIds  = new Set(queuedEntries.filter(e => !e.is_upgrade).map(e => e.building_id));
+  const availBuildings = compatible.filter(b => {
+    const bCat = b.category || 'production';
+    return bCat === catId && !builtIds.has(b.id) && !inQueueIds.has(b.id);
+  });
+
+  // Пустая категория — не рендерим
+  if (builtSlots.length === 0 && queuedEntries.length === 0 && availBuildings.length === 0) {
+    return '';
+  }
+
+  const isOpen   = openCats.has(catId);
+  const hdrCls   = isOpen ? 'rbt-ac-hdr rbt-ac-hdr--open' : 'rbt-ac-hdr';
+  const bodyCls  = isOpen ? 'rbt-ac-body rbt-ac-body--open' : 'rbt-ac-body';
+
+  // Статистика для заголовка
+  const totalWorkers = builtSlots.reduce((sum, s) => {
+    const level = s.level || 1;
+    return sum + Object.values(s.workers || {}).reduce((a, v) => a + v * level, 0);
+  }, 0);
+  const statsHtml = builtSlots.length > 0
+    ? `<span class="rbt-ac-stats"><b>${builtSlots.length}</b> зд · <b>${totalWorkers.toLocaleString()}</b> раб.</span>`
+    : `<span class="rbt-ac-stats">${availBuildings.length} доступно</span>`;
+
+  // Строки тела
+  let rows = '';
+  for (const slot of builtSlots) {
+    rows += _rbtBuiltRow(slot, regionId, region, nation);
+  }
+  for (const entry of queuedEntries) {
+    rows += _rbtQueueRow(entry, regionId);
+  }
+  for (const b of availBuildings) {
+    rows += _rbtAvailRow(b, regionId, region, nation, slotsLeft);
+  }
+
+  return `
+    <div class="rbt-ac-cat" id="rbt-cat-${regionId}-${catId}">
+      <div class="${hdrCls}" onclick="rbtToggleCategory('${regionId}','${catId}')">
+        <span class="rbt-ac-icon">${cat.icon}</span>
+        <span class="rbt-ac-title">${cat.label}</span>
+        ${statsHtml}
+        <span class="rbt-ac-chevron">▶</span>
+      </div>
+      <div class="${bodyCls}">
+        ${rows}
+      </div>
+    </div>
+  `;
+}
+
+// ──────────────────────────────────────────────────────────────
+// СТРОКА: АКТИВНОЕ ЗДАНИЕ
+// ──────────────────────────────────────────────────────────────
+
+function _rbtBuiltRow(slot, regionId, region, nation) {
+  const bDef = (typeof BUILDINGS !== 'undefined') ? BUILDINGS[slot.building_id] : null;
+  if (!bDef) return '';
+
+  const level    = slot.level || 1;
+  const maxLevel = bDef.max_level ?? Infinity;
+  const revenue  = slot.revenue ? Math.round(slot.revenue) : 0;
+
+  // Суммарные работники (level × workers_per_unit)
+  const totalWorkers = Object.values(slot.workers || {}).reduce((s, v) => s + v * level, 0);
+
+  // Проверяем: идёт ли уже улучшение
+  const upgrading = (region.construction_queue || [])
+    .some(e => e.building_id === slot.building_id && e.is_upgrade);
+
+  const canUpgrade = bDef.nation_buildable !== false && level < maxLevel && !upgrading;
+
+  const upgBtn = canUpgrade
+    ? `<button class="rbt-ac-btn rbt-ac-btn--upg"
+         title="Улучшить до ур. ${level + 1}"
+         onclick="uiOrderConstruction('${regionId}','${slot.building_id}')">▲ +1</button>`
+    : (upgrading
+        ? `<span class="rbt-ac-building">▲…</span>`
+        : '');
+
+  const demBtn = `<button class="rbt-ac-btn rbt-ac-btn--dem"
+      title="${level > 1 ? 'Снизить уровень' : 'Снести'}"
+      onclick="uiDemolishBuilding('${regionId}','${slot.slot_id}')">✕</button>`;
+
+  return `
+    <div class="rbt-ac-row rbt-ac-row--built">
+      <span class="rbt-ac-bicon">${bDef.icon || '🏛'}</span>
+      <span class="rbt-ac-bname">${bDef.name}</span>
+      ${level > 1 ? `<span class="rbt-ac-lvl">×${level}</span>` : ''}
+      <span class="rbt-ac-workers"><b>${totalWorkers.toLocaleString()}</b> раб.</span>
+      <span class="rbt-ac-rev">💰${revenue.toLocaleString()}</span>
+      <span class="rbt-ac-actions">${upgBtn}${demBtn}</span>
+    </div>
+  `;
+}
+
+// ──────────────────────────────────────────────────────────────
+// СТРОКА: ЗДАНИЕ В ОЧЕРЕДИ
+// ──────────────────────────────────────────────────────────────
+
+function _rbtQueueRow(entry, regionId) {
+  const bDef = (typeof BUILDINGS !== 'undefined') ? BUILDINGS[entry.building_id] : null;
+  if (!bDef) return '';
+
+  const pct    = entry.turns_total > 0
+    ? Math.round((1 - entry.turns_left / entry.turns_total) * 100)
+    : 0;
+  const refund = Math.round((bDef.cost || 0) * 0.5);
+  const label  = entry.is_upgrade ? `▲ ур. ${entry.to_level}` : 'Строится';
+
+  return `
+    <div class="rbt-ac-row rbt-ac-row--queue">
+      <span class="rbt-ac-bicon">${bDef.icon || '🏗'}</span>
+      <span class="rbt-ac-bname">${bDef.name}</span>
+      <span class="rbt-ac-building">${label}</span>
+      <span class="rbt-ac-workers" style="color:#ffb74d"><b>${entry.turns_left}</b> ход${_rbtTurnsSuffix(entry.turns_left)}</span>
+      <div style="flex:1">
+        <div class="rbt-ac-prog"><div class="rbt-ac-prog-fill" style="width:${pct}%"></div></div>
+      </div>
+      <span class="rbt-ac-actions">
+        <button class="rbt-ac-btn rbt-ac-btn--cancel"
+          title="Отменить (+${refund} монет)"
+          onclick="uiCancelConstruction('${regionId}','${entry.slot_id}')">✕ +${refund}</button>
+      </span>
+    </div>
+  `;
+}
+
+// ──────────────────────────────────────────────────────────────
+// СТРОКА: ДОСТУПНОЕ ДЛЯ ПОСТРОЙКИ ЗДАНИЕ
+// ──────────────────────────────────────────────────────────────
+
+function _rbtAvailRow(b, regionId, region, nation, slotsLeft) {
+  const check = (typeof canBuildInRegion === 'function')
+    ? canBuildInRegion(b.id, region)
+    : { ok: true, reason: null };
+
+  const dynCost   = (typeof calcConstructionCost === 'function')
+    ? calcConstructionCost(b.id)
+    : (b.cost || 0);
+  const treasury  = nation?.economy?.treasury || 0;
+
+  let costTier, costCls;
+  if (treasury >= dynCost * 1.5) { costTier = 'ok';  costCls = 'rbt-ac-cost--ok'; }
+  else if (treasury >= dynCost)  { costTier = 'low'; costCls = 'rbt-ac-cost--low'; }
+  else                            { costTier = 'no';  costCls = 'rbt-ac-cost--no'; }
+
+  const canAfford = costTier !== 'no';
+  const noSlots   = slotsLeft <= 0;
+
+  // Определяем блокировку и причину
+  let disabled = false;
+  let reason   = null;
+  if (noSlots) {
+    disabled = true;
+    reason   = 'Нет слотов';
+  } else if (!check.ok) {
+    disabled = true;
+    reason   = check.reason;
+  } else if (!canAfford) {
+    disabled = true;
+    reason   = `Нужно ${dynCost.toLocaleString()}`;
+  }
+
+  const totalWorkers = (b.worker_profession || []).reduce((s, wp) => s + wp.count, 0);
+
+  const addBtn = `<button class="rbt-ac-btn rbt-ac-btn--add"
+      ${disabled ? 'disabled' : `onclick="uiOrderConstruction('${regionId}','${b.id}')"`}
+      title="${reason || 'Построить'}">＋</button>`;
+
+  const rowCls = disabled ? 'rbt-ac-row rbt-ac-row--avail rbt-ac-row--noafford' : 'rbt-ac-row rbt-ac-row--avail';
+
+  return `
+    <div class="${rowCls}">
+      <span class="rbt-ac-bicon">${b.icon || '🏛'}</span>
+      <span class="rbt-ac-bname">${b.name}</span>
+      ${reason ? `<span class="rbt-ac-reason" title="${reason}">${reason}</span>` : ''}
+      ${totalWorkers > 0 ? `<span class="rbt-ac-workers">${totalWorkers.toLocaleString()} раб.</span>` : ''}
+      <span class="rbt-ac-cost ${costCls}">💰${dynCost.toLocaleString()}</span>
+      <span class="rbt-ac-actions">${addBtn}</span>
+    </div>
+  `;
+}
+
+// ──────────────────────────────────────────────────────────────
+// ЗЕМЕЛЬНАЯ ПОЛОСА (без изменений)
 // ──────────────────────────────────────────────────────────────
 
 function _rbtLandBar(region) {
@@ -82,29 +313,23 @@ function _rbtLandBar(region) {
     return '<div class="rbt-land rbt-land--nodata">📐 Земельные данные недоступны</div>';
   }
 
-  const used    = land.buildings_ha    || 0;
-  // Лимит застройки = 70% от total_ha (жёсткое ограничение)
-  const limit   = land.max_buildings_ha || land.arable_ha;
-  const free    = land.free_ha          || 0;
-  const total   = land.total_ha         || land.arable_ha;
-  const pct     = Math.min(100, Math.round(used / limit * 100));
+  const used  = land.buildings_ha    || 0;
+  const limit = land.max_buildings_ha || land.arable_ha;
+  const free  = land.free_ha          || 0;
+  const total = land.total_ha         || land.arable_ha;
+  const pct   = Math.min(100, Math.round(used / limit * 100));
+  const tier  = pct >= 95 ? 'red' : pct >= 75 ? 'yellow' : 'green';
 
-  // Цвет полосы по степени заполнения (относительно 70%-лимита)
-  const tier = pct >= 95 ? 'red' : pct >= 75 ? 'yellow' : 'green';
-
-  // Подсказки: сколько единиц каждого пшеничного типа ещё влезет
   const hints = [];
   if (typeof BUILDINGS !== 'undefined') {
     const pairs = [
-      ['wheat_family_farm',  '🌾ф'],
-      ['wheat_villa',        '🏡в'],
-      ['wheat_latifundium',  '🌿л'],
+      ['wheat_family_farm', '🌾ф'],
+      ['wheat_villa',       '🏡в'],
+      ['wheat_latifundium', '🌿л'],
     ];
     for (const [id, label] of pairs) {
       const fp = BUILDINGS[id]?.footprint_ha;
-      if (fp && free >= fp) {
-        hints.push(`${label}×${Math.floor(free / fp)}`);
-      }
+      if (fp && free >= fp) hints.push(`${label}×${Math.floor(free / fp)}`);
     }
   }
   const hintsHtml = hints.length
@@ -119,7 +344,7 @@ function _rbtLandBar(region) {
       </div>
       <div class="rbt-land-row">
         <span class="rbt-land-stat">
-          <b>${used.toLocaleString()}</b> га занято из <b>${limit.toLocaleString()}</b> га (лимит 70% от ${total.toLocaleString()} га)
+          <b>${used.toLocaleString()}</b> га из <b>${limit.toLocaleString()}</b> га
         </span>
         <span class="rbt-land-free rbt-land-free--${tier}">
           свободно <b>${free.toLocaleString()}</b> га
@@ -132,222 +357,29 @@ function _rbtLandBar(region) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// КАРТОЧКИ СЛОТОВ
-// ──────────────────────────────────────────────────────────────
-
-// Карточка работающего здания
-function _rbtActiveCard(slot, regionId, nation, region) {
-  const bDef = (typeof BUILDINGS !== 'undefined') ? BUILDINGS[slot.building_id] : null;
-  if (!bDef) return '';
-
-  const level    = slot.level || 1;
-  // null = без верхнего предела (ограничено землёй/населением)
-  const maxLevel = bDef.max_level ?? Infinity;
-  const revenue  = slot.revenue ? Math.round(slot.revenue) : 0;
-  const wages    = slot.wages_paid ? Math.round(slot.wages_paid) : 0;
-
-  const workerLines = Object.entries(slot.workers || {}).map(([prof, cnt]) => {
-    const effective = cnt * level;
-    return `<span class="rbt-w-row">${_rbtProfLabel(prof)}: <b>${effective.toLocaleString()}</b></span>`;
-  }).join('');
-
-  const upgrading = (region.construction_queue || [])
-    .some(e => e.building_id === slot.building_id && e.is_upgrade);
-
-  // Здания с nation_buildable===false улучшаются только автономно (классами), не игроком
-  const canUpgrade = bDef.nation_buildable !== false;
-  const upgBtn = (canUpgrade && level < maxLevel && !upgrading)
-    ? `<button class="rbt-btn rbt-btn--upg"
-        onclick="uiOrderConstruction('${regionId}','${slot.building_id}')">▲ Улучшить до ур. ${level + 1}</button>`
-    : (upgrading ? `<span class="rbt-badge rbt-badge--wip">Улучшение…</span>` : '');
-
-  return `
-    <div class="rbt-card rbt-card--active">
-      <div class="rbt-card-head">
-        <span class="rbt-icon">${bDef.icon || '🏛'}</span>
-        <span class="rbt-bname">${bDef.name}</span>
-        ${level > 1 ? `<span class="rbt-badge rbt-badge--lvl">Ур. ${level}</span>` : ''}
-        <span class="rbt-badge rbt-badge--ok">Работает</span>
-      </div>
-      <div class="rbt-card-body">
-        <div class="rbt-wrows">${workerLines || '<span class="rbt-dim">Нет рабочих</span>'}</div>
-        <div class="rbt-rev">💰 ~${revenue} ден/ход</div>
-        ${wages > 0 ? `<div class="rbt-wages">👷 Зарплаты: ${wages} ден</div>` : ''}
-      </div>
-      <div class="rbt-card-foot">
-        ${upgBtn}
-        <button class="rbt-btn rbt-btn--dem"
-          onclick="uiDemolishBuilding('${regionId}','${slot.slot_id}')">Снести</button>
-      </div>
-    </div>
-  `;
-}
-
-// Карточка строящегося здания
-function _rbtQueueCard(entry, regionId) {
-  const bDef = (typeof BUILDINGS !== 'undefined') ? BUILDINGS[entry.building_id] : null;
-  if (!bDef) return '';
-
-  const pct    = entry.turns_total > 0
-    ? Math.round((1 - entry.turns_left / entry.turns_total) * 100)
-    : 0;
-  const refund = Math.round((bDef.cost || 0) * 0.5);
-
-  const isUpgrade = !!entry.is_upgrade;
-
-  return `
-    <div class="rbt-card rbt-card--queue">
-      <div class="rbt-card-head">
-        <span class="rbt-icon">${bDef.icon || '🏗'}</span>
-        <span class="rbt-bname">${bDef.name}</span>
-        <span class="rbt-badge rbt-badge--wip">${isUpgrade ? `Улучшение до ур. ${entry.to_level}` : 'Строится'}</span>
-      </div>
-      <div class="rbt-card-body">
-        <div class="rbt-prog-wrap"><div class="rbt-prog-bar" style="width:${pct}%"></div></div>
-        <div class="rbt-turns-left">
-          Осталось: <b>${entry.turns_left}</b> ход${_rbtTurnsSuffix(entry.turns_left)}
-        </div>
-      </div>
-      <div class="rbt-card-foot">
-        <button class="rbt-btn rbt-btn--cancel"
-          onclick="uiCancelConstruction('${regionId}','${entry.slot_id}')">
-          Отменить (+${refund} монет)
-        </button>
-      </div>
-    </div>
-  `;
-}
-
-// Карточка пустого слота
-function _rbtEmptyCard(regionId) {
-  return `
-    <div class="rbt-card rbt-card--empty" onclick="toggleBuildingChooser('${regionId}')">
-      <div class="rbt-empty-inner">
-        <span class="rbt-plus">＋</span>
-        <span class="rbt-empty-lbl">Построить</span>
-      </div>
-    </div>
-  `;
-}
-
-// ──────────────────────────────────────────────────────────────
-// СПИСОК ЗДАНИЙ-КАНДИДАТОВ
-// ──────────────────────────────────────────────────────────────
-
-function _rbtBuildingChooser(regionId, region, terrain, nation) {
-  // Скрываем здания, которые уже есть в регионе (для них есть кнопка «Улучшить» на карточке)
-  const builtIds = new Set(
-    (region.building_slots || [])
-      .filter(s => s.status !== 'demolished')
-      .map(s => s.building_id),
-  );
-  const inQueueIds = new Set(
-    (region.construction_queue || [])
-      .filter(e => !e.is_upgrade)
-      .map(e => e.building_id),
-  );
-
-  const compatible = (typeof getBuildingsForTerrain === 'function')
-    ? getBuildingsForTerrain(terrain, region).filter(b => !builtIds.has(b.id) && !inQueueIds.has(b.id))
-    : [];
-
-  if (!compatible.length) {
-    return '<div class="rbt-chooser hidden" id="rbt-chooser"></div>';
-  }
-
-  const treasury = nation?.economy?.treasury || 0;
-
-  const bCards = compatible.map(b => {
-    const check   = (typeof canBuildInRegion === 'function')
-      ? canBuildInRegion(b.id, region)
-      : { ok: true, reason: null };
-    const dynCost = (typeof calcConstructionCost === 'function')
-      ? calcConstructionCost(b.id)
-      : (b.cost || 0);
-
-    // Три порога доступности
-    let affordTier; // 'green' | 'yellow' | 'red'
-    if (treasury >= dynCost * 1.5) affordTier = 'green';
-    else if (treasury >= dynCost)  affordTier = 'yellow';
-    else                            affordTier = 'red';
-
-    const canAfford = (affordTier !== 'red');
-    const disabled  = !check.ok || !canAfford;
-    const reason    = !check.ok
-      ? check.reason
-      : (!canAfford ? `Нужно ${dynCost.toLocaleString()} монет` : null);
-
-    // Разбивка по материалам
-    const mats = b.construction_materials || {};
-    const matLines = Object.entries(mats).map(([good, amt]) => {
-      const g     = (typeof GOODS !== 'undefined') ? GOODS[good] : null;
-      const price = GAME_STATE?.market?.[good]?.price ?? g?.base_price ?? 0;
-      const total = Math.round(amt * price);
-      return `<span class="rbt-bc-mat">${g ? g.icon : '📦'}${amt}×${Math.round(price)}=${total}</span>`;
-    }).join('');
-
-    const totalWorkers = (b.worker_profession || []).reduce((s, wp) => s + wp.count, 0);
-    const prodItems    = (b.production_output || []).map(p => {
-      const g = (typeof GOODS !== 'undefined') ? GOODS[p.good] : null;
-      return `${g ? g.icon : '📦'} ${g ? g.name : p.good}`;
-    }).join(', ');
-
-    // Земельная строка
-    const footprint = b.footprint_ha ?? 0;
-    const freeHa    = region.land?.free_ha ?? null;
-    let landHtml = '';
-    if (footprint > 0) {
-      if (freeHa === null) {
-        landHtml = `<div class="rbt-bc-land">📐 ${footprint} га</div>`;
-      } else {
-        const landOk  = freeHa >= footprint;
-        const tierCls = landOk ? 'ok' : 'bad';
-        const sign    = landOk ? '✓' : '✗';
-        landHtml = `<div class="rbt-bc-land rbt-bc-land--${tierCls}">` +
-          `📐 ${footprint} га · свободно ${Math.round(freeHa).toLocaleString()} га ${sign}</div>`;
-      }
-    }
-
-    return `
-      <div class="rbt-bcard rbt-bcard--${affordTier}${disabled ? ' rbt-bcard--dis' : ''}"
-        ${disabled ? `title="${reason || ''}"` : `onclick="uiOrderConstruction('${regionId}','${b.id}')"`}>
-        <div class="rbt-bc-head">
-          <span class="rbt-bc-icon">${b.icon || '🏛'}</span>
-          <span class="rbt-bc-name">${b.name}</span>
-          <span class="rbt-bc-cost rbt-bc-cost--${affordTier}">💰${dynCost.toLocaleString()}</span>
-        </div>
-        <div class="rbt-bc-body">
-          ${totalWorkers > 0 ? `<div class="rbt-bc-wkr">👷 ${totalWorkers.toLocaleString()} рабочих</div>` : ''}
-          ${b.build_turns ? `<div class="rbt-bc-turns">⏳ ${b.build_turns} хода</div>` : ''}
-          ${prodItems ? `<div class="rbt-bc-prod">${prodItems}</div>` : ''}
-          ${landHtml}
-          ${matLines ? `<div class="rbt-bc-mats">${matLines}</div>` : ''}
-          ${reason ? `<div class="rbt-bc-reason">${reason}</div>` : ''}
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  return `
-    <div class="rbt-chooser hidden" id="rbt-chooser">
-      <div class="rbt-ch-hdr">
-        <span class="rbt-ch-title">Выбор здания</span>
-        <button class="rbt-ch-close" onclick="toggleBuildingChooser('${regionId}')">✕</button>
-      </div>
-      <div class="rbt-ch-treasury">Казна: ${Math.round(treasury).toLocaleString()} монет</div>
-      <div class="rbt-ch-grid">${bCards}</div>
-    </div>
-  `;
-}
-
-// ──────────────────────────────────────────────────────────────
 // ПУБЛИЧНЫЕ ОБРАБОТЧИКИ СОБЫТИЙ
 // ──────────────────────────────────────────────────────────────
 
-function toggleBuildingChooser(regionId) {
-  const ch = document.getElementById('rbt-chooser');
-  if (!ch) return;
-  ch.classList.toggle('hidden');
+function rbtToggleCategory(regionId, catId) {
+  const openCats = _getRbtOpenCats(regionId);
+  if (openCats.has(catId)) openCats.delete(catId);
+  else                      openCats.add(catId);
+
+  // Обновляем только этот блок без полного перерисования
+  const catEl  = document.getElementById(`rbt-cat-${regionId}-${catId}`);
+  if (!catEl) { showRegionInfo(regionId); return; }
+
+  const hdrEl  = catEl.querySelector('.rbt-ac-hdr');
+  const bodyEl = catEl.querySelector('.rbt-ac-body');
+  if (!hdrEl || !bodyEl) return;
+
+  if (openCats.has(catId)) {
+    hdrEl.classList.add('rbt-ac-hdr--open');
+    bodyEl.classList.add('rbt-ac-body--open');
+  } else {
+    hdrEl.classList.remove('rbt-ac-hdr--open');
+    bodyEl.classList.remove('rbt-ac-body--open');
+  }
 }
 
 function uiOrderConstruction(regionId, buildingId) {
@@ -359,14 +391,14 @@ function uiOrderConstruction(regionId, buildingId) {
     _activeRegionTab = 'build';
     showRegionInfo(regionId);
   } else {
-    // Показываем ошибку в шапке chooser
-    const ch = document.getElementById('rbt-chooser');
-    if (ch) {
-      let err = ch.querySelector('.rbt-err');
+    // Краткое уведомление в шапке панели (если есть rbt-hdr)
+    const wrap = document.querySelector('.rbt-wrap');
+    if (wrap) {
+      let err = wrap.querySelector('.rbt-err');
       if (!err) {
         err = document.createElement('div');
         err.className = 'rbt-err';
-        ch.insertBefore(err, ch.children[1] || null);
+        wrap.insertBefore(err, wrap.children[1] || null);
       }
       err.textContent = result.reason || 'Ошибка строительства';
       clearTimeout(err._tid);
@@ -399,7 +431,7 @@ function uiDemolishBuilding(regionId, slotId) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// ВСПОМОГАТЕЛЬНЫЕ УТИЛИТЫ
+// УТИЛИТЫ
 // ──────────────────────────────────────────────────────────────
 
 function _rbtProfLabel(prof) {
