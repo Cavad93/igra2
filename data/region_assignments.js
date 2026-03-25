@@ -2564,7 +2564,7 @@ var REGION_ASSIGNMENTS = {
   "r2176": "hipponion",
   "r2196": "apuania",
   "r2197": "etruscan_conf",
-  "r2198": "rome",
+  "r2198": "etruscan_conf",
   "r2205": "senones",
   "r2206": "senones",
   "r2207": "ravenna",
