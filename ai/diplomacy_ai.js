@@ -190,3 +190,154 @@ function parseDiplomacyTreaty(responseText) {
 function stripDiplomacyJSON(text) {
   return text.replace(/```(?:json)?\s*[\s\S]*?```/g, '').trim();
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ФАЗА 2: СОСТАВЛЕНИЕ ФИНАЛЬНОГО ТЕКСТА ДОГОВОРА
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Просит AI составить официальный текст договора на основе переговоров.
+ * @returns {Promise<string>} — полный текст договора
+ */
+async function callTreatyDraftAI(aiNationId, playerNationId, chatHistory, treatyType, conditions) {
+  if (!CONFIG.API_KEY) throw new Error('API ключ не установлен');
+
+  const aiNation     = GAME_STATE.nations[aiNationId];
+  const playerNation = GAME_STATE.nations[playerNationId];
+  const aiName     = aiNation?.name     ?? 'Иностранная держава';
+  const playerName = playerNation?.name ?? 'Ваша держава';
+  const aiRuler    = aiNation?.government?.ruler?.name ?? aiNation?.government?.ruler ?? 'Правитель';
+  const plRuler    = playerNation?.government?.ruler?.name ?? playerNation?.government?.ruler ?? 'Правитель';
+  const tDef       = typeof TREATY_TYPES !== 'undefined' ? (TREATY_TYPES[treatyType] ?? {}) : {};
+  const d          = GAME_STATE.date;
+  const year       = d?.year ?? d?.turn ?? 0;
+  const era        = year < 0 ? `${Math.abs(year)} г. до н.э.` : `${year} г. н.э.`;
+
+  // Краткий пересказ переговоров
+  const chatSummary = chatHistory.slice(-12).map(m =>
+    `${m.role === 'user' ? playerName : aiName}: ${(m.displayText ?? m.text ?? '').slice(0, 200)}`
+  ).join('\n');
+
+  const system = `Ты — опытный государственный писарь и правовед.
+Составляй официальные тексты договоров в стиле античности (Рим, Греция, Персия).
+Пиши на русском языке. Используй торжественный, официальный стиль.
+Никаких комментариев от себя — только текст самого документа.`;
+
+  const userPrompt = `Составь официальный текст договора «${tDef.label ?? treatyType}» между:
+— ${playerName} (${plRuler})
+— ${aiName} (${aiRuler})
+
+Год: ${era}
+
+Итог переговоров (последние реплики):
+${chatSummary}
+
+Особые условия: ${conditions?.notes ?? conditions?.duration ? `срок ${conditions.duration} ходов` : 'не указаны'}
+
+Структура документа:
+1. Преамбула (стороны, дата, место)
+2. Предмет договора (что договорились)
+3. Обязательства сторон (по пунктам)
+4. Срок действия
+5. Последствия нарушения
+6. Заключение и печати
+
+Длина: 250–400 слов. Только текст документа.`;
+
+  const response = await fetch(CONFIG.API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type':   'application/json',
+      'x-api-key':      CONFIG.API_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model:      CONFIG.MODEL_SONNET,
+      max_tokens: 1200,
+      system,
+      messages: [{ role: 'user', content: userPrompt }],
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text().catch(() => '');
+    throw new Error(`API ${response.status}: ${err.slice(0, 150)}`);
+  }
+  const data = await response.json();
+  const text = data.content?.[0]?.text;
+  if (!text) throw new Error('Пустой ответ при составлении договора');
+  return text.trim();
+}
+
+/**
+ * Просит AI внести правки в существующий черновик договора.
+ * @returns {Promise<{draftText: string, comment: string}>}
+ */
+async function callTreatyRevisionAI(aiNationId, playerNationId, currentDraft, editHistory, treatyType) {
+  if (!CONFIG.API_KEY) throw new Error('API ключ не установлен');
+
+  const aiNation     = GAME_STATE.nations[aiNationId];
+  const playerNation = GAME_STATE.nations[playerNationId];
+  const aiName   = aiNation?.name     ?? 'Иностранная держава';
+  const plName   = playerNation?.name ?? 'Ваша держава';
+  const aiRuler  = aiNation?.government?.ruler?.name ?? aiNation?.government?.ruler ?? 'Правитель';
+  const tDef     = typeof TREATY_TYPES !== 'undefined' ? (TREATY_TYPES[treatyType] ?? {}) : {};
+
+  // Последние правки
+  const lastEdit = editHistory.filter(m => m.role === 'user').slice(-1)[0]?.text ?? '';
+
+  const system = `Ты — ${aiRuler}, правитель ${aiName}.
+Ты рассматриваешь правки к тексту договора и либо принимаешь их, либо предлагаешь компромисс.
+Отвечай кратко (1-3 предложения) как государственный деятель античности.
+После своего ответа ОБЯЗАТЕЛЬНО предоставь обновлённый полный текст договора.
+
+Формат ответа:
+КОММЕНТАРИЙ: <твой ответ как правителя>
+---ДОГОВОР---
+<полный обновлённый текст договора>`;
+
+  const userPrompt = `Игрок (${plName}) запрашивает следующую правку к договору «${tDef.label ?? treatyType}»:
+"${lastEdit}"
+
+Текущий текст договора:
+${currentDraft}
+
+Внеси разумные правки (если они не ущемляют интересы ${aiName}) и предоставь обновлённый текст.`;
+
+  const response = await fetch(CONFIG.API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type':   'application/json',
+      'x-api-key':      CONFIG.API_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model:      CONFIG.MODEL_SONNET,
+      max_tokens: 1400,
+      system,
+      messages: [{ role: 'user', content: userPrompt }],
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text().catch(() => '');
+    throw new Error(`API ${response.status}: ${err.slice(0, 150)}`);
+  }
+
+  const data = await response.json();
+  const raw  = data.content?.[0]?.text ?? '';
+  if (!raw) throw new Error('Пустой ответ при правке договора');
+
+  // Парсим ответ: комментарий и новый текст договора
+  const sepIdx = raw.indexOf('---ДОГОВОР---');
+  if (sepIdx !== -1) {
+    const commentRaw  = raw.slice(0, sepIdx).replace(/^КОММЕНТАРИЙ:\s*/i, '').trim();
+    const newDraft    = raw.slice(sepIdx + 13).trim();
+    return { draftText: newDraft || currentDraft, comment: commentRaw || 'Правки внесены.' };
+  }
+
+  // Если разделитель не найден — вернуть оригинал с комментарием
+  return { draftText: currentDraft, comment: raw.slice(0, 300).trim() };
+}

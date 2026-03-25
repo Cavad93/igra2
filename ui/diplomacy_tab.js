@@ -10,9 +10,24 @@
 let _dpSelectedNation = null;     // string|null
 let _dpTab            = 'negotiations'; // 'negotiations' | 'treaties'
 
+// Состояние текущего открытого чат-модала
+let _dpChatModalNation = null;    // aiNationId открытого модала
+
 const _dtState = {};
 function _getDtState(id) {
-  if (!_dtState[id]) _dtState[id] = { selectedTreaty: null, isLoading: false };
+  if (!_dtState[id]) {
+    _dtState[id] = {
+      selectedTreaty: null,
+      isLoading:      false,
+      // Фаза переговоров: 'chat' | 'finalization' | 'signed'
+      phase:          'chat',
+      agreedTreaty:   null,  // { type, conditions } — согласованный договор
+      draftText:      '',    // текст договора в фазе финализации
+      finDialogue:    [],    // [{role, text}] — правки в фазе финализации
+      isFinLoading:   false,
+      draftVersion:   0,
+    };
+  }
   return _dtState[id];
 }
 
@@ -444,8 +459,7 @@ function dtSelectTreaty(aiNationId, key) {
   _dpRender();
 }
 
-async function dtSendMessage(aiNationId) {
-  const playerNationId = GAME_STATE.player_nation;
+function dtSendMessage(aiNationId) {
   const inputEl = document.getElementById(`dp-input-${aiNationId}`);
   if (!inputEl) return;
 
@@ -456,57 +470,9 @@ async function dtSendMessage(aiNationId) {
     return;
   }
 
-  const st = _getDtState(aiNationId);
-  if (st.isLoading) return;
-
-  let fullText = text;
-  if (st.selectedTreaty && TREATY_TYPES?.[st.selectedTreaty]) {
-    const d = TREATY_TYPES[st.selectedTreaty];
-    fullText = `[Предложение: ${d.icon} ${d.label}]\n${text}`;
-  }
-
-  if (typeof DiplomacyEngine !== 'undefined') {
-    DiplomacyEngine.addMessage(playerNationId, aiNationId, 'user', fullText, text);
-  }
-
   inputEl.value = '';
-  st.isLoading  = true;
-  _dpRender();
-
-  try {
-    const dialogue    = typeof DiplomacyEngine !== 'undefined'
-      ? DiplomacyEngine.getDialogue(playerNationId, aiNationId) : [];
-    const apiMessages = dialogue.map(m => ({
-      role:    m.role === 'user' ? 'user' : 'assistant',
-      content: m.text,
-    }));
-
-    const raw     = await callDiplomacyAI(aiNationId, playerNationId, apiMessages);
-    const treaty  = parseDiplomacyTreaty(raw);
-    const display = stripDiplomacyJSON(raw);
-
-    if (typeof DiplomacyEngine !== 'undefined') {
-      DiplomacyEngine.addMessage(playerNationId, aiNationId, 'assistant', raw, display);
-    }
-
-    if (treaty?.agreed === true && treaty.treaty_type) {
-      _dtFinalizeTreaty(playerNationId, aiNationId, treaty, dialogue);
-    } else if (treaty?.agreed === false) {
-      if (typeof DiplomacyEngine !== 'undefined' && st.selectedTreaty) {
-        DiplomacyEngine.recordRejection(playerNationId, aiNationId, st.selectedTreaty);
-      }
-      st.selectedTreaty = null;
-    }
-  } catch (err) {
-    console.error('[dtSendMessage]', err);
-    if (typeof DiplomacyEngine !== 'undefined') {
-      DiplomacyEngine.addMessage(playerNationId, aiNationId, 'system',
-        `[Ошибка: ${err.message}]`, `⚠ Ошибка связи: ${err.message}`);
-    }
-  } finally {
-    st.isLoading = false;
-    _dpRender();
-  }
+  // Открываем большой чат-модал и отправляем первое сообщение
+  showDipChatModal(aiNationId, text);
 }
 
 function dtClearDialogue(aiNationId) {
@@ -546,6 +512,520 @@ function _dtFinalizeTreaty(playerNationId, aiNationId, treaty, dialogueLog) {
     addLogEntry('diplomacy', `${def?.icon ?? '📜'} Подписан "${def?.label ?? treaty.treaty_type}" между ${pName} и ${aName}.`);
   }
   _getDtState(aiNationId).selectedTreaty = null;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ЧАТ-МОДАЛ: ПЕРЕГОВОРНЫЙ ЗАЛ (МЕССЕНДЖЕР-СТИЛЬ)
+// Фаза 1: свободный диалог → Фаза 2: финализация и подписание договора
+// ══════════════════════════════════════════════════════════════════════════════
+
+function showDipChatModal(aiNationId, firstMessage) {
+  const modal = document.getElementById('dp-chat-modal');
+  if (!modal) return;
+  _dpChatModalNation = aiNationId;
+  const st = _getDtState(aiNationId);
+  // Сбрасываем фазу если предыдущий договор уже подписан
+  if (st.phase === 'signed') {
+    st.phase = 'chat';
+    st.agreedTreaty = null;
+    st.draftText = '';
+    st.finDialogue = [];
+  }
+  modal.classList.remove('hidden');
+  _renderChatModal();
+  if (firstMessage && firstMessage.trim()) {
+    _dpChatSendActual(aiNationId, firstMessage.trim());
+  }
+}
+
+function hideDipChatModal() {
+  document.getElementById('dp-chat-modal')?.classList.add('hidden');
+  _dpChatModalNation = null;
+}
+
+// ── Главный рендер модала ─────────────────────────────────────
+function _renderChatModal() {
+  const modal = document.getElementById('dp-chat-modal');
+  if (!modal) return;
+  const aiId = _dpChatModalNation;
+  if (!aiId) { modal.classList.add('hidden'); return; }
+
+  const playerNationId = GAME_STATE.player_nation;
+  const aiNation    = GAME_STATE.nations[aiId];
+  const playerNation = GAME_STATE.nations[playerNationId];
+  if (!aiNation) return;
+
+  const st      = _getDtState(aiId);
+  const aiFlag  = aiNation.flag_emoji ?? '🏛';
+  const aiName  = aiNation.name;
+  const aiRuler = aiNation.government?.ruler?.name ?? aiNation.government?.ruler ?? 'Правитель';
+  const rel     = _dpRelObj(playerNationId, aiId);
+  const atWar   = typeof DiplomacyEngine !== 'undefined'
+    && DiplomacyEngine.isAtWar?.(playerNationId, aiId);
+  const pct     = Math.round(((rel.score ?? 0) + 100) / 2);
+
+  const phaseBadge = st.phase === 'chat'
+    ? `<span class="dp-cm-phase-badge dp-cm-phase-badge--chat">● Фаза I · Переговоры</span>`
+    : st.phase === 'finalization'
+    ? `<span class="dp-cm-phase-badge dp-cm-phase-badge--draft">● Фаза II · Финализация договора</span>`
+    : `<span class="dp-cm-phase-badge dp-cm-phase-badge--final">✓ Договор подписан</span>`;
+
+  const treatyTag = st.selectedTreaty && TREATY_TYPES?.[st.selectedTreaty]
+    ? `<span class="dp-cm-hdr-treaty">${TREATY_TYPES[st.selectedTreaty].icon} ${TREATY_TYPES[st.selectedTreaty].label}</span>`
+    : st.agreedTreaty && TREATY_TYPES?.[st.agreedTreaty.type]
+    ? `<span class="dp-cm-hdr-treaty" style="border-color:rgba(76,175,80,.5);background:rgba(76,175,80,.1);color:#a5d6a7">${TREATY_TYPES[st.agreedTreaty.type].icon} ${TREATY_TYPES[st.agreedTreaty.type].label}</span>`
+    : '';
+
+  let bodyHtml = '';
+  if (st.phase === 'chat') {
+    bodyHtml = _renderCmChatPhase(aiId, st, aiNation, playerNation);
+  } else if (st.phase === 'finalization') {
+    bodyHtml = _renderCmFinalizationPhase(aiId, st, aiNation, playerNation);
+  } else {
+    bodyHtml = _renderCmSignedPhase(aiId, st, aiNation);
+  }
+
+  modal.innerHTML = `
+    <div class="dp-cm-backdrop" onclick="hideDipChatModal()"></div>
+    <div class="dp-cm-panel">
+      <div class="dp-cm-hdr">
+        <div class="dp-cm-hdr-left">
+          <div class="dp-cm-avatar">${aiFlag}</div>
+          <div class="dp-cm-hdr-info">
+            <div class="dp-cm-hdr-name">${aiName}</div>
+            <div class="dp-cm-hdr-sub">${aiRuler}${aiNation.government?.type ? ' · ' + aiNation.government.type : ''}</div>
+          </div>
+          ${phaseBadge}
+          ${treatyTag}
+        </div>
+        <div class="dp-cm-hdr-rel">
+          <div class="dp-cm-hdr-relbar">
+            <div class="dp-cm-hdr-relfill" style="width:${pct}%;background:${rel.color}"></div>
+          </div>
+          <div class="dp-cm-hdr-rellbl" style="color:${rel.color}">
+            ${atWar ? '⚔ ВОЙНА' : (rel.icon ?? '') + ' ' + (rel.label ?? '') + ' (' + (rel.score >= 0 ? '+' : '') + rel.score + ')'}
+          </div>
+        </div>
+        <button class="dp-cm-close" onclick="hideDipChatModal()" title="Закрыть">✕</button>
+      </div>
+      ${bodyHtml}
+    </div>`;
+
+  // Прокрутить чат вниз
+  requestAnimationFrame(() => {
+    const chatEl = document.getElementById('dp-cm-msgs-' + aiId);
+    if (chatEl) chatEl.scrollTop = chatEl.scrollHeight;
+    const editEl = document.getElementById('dp-cm-edit-' + aiId);
+    if (editEl) editEl.scrollTop = editEl.scrollHeight;
+  });
+}
+
+// ── Фаза 1: мессенджер ───────────────────────────────────────
+function _renderCmChatPhase(aiId, st, aiNation, playerNation) {
+  const playerNationId = GAME_STATE.player_nation;
+  const aiFlag   = aiNation.flag_emoji ?? '🏛';
+  const aiRuler  = aiNation.government?.ruler?.name ?? aiNation.government?.ruler ?? 'Правитель';
+  const plFlag   = playerNation?.flag_emoji ?? '👑';
+  const plName   = playerNation?.name ?? 'Вы';
+
+  const dialogue = typeof DiplomacyEngine !== 'undefined'
+    ? DiplomacyEngine.getDialogue(playerNationId, aiId) : [];
+
+  let msgsHtml;
+  if (dialogue.length === 0 && !st.isLoading) {
+    msgsHtml = `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-dim);text-align:center">
+      <div style="font-size:52px;opacity:.3">${aiFlag}</div>
+      <div style="font-family:'Cinzel',serif;font-size:14px">Начните переговоры</div>
+      <div style="font-size:11px;max-width:280px;opacity:.7">Напишите обращение к ${aiRuler} — выберите тип договора и изложите условия</div>
+    </div>`;
+  } else {
+    msgsHtml = dialogue.map(m => {
+      const isPlayer = m.role === 'user';
+      const isSys    = m.role === 'system';
+      const cls = isPlayer ? 'dp-cm-msg dp-cm-msg--player' : isSys ? 'dp-cm-msg dp-cm-msg--sys' : 'dp-cm-msg dp-cm-msg--ai';
+      const av  = isPlayer ? plFlag : isSys ? '' : aiFlag;
+      const nm  = isPlayer ? plName : isSys ? '' : aiRuler;
+      const txt = _escHtml(m.displayText ?? m.text);
+      if (isSys) {
+        return `<div class="${cls}"><div class="dp-cm-bubble">${txt}</div></div>`;
+      }
+      return `<div class="${cls}">
+        <div class="dp-cm-msg-av">${av}</div>
+        <div class="dp-cm-msg-body">
+          ${nm ? `<div class="dp-cm-msg-name">${nm}</div>` : ''}
+          <div class="dp-cm-bubble">${txt}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    if (st.isLoading) {
+      msgsHtml += `<div class="dp-cm-msg dp-cm-msg--ai">
+        <div class="dp-cm-msg-av">${aiFlag}</div>
+        <div class="dp-cm-msg-body">
+          <div class="dp-cm-msg-name">${aiRuler}</div>
+          <div class="dp-cm-bubble dp-cm-typing"><span></span><span></span><span></span></div>
+        </div>
+      </div>`;
+    }
+  }
+
+  // Если AI согласился — показываем баннер перехода к финализации
+  const agreedBanner = (!st.isLoading && st.agreedTreaty) ? `
+    <div style="
+      margin: 0 24px 12px;
+      padding: 12px 18px;
+      background: rgba(76,175,80,.08);
+      border: 1px solid rgba(76,175,80,.35);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    ">
+      <span style="font-size:24px">${TREATY_TYPES?.[st.agreedTreaty.type]?.icon ?? '📜'}</span>
+      <div style="flex:1;font-size:12px;color:#c8e6c9;line-height:1.5">
+        <strong style="color:#a5d6a7">Соглашение достигнуто!</strong><br>
+        ${aiRuler} согласился на «${TREATY_TYPES?.[st.agreedTreaty.type]?.label ?? st.agreedTreaty.type}».
+        Перейдите к составлению финального текста.
+      </div>
+      <button onclick="dpEndNegotiations('${aiId}')" style="
+        background: linear-gradient(135deg, rgba(76,175,80,.45), rgba(40,110,45,.3));
+        border: 1px solid rgba(76,175,80,.55);
+        border-radius: 5px;
+        color: #c8e6c9;
+        font-size: 12px;
+        font-family: 'Cinzel', serif;
+        padding: 8px 16px;
+        cursor: pointer;
+        white-space: nowrap;
+        letter-spacing: 0.04em;
+        transition: all .15s;
+      ">📜 К финализации →</button>
+    </div>` : '';
+
+  const placeholder = st.selectedTreaty && TREATY_TYPES?.[st.selectedTreaty]
+    ? `Обратитесь к ${aiRuler} по поводу «${TREATY_TYPES[st.selectedTreaty].label}»...`
+    : `Напишите обращение к ${aiRuler}...`;
+
+  return `
+    <div class="dp-cm-body">
+      <div class="dp-cm-messages" id="dp-cm-msgs-${aiId}">${msgsHtml}</div>
+      ${agreedBanner}
+      <div class="dp-cm-compose">
+        <div class="dp-cm-compose-row">
+          <textarea class="dp-cm-textarea" id="dp-cm-input-${aiId}" rows="3"
+            placeholder="${placeholder}"
+            onkeydown="if(event.ctrlKey&&event.key==='Enter')dpChatSend('${aiId}')"
+            ${st.isLoading ? 'disabled' : ''}></textarea>
+          <div class="dp-cm-btns">
+            <button class="dp-cm-send" id="dp-cm-send-${aiId}"
+              onclick="dpChatSend('${aiId}')"
+              ${st.isLoading ? 'disabled' : ''}>
+              ${st.isLoading
+                ? `<span class="dp-btn-dots"><span></span><span></span><span></span></span>`
+                : '📨 Отправить'}
+            </button>
+            <button class="dp-cm-end-btn" onclick="dpEndNegotiations('${aiId}')"
+              ${st.isLoading ? 'disabled' : ''}>
+              ${st.agreedTreaty ? '📜 Финализировать →' : dialogue.length > 0 ? '🚪 Прервать' : '✕ Закрыть'}
+            </button>
+          </div>
+        </div>
+        <div class="dp-cm-hint">Ctrl+Enter — отправить · Выберите тип договора в главном окне</div>
+      </div>
+    </div>`;
+}
+
+// ── Фаза 2: финализация договора ─────────────────────────────
+function _renderCmFinalizationPhase(aiId, st, aiNation, playerNation) {
+  const def = st.agreedTreaty ? TREATY_TYPES?.[st.agreedTreaty.type] : null;
+  const treatyLabel = def ? `${def.icon} ${def.label}` : '📜 Договор';
+  const aiRuler = aiNation.government?.ruler?.name ?? aiNation.government?.ruler ?? 'Правитель';
+  const plFlag  = playerNation?.flag_emoji ?? '👑';
+
+  // Текст договора
+  let docContent;
+  if (st.isFinLoading && !st.draftText) {
+    docContent = `<div class="dp-cm-doc-loading">
+      <div class="dp-cm-doc-loading-dots"><span></span><span></span><span></span></div>
+      <div>${aiRuler} составляет текст договора...</div>
+    </div>`;
+  } else if (st.draftText) {
+    docContent = `<div class="dp-cm-doc-text">${_escHtml(st.draftText)}</div>`;
+  } else {
+    docContent = `<div class="dp-cm-doc-loading">
+      <div style="font-size:32px;opacity:.3">📜</div>
+      <div>Текст договора будет здесь</div>
+    </div>`;
+  }
+
+  // История правок
+  const editsHtml = st.finDialogue.map(m => {
+    const cls = m.role === 'user' ? 'dp-cm-edit-msg dp-cm-edit-msg--player'
+              : m.role === 'system' ? 'dp-cm-edit-msg dp-cm-edit-msg--sys'
+              : 'dp-cm-edit-msg dp-cm-edit-msg--ai';
+    return `<div class="${cls}">${_escHtml(m.text)}</div>`;
+  }).join('');
+
+  if (st.isFinLoading && st.draftText) {
+    // AI обрабатывает правку
+  }
+
+  const canSign = !!st.draftText && !st.isFinLoading;
+
+  return `
+    <div class="dp-cm-final-body">
+      <!-- Документ договора -->
+      <div class="dp-cm-doc-pane">
+        <div class="dp-cm-doc-hdr">
+          <div class="dp-cm-doc-title">${treatyLabel}</div>
+          <div class="dp-cm-doc-subtitle">
+            ${aiNation.flag_emoji ?? '🏛'} ${aiNation.name} &nbsp;↔&nbsp; ${playerNation?.flag_emoji ?? '👑'} ${playerNation?.name ?? 'Ваша держава'}
+            · Версия ${st.draftVersion + 1}
+          </div>
+        </div>
+        <div class="dp-cm-doc-scroll">${docContent}</div>
+      </div>
+
+      <!-- Правки и подписание -->
+      <div class="dp-cm-edit-pane">
+        <div class="dp-cm-edit-hdr">
+          <div class="dp-cm-edit-hdr-title">Обсуждение условий</div>
+          <div class="dp-cm-edit-hdr-sub">Предложите правки или запросите изменения</div>
+        </div>
+        <div class="dp-cm-edit-chat" id="dp-cm-edit-${aiId}">
+          ${editsHtml || `<div style="padding:16px;font-size:11px;color:var(--text-dim);text-align:center">
+            Стороны согласовали основные условия.<br>Вы можете запросить правки или подписать договор.
+          </div>`}
+          ${st.isFinLoading ? `<div class="dp-cm-edit-msg dp-cm-edit-msg--ai">
+            <span class="dp-btn-dots"><span></span><span></span><span></span></span> ${aiRuler} отвечает...
+          </div>` : ''}
+        </div>
+        <div class="dp-cm-edit-compose">
+          <textarea class="dp-cm-edit-textarea" id="dp-cm-edit-input-${aiId}"
+            placeholder="Запросите правки или уточнения..."
+            onkeydown="if(event.ctrlKey&&event.key==='Enter')dpFinalizeSend('${aiId}')"
+            ${st.isFinLoading ? 'disabled' : ''}></textarea>
+          <div class="dp-cm-edit-btns">
+            <button class="dp-cm-edit-send"
+              onclick="dpFinalizeSend('${aiId}')"
+              ${st.isFinLoading || !st.draftText ? 'disabled' : ''}>
+              💬 Запросить правку
+            </button>
+          </div>
+        </div>
+        <div class="dp-cm-sign-bar">
+          <div class="dp-cm-sign-status">
+            ${canSign
+              ? '✅ Договор готов к подписанию. Обе стороны могут принять условия.'
+              : '⏳ Ожидание текста договора...'}
+          </div>
+          <button class="dp-cm-sign-btn" onclick="dpSignTreaty('${aiId}')"
+            ${canSign ? '' : 'disabled'}>
+            ✍ Подписать
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Экран «Договор подписан» ──────────────────────────────────
+function _renderCmSignedPhase(aiId, st, aiNation) {
+  const def    = st.agreedTreaty ? TREATY_TYPES?.[st.agreedTreaty.type] : null;
+  const icon   = def?.icon ?? '📜';
+  const label  = def?.label ?? 'Договор';
+  const ruler  = aiNation.government?.ruler?.name ?? aiNation.government?.ruler ?? 'Правитель';
+  return `
+    <div class="dp-cm-signed">
+      <div class="dp-cm-signed-seal">${icon}</div>
+      <div class="dp-cm-signed-title">Договор подписан!</div>
+      <div class="dp-cm-signed-sub">
+        «${label}» между <strong>${GAME_STATE.nations[GAME_STATE.player_nation]?.name ?? 'вами'}</strong> и
+        <strong>${aiNation.name}</strong> скреплён печатью.<br>
+        ${ruler} благодарит за плодотворные переговоры.
+      </div>
+      <button class="dp-cm-signed-close" onclick="hideDipChatModal();_dpRender()">
+        Закрыть переговорный зал
+      </button>
+    </div>`;
+}
+
+// ── Отправить сообщение в фазе 1 ─────────────────────────────
+function dpChatSend(aiNationId) {
+  const inputEl = document.getElementById(`dp-cm-input-${aiNationId}`);
+  if (!inputEl) return;
+  const text = inputEl.value.trim();
+  if (!text) return;
+  const st = _getDtState(aiNationId);
+  if (st.isLoading) return;
+  inputEl.value = '';
+  _dpChatSendActual(aiNationId, text);
+}
+
+async function _dpChatSendActual(aiNationId, text) {
+  const playerNationId = GAME_STATE.player_nation;
+  const st = _getDtState(aiNationId);
+
+  let fullText = text;
+  if (st.selectedTreaty && TREATY_TYPES?.[st.selectedTreaty]) {
+    const d = TREATY_TYPES[st.selectedTreaty];
+    fullText = `[Предложение: ${d.icon} ${d.label}]\n${text}`;
+  }
+
+  if (typeof DiplomacyEngine !== 'undefined') {
+    DiplomacyEngine.addMessage(playerNationId, aiNationId, 'user', fullText, text);
+  }
+
+  st.isLoading = true;
+  _renderChatModal();
+
+  try {
+    const dialogue    = typeof DiplomacyEngine !== 'undefined'
+      ? DiplomacyEngine.getDialogue(playerNationId, aiNationId) : [];
+    const apiMessages = dialogue.map(m => ({
+      role:    m.role === 'user' ? 'user' : 'assistant',
+      content: m.text,
+    }));
+
+    const raw     = await callDiplomacyAI(aiNationId, playerNationId, apiMessages);
+    const treaty  = parseDiplomacyTreaty(raw);
+    const display = stripDiplomacyJSON(raw);
+
+    if (typeof DiplomacyEngine !== 'undefined') {
+      DiplomacyEngine.addMessage(playerNationId, aiNationId, 'assistant', raw, display);
+    }
+
+    if (treaty?.agreed === true && treaty.treaty_type) {
+      // AI согласился — сохраняем и переходим к финализации
+      st.agreedTreaty = { type: treaty.treaty_type, conditions: treaty.conditions ?? {} };
+      // Не сохраняем как финальный договор пока — это делается при подписании
+      st.selectedTreaty = null;
+    } else if (treaty?.agreed === false) {
+      if (typeof DiplomacyEngine !== 'undefined' && st.selectedTreaty) {
+        DiplomacyEngine.recordRejection(playerNationId, aiNationId, st.selectedTreaty);
+      }
+      st.selectedTreaty = null;
+    }
+  } catch (err) {
+    console.error('[dpChatSend]', err);
+    if (typeof DiplomacyEngine !== 'undefined') {
+      DiplomacyEngine.addMessage(playerNationId, aiNationId, 'system',
+        `[Ошибка: ${err.message}]`, `⚠ Ошибка связи: ${err.message}`);
+    }
+  } finally {
+    st.isLoading = false;
+    _renderChatModal();
+  }
+}
+
+// ── Завершить фазу 1 переговоров ─────────────────────────────
+function dpEndNegotiations(aiNationId) {
+  const st = _getDtState(aiNationId);
+  if (st.isLoading) return;
+  const dialogue = typeof DiplomacyEngine !== 'undefined'
+    ? DiplomacyEngine.getDialogue(GAME_STATE.player_nation, aiNationId) : [];
+
+  if (!st.agreedTreaty) {
+    // Нет договорённости — просто закрыть
+    hideDipChatModal();
+    return;
+  }
+
+  // Есть договорённость — перейти к финализации
+  st.phase = 'finalization';
+  _renderChatModal();
+  // Автоматически запросить черновик у AI
+  _dpRequestDraftFromAI(aiNationId);
+}
+
+// ── Запросить черновик договора у AI ─────────────────────────
+async function _dpRequestDraftFromAI(aiNationId) {
+  const playerNationId = GAME_STATE.player_nation;
+  const st = _getDtState(aiNationId);
+  if (!st.agreedTreaty) return;
+
+  st.isFinLoading = true;
+  _renderChatModal();
+
+  try {
+    const chatHistory = typeof DiplomacyEngine !== 'undefined'
+      ? DiplomacyEngine.getDialogue(playerNationId, aiNationId) : [];
+
+    const draftText = await callTreatyDraftAI(
+      aiNationId, playerNationId,
+      chatHistory, st.agreedTreaty.type, st.agreedTreaty.conditions
+    );
+
+    st.draftText    = draftText;
+    st.draftVersion = 0;
+    st.finDialogue.push({ role: 'system', text: '📜 Первый вариант договора составлен. Ознакомьтесь и предложите правки или подпишите.' });
+  } catch (err) {
+    console.error('[_dpRequestDraftFromAI]', err);
+    st.finDialogue.push({ role: 'system', text: `⚠ Ошибка составления договора: ${err.message}` });
+  } finally {
+    st.isFinLoading = false;
+    _renderChatModal();
+  }
+}
+
+// ── Отправить правку в фазе финализации ──────────────────────
+async function dpFinalizeSend(aiNationId) {
+  const inputEl = document.getElementById(`dp-cm-edit-input-${aiNationId}`);
+  if (!inputEl) return;
+  const text = inputEl.value.trim();
+  if (!text) return;
+  const st = _getDtState(aiNationId);
+  if (st.isFinLoading || !st.draftText) return;
+
+  inputEl.value = '';
+  st.finDialogue.push({ role: 'user', text });
+  st.isFinLoading = true;
+  _renderChatModal();
+
+  try {
+    const playerNationId = GAME_STATE.player_nation;
+    const result = await callTreatyRevisionAI(
+      aiNationId, playerNationId,
+      st.draftText, st.finDialogue, st.agreedTreaty?.type
+    );
+
+    st.draftText = result.draftText;
+    st.draftVersion++;
+    st.finDialogue.push({ role: 'assistant', text: result.comment });
+    if (result.comment.toLowerCase().includes('изменени') || result.comment.toLowerCase().includes('обновл')) {
+      st.finDialogue.push({ role: 'system', text: `📝 Версия ${st.draftVersion + 1}: договор обновлён по вашему запросу.` });
+    }
+  } catch (err) {
+    console.error('[dpFinalizeSend]', err);
+    st.finDialogue.push({ role: 'system', text: `⚠ Ошибка: ${err.message}` });
+  } finally {
+    st.isFinLoading = false;
+    _renderChatModal();
+  }
+}
+
+// ── Подписать договор ─────────────────────────────────────────
+function dpSignTreaty(aiNationId) {
+  const playerNationId = GAME_STATE.player_nation;
+  const st = _getDtState(aiNationId);
+  if (!st.agreedTreaty || !st.draftText) return;
+
+  const dialogue = typeof DiplomacyEngine !== 'undefined'
+    ? DiplomacyEngine.getDialogue(playerNationId, aiNationId) : [];
+
+  const conditions = {
+    ...st.agreedTreaty.conditions,
+    notes: st.draftText.slice(0, 500),
+  };
+
+  _dtFinalizeTreaty(playerNationId, aiNationId, {
+    agreed: true,
+    treaty_type: st.agreedTreaty.type,
+    conditions,
+  }, dialogue);
+
+  st.phase = 'signed';
+  _renderChatModal();
+  _dpRender(); // Обновить основное окно
 }
 
 function _getForeignNations(playerNationId) {
