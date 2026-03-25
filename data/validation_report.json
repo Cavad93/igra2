@@ -1,11 +1,11 @@
 {
-  "generated": "2026-03-25T05:40:07.768Z",
+  "generated": "2026-03-25T05:48:32.468Z",
   "summary": {
     "total": 858,
-    "ok": 313,
-    "warn": 8,
+    "ok": 314,
+    "warn": 10,
     "error": 0,
-    "no_match": 537,
+    "no_match": 534,
     "fixes_applied": 0
   },
   "ok": [
@@ -875,7 +875,7 @@
     },
     {
       "id": "judea",
-      "method": "geo",
+      "method": "manual",
       "claude_cap": {
         "lat": 31.77,
         "lon": 35.23
@@ -887,6 +887,22 @@
       "pleiades_title": "Ierusalem|Hierosolyma|Col. Aelia Capitolina",
       "pleiades_type": "settlement",
       "dist_deg": 0.01,
+      "in_bbox": true
+    },
+    {
+      "id": "atropatene",
+      "method": "manual",
+      "claude_cap": {
+        "lat": 37.5,
+        "lon": 46
+      },
+      "pleiades_cap": {
+        "lat": 38.5,
+        "lon": 45.5
+      },
+      "pleiades_title": "Media Atropatene",
+      "pleiades_type": "unknown",
+      "dist_deg": 1.12,
       "in_bbox": true
     },
     {
@@ -5132,6 +5148,38 @@
       "in_bbox": true
     },
     {
+      "id": "getae",
+      "method": "manual",
+      "claude_cap": {
+        "lat": 44.5,
+        "lon": 28
+      },
+      "pleiades_cap": {
+        "lat": 44.5,
+        "lon": 25.5
+      },
+      "pleiades_title": "Getae",
+      "pleiades_type": "people",
+      "dist_deg": 2.5,
+      "in_bbox": false
+    },
+    {
+      "id": "nabataea",
+      "method": "manual",
+      "claude_cap": {
+        "lat": 30.32,
+        "lon": 35.44
+      },
+      "pleiades_cap": {
+        "lat": 29.25,
+        "lon": 33.25
+      },
+      "pleiades_title": "Nabataei",
+      "pleiades_type": "people",
+      "dist_deg": 2.44,
+      "in_bbox": false
+    },
+    {
       "id": "arachosia",
       "method": "manual",
       "claude_cap": {
@@ -5167,14 +5215,6 @@
       "reason": "not_in_pleiades"
     },
     {
-      "id": "nabataea",
-      "reason": "not_in_pleiades"
-    },
-    {
-      "id": "atropatene",
-      "reason": "not_in_pleiades"
-    },
-    {
       "id": "odrysian_kingdom",
       "reason": "not_in_pleiades"
     },
@@ -5192,10 +5232,6 @@
     },
     {
       "id": "liburnians",
-      "reason": "not_in_pleiades"
-    },
-    {
-      "id": "getae",
       "reason": "not_in_pleiades"
     },
     {

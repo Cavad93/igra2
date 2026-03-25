@@ -112,30 +112,39 @@ for (const [nationId, newRegions] of Object.entries(nationToRegions)) {
   const hasRIds = currentRegions.some(r => /^r\d+$/.test(r));
   if (hasRIds) continue;
 
-  // Ищем строку с ключом нации: 2-4 пробела, id, ': {', конец строки
-  // (чтобы не поймать nation в блоке relations: там после { есть content)
   const esc = nationId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const nationKeyRe = new RegExp(`^ {2,4}${esc}\\s*:\\s*\\{\\s*$`);
-  const nationLineIdx = nationsLines.findIndex(l => nationKeyRe.test(l));
-  if (nationLineIdx === -1) {
-    console.log(`  ⚠ не найдена строка нации: ${nationId}`);
-    continue;
-  }
 
-  // В следующих 200 строках ищем "regions: [...]"
-  const regionsRe = /^(\s*regions\s*:\s*)\[([^\]]*)\]/;
+  // Попытка 1: многострочный формат — ключ нации на отдельной строке: '  id: {'
+  const nationKeyRe = new RegExp(`^ {2,4}"?${esc}"?\\s*:\\s*\\{\\s*$`);
+  const nationLineIdx = nationsLines.findIndex(l => nationKeyRe.test(l));
   let patched = false;
-  const searchEnd = Math.min(nationLineIdx + 200, nationsLines.length);
-  for (let i = nationLineIdx + 1; i < searchEnd; i++) {
-    const m = regionsRe.exec(nationsLines[i]);
-    if (m) {
-      const trailingComma = nationsLines[i].trimEnd().endsWith(',') ? ',' : '';
-      nationsLines[i] = `${m[1]}${JSON.stringify(newRegions)}${trailingComma}`;
+
+  if (nationLineIdx !== -1) {
+    // Ищем "regions: [...]" в следующих 200 строках
+    const regionsRe = /^(\s*"?regions"?\s*:\s*)\[([^\]]*)\]/;
+    const searchEnd = Math.min(nationLineIdx + 200, nationsLines.length);
+    for (let i = nationLineIdx + 1; i < searchEnd; i++) {
+      const m = regionsRe.exec(nationsLines[i]);
+      if (m) {
+        const trailingComma = nationsLines[i].trimEnd().endsWith(',') ? ',' : '';
+        nationsLines[i] = `${m[1]}${JSON.stringify(newRegions)}${trailingComma}`;
+        patched = true;
+        natChanged++;
+        break;
+      }
+    }
+  } else {
+    // Попытка 2: компактный JSON формат — всё на одной строке: '"id": {...,"regions":[],...}'
+    const compactRe = new RegExp(`(^\\s*"${esc}"\\s*:.*?"regions"\\s*:\\s*)\\[[^\\]]*\\]`);
+    const lineIdx = nationsLines.findIndex(l => compactRe.test(l));
+    if (lineIdx !== -1) {
+      nationsLines[lineIdx] = nationsLines[lineIdx].replace(compactRe,
+        (m, pre) => `${pre}${JSON.stringify(newRegions)}`);
       patched = true;
       natChanged++;
-      break;
     }
   }
+
   if (!patched) {
     console.log(`  ⚠ не удалось патчить nations.js для: ${nationId}`);
   }

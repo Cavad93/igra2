@@ -129,17 +129,26 @@ const MANUAL_MAP = {
   // Балканы / Причерноморье
   scythians:         'Scythia',
   sarmatia:          'Sarmatia',
-  getae:             'Getai',
+  getae:             'Getae',
   dacians:           'Dacia',
   illyria:           'Illyria',
   bosporan_kingdom:  'Panticapaeum',
+  odrysian_kingdom:  'Odrysai',
+  // Северная Африка / Германия / Галлия
+  germani:           'Germania',
+  balts:             'Galindae',
+  gaul:              'Lugdunum',       // крупнейший галльский город
+  roxolani:          'Roxolani',
+  // Испания
+  iberian_coast:     'Iberia',
   // Кавказ
   colchis:           'Kolchis',
   armenia:           'Armenia',
-  atropatene:        'Atropatene',
+  atropatene:        'Media Atropatene',
   // Ближний Восток
-  nabataea:          'Arabia Nabataea',
-  judaea:            'Ioudaia',
+  nabataea:          'Nabataei',
+  judea:             'Ierusalem',
+  judaea:            'Ierusalem',
   phoenicia:         'Phoenice',
   // Восточная Азия
   qin:               'Qin',
@@ -275,7 +284,7 @@ function findPleiades(nationId, geo) {
     const key = norm(manualTitle);
     const hits = pIdx[key] ?? [];
     // Для ручной карты допускаем расширенный bbox (зоны могут быть большими)
-    const inBox = hits.filter(p => nearBbox(p.lat, p.lon, bbox, 3.0));
+    const inBox = hits.filter(p => nearBbox(p.lat, p.lon, bbox, 5.0));
     if (inBox.length > 0) {
       inBox.sort((a, b) => dist(capLat, capLon, a.lat, a.lon) - dist(capLat, capLon, b.lat, b.lon));
       return { place: inBox[0], method: 'manual' };
