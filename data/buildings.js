@@ -30,8 +30,7 @@ const BUILDINGS = {
     category:    'infrastructure',
     footprint_ha: 8,   // причалы, склады, акватория
     // timber×10(220) + iron×5(225) + tools×3(105) = 550; labor=250 → ~800
-    construction_materials: { timber: 10, iron: 5, tools: 3 },
-    construction_labor:     250,
+    construction_materials: { timber: 20, stone: 10, iron: 8, pitch: 5, tools: 6 },
 
     worker_profession: [
       { profession: 'sailors',   count: 250 },
@@ -65,8 +64,7 @@ const BUILDINGS = {
     category:    'infrastructure',
     footprint_ha: 12,  // стапели, мастерские, береговая полоса
     // timber×20(440) + iron×10(450) + tools×5(175) = 1065; labor=135 → ~1200
-    construction_materials: { timber: 20, iron: 10, tools: 5 },
-    construction_labor:     135,
+    construction_materials: { timber: 30, stone: 8, iron: 12, pitch: 8, tools: 8 },
 
     worker_profession: [
       { profession: 'craftsmen', count: 300 },
@@ -97,8 +95,7 @@ const BUILDINGS = {
     category:    'infrastructure',
     footprint_ha: 2,   // городская площадь с лавками
     // timber×8(176) + tools×4(140) = 316; labor=284 → ~600
-    construction_materials: { timber: 8, tools: 4 },
-    construction_labor:     284,
+    construction_materials: { timber: 15, stone: 12, tools: 6 },
 
     worker_profession: [
       { profession: 'merchants', count: 200 },
@@ -135,8 +132,7 @@ const BUILDINGS = {
     category:    'infrastructure',
     footprint_ha: 1,   // линейная инфраструктура, минимальный отвод земли
     // timber×8(176) + iron×8(360) + tools×6(210) = 746; labor=254 → ~1000
-    construction_materials: { timber: 8, iron: 8, tools: 6 },
-    construction_labor:     254,
+    construction_materials: { stone: 40, timber: 5, iron: 8, tools: 8 },
 
     worker_profession: [
       { profession: 'craftsmen', count: 50 },  // техобслуживание
@@ -167,8 +163,7 @@ const BUILDINGS = {
     category:    'infrastructure',
     footprint_ha: 3,   // складские помещения и двор
     // timber×10(220) + tools×3(105) = 325; labor=125 → ~450
-    construction_materials: { timber: 10, tools: 3 },
-    construction_labor:     125,
+    construction_materials: { timber: 20, stone: 8, tools: 5 },
 
     worker_profession: [
       { profession: 'merchants', count: 100 },
@@ -201,8 +196,7 @@ const BUILDINGS = {
     category:    'military',
     footprint_ha: 6,   // казармы, плац, конюшни
     // timber×10(220) + iron×5(225) + tools×4(140) = 585; labor=115 → ~700
-    construction_materials: { timber: 10, iron: 5, tools: 4 },
-    construction_labor:     115,
+    construction_materials: { timber: 15, stone: 20, iron: 8, tools: 6 },
 
     worker_profession: [
       { profession: 'soldiers', count: 500 },
@@ -232,8 +226,7 @@ const BUILDINGS = {
     category:    'military',
     footprint_ha: 5,   // периметр стен и эспланада
     // timber×5(110) + iron×15(675) + tools×10(350) = 1135; labor=365 → ~1500
-    construction_materials: { timber: 5, iron: 15, tools: 10 },
-    construction_labor:     365,
+    construction_materials: { stone: 60, timber: 10, iron: 20, tools: 12 },
 
     worker_profession: [
       { profession: 'soldiers', count: 100 },  // стражники
@@ -268,8 +261,7 @@ const BUILDINGS = {
     category:    'agriculture',
     footprint_ha: 200,  // выгоны и луга для скота
     // timber×5(110) + tools×2(70) = 180; labor=120 → ~300
-    construction_materials: { timber: 5, tools: 2 },
-    construction_labor:     120,
+    construction_materials: { timber: 12, tools: 3 },
 
     worker_profession: [
       { profession: 'farmers', count: 300 },
@@ -299,8 +291,7 @@ const BUILDINGS = {
     category:    'agriculture',
     footprint_ha: 2,   // амбары и двор
     // timber×8(176) + tools×4(140) = 316; labor=184 → ~500
-    construction_materials: { timber: 8, tools: 4 },
-    construction_labor:     184,
+    construction_materials: { timber: 20, stone: 10, tools: 5 },
 
     worker_profession: [
       { profession: 'farmers', count: 50 },
@@ -336,8 +327,7 @@ const BUILDINGS = {
     category:    'agriculture',
     footprint_ha: 30,  // сеть каналов и водозаборов
     // timber×10(220) + iron×10(450) + tools×8(280) = 950; labor=150 → ~1100
-    construction_materials: { timber: 10, iron: 10, tools: 8 },
-    construction_labor:     150,
+    construction_materials: { timber: 15, stone: 20, iron: 8, tools: 8 },
 
     worker_profession: [
       { profession: 'farmers', count: 100 },
@@ -373,8 +363,7 @@ const BUILDINGS = {
     category:    'culture',
     footprint_ha: 2,   // теменос, постройки, священная роща
     // timber×12(264) + tools×6(210) = 474; labor=326 → ~800
-    construction_materials: { timber: 12, tools: 6 },
-    construction_labor:     326,
+    construction_materials: { timber: 15, stone: 30, tools: 8 },
 
     worker_profession: [
       { profession: 'clergy', count: 150 },
@@ -413,8 +402,7 @@ const BUILDINGS = {
     category:    'culture',
     footprint_ha: 4,   // трасса акведука и водонапорные башни
     // timber×8(176) + iron×20(900) + tools×15(525) = 1601; labor=399 → ~2000
-    construction_materials: { timber: 8, iron: 20, tools: 15 },
-    construction_labor:     399,
+    construction_materials: { stone: 50, iron: 20, timber: 10, tools: 15 },
 
     worker_profession: [
       { profession: 'craftsmen', count: 100 },
@@ -453,8 +441,7 @@ const BUILDINGS = {
     category:    'culture',
     footprint_ha: 1,   // здание и двор для упражнений
     // timber×10(220) + tools×5(175) = 395; labor=305 → ~700
-    construction_materials: { timber: 10, tools: 5 },
-    construction_labor:     305,
+    construction_materials: { timber: 15, stone: 15, tools: 6 },
 
     worker_profession: [
       { profession: 'clergy', count: 80 },
@@ -484,8 +471,7 @@ const BUILDINGS = {
     category:    'culture',
     footprint_ha: 2,   // площадь с портиками и трибунами
     // timber×8(176) + tools×4(140) = 316; labor=284 → ~600
-    construction_materials: { timber: 8, tools: 4 },
-    construction_labor:     284,
+    construction_materials: { timber: 12, stone: 25, iron: 8, tools: 8 },
 
     worker_profession:   [],
     wage_rate:           0.00,
@@ -522,8 +508,7 @@ const BUILDINGS = {
     category:    'culture',
     footprint_ha: 1,   // здание с двором
     // timber×5(110) + tools×2(70) = 180; labor=70 → ~250
-    construction_materials: { timber: 5, tools: 2 },
-    construction_labor:     70,
+    construction_materials: { timber: 12, stone: 5, tools: 4 },
 
     worker_profession: [
       { profession: 'craftsmen', count: 50 },
@@ -562,8 +547,7 @@ const BUILDINGS = {
     category:    'culture',
     footprint_ha: 2,   // здание с бассейнами и садиком
     // timber×6(132) + iron×4(180) + tools×3(105) = 417; labor=283 → ~700
-    construction_materials: { timber: 6, iron: 4, tools: 3 },
-    construction_labor:     283,
+    construction_materials: { stone: 30, timber: 10, iron: 8, tools: 8 },
 
     worker_profession: [
       { profession: 'slaves', count: 80 },
@@ -605,8 +589,7 @@ const BUILDINGS = {
     category:    'production',
     footprint_ha: 3,   // цеха и склад материалов
     // timber×8(176) + iron×4(180) + tools×4(140) = 496; labor=154 → ~650
-    construction_materials: { timber: 8, iron: 4, tools: 4 },
-    construction_labor:     154,
+    construction_materials: { timber: 12, iron: 6, tools: 6 },
 
     worker_profession: [
       { profession: 'craftsmen', count: 400 },
@@ -641,8 +624,7 @@ const BUILDINGS = {
     category:    'production',
     footprint_ha: 20,  // карьер, отвалы, обогатительный двор
     // timber×12(264) + iron×6(270) + tools×6(210) = 744; labor=106 → ~850
-    construction_materials: { timber: 12, iron: 6, tools: 6 },
-    construction_labor:     106,
+    construction_materials: { timber: 16, iron: 6, tools: 8 },
 
     worker_profession: [
       { profession: 'craftsmen', count: 200 },
@@ -676,8 +658,7 @@ const BUILDINGS = {
     category:    'production',
     footprint_ha: 15,  // соляные выпарные бассейны
     // timber×6(132) + tools×4(140) = 272; labor=328 → ~600
-    construction_materials: { timber: 6, tools: 4 },
-    construction_labor:     328,
+    construction_materials: { timber: 15, stone: 10, tools: 6 },
 
     worker_profession: [
       { profession: 'craftsmen', count: 200 },
@@ -706,8 +687,7 @@ const BUILDINGS = {
     category:    'production',
     footprint_ha: 150, // делянка леса под вырубку
     // timber×4(88) + iron×2(90) + tools×3(105) = 283; labor=67 → ~350
-    construction_materials: { timber: 4, iron: 2, tools: 3 },
-    construction_labor:     67,
+    construction_materials: { timber: 6, iron: 4, tools: 5 },
 
     worker_profession: [
       { profession: 'farmers', count: 300 },
@@ -736,8 +716,7 @@ const BUILDINGS = {
     category:    'production',
     footprint_ha: 2,   // мастерская с обжиговыми печами
     // timber×7(154) + tools×4(140) = 294; labor=106 → ~400
-    construction_materials: { timber: 7, tools: 4 },
-    construction_labor:     106,
+    construction_materials: { timber: 8, stone: 4, tools: 4 },
 
     worker_profession: [
       { profession: 'craftsmen', count: 200 },
@@ -765,8 +744,7 @@ const BUILDINGS = {
     category:    'production',
     footprint_ha: 4,   // давильня и сборный двор
     // timber×6(132) + tools×3(105) = 237; labor=113 → ~350
-    construction_materials: { timber: 6, tools: 3 },
-    construction_labor:     113,
+    construction_materials: { timber: 10, stone: 5, iron: 4, tools: 5 },
 
     worker_profession: [
       { profession: 'farmers', count: 100 },
@@ -800,8 +778,7 @@ const BUILDINGS = {
     category:    'production',
     footprint_ha: 10,  // погреба, давильня, небольшой виноградник
     // timber×8(176) + tools×3(105) = 281; labor=169 → ~450
-    construction_materials: { timber: 8, tools: 3 },
-    construction_labor:     169,
+    construction_materials: { timber: 12, stone: 8, tools: 5 },
 
     worker_profession: [
       { profession: 'craftsmen', count: 150 },
@@ -853,8 +830,7 @@ const BUILDINGS = {
     efficiency_mult: 1.0,
 
     // timber×2(44) + tools×1(35) = 79; labor=21 → ~100
-    construction_materials: { timber: 2, tools: 1 },
-    construction_labor:     21,
+    construction_materials: { timber: 3, tools: 1 },
 
     worker_profession: [
       { profession: 'farmers', count: 5 },  // 5 чел./ферму
@@ -912,8 +888,7 @@ const BUILDINGS = {
     efficiency_mult: 1.05,
 
     // timber×3(66) + tools×2(70) = 136; labor=114 → ~250
-    construction_materials: { timber: 3, tools: 2 },
-    construction_labor:     114,
+    construction_materials: { timber: 6, tools: 2 },
 
     worker_profession: [
       { profession: 'farmers', count: 20 },
@@ -963,8 +938,7 @@ const BUILDINGS = {
     efficiency_mult: 1.4,
 
     // timber×10(220) + iron×4(180) + tools×6(210) = 610; labor=390 → ~1500 с наценкой
-    construction_materials: { timber: 10, iron: 4, tools: 6 },
-    construction_labor:     390,
+    construction_materials: { timber: 20, stone: 15, iron: 6, tools: 8 },
 
     worker_profession: [
       { profession: 'farmers', count: 55 },
@@ -1017,8 +991,7 @@ const BUILDINGS = {
     efficiency_mult: 1.3,
 
     // timber×6(132) + iron×2(90) + tools×3(105) = 327; labor=273 → ~600
-    construction_materials: { timber: 6, iron: 2, tools: 3 },
-    construction_labor:     273,
+    construction_materials: { timber: 12, stone: 8, tools: 4 },
 
     worker_profession: [
       { profession: 'farmers', count: 15 },  // 15 чел./виллу
@@ -1073,8 +1046,7 @@ const BUILDINGS = {
     efficiency_mult: 1.8,
 
     // timber×15(330) + iron×8(360) + tools×8(280) = 970; labor=530 → ~2500 с наценкой
-    construction_materials: { timber: 15, iron: 8, tools: 8 },
-    construction_labor:     530,
+    construction_materials: { timber: 25, stone: 20, iron: 10, tools: 12 },
 
     worker_profession: [
       { profession: 'farmers', count: 50 },
@@ -1133,8 +1105,7 @@ const BUILDINGS = {
     efficiency_mult: 1.0,
 
     // timber×4(88) + tools×2(70) = 158; labor=242 → ~400
-    construction_materials: { timber: 4, tools: 2 },
-    construction_labor:     242,
+    construction_materials: { timber: 12, iron: 4, tools: 4 },
 
     worker_profession: [
       { profession: 'farmers', count: 8 },
@@ -1174,8 +1145,7 @@ const BUILDINGS = {
     efficiency_mult: 1.0,
 
     // timber×3(66) + tools×1(35) = 101; labor=149 → ~250
-    construction_materials: { timber: 3, tools: 1 },
-    construction_labor:     149,
+    construction_materials: { timber: 8, tools: 3 },
 
     worker_profession: [
       { profession: 'farmers', count: 6 },
@@ -1211,8 +1181,7 @@ const BUILDINGS = {
     category:    'production',
     footprint_ha: 15,  // шахты, отвалы, производственный двор
     // timber×10(220) + iron×5(225) + tools×4(140) = 585; labor=115 → ~700
-    construction_materials: { timber: 10, iron: 5, tools: 4 },
-    construction_labor:     115,
+    construction_materials: { timber: 16, iron: 6, tools: 8 },
 
     worker_profession: [
       { profession: 'craftsmen', count: 100 },
@@ -1244,8 +1213,7 @@ const BUILDINGS = {
     category:    'production',
     footprint_ha: 3,   // береговые постройки и причал
     // timber×8(176) + tools×4(140) = 316; labor=184 → ~500
-    construction_materials: { timber: 8, tools: 4 },
-    construction_labor:     184,
+    construction_materials: { timber: 15, pitch: 4, iron: 4, tools: 5 },
 
     worker_profession: [
       { profession: 'sailors',   count: 200 },
@@ -1285,8 +1253,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.25,
     labor_type:         'mixed',
-    construction_materials: { timber: 8, iron: 6, tools: 4 },
-    construction_labor:     152,
+    construction_materials: { timber: 15, iron: 15, stone: 10, charcoal: 10, tools: 6 },
     build_turns:        3,
     autonomous_builder: 'craftsmen_class',
     nation_buildable:   true,
@@ -1334,8 +1301,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.08,
     labor_type:         'slave',
-    construction_materials: { timber: 14, iron: 4, tools: 6 },
-    construction_labor:     196,
+    construction_materials: { timber: 20, iron: 8, tools: 10 },
     build_turns:        5,
     autonomous_builder: null,
     nation_buildable:   true,
@@ -1377,8 +1343,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.08,
     labor_type:         'slave',
-    construction_materials: { timber: 12, iron: 4, tools: 5 },
-    construction_labor:     179,
+    construction_materials: { timber: 18, iron: 6, tools: 8 },
     build_turns:        5,
     autonomous_builder: null,
     nation_buildable:   true,
@@ -1420,8 +1385,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.06,
     labor_type:         'slave',
-    construction_materials: { timber: 18, iron: 8, tools: 8 },
-    construction_labor:     286,
+    construction_materials: { timber: 25, iron: 10, tools: 12 },
     build_turns:        6,
     autonomous_builder: null,
     nation_buildable:   true,
@@ -1463,8 +1427,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.25,
     labor_type:         'mixed',
-    construction_materials: { timber: 3, tools: 1 },
-    construction_labor:     76,
+    construction_materials: { timber: 8, tools: 2 },
     build_turns:        1,
     autonomous_builder: null,
     nation_buildable:   true,
@@ -1505,8 +1468,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.24,
     labor_type:         'mixed',
-    construction_materials: { timber: 10, iron: 5, tools: 5 },
-    construction_labor:     180,
+    construction_materials: { timber: 12, stone: 8, copper: 5, charcoal: 8, tools: 6 },
     build_turns:        4,
     autonomous_builder: null,
     nation_buildable:   true,
@@ -1550,8 +1512,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.28,
     labor_type:         'wage',
-    construction_materials: { timber: 6, tools: 3 },
-    construction_labor:     124,
+    construction_materials: { timber: 12, iron: 4, tools: 5 },
     build_turns:        2,
     autonomous_builder: 'craftsmen_class',
     nation_buildable:   true,
@@ -1592,8 +1553,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.27,
     labor_type:         'mixed',
-    construction_materials: { timber: 6, tools: 3 },
-    construction_labor:     134,
+    construction_materials: { timber: 10, tools: 5 },
     build_turns:        2,
     autonomous_builder: 'craftsmen_class',
     nation_buildable:   true,
@@ -1632,8 +1592,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.35,
     labor_type:         'free',
-    construction_materials: { timber: 2, tools: 1 },
-    construction_labor:     27,
+    construction_materials: { timber: 5, tools: 2 },
     build_turns:        1,
     autonomous_builder: 'farmers_class',
     nation_buildable:   false,
@@ -1672,8 +1631,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.30,
     labor_type:         'free',
-    construction_materials: { timber: 7, tools: 3 },
-    construction_labor:     130,
+    construction_materials: { timber: 12, pitch: 3, tools: 4 },
     build_turns:        2,
     autonomous_builder: 'sailors_class',
     nation_buildable:   true,
@@ -1711,8 +1669,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.28,
     labor_type:         'free',
-    construction_materials: { timber: 7, stone: 3, tools: 3 },
-    construction_labor:     120,
+    construction_materials: { timber: 10, stone: 6, tools: 5 },
     build_turns:        2,
     autonomous_builder: 'sailors_class',
     nation_buildable:   true,
@@ -1752,8 +1709,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.28,
     labor_type:         'wage',
-    construction_materials: { timber: 4, tools: 2 },
-    construction_labor:     86,
+    construction_materials: { timber: 8, stone: 4, iron: 3, tools: 4 },
     build_turns:        1,
     autonomous_builder: null,
     nation_buildable:   true,
@@ -1793,8 +1749,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.12,
     labor_type:         'mixed',
-    construction_materials: { timber: 8, iron: 4, tools: 5 },
-    construction_labor:     143,
+    construction_materials: { timber: 12, iron: 8, tools: 10 },
     build_turns:        3,
     autonomous_builder: null,
     nation_buildable:   true,
@@ -1836,8 +1791,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.22,
     labor_type:         'mixed',
-    construction_materials: { timber: 6, stone: 4, tools: 3 },
-    construction_labor:     137,
+    construction_materials: { timber: 10, stone: 6, iron: 4, tools: 5 },
     build_turns:        3,
     autonomous_builder: null,
     nation_buildable:   true,
@@ -1878,8 +1832,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.30,
     labor_type:         'wage',
-    construction_materials: { timber: 8, tools: 4 },
-    construction_labor:     158,
+    construction_materials: { timber: 12, stone: 5, tools: 5 },
     build_turns:        2,
     autonomous_builder: null,
     nation_buildable:   true,
@@ -1919,8 +1872,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.30,
     labor_type:         'mixed',
-    construction_materials: { timber: 3, tools: 2 },
-    construction_labor:     95,
+    construction_materials: { timber: 8, tools: 3 },
     build_turns:        3,
     autonomous_builder: 'farmers_class',
     nation_buildable:   true,
@@ -1962,8 +1914,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.05,
     labor_type:         'slave',
-    construction_materials: { timber: 16, iron: 8, tools: 8 },
-    construction_labor:     312,
+    construction_materials: { timber: 28, iron: 12, tools: 14 },
     build_turns:        6,
     autonomous_builder: null,
     nation_buildable:   true,
@@ -2004,8 +1955,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.30,
     labor_type:         'tenant',
-    construction_materials: { timber: 2, tools: 1 },
-    construction_labor:     67,
+    construction_materials: { timber: 4, tools: 2 },
     build_turns:        1,
     autonomous_builder: 'farmers_class',
     nation_buildable:   true,
@@ -2047,8 +1997,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.25,
     labor_type:         'mixed',
-    construction_materials: { timber: 5, tools: 2 },
-    construction_labor:     83,
+    construction_materials: { timber: 10, tools: 3 },
     build_turns:        2,
     autonomous_builder: null,
     nation_buildable:   true,
@@ -2089,8 +2038,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.32,
     labor_type:         'free',
-    construction_materials: { timber: 3, tools: 1 },
-    construction_labor:     56,
+    construction_materials: { timber: 6, pitch: 3, tools: 2 },
     build_turns:        1,
     autonomous_builder: 'farmers_class',
     nation_buildable:   true,
@@ -2127,8 +2075,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.35,
     labor_type:         'free',
-    construction_materials: { timber: 2, tools: 1 },
-    construction_labor:     47,
+    construction_materials: { timber: 4, tools: 2 },
     build_turns:        1,
     autonomous_builder: 'farmers_class',
     nation_buildable:   true,
@@ -2166,8 +2113,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.08,
     labor_type:         'slave',
-    construction_materials: { timber: 12, iron: 5, tools: 6 },
-    construction_labor:     207,
+    construction_materials: { timber: 20, iron: 8, tools: 10 },
     build_turns:        5,
     autonomous_builder: null,
     nation_buildable:   true,
@@ -2208,8 +2154,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.30,
     labor_type:         'free',
-    construction_materials: { timber: 3, tools: 2 },
-    construction_labor:     115,
+    construction_materials: { timber: 5, stone: 3, tools: 2 },
     build_turns:        2,
     autonomous_builder: 'farmers_class',
     nation_buildable:   true,
@@ -2246,8 +2191,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.28,
     labor_type:         'wage',
-    construction_materials: { timber: 6, stone: 3, tools: 3 },
-    construction_labor:     128,
+    construction_materials: { timber: 10, stone: 8, iron: 3, tools: 5 },
     build_turns:        2,
     autonomous_builder: null,
     nation_buildable:   true,
@@ -2286,8 +2230,7 @@ const BUILDINGS = {
     ],
     wage_rate:          0.25,
     labor_type:         'wage',
-    construction_materials: { timber: 12, iron: 4, tools: 4 },
-    construction_labor:     230,
+    construction_materials: { timber: 18, stone: 8, iron: 8, tools: 8 },
     build_turns:        4,
     autonomous_builder: null,
     nation_buildable:   true,
@@ -2321,8 +2264,7 @@ const BUILDINGS = {
     category:    'production',
     footprint_ha: 8,   // прибрежные заросли вдоль Кианы
     // timber×5(110) + tools×3(105) = 215; labor=185 → ~400
-    construction_materials: { timber: 5, tools: 3 },
-    construction_labor:     185,
+    construction_materials: { timber: 6, tools: 3 },
 
     worker_profession: [
       { profession: 'farmers', count: 80 },

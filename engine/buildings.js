@@ -1650,15 +1650,18 @@ function getUnemploymentRates(nation) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// 8. ДИНАМИЧЕСКАЯ СТОИМОСТЬ СТРОИТЕЛЬСТВА (Этап 5)
+// 8. ДИНАМИЧЕСКАЯ СТОИМОСТЬ СТРОИТЕЛЬСТВА
 //
 // calcConstructionCost(buildingId) — пересчитывается каждый раз
 // из текущих рыночных цен; НЕ кэшируется в GAME_STATE.
 //
-//   cost = Σ(material.amount × market.price) + construction_labor
+//   cost = Σ(material.qty × market.price) × 1.20
 //
-// Если market.price недоступен, используется base_price из GOODS.
+// ×1.20 — надбавка на труд строителей (наём, питание, инструменты).
+// Если рыночная цена недоступна, берётся base_price из GOODS.
 // ──────────────────────────────────────────────────────────────
+
+const CONSTRUCTION_LABOR_SURCHARGE = 1.20;   // 20% на труд строителей
 
 function calcConstructionCost(buildingId) {
   const bDef = BUILDINGS[buildingId];
@@ -1670,7 +1673,28 @@ function calcConstructionCost(buildingId) {
       ?? (typeof GOODS !== 'undefined' ? (GOODS[good]?.base_price ?? 0) : 0);
     matCost += amount * price;
   }
-  return Math.round(matCost + (bDef.construction_labor ?? bDef.cost ?? 0));
+  return Math.round(matCost * CONSTRUCTION_LABOR_SURCHARGE);
+}
+
+// Детальный расчёт для UI — возвращает разбивку по материалам
+function calcConstructionCostDetailed(buildingId) {
+  const bDef = BUILDINGS[buildingId];
+  if (!bDef) return { total: 0, matCost: 0, laborCost: 0, lines: [] };
+  const mats = bDef.construction_materials || {};
+  const lines = [];
+  let matCost = 0;
+  for (const [good, amount] of Object.entries(mats)) {
+    const price = GAME_STATE.market?.[good]?.price
+      ?? (typeof GOODS !== 'undefined' ? (GOODS[good]?.base_price ?? 0) : 0);
+    const subtotal = amount * price;
+    matCost += subtotal;
+    const goodDef = typeof GOODS !== 'undefined' ? GOODS[good] : null;
+    lines.push({ good, amount, price: Math.round(price), subtotal: Math.round(subtotal),
+                 icon: goodDef?.icon ?? '📦', name: goodDef?.name ?? good });
+  }
+  const laborCost = Math.round(matCost * (CONSTRUCTION_LABOR_SURCHARGE - 1));
+  const total     = Math.round(matCost * CONSTRUCTION_LABOR_SURCHARGE);
+  return { total, matCost: Math.round(matCost), laborCost, lines };
 }
 
 // ──────────────────────────────────────────────────────────────

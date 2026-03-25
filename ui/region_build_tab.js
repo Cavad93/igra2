@@ -256,10 +256,12 @@ function _rbtAvailRow(b, regionId, region, nation, slotsLeft) {
     ? canBuildInRegion(b.id, region)
     : { ok: true, reason: null };
 
-  const dynCost   = (typeof calcConstructionCost === 'function')
-    ? calcConstructionCost(b.id)
-    : (b.cost || 0);
-  const treasury  = nation?.economy?.treasury || 0;
+  // Детальный расчёт стоимости (материалы × рыночная цена × 1.2)
+  const detail  = (typeof calcConstructionCostDetailed === 'function')
+    ? calcConstructionCostDetailed(b.id)
+    : { total: b.cost || 0, lines: [], laborCost: 0 };
+  const dynCost = detail.total;
+  const treasury = nation?.economy?.treasury || 0;
 
   let costTier, costCls;
   if (treasury >= dynCost * 1.5) { costTier = 'ok';  costCls = 'rbt-ac-cost--ok'; }
@@ -283,11 +285,21 @@ function _rbtAvailRow(b, regionId, region, nation, slotsLeft) {
     reason   = `Нужно ${dynCost.toLocaleString()}`;
   }
 
+  // Строка иконок материалов с количеством (кликабельный тултип)
+  const matIcons = detail.lines.map(l =>
+    `<span class="rbt-ac-mat" title="${l.name}: ${l.amount}×${l.price}=${l.subtotal}">` +
+    `${l.icon}${l.amount}</span>`
+  ).join('');
+  // Tooltip с полной разбивкой для кнопки ＋
+  const matTooltip = detail.lines.map(l =>
+    `${l.icon} ${l.name}: ${l.amount} × ${l.price} = ${l.subtotal}`
+  ).join('\n') + `\nТруд (+20%): ${detail.laborCost}\nИТОГО: ${dynCost}`;
+
   const totalWorkers = (b.worker_profession || []).reduce((s, wp) => s + wp.count, 0);
 
   const addBtn = `<button class="rbt-ac-btn rbt-ac-btn--add"
       ${disabled ? 'disabled' : `onclick="uiOrderConstruction('${regionId}','${b.id}')"`}
-      title="${reason || 'Построить'}">＋</button>`;
+      title="${disabled ? (reason || 'Недоступно') : matTooltip}">＋</button>`;
 
   const rowCls = disabled ? 'rbt-ac-row rbt-ac-row--avail rbt-ac-row--noafford' : 'rbt-ac-row rbt-ac-row--avail';
 
@@ -296,6 +308,7 @@ function _rbtAvailRow(b, regionId, region, nation, slotsLeft) {
       <span class="rbt-ac-bicon">${b.icon || '🏛'}</span>
       <span class="rbt-ac-bname">${b.name}</span>
       ${reason ? `<span class="rbt-ac-reason" title="${reason}">${reason}</span>` : ''}
+      ${matIcons ? `<span class="rbt-ac-mats">${matIcons}</span>` : ''}
       ${totalWorkers > 0 ? `<span class="rbt-ac-workers">${totalWorkers.toLocaleString()} раб.</span>` : ''}
       <span class="rbt-ac-cost ${costCls}">💰${dynCost.toLocaleString()}</span>
       <span class="rbt-ac-actions">${addBtn}</span>
