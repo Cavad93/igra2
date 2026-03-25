@@ -711,7 +711,7 @@ function _migrateCharacterSenateFields() {
     syracuse: typeof INITIAL_CHARACTERS_SYRACUSE !== 'undefined' ? INITIAL_CHARACTERS_SYRACUSE : [],
     rome:     typeof INITIAL_SENATORS_ROME        !== 'undefined' ? INITIAL_SENATORS_ROME        : [],
     carthage: typeof INITIAL_COUNCIL_CARTHAGE     !== 'undefined' ? INITIAL_COUNCIL_CARTHAGE     : [],
-    egypt:    typeof INITIAL_COURT_EGYPT          !== 'undefined' ? INITIAL_COURT_EGYPT          : [],
+    ptolemaic_kingdom: typeof INITIAL_COURT_EGYPT !== 'undefined' ? INITIAL_COURT_EGYPT          : [],
     macedon:  typeof INITIAL_HETAIROI_MACEDON     !== 'undefined' ? INITIAL_HETAIROI_MACEDON     : [],
     numidia:  typeof INITIAL_ELDERS_NUMIDIA       !== 'undefined' ? INITIAL_ELDERS_NUMIDIA       : [],
   };
@@ -748,7 +748,9 @@ function initGame() {
   GAME_STATE.nations.rome.characters = JSON.parse(JSON.stringify(INITIAL_SENATORS_ROME));
   // Загружаем акторов остальных наций
   GAME_STATE.nations.carthage.characters = JSON.parse(JSON.stringify(INITIAL_COUNCIL_CARTHAGE));
-  GAME_STATE.nations.egypt.characters    = JSON.parse(JSON.stringify(INITIAL_COURT_EGYPT));
+  if (GAME_STATE.nations.ptolemaic_kingdom) {
+    GAME_STATE.nations.ptolemaic_kingdom.characters = JSON.parse(JSON.stringify(INITIAL_COURT_EGYPT));
+  }
   GAME_STATE.nations.macedon.characters  = JSON.parse(JSON.stringify(INITIAL_HETAIROI_MACEDON));
   GAME_STATE.nations.numidia.characters  = JSON.parse(JSON.stringify(INITIAL_ELDERS_NUMIDIA));
 
