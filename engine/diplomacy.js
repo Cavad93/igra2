@@ -597,10 +597,16 @@ function _calcTriangularBalance(nationA, nationB) {
   const candidates = largMap
     ? Object.keys(GAME_STATE.diplomacy.relations)
         .filter(k => k.includes(nationA) || k.includes(nationB))
-        .flatMap(k => k.split('_'))
-        .filter(id => id !== nationA && id !== nationB && GAME_STATE.nations?.[id])
-        // уникальные
-        .filter((id, i, arr) => arr.indexOf(id) === i)
+        .flatMap(k => {
+          for (let si = 1; si < k.length; si++) {
+            if (k[si] === '_') {
+              const left = k.slice(0, si), right = k.slice(si + 1);
+              if (GAME_STATE.nations?.[left] && GAME_STATE.nations?.[right]) return [left, right];
+            }
+          }
+          return [];
+        })
+        .filter((id, i, arr) => id !== nationA && id !== nationB && arr.indexOf(id) === i)
     : nids.filter(id => id !== nationA && id !== nationB);
 
   let balance = 0;
@@ -629,10 +635,12 @@ function _calcMemoryDecay(nationA, nationB) {
   const events = rel.events || [];
   const now    = GAME_STATE.turn || 1;
   const LAMBDA = 0.10;
+  const MAX_AGE = 50; // e^(-0.1*50) ≈ 0.007, negligible
 
   let sum = 0;
   for (const ev of events) {
     const age = Math.max(0, now - ev.turn);
+    if (age > MAX_AGE) continue; // skip negligible old events
     sum += ev.delta * Math.exp(-LAMBDA * age);
   }
   return Math.max(-30, Math.min(30, Math.round(sum)));
@@ -681,6 +689,9 @@ function addDiplomacyEvent(nationA, nationB, delta, eventType) {
   });
   // Оставляем последние 80 событий
   if (rel.events.length > 80) rel.events.splice(0, rel.events.length - 80);
+  // Also remove events older than 50 turns
+  const now = GAME_STATE.turn || 1;
+  rel.events = rel.events.filter(ev => (now - ev.turn) <= 50);
 }
 
 // ── Глобальный тик конвергенции (вызывать 1 раз за ход) ──────
@@ -698,10 +709,18 @@ function processDiplomacyGlobalTick() {
   if (nids.length > _INIT_NATION_LIMIT) {
     for (const [key, rel] of Object.entries(GAME_STATE.diplomacy.relations)) {
       if (!rel || rel.war) continue;
-      const parts = key.split('_');
-      if (parts.length < 2) continue;
-      const [a, b] = parts;
-      if (!GAME_STATE.nations?.[a] || !GAME_STATE.nations?.[b]) continue;
+      // _relKey(a,b) = [a,b].sort().join('_')
+      // Nation IDs may contain underscores, so we find the split point where both sides are known nation IDs
+      const nidSet = new Set(nids);
+      let a = null, b = null;
+      for (let si = 1; si < key.length; si++) {
+        if (key[si] === '_') {
+          const left = key.slice(0, si);
+          const right = key.slice(si + 1);
+          if (nidSet.has(left) && nidSet.has(right)) { a = left; b = right; break; }
+        }
+      }
+      if (!a || !b) continue;
       const base = calcBaseRelation(a, b);
       rel.score  = Math.round(rel.score + ALPHA * (base - rel.score));
       rel.score  = Math.max(-100, Math.min(100, rel.score));

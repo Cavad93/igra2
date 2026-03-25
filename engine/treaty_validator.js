@@ -110,7 +110,7 @@ function validateTreaty(treaty, playerNationId, aiNationId) {
 
   // 3б. Контрибуция за ход
   if (cond.reparations_per_turn !== undefined) {
-    const payerId  = _payerOf(treaty, playerNationId);
+    const payerId  = _validatorPayerOf(treaty, playerNationId);
     const payerNat = GAME_STATE.nations[payerId];
     const maxTurn  = Math.max(50, (payerNat?.economy?.treasury ?? 500) * TREATY_LIMITS.MAX_REPARATION_TURN_PCT);
     if (cond.reparations_per_turn > maxTurn) {
@@ -121,7 +121,7 @@ function validateTreaty(treaty, playerNationId, aiNationId) {
 
   // 3в. Единовременный платёж
   if (cond.one_time_payment !== undefined) {
-    const payerId  = _payerOf(treaty, playerNationId);
+    const payerId  = _validatorPayerOf(treaty, playerNationId);
     const payerNat = GAME_STATE.nations[payerId];
     const maxOnce  = Math.max(100, (payerNat?.economy?.treasury ?? 1000) * TREATY_LIMITS.MAX_REPARATION_TOTAL_PCT);
     if (cond.one_time_payment > maxOnce) {
@@ -198,7 +198,7 @@ function validateTreaty(treaty, playerNationId, aiNationId) {
 function pct(v) { return `${Math.round(v * 100)}%`; }
 
 /** Определяет, кто платит (для контрибуций) — проигравший = первый подписавший */
-function _payerOf(treaty, playerNationId) {
+function _validatorPayerOf(treaty, playerNationId) {
   // Обычно игрок не платит сам себе; плательщик = не-игрок
   return treaty.parties.find(p => p !== playerNationId) ?? treaty.parties[0];
 }
@@ -211,24 +211,24 @@ function _payerOf(treaty, playerNationId) {
 function formatValidationResult(v) {
   if (v.blocked) {
     return `<div class="treaty-val treaty-val--blocked">
-      🚫 <strong>Договор отклонён:</strong> ${_escHtml(v.reason)}
+      🚫 <strong>Договор отклонён:</strong> ${_escHtmlValidator(v.reason)}
     </div>`;
   }
   const parts = [];
   if (v.issues.length) {
     parts.push(`<div class="treaty-val treaty-val--warn">
       ⚖ <strong>Условия скорректированы системой баланса:</strong><br>
-      ${v.issues.map(i => `• ${_escHtml(i)}`).join('<br>')}
+      ${v.issues.map(i => `• ${_escHtmlValidator(i)}`).join('<br>')}
     </div>`);
   }
   if (v.warnings.length) {
     parts.push(`<div class="treaty-val treaty-val--info">
-      ℹ ${v.warnings.map(w => _escHtml(w)).join('<br>ℹ ')}
+      ℹ ${v.warnings.map(w => _escHtmlValidator(w)).join('<br>ℹ ')}
     </div>`);
   }
   return parts.join('');
 }
 
-function _escHtml(s) {
+function _escHtmlValidator(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }

@@ -27,7 +27,8 @@ async function processTurn() {
 
   try {
     const date = GAME_STATE.date;
-    addEventLog(`── Ход ${GAME_STATE.turn}: ${MONTH_NAMES[date.month]} ${Math.abs(date.year)} г. до н.э. ──`, 'turn');
+    const monthName = MONTH_NAMES?.[Math.max(1, Math.min(12, date.month ?? 1))] ?? 'Месяц';
+    addEventLog(`── Ход ${GAME_STATE.turn}: ${monthName} ${Math.abs(date.year)} г. до н.э. ──`, 'turn');
 
     // 0.8. Договоры — сброс флагов, финансовые потоки (дань, контрибуции), истечение
     if (typeof processAllTreatyTicks === 'function') {
@@ -213,7 +214,7 @@ function advanceDate() {
 
 function formatDate(date) {
   const era = date.year < 0 ? `${Math.abs(date.year)} г. до н.э.` : `${date.year} г. н.э.`;
-  return `${MONTH_NAMES[date.month]}, ${era}`;
+  return `${MONTH_NAMES?.[Math.max(1, Math.min(12, date.month ?? 1))] ?? 'Месяц'}, ${era}`;
 }
 
 function updateDateDisplay() {

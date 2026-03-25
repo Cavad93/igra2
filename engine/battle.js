@@ -141,7 +141,11 @@ function resolveBattle(attackerNationId, defenderNationId, opts = {}) {
 
   // Определяем регион боя (для местности и гарнизона)
   const targetRegionId = opts.targetRegionId
-    || defender.regions[defender.regions.length - 1];
+    || (defender.regions?.length > 0 ? defender.regions[defender.regions.length - 1] : null);
+  if (!targetRegionId) {
+    console.warn('[battle] defender has no regions, battle aborted');
+    return null;
+  }
   const regionData = GAME_STATE.regions[targetRegionId];
   const terrain = regionData?.terrain || 'plains';
   const garrison = regionData?.garrison || 0;
@@ -221,6 +225,10 @@ function resolveBattle(attackerNationId, defenderNationId, opts = {}) {
     (attacker.relations[defenderNationId].score ?? 0) - BATTLE.WAR_RELATION_DROP);
   defender.relations[attackerNationId].score = Math.max(-100,
     (defender.relations[attackerNationId].score ?? 0) - BATTLE.WAR_RELATION_DROP);
+  // Sync war status to DiplomacyEngine (canonical diplomacy storage)
+  if (typeof DiplomacyEngine !== 'undefined') {
+    DiplomacyEngine.getRelation(attackerNationId, defenderNationId).war = true;
+  }
 
   return {
     attackerWins,
@@ -272,6 +280,10 @@ function resolveNavalBattle(attackerNationId, defenderNationId) {
   _ensureRelation(defender, attackerNationId);
   attacker.relations[defenderNationId].at_war = true;
   defender.relations[attackerNationId].at_war = true;
+  // Sync war status to DiplomacyEngine (canonical diplomacy storage)
+  if (typeof DiplomacyEngine !== 'undefined') {
+    DiplomacyEngine.getRelation(attackerNationId, defenderNationId).war = true;
+  }
 
   return {
     attackerWins,
