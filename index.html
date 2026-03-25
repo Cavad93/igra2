@@ -272,13 +272,17 @@
 
     /* Инфо о выбранном регионе */
     #region-info {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 280px;
-      max-height: calc(100% - 20px);
-      overflow-y: auto;
-      background: rgba(17, 11, 4, 0.95);
+      /* position: fixed — вырывается из overflow:hidden центральной панели */
+      position: fixed;
+      top: calc(var(--header-h) + 10px);
+      right: calc(var(--panel-w) + 10px);
+      width: 310px;
+      max-height: calc(100vh - var(--header-h) - var(--footer-h) - 20px);
+      /* flex-колонка: шапка+табы фиксированы, контент скроллится */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: rgba(17, 11, 4, 0.97);
       border: 1px solid var(--border-gold);
       border-radius: 3px;
       z-index: 1000;
@@ -286,6 +290,25 @@
       pointer-events: auto;
     }
     #region-info.hidden { display: none; }
+
+    /* Шапка и табы — не скроллятся */
+    .region-info-header { flex-shrink: 0; }
+    .ri-tabs            { flex-shrink: 0; }
+
+    /* Контент вкладок — скроллится */
+    #region-tab-info,
+    #region-tab-build {
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex: 1;
+      min-height: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-gold) var(--bg-deep);
+    }
+    #region-tab-info::-webkit-scrollbar,
+    #region-tab-build::-webkit-scrollbar { width: 5px; }
+    #region-tab-info::-webkit-scrollbar-thumb,
+    #region-tab-build::-webkit-scrollbar-thumb { background: var(--border-gold); border-radius: 2px; }
 
     .region-info-header {
       display: flex;
@@ -1160,11 +1183,11 @@
       :root { --panel-w: 0px; --footer-h: 140px; }
       #left-panel, #right-panel { display: none; }
       .culture-window { width: 95vw; }
-      #region-info { width: 240px; }
+      #region-info { width: 92vw; right: 4vw; }
     }
     @media (max-width: 480px) {
       .culture-window { width: 100vw; max-height: 100vh; border-radius: 0; }
-      #region-info { width: 200px; font-size: 10px; }
+      #region-info { width: 96vw; right: 2vw; font-size: 10px; }
     }
 
     /* ══════════════════════════════════════════════════
@@ -3729,14 +3752,14 @@
     .region-info-body.hidden { display: none; }
 
     /* ── Строительная вкладка ── */
-    .rbt-wrap { padding: 8px; }
+    .rbt-wrap { padding: 6px 7px; }
 
     .rbt-hdr {
       display: flex;
       align-items: center;
       gap: 6px;
-      margin-bottom: 8px;
-      padding-bottom: 6px;
+      margin-bottom: 6px;
+      padding-bottom: 5px;
       border-bottom: 1px solid rgba(107,79,26,.25);
     }
     .rbt-slots-lbl { font-size: 11px; color: var(--text-dim); }
@@ -3973,8 +3996,8 @@
 
     /* ── Земельная полоса ── */
     .rbt-land {
-      margin-bottom: 6px;
-      padding: 5px 6px;
+      margin-bottom: 5px;
+      padding: 4px 6px;
       background: rgba(0,0,0,.2);
       border: 1px solid rgba(107,79,26,.3);
       border-radius: 3px;
@@ -4041,8 +4064,8 @@
 
     /* Заголовок категории (кликабельный) */
     .rbt-ac-hdr {
-      display: flex; align-items: center; gap: 6px;
-      padding: 6px 8px; cursor: pointer;
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 7px; cursor: pointer;
       background: rgba(30,20,5,.45);
       user-select: none; transition: background .15s;
     }
@@ -4062,9 +4085,9 @@
 
     /* Строка здания */
     .rbt-ac-row {
-      display: flex; align-items: center; gap: 6px;
-      padding: 5px 8px; border-bottom: 1px solid rgba(107,79,26,.15);
-      min-height: 32px;
+      display: flex; align-items: center; gap: 4px;
+      padding: 3px 7px; border-bottom: 1px solid rgba(107,79,26,.15);
+      min-height: 26px;
     }
     .rbt-ac-row:last-child { border-bottom: none; }
     .rbt-ac-row--built   { background: rgba(20,15,5,.3); }
