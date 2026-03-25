@@ -658,7 +658,7 @@ var REGION_ASSIGNMENTS = {
   "r2202": "neutral",
   "r2203": "neutral",
   "r2204": "neutral",
-  "r2403": "neutral",
+  "r2403": "syracuse",
   "r2404": "gela",
   "r2407": "syracuse",
   "r2408": "syracuse",
@@ -3780,9 +3780,9 @@ var REGION_ASSIGNMENTS = {
   "r2113": "neutral",
   "r2114": "neutral",
   "r2115": "neutral",
-  "r2149": "neutral",
-  "r2220": "neutral",
-  "r2241": "neutral",
+  "r2149": "lucani",
+  "r2220": "apuania",
+  "r2241": "carni",
   "r2295": "caturigi",
   "r2322": "neutral",
   "r2325": "neutral",
@@ -3811,5 +3811,5 @@ var REGION_ASSIGNMENTS = {
   "r2758": "mauretania",
   "r2759": "mauretania",
   "r2760": "mauretania",
-  "r3199": "neutral"
+  "r3199": "syracuse"
 };
