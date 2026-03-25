@@ -191,13 +191,21 @@ function _rbtBuiltRow(slot, regionId, region, nation) {
 
   const canUpgrade = bDef.nation_buildable !== false && level < maxLevel && !upgrading;
 
+  // Метки: автономное здание / достигнут максимум
+  const autoTag = bDef.autonomous_builder
+    ? `<span class="rbt-ac-auto" title="Также строится автономно классом населения">🤝</span>`
+    : '';
+  const maxTag  = (level >= maxLevel && maxLevel !== Infinity)
+    ? `<span class="rbt-ac-lvl" title="Максимальный уровень">макс</span>`
+    : '';
+
   const upgBtn = canUpgrade
     ? `<button class="rbt-ac-btn rbt-ac-btn--upg"
-         title="Улучшить до ур. ${level + 1}"
+         title="Построить ещё 1 здание (уровень ${level} → ${level + 1})"
          onclick="uiOrderConstruction('${regionId}','${slot.building_id}')">▲ +1</button>`
     : (upgrading
         ? `<span class="rbt-ac-building">▲…</span>`
-        : '');
+        : maxTag);
 
   const demBtn = `<button class="rbt-ac-btn rbt-ac-btn--dem"
       title="${level > 1 ? 'Снизить уровень' : 'Снести'}"
@@ -207,6 +215,7 @@ function _rbtBuiltRow(slot, regionId, region, nation) {
     <div class="rbt-ac-row rbt-ac-row--built">
       <span class="rbt-ac-bicon">${bDef.icon || '🏛'}</span>
       <span class="rbt-ac-bname">${bDef.name}</span>
+      ${autoTag}
       ${level > 1 ? `<span class="rbt-ac-lvl">×${level}</span>` : ''}
       <span class="rbt-ac-workers"><b>${totalWorkers.toLocaleString()}</b> раб.</span>
       <span class="rbt-ac-rev">💰${revenue.toLocaleString()}</span>
