@@ -891,6 +891,112 @@ const BUILDINGS = {
     historical_note: "Мелкие крестьянские хозяйства Сицилии производили большую часть зерна; Диодор описывает 30 000 небольших ферм вокруг Сиракуз в IV в. до н.э.",
   },
 
+  // ── farm ─────────────────────────────────────────────────────────
+  // Средняя зерновая ферма — между семейным наделом и виллой.
+  // Управляется вольными арендаторами. Совместимость: r2407, r2408 (Сицилия, Сиракузы).
+  farm: {
+    name:        'Ферма',
+    icon:        '🌾',
+    description: 'Среднее зерновое хозяйство вольных арендаторов. ' +
+                 'Крупнее семейного надела, но не требует рабского труда. ' +
+                 'Эффективнее wheat_family_farm, дешевле wheat_villa.',
+    cost:        250,
+    category:    'agriculture',
+    footprint_ha: 20,          // га на 1 ферму
+    workers_per_unit: 20,      // 20 фермеров на 1 ферму
+
+    autonomous_builder: 'farmers_class',
+    nation_buildable:   true,
+
+    // (20/1000)×3500×1.05 ≈ 73.5 пш/ферму/ход → ~3.7 пш/га
+    efficiency_mult: 1.05,
+
+    // timber×3(66) + tools×2(70) = 136; labor=114 → ~250
+    construction_materials: { timber: 3, tools: 2 },
+    construction_labor:     114,
+
+    worker_profession: [
+      { profession: 'farmers', count: 20 },
+    ],
+    wage_rate:    0.33,
+    labor_type:   'tenant',
+    build_turns:  2,
+    terrain_restriction: ['plains', 'hills', 'river_valley',
+                          'mediterranean_coast', 'mediterranean_hills',
+                          'steppe', 'temperate_forest', 'coastal_city'],
+    max_per_region: null,
+    max_level:      null,
+
+    production_output: [
+      { good: 'wheat', base_rate: 3500 },
+    ],
+
+    capital_inputs: [
+      { good: 'tools',  count_per_level: 2,  monthly_wear: 0.021 },
+      { good: 'cattle', count_per_level: 3,  monthly_wear: 0.007,
+        alt_good: 'horses', alt_efficiency: 1.2 },
+    ],
+
+    profession_growth: { farmers: 0.004 },
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Обычная аренда участка у землевладельца; типична для сельских округ сицилийских полисов. Диодор упоминает арендаторов-зерновиков в окрестностях Сиракуз.",
+  },
+
+  // ── grain_estate ─────────────────────────────────────────────────
+  // Крупное зерновое поместье с рабами — между виллой и латифундией.
+  // Высокий выход пшеницы + побочный ячмень. r2408 (Сицилия, река, Сиракузы).
+  grain_estate: {
+    name:        'Зерновое поместье',
+    icon:        '🏚️',
+    description: 'Крупное поместье с вольными арендаторами и рабами. ' +
+                 'Производит пшеницу и ячмень. Эффективнее виллы, ' +
+                 'дешевле полноценной латифундии.',
+    cost:        1500,
+    category:    'agriculture',
+    footprint_ha: 150,         // га на 1 поместье
+    workers_per_unit: 75,      // 55 фермеров + 20 рабов (соотношение ~3:1)
+
+    autonomous_builder: 'aristocrats',
+    nation_buildable:   true,
+
+    // (75/1000)×5000×1.4 ≈ 525 пш/поместье/ход → 3.5 пш/га
+    efficiency_mult: 1.4,
+
+    // timber×10(220) + iron×4(180) + tools×6(210) = 610; labor=390 → ~1500 с наценкой
+    construction_materials: { timber: 10, iron: 4, tools: 6 },
+    construction_labor:     390,
+
+    worker_profession: [
+      { profession: 'farmers', count: 55 },
+      { profession: 'slaves',  count: 20 },
+    ],
+    slave_fallback_profession: 'farmers',
+
+    wage_rate:    0.28,
+    labor_type:   'tenant',
+    build_turns:  5,
+    terrain_restriction: ['plains', 'river_valley',
+                          'mediterranean_coast', 'mediterranean_hills'],
+    max_per_region: null,
+    max_level:      null,
+
+    production_output: [
+      { good: 'wheat',  base_rate: 5000 },
+      { good: 'barley', base_rate: 700 },
+    ],
+
+    capital_inputs: [
+      { good: 'tools',  count_per_level: 8,  monthly_wear: 0.021 },
+      { good: 'cattle', count_per_level: 15, monthly_wear: 0.007,
+        alt_good: 'horses', alt_efficiency: 1.2 },
+    ],
+
+    profession_growth:   { farmers: 0.005, slaves: 0.010 },
+    slave_mortality_mod: 0.002,
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Крупные зерновые поместья с рабами процветали на плодородных речных долинах Сицилии. Цицерон описывает подобные хозяйства в Вёррах как основу сицилийского зернового экспорта.",
+  },
+
   wheat_villa: {
     name:        'Средняя вилла',
     icon:        '🏡',
