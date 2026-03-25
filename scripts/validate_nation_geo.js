@@ -48,12 +48,33 @@ const MANUAL_MAP = {
   // Греция
   athens:            'Athenai',
   greek_states:      'Hellas',
-  boeotian_states:   'Boiotia',
-  macedon:           'Makedonia',
-  antigonid_kingdom: 'Makedonia',
+  boeotian_states:   'Thebai',        // столица Беотийского союза — Фивы
+  macedon:           'Pella',         // столица Македонии
+  antigonid_kingdom: 'Pella',
+  antipatrid_kingdom:'Pella',
+  lysimachus_kingdom:'Lysimacheia',
   epirus:            'Epeiros',
   thessaly:          'Thessalia',
   thrace:            'Thracia',
+  // Греческие города с вариациями имён
+  argos:             'Argolis',       // Аргос сам unlocated, используем регион
+  eretria:           'Acropolis of Eretria', // Эретрия на Эвбее
+  rhodes:            'Rhodos',
+  kos:               'Cos',
+  knidos:            'Cnidus',
+  kyzikios:          'Cyzicus',
+  miletos:           'Miletus',
+  pergamon:          'Pergamum',
+  byzantion:         'Byzantium',
+  rhegium:           'Rhegion',
+  trapezous:         'Trapezus',
+  herakleia:         'Herakleia ad Sinum Astacenum',
+  sinope:            'Sinope',
+  // Малая Азия
+  pontus:            'Amaseia',
+  oinoandia:         'Oenoanda',
+  commagene:         'Samosata',
+  ambrakia:          'Ambracia',
   // Азия
   egypt:             'Aegyptus',
   seleucid:          'Seleucia Pieria',
@@ -130,11 +151,26 @@ const MANUAL_MAP = {
   han:               'Han',
 };
 
+// Греко-латинские суффиксы для стемминга (от длинных к коротким — важен порядок)
+const SUFFIXES = ['ium','ius','ion','ia','us','um','os','on','is','ae','ai','oi','es','i'];
+
 // ── Нормализация строки ────────────────────────────────────────────
 function norm(s) {
   return s.toLowerCase()
     .replace(/ae/g, 'e').replace(/oe/g, 'e')
+    // k↔c: греческий k ↔ латинский c (Knidos/Cnidus, Kyzikos/Cyzicus)
+    .replace(/k/g, 'c')
     .replace(/[^a-z]/g, '');
+}
+
+// ── Стемминг: убирает греко-латинские суффиксы + k→c ─────────────
+function stem(s) {
+  // Сначала нормализуем k→c
+  let n = s.toLowerCase().replace(/k/g, 'c').replace(/[^a-z]/g, '');
+  for (const suf of SUFFIXES) {
+    if (n.endsWith(suf) && n.length - suf.length >= 3) return n.slice(0, -suf.length);
+  }
+  return n;
 }
 
 // ── Схожесть Жакара (по биграммам) ────────────────────────────────
@@ -178,28 +214,40 @@ console.log(`  Мест: ${pleiades.length}`);
 
 // ── Построение индекса Pleiades ────────────────────────────────────
 // Ключ: нормализованное имя → массив мест, отсортированных по типу
-const pIdx = {};   // norm(name) → [place, ...]
-const pTitle = {}; // norm(title_first_part) → place (для ручной карты)
+const pIdx     = {};  // norm(name)  → [place, ...]
+const pStemIdx = {};  // stem(name)  → [place, ...]  (для стемм-поиска)
+const pTitle   = {};  // norm(title) → place (для ручной карты)
 
 const TYPE_SCORE = { settlement: 3, region: 2, fort: 1 };
 
 for (const p of pleiades) {
   const titles = p.title.split('|');
   for (const t of titles) {
-    const key = norm(t.trim());
-    if (!key || key.length < 2) continue;
-    if (!pIdx[key]) pIdx[key] = [];
-    pIdx[key].push(p);
+    const raw = t.trim();
+    // Обычный индекс
+    const key = norm(raw);
+    if (key && key.length >= 2) {
+      if (!pIdx[key]) pIdx[key] = [];
+      pIdx[key].push(p);
+    }
+    // Стемм-индекс
+    const skey = stem(raw);
+    if (skey && skey.length >= 3) {
+      if (!pStemIdx[skey]) pStemIdx[skey] = [];
+      pStemIdx[skey].push(p);
+    }
   }
   // Индекс по первому имени (для ручной карты)
   const mainKey = norm(titles[0].trim());
   if (mainKey) pTitle[mainKey] = p;
 }
 // Для каждого ключа — предпочитаем settlements
-for (const key of Object.keys(pIdx)) {
-  pIdx[key].sort((a, b) => (TYPE_SCORE[b.types] || 0) - (TYPE_SCORE[a.types] || 0));
+for (const idx of [pIdx, pStemIdx]) {
+  for (const key of Object.keys(idx)) {
+    idx[key].sort((a, b) => (TYPE_SCORE[b.types] || 0) - (TYPE_SCORE[a.types] || 0));
+  }
 }
-console.log(`  Индекс: ${Object.keys(pIdx).length} уникальных имён`);
+console.log(`  Индекс: ${Object.keys(pIdx).length} имён, ${Object.keys(pStemIdx).length} стеммов`);
 
 // ── Поиск совпадения для нации ─────────────────────────────────────
 // Возвращает { place, method } или null
@@ -245,7 +293,23 @@ function findPleiades(nationId, geo) {
     if (r) return r;
   }
 
-  // 3. Нечёткий поиск — только в bbox, строгий cutoff
+  // 3. Стемм-поиск: убираем суффиксы из ID нации и ищем в стемм-индексе
+  const idStem = stem(nationId.replace(/_/g, ' '));
+  if (idStem.length >= 3) {
+    const stemPool = [];
+    for (const [key, places] of Object.entries(pStemIdx)) {
+      if (Math.abs(key.length - idStem.length) > 3) continue;
+      if (similarity(idStem, key) >= 0.82) {   // чуть мягче для стеммов
+        for (const p of places) {
+          if (!stemPool.find(x => x.pid === p.pid)) stemPool.push(p);
+        }
+      }
+    }
+    const r = bestInBbox(stemPool, 'stem');
+    if (r) return r;
+  }
+
+  // 4. Нечёткий поиск по полному имени — только в bbox, строгий cutoff
   const idNorm = norm(nationId.replace(/_/g, ' '));
   if (idNorm.length >= 5) {
     const fuzzyPool = [];
@@ -257,6 +321,21 @@ function findPleiades(nationId, geo) {
     }
     const r = bestInBbox(fuzzyPool, 'fuzzy');
     if (r) return r;
+  }
+
+  // 5. Географическое подтверждение: ближайший settlement к столице в bbox
+  //    (имена не сравниваем — только расстояние < GEO_CONFIRM_DEG)
+  const GEO_CONFIRM_DEG = 0.15;
+  const nearCap = pleiades
+    .filter(p =>
+      ['settlement'].includes(p.types) &&
+      nearBbox(p.lat, p.lon, bbox, 0) &&
+      dist(capLat, capLon, p.lat, p.lon) < GEO_CONFIRM_DEG
+    )
+    .sort((a, b) => dist(capLat, capLon, a.lat, a.lon) - dist(capLat, capLon, b.lat, b.lon));
+
+  if (nearCap.length > 0) {
+    return { place: nearCap[0], method: 'geo' };
   }
 
   return null;
