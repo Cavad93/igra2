@@ -1142,38 +1142,139 @@
     /* ══════════════════════════════════════════════════
        ДИПЛОМАТИЯ
     ══════════════════════════════════════════════════ */
-    .relation-row {
-      margin-bottom: 6px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid rgba(139,109,56,0.15);
+    /* ── Дипломатия в левой панели ─────────────────── */
+    .diplo-open-btn {
+      width: 100%;
+      padding: 6px 10px;
+      background: linear-gradient(135deg, rgba(139,90,43,.35), rgba(89,50,10,.2));
+      border: 1px solid var(--border-gold);
+      border-radius: 4px;
+      color: var(--text-gold);
+      font-size: 11px;
+      font-family: 'Cinzel', serif;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: background .15s, box-shadow .15s;
+      letter-spacing: 0.03em;
     }
-    .relation-row:last-child { border-bottom: none; }
-    .relation-header {
-      display: flex; align-items: center; gap: 4px;
+    .diplo-open-btn:hover {
+      background: linear-gradient(135deg, rgba(139,90,43,.55), rgba(89,50,10,.4));
+      box-shadow: 0 0 10px rgba(212,168,83,.15);
+    }
+
+    /* Подзаголовки блоков */
+    .diplo-block-title {
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-gold);
+      font-family: 'Cinzel', serif;
+      border-bottom: 1px solid rgba(107,79,26,.25);
+      padding-bottom: 3px;
+      margin-bottom: 6px;
+    }
+    .diplo-no-treaties {
+      font-size: 10px;
+      color: var(--text-dim);
+      text-align: center;
+      padding: 6px 0;
+    }
+
+    /* ── Блок «по типу договора» ── */
+    .diplo-types-list { display: flex; flex-direction: column; gap: 6px; }
+    .diplo-type-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .diplo-type-icon {
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .diplo-type-body { flex: 1; min-width: 0; }
+    .diplo-type-name {
+      font-size: 9px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
       margin-bottom: 3px;
     }
-    .relation-name { font-size: 11px; font-weight: 600; }
-    .relation-score { font-size: 10px; margin-left: auto; font-weight: 700; }
-    .diplo-tag {
-      font-size: 9px; padding: 1px 5px; border-radius: 3px;
-      font-weight: 600;
+    .diplo-type-nations { display: flex; flex-wrap: wrap; gap: 3px; }
+    .diplo-nation-chip {
+      font-size: 10px;
+      padding: 2px 6px;
+      background: rgba(139,90,43,.18);
+      border: 1px solid rgba(107,79,26,.4);
+      border-radius: 3px;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: background .12s;
+      white-space: nowrap;
     }
-    .diplo-war   { background: rgba(244,67,54,0.3); color: #f44336; }
-    .diplo-ally  { background: rgba(76,175,80,0.3);  color: #4CAF50; }
-    .diplo-trade { background: rgba(255,152,0,0.3);  color: #FF9800; }
-    .diplo-actions {
-      display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap;
+    .diplo-nation-chip:hover { background: rgba(139,90,43,.35); }
+    .diplo-nation-chip--war {
+      background: rgba(244,67,54,.15);
+      border-color: rgba(244,67,54,.4);
+      color: #ef9a9a;
     }
-    .diplo-btn {
-      font-size: 9px; padding: 2px 6px; border-radius: 3px;
-      background: rgba(139,109,56,0.25); border: 1px solid var(--border-gold);
-      color: var(--text-gold); cursor: pointer;
+    .diplo-nation-chip--war:hover { background: rgba(244,67,54,.28); }
+
+    /* ── Блок «все отношения» ── */
+    .diplo-rels-list { display: flex; flex-direction: column; gap: 3px; }
+    .diplo-rel-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background .12s;
+      border: 1px solid transparent;
     }
-    .diplo-btn:hover { background: rgba(139,109,56,0.45); }
-    .diplo-btn-war {
-      background: rgba(244,67,54,0.2); border-color: #f44336; color: #f44336;
+    .diplo-rel-row:hover {
+      background: rgba(139,90,43,.14);
+      border-color: rgba(107,79,26,.3);
     }
-    .diplo-btn-war:hover { background: rgba(244,67,54,0.4); }
+    .diplo-rel-left {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+      flex: 1;
+    }
+    .diplo-rel-flag { font-size: 14px; flex-shrink: 0; }
+    .diplo-rel-info { display: flex; flex-direction: column; min-width: 0; }
+    .diplo-rel-name {
+      font-size: 11px;
+      color: var(--text-light);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .diplo-rel-icons { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; }
+    .diplo-rel-right {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    .diplo-war-dot { font-size: 11px; }
+    .diplo-rel-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+    .diplo-rel-bar {
+      width: 44px;
+      height: 3px;
+      background: rgba(255,255,255,.07);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .diplo-rel-fill { height: 100%; border-radius: 2px; transition: width .3s; }
+    .diplo-rel-score { font-size: 9px; font-weight: 700; white-space: nowrap; }
 
     /* ══════════════════════════════════════════════════
        АДАПТИВНОСТЬ

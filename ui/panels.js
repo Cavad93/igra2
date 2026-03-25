@@ -1115,51 +1115,153 @@ function _getReligionDefForUI(id) {
 }
 
 function renderRelations(relations) {
-  if (!relations) return '<div class="no-data">Нет данных</div>';
+  const playerNationId = GAME_STATE.player_nation;
+  const playerNation   = GAME_STATE.nations[playerNationId];
 
-  return Object.entries(relations).slice(0, 8).map(([nationId, rel]) => {
-    const otherNation = GAME_STATE.nations[nationId];
-    if (!otherNation) return '';
+  // ── Собираем все нации и их данные ──────────────────────────
+  // Источник 1: старая система (nation.relations)
+  const legacyRels = relations ?? {};
 
-    const score = rel.score;
-    const bar = Math.max(0, Math.min(100, score + 50));
-    const color = score > 20 ? '#4CAF50' : score < -20 ? '#f44336' : '#FF9800';
-    const treaties = (rel.treaties || []);
-    const hasTrade = treaties.includes('trade');
-    const hasAlliance = treaties.includes('alliance');
-    const atWar = rel.at_war;
+  // Источник 2: новая система (DiplomacyEngine)
+  const newTreaties = (typeof DiplomacyEngine !== 'undefined')
+    ? DiplomacyEngine.getAllTreaties(playerNationId).filter(t => t.status === 'active')
+    : [];
 
-    let statusLabel = '';
-    if (atWar) statusLabel = '<span class="diplo-tag diplo-war">Война</span>';
-    else if (hasAlliance) statusLabel = '<span class="diplo-tag diplo-ally">Союз</span>';
-    else if (hasTrade) statusLabel = '<span class="diplo-tag diplo-trade">Торговля</span>';
+  // ── Договоры по типу: { typeKey → [{nationId, nationName, flag, icon, label}] } ──
+  const byType = {};
 
-    // Кнопки действий
-    let actionsHtml = '';
-    if (atWar) {
-      actionsHtml = `<button class="diplo-btn" onclick="proposePeace('${nationId}')">Мир</button>`;
-    } else {
-      const btns = [];
-      if (!hasTrade) btns.push(`<button class="diplo-btn" onclick="proposeTreaty('${nationId}','trade')">Торг. договор</button>`);
-      if (!hasAlliance && score > 10) btns.push(`<button class="diplo-btn" onclick="proposeTreaty('${nationId}','alliance')">Союз</button>`);
-      if (score < 0) btns.push(`<button class="diplo-btn diplo-btn-war" onclick="declareWar('${nationId}')">Война</button>`);
-      actionsHtml = btns.join('');
+  // Старые договоры ('trade' → 💼, 'alliance' → 🛡)
+  const LEGACY_MAP = {
+    trade:    { key: 'trade_agreement',    icon: '💼', label: 'Торговый договор' },
+    alliance: { key: 'defensive_alliance', icon: '🛡', label: 'Союз'             },
+  };
+  for (const [nId, rel] of Object.entries(legacyRels)) {
+    const nation = GAME_STATE.nations[nId];
+    if (!nation) continue;
+    for (const t of (rel.treaties ?? [])) {
+      const m = LEGACY_MAP[t];
+      if (!m) continue;
+      if (!byType[m.key]) byType[m.key] = { icon: m.icon, label: m.label, nations: [] };
+      if (!byType[m.key].nations.find(x => x.id === nId)) {
+        byType[m.key].nations.push({ id: nId, name: nation.name, flag: nation.flag_emoji ?? '🏛' });
+      }
     }
+    if (rel.at_war) {
+      if (!byType['_war']) byType['_war'] = { icon: '⚔', label: 'Война', nations: [], isWar: true };
+      if (!byType['_war'].nations.find(x => x.id === nId)) {
+        byType['_war'].nations.push({ id: nId, name: nation.name, flag: nation.flag_emoji ?? '🏛' });
+      }
+    }
+  }
 
-    return `
-      <div class="relation-row">
-        <div class="relation-header">
-          <span class="relation-name" style="color:${otherNation.color}">${otherNation.name}</span>
-          ${statusLabel}
-          <span class="relation-score" style="color:${color}">${score > 0 ? '+' : ''}${score}</span>
-        </div>
-        <div class="bar-container small">
-          <div class="bar-fill" style="width:${bar}%; background:${color}"></div>
-        </div>
-        <div class="diplo-actions">${actionsHtml}</div>
+  // Новые договоры
+  for (const t of newTreaties) {
+    const otherId = t.parties.find(p => p !== playerNationId);
+    if (!otherId) continue;
+    const nation  = GAME_STATE.nations[otherId];
+    if (!nation) continue;
+    const def     = TREATY_TYPES?.[t.type] ?? { icon: '📜', label: t.type };
+    if (!byType[t.type]) byType[t.type] = { icon: def.icon, label: def.label, nations: [] };
+    if (!byType[t.type].nations.find(x => x.id === otherId)) {
+      byType[t.type].nations.push({ id: otherId, name: nation.name, flag: nation.flag_emoji ?? '🏛' });
+    }
+  }
+
+  // ── Секция «По договорам» ────────────────────────────────────
+  const treatyGroupsHtml = Object.entries(byType).map(([typeKey, group]) => {
+    const nationsList = group.nations.map(n =>
+      `<button class="diplo-nation-chip ${group.isWar ? 'diplo-nation-chip--war' : ''}"
+        onclick="showDiplomacyOverlay('${n.id}')"
+        title="${n.name}">${n.flag} ${n.name}</button>`
+    ).join('');
+    return `<div class="diplo-type-row">
+      <span class="diplo-type-icon">${group.icon}</span>
+      <div class="diplo-type-body">
+        <div class="diplo-type-name">${group.label}</div>
+        <div class="diplo-type-nations">${nationsList}</div>
       </div>
-    `;
+    </div>`;
   }).join('');
+
+  // ── Секция «Все отношения» ───────────────────────────────────
+  const allNations = Object.entries(legacyRels).map(([nId, rel]) => {
+    const nation = GAME_STATE.nations[nId];
+    if (!nation) return null;
+    return { nId, nation, score: rel.score ?? 0, atWar: !!rel.at_war,
+             treaties: rel.treaties ?? [] };
+  }).filter(Boolean);
+
+  // Добавляем нации только из нового движка (если их нет в legacyRels)
+  if (typeof DiplomacyEngine !== 'undefined') {
+    const newNations = new Set(newTreaties.flatMap(t => t.parties).filter(p => p !== playerNationId));
+    for (const nId of newNations) {
+      if (!allNations.find(x => x.nId === nId) && GAME_STATE.nations[nId]) {
+        allNations.push({ nId, nation: GAME_STATE.nations[nId],
+          score: DiplomacyEngine.getRelationScore(playerNationId, nId),
+          atWar: DiplomacyEngine.isAtWar?.(playerNationId, nId) ?? false,
+          treaties: [] });
+      }
+    }
+  }
+
+  // Сортируем по убыванию отношений
+  allNations.sort((a, b) => b.score - a.score);
+
+  const relRowsHtml = allNations.slice(0, 10).map(({ nId, nation, score, atWar, treaties }) => {
+    // Иконки договоров
+    let treatyIcons = treaties.map(t => LEGACY_MAP[t]?.icon ?? '📜').join('');
+    // Добавляем иконки из нового движка
+    if (typeof DiplomacyEngine !== 'undefined') {
+      const newTs = DiplomacyEngine.getActiveTreaties(playerNationId, nId);
+      treatyIcons += newTs.map(t => TREATY_TYPES?.[t.type]?.icon ?? '📜').join('');
+    }
+    // Деdup иконок
+    treatyIcons = [...new Set([...treatyIcons])].join('');
+
+    const color  = score >= 30 ? '#4caf50' : score >= 5 ? '#8bc34a'
+      : score >= -15 ? '#9e9e9e' : score >= -50 ? '#ff9800' : '#f44336';
+    const barPct = Math.round((score + 100) / 2);
+    const scoreStr = (score > 0 ? '+' : '') + score;
+    const warBadge = atWar ? '<span class="diplo-war-dot">⚔</span>' : '';
+
+    return `<div class="diplo-rel-row" onclick="showDiplomacyOverlay('${nId}')" title="Открыть переговоры">
+      <div class="diplo-rel-left">
+        <span class="diplo-rel-flag">${nation.flag_emoji ?? '🏛'}</span>
+        <div class="diplo-rel-info">
+          <span class="diplo-rel-name">${nation.name}</span>
+          ${treatyIcons ? `<span class="diplo-rel-icons">${treatyIcons}</span>` : ''}
+        </div>
+      </div>
+      <div class="diplo-rel-right">
+        ${warBadge}
+        <div class="diplo-rel-bar-wrap">
+          <div class="diplo-rel-bar">
+            <div class="diplo-rel-fill" style="width:${barPct}%;background:${color}"></div>
+          </div>
+          <span class="diplo-rel-score" style="color:${color}">${scoreStr}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const hasTreaties = Object.keys(byType).length > 0;
+  const hasNations  = allNations.length > 0;
+
+  return `
+    <button class="diplo-open-btn" onclick="showDiplomacyOverlay()">
+      🤝 Зал переговоров ▸
+    </button>
+
+    ${hasTreaties ? `
+      <div class="diplo-block-title">Действующие договоры</div>
+      <div class="diplo-types-list">${treatyGroupsHtml}</div>
+    ` : '<div class="diplo-no-treaties">Нет активных договоров</div>'}
+
+    ${hasNations ? `
+      <div class="diplo-block-title" style="margin-top:10px">Отношения</div>
+      <div class="diplo-rels-list">${relRowsHtml}</div>
+    ` : ''}
+  `;
 }
 
 // ── Дипломатические действия ─────────────────────────────────────────
