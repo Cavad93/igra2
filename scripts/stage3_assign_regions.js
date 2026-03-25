@@ -236,11 +236,19 @@ if (stillZero.length > 0) {
 
     let bestRegion = null;
     let bestDist = Infinity;
+    const myPriority2 = geo.priority ?? 5;
     for (const [regionId, region] of Object.entries(REGION_CENTROIDS)) {
       if (!region.in_historical_world) continue;
       if (fallbackClaimed.has(regionId)) continue;
       const dist = Math.sqrt((region.lat - cLat) ** 2 + (region.lon - cLon) ** 2);
-      if (dist < bestDist) { bestDist = dist; bestRegion = regionId; }
+      // Второй fallback: берём только neutral или менее специфичные (выше приоритет)
+      const curNation = assignments[regionId];
+      const isNeutral2 = !curNation || curNation === 'neutral';
+      const curPriority2 = curNation && curNation !== 'neutral'
+        ? (NATION_GEO[curNation]?.priority ?? 10) : 10;
+      if (dist < bestDist && (isNeutral2 || myPriority2 < curPriority2)) {
+        bestDist = dist; bestRegion = regionId;
+      }
     }
     if (bestRegion) {
       const prev = assignments[bestRegion];
