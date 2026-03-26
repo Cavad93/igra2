@@ -177,6 +177,11 @@ function resolveArmyBattle(atkArmy, defArmy, regionId) {
   const wsGain = Math.round(5 + (atkTotal + defTotal) / 500);
   if (atkWins) atkArmy.war_score_earned += wsGain + (capturedRegionId ? 10 : 0);
   else         defArmy.war_score_earned += wsGain;
+  // Нация-уровневый war score (для мирных переговоров)
+  if (typeof WarScoreEngine !== 'undefined') {
+    if (atkWins) WarScoreEngine.onBattleResult(atkArmy.nation, defArmy.nation, defCas + pursuitCas, capturedRegionId);
+    else         WarScoreEngine.onBattleResult(defArmy.nation, atkArmy.nation, atkCas, null);
+  }
 
   // ── Дипломатия ───────────────────────────────────────────────────
   if (typeof DiplomacyEngine !== 'undefined') {
@@ -423,6 +428,12 @@ function resolveNavalArmyBattle(atkFleet, defFleet, regionId) {
       `Потери кораблей: ${atkName} −${atkShipLoss}, ${defName} −${defShipLoss}.`,
       'military'
     );
+  }
+
+  // War score за морской бой
+  if (typeof WarScoreEngine !== 'undefined') {
+    if (atkWins) WarScoreEngine.onNavalBattle(atkFleet.nation, defFleet.nation, defShipLoss);
+    else         WarScoreEngine.onNavalBattle(defFleet.nation, atkFleet.nation, atkShipLoss);
   }
 
   return { attackerWins: atkWins, atkShipLoss, defShipLoss };

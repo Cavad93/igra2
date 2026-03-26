@@ -43,6 +43,11 @@ function _buildLeaderSystemPrompt(aiNationId, playerNationId) {
   const atWar = typeof DiplomacyEngine !== 'undefined'
     && DiplomacyEngine.isAtWar?.(playerNationId, aiNationId);
 
+  // Очки войны и военный контекст
+  const warContext = (atWar && typeof WarScoreEngine !== 'undefined')
+    ? WarScoreEngine.getWarContextForAI(aiNationId, playerNationId)
+    : '';
+
   // Дата
   const d     = GAME_STATE.date;
   const year  = d?.year  ?? d?.turn ?? 0;
@@ -86,6 +91,7 @@ ${treatyList}
   Население ${playerName}: ${playerPop.toLocaleString()}
   Казна ${aiName}: ${Math.round(aiTreasury)} монет
   Казна ${playerName}: ${Math.round(playerTreasury)} монет
+${warContext}
 
 ИНСТРУКЦИИ ДЛЯ РОЛЕВОЙ ИГРЫ:
 1. Отвечай ТОЛЬКО как ${aiRuler} — государственный деятель античности. Краткие, весомые фразы.
@@ -94,7 +100,7 @@ ${treatyList}
 4. Если игрок явно предлагает договор — прими решение: согласиться, отклонить или торговаться.
 5. После финального решения по договору ОБЯЗАТЕЛЬНО добавь в конце ответа JSON-блок:
 
-Если СОГЛАСЕН:
+Если СОГЛАСЕН на обычный договор:
 \`\`\`json
 {"treaty_agreed": true, "treaty_type": "тип_из_списка", "conditions": {"duration": 10, "notes": "особые условия если есть"}}
 \`\`\`

@@ -420,13 +420,23 @@ function _dpWarPeaceBlock(playerNationId, aiId, atWar, rel) {
     : 0;
 
   if (atWar) {
+    // Очки войны
+    const ws = typeof WarScoreEngine !== 'undefined'
+      ? WarScoreEngine.getWarScore(playerNationId, aiId)
+      : { player: 0, opponent: 0 };
+    const wsBar = _dpWarScoreBar(ws.player, ws.opponent);
+
     // Показываем форму условий мира или кнопку её открытия
-    if (_dpShowPeaceForm) return _dpPeaceForm(playerNationId, aiId);
+    if (_dpShowPeaceForm) return wsBar + _dpPeaceForm(playerNationId, aiId);
     return `<div class="dp-war-block dp-war-block--war">
       <div class="dp-war-status">⚔️ <b>Состояние войны</b></div>
+      ${wsBar}
       <div class="dp-war-actions">
         <button class="dp-war-btn dp-war-btn--peace" onclick="dpOpenPeaceForm('${aiId}')">
-          📜 Предложить условия мира
+          📜 Условия мира (форма)
+        </button>
+        <button class="dp-war-btn dp-war-btn--peace-chat" onclick="dpOpenPeaceChat('${aiId}')">
+          🤝 Переговоры с ИИ
         </button>
       </div>
     </div>`;
@@ -454,35 +464,61 @@ function _dpPeaceForm(playerNationId, aiId) {
   const aiNation = GAME_STATE.nations[aiId];
   const aiName   = aiNation?.name ?? aiId;
 
-  // Регионы противника (выпадающий список с чекбоксами)
-  const allRegions = Object.values(GAME_STATE.regions ?? {});
+  // War score
+  const ws = typeof WarScoreEngine !== 'undefined'
+    ? WarScoreEngine.getWarScore(playerNationId, aiId)
+    : { player: 0, opponent: 0 };
+  const playerWS = ws.player;
+
+  // Регионы противника (список с чекбоксами)
+  const allRegions   = Object.values(GAME_STATE.regions ?? {});
   const enemyRegions = allRegions.filter(r => r.nation === aiId);
+  const cfg          = typeof WarScoreEngine !== 'undefined' ? WarScoreEngine.CFG : {};
 
   const regionRows = enemyRegions.map(r => {
     const checked = _dpPeaceRegions.has(r.id) ? 'checked' : '';
     const terrain = r.terrain ? ` <span class="dp-reg-terrain">[${r.terrain}]</span>` : '';
-    const pop = r.population?.total ?? r.population ?? 0;
+    const pop     = r.population?.total ?? r.population ?? 0;
+    const cost    = Math.min(cfg.PEACE_PROVINCE_MAX ?? 22,
+      (cfg.PEACE_PROVINCE_BASE ?? 8) + Math.floor(pop / 10_000) * (cfg.PEACE_PROVINCE_PER_10K ?? 1)
+    );
     return `<label class="dp-reg-row${_dpPeaceRegions.has(r.id) ? ' dp-reg-row--sel' : ''}">
       <input type="checkbox" ${checked} onchange="dpTogglePeaceRegion('${r.id}')">
-      <span class="dp-reg-name">${r.name ?? r.id}${terrain}</span>
+      <span class="dp-reg-name">${_escHtml(r.name ?? r.id)}${terrain}</span>
       ${pop > 0 ? `<span class="dp-reg-pop">👥 ${pop.toLocaleString()}</span>` : ''}
+      <span class="dp-reg-cost dp-ws-cost">⚔${cost}</span>
     </label>`;
   }).join('');
 
   const noRegions = enemyRegions.length === 0
     ? '<div class="dp-reg-empty">У противника нет регионов для передачи.</div>' : '';
 
+  // Расчёт стоимости текущих требований
+  const currentTerms = {
+    ceded_regions:    [..._dpPeaceRegions],
+    vassalize:        _dpPeaceVassalize,
+    reparations_turns: _dpPeaceRepTurns,
+    armistice_turns:  _dpPeaceArmistice ? 60 : 0,
+  };
+  const costCalc = typeof WarScoreEngine !== 'undefined'
+    ? WarScoreEngine.calcPeaceTermsCost(currentTerms)
+    : { total: 0, breakdown: [] };
+  const totalCost    = costCalc.total;
+  const canAfford    = totalCost <= playerWS;
+  const costBarPct   = playerWS > 0 ? Math.min(100, Math.round((totalCost / playerWS) * 100)) : (totalCost > 0 ? 100 : 0);
+  const costColor    = canAfford ? '#66bb6a' : '#ef5350';
+
   // Расчёт контрибуции на основе казны противника
-  const aiTreasury = Math.round(aiNation?.economy?.treasury ?? 0);
+  const aiTreasury   = Math.round(aiNation?.economy?.treasury ?? 0);
   const suggestedRep = Math.max(10, Math.round(aiTreasury * 0.03));
 
-  const repSelected = _dpPeaceRepTurns;
   const repOptions = [
-    { v: 0,   l: 'Без контрибуции' },
-    { v: 60,  l: '5 лет (60 ходов)' },
-    { v: 120, l: '10 лет (120 ходов)' },
-  ].map(o => `<option value="${o.v}"${repSelected === o.v ? ' selected' : ''}>${o.l}</option>`).join('');
+    { v: 0,   l: 'Без контрибуции',     cost: 0 },
+    { v: 60,  l: '5 лет (60 ходов)',    cost: cfg.PEACE_REP_60  ?? 10 },
+    { v: 120, l: '10 лет (120 ходов)',  cost: cfg.PEACE_REP_120 ?? 18 },
+  ].map(o => `<option value="${o.v}"${_dpPeaceRepTurns === o.v ? ' selected' : ''}>${o.l} ${o.cost > 0 ? '(⚔' + o.cost + ' WS)' : ''}</option>`).join('');
 
+  const vassalCost = cfg.PEACE_VASSALIZE ?? 30;
   const vassalChecked = _dpPeaceVassalize ? 'checked' : '';
   const armChecked    = _dpPeaceArmistice ? 'checked' : '';
 
@@ -490,6 +526,17 @@ function _dpPeaceForm(playerNationId, aiId) {
     <div class="dp-peace-hdr">
       <span>📜 Условия мира с <b>${_escHtml(aiName)}</b></span>
       <button class="dp-peace-cancel" onclick="dpClosePeaceForm()">✕</button>
+    </div>
+
+    <!-- Стоимость условий -->
+    <div class="dp-peace-cost-bar">
+      <div class="dp-peace-cost-track">
+        <div class="dp-peace-cost-fill" style="width:${costBarPct}%;background:${costColor}"></div>
+      </div>
+      <span class="dp-peace-cost-txt" style="color:${costColor}">
+        Стоимость: <b>${totalCost}</b> / ${playerWS} WS
+        ${!canAfford ? ' ⚠️ Недостаточно очков войны' : ''}
+      </span>
     </div>
 
     <!-- Провинции -->
@@ -506,9 +553,10 @@ function _dpPeaceForm(playerNationId, aiId) {
     <!-- Вассалитет -->
     <div class="dp-peace-section dp-peace-row">
       <label class="dp-peace-check-label">
-        <input type="checkbox" ${vassalChecked} onchange="dpSetPeaceVassalize(this.checked)">
+        <input type="checkbox" ${vassalChecked} onchange="dpSetPeaceVassalize(this.checked);dpUpdatePeaceCost('${aiId}')">
         🏳 Потребовать вассалитет
       </label>
+      <span class="dp-ws-cost">⚔${vassalCost} WS</span>
     </div>
 
     <!-- Контрибуция -->
@@ -517,23 +565,42 @@ function _dpPeaceForm(playerNationId, aiId) {
       <select class="dp-peace-sel" onchange="dpSetPeaceRep(+this.value)">
         ${repOptions}
       </select>
-      ${repSelected > 0 ? `<span class="dp-peace-rep-hint">≈ ${suggestedRep} зол./ход</span>` : ''}
+      ${_dpPeaceRepTurns > 0 ? `<span class="dp-peace-rep-hint">≈ ${suggestedRep} зол./ход</span>` : ''}
     </div>
 
     <!-- Перемирие -->
     <div class="dp-peace-section dp-peace-row">
       <label class="dp-peace-check-label">
         <input type="checkbox" ${armChecked} onchange="dpSetPeaceArmistice(this.checked)">
-        🕊 Перемирие 5 лет (60 ходов) — нельзя нарушить без штрафа
+        🕊 Перемирие 5 лет (60 ходов)
       </label>
+      <span class="dp-ws-cost" style="color:var(--text-dim)">⚔0 WS (бесплатно)</span>
     </div>
 
-    <button class="dp-peace-submit" onclick="dpProposePeace('${aiId}')">
+    <button class="dp-peace-submit${canAfford ? '' : ' dp-peace-submit--blocked'}"
+      onclick="dpProposePeace('${aiId}')"
+      ${canAfford ? '' : 'title="Недостаточно очков войны"'}>
       📨 Предложить условия мира
     </button>
     <div class="dp-peace-hint">
-      ИИ противника оценит ваши условия и может принять, отклонить или выдвинуть встречное предложение.
+      Очки войны (WS) определяют, насколько тяжёлые условия вы можете требовать.
+      ${!canAfford ? '<b style="color:#ef9a9a">Снизьте требования или продолжайте воевать.</b>' : ''}
     </div>
+  </div>`;
+
+/** Полоска очков войны: игрок vs противник */
+function _dpWarScoreBar(playerScore, opponentScore) {
+  const total = Math.max(1, playerScore + opponentScore);
+  const pct   = Math.round((playerScore / total) * 100);
+  const lead  = playerScore > opponentScore ? 'dp-ws-lead--player' : playerScore < opponentScore ? 'dp-ws-lead--opp' : '';
+  return `<div class="dp-ws-row">
+    <span class="dp-ws-label">Мои очки</span>
+    <div class="dp-ws-bar">
+      <div class="dp-ws-fill dp-ws-fill--player" style="width:${pct}%"></div>
+    </div>
+    <span class="dp-ws-nums ${lead}">
+      <b>${playerScore}</b> vs ${opponentScore}
+    </span>
   </div>`;
 }
 
@@ -566,6 +633,23 @@ function dpOpenPeaceForm(aiId) {
   _dpRender();
 }
 
+/** Открыть переговоры о мире через AI-чат (Claude Sonnet). */
+function dpOpenPeaceChat(aiId) {
+  const playerNationId = GAME_STATE.player_nation;
+  const aiNation = GAME_STATE.nations[aiId];
+  const ws = typeof WarScoreEngine !== 'undefined'
+    ? WarScoreEngine.getWarScore(playerNationId, aiId)
+    : { player: 0, opponent: 0 };
+
+  const firstMessage = `Я предлагаю начать переговоры о мире. `
+    + `Наши очки войны: мои — ${ws.player}, ваши — ${ws.opponent}. `
+    + `Какие условия вы считаете приемлемыми для завершения конфликта?`;
+
+  if (typeof showDipChatModal === 'function') {
+    showDipChatModal(aiId, firstMessage);
+  }
+}
+
 function dpClosePeaceForm() {
   _dpShowPeaceForm = false;
   _dpRender();
@@ -584,6 +668,7 @@ function dpTogglePeaceRegion(regionId) {
 function dpSetPeaceVassalize(v) { _dpPeaceVassalize = v; }
 function dpSetPeaceRep(v)       { _dpPeaceRepTurns  = v; _dpRender(); }
 function dpSetPeaceArmistice(v) { _dpPeaceArmistice = v; }
+function dpUpdatePeaceCost(aiId) { _dpRender(); }
 
 function dpProposePeace(aiId) {
   if (typeof DiplomacyEngine === 'undefined') return;
@@ -593,24 +678,46 @@ function dpProposePeace(aiId) {
   const aiTreasury = Math.round(aiNation?.economy?.treasury ?? 0);
   const suggestedRep = Math.max(10, Math.round(aiTreasury * 0.03));
 
-  // Оцениваем принятие ИИ
-  const score = DiplomacyEngine.getRelationScore(playerNationId, aiId);
-  let acceptChance = 0.5;
+  // Проверка war score
+  const ws = typeof WarScoreEngine !== 'undefined'
+    ? WarScoreEngine.getWarScore(playerNationId, aiId)
+    : { player: 0, opponent: 0 };
+  const currentTerms = {
+    ceded_regions: [..._dpPeaceRegions],
+    vassalize: _dpPeaceVassalize,
+    reparations_turns: _dpPeaceRepTurns,
+    armistice_turns: _dpPeaceArmistice ? 60 : 0,
+  };
+  const costCalc = typeof WarScoreEngine !== 'undefined'
+    ? WarScoreEngine.calcPeaceTermsCost(currentTerms)
+    : { total: 0 };
+
+  if (costCalc.total > ws.player) {
+    if (typeof addEventLog === 'function')
+      addEventLog(`⚠️ Требования слишком тяжёлые для ваших военных успехов (нужно ${costCalc.total} WS, у вас ${ws.player}).`, 'warning');
+    _dpRender();
+    return;
+  }
+
+  // Оцениваем принятие ИИ на основе военного баланса
+  const aiEval = typeof WarScoreEngine !== 'undefined'
+    ? WarScoreEngine.evaluateAIWarPosition(aiId, playerNationId)
+    : null;
+
+  const scoreGap  = ws.player - ws.opponent;  // положительное = игрок выигрывает
+  let acceptChance = 0.45 + (scoreGap / 100);  // базовый шанс от разрыва WS
 
   // Тяжёлые условия снижают шанс принятия
-  if (_dpPeaceRegions.size > 0)  acceptChance -= 0.08 * _dpPeaceRegions.size;
-  if (_dpPeaceVassalize)          acceptChance -= 0.30;
-  if (_dpPeaceRepTurns >= 120)    acceptChance -= 0.15;
-  else if (_dpPeaceRepTurns >= 60) acceptChance -= 0.08;
+  const costRatio = ws.player > 0 ? costCalc.total / ws.player : 1;
+  acceptChance -= costRatio * 0.3;  // дороже требования = меньше шанс
 
-  // Военная ситуация: если ИИ сильно проигрывает (очень низкий score) — примет хуже
-  const relMod = Math.max(-0.3, Math.min(0.3, score / 100 * 0.3));
-  acceptChance += relMod;
+  // Если ИИ оценивает своё положение как безнадёжное — принимает охотнее
+  if (aiEval?.shouldSeekPeace) acceptChance += 0.25;
 
-  // Перемирие — всегда повышает шанс принятия
-  if (_dpPeaceArmistice) acceptChance += 0.10;
+  // Перемирие повышает шанс
+  if (_dpPeaceArmistice) acceptChance += 0.08;
 
-  acceptChance = Math.max(0.05, Math.min(0.95, acceptChance));
+  acceptChance = Math.max(0.05, Math.min(0.92, acceptChance));
 
   const accepted = Math.random() < acceptChance;
 

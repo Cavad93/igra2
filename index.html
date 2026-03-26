@@ -5382,6 +5382,37 @@
       border-color: rgba(102,187,106,.5); background: rgba(102,187,106,.12); color: #a5d6a7;
     }
     .dp-war-btn--peace:hover { background: rgba(102,187,106,.25); }
+    .dp-war-btn--peace-chat {
+      border-color: rgba(100,181,246,.5); background: rgba(100,181,246,.12); color: #90caf9;
+    }
+    .dp-war-btn--peace-chat:hover { background: rgba(100,181,246,.25); }
+
+    /* ── Полоска очков войны ── */
+    .dp-ws-row {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 11px; margin-bottom: 8px; padding: 0 2px;
+    }
+    .dp-ws-label { color: var(--text-dim); min-width: 70px; white-space: nowrap; }
+    .dp-ws-bar {
+      flex: 1; height: 6px; background: rgba(255,255,255,.08);
+      border-radius: 3px; overflow: hidden;
+    }
+    .dp-ws-fill--player { height: 100%; background: linear-gradient(90deg,#66bb6a,#43a047); border-radius: 3px; transition: width .4s; }
+    .dp-ws-nums { font-size: 11px; color: var(--text-secondary); white-space: nowrap; min-width: 60px; text-align: right; }
+    .dp-ws-lead--player { color: #a5d6a7; font-weight: bold; }
+    .dp-ws-lead--opp    { color: #ef9a9a; font-weight: bold; }
+    .dp-ws-cost { font-size: 9px; color: var(--text-dim); white-space: nowrap; margin-left: auto; flex-shrink: 0; }
+
+    /* ── Полоска стоимости условий мира ── */
+    .dp-peace-cost-bar { margin-bottom: 10px; }
+    .dp-peace-cost-track {
+      height: 5px; background: rgba(255,255,255,.08);
+      border-radius: 3px; overflow: hidden; margin-bottom: 3px;
+    }
+    .dp-peace-cost-fill { height: 100%; border-radius: 3px; transition: width .3s, background .3s; }
+    .dp-peace-cost-txt { font-size: 10px; color: var(--text-secondary); }
+    .dp-reg-cost { font-size: 9px; white-space: nowrap; flex-shrink: 0; }
+    .dp-peace-submit--blocked { opacity: 0.5; cursor: not-allowed; }
     .dp-armistice-warn {
       font-size: 11px; color: #ffcc80; background: rgba(255,152,0,.1);
       border: 1px solid rgba(255,152,0,.3); border-radius: 4px;
@@ -6590,6 +6621,7 @@
   <script src="engine/diplomacy.js"></script>
   <script src="engine/treaty_validator.js"></script>
   <script src="engine/treaty_effects.js"></script>
+  <script src="engine/war_score.js"></script>
   <script src="engine/diplomacy_range.js"></script>
   <script src="engine/memory.js"></script>
   <script src="engine/buildings.js"></script>

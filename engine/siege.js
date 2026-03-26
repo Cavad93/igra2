@@ -298,6 +298,12 @@ function _completeSiege(siege, winArmy, cause) {
 
   // War score
   if (winArmy) winArmy.war_score_earned += SIEGE_CFG.WAR_SCORE_SIEGE;
+  if (typeof WarScoreEngine !== 'undefined') {
+    WarScoreEngine.onSiegeComplete(
+      siege.attacker_nation, siege.defender_nation,
+      siege.fortress_level ?? 1
+    );
+  }
 
   const causeLabel = { storm: 'штурмом', surrender: 'капитуляцией', starvation: 'голодом' }[cause] ?? 'осадой';
   const attName = GAME_STATE.nations[siege.attacker_nation]?.name ?? siege.attacker_nation;

@@ -188,6 +188,12 @@ async function processTurn() {
       try { processMemoryTick(); } catch (e) { console.warn('[memory_tick]', e); }
     }
 
+    // 5.4б2. Блокады портов и удержание территорий (war score)
+    if (typeof WarScoreEngine !== 'undefined') {
+      try { WarScoreEngine.processBlockadeTick(); } catch (e) { console.warn('[blockade_tick]', e); }
+      try { WarScoreEngine.processHoldingTick();  } catch (e) { console.warn('[holding_tick]', e); }
+    }
+
     // 5.4в. Движение армий и обработка осад
     if (typeof processArmyMovement === 'function') {
       try { processArmyMovement(); } catch (e) { console.warn('[army_movement]', e); }

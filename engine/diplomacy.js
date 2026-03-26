@@ -836,6 +836,11 @@ function declareWar(attackerNationId, targetNationId) {
     _applyArmisticeBreakCoalitionPenalty(attackerNationId, targetNationId);
   }
 
+  // Создаём запись войны в WarScoreEngine
+  if (typeof WarScoreEngine !== 'undefined') {
+    WarScoreEngine.initWar(attackerNationId, targetNationId);
+  }
+
   // Объявление войны
   rel.war   = true;
   rel.score = Math.min(-60, rel.score - 30);
@@ -940,6 +945,9 @@ function concludePeace(playerNationId, targetNationId, terms) {
 
   // 1. Завершаем войну
   rel.war = false;
+  if (typeof WarScoreEngine !== 'undefined') {
+    WarScoreEngine.endWar(playerNationId, targetNationId);
+  }
   const natPlayer = GAME_STATE.nations?.[playerNationId];
   const natTarget = GAME_STATE.nations?.[targetNationId];
   if (natPlayer?.relations?.[targetNationId]) natPlayer.relations[targetNationId].at_war = false;
