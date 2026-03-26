@@ -1004,6 +1004,7 @@ async function initGame() {
   // Fix #2a: _production_mod используется в _calcSlotBaseOutput на Ход 1,
   // до того как updateHappiness() его установит. Инициализируем нейтральным значением.
   for (const nation of Object.values(GAME_STATE.nations)) {
+    _ensureNationDefaults(nation);
     if (nation.population._production_mod == null) {
       nation.population._production_mod = 1.0;
     }
