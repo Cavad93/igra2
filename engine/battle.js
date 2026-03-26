@@ -302,9 +302,13 @@ function resolveNavalBattle(attackerNationId, defenderNationId) {
 // ── Вспомогательные ──────────────────────────────────────────────────
 
 /**
- * Считает бонус к силе атакующего от союзников по военному союзу (joint_attack).
- * Союзник добавляет 40% своей силы, сам несёт небольшие потери (1–3%).
- * @returns {{ bonus: number, allies: Array<{id, name, contribution}> }}
+ * Считает бонус к силе атакующего от союзников по совместному договору.
+ * Охватывает два типа:
+ *   military_alliance  — 40% силы союзника (постоянный союз, союзник уже воюет с врагом)
+ *   joint_campaign     — 60% силы союзника (целевой поход, максимальная координация)
+ *
+ * Союзник несёт потери 1–3% пехоты за участие.
+ * @returns {{ bonus: number, allies: Array<{id, name, contribution, treatyType}> }}
  */
 function _calcJointAttackBonus(attackerNationId, defenderNationId, terrain, battleType) {
   const allies = [];
@@ -314,33 +318,92 @@ function _calcJointAttackBonus(attackerNationId, defenderNationId, terrain, batt
   const treaties = GAME_STATE.diplomacy?.treaties ?? [];
 
   for (const treaty of treaties) {
-    if (treaty.status !== 'active' || treaty.type !== 'military_alliance') continue;
+    if (treaty.status !== 'active') continue;
+    if (!['military_alliance', 'joint_campaign'].includes(treaty.type)) continue;
     if (!treaty.parties.includes(attackerNationId)) continue;
 
     const allyId = treaty.parties.find(p => p !== attackerNationId);
     if (!allyId || allyId === defenderNationId) continue;
 
-    // Союзник должен быть в состоянии войны с защитником
-    const allyDefRel = DiplomacyEngine.getRelation(allyId, defenderNationId);
-    if (!allyDefRel?.war) continue;
-
     const ally = GAME_STATE.nations[allyId];
     if (!ally) continue;
+
+    if (treaty.type === 'military_alliance') {
+      // Союзник должен сам воевать с этим врагом
+      const allyDefRel = DiplomacyEngine.getRelation(allyId, defenderNationId);
+      if (!allyDefRel?.war) continue;
+    }
+    // joint_campaign: союзник участвует всегда — это суть совместного похода;
+    // если цель кампании указана в conditions.target_id — сверяем
+    if (treaty.type === 'joint_campaign') {
+      const targetId = treaty.conditions?.target_id;
+      if (targetId && targetId !== defenderNationId) continue;
+    }
 
     const allyStr = calculateMilitaryStrength(ally, {
       terrain, isDefender: false, type: battleType, nationId: allyId,
     });
-    const contribution = Math.round(allyStr * 0.40);
+
+    // joint_campaign — сильнее скоординированы (60%), military_alliance — 40%
+    const contributionPct = treaty.type === 'joint_campaign' ? 0.60 : 0.40;
+    const contribution = Math.round(allyStr * contributionPct);
     bonus += contribution;
 
-    // Союзник несёт символические потери (1–3% пехоты)
+    // Союзник несёт потери 1–3% пехоты
     const allyLoss = Math.round((ally.military.infantry ?? 0) * (0.01 + Math.random() * 0.02));
     ally.military.infantry = Math.max(0, (ally.military.infantry ?? 0) - allyLoss);
 
-    allies.push({ id: allyId, name: ally.name ?? allyId, contribution, loss: allyLoss });
+    allies.push({ id: allyId, name: ally.name ?? allyId, contribution, loss: allyLoss, treatyType: treaty.type });
   }
 
   return { bonus, allies };
+}
+
+/**
+ * Делит добычу с захваченного региона между атакующим и союзниками по совместному походу.
+ * joint_campaign.conditions.shared_loot = 0.5 → 50% добычи уходит союзнику.
+ */
+function _applySharedLoot(attackerNationId, defenderNationId, capturedRegionId, jointAllies) {
+  if (!capturedRegionId || !jointAllies?.length) return;
+
+  const region   = GAME_STATE.regions?.[capturedRegionId];
+  const attacker = GAME_STATE.nations[attackerNationId];
+  if (!region || !attacker) return;
+
+  // Базовая стоимость добычи: от численности населения региона
+  const regionPop  = region.population ?? region.pop_size ?? 5000;
+  const baseLoot   = Math.round(regionPop * 0.05);  // 5% населения → монеты
+  if (baseLoot <= 0) return;
+
+  const treaties = GAME_STATE.diplomacy?.treaties ?? [];
+
+  for (const ally of jointAllies) {
+    if (ally.treatyType !== 'joint_campaign') continue;
+
+    // Ищем соответствующий договор для получения shared_loot коэффициента
+    const treaty = treaties.find(t =>
+      t.status === 'active' && t.type === 'joint_campaign' &&
+      t.parties.includes(attackerNationId) && t.parties.includes(ally.id)
+    );
+    const lootShare = treaty?.conditions?.shared_loot ?? treaty?.effects?.shared_loot ?? 0.5;
+    const allyShare = Math.round(baseLoot * lootShare);
+
+    const allyNation = GAME_STATE.nations[ally.id];
+    if (!allyNation?.economy) continue;
+
+    // Вычитаем у атакующего, зачисляем союзнику
+    attacker.economy.treasury  = Math.max(0, (attacker.economy.treasury ?? 0) - allyShare);
+    allyNation.economy.treasury = (allyNation.economy.treasury ?? 0) + allyShare;
+
+    const isPlayerInvolved = attackerNationId === GAME_STATE.player_nation
+                          || ally.id          === GAME_STATE.player_nation;
+    if (isPlayerInvolved) {
+      addEventLog(
+        `💰 Добыча из ${region.name ?? capturedRegionId} разделена: ${ally.name} получает ${allyShare} монет по условиям совместного похода.`,
+        'good'
+      );
+    }
+  }
 }
 
 /**
@@ -356,29 +419,40 @@ function processAllianceWars() {
   const treaties = GAME_STATE.diplomacy?.treaties ?? [];
 
   for (const treaty of treaties) {
-    if (treaty.status !== 'active' || treaty.type !== 'military_alliance') continue;
+    if (treaty.status !== 'active') continue;
+    if (!['military_alliance', 'joint_campaign'].includes(treaty.type)) continue;
 
     const [natA, natB] = treaty.parties;
+    const isJointCampaign = treaty.type === 'joint_campaign';
+    // joint_campaign: цель может быть зафиксирована в conditions
+    const fixedTarget = isJointCampaign ? (treaty.conditions?.target_id ?? null) : null;
 
-    // Ищем общих врагов: нации, с которыми воюет хотя бы одна из сторон
+    // Шанс атаки за ход: joint_campaign активнее (50%), military_alliance (30%)
+    const attackChance = isJointCampaign ? 0.50 : 0.30;
+
     for (const [side, other] of [[natA, natB], [natB, natA]]) {
-      if (side === GAME_STATE.player_nation) continue; // игрок сам решает когда атаковать
+      if (side === GAME_STATE.player_nation) continue; // игрок решает сам
       const sideNat = GAME_STATE.nations[side];
       if (!sideNat) continue;
 
-      const enemies = (sideNat.military.at_war_with ?? []);
+      // Цели для атаки: зафиксированный враг или все общие враги
+      const enemies = fixedTarget
+        ? [fixedTarget]
+        : (sideNat.military.at_war_with ?? []);
+
       for (const enemyId of enemies) {
-        if (enemyId === other) continue; // союзники не атакуют друг друга
+        if (enemyId === other) continue;
 
-        // Союзник другой стороны тоже атакует этого врага (если ещё не воюет с ним)
-        const otherRelEnemy = DiplomacyEngine.getRelation(other, enemyId);
-        if (!otherRelEnemy?.war) continue; // союзник не воюет с этим врагом — пропуск
+        // Для military_alliance — оба должны воевать с врагом
+        if (!isJointCampaign) {
+          const otherRelEnemy = DiplomacyEngine.getRelation(other, enemyId);
+          if (!otherRelEnemy?.war) continue;
+        }
 
-        // 30% шанс совместной атаки за ход
-        if (Math.random() > 0.30) continue;
+        if (Math.random() > attackChance) continue;
 
         const enemy = GAME_STATE.nations[enemyId];
-        if (!enemy || enemy.regions?.length === 0) continue;
+        if (!enemy || !enemy.regions?.length) continue;
 
         processAttackAction(side, enemyId);
       }
@@ -518,6 +592,11 @@ function processAttackAction(attackerNationId, defenderNationId, opts = {}) {
 
   // Оборонные союзы: союзники защитника автоматически вступают в войну
   triggerDefensiveAlliances(attackerNationId, defenderNationId);
+
+  // Раздел добычи с союзниками по совместному походу
+  if (result.capturedRegionId && result.jointAllies?.length) {
+    _applySharedLoot(attackerNationId, defenderNationId, result.capturedRegionId, result.jointAllies);
+  }
 
   const attName = GAME_STATE.nations[attackerNationId]?.name ?? attackerNationId;
   const defName = GAME_STATE.nations[defenderNationId]?.name ?? defenderNationId;
