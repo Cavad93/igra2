@@ -385,17 +385,88 @@ function _applyOrderEffects(order, quality, char, nation) {
     }
 
     case 'economic_project': {
-      // Проект → разовая прибыль
-      const bonus = Math.round(qf * 500 * (nation.economy?.tax_rate ?? 0.1) * 100);
-      if (quality >= 50) {
-        nation.economy.treasury = (nation.economy.treasury ?? 0) + bonus;
-        return `Проект принёс ${bonus} монет в казну.`;
+      // Экономический проект: наместник строит здание в целевом регионе
+      // за счёт государственной казны (не более 30% наличных средств).
+      // Устраняет один дефицитный товар. Строит 1 тип здания, до 5 уровней.
+
+      const regionId = order.target_id;
+      const region   = regionId ? GAME_STATE.regions[regionId] : null;
+      if (!region) {
+        return 'Экономический проект: регион не указан или данные недоступны.';
+      }
+
+      // 1. Определяем дефицитный товар
+      const deficitGood = _findDeficitGood(nation);
+      if (!deficitGood) {
+        // Дефицита нет — строим наиболее востребованное здание по доходности
+        return 'Проект завершён: серьёзных дефицитов не обнаружено. Казначей оптимизировал существующее производство.';
+      }
+
+      // 2. Находим подходящее здание для региона
+      const buildingId = _findBuildingForGood(deficitGood, region);
+      if (!buildingId) {
+        const gName = typeof GOODS !== 'undefined' ? (GOODS[deficitGood]?.name ?? deficitGood) : deficitGood;
+        return `Проект: нет подходящего здания для «${gName}» в данном регионе (несовместимая местность).`;
+      }
+
+      const bDef       = BUILDINGS[buildingId];
+      const costPerLvl = calcConstructionCost(buildingId) || (bDef.cost ?? 200);
+
+      // 3. Бюджет ≤ 30% казны
+      const budget = Math.floor((nation.economy.treasury ?? 0) * 0.3);
+      if (budget < costPerLvl) {
+        return `Проект: недостаточно средств. Нужно ${costPerLvl} монет, бюджет 30% казны = ${budget} монет.`;
+      }
+
+      // 4. Сколько уровней строим (1-5, с учётом качества и бюджета)
+      const maxByBudget  = Math.min(5, Math.floor(budget / costPerLvl));
+      const maxByQuality = Math.max(1, Math.round(maxByBudget * qf));
+
+      // Проверяем существующий слот (не превышаем max_level здания)
+      const existingSlot = (region.building_slots || [])
+        .find(s => s.building_id === buildingId && s.status !== 'demolished');
+      const currentLevel  = existingSlot ? (existingSlot.level || 1) : 0;
+      const hardMax       = Math.min(5, bDef.max_level ?? 5);
+      const levelsToAdd   = Math.min(maxByQuality, hardMax - currentLevel);
+
+      if (levelsToAdd <= 0) {
+        const rName = MAP_REGIONS?.[regionId]?.name ?? regionId;
+        return `Проект: ${bDef.name} уже на максимальном уровне (${currentLevel}) в ${rName}.`;
+      }
+
+      const totalCost  = levelsToAdd * costPerLvl;
+      const finalLevel = currentLevel + levelsToAdd;
+
+      // 5. Применяем: меняем слот напрямую (проект выполнен за время приказа)
+      if (existingSlot) {
+        existingSlot.level = finalLevel;
       } else {
-        // Коррумпированный персонаж украл деньги
-        const stolen = Math.round(bonus * 0.4);
-        char.resources = char.resources ?? {};
-        char.resources.gold = (char.resources.gold ?? 0) + stolen;
-        return `Проект провален. Часть средств (${stolen} монет) присвоена исполнителем.`;
+        region.building_slots = region.building_slots || [];
+        region.building_slots.push({
+          slot_id:      `${regionId}_ep_${buildingId}_t${GAME_STATE.turn}`,
+          building_id:  buildingId,
+          status:       'active',
+          level:        finalLevel,
+          workers:      {},
+          founded_turn: GAME_STATE.turn,
+          revenue:      0,
+          wages_paid:   0,
+          owner:        'nation',
+        });
+      }
+      nation.economy.treasury = Math.max(0, (nation.economy.treasury ?? 0) - totalCost);
+
+      const rName   = MAP_REGIONS?.[regionId]?.name ?? regionId;
+      const gName   = typeof GOODS !== 'undefined' ? (GOODS[deficitGood]?.name ?? deficitGood) : deficitGood;
+      const lvlWord = finalLevel === 1 ? 'построено' : `расширено до уровня ${finalLevel}`;
+
+      if (quality >= 70) {
+        return `${bDef.icon ?? ''} ${bDef.name} ${lvlWord} в ${rName}. Устраняет дефицит «${gName}». Потрачено ${totalCost} монет.`;
+      } else if (quality >= 40) {
+        return `${bDef.name} ${lvlWord} в ${rName} (качество среднее). Потрачено ${totalCost} монет.`;
+      } else {
+        // Плохое качество: построено меньше, часть денег потрачена впустую
+        return `${bDef.name} ${lvlWord} в ${rName}, но строительство велось неэффективно. Потрачено ${totalCost} монет.`;
       }
     }
 
@@ -499,4 +570,62 @@ function getOrderRoleMatch(char, orderType) {
  */
 function initOrders() {
   if (!GAME_STATE.orders) GAME_STATE.orders = [];
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ ЭКОНОМИЧЕСКОГО ПРОЕКТА
+// ──────────────────────────────────────────────────────────────────────
+
+/**
+ * Находит наиболее дефицитный товар в запасах нации.
+ * Приоритет: wheat > timber > salt > tools > cloth > iron > wine > fish
+ * Возвращает строку-ключ товара или null если дефицита нет.
+ */
+function _findDeficitGood(nation) {
+  const stockpile = nation?.economy?.stockpile ?? {};
+  const PRIORITY = ['wheat', 'timber', 'salt', 'tools', 'cloth', 'iron', 'wine', 'fish',
+                    'wool', 'leather', 'olive_oil', 'pottery', 'bronze', 'trade_goods'];
+
+  // Сначала ищем товары с нулевым или очень низким запасом (< 50)
+  for (const good of PRIORITY) {
+    const qty = stockpile[good] ?? 0;
+    if (qty < 50) return good;
+  }
+
+  // Если явного нуля нет — берём товар с наименьшим запасом среди приоритетных
+  let minGood = null, minQty = Infinity;
+  for (const good of PRIORITY) {
+    const qty = stockpile[good] ?? 0;
+    if (qty < minQty) { minQty = qty; minGood = good; }
+  }
+  // Считаем дефицитом если ниже 200
+  return (minQty < 200) ? minGood : null;
+}
+
+/**
+ * Находит здание, производящее указанный товар и совместимое с регионом.
+ * Возвращает buildingId или null.
+ */
+function _findBuildingForGood(good, region) {
+  if (!good || typeof BUILDINGS === 'undefined') return null;
+
+  const candidates = [];
+  for (const [bid, bDef] of Object.entries(BUILDINGS)) {
+    if (!bDef.nation_buildable) continue;
+    const outputs = bDef.production_output ?? [];
+    const produces = outputs.some(o => o.good === good);
+    if (!produces) continue;
+    // Проверяем совместимость с регионом
+    const check = typeof canBuildInRegion === 'function' ? canBuildInRegion(bid, region) : { ok: true };
+    if (check.ok || check.is_upgrade) candidates.push(bid);
+  }
+
+  if (candidates.length === 0) return null;
+
+  // Предпочитаем здание, которое уже строится/существует в регионе
+  const existing = (region.building_slots ?? []).map(s => s.building_id);
+  for (const bid of candidates) {
+    if (existing.includes(bid)) return bid;
+  }
+  return candidates[0];
 }

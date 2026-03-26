@@ -2447,7 +2447,7 @@ function onOrderTypeChange() {
   if (!targetRow) return;
   // Дипломатические и военные миссии имеют иностранную цель
   const needsForeignTarget = ['diplomatic_mission', 'military_campaign'].includes(type);
-  const needsRegionTarget  = type === 'govern_region';
+  const needsRegionTarget  = ['govern_region', 'economic_project'].includes(type);
 
   // Перестраиваем select цели
   const targetSel = document.getElementById('order-target-sel');
@@ -2523,8 +2523,15 @@ function submitIssueOrder() {
   }
 
   const nation      = GAME_STATE.nations[GAME_STATE.player_nation];
-  const targetNation = targetId ? GAME_STATE.nations[targetId] : null;
-  const targetLabel  = targetNation?.name ?? targetId ?? '—';
+  const needsRegion = ['govern_region', 'economic_project'].includes(type);
+  let targetLabel;
+  if (needsRegion && targetId) {
+    const r = GAME_STATE.regions?.[targetId] ?? MAP_REGIONS?.[targetId];
+    targetLabel = r?.name ?? targetId;
+  } else {
+    const targetNation = targetId ? GAME_STATE.nations[targetId] : null;
+    targetLabel = targetNation?.name ?? targetId ?? '—';
+  }
 
   if (typeof issueOrder !== 'function') {
     alert('Движок приказов не загружен.');
@@ -2679,7 +2686,7 @@ function onMpTypeChange() {
   const nation   = GAME_STATE.nations?.[nationId];
 
   const needsForeign = ['diplomatic_mission', 'military_campaign'].includes(type);
-  const needsRegion  = type === 'govern_region';
+  const needsRegion  = ['govern_region', 'economic_project'].includes(type);
 
   if (needsForeign) {
     const opts = Object.entries(GAME_STATE.nations ?? {}).filter(([id]) => id !== nationId).slice(0, 30)
@@ -2726,8 +2733,15 @@ function submitMpOrder() {
   if (!type || !charId) { alert('Выберите тип приказа и исполнителя.'); return; }
   if (typeof issueOrder !== 'function') { alert('Движок приказов не загружен.'); return; }
 
-  const targetNation = targetId ? GAME_STATE.nations?.[targetId] : null;
-  const targetLabel  = targetNation?.name ?? targetId ?? '—';
+  const needsRegionTgt = ['govern_region', 'economic_project'].includes(type);
+  let targetLabel;
+  if (needsRegionTgt && targetId) {
+    const r = GAME_STATE.regions?.[targetId] ?? MAP_REGIONS?.[targetId];
+    targetLabel = r?.name ?? targetId;
+  } else {
+    const targetNation = targetId ? GAME_STATE.nations?.[targetId] : null;
+    targetLabel = targetNation?.name ?? targetId ?? '—';
+  }
 
   const result = issueOrder({ type, target_id: targetId, target_label: targetLabel, assigned_char_id: charId, oversight });
   if (result) {
