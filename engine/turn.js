@@ -338,7 +338,7 @@ async function processAINations() {
     }
 
     // Tier 1 → Sonnet (полный контекст), Tier 2 → Haiku (экономия)
-    const model = tier === 1 ? CONFIG.MODEL_SONNET : CONFIG.MODEL_HAIKU;
+    const model = CONFIG.MODEL_HAIKU; // Sonnet только для реального диалога с игроком
 
     pendingNationIds.push(nationId);
     promises.push(

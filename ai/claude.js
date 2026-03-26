@@ -287,7 +287,7 @@ function calculatePersonalImpact(char, action) {
 // 3. РЕШЕНИЕ AI-НАЦИИ
 // ──────────────────────────────────────────────────────────────
 
-async function getAINationDecision(nationId, model = CONFIG.MODEL_SONNET) {
+async function getAINationDecision(nationId, model = CONFIG.MODEL_HAIKU) {
   const nation = GAME_STATE.nations[nationId];
 
   // Собираем информацию о соседях
