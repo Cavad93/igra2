@@ -5358,6 +5358,98 @@
       color: var(--text-dim);
     }
 
+    /* ── Война / Мир ── */
+    .dp-war-block {
+      padding: 10px 22px;
+      border-bottom: 1px solid rgba(107,79,26,.18);
+      flex-shrink: 0;
+    }
+    .dp-war-block--war { background: rgba(183,28,28,.06); }
+    .dp-war-status { font-size: 12px; font-weight: bold; color: #ef5350; margin-bottom: 8px; }
+    .dp-war-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .dp-war-btn {
+      padding: 5px 14px; font-size: 11px; cursor: pointer; border-radius: 4px;
+      border: 1px solid; transition: background .15s;
+    }
+    .dp-war-btn--declare {
+      border-color: rgba(229,57,53,.5); background: rgba(229,57,53,.15); color: #ef9a9a;
+    }
+    .dp-war-btn--declare:hover { background: rgba(229,57,53,.3); }
+    .dp-war-btn--armistice {
+      border-color: rgba(255,152,0,.5); background: rgba(255,152,0,.12); color: #ffcc80;
+    }
+    .dp-war-btn--peace {
+      border-color: rgba(102,187,106,.5); background: rgba(102,187,106,.12); color: #a5d6a7;
+    }
+    .dp-war-btn--peace:hover { background: rgba(102,187,106,.25); }
+    .dp-armistice-warn {
+      font-size: 11px; color: #ffcc80; background: rgba(255,152,0,.1);
+      border: 1px solid rgba(255,152,0,.3); border-radius: 4px;
+      padding: 6px 10px; margin-bottom: 8px; line-height: 1.5;
+    }
+
+    /* ── Форма условий мира ── */
+    .dp-peace-form {
+      padding: 12px 22px;
+      border-bottom: 1px solid rgba(107,79,26,.18);
+      flex-shrink: 0;
+    }
+    .dp-peace-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 13px; font-weight: bold; color: var(--text-gold);
+      margin-bottom: 12px;
+    }
+    .dp-peace-cancel {
+      background: none; border: none; color: var(--text-dim);
+      cursor: pointer; font-size: 14px;
+    }
+    .dp-peace-cancel:hover { color: var(--text-primary); }
+    .dp-peace-section { margin-bottom: 10px; }
+    .dp-peace-sec-label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: .1em;
+      color: var(--text-gold); font-family: 'Cinzel', serif; margin-bottom: 6px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .dp-peace-count { color: var(--text-secondary); font-family: inherit; text-transform: none; letter-spacing: 0; }
+    .dp-peace-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .dp-peace-check-label { font-size: 12px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .dp-peace-check-label input { cursor: pointer; }
+    .dp-peace-sel {
+      background: rgba(255,255,255,.06); border: 1px solid rgba(107,79,26,.4);
+      color: var(--text-primary); border-radius: 3px; font-size: 11px; padding: 3px 6px; cursor: pointer;
+    }
+    .dp-peace-rep-hint { font-size: 10px; color: var(--text-dim); }
+
+    /* ── Список регионов ── */
+    .dp-reg-list {
+      max-height: 150px; overflow-y: auto;
+      border: 1px solid rgba(107,79,26,.25); border-radius: 4px;
+      background: rgba(0,0,0,.2);
+    }
+    .dp-reg-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 8px; cursor: pointer; font-size: 11px;
+      color: var(--text-secondary); border-bottom: 1px solid rgba(107,79,26,.1);
+      transition: background .1s;
+    }
+    .dp-reg-row:last-child { border-bottom: none; }
+    .dp-reg-row:hover { background: rgba(107,79,26,.15); }
+    .dp-reg-row--sel { background: rgba(102,187,106,.08); color: var(--text-primary); }
+    .dp-reg-row input[type=checkbox] { cursor: pointer; flex-shrink: 0; }
+    .dp-reg-name { flex: 1; }
+    .dp-reg-terrain { color: var(--text-dim); font-size: 9px; }
+    .dp-reg-pop { color: var(--text-dim); font-size: 10px; white-space: nowrap; }
+    .dp-reg-empty { padding: 10px 12px; font-size: 11px; color: var(--text-dim); }
+
+    .dp-peace-submit {
+      width: 100%; padding: 8px; margin-top: 8px;
+      background: rgba(102,187,106,.2); border: 1px solid rgba(102,187,106,.4);
+      color: #a5d6a7; border-radius: 4px; cursor: pointer; font-size: 12px;
+      transition: background .15s;
+    }
+    .dp-peace-submit:hover { background: rgba(102,187,106,.35); }
+    .dp-peace-hint { font-size: 10px; color: var(--text-dim); margin-top: 6px; line-height: 1.4; }
+
     /* ── Секция договоров ── */
     .dp-treaties-section {
       padding: 12px 22px;

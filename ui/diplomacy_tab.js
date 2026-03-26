@@ -13,6 +13,13 @@ let _dpTab            = 'negotiations'; // 'negotiations' | 'treaties'
 // Состояние текущего открытого чат-модала
 let _dpChatModalNation = null;    // aiNationId открытого модала
 
+// Выбранные регионы для передачи в условиях мира
+let _dpPeaceRegions    = new Set();   // Set of regionId
+let _dpPeaceVassalize  = false;
+let _dpPeaceRepTurns   = 0;    // 0 | 60 | 120
+let _dpPeaceArmistice  = true;
+let _dpShowPeaceForm   = false;
+
 const _dtState = {};
 function _getDtState(id) {
   if (!_dtState[id]) {
@@ -103,6 +110,8 @@ function dpSwitchTab(tab) { _dpTab = tab; _dpRender(); }
 function dpSelectNation(aiNationId) {
   _dpSelectedNation = aiNationId;
   _dpTab = 'negotiations';
+  _dpShowPeaceForm  = false;
+  _dpPeaceRegions   = new Set();
   _dpRender();
 }
 
@@ -360,12 +369,16 @@ function _dpRenderNegotiation(playerNationId, foreign) {
       </div>
     </div>
 
-    <!-- ДОГОВОРЫ -->
+    <!-- ВОЙНА / МИР -->
+    ${_dpWarPeaceBlock(playerNationId, aiId, atWar, rel)}
+
+    <!-- ДОГОВОРЫ (только когда нет войны и не показана форма мира) -->
+    ${!atWar && !_dpShowPeaceForm ? `
     <div class="dp-treaties-section">
       <div class="dp-sec-label">Предложить договор</div>
       <div class="dp-treaty-grid">${treatyBtns}</div>
       ${selectedTag}
-    </div>
+    </div>` : ''}
 
     <!-- ДИАЛОГ -->
     <div class="dp-dialogue-section">
@@ -393,6 +406,236 @@ function _dpRenderNegotiation(playerNationId, foreign) {
       </div>
     </div>
   `;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// БЛОК ВОЙНА / МИР
+// ──────────────────────────────────────────────────────────────────────────────
+
+function _dpWarPeaceBlock(playerNationId, aiId, atWar, rel) {
+  const armistice = typeof DiplomacyEngine !== 'undefined'
+    ? DiplomacyEngine.getArmistice?.(playerNationId, aiId) : null;
+  const armisticeTurns = armistice
+    ? Math.max(0, (armistice.turn_expires ?? 0) - (GAME_STATE.turn ?? 1))
+    : 0;
+
+  if (atWar) {
+    // Показываем форму условий мира или кнопку её открытия
+    if (_dpShowPeaceForm) return _dpPeaceForm(playerNationId, aiId);
+    return `<div class="dp-war-block dp-war-block--war">
+      <div class="dp-war-status">⚔️ <b>Состояние войны</b></div>
+      <div class="dp-war-actions">
+        <button class="dp-war-btn dp-war-btn--peace" onclick="dpOpenPeaceForm('${aiId}')">
+          📜 Предложить условия мира
+        </button>
+      </div>
+    </div>`;
+  }
+
+  // Не в войне
+  const hasArmistice = !!armistice;
+  const armisticeWarning = hasArmistice
+    ? `<div class="dp-armistice-warn">
+        🕊 Перемирие действует ещё <b>${armisticeTurns} ход.</b>
+        Объявление войны нарушит договор: <b>−50 отношений</b> + штраф со всеми соседями.
+      </div>` : '';
+
+  return `<div class="dp-war-block">
+    ${armisticeWarning}
+    <button class="dp-war-btn dp-war-btn--declare${hasArmistice ? ' dp-war-btn--armistice' : ''}"
+      onclick="dpDeclareWar('${aiId}')">
+      ⚔️ ${hasArmistice ? 'Нарушить перемирие и объявить войну' : 'Объявить войну'}
+    </button>
+  </div>`;
+}
+
+/** Форма условий мира */
+function _dpPeaceForm(playerNationId, aiId) {
+  const aiNation = GAME_STATE.nations[aiId];
+  const aiName   = aiNation?.name ?? aiId;
+
+  // Регионы противника (выпадающий список с чекбоксами)
+  const allRegions = Object.values(GAME_STATE.regions ?? {});
+  const enemyRegions = allRegions.filter(r => r.nation === aiId);
+
+  const regionRows = enemyRegions.map(r => {
+    const checked = _dpPeaceRegions.has(r.id) ? 'checked' : '';
+    const terrain = r.terrain ? ` <span class="dp-reg-terrain">[${r.terrain}]</span>` : '';
+    const pop = r.population?.total ?? r.population ?? 0;
+    return `<label class="dp-reg-row${_dpPeaceRegions.has(r.id) ? ' dp-reg-row--sel' : ''}">
+      <input type="checkbox" ${checked} onchange="dpTogglePeaceRegion('${r.id}')">
+      <span class="dp-reg-name">${r.name ?? r.id}${terrain}</span>
+      ${pop > 0 ? `<span class="dp-reg-pop">👥 ${pop.toLocaleString()}</span>` : ''}
+    </label>`;
+  }).join('');
+
+  const noRegions = enemyRegions.length === 0
+    ? '<div class="dp-reg-empty">У противника нет регионов для передачи.</div>' : '';
+
+  // Расчёт контрибуции на основе казны противника
+  const aiTreasury = Math.round(aiNation?.economy?.treasury ?? 0);
+  const suggestedRep = Math.max(10, Math.round(aiTreasury * 0.03));
+
+  const repSelected = _dpPeaceRepTurns;
+  const repOptions = [
+    { v: 0,   l: 'Без контрибуции' },
+    { v: 60,  l: '5 лет (60 ходов)' },
+    { v: 120, l: '10 лет (120 ходов)' },
+  ].map(o => `<option value="${o.v}"${repSelected === o.v ? ' selected' : ''}>${o.l}</option>`).join('');
+
+  const vassalChecked = _dpPeaceVassalize ? 'checked' : '';
+  const armChecked    = _dpPeaceArmistice ? 'checked' : '';
+
+  return `<div class="dp-peace-form">
+    <div class="dp-peace-hdr">
+      <span>📜 Условия мира с <b>${_escHtml(aiName)}</b></span>
+      <button class="dp-peace-cancel" onclick="dpClosePeaceForm()">✕</button>
+    </div>
+
+    <!-- Провинции -->
+    <div class="dp-peace-section">
+      <div class="dp-peace-sec-label">🗺 Потребовать провинции
+        <span class="dp-peace-count">${_dpPeaceRegions.size > 0 ? '(' + _dpPeaceRegions.size + ' выбрано)' : ''}</span>
+      </div>
+      <div class="dp-reg-list">
+        ${noRegions}
+        ${regionRows}
+      </div>
+    </div>
+
+    <!-- Вассалитет -->
+    <div class="dp-peace-section dp-peace-row">
+      <label class="dp-peace-check-label">
+        <input type="checkbox" ${vassalChecked} onchange="dpSetPeaceVassalize(this.checked)">
+        🏳 Потребовать вассалитет
+      </label>
+    </div>
+
+    <!-- Контрибуция -->
+    <div class="dp-peace-section dp-peace-row">
+      <span class="dp-peace-sec-label">💰 Репарации</span>
+      <select class="dp-peace-sel" onchange="dpSetPeaceRep(+this.value)">
+        ${repOptions}
+      </select>
+      ${repSelected > 0 ? `<span class="dp-peace-rep-hint">≈ ${suggestedRep} зол./ход</span>` : ''}
+    </div>
+
+    <!-- Перемирие -->
+    <div class="dp-peace-section dp-peace-row">
+      <label class="dp-peace-check-label">
+        <input type="checkbox" ${armChecked} onchange="dpSetPeaceArmistice(this.checked)">
+        🕊 Перемирие 5 лет (60 ходов) — нельзя нарушить без штрафа
+      </label>
+    </div>
+
+    <button class="dp-peace-submit" onclick="dpProposePeace('${aiId}')">
+      📨 Предложить условия мира
+    </button>
+    <div class="dp-peace-hint">
+      ИИ противника оценит ваши условия и может принять, отклонить или выдвинуть встречное предложение.
+    </div>
+  </div>`;
+}
+
+// ── Обработчики войны / мира ─────────────────────────────────────────────────
+
+function dpDeclareWar(aiId) {
+  const playerNationId = GAME_STATE.player_nation;
+  const aiNation  = GAME_STATE.nations[aiId];
+  const armistice = typeof DiplomacyEngine !== 'undefined'
+    ? DiplomacyEngine.getArmistice?.(playerNationId, aiId) : null;
+
+  const msg = armistice
+    ? `Вы нарушите активное перемирие! Штраф: −50 к отношениям + ухудшение отношений со всеми соседями.\n\nОбъявить войну ${aiNation?.name ?? aiId}?`
+    : `Объявить войну ${aiNation?.name ?? aiId}?`;
+
+  if (!confirm(msg)) return;
+
+  if (typeof DiplomacyEngine !== 'undefined') {
+    DiplomacyEngine.declareWar(playerNationId, aiId);
+  }
+  _dpRender();
+}
+
+function dpOpenPeaceForm(aiId) {
+  _dpPeaceRegions   = new Set();
+  _dpPeaceVassalize = false;
+  _dpPeaceRepTurns  = 0;
+  _dpPeaceArmistice = true;
+  _dpShowPeaceForm  = true;
+  _dpRender();
+}
+
+function dpClosePeaceForm() {
+  _dpShowPeaceForm = false;
+  _dpRender();
+}
+
+function dpTogglePeaceRegion(regionId) {
+  if (_dpPeaceRegions.has(regionId)) _dpPeaceRegions.delete(regionId);
+  else _dpPeaceRegions.add(regionId);
+  // Перерисовываем только форму, не весь оверлей
+  const formEl = document.querySelector('.dp-peace-form');
+  if (formEl) formEl.outerHTML = _dpPeaceForm(GAME_STATE.player_nation, _dpSelectedNation);
+  // Fallback — полный ре-рендер
+  else _dpRender();
+}
+
+function dpSetPeaceVassalize(v) { _dpPeaceVassalize = v; }
+function dpSetPeaceRep(v)       { _dpPeaceRepTurns  = v; _dpRender(); }
+function dpSetPeaceArmistice(v) { _dpPeaceArmistice = v; }
+
+function dpProposePeace(aiId) {
+  if (typeof DiplomacyEngine === 'undefined') return;
+
+  const playerNationId = GAME_STATE.player_nation;
+  const aiNation  = GAME_STATE.nations[aiId];
+  const aiTreasury = Math.round(aiNation?.economy?.treasury ?? 0);
+  const suggestedRep = Math.max(10, Math.round(aiTreasury * 0.03));
+
+  // Оцениваем принятие ИИ
+  const score = DiplomacyEngine.getRelationScore(playerNationId, aiId);
+  let acceptChance = 0.5;
+
+  // Тяжёлые условия снижают шанс принятия
+  if (_dpPeaceRegions.size > 0)  acceptChance -= 0.08 * _dpPeaceRegions.size;
+  if (_dpPeaceVassalize)          acceptChance -= 0.30;
+  if (_dpPeaceRepTurns >= 120)    acceptChance -= 0.15;
+  else if (_dpPeaceRepTurns >= 60) acceptChance -= 0.08;
+
+  // Военная ситуация: если ИИ сильно проигрывает (очень низкий score) — примет хуже
+  const relMod = Math.max(-0.3, Math.min(0.3, score / 100 * 0.3));
+  acceptChance += relMod;
+
+  // Перемирие — всегда повышает шанс принятия
+  if (_dpPeaceArmistice) acceptChance += 0.10;
+
+  acceptChance = Math.max(0.05, Math.min(0.95, acceptChance));
+
+  const accepted = Math.random() < acceptChance;
+
+  const terms = {
+    ceded_regions:       [..._dpPeaceRegions],
+    vassalize:           _dpPeaceVassalize,
+    reparations_turns:   _dpPeaceRepTurns,
+    reparations_per_turn: _dpPeaceRepTurns > 0 ? suggestedRep : 0,
+    armistice_turns:     _dpPeaceArmistice ? 60 : 0,
+    loser:               aiId,
+    winner:              playerNationId,
+  };
+
+  if (accepted) {
+    DiplomacyEngine.concludePeace(playerNationId, aiId, terms);
+    _dpShowPeaceForm = false;
+    if (typeof addEventLog === 'function') {
+      addEventLog(`✅ ${aiNation?.name ?? aiId} принял условия мира.`, 'success');
+    }
+  } else {
+    if (typeof addEventLog === 'function') {
+      addEventLog(`❌ ${aiNation?.name ?? aiId} отклонил условия мира. Слишком тяжёлые требования.`, 'warning');
+    }
+  }
+  _dpRender();
 }
 
 function _typingDots() {

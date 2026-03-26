@@ -89,10 +89,18 @@ const TREATY_TYPES = {
   war_reparations: {
     label:       'Выплата контрибуции',
     icon:        '💰',
-    description: 'Проигравший выплачивает единовременно или по ходам.',
+    description: 'Проигравший выплачивает ежемесячно в течение 10 лет (120 ходов).',
     effects: { reparations: true },
-    default_duration: 5,    // лет
+    default_duration: 10,   // лет (120 ходов)
     ai_weight: 0.5,
+  },
+  armistice: {
+    label:       'Перемирие',
+    icon:        '🕊',
+    description: 'Обязательное прекращение огня на 5 лет (60 ходов). Нарушение карается штрафом к отношениям со всеми соседями.',
+    effects: { forbid_attack: true, is_armistice: true },
+    default_duration: 5,    // лет (60 ходов)
+    ai_weight: 1.3,
   },
   territorial_exchange: {
     label:       'Обмен территориями',
@@ -795,6 +803,208 @@ function processDiplomacyGlobalTick() {
 }
 
 // ──────────────────────────────────────────────────────────────
+// ВОЙНА / МИР — прямые действия
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Официально объявить войну. Учитывает активное перемирие (armistice).
+ * @returns { ok: bool, reason: string }
+ */
+function declareWar(attackerNationId, targetNationId) {
+  if (!GAME_STATE.diplomacy) initDiplomacy();
+  const rel = getRelation(attackerNationId, targetNationId);
+
+  if (rel.war) return { ok: false, reason: 'Вы уже находитесь в состоянии войны.' };
+
+  // Нарушение перемирия
+  const armistices = (GAME_STATE.diplomacy.treaties ?? []).filter(t =>
+    t.status === 'active' && t.type === 'armistice' &&
+    t.parties.includes(attackerNationId) && t.parties.includes(targetNationId)
+  );
+  const breakingArmistice = armistices.length > 0;
+
+  if (breakingArmistice) {
+    for (const t of armistices) {
+      t.status    = 'broken';
+      t.breaker   = attackerNationId;
+      t.turn_broken = GAME_STATE.turn ?? 1;
+    }
+    // Штраф за нарушение перемирия
+    rel.score = Math.max(-100, rel.score - 50);
+    addDiplomacyEvent(attackerNationId, targetNationId, -50, 'armistice_broken');
+    // Штраф к отношениям со всеми соседями-очевидцами
+    _applyArmisticeBreakCoalitionPenalty(attackerNationId, targetNationId);
+  }
+
+  // Объявление войны
+  rel.war   = true;
+  rel.score = Math.min(-60, rel.score - 30);
+  addDiplomacyEvent(attackerNationId, targetNationId, -30, 'war');
+
+  // Обновляем legacy relations
+  const natA = GAME_STATE.nations?.[attackerNationId];
+  const natB = GAME_STATE.nations?.[targetNationId];
+  if (natA?.relations?.[targetNationId]) natA.relations[targetNationId].at_war = true;
+  if (natB?.relations?.[attackerNationId]) natB.relations[attackerNationId].at_war = true;
+
+  // Разрываем несовместимые договоры (пакты о ненападении, союзы)
+  const incompatible = ['non_aggression', 'defensive_alliance', 'military_alliance', 'military_access'];
+  for (const t of (GAME_STATE.diplomacy.treaties ?? [])) {
+    if (t.status !== 'active') continue;
+    if (!incompatible.includes(t.type)) continue;
+    if (t.parties.includes(attackerNationId) && t.parties.includes(targetNationId)) {
+      t.status    = 'broken';
+      t.breaker   = attackerNationId;
+      t.turn_broken = GAME_STATE.turn ?? 1;
+    }
+  }
+
+  if (typeof addEventLog === 'function') {
+    const aN = natA?.name ?? attackerNationId;
+    const bN = natB?.name ?? targetNationId;
+    const warn = breakingArmistice ? ' ⚠️ Перемирие нарушено! Штраф к отношениям.' : '';
+    addEventLog(`⚔️ ${aN} объявляет войну ${bN}!${warn}`, 'danger');
+  }
+  return { ok: true, breaking_armistice: breakingArmistice };
+}
+
+/** Штраф к отношениям агрессора со всеми его соседями при нарушении перемирия. */
+function _applyArmisticeBreakCoalitionPenalty(aggressorId, victimId) {
+  const allNationIds = Object.keys(GAME_STATE.nations ?? {});
+  for (const otherId of allNationIds) {
+    if (otherId === aggressorId || otherId === victimId) continue;
+    const relOther = getRelation(aggressorId, otherId);
+    // Соседи (смежные регионы) получают штраф -15, остальные -5
+    const penalty = _areNeighbors(aggressorId, otherId) ? 15 : 5;
+    relOther.score = Math.max(-100, relOther.score - penalty);
+    addDiplomacyEvent(aggressorId, otherId, -penalty, 'armistice_broken_observer');
+  }
+}
+
+function _areNeighbors(nationA, nationB) {
+  const regions = Object.values(GAME_STATE.regions ?? {});
+  const regA = new Set(regions.filter(r => r.nation === nationA).map(r => r.id));
+  const regB = new Set(regions.filter(r => r.nation === nationB).map(r => r.id));
+  for (const r of regions) {
+    if (regA.has(r.id)) {
+      for (const c of (r.connections ?? [])) {
+        if (regB.has(c)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Передать регион от одной нации к другой (при мирном договоре).
+ * @param {string} regionId
+ * @param {string} fromNationId
+ * @param {string} toNationId
+ */
+function transferRegion(regionId, fromNationId, toNationId) {
+  const region = GAME_STATE.regions?.[regionId];
+  if (!region) return false;
+  if (region.nation !== fromNationId) return false;
+
+  region.nation = toNationId;
+
+  // Обновляем нации (если хранят списки регионов)
+  const natFrom = GAME_STATE.nations?.[fromNationId];
+  const natTo   = GAME_STATE.nations?.[toNationId];
+  if (natFrom?.regions) natFrom.regions = natFrom.regions.filter(id => id !== regionId);
+  if (natTo?.regions && !natTo.regions.includes(regionId)) natTo.regions.push(regionId);
+
+  if (typeof addEventLog === 'function') {
+    const fromName = natFrom?.name ?? fromNationId;
+    const toName   = natTo?.name   ?? toNationId;
+    addEventLog(`🗺 Регион «${region.name ?? regionId}» передан: ${fromName} → ${toName}.`, 'info');
+  }
+  return true;
+}
+
+/**
+ * Принять условия мира и создать соответствующие договоры.
+ * terms = {
+ *   ceded_regions:    string[],   // regionId — от проигравшего к победителю
+ *   vassalize:        bool,        // проигравший становится вассалом
+ *   reparations_turns: number,     // 0 | 60 | 120
+ *   reparations_per_turn: number,  // золото/ход
+ *   armistice_turns:  number,      // 60 (5 лет)
+ *   loser:            string,      // nationId проигравшего
+ *   winner:           string,      // nationId победителя
+ * }
+ */
+function concludePeace(playerNationId, targetNationId, terms) {
+  if (!GAME_STATE.diplomacy) initDiplomacy();
+  const rel = getRelation(playerNationId, targetNationId);
+
+  // 1. Завершаем войну
+  rel.war = false;
+  const natPlayer = GAME_STATE.nations?.[playerNationId];
+  const natTarget = GAME_STATE.nations?.[targetNationId];
+  if (natPlayer?.relations?.[targetNationId]) natPlayer.relations[targetNationId].at_war = false;
+  if (natTarget?.relations?.[playerNationId]) natTarget.relations[playerNationId].at_war = false;
+
+  const loser  = terms.loser  ?? targetNationId;
+  const winner = terms.winner ?? playerNationId;
+
+  // 2. Передача регионов
+  for (const regionId of (terms.ceded_regions ?? [])) {
+    transferRegion(regionId, loser, winner);
+  }
+
+  // 3. Вассалитет
+  if (terms.vassalize) {
+    createTreaty(winner, loser, 'vassalage', { notes: 'Условие мирного договора.' });
+  }
+
+  // 4. Контрибуция
+  if ((terms.reparations_turns ?? 0) > 0 && (terms.reparations_per_turn ?? 0) > 0) {
+    const durationYears = Math.round(terms.reparations_turns / TURNS_PER_YEAR);
+    createTreaty(winner, loser, 'war_reparations', {
+      duration:              durationYears,
+      reparations_per_turn:  terms.reparations_per_turn,
+      reparations_payer:     loser,
+      notes: `Контрибуция по ${terms.reparations_per_turn} зол./ход за ${terms.reparations_turns} ходов.`,
+    });
+  }
+
+  // 5. Перемирие
+  if ((terms.armistice_turns ?? 0) > 0) {
+    const durationYears = Math.round(terms.armistice_turns / TURNS_PER_YEAR);
+    createTreaty(playerNationId, targetNationId, 'armistice', {
+      duration: durationYears,
+      notes: `Перемирие на ${terms.armistice_turns} ходов.`,
+    });
+  }
+
+  // 6. Мирный договор (сам факт)
+  const peaceTreaty = createTreaty(playerNationId, targetNationId, 'peace_treaty', {
+    ceded_regions: terms.ceded_regions ?? [],
+    notes: 'Конец войны.',
+  });
+
+  rel.score = Math.min(rel.score + 20, -10); // улучшение, но не выше -10 сразу
+
+  addDiplomacyEvent(playerNationId, targetNationId, 15, 'peace');
+  if (typeof addEventLog === 'function') {
+    const pN = natPlayer?.name ?? playerNationId;
+    const tN = natTarget?.name ?? targetNationId;
+    addEventLog(`📜 Мир заключён: ${pN} и ${tN}.`, 'success');
+  }
+  return peaceTreaty;
+}
+
+/** Получить активное перемирие между двумя нациями (или null). */
+function getArmistice(nationA, nationB) {
+  if (!GAME_STATE.diplomacy) return null;
+  return (GAME_STATE.diplomacy.treaties ?? []).find(t =>
+    t.status === 'active' && t.type === 'armistice' &&
+    t.parties.includes(nationA) && t.parties.includes(nationB)
+  ) ?? null;
+}
+
+// ──────────────────────────────────────────────────────────────
 // ПУБЛИЧНОЕ API
 // ──────────────────────────────────────────────────────────────
 
@@ -815,6 +1025,11 @@ const DiplomacyEngine = {
   evalReceptiveness: evalAIReceptiveness,
   extractConditions: extractTreatyConditions,
   recordRejection,
+  // Война / Мир
+  declareWar,
+  concludePeace,
+  transferRegion,
+  getArmistice,
   // Научная модель отношений
   calcBaseRelation,
   addEvent:          addDiplomacyEvent,

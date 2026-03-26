@@ -38,6 +38,7 @@ function applyTreatyEffects(treaty) {
     case 'peace_treaty':        _onPeace(treaty, a, b, cond);                 break;
     case 'military_access':     _onMilAccess(treaty, a, b, cond);             break;
     case 'war_reparations':     _onReparations(treaty, a, b, natA, natB, cond); break;
+    case 'armistice':            _onArmistice(treaty, a, b, cond);             break;
     case 'territorial_exchange': _onTerritorialExchange(treaty, a, b, cond);  break;
     case 'joint_campaign':      _onJointCampaign(treaty, a, b, cond);         break;
     case 'cultural_exchange':   _onCultural(treaty, a, b, natA, natB, cond);  break;
@@ -71,8 +72,21 @@ function removeTreatyEffects(treaty) {
 
   // Сброс флагов, связанных с этим договором
   switch (treaty.type) {
+    case 'armistice': {
+      const stillHasArmistice = _hasAnotherOf('armistice', a, b, treaty.id);
+      rel.flags.no_attack = stillHasArmistice || _hasAnotherOf('non_aggression', a, b, treaty.id);
+      rel.flags.is_armistice = stillHasArmistice;
+      if (treaty.status === 'broken') {
+        // Нарушение перемирия — тяжёлый штраф
+        _adjustRelScore(a, b, -50, 'armistice_broken');
+        // Уведомить соседей (логируем, coalition уже обработан в declareWar)
+        _log(`💥 Перемирие нарушено — тяжёлый штраф к отношениям.`);
+      }
+      break;
+    }
     case 'non_aggression':
-      rel.flags.no_attack = _hasAnotherOf('non_aggression', a, b, treaty.id);
+      rel.flags.no_attack = _hasAnotherOf('non_aggression', a, b, treaty.id)
+                         || _hasAnotherOf('armistice', a, b, treaty.id);
       break;
     case 'defensive_alliance':
       rel.flags.auto_defend = _hasAnotherOf('defensive_alliance', a, b, treaty.id)
@@ -155,6 +169,7 @@ function processAllTreatyTicks() {
     rel.flags.military_access = false;
     rel.flags.protectorate    = false;
     rel.flags.dynasty_link    = false;
+    rel.flags.is_armistice    = false;
   }
 
   // 3. Применяем флаги и финансовые эффекты каждого активного договора
@@ -229,6 +244,12 @@ function _onTrade(treaty, a, b, natA, natB, cond) {
 
 function _onNonAgg(treaty, a, b, cond) {
   _rel(a, b).flags.no_attack = true;
+}
+
+function _onArmistice(treaty, a, b, cond) {
+  const rel = _rel(a, b);
+  rel.flags.no_attack    = true;
+  rel.flags.is_armistice = true;
 }
 
 function _onDefAlliance(treaty, a, b, cond) {
@@ -385,6 +406,10 @@ function _setRelFlags(treaty, rel, a, b) {
     case 'marriage_alliance':  rel.flags.dynasty_link = true; break;
     case 'vassalage':          rel.flags.protectorate = true; break;
     case 'military_access':    rel.flags.military_access = true; break;
+    case 'armistice':
+      rel.flags.no_attack    = true;
+      rel.flags.is_armistice = true;
+      break;
     case 'joint_campaign':
       rel.flags.joint_attack   = true;
       rel.flags.military_access = true;
