@@ -536,60 +536,100 @@ function recruitToArmy(armyId, addUnits) {
 
 /**
  * Обрабатывает производство воинских единиц из зданий:
- *   казармы   → infantry  (из крестьян)
- *   конюшни   → cavalry   (из крестьян, дороже)
+ *   казармы    → infantry   (из крестьян)
+ *   конюшни    → cavalry    (из крестьян, дороже)
  *   воен. порт → light_ships (из моряков)
  *
- * Для каждого активного здания с полем recruit_output:
- *   1. Рассчитывает кол-во единиц = level × per_level_per_turn
- *   2. Вычитает pop_cost_per_unit × кол-во из population региона
- *   3. Прибавляет к nation.military[unit_type]
- *
- * Ограничения:
- *   • Не более 2% населения региона за ход (чтобы не опустошить)
- *   • Минимум 500 жителей в регионе после рекрутинга
+ * Шаги для каждого здания с recruit_output:
+ *   1. Проверяет recruit_inputs — доступность ресурсов в stockpile.
+ *      required:true  → без ресурса производство × 0.5 за каждый дефицит
+ *      required:false → штраф −30% за каждый отсутствующий ресурс
+ *   2. Вычитает пропорциональное кол-во ресурсов из stockpile.
+ *   3. Ограничивает по населению (≤2% региона, мин. 500 после).
+ *   4. Прибавляет к nation.military[unit_type].
  */
 function processRecruitment() {
-  const nationId = GAME_STATE.player_nation;
-  const nation   = GAME_STATE.nations[nationId];
+  const nationId  = GAME_STATE.player_nation;
+  const nation    = GAME_STATE.nations[nationId];
   if (!nation) return;
 
-  let totalByType = {};
+  const stockpile = nation.economy?.stockpile ?? {};
+  let   totalByType = {};
 
   for (const regionId of (nation.regions ?? [])) {
     const region = GAME_STATE.regions[regionId];
     if (!region) continue;
 
     for (const slot of (region.building_slots ?? [])) {
-      if (slot.status !== 'active') continue;   // пропускаем paused / снесённые
+      if (slot.status !== 'active') continue;
 
       const bDef = typeof BUILDINGS !== 'undefined' ? BUILDINGS[slot.building_id] : null;
       const ro   = bDef?.recruit_output;
       if (!ro) continue;
 
-      const level   = slot.level ?? 1;
-      const wanted  = level * ro.per_level_per_turn;
+      const level  = slot.level ?? 1;
+      const wanted = level * ro.per_level_per_turn;
 
-      // Ограничение: не более 2% населения региона за ход, минимум 500 после
-      const pop     = region.population ?? 0;
-      const maxDraw = Math.max(0, Math.floor(pop * 0.02));
-      const popNeeded = wanted * ro.pop_cost_per_unit;
+      // ── 1. Коэффициент ресурсного обеспечения ──────────────────────────
+      let resourceRatio = 1.0;
+      const inputs = bDef.recruit_inputs ?? [];
+      const deficitGoods = [];
+
+      for (const inp of inputs) {
+        const needed    = inp.amount_per_level * level;
+        const available = stockpile[inp.good] ?? 0;
+
+        if (available < needed) {
+          if (inp.required) {
+            // Критический ресурс: пропорциональный штраф (вплоть до 0)
+            resourceRatio *= available > 0 ? (available / needed) * 0.5 : 0.0;
+          } else {
+            // Вспомогательный: фиксированный штраф −30%
+            resourceRatio *= 0.70;
+          }
+          deficitGoods.push(inp.good);
+        }
+      }
+
+      // Если ресурсов совсем нет — пропускаем здание
+      if (resourceRatio <= 0.01) {
+        slot._recruited_last_turn = 0;
+        slot._recruit_deficit     = deficitGoods;
+        continue;
+      }
+
+      // ── 2. Ограничение по населению ────────────────────────────────────
+      const pop       = region.population ?? 0;
+      const maxDraw   = Math.max(0, Math.floor(pop * 0.02));
+      const wantedAdj = Math.round(wanted * resourceRatio);
+      const popNeeded = wantedAdj * ro.pop_cost_per_unit;
       const popCost   = Math.min(popNeeded, maxDraw);
       const actual    = Math.floor(popCost / ro.pop_cost_per_unit);
 
-      if (actual <= 0) continue;
-      if (pop - actual * ro.pop_cost_per_unit < 500) continue;
+      if (actual <= 0 || pop - actual * ro.pop_cost_per_unit < 500) {
+        slot._recruited_last_turn = 0;
+        slot._recruit_deficit     = deficitGoods;
+        continue;
+      }
 
-      // Списываем население
+      // ── 3. Списываем ресурсы из stockpile ─────────────────────────────
+      const ratio = actual / wanted;   // реальная доля от максимума
+      for (const inp of inputs) {
+        const consume = Math.floor(inp.amount_per_level * level * ratio);
+        if (consume > 0 && stockpile[inp.good]) {
+          stockpile[inp.good] = Math.max(0, (stockpile[inp.good] ?? 0) - consume);
+        }
+      }
+
+      // ── 4. Списываем население и добавляем в резерв ────────────────────
       region.population = pop - actual * ro.pop_cost_per_unit;
 
-      // Добавляем в резерв нации
       const ut = ro.unit_type;
       totalByType[ut] = (totalByType[ut] ?? 0) + actual;
 
-      // Логируем в слот (чтобы UI показал выработку)
       slot._recruited_last_turn = actual;
       slot._recruited_unit_type = ut;
+      slot._recruit_deficit     = deficitGoods.length > 0 ? deficitGoods : null;
     }
   }
 

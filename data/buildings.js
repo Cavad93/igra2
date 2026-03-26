@@ -215,6 +215,16 @@ const BUILDINGS = {
     // pop_cost_per_unit  = сколько крестьян уходит на 1 солдата
     recruit_output: { unit_type: 'infantry', per_level_per_turn: 20, pop_cost_per_unit: 1 },
 
+    // Потребление ресурсов на рекрутинг (за ход, на 1 уровень)
+    // required:true  → без этого ресурса производство сокращается вдвое
+    // required:false → желательно, но при дефиците штраф −30%
+    recruit_inputs: [
+      { good: 'iron',    amount_per_level: 8,  required: true  }, // оружие и доспехи
+      { good: 'timber',  amount_per_level: 4,  required: true  }, // щиты, копья, обозы
+      { good: 'wheat',   amount_per_level: 15, required: true  }, // питание солдат
+      { good: 'leather', amount_per_level: 3,  required: false }, // снаряжение, ремни
+    ],
+
     // Бонус к росту имеющихся солдат (профессиональная подготовка)
     profession_growth: { soldiers: 0.008 },
 
@@ -249,6 +259,14 @@ const BUILDINGS = {
     // Кавалерия дороже: 1 всадник = 2 крестьянина
     recruit_output: { unit_type: 'cavalry', per_level_per_turn: 8, pop_cost_per_unit: 2 },
 
+    // Потребление ресурсов на рекрутинг (за ход, на 1 уровень)
+    recruit_inputs: [
+      { good: 'horses',  amount_per_level: 4,  required: true  }, // верховые лошади
+      { good: 'iron',    amount_per_level: 5,  required: true  }, // подковы, оружие всадника
+      { good: 'leather', amount_per_level: 6,  required: true  }, // сёдла, упряжь, доспех
+      { good: 'wheat',   amount_per_level: 20, required: false }, // корм лошадей и питание
+    ],
+
     profession_growth: { soldiers: 0.004 },
 
     location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
@@ -282,6 +300,14 @@ const BUILDINGS = {
     // Ежеходный рекрутинг: моряки → лёгкие корабли
     // 1 корабль требует 10 чел. экипажа (моряков)
     recruit_output: { unit_type: 'light_ships', per_level_per_turn: 1, pop_cost_per_unit: 10 },
+
+    // Потребление ресурсов на постройку кораблей (за ход, на 1 уровень)
+    recruit_inputs: [
+      { good: 'timber', amount_per_level: 25, required: true  }, // корпус, мачты, вёсла
+      { good: 'pitch',  amount_per_level: 8,  required: true  }, // конопатка, смоление
+      { good: 'iron',   amount_per_level: 6,  required: true  }, // крепёж, якоря, обивка
+      { good: 'hemp',   amount_per_level: 5,  required: false }, // канаты и такелаж
+    ],
 
     location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
     historical_note: "Афинский военный порт Пирей мог вместить 372 триеры; корабли строились и хранились в крытых эллингах — неосях.",

@@ -225,16 +225,39 @@ function _rbtBuiltRow(slot, regionId, region, nation) {
   const ro = bDef.recruit_output;
   let recruitInfo = '';
   if (ro) {
-    const unitLabels = { infantry: 'пехота', cavalry: 'конница', light_ships: 'корабли' };
-    const perTurn = isPaused ? 0 : level * ro.per_level_per_turn;
-    const popCost = isPaused ? 0 : perTurn * ro.pop_cost_per_unit;
-    const lastTurn = slot._recruited_last_turn ?? 0;
-    const unitLabel = unitLabels[ro.unit_type] ?? ro.unit_type;
-    recruitInfo = `
-      <div class="rbt-recruit-info${isPaused ? ' rbt-recruit-info--paused' : ''}">
-        🪖 ${isPaused ? '<i>Пауза</i>' : `+${perTurn} ${unitLabel}/ход · −${popCost} нас.`}
-        ${!isPaused && lastTurn > 0 ? `<span class="rbt-recruit-last">(прошл. ход: +${lastTurn})</span>` : ''}
-      </div>`;
+    const unitLabels  = { infantry: 'пехота', cavalry: 'конница', light_ships: 'корабли' };
+    const unitLabel   = unitLabels[ro.unit_type] ?? ro.unit_type;
+    const perTurn     = level * ro.per_level_per_turn;
+    const popCost     = perTurn * ro.pop_cost_per_unit;
+    const lastTurn    = slot._recruited_last_turn ?? 0;
+    const deficits    = slot._recruit_deficit ?? [];
+    const hasDeficit  = deficits.length > 0;
+
+    if (isPaused) {
+      recruitInfo = `<div class="rbt-recruit-info rbt-recruit-info--paused">⏸ Рекрутинг приостановлен</div>`;
+    } else {
+      // Строка ресурсов потребления
+      const inputs     = bDef.recruit_inputs ?? [];
+      const goodLabels = typeof GOODS !== 'undefined'
+        ? inputs.map(inp => {
+            const g    = GOODS[inp.good];
+            const icon = g?.icon ?? '📦';
+            const nm   = g?.name ?? inp.good;
+            const amt  = inp.amount_per_level * level;
+            const isMissing = deficits.includes(inp.good);
+            return `<span class="rbt-res-tag${isMissing ? ' rbt-res-tag--miss' : ''}"
+              title="${inp.required ? 'Обязательный' : 'Желательный'}">${icon} ${nm}: ${amt}${isMissing ? ' ⚠️' : ''}</span>`;
+          }).join(' ')
+        : '';
+
+      recruitInfo = `
+        <div class="rbt-recruit-info${hasDeficit ? ' rbt-recruit-info--deficit' : ''}">
+          <span class="rbt-recruit-prod">🪖 +${perTurn} ${unitLabel}/ход · −${popCost} нас.</span>
+          ${lastTurn > 0 ? `<span class="rbt-recruit-last">прошл.: +${lastTurn}</span>` : ''}
+          ${goodLabels ? `<div class="rbt-recruit-res">${goodLabels}</div>` : ''}
+          ${hasDeficit ? `<div class="rbt-recruit-warn">⚠️ Дефицит: ${deficits.map(g => GOODS?.[g]?.name ?? g).join(', ')}</div>` : ''}
+        </div>`;
+    }
   }
 
   return `
