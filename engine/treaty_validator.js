@@ -172,6 +172,20 @@ function validateTreaty(treaty, playerNationId, aiNationId) {
     );
   }
 
+  // ── 4б. Ставка пошлины и приоритетные товары ────────────────
+  // Проверка ставки пошлины
+  if (tType === 'trade_agreement' && cond.tariff_rate !== undefined) {
+    if (cond.tariff_rate < 0 || cond.tariff_rate > 0.50) {
+      result.issues.push('Ставка пошлины скорректирована до допустимого диапазона (0–50%).');
+      result.modified.tariff_rate = Math.max(0, Math.min(0.50, cond.tariff_rate));
+    }
+  }
+  // Проверка preferential_goods
+  if (Array.isArray(cond.preferential_goods) && cond.preferential_goods.length > 5) {
+    result.issues.push('Преимущественное право ограничено 5 товарами.');
+    result.modified.preferential_goods = cond.preferential_goods.slice(0, 5);
+  }
+
   // ── 5. Логика vassal: нельзя вассализировать равного ────────
   if (tType === 'vassalage') {
     const popP = playerNation.population?.total ?? 100_000;

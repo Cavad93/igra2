@@ -413,6 +413,25 @@ function calculateConsumption(nation) {
 // procureCapitalInputs).  Приоритет: сначала продовольствие,
 // затем инструменты и сырьё.
 // ──────────────────────────────────────────────────────────────
+/**
+ * Возвращает эффективную ставку пошлины для торговли nationId ↔ partnerId.
+ * Если есть договор — использует treaty's tariff_rate.
+ * Иначе — авторасчёт по дипломатическим отношениям.
+ *   score -100 → 35%,  score 0 → 20%,  score +100 → 5%
+ * Война → 0.99 (торговля заблокирована).
+ */
+function _getEffectiveTariffRate(nationId, partnerId) {
+  if (typeof DiplomacyEngine === 'undefined') return 0.20;
+  const rel = DiplomacyEngine.getRelation(nationId, partnerId);
+  if (!rel) return 0.20;
+  if (rel.war) return 0.99;
+  // Если договор задал явную ставку
+  if (rel.flags?.tariff_rate !== undefined) return rel.flags.tariff_rate;
+  // Авторасчёт: tariff = 0.20 − (score/100) × 0.15, границы [0.05, 0.35]
+  const score = rel.score ?? 0;
+  return Math.max(0.05, Math.min(0.35, 0.20 - (score / 100) * 0.15));
+}
+
 const _WORLD_IMPORT_GOODS = [
   'wheat', 'barley', 'salt', 'cloth',         // потребительские
   'tools', 'iron', 'timber', 'bronze',         // производственные
@@ -422,6 +441,7 @@ const _WORLD_IMPORT_GOODS = [
 function processTrade(nationId) {
   const nation = GAME_STATE.nations[nationId];
   let tradeProfit = 0;
+  let tariffIncome = 0;
 
   // ── 1. Экспортная прибыль от торговых маршрутов ───────────────────────
   for (const partnerNationId of (nation.economy.trade_routes || [])) {
@@ -436,13 +456,27 @@ function processTrade(nationId) {
       if (surplus <= 0) continue;
 
       const tradeVolume = Math.min(surplus * 0.1, 1000);
-      const hasTradeTreaty = (nation.relations?.[partnerNationId]?.treaties ?? []).includes('trade');
-      const treatyMult = hasTradeTreaty ? 1.5 : 1.0;
-      const profit = tradeVolume * mkt.price * 0.05 * treatyMult
-                   * (1 - CONFIG.BALANCE.PIRACY_BASE)
-                   * (1 - CONFIG.BALANCE.BASE_TARIFF);
 
-      tradeProfit += profit;
+      const tariffRate = _getEffectiveTariffRate(nationId, partnerNationId);
+      // Заблокировать торговлю если эффективная пошлина ≥ 99%
+      if (tariffRate >= 0.99) continue;
+
+      // Бонус за преимущественное право на товар
+      const prefGoods = typeof DiplomacyEngine !== 'undefined'
+        ? (DiplomacyEngine.getRelation(nationId, partnerNationId)?.flags?.preferential_goods ?? [])
+        : [];
+      const isPrefGood = prefGoods.includes(good);
+      const prefBonus = isPrefGood ? 0.20 : 0.0; // +20% к прибыли для приоритетных товаров
+
+      const grossProfit = tradeVolume * mkt.price * 0.05 * (1 + prefBonus)
+                        * (1 - CONFIG.BALANCE.PIRACY_BASE);
+      const tariffAmount = grossProfit * tariffRate;
+      const netProfit = grossProfit - tariffAmount;
+
+      // tariffIncome — пошлины которые nation ПОЛУЧАЕТ как портовая держава
+      // (половина от пошлин со всей торговли через её порты)
+      tariffIncome += tariffAmount * 0.5;
+      tradeProfit += netProfit;
     }
   }
 
@@ -495,6 +529,9 @@ function processTrade(nationId) {
     }
   }
 
+  // Сохраняем для отображения в казне
+  const economy = GAME_STATE.nations[nationId]?.economy;
+  if (economy) economy._tariff_income_tick = Math.round(tariffIncome);
   return tradeProfit;
 }
 
@@ -573,7 +610,8 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   // Флот влияет на торговую прибыль; здания — на портовые пошлины
   const effTradeProfit = Math.round(tradeProfit * navyLvl);
   const effPortDuties  = Math.round(portDuties  * buildingsLvl);
-  const totalIncome = taxIncomeTotal + effPortDuties + effTradeProfit;
+  const tariffIncome   = Math.round((economy._tariff_income_tick ?? 0) * (buildingsLvl ?? 1));
+  const totalIncome = taxIncomeTotal + effPortDuties + effTradeProfit + tariffIncome;
 
   // ── РАСХОДЫ: АРМИЯ ─────────────────────────────────────────
   const expArmyInfantry    = (military.infantry    || 0) * CONFIG.BALANCE.INFANTRY_UPKEEP;
@@ -723,6 +761,7 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     tax_soldiers:    taxByClass.soldiers,
     trade_profit:    Math.round(effTradeProfit),
     port_duties:     Math.round(effPortDuties),
+    tariff_income:   tariffIncome,
     building_profit:       buildingProfit,
     state_building_count:  nation.economy._state_building_active_count || 0,
     total:                 Math.round(totalIncome) + buildingProfit,

@@ -167,7 +167,7 @@ function _tpRefreshBreakdowns(nationId) {
   const newTaxCo = _tpIncomeFor('commoners',   rates.commoners   ?? 0);
   const newTaxSo = _tpIncomeFor('soldiers',    rates.soldiers    ?? 0);
   const newTaxTotal = newTaxAr + newTaxCl + newTaxCo + newTaxSo;
-  const newTotal = newTaxTotal + (inc.port_duties || 0) + (inc.trade_profit || 0) + (inc.building_profit || 0);
+  const newTotal = newTaxTotal + (inc.port_duties || 0) + (inc.trade_profit || 0) + (inc.tariff_income || 0) + (inc.building_profit || 0);
 
   inc.tax_aristocrats = newTaxAr;
   inc.tax_clergy      = newTaxCl;
@@ -257,9 +257,10 @@ function _tpRenderIncome() {
   const taxTotal     = _tpTaxTotal();
   const portDuties     = inc.port_duties     || 0;
   const tradeProfit    = inc.trade_profit    || 0;
+  const tariffIncome   = inc.tariff_income   || 0;
   const buildingProfit      = inc.building_profit      || 0;
   const stateBuildingCount  = inc.state_building_count || 0;
-  const totalPreview   = taxTotal + portDuties + tradeProfit + buildingProfit;
+  const totalPreview   = taxTotal + portDuties + tradeProfit + tariffIncome + buildingProfit;
 
   return `
     <div class="tp-col-title">📈 ДОХОДЫ</div>
@@ -279,6 +280,11 @@ function _tpRenderIncome() {
       <span class="tp-item-label">⚓ Портовые пошлины</span>
       <span class="tp-item-value">${portDuties.toLocaleString()} ₴</span>
     </div>
+    ${tariffIncome > 0 ? `
+    <div class="tp-row-item">
+      <span class="tp-item-label">⚖ Таможенные пошлины</span>
+      <span class="tp-item-value tp-val-pos">+${tariffIncome.toLocaleString()} ₴</span>
+    </div>` : ''}
     ${stateBuildingCount > 0 ? `
     <div class="tp-row-item">
       <span class="tp-item-label">🏛 Гос. здания</span>

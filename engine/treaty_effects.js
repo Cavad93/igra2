@@ -83,6 +83,18 @@ function removeTreatyEffects(treaty) {
       break;
     case 'trade_agreement':
       rel.flags.trade_open = _hasAnotherOf('trade_agreement', a, b, treaty.id);
+      // Remove from trade_routes if this was the last trade agreement between them
+      const [pa, pb] = treaty.parties;
+      const natA2 = GAME_STATE.nations?.[pa];
+      const natB2 = GAME_STATE.nations?.[pb];
+      const stillHasTrade = GAME_STATE.diplomacy?.treaties?.some(t =>
+        t.id !== treaty.id && t.status === 'active' && t.type === 'trade_agreement' &&
+        t.parties.includes(pa) && t.parties.includes(pb)
+      );
+      if (!stillHasTrade) {
+        if (natA2?.economy?.trade_routes) natA2.economy.trade_routes = natA2.economy.trade_routes.filter(id => id !== pb);
+        if (natB2?.economy?.trade_routes) natB2.economy.trade_routes = natB2.economy.trade_routes.filter(id => id !== pa);
+      }
       break;
     case 'marriage_alliance':
       rel.flags.dynasty_link = _hasAnotherOf('marriage_alliance', a, b, treaty.id);
@@ -192,6 +204,16 @@ function processAllTreatyTicks() {
 function _onTrade(treaty, a, b, natA, natB, cond) {
   _rel(a, b).flags.trade_open    = true;
   _rel(a, b).flags.market_access = true;
+  // Tariff rate from treaty (0 = free trade, default 0.05 = 5% preferred rate)
+  _rel(a, b).flags.tariff_rate = cond.tariff_rate ?? 0;
+  // Goods with preferential right (preferred buyer gets lower effective price)
+  _rel(a, b).flags.preferential_goods = Array.isArray(cond.preferential_goods) ? [...cond.preferential_goods] : [];
+
+  // Sync trade_routes arrays so processTrade() can find partners
+  if (!natA.economy.trade_routes) natA.economy.trade_routes = [];
+  if (!natB.economy.trade_routes) natB.economy.trade_routes = [];
+  if (!natA.economy.trade_routes.includes(b)) natA.economy.trade_routes.push(b);
+  if (!natB.economy.trade_routes.includes(a)) natB.economy.trade_routes.push(a);
 }
 
 function _onNonAgg(treaty, a, b, cond) {
@@ -325,7 +347,12 @@ function _onCustom(treaty, a, b, natA, natB, cond) {
 function _setRelFlags(treaty, rel, a, b) {
   if (!rel.flags) rel.flags = {};
   switch (treaty.type) {
-    case 'trade_agreement':    rel.flags.trade_open = true; rel.flags.market_access = true; break;
+    case 'trade_agreement':
+      rel.flags.trade_open    = true;
+      rel.flags.market_access = true;
+      rel.flags.tariff_rate         = treaty.conditions?.tariff_rate ?? 0;
+      rel.flags.preferential_goods  = treaty.conditions?.preferential_goods ?? [];
+      break;
     case 'non_aggression':     rel.flags.no_attack  = true; break;
     case 'defensive_alliance': rel.flags.auto_defend = true; break;
     case 'military_alliance':
