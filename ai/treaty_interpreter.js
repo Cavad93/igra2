@@ -43,15 +43,19 @@ function _buildInterpreterPrompt(treaty, playerNationId, aiNationId) {
     joint_attack: bool,      // совместная атака
     dynasty_link: bool,      // династическая связь
   }
-  one_time_payment: number,   // единовременный платёж (монет)
-  reparations_per_turn: number, // платёж каждый ход (монет)
-  tribute_pct: number,        // дань (0.0–0.25)
-  duration: number,           // срок (ходов, null=бессрочно)
-  transfer_regions: string[], // список id регионов для передачи
-  tech_bonus: number,         // бонус к технологиям (0.0–0.15)
-  stability_bonus: number,    // бонус стабильности (0–5)
-  trade_bonus: number,        // торговый мультипликатор (0.0–0.20)
-  payer: "player"|"ai",       // кто платит (для платежей)
+  one_time_payment: number,      // единовременный платёж (монет)
+  reparations_per_turn: number,  // платёж каждый ход (монет)
+  tribute_pct: number,           // дань (0.0–0.25)
+  duration: number,              // срок (ходов, null=бессрочно)
+  transfer_regions: string[],    // список id регионов для передачи
+  tech_bonus: number,            // бонус к технологиям (0.0–0.15)
+  stability_bonus: number,       // бонус стабильности (0–5)
+  trade_bonus: number,           // торговый мультипликатор (0.0–0.20)
+  tariff_rate: number,           // пошлина (0.0=беспошлинно, 0.05–0.30=льготная/стандартная)
+  preferential_goods: string[],  // товары с приоритетным правом покупки (max 5)
+                                 // доступные: wheat, barley, wine, olive_oil, timber, iron,
+                                 //            salt, cloth, pottery, bronze, tools, cattle
+  payer: "player"|"ai",          // кто платит (для платежей)
 
 ПРАВИЛА:
   1. Извлекай ТОЛЬКО то, что явно упомянуто в тексте условий.
@@ -204,7 +208,9 @@ function _clampEffects(ef) {
   if (c.trade_bonus          !== undefined) c.trade_bonus          = Math.min(0.20, Math.max(0, c.trade_bonus));
   if (c.tech_bonus           !== undefined) c.tech_bonus           = Math.min(0.15, Math.max(0, c.tech_bonus));
   if (c.stability_bonus      !== undefined) c.stability_bonus      = Math.min(5, Math.max(0, c.stability_bonus));
-  if (Array.isArray(c.transfer_regions)) c.transfer_regions       = c.transfer_regions.slice(0, 3);
+  if (Array.isArray(c.transfer_regions))  c.transfer_regions  = c.transfer_regions.slice(0, 3);
+  if (c.tariff_rate !== undefined)        c.tariff_rate       = Math.min(0.50, Math.max(0, c.tariff_rate));
+  if (Array.isArray(c.preferential_goods)) c.preferential_goods = c.preferential_goods.slice(0, 5);
   return c;
 }
 
@@ -223,5 +229,9 @@ function _summariseEffects(ef) {
   if (ef.stability_bonus > 0)  parts.push(`⚖ Стабильность: +${ef.stability_bonus}`);
   if (ef.tech_bonus > 0)       parts.push(`🔬 Технологии: +${Math.round(ef.tech_bonus * 100)}%`);
   if (ef.transfer_regions?.length) parts.push(`🗺 Передача ${ef.transfer_regions.length} регион(ов)`);
+  if (ef.tariff_rate !== undefined) parts.push(
+    ef.tariff_rate === 0 ? '⚖ Беспошлинная торговля' : `⚖ Пошлина: ${Math.round(ef.tariff_rate * 100)}%`
+  );
+  if (ef.preferential_goods?.length) parts.push(`🥇 Приоритет: ${ef.preferential_goods.join(', ')}`);
   return parts.length ? parts.join(' · ') : 'Стандартные условия применены.';
 }

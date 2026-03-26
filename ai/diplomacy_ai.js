@@ -82,6 +82,13 @@ ${treatyList}
 {"treaty_agreed": true, "treaty_type": "тип_из_списка", "conditions": {"duration": 10, "notes": "особые условия если есть"}}
 \`\`\`
 
+Для trade_agreement можно указать дополнительные торговые условия:
+\`\`\`json
+{"treaty_agreed": true, "treaty_type": "trade_agreement", "conditions": {"duration": 10, "tariff_rate": 0.05, "preferential_goods": ["grain", "wine"], "notes": "описание"}}
+\`\`\`
+tariff_rate: 0 = беспошлинно, 0.05–0.20 = льготная ставка, не указывай если стандартные условия.
+preferential_goods: товары с преимущественным правом покупки. Доступные: wheat, barley, wine, olive_oil, timber, iron, salt, cloth, pottery, bronze, tools, cattle, fish, papyrus, marble.
+
 Если ОТКЛОНЯЕШЬ:
 \`\`\`json
 {"treaty_agreed": false, "reason": "краткое объяснение"}

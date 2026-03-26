@@ -204,10 +204,15 @@ function processAllTreatyTicks() {
 function _onTrade(treaty, a, b, natA, natB, cond) {
   _rel(a, b).flags.trade_open    = true;
   _rel(a, b).flags.market_access = true;
-  // Tariff rate from treaty (0 = free trade, default 0.05 = 5% preferred rate)
-  _rel(a, b).flags.tariff_rate = cond.tariff_rate ?? 0;
-  // Goods with preferential right (preferred buyer gets lower effective price)
-  _rel(a, b).flags.preferential_goods = Array.isArray(cond.preferential_goods) ? [...cond.preferential_goods] : [];
+
+  // Условия могут прийти напрямую из JSON AI-переговорщика (cond.tariff_rate)
+  // ИЛИ из AI-интерпретатора текста договора (cond._interpreted_effects.tariff_rate).
+  // Приоритет: прямые условия → интерпретированные → 0 (беспошлинно по умолчанию для договора)
+  const ie = cond._interpreted_effects ?? {};
+  _rel(a, b).flags.tariff_rate = cond.tariff_rate ?? ie.tariff_rate ?? 0;
+  _rel(a, b).flags.preferential_goods = Array.isArray(cond.preferential_goods)
+    ? [...cond.preferential_goods]
+    : Array.isArray(ie.preferential_goods) ? [...ie.preferential_goods] : [];
 
   // Sync trade_routes arrays so processTrade() can find partners
   if (!natA.economy.trade_routes) natA.economy.trade_routes = [];
@@ -350,8 +355,10 @@ function _setRelFlags(treaty, rel, a, b) {
     case 'trade_agreement':
       rel.flags.trade_open    = true;
       rel.flags.market_access = true;
-      rel.flags.tariff_rate         = treaty.conditions?.tariff_rate ?? 0;
-      rel.flags.preferential_goods  = treaty.conditions?.preferential_goods ?? [];
+      // Читаем из прямых условий или из AI-интерпретатора (оба источника)
+      const _ie = treaty.conditions?._interpreted_effects ?? {};
+      rel.flags.tariff_rate        = treaty.conditions?.tariff_rate ?? _ie.tariff_rate ?? 0;
+      rel.flags.preferential_goods = treaty.conditions?.preferential_goods ?? _ie.preferential_goods ?? [];
       break;
     case 'non_aggression':     rel.flags.no_attack  = true; break;
     case 'defensive_alliance': rel.flags.auto_defend = true; break;
