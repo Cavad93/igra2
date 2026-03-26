@@ -185,7 +185,8 @@ function resolveArmyBattle(atkArmy, defArmy, regionId) {
 
   // ── Дипломатия ───────────────────────────────────────────────────
   if (typeof DiplomacyEngine !== 'undefined') {
-    DiplomacyEngine.getRelation(atkArmy.nation, defArmy.nation).war = true;
+    const _rel = DiplomacyEngine.getRelation(atkArmy.nation, defArmy.nation);
+    if (_rel) _rel.war = true;
   }
 
   // ── Синхронизировать потери в nation.military ───────────────────

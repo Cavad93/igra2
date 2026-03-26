@@ -375,9 +375,9 @@ function _processSupply(army) {
   if (delta < 0) delta = Math.min(0, delta + log);
 
   // ── Штраф за перегрузку региона ─────────────────────────────────────
-  const capacity     = _getRegionSupplyCapacity(region);
-  const totalTroops  = capacity > 0 ? _getTotalTroopsInRegion(army.position) : 0;
-  const overloadRatio = capacity > 0 ? totalTroops / capacity : 0;
+  const capacity    = _getRegionSupplyCapacity(region);
+  const totalTroops = _getTotalTroopsInRegion(army.position); // всегда считаем
+  const overloadRatio = capacity > 0 ? totalTroops / capacity : (totalTroops > 0 ? Infinity : 0);
 
   if (capacity === 0 && totalTroops > 0) {
     // Непроходимый тип (океан) — максимальный штраф

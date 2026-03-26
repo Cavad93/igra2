@@ -225,12 +225,25 @@ function parseDiplomacyTreaty(responseText) {
     const cleaned = fence[1].replace(/,\s*([}\]])/g, '$1').trim();
     const obj = JSON.parse(cleaned);
 
+    // Обычный договор
     if (typeof obj.treaty_agreed === 'boolean') {
       return {
         agreed:      obj.treaty_agreed,
         treaty_type: obj.treaty_type  ?? null,
         conditions:  obj.conditions   ?? {},
         reason:      obj.reason       ?? null,
+      };
+    }
+
+    // Мирный договор (войн)
+    if (obj.peace_agreed !== undefined) {
+      return {
+        agreed:       obj.peace_agreed === true,
+        is_peace:     true,
+        peace_agreed: obj.peace_agreed,       // true | false | 'counter'
+        peace_terms:  obj.peace_terms  ?? {}, // {ceded_regions, vassalize, reparations_turns, armistice_turns}
+        counter_terms: obj.counter_terms ?? null,
+        reason:       obj.reason       ?? null,
       };
     }
   } catch (_) {}

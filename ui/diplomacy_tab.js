@@ -587,6 +587,7 @@ function _dpPeaceForm(playerNationId, aiId) {
       ${!canAfford ? '<b style="color:#ef9a9a">Снизьте требования или продолжайте воевать.</b>' : ''}
     </div>
   </div>`;
+}
 
 /** Полоска очков войны: игрок vs противник */
 function _dpWarScoreBar(playerScore, opponentScore) {
@@ -1319,7 +1320,36 @@ async function _dpChatSendActual(aiNationId, text) {
       addDialogueMessage(playerNationId, aiNationId,     'assistant', display);
     }
 
-    if (treaty?.agreed === true && treaty.treaty_type) {
+    if (treaty?.is_peace) {
+      // ── Ответ на мирные переговоры ──────────────────────────────────
+      if (treaty.peace_agreed === true) {
+        // AI принял мир — заключаем договор
+        const terms = treaty.peace_terms ?? {};
+        if (typeof DiplomacyEngine !== 'undefined') {
+          const aiTreasury = GAME_STATE.nations[aiNationId]?.economy?.treasury ?? 0;
+          const repTurns = terms.reparations_turns ?? 0;
+          DiplomacyEngine.concludePeace(playerNationId, aiNationId, {
+            ceded_regions:       terms.ceded_regions ?? [],
+            vassalize:           terms.vassalize ?? false,
+            reparations_turns:   repTurns,
+            reparations_per_turn: repTurns > 0 ? Math.max(10, Math.round(aiTreasury * 0.03)) : 0,
+            armistice_turns:     terms.armistice_turns ?? 60,
+            loser:               aiNationId,
+            winner:              playerNationId,
+          });
+          if (typeof addEventLog === 'function')
+            addEventLog(`✅ Мир заключён через переговоры с ${GAME_STATE.nations[aiNationId]?.name ?? aiNationId}.`, 'success');
+        }
+        hideDipChatModal();
+        _dpShowPeaceForm = false;
+        _dpRender();
+      } else if (treaty.peace_agreed === 'counter') {
+        // AI выдвинул встречные условия — они отображаются в чате
+        if (typeof addEventLog === 'function')
+          addEventLog(`💬 ${GAME_STATE.nations[aiNationId]?.name ?? aiNationId} выдвинул встречные условия мира.`, 'info');
+      }
+      // false — отклонил, текст уже в чате
+    } else if (treaty?.agreed === true && treaty.treaty_type) {
       // AI согласился — сохраняем и переходим к финализации
       st.agreedTreaty = { type: treaty.treaty_type, conditions: treaty.conditions ?? {} };
       // Не сохраняем как финальный договор пока — это делается при подписании

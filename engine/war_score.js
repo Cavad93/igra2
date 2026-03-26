@@ -357,12 +357,12 @@ function evaluateAIWarPosition(aiNationId, playerNationId) {
   const armies  = GAME_STATE.armies ?? [];
   const aiForce = armies.reduce((s, a) => {
     if (a.nation !== aiNationId || a.state === 'disbanded') return s;
-    return s + (a.units?.infantry ?? 0) + (a.units?.cavalry ?? 3)
+    return s + (a.units?.infantry ?? 0) + (a.units?.cavalry ?? 0)
               + (a.units?.mercenaries ?? 0);
   }, 0);
   const playerForce = armies.reduce((s, a) => {
     if (a.nation !== playerNationId || a.state === 'disbanded') return s;
-    return s + (a.units?.infantry ?? 0) + (a.units?.cavalry ?? 3)
+    return s + (a.units?.infantry ?? 0) + (a.units?.cavalry ?? 0)
               + (a.units?.mercenaries ?? 0);
   }, 0);
 
