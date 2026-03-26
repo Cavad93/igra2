@@ -15,6 +15,24 @@ const MONTH_NAMES = [
 // ГЛАВНАЯ ФУНКЦИЯ ХОДА
 // ──────────────────────────────────────────────────────────────
 
+// Гарантирует минимальную структуру нации перед обработкой хода
+function _ensureNationDefaults(nation) {
+  if (!nation.economy)                    nation.economy    = {};
+  if (!nation.economy.stockpile)          nation.economy.stockpile = {};
+  if (nation.economy.treasury == null)    nation.economy.treasury  = 0;
+  if (!nation.population)                 nation.population = {};
+  if (!nation.population.by_profession)   nation.population.by_profession = {};
+  if (nation.population.total == null)    nation.population.total     = 0;
+  if (nation.population.happiness == null) nation.population.happiness = 50;
+  if (!nation.military)                   nation.military   = {};
+  if (!nation.military.at_war_with)       nation.military.at_war_with = [];
+  if (!nation.government)                 nation.government = {};
+  if (nation.government.legitimacy == null) nation.government.legitimacy = 50;
+  if (nation.government.stability == null)  nation.government.stability  = 50;
+  if (!nation.regions)                    nation.regions    = [];
+  if (!nation.relations)                  nation.relations  = {};
+}
+
 async function processTurn() {
   if (IS_PROCESSING_TURN) return;
   IS_PROCESSING_TURN = true;
@@ -26,6 +44,11 @@ async function processTurn() {
   }
 
   try {
+    // Инициализируем поля у всех наций перед обработкой
+    for (const nation of Object.values(GAME_STATE.nations ?? {})) {
+      _ensureNationDefaults(nation);
+    }
+
     const date = GAME_STATE.date;
     const monthName = MONTH_NAMES?.[Math.max(1, Math.min(12, date.month ?? 1))] ?? 'Месяц';
     addEventLog(`── Ход ${GAME_STATE.turn}: ${monthName} ${Math.abs(date.year)} г. до н.э. ──`, 'turn');
@@ -674,28 +697,64 @@ function _recordTurnSummary() {
 // СОХРАНЕНИЕ / ЗАГРУЗКА
 // ──────────────────────────────────────────────────────────────
 
+function _buildSavePayload(level = 0) {
+  // Сериализуем SENATE_MANAGERS
+  const senateData = {};
+  for (const [nationId, mgr] of Object.entries(SENATE_MANAGERS)) {
+    try { senateData[nationId] = mgr.toJSON(); } catch (_) {}
+  }
+
+  // Исключаем всегда: эфемерные данные хода
+  const { _turn_summary_history, _last_turn_snapshot, _pending_char_initiatives, ...base } = GAME_STATE;
+
+  // Уровень обрезки: чем выше level, тем меньше сохраняем
+  if (level >= 1) {
+    // Обрезаем лог событий
+    if (base.events_log?.length > 20) base.events_log = base.events_log.slice(0, 20);
+
+    // Для каждой нации обрезаем тяжёлые поля
+    for (const nation of Object.values(base.nations ?? {})) {
+      // Диалоговая память персонажей (сжимается каждый ход — её можно очистить)
+      for (const char of (nation.characters ?? [])) {
+        if (char.dialogue?.hot_memory?.length) char.dialogue.hot_memory = [];
+        if (char.history?.length > 5) char.history = char.history.slice(-5);
+      }
+      // AI-память нации: оставляем только свежие события
+      if (nation._memory?.events?.length > 30) {
+        nation._memory.events = nation._memory.events.slice(-30);
+      }
+    }
+  }
+
+  if (level >= 2) {
+    // Агрессивная обрезка: только критические поля
+    if (base.events_log?.length > 5) base.events_log = base.events_log.slice(0, 5);
+    for (const nation of Object.values(base.nations ?? {})) {
+      for (const char of (nation.characters ?? [])) {
+        if (char.dialogue) char.dialogue = { hot_memory: [] };
+        char.history = [];
+      }
+      if (nation._memory) nation._memory = { events: [] };
+    }
+  }
+
+  return JSON.stringify({ ...base, _senate: senateData });
+}
+
 function saveGame() {
-  try {
-    // Сериализуем SENATE_MANAGERS отдельно (они не входят в GAME_STATE)
-    const senateData = {};
-    for (const [nationId, mgr] of Object.entries(SENATE_MANAGERS)) {
-      senateData[nationId] = mgr.toJSON();
-    }
-
-    // Исключаем эфемерные данные, которые пересчитываются каждый ход
-    const { _turn_summary_history, _last_turn_snapshot, ...stateToSave } = GAME_STATE;
-
-    // Обрезаем лог до 50 записей чтобы не раздувать сохранение
-    if (stateToSave.events_log?.length > 50) {
-      stateToSave.events_log = stateToSave.events_log.slice(0, 50);
-    }
-
-    const saveData = JSON.stringify({ ...stateToSave, _senate: senateData });
-    localStorage.setItem(CONFIG.SAVE_KEY, saveData);
-  } catch (e) {
-    console.warn('Не удалось сохранить игру:', e);
-    if (e.name === 'QuotaExceededError') {
-      addEventLog('⚠ Сохранение не удалось: переполнен localStorage. Попробуйте сбросить старое сохранение.', 'warning');
+  for (let level = 0; level <= 2; level++) {
+    try {
+      const data = _buildSavePayload(level);
+      localStorage.setItem(CONFIG.SAVE_KEY, data);
+      return; // успех
+    } catch (e) {
+      if (e.name !== 'QuotaExceededError' || level === 2) {
+        console.warn('Не удалось сохранить игру:', e);
+        addEventLog('⚠ Сохранение не удалось: переполнен localStorage. Сбросьте старое сохранение командой /reset.', 'warning');
+        return;
+      }
+      // Пробуем следующий уровень обрезки
+      console.warn(`[save] QuotaExceeded, пробуем уровень обрезки ${level + 1}`);
     }
   }
 }
