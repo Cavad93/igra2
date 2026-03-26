@@ -52,6 +52,12 @@ function applyTreatyEffects(treaty) {
   _adjustRelScore(a, b, +8, 'treaty_signed');
 
   _log(`📜 Договор «${treaty.label ?? treaty.type}» вступил в силу между ${natA.name} и ${natB.name}.`);
+
+  // Записываем в долгосрочную память обеих сторон
+  if (typeof addMemoryEvent === 'function') {
+    const tText = `Заключён договор «${treaty.label ?? treaty.type}» с ${natB.name}.`;
+    addMemoryEvent(a, 'diplomacy', tText, [b]);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────

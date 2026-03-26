@@ -207,6 +207,14 @@ function resolveArmyBattle(atkArmy, defArmy, regionId) {
       addEventLog(`🏴 ${atkName} захватывает ${region?.name ?? regionId}!`, 'military');
   }
 
+  // Записываем сражение в долгосрочную память обеих сторон
+  if (typeof addMemoryEvent === 'function') {
+    const battleText = `Сражение у ${region?.name ?? regionId} (${TERRAIN_LABELS[terrain] ?? terrain}): `
+      + `${winName} победил. ${atkName} потери: ${atkCas}, ${defName} потери: ${defCas + pursuitCas}.`
+      + (capturedRegionId ? ` Регион захвачен.` : '');
+    addMemoryEvent(atkArmy.nation, 'military', battleText, [defArmy.nation]);
+  }
+
   return {
     attackerWins: atkWins,
     winner:  atkWins ? atkArmy.nation : defArmy.nation,

@@ -309,6 +309,12 @@ function _completeSiege(siege, winArmy, cause) {
       'military'
     );
 
+  // Записываем в долгосрочную память
+  if (typeof addMemoryEvent === 'function') {
+    const siegeText = `Взят ${siege.region_name} ${causeLabel} после ${siege.turns_elapsed} ходов осады.`;
+    addMemoryEvent(siege.attacker_nation, 'military', siegeText, [siege.defender_nation]);
+  }
+
   // Небольшой гарнизон захватчика в регионе
   const gr = GAME_STATE.regions?.[siege.region_id];
   if (gr) gr.garrison = Math.max(100, Math.round((siege.garrison ?? 0) * 0.1));

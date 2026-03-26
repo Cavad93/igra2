@@ -308,10 +308,15 @@ async function getAINationDecision(nationId, model = CONFIG.MODEL_HAIKU) {
   // Список доступных действий
   const availableActions = buildAvailableActions(nationId, nation);
 
-  // Краткосрочная память: последние 3 решения
-  const recentDecisions = (nation.recent_decisions || []).slice(-3);
+  // Краткосрочная память: последние 5 решений
+  const recentDecisions = (nation.recent_decisions || []).slice(-5);
 
-  const prompt = PROMPTS.nationDecision(nationId, nation, neighborsSummary, availableActions, recentDecisions);
+  // Долгосрочный контекст из памяти нации
+  const memoryContext = typeof getDecisionContext === 'function'
+    ? getDecisionContext(nationId)
+    : '';
+
+  const prompt = PROMPTS.nationDecision(nationId, nation, neighborsSummary, availableActions, recentDecisions, memoryContext);
 
   const rawResponse = await callClaude(prompt.system, prompt.user, 300, model);
   const decision = parseAIResponse(rawResponse);
@@ -319,15 +324,28 @@ async function getAINationDecision(nationId, model = CONFIG.MODEL_HAIKU) {
   if (validateNationDecision(decision)) {
     applyNationDecision(nationId, decision);
 
-    // Сохраняем решение в краткосрочную память (последние 3 хода)
+    // Сохраняем решение в краткосрочную память (последние 5 ходов)
     if (!nation.recent_decisions) nation.recent_decisions = [];
     nation.recent_decisions.push({
       turn:      GAME_STATE.turn,
       action:    decision.action,
       target:    decision.target ?? null,
-      reasoning: (decision.reasoning ?? '').slice(0, 80),
+      reasoning: (decision.reasoning ?? '').slice(0, 120),
     });
-    if (nation.recent_decisions.length > 3) nation.recent_decisions.shift();
+    if (nation.recent_decisions.length > 5) nation.recent_decisions.shift();
+
+    // Записываем решение в долгосрочную память
+    if (typeof addMemoryEvent === 'function') {
+      const targetName = decision.target
+        ? (GAME_STATE.nations?.[decision.target]?.name ?? decision.target)
+        : null;
+      addMemoryEvent(
+        nationId,
+        'decision',
+        `Решение: ${decision.action}${targetName ? ' → ' + targetName : ''}. ${decision.reasoning ?? ''}`,
+        decision.target ? [decision.target] : []
+      );
+    }
   }
 }
 

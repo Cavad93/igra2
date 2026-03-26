@@ -885,6 +885,11 @@ async function _dpChatSendActual(aiNationId, text) {
   if (typeof DiplomacyEngine !== 'undefined') {
     DiplomacyEngine.addMessage(playerNationId, aiNationId, 'user', fullText, text);
   }
+  // Сохраняем в долгосрочную память обеих сторон
+  if (typeof addDialogueMessage === 'function') {
+    addDialogueMessage(aiNationId,     playerNationId, 'user',      fullText);
+    addDialogueMessage(playerNationId, aiNationId,     'user',      fullText);
+  }
 
   st.isLoading = true;
   _renderChatModal();
@@ -903,6 +908,11 @@ async function _dpChatSendActual(aiNationId, text) {
 
     if (typeof DiplomacyEngine !== 'undefined') {
       DiplomacyEngine.addMessage(playerNationId, aiNationId, 'assistant', raw, display);
+    }
+    // Сохраняем ответ AI в долгосрочную память
+    if (typeof addDialogueMessage === 'function') {
+      addDialogueMessage(aiNationId,     playerNationId, 'assistant', display);
+      addDialogueMessage(playerNationId, aiNationId,     'assistant', display);
     }
 
     if (treaty?.agreed === true && treaty.treaty_type) {

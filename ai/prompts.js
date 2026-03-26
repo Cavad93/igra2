@@ -81,13 +81,13 @@ ${JSON.stringify(politicalContext, null, 2)}
   // ──────────────────────────────────────────────────────────
   // 3. РЕШЕНИЕ AI-НАЦИИ
   // ──────────────────────────────────────────────────────────
-  nationDecision: (nationId, nationState, neighborsSummary, availableActions, recentDecisions = []) => ({
+  nationDecision: (nationId, nationState, neighborsSummary, availableActions, recentDecisions = [], memoryContext = '') => ({
     system: `Ты — правитель ${nationState.name} в 301 BC.
 Принимаешь решение исходя из интересов своего государства.
 Отвечай ТОЛЬКО JSON. Никакого текста кроме JSON.
 Личность правителя: ${nationState.ai_personality || 'нейтральный'}.
 Приоритет: ${nationState.ai_priority || 'выживание'}.
-Избегай бездумного повторения одних и тех же действий несколько ходов подряд.`,
+Помни историю своих решений и их последствия. Избегай бездумного повторения.`,
 
     user: `ТВОЁ ГОСУДАРСТВО (ключевые метрики):
 Казна: ${nationState.economy?.treasury ?? '?'} | Армия: ${(nationState.military?.infantry ?? 0) + (nationState.military?.cavalry ?? 0) * 3} | Счастье: ${nationState.population?.happiness ?? '?'}% | Личная власть: ${nationState.government?.ruler?.personal_power ?? '?'}/100
@@ -98,6 +98,7 @@ ${JSON.stringify(neighborsSummary, null, 2)}
 ДОСТУПНЫЕ ДЕЙСТВИЯ:
 ${JSON.stringify(availableActions, null, 2)}
 ${recentDecisions.length ? `\nПОСЛЕДНИЕ РЕШЕНИЯ (не повторяй без причины):\n${recentDecisions.map(d => `Ход ${d.turn}: ${d.action}${d.target ? ' → ' + d.target : ''} (${d.reasoning})`).join('\n')}` : ''}
+${memoryContext ? `\n--- КОНТЕКСТ ИСТОРИИ ---\n${memoryContext}\n---` : ''}
 
 Выбери одно действие и верни JSON:
 {

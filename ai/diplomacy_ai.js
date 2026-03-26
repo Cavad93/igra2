@@ -55,11 +55,22 @@ function _buildLeaderSystemPrompt(aiNationId, playerNationId) {
   const aiTreasury     = aiNation?.economy?.treasury     ?? 0;
   const playerTreasury = playerNation?.economy?.treasury ?? 0;
 
+  // История прошлых переговоров с этим игроком
+  const dialogueHistory = typeof getDialogueContext === 'function'
+    ? getDialogueContext(aiNationId, playerNationId)
+    : '';
+
+  // Исторический контекст нации
+  const nationHistory = typeof getDecisionContext === 'function'
+    ? getDecisionContext(aiNationId)
+    : '';
+
   return `Ты — ${aiRuler}, правитель государства ${aiName}.
 Форма правления: ${aiGovType}.
 Год: ${era}, месяц ${month}.
 Жанр: стратегия в духе «Imperator Rome».
-
+${nationHistory ? `\nКОНТЕКСТ ИСТОРИИ НАЦИИ:\n${nationHistory.slice(0, 1000)}\n` : ''}
+${dialogueHistory ? `\n${dialogueHistory}\n` : ''}
 КОНТЕКСТ ОТНОШЕНИЙ С ${playerName.toUpperCase()}:
   Оценка отношений: ${relScore} (${relLabel})
   Состояние войны: ${atWar ? '⚔ ВОЙНА' : 'мира'}

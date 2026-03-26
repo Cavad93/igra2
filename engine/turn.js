@@ -166,6 +166,11 @@ async function processTurn() {
       try { processAllianceWars(); } catch (e) { console.warn('[alliance_wars]', e); }
     }
 
+    // 5.4г. Тик памяти AI-наций (компрессия старых событий в архив)
+    if (typeof processMemoryTick === 'function') {
+      try { processMemoryTick(); } catch (e) { console.warn('[memory_tick]', e); }
+    }
+
     // 5.4в. Движение армий и обработка осад
     if (typeof processArmyMovement === 'function') {
       try { processArmyMovement(); } catch (e) { console.warn('[army_movement]', e); }
