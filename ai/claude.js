@@ -339,11 +339,13 @@ async function getAINationDecision(nationId, model = CONFIG.MODEL_HAIKU) {
       const targetName = decision.target
         ? (GAME_STATE.nations?.[decision.target]?.name ?? decision.target)
         : null;
+      const modelTag = model === CONFIG.MODEL_SONNET ? 'sonnet' : 'haiku';
       addMemoryEvent(
         nationId,
         'decision',
         `Решение: ${decision.action}${targetName ? ' → ' + targetName : ''}. ${decision.reasoning ?? ''}`,
-        decision.target ? [decision.target] : []
+        decision.target ? [decision.target] : [],
+        modelTag
       );
     }
   }

@@ -65,11 +65,17 @@ function _buildLeaderSystemPrompt(aiNationId, playerNationId) {
     ? getDecisionContext(aiNationId)
     : '';
 
+  // Контекст передачи управления от фонового AI (Haiku/Fallback → Sonnet)
+  const handoffContext = typeof getHandoffContext === 'function'
+    ? getHandoffContext(aiNationId, 'sonnet')
+    : '';
+
   return `Ты — ${aiRuler}, правитель государства ${aiName}.
 Форма правления: ${aiGovType}.
 Год: ${era}, месяц ${month}.
 Жанр: стратегия в духе «Imperator Rome».
 ${nationHistory ? `\nКОНТЕКСТ ИСТОРИИ НАЦИИ:\n${nationHistory.slice(0, 1000)}\n` : ''}
+${handoffContext ? `\nПЕРЕДАЧА ОТ ФОНОВОГО AI:\n${handoffContext}\n` : ''}
 ${dialogueHistory ? `\n${dialogueHistory}\n` : ''}
 КОНТЕКСТ ОТНОШЕНИЙ С ${playerName.toUpperCase()}:
   Оценка отношений: ${relScore} (${relLabel})

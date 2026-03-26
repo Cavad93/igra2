@@ -578,6 +578,29 @@ function showDipChatModal(aiNationId, firstMessage) {
 }
 
 function hideDipChatModal() {
+  // Записываем исход переговоров в память до закрытия
+  if (_dpChatModalNation && typeof addMemoryEvent === 'function') {
+    const aiId         = _dpChatModalNation;
+    const playerId     = GAME_STATE.player_nation;
+    const st           = _getDtState(aiId);
+    const aiName       = GAME_STATE.nations[aiId]?.name ?? aiId;
+    const playerName   = GAME_STATE.nations[playerId]?.name ?? playerId;
+
+    if (st?.agreedTreaty?.type && st?.phase !== 'signed') {
+      // Договор достигнут но ещё не подписан (прервали на полпути)
+      const tLabel = TREATY_TYPES?.[st.agreedTreaty.type]?.label ?? st.agreedTreaty.type;
+      const outcomeText = `Переговоры с ${playerName}: договор «${tLabel}» обсуждался, но не подписан`;
+      addMemoryEvent(aiId,     'diplomacy', outcomeText, [playerId], 'sonnet');
+      addMemoryEvent(playerId, 'diplomacy', `Переговоры с ${aiName}: договор «${tLabel}» обсуждался, но не подписан`, [aiId], 'player');
+    } else if (!st?.agreedTreaty?.type) {
+      const dialogue = typeof DiplomacyEngine !== 'undefined'
+        ? DiplomacyEngine.getDialogue(playerId, aiId) : [];
+      if (dialogue.length > 0) {
+        addMemoryEvent(aiId,     'diplomacy', `Переговоры с ${playerName} прерваны без договора`, [playerId], 'sonnet');
+        addMemoryEvent(playerId, 'diplomacy', `Переговоры с ${aiName} прерваны без договора`, [aiId], 'player');
+      }
+    }
+  }
   document.getElementById('dp-chat-modal')?.classList.add('hidden');
   _dpChatModalNation = null;
 }

@@ -51,27 +51,27 @@ function _ensureMemory(nationId) {
  * @param {'military'|'diplomacy'|'economy'|'decision'|'political'} type
  * @param {string} text  — описание события
  * @param {string[]} [involvedNations] — другие нации-участники (для перекрёстной записи)
+ * @param {'haiku'|'sonnet'|'fallback'|'player'|null} [model] — кто принял решение
  */
-function addMemoryEvent(nationId, type, text, involvedNations) {
+function addMemoryEvent(nationId, type, text, involvedNations, model) {
   const mem = _ensureMemory(nationId);
   if (!mem) return;
 
-  mem.events.push({
-    turn: GAME_STATE.turn ?? 1,
+  const entry = {
+    turn:  GAME_STATE.turn ?? 1,
     type,
-    text: String(text).slice(0, MEMORY_CFG.MAX_EVENT_TEXT),
-  });
+    text:  String(text).slice(0, MEMORY_CFG.MAX_EVENT_TEXT),
+  };
+  if (model) entry.model = model;
+
+  mem.events.push(entry);
 
   // Перекрёстная запись для других наций-участников
   if (Array.isArray(involvedNations)) {
     for (const nId of involvedNations) {
       if (nId && nId !== nationId) {
         const m2 = _ensureMemory(nId);
-        if (m2) m2.events.push({
-          turn: GAME_STATE.turn ?? 1,
-          type,
-          text: String(text).slice(0, MEMORY_CFG.MAX_EVENT_TEXT),
-        });
+        if (m2) m2.events.push({ ...entry });
       }
     }
   }
@@ -138,6 +138,75 @@ function getDecisionContext(nationId) {
   return result.length > MEMORY_CFG.MAX_CONTEXT_CHARS
     ? '...(обрезано)\n' + result.slice(-MEMORY_CFG.MAX_CONTEXT_CHARS)
     : result;
+}
+
+/**
+ * Контекст передачи управления между моделями.
+ *
+ * Когда Sonnet открывает диалог — он должен знать что делал Haiku/Fallback.
+ * Когда Haiku принимает решение — он должен знать что согласовал Sonnet.
+ *
+ * @param {string} nationId
+ * @param {'sonnet'|'haiku'|'fallback'} receivingModel — кто ПОЛУЧАЕТ контекст
+ * @returns {string}
+ */
+function getHandoffContext(nationId, receivingModel) {
+  const mem = GAME_STATE.nations?.[nationId]?.memory;
+  if (!mem) return '';
+
+  const turn    = GAME_STATE.turn ?? 1;
+  const parts   = [];
+  const WINDOW  = 30; // последние 30 ходов
+
+  // ── Решения, принятые ДРУГИМИ моделями ──────────────────────────
+  const MODEL_LABELS = {
+    haiku:    'Автономный AI (Haiku)',
+    fallback: 'Алгоритм (Fallback)',
+    sonnet:   'Дипломатический AI (Sonnet)',
+    player:   'Игрок',
+  };
+
+  const recentDecisions = mem.events.filter(e =>
+    e.type === 'decision' &&
+    e.turn >= turn - WINDOW &&
+    e.model !== receivingModel
+  );
+
+  if (recentDecisions.length > 0) {
+    parts.push('◈ РЕШЕНИЯ ПРЕДЫДУЩИХ AI (последние 30 ходов):');
+    for (const e of recentDecisions.slice(-12)) {
+      const who = MODEL_LABELS[e.model] ?? e.model ?? 'AI';
+      parts.push(`  [Ход ${e.turn}][${who}] ${e.text}`);
+    }
+  }
+
+  // ── Последние дипломатические исходы от диалогов ────────────────
+  const recentDialogue = mem.events.filter(e =>
+    e.type === 'diplomacy' &&
+    e.turn >= turn - WINDOW &&
+    (e.model === 'sonnet' || e.model === 'player')
+  );
+
+  if (recentDialogue.length > 0) {
+    parts.push('\n◈ ИТОГИ ПЕРЕГОВОРОВ С ИГРОКОМ:');
+    for (const e of recentDialogue.slice(-6)) {
+      parts.push(`  [Ход ${e.turn}] ${e.text}`);
+    }
+  }
+
+  // ── Последние военные события ────────────────────────────────────
+  const recentMilitary = mem.events.filter(e =>
+    e.type === 'military' && e.turn >= turn - WINDOW
+  );
+  if (recentMilitary.length > 0) {
+    parts.push('\n◈ ВОЕННАЯ ОБСТАНОВКА (последние 30 ходов):');
+    for (const e of recentMilitary.slice(-5)) {
+      parts.push(`  [Ход ${e.turn}] ${e.text}`);
+    }
+  }
+
+  if (parts.length === 0) return '';
+  return parts.join('\n').slice(0, 2500);
 }
 
 /**

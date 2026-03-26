@@ -388,6 +388,13 @@ function applyFallbackDecision(nationId) {
   const military = nation.military;
   const pop = nation.population;
 
+  // ── Запись в память для преемственности между моделями ──────────
+  const _recordFallback = (action, detail) => {
+    if (typeof addMemoryEvent === 'function') {
+      addMemoryEvent(nationId, 'decision', `${action}${detail ? ': ' + detail : ''}`, [], 'fallback');
+    }
+  };
+
   // Приоритет 1: если мало армии относительно населения — рекрутируем
   // cavalry * 3: cavalry units count as 3x for military strength purposes (mounted troops are ~3x more effective)
   const armyRatio = (military.infantry + military.cavalry * 3) / Math.max(1, pop.total);
@@ -396,6 +403,7 @@ function applyFallbackDecision(nationId) {
     if (recruits > 0) {
       military.infantry += recruits;
       nation.economy.treasury -= recruits * CONFIG.BALANCE.INFANTRY_UPKEEP * 5;
+      _recordFallback('recruit', `+${recruits} пехоты (армия мала)`);
     }
     return;
   }
@@ -406,6 +414,7 @@ function applyFallbackDecision(nationId) {
     const recruits = Math.min(Math.floor(treasury * 0.02), 500);
     military.infantry += recruits;
     nation.economy.treasury -= recruits * CONFIG.BALANCE.INFANTRY_UPKEEP * 3;
+    _recordFallback('war_recruit', `+${recruits} пехоты (идёт война)`);
 
     // Нанять наёмников если есть деньги
     if (treasury > 5000 && military.mercenaries < 300) {
@@ -418,6 +427,7 @@ function applyFallbackDecision(nationId) {
 
   // Приоритет 3: дипломатия — попытаться заключить торговый договор
   if (!atWar && treasury > 1000 && GAME_STATE.turn % 12 === 0) {
+    let tradeMade = false;
     for (const [otherId, rel] of Object.entries(nation.relations || {})) {
       if (rel.at_war || (rel.treaties || []).includes('trade')) continue;
       if (rel.score > -10) {
@@ -436,14 +446,21 @@ function applyFallbackDecision(nationId) {
             }
             other.relations[nationId].score = Math.min(100, other.relations[nationId].score + 10);
           }
+          const otherName = other?.name ?? otherId;
+          _recordFallback('trade_deal', `торговый договор с ${otherName}`);
+          tradeMade = true;
           break; // одно действие за ход
         }
       }
+    }
+    if (!tradeMade) {
+      _recordFallback('diplomacy_idle', 'не найдено подходящих партнёров для торговли');
     }
     return;
   }
 
   // Приоритет 4: накапливать деньги (ничего не делаем)
+  _recordFallback('accumulate', `казна: ${Math.round(treasury)} золота`);
 }
 
 // ──────────────────────────────────────────────────────────────
