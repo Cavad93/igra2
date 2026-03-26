@@ -166,17 +166,48 @@ function applyNationDecision(nationId, decision) {
     case 'trade': {
       if (decision.target && GAME_STATE.nations[decision.target]) {
         const rel = nation.relations[decision.target];
-        if (rel && !rel.treaties.includes('trade')) {
+        if (rel && !(rel.treaties ?? []).includes('trade')) {
+          rel.treaties = rel.treaties ?? [];
           rel.treaties.push('trade');
           rel.score = Math.min(100, rel.score + 5);
           const targetNation = GAME_STATE.nations[decision.target];
           // Взаимность — добавляем торговлю в обе стороны
-          if (targetNation.relations[nationId]) {
-            targetNation.relations[nationId].treaties = [
-              ...new Set([...targetNation.relations[nationId].treaties, 'trade']),
-            ];
+          if (targetNation.relations?.[nationId]) {
+            const tRel = targetNation.relations[nationId];
+            tRel.treaties = tRel.treaties ?? [];
+            if (!tRel.treaties.includes('trade')) tRel.treaties.push('trade');
           }
           addEventLog(`${nation.name} заключает торговый договор с ${targetNation.name}.`, 'diplomacy');
+        }
+      }
+      break;
+    }
+
+    case 'attack': {
+      // AI решил атаковать — делегируем в processAttackAction если доступен
+      if (decision.target && typeof processAttackAction === 'function') {
+        const targetRegion = GAME_STATE.regions?.[decision.target];
+        const defenderNationId = targetRegion?.nation;
+        if (defenderNationId && defenderNationId !== nationId) {
+          processAttackAction(nationId, defenderNationId, { target_region: decision.target });
+        }
+      }
+      break;
+    }
+
+    case 'build': {
+      // AI решил строить — ставим в очередь если доступна функция
+      if (typeof queueBuilding === 'function') {
+        const myRegions = nation.regions ?? [];
+        // Найти первый регион со свободным слотом
+        for (const rid of myRegions) {
+          const r = GAME_STATE.regions?.[rid];
+          if (!r) continue;
+          const freeSlot = (r.building_slots ?? []).find(s => !s.building_id);
+          if (freeSlot) {
+            queueBuilding(nationId, rid, 'workshop'); // базовое здание по умолчанию
+            break;
+          }
         }
       }
       break;
