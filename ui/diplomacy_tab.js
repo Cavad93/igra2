@@ -40,9 +40,15 @@ function _dpRelObj(playerNationId, aiNationId) {
   if (typeof DiplomacyEngine === 'undefined') {
     return { label: 'Нейтральные', color: '#9e9e9e', icon: '⚪' };
   }
-  const score = DiplomacyEngine.getRelationScore(playerNationId, aiNationId);
-  const obj   = DiplomacyEngine.getRelationLabel(score);
-  // getRelationLabel возвращает { label, color, icon }
+  let score = DiplomacyEngine.getRelationScore(playerNationId, aiNationId);
+  // Если DiplomacyEngine ещё не имеет данных для пары — берём из legacy nation.relations
+  if (score === 0) {
+    const legA = GAME_STATE.nations?.[playerNationId]?.relations?.[aiNationId]?.score;
+    const legB = GAME_STATE.nations?.[aiNationId]?.relations?.[playerNationId]?.score;
+    const leg  = legA ?? legB ?? null;
+    if (typeof leg === 'number' && leg !== 0) score = leg;
+  }
+  const obj = DiplomacyEngine.getRelationLabel(score);
   return { score, ...obj };
 }
 
@@ -1110,9 +1116,16 @@ function _getForeignNations(playerNationId) {
     .map(([id, n]) => {
       // Читаем score напрямую из relations — НЕ вызываем getRelationScore,
       // чтобы не провоцировать ленивую инициализацию 1900+ пар при открытии UI.
-      const key   = [id, playerNationId].sort().join('_');
-      const score = diplomacy?.relations?.[key]?.score ?? 0;
-      const atWar = diplomacy?.relations?.[key]?.war ?? false;
+      const key    = [id, playerNationId].sort().join('_');
+      let   score  = diplomacy?.relations?.[key]?.score ?? 0;
+      const atWar  = diplomacy?.relations?.[key]?.war ?? false;
+      // Fallback на legacy nation.relations если DiplomacyEngine ещё не засеян
+      if (score === 0) {
+        const legA = GAME_STATE.nations?.[playerNationId]?.relations?.[id]?.score;
+        const legB = n?.relations?.[playerNationId]?.score;
+        const leg  = legA ?? legB ?? null;
+        if (typeof leg === 'number' && leg !== 0) score = leg;
+      }
       return { id, name: n.name, flag: n.flag_emoji ?? '🏛', score, atWar };
     })
     // Сначала союзники/дружественные, потом враги, потом нейтральные

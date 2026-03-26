@@ -181,6 +181,50 @@ function initDiplomacy() {
       }
     }
   }
+
+  // Проход 3: смешиваем с унаследованными данными из nation.relations (сценарные значения)
+  _seedFromLegacyRelations();
+}
+
+/**
+ * Читает score из устаревшего формата nation.relations[otherId].score.
+ * Возвращает null если данных нет.
+ */
+function _legacyScore(nationA, nationB) {
+  const a = GAME_STATE.nations?.[nationA]?.relations?.[nationB]?.score;
+  if (typeof a === 'number') return a;
+  const b = GAME_STATE.nations?.[nationB]?.relations?.[nationA]?.score;
+  if (typeof b === 'number') return b;
+  return null;
+}
+
+/**
+ * Засевает DiplomacyEngine из устаревшей системы nation.relations.
+ * Если рассчитанный score == 0, но в legacy есть ненулевое значение — берём legacy.
+ * Если оба ненулевые — среднее, с весом 60% legacy (сценарные данные приоритетнее).
+ */
+function _seedFromLegacyRelations() {
+  const nations = GAME_STATE.nations ?? {};
+  for (const [nId, nation] of Object.entries(nations)) {
+    const legRels = nation.relations;
+    if (!legRels || typeof legRels !== 'object') continue;
+    for (const [otherId, legRel] of Object.entries(legRels)) {
+      if (!nations[otherId]) continue;
+      const legScore = typeof legRel?.score === 'number' ? legRel.score : null;
+      if (legScore === null) continue;
+      const key = _relKey(nId, otherId);
+      const rel = GAME_STATE.diplomacy.relations[key];
+      if (!rel) continue;
+      if (rel.score === 0) {
+        rel.score = legScore;
+      } else if (rel.score !== legScore) {
+        // Взвешенное среднее: 60% сценарные данные, 40% рассчитанные
+        rel.score = Math.round(legScore * 0.6 + rel.score * 0.4);
+      }
+      // Синхронизируем флаг войны
+      if (legRel.at_war) rel.war = true;
+    }
+  }
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -201,6 +245,11 @@ function getRelation(nationA, nationB) {
     // Для малых карт рассчитываем score при первом доступе к паре
     if (nids.length <= _INIT_NATION_LIMIT) {
       try { score = calcBaseRelation(nationA, nationB); calculated = true; } catch (_) {}
+    }
+    // Если рассчитанный score == 0, пробуем унаследовать из устаревшего формата
+    if (score === 0) {
+      const leg = _legacyScore(nationA, nationB);
+      if (leg !== null) { score = leg; calculated = true; }
     }
     GAME_STATE.diplomacy.relations[key] = {
       score, war: false, truces: [], events: [], flags: {},
