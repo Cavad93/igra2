@@ -161,7 +161,12 @@ async function processTurn() {
       try { checkProvinceControlEvents(); } catch (e) { console.warn('[province_events]', e); }
     }
 
-    // 5.5. Автономное поведение персонажей (fire-and-forget)
+    // 5.5. Прогресс активных приказов (делегирование)
+    if (typeof processAllOrders === 'function') {
+      try { processAllOrders(); } catch (e) { console.warn('[orders]', e); }
+    }
+
+    // 5.55. Автономное поведение персонажей (fire-and-forget)
     processCharacterAutonomy(GAME_STATE.player_nation).catch(console.warn);
 
     // 5.6. Условия победы / поражения

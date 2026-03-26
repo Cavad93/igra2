@@ -2103,6 +2103,74 @@
     .gov-section-title.clickable:hover { opacity: 1; }
     .gov-section.collapsed > *:not(.gov-section-title) { display: none; }
 
+    /* ── Система приказов ────────────────────────────────── */
+    .orders-new-btn {
+      float: right; font-size: 10px; padding: 2px 7px;
+      background: rgba(107,79,26,0.5); border: 1px solid var(--border);
+      color: var(--text-gold); border-radius: 3px; cursor: pointer;
+    }
+    .orders-new-btn:hover { background: rgba(107,79,26,0.9); }
+    .orders-subsection-title {
+      font-size: 10px; color: #aaa; text-transform: uppercase;
+      letter-spacing: 0.6px; margin: 6px 0 4px;
+    }
+    .orders-empty {
+      font-size: 11px; color: #888; font-style: italic; padding: 4px 0;
+    }
+    .order-card {
+      background: rgba(0,0,0,0.2); border: 1px solid rgba(107,79,26,0.3);
+      border-radius: 3px; padding: 7px 9px; margin-bottom: 5px;
+    }
+    .order-card.active { border-color: rgba(33,150,243,0.5); }
+    .order-card.done   { opacity: 0.75; }
+    .order-card-header {
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 4px;
+    }
+    .order-label { font-size: 12px; font-weight: bold; color: var(--text-gold); flex: 1; }
+    .order-cancel-btn {
+      background: none; border: none; color: #f44; cursor: pointer;
+      font-size: 12px; padding: 0 2px;
+    }
+    .order-badge { font-size: 10px; padding: 1px 5px; border-radius: 3px; }
+    .order-badge.done   { background: rgba(76,175,80,0.25); color: #4CAF50; }
+    .order-badge.fail   { background: rgba(244,67,54,0.25); color: #f44336; }
+    .order-badge.cancel { background: rgba(150,150,150,0.2); color: #aaa; }
+    .order-meta   { font-size: 10px; color: #aaa; margin-bottom: 4px; }
+    .order-progress-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+    .order-progress-bar { flex: 1; height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+    .order-progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+    .order-progress-pct { font-size: 10px; color: #aaa; min-width: 30px; text-align: right; }
+    .order-expected { font-size: 10px; color: #888; }
+    .order-result   { font-size: 11px; color: #ccc; font-style: italic; }
+    /* Форма приказа */
+    .order-form { display: flex; flex-direction: column; gap: 7px; }
+    .order-form-row { display: flex; flex-direction: column; gap: 3px; }
+    .order-form-row label {
+      font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .order-form-row select,
+    .order-form-row input[type="text"] {
+      background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+      color: var(--text); padding: 4px 7px; border-radius: 3px; font-size: 11px;
+      width: 100%; box-sizing: border-box;
+    }
+    .order-quality-preview {
+      font-size: 11px; color: #ccc;
+      background: rgba(255,255,255,0.04); border-radius: 3px;
+      padding: 5px 8px; border: 1px solid rgba(107,79,26,0.25);
+    }
+    .gov-action-btn {
+      padding: 5px 14px; border-radius: 3px; cursor: pointer;
+      border: 1px solid var(--border); font-size: 11px;
+      background: rgba(107,79,26,0.4); color: var(--text-gold);
+    }
+    .gov-action-btn:hover { background: rgba(107,79,26,0.8); }
+    .gov-action-btn.primary {
+      background: rgba(33,150,243,0.3); border-color: rgba(33,150,243,0.6); color: #90CAF9;
+    }
+    .gov-action-btn.primary:hover { background: rgba(33,150,243,0.55); }
+
     /* Заголовок правительства */
     .gov-header { margin-bottom: 10px; }
     .gov-type-badge {
@@ -6056,6 +6124,7 @@
   <script src="engine/battle.js"></script>
   <script src="engine/victory.js"></script>
   <script src="engine/characters_ai.js"></script>
+  <script src="engine/orders.js"></script>
   <script src="engine/culture.js"></script>
   <script src="engine/religion.js"></script>
   <script src="engine/turn.js"></script>
