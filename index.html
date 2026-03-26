@@ -1522,7 +1522,11 @@
     .negative { color: var(--negative); }
 
     .api-key-prompt {
-      padding: 4px;
+      padding: 8px;
+      background: rgba(180,140,60,0.07);
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+      margin: 6px 0;
     }
     .api-key-title { color: var(--text-gold); font-weight: bold; margin-bottom: 4px; }
     .api-key-desc  { color: var(--text-dim); font-size: 11px; margin-bottom: 6px; }
@@ -6416,31 +6420,35 @@
         <button id="generate-chars-btn" onclick="handleGenerateChars()">
           ✨ Созвать советников (AI)
         </button>
-        <div class="characters-list">
-          <div style="color:var(--text-dim);font-size:11px;padding:4px;">Загрузка...</div>
-        </div>
 
-        <!-- Сохранение API ключей -->
+        <!-- Сохранение API ключей — ВВЕРХУ панели для удобного доступа -->
         <div class="api-key-prompt" id="api-key-inline-panel">
-          <div class="api-key-title">🔑 API ключи</div>
-          <div class="api-key-desc">Groq (бесплатно) — решения AI-наций</div>
+          <div class="api-key-title">🔑 API ключи AI</div>
+
+          <div class="api-key-desc">Groq — бесплатно, для AI-наций</div>
           <div class="api-key-input-row">
             <input type="password" id="inline-groq-key" class="api-key-field"
                    placeholder="gsk_..." autocomplete="off" spellcheck="false">
-            <button class="api-key-btn" onclick="saveInlineAPIKeys()">Сохранить</button>
           </div>
-          <div class="api-key-hint">
-            <a href="https://console.groq.com" target="_blank">console.groq.com</a> → API Keys
+          <div class="api-key-hint" style="margin-bottom:6px">
+            🔗 <a href="https://console.groq.com" target="_blank">console.groq.com</a> → API Keys (бесплатно)
           </div>
-          <div class="api-key-desc" style="margin-top:6px">Anthropic Claude — дипломатия</div>
+
+          <div class="api-key-desc">Anthropic Claude — для дипломатии</div>
           <div class="api-key-input-row">
             <input type="password" id="inline-anthropic-key" class="api-key-field"
                    placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false">
           </div>
-          <div class="api-key-hint">
-            <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys
+          <div class="api-key-hint" style="margin-bottom:6px">
+            🔗 <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys
           </div>
-          <div id="inline-key-status" style="font-size:10px;margin-top:4px;color:var(--text-dim)"></div>
+
+          <button class="api-key-btn" style="width:100%;padding:6px;" onclick="saveInlineAPIKeys()">💾 Сохранить ключи</button>
+          <div id="inline-key-status" style="font-size:10px;margin-top:4px;color:var(--text-dim);text-align:center"></div>
+        </div>
+
+        <div class="characters-list">
+          <div style="color:var(--text-dim);font-size:11px;padding:4px;">Загрузка...</div>
         </div>
       </div>
     </main>
