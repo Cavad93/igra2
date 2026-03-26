@@ -161,6 +161,11 @@ async function processTurn() {
       try { checkProvinceControlEvents(); } catch (e) { console.warn('[province_events]', e); }
     }
 
+    // 5.4б. Военные союзы — AI союзники атакуют общих врагов
+    if (typeof processAllianceWars === 'function') {
+      try { processAllianceWars(); } catch (e) { console.warn('[alliance_wars]', e); }
+    }
+
     // 5.5. Прогресс активных приказов (делегирование)
     if (typeof processAllOrders === 'function') {
       try { processAllOrders(); } catch (e) { console.warn('[orders]', e); }

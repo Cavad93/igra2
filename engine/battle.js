@@ -158,9 +158,14 @@ function resolveBattle(attackerNationId, defenderNationId, opts = {}) {
     terrain, isDefender: true, type: battleType, garrison, nationId: defenderNationId,
   });
 
+  // Совместная атака: союзники по военному союзу добавляют часть силы
+  const { bonus: jointBonus, allies: jointAllies } =
+    _calcJointAttackBonus(attackerNationId, defenderNationId, terrain, battleType);
+  const totalAtkBase = atkBase + jointBonus;
+
   // Бросок с разбросом ±30%
-  const atkRoll = atkBase * (0.7 + Math.random() * 0.6);
-  const defRoll = defBase * (0.7 + Math.random() * 0.6);
+  const atkRoll = totalAtkBase * (0.7 + Math.random() * 0.6);
+  const defRoll = defBase       * (0.7 + Math.random() * 0.6);
   const attackerWins = atkRoll > defRoll;
 
   // Потери: 5-15% от пехоты+конницы каждой стороны
@@ -236,6 +241,7 @@ function resolveBattle(attackerNationId, defenderNationId, opts = {}) {
     loser: attackerWins ? defenderNationId : attackerNationId,
     capturedRegionId, atkCasualties, defCasualties,
     battleType, terrain,
+    jointAllies,   // [] или [{ id, name, contribution }]
   };
 }
 
@@ -294,6 +300,91 @@ function resolveNavalBattle(attackerNationId, defenderNationId) {
 }
 
 // ── Вспомогательные ──────────────────────────────────────────────────
+
+/**
+ * Считает бонус к силе атакующего от союзников по военному союзу (joint_attack).
+ * Союзник добавляет 40% своей силы, сам несёт небольшие потери (1–3%).
+ * @returns {{ bonus: number, allies: Array<{id, name, contribution}> }}
+ */
+function _calcJointAttackBonus(attackerNationId, defenderNationId, terrain, battleType) {
+  const allies = [];
+  let bonus = 0;
+  if (typeof DiplomacyEngine === 'undefined') return { bonus, allies };
+
+  const treaties = GAME_STATE.diplomacy?.treaties ?? [];
+
+  for (const treaty of treaties) {
+    if (treaty.status !== 'active' || treaty.type !== 'military_alliance') continue;
+    if (!treaty.parties.includes(attackerNationId)) continue;
+
+    const allyId = treaty.parties.find(p => p !== attackerNationId);
+    if (!allyId || allyId === defenderNationId) continue;
+
+    // Союзник должен быть в состоянии войны с защитником
+    const allyDefRel = DiplomacyEngine.getRelation(allyId, defenderNationId);
+    if (!allyDefRel?.war) continue;
+
+    const ally = GAME_STATE.nations[allyId];
+    if (!ally) continue;
+
+    const allyStr = calculateMilitaryStrength(ally, {
+      terrain, isDefender: false, type: battleType, nationId: allyId,
+    });
+    const contribution = Math.round(allyStr * 0.40);
+    bonus += contribution;
+
+    // Союзник несёт символические потери (1–3% пехоты)
+    const allyLoss = Math.round((ally.military.infantry ?? 0) * (0.01 + Math.random() * 0.02));
+    ally.military.infantry = Math.max(0, (ally.military.infantry ?? 0) - allyLoss);
+
+    allies.push({ id: allyId, name: ally.name ?? allyId, contribution, loss: allyLoss });
+  }
+
+  return { bonus, allies };
+}
+
+/**
+ * Активные военные союзы: AI союзники сами атакуют общих врагов каждые 3 хода.
+ * Вызывается из turn.js один раз за ход.
+ */
+function processAllianceWars() {
+  if (typeof DiplomacyEngine === 'undefined') return;
+
+  // Только каждые 3 хода и не каждый раз (30% шанс на пару)
+  if (GAME_STATE.turn % 3 !== 0) return;
+
+  const treaties = GAME_STATE.diplomacy?.treaties ?? [];
+
+  for (const treaty of treaties) {
+    if (treaty.status !== 'active' || treaty.type !== 'military_alliance') continue;
+
+    const [natA, natB] = treaty.parties;
+
+    // Ищем общих врагов: нации, с которыми воюет хотя бы одна из сторон
+    for (const [side, other] of [[natA, natB], [natB, natA]]) {
+      if (side === GAME_STATE.player_nation) continue; // игрок сам решает когда атаковать
+      const sideNat = GAME_STATE.nations[side];
+      if (!sideNat) continue;
+
+      const enemies = (sideNat.military.at_war_with ?? []);
+      for (const enemyId of enemies) {
+        if (enemyId === other) continue; // союзники не атакуют друг друга
+
+        // Союзник другой стороны тоже атакует этого врага (если ещё не воюет с ним)
+        const otherRelEnemy = DiplomacyEngine.getRelation(other, enemyId);
+        if (!otherRelEnemy?.war) continue; // союзник не воюет с этим врагом — пропуск
+
+        // 30% шанс совместной атаки за ход
+        if (Math.random() > 0.30) continue;
+
+        const enemy = GAME_STATE.nations[enemyId];
+        if (!enemy || enemy.regions?.length === 0) continue;
+
+        processAttackAction(side, enemyId);
+      }
+    }
+  }
+}
 
 /**
  * Срабатывает оборонный/военный союз: все союзники defenderNationId
@@ -446,6 +537,10 @@ function processAttackAction(attackerNationId, defenderNationId, opts = {}) {
   } else {
     msg = `⚔️ ${typeLabel}${terrainLabel}: ${attName} атакует ${defName}. Победитель: ${winName}. `
         + `Потери: нападающий −${result.atkCasualties} воинов, защитник −${result.defCasualties}.`;
+    if (result.jointAllies?.length) {
+      const allyNames = result.jointAllies.map(a => a.name).join(', ');
+      msg += ` ⚔ Совместная атака: ${allyNames}.`;
+    }
   }
 
   if (result.capturedRegionId) {
