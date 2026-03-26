@@ -2319,7 +2319,7 @@ function renderOrderCard(order, nation, isActive) {
       <div class="order-card-header">
         <span class="order-label">${_escHtml(order.label)}</span>
         ${statusBadge}
-        ${isActive ? `<button class="order-cancel-btn" onclick="cancelOrder('${order.id}');renderGovernmentOverlay()">✕</button>` : ''}
+        ${isActive ? `<button class="order-cancel-btn" onclick="cancelOrder('${order.id}');renderOrdersPanel();renderGovernmentOverlay()">✕</button>` : ''}
       </div>
       <div class="order-meta">
         👤 <b>${_escHtml(order.assigned_char_name)}</b>
@@ -2535,6 +2535,204 @@ function submitIssueOrder() {
 
   if (result) {
     hideIssueOrderPanel();
+    renderGovernmentOverlay();
+    renderOrdersPanel();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ПАНЕЛЬ ПРИКАЗОВ НА ГЛАВНОМ ЭКРАНЕ
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Рендерит список приказов в #orders-main-list на главном экране.
+ * Вызывается из renderAll() и при изменении приказов.
+ */
+function renderOrdersPanel() {
+  const listEl = document.getElementById('orders-main-list');
+  if (!listEl) return;
+
+  const nation    = GAME_STATE.nations?.[GAME_STATE.player_nation];
+  const active    = typeof getActiveOrders          === 'function' ? getActiveOrders()           : [];
+  const completed = typeof getRecentCompletedOrders === 'function' ? getRecentCompletedOrders(3) : [];
+
+  let html = '';
+
+  if (active.length === 0 && completed.length === 0) {
+    html = `<div class="op-empty">Нет активных приказов. Нажмите «+ Новый приказ».</div>`;
+  } else {
+    if (active.length > 0) {
+      html += `<div class="op-subsection">⚙ Активные</div>`;
+      html += active.map(o => _renderMpCard(o, true)).join('');
+    }
+    if (completed.length > 0) {
+      html += `<div class="op-subsection">📜 Завершённые</div>`;
+      html += completed.map(o => _renderMpCard(o, false)).join('');
+    }
+  }
+
+  listEl.innerHTML = html;
+}
+
+function _renderMpCard(order, isActive) {
+  const pct   = Math.min(100, order.progress ?? 0);
+  const color = pct >= 80 ? '#4CAF50' : pct >= 50 ? '#FF9800' : '#2196F3';
+
+  const badgeText = order.status === 'failed'    ? '<span style="color:#f44;font-size:9px">Провал</span>'
+                  : order.status === 'cancelled' ? '<span style="color:#aaa;font-size:9px">Отменён</span>'
+                  : order.status === 'completed' ? `<span style="color:#4CAF50;font-size:9px">${order.result_quality ?? '?'}/100</span>`
+                  : '';
+
+  const oversight = typeof OVERSIGHT_LABELS !== 'undefined'
+    ? (OVERSIGHT_LABELS[order.ruler_oversight] ?? order.ruler_oversight)
+    : order.ruler_oversight;
+
+  return `
+    <div class="op-card ${isActive ? 'active' : 'done'}">
+      <div class="op-card-top">
+        <span class="op-card-label">${_escHtml(order.label)}</span>
+        ${badgeText}
+        ${isActive ? `<button class="op-card-cancel"
+          onclick="cancelOrder('${order.id}');renderOrdersPanel();renderGovernmentOverlay()" title="Отменить">✕</button>` : ''}
+      </div>
+      <div class="op-card-meta">👤 ${_escHtml(order.assigned_char_name)} · 🎯 ${_escHtml(order.target_label)} · ${_escHtml(oversight)}</div>
+      ${isActive ? `
+        <div class="op-card-progress">
+          <div class="op-card-bar"><div class="op-card-fill" style="width:${pct}%;background:${color}"></div></div>
+          <span class="op-card-pct">${pct}%</span>
+        </div>` : (order.result_text ? `<div class="op-card-result">${_escHtml(order.result_text)}</div>` : '')}
+    </div>`;
+}
+
+/** Показать инлайн-форму нового приказа на главном экране */
+function showMpOrderForm() {
+  const formEl = document.getElementById('mp-order-form');
+  if (!formEl) return;
+
+  const nation   = GAME_STATE.nations?.[GAME_STATE.player_nation];
+  const nationId = GAME_STATE.player_nation;
+  const chars    = (nation?.characters ?? []).filter(c => c.alive !== false);
+
+  const typeOpts = typeof ORDER_TYPES !== 'undefined'
+    ? Object.entries(ORDER_TYPES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('')
+    : '';
+
+  const charOpts = chars.length > 0
+    ? chars.map(c => {
+        const busy = (GAME_STATE.orders ?? []).some(o => o.status === 'active' && o.assigned_char_id === c.id);
+        return `<option value="${c.id}" ${busy ? 'disabled' : ''}>${_escHtml(c.name)} (${getRoleLabel(c.role)})${busy ? ' [занят]' : ''}</option>`;
+      }).join('')
+    : '<option disabled>Нет персонажей</option>';
+
+  const foreignOpts = Object.entries(GAME_STATE.nations ?? {})
+    .filter(([id]) => id !== nationId).slice(0, 30)
+    .map(([id, n]) => `<option value="${id}">${_escHtml(n.name)}</option>`).join('');
+
+  formEl.innerHTML = `
+    <div class="op-form-hdr">
+      📋 Новый приказ
+      <button class="op-form-close" onclick="hideMpOrderForm()">✕</button>
+    </div>
+    <div class="op-form-grid">
+      <div class="op-form-field">
+        <label>Тип приказа</label>
+        <select id="mp-order-type" onchange="onMpTypeChange()">${typeOpts}</select>
+      </div>
+      <div class="op-form-field">
+        <label>Исполнитель</label>
+        <select id="mp-order-char" onchange="onMpCharChange()">${charOpts}</select>
+      </div>
+      <div class="op-form-field" id="mp-target-field">
+        <label>Цель</label>
+        <select id="mp-order-target"><option value="">— не указана —</option>${foreignOpts}</select>
+      </div>
+      <div class="op-form-field">
+        <label>Надзор</label>
+        <select id="mp-order-oversight" onchange="updateMpQuality()">
+          <option value="personal">👑 Личный надзор</option>
+          <option value="direct" selected>📋 Прямой контроль</option>
+          <option value="distant">📮 Дальнее командование</option>
+        </select>
+      </div>
+    </div>
+    <div class="op-form-bottom">
+      <span class="op-form-quality" id="mp-quality-preview">Ожидаемое качество: —</span>
+      <button class="op-form-submit" onclick="submitMpOrder()">📋 Выдать приказ</button>
+    </div>`;
+
+  formEl.style.display = 'block';
+  onMpTypeChange();
+}
+
+function hideMpOrderForm() {
+  const formEl = document.getElementById('mp-order-form');
+  if (formEl) { formEl.style.display = 'none'; formEl.innerHTML = ''; }
+}
+
+function onMpTypeChange() {
+  const type      = document.getElementById('mp-order-type')?.value;
+  const targetFld = document.getElementById('mp-target-field');
+  const targetSel = document.getElementById('mp-order-target');
+  if (!targetSel || !targetFld) return;
+
+  const nationId = GAME_STATE.player_nation;
+  const nation   = GAME_STATE.nations?.[nationId];
+
+  const needsForeign = ['diplomatic_mission', 'military_campaign'].includes(type);
+  const needsRegion  = type === 'govern_region';
+
+  if (needsForeign) {
+    const opts = Object.entries(GAME_STATE.nations ?? {}).filter(([id]) => id !== nationId).slice(0, 30)
+      .map(([id, n]) => `<option value="${id}">${_escHtml(n.name)}</option>`).join('');
+    targetSel.innerHTML = `<option value="">— не указана —</option>${opts}`;
+    targetFld.style.display = '';
+  } else if (needsRegion) {
+    const opts = (nation?.regions ?? []).slice(0, 20)
+      .map(rid => { const r = GAME_STATE.regions?.[rid] ?? MAP_REGIONS?.[rid]; return `<option value="${rid}">${_escHtml(r?.name ?? rid)}</option>`; }).join('');
+    targetSel.innerHTML = `<option value="">— любой регион —</option>${opts}`;
+    targetFld.style.display = '';
+  } else {
+    targetFld.style.display = 'none';
+  }
+  updateMpQuality();
+}
+
+function onMpCharChange() { updateMpQuality(); }
+
+function updateMpQuality() {
+  const preview   = document.getElementById('mp-quality-preview');
+  if (!preview) return;
+  const type      = document.getElementById('mp-order-type')?.value;
+  const charId    = document.getElementById('mp-order-char')?.value;
+  const oversight = document.getElementById('mp-order-oversight')?.value ?? 'direct';
+  if (!type || !charId || typeof calcOrderQuality !== 'function') {
+    preview.textContent = 'Ожидаемое качество: —'; return;
+  }
+  const nation  = GAME_STATE.nations?.[GAME_STATE.player_nation];
+  const char    = (nation?.characters ?? []).find(c => c.id === charId);
+  if (!char) { preview.textContent = 'Ожидаемое качество: —'; return; }
+  const typeDef = ORDER_TYPES?.[type];
+  const quality = calcOrderQuality(char, typeDef?.skill ?? 'admin', oversight, nation);
+  const color   = quality >= 70 ? '#4CAF50' : quality >= 45 ? '#FF9800' : '#f44336';
+  preview.innerHTML = `Ожидаемое качество: <b style="color:${color}">${quality}/100</b>`;
+}
+
+function submitMpOrder() {
+  const type      = document.getElementById('mp-order-type')?.value;
+  const charId    = document.getElementById('mp-order-char')?.value;
+  const targetId  = document.getElementById('mp-order-target')?.value || null;
+  const oversight = document.getElementById('mp-order-oversight')?.value ?? 'direct';
+
+  if (!type || !charId) { alert('Выберите тип приказа и исполнителя.'); return; }
+  if (typeof issueOrder !== 'function') { alert('Движок приказов не загружен.'); return; }
+
+  const targetNation = targetId ? GAME_STATE.nations?.[targetId] : null;
+  const targetLabel  = targetNation?.name ?? targetId ?? '—';
+
+  const result = issueOrder({ type, target_id: targetId, target_label: targetLabel, assigned_char_id: charId, oversight });
+  if (result) {
+    hideMpOrderForm();
+    renderOrdersPanel();
     renderGovernmentOverlay();
   }
 }

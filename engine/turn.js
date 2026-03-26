@@ -1057,8 +1057,9 @@ function renderAll() {
   try { renderRightPanel(); }             catch (e) { console.error('renderRightPanel error:', e); }
   try { updateDateDisplay(); }            catch (e) { console.error('updateDateDisplay error:', e); }
   try { renderCharInitiativesPanel(); }   catch (e) { console.error('renderCharInitiativesPanel error:', e); }
-  try { if (typeof _applyLogFilter === 'function') _applyLogFilter(); } catch (e) {}
-  try { if (typeof refreshPopulationTab  === 'function') refreshPopulationTab();  } catch (e) {}
+  try { if (typeof renderOrdersPanel    === 'function') renderOrdersPanel();    } catch (e) {}
+  try { if (typeof _applyLogFilter      === 'function') _applyLogFilter();      } catch (e) {}
+  try { if (typeof refreshPopulationTab === 'function') refreshPopulationTab(); } catch (e) {}
   try { if (typeof refreshEconomyTab    === 'function') refreshEconomyTab();    } catch (e) {}
   try { if (typeof renderAllArmies      === 'function') renderAllArmies();      } catch (e) {}
 }

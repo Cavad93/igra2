@@ -37,7 +37,7 @@
       --accent:       #FFD700;
       --panel-w:      260px;
       --header-h:     42px;
-      --footer-h:     180px;
+      --footer-h:     220px;
     }
 
     html, body {
@@ -1286,6 +1286,8 @@
     @media (max-width: 768px) {
       :root { --panel-w: 0px; --footer-h: 140px; }
       #left-panel, #right-panel { display: none; }
+      #orders-panel { display: none; }
+      #input-area { width: auto; flex: 1; }
       .culture-window { width: 95vw; }
       #region-info { width: 92vw; right: 4vw; }
     }
@@ -1306,7 +1308,7 @@
     }
 
     #event-log {
-      width: 380px;
+      width: 260px;
       flex-shrink: 0;
       border-right: 1px solid var(--border-gold);
       overflow: hidden;
@@ -1325,7 +1327,7 @@
 
     #log-entries {
       overflow-y: auto;
-      max-height: 148px;
+      max-height: 185px;
       scrollbar-width: thin;
       scrollbar-color: var(--border-gold) transparent;
     }
@@ -1353,9 +1355,112 @@
     .log-character .log-text { color: #a5d6a7; }
     .log-diplomacy .log-text { color: #80cbc4; }
 
+    /* ══════════════════════════════════════════════════
+       ПАНЕЛЬ ПРИКАЗОВ (главный экран)
+    ══════════════════════════════════════════════════ */
+    #orders-panel {
+      flex: 1;
+      border-right: 1px solid var(--border-gold);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 6px 8px;
+      min-width: 0;
+    }
+    .op-hdr {
+      font-size: 11px; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 1px;
+      border-bottom: 1px solid var(--border-gold);
+      padding-bottom: 3px; margin-bottom: 5px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .op-new-btn {
+      font-size: 10px; padding: 1px 8px;
+      background: rgba(107,79,26,0.45); border: 1px solid var(--border);
+      color: var(--text-gold); border-radius: 2px; cursor: pointer;
+      letter-spacing: 0; text-transform: none;
+    }
+    .op-new-btn:hover { background: rgba(107,79,26,0.8); }
+    /* Инлайн-форма нового приказа */
+    #mp-order-form {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(107,79,26,0.5);
+      border-radius: 3px;
+      padding: 6px 8px;
+      margin-bottom: 5px;
+      flex-shrink: 0;
+    }
+    .op-form-hdr {
+      font-size: 10px; color: var(--text-gold);
+      margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .op-form-close {
+      background: none; border: none; color: #f44; cursor: pointer; font-size: 12px; padding: 0;
+    }
+    .op-form-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; margin-bottom: 5px;
+    }
+    .op-form-field { display: flex; flex-direction: column; gap: 2px; }
+    .op-form-field label {
+      font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .op-form-field select {
+      background: rgba(0,0,0,0.45); border: 1px solid var(--border);
+      color: var(--text); padding: 3px 5px; border-radius: 2px;
+      font-size: 10px; font-family: inherit; width: 100%;
+    }
+    .op-form-bottom {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .op-form-quality { font-size: 10px; color: #aaa; flex: 1; }
+    .op-form-submit {
+      font-size: 10px; padding: 3px 12px;
+      background: rgba(33,150,243,0.3); border: 1px solid rgba(33,150,243,0.5);
+      color: #90CAF9; border-radius: 2px; cursor: pointer; font-family: inherit;
+      white-space: nowrap;
+    }
+    .op-form-submit:hover { background: rgba(33,150,243,0.55); }
+    /* Список приказов */
+    #orders-main-list {
+      flex: 1; overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-gold) transparent;
+    }
+    #orders-main-list::-webkit-scrollbar { width: 4px; }
+    #orders-main-list::-webkit-scrollbar-thumb { background: var(--border-gold); border-radius: 2px; }
+    .op-subsection {
+      font-size: 10px; color: #777; text-transform: uppercase;
+      letter-spacing: 0.5px; margin: 4px 0 3px;
+    }
+    .op-empty { font-size: 11px; color: #666; font-style: italic; padding: 3px 0; }
+    .op-card {
+      display: flex; flex-direction: column; gap: 2px;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(107,79,26,0.3);
+      border-radius: 3px; padding: 5px 7px; margin-bottom: 4px;
+    }
+    .op-card.active  { border-color: rgba(33,150,243,0.45); }
+    .op-card.done    { opacity: 0.7; }
+    .op-card-top { display: flex; align-items: center; gap: 5px; }
+    .op-card-label { flex: 1; font-size: 11px; font-weight: bold; color: var(--text-gold); }
+    .op-card-cancel {
+      background: none; border: none; color: #f44; cursor: pointer;
+      font-size: 11px; padding: 0 2px; flex-shrink: 0;
+    }
+    .op-card-meta { font-size: 10px; color: #999; }
+    .op-card-progress { display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+    .op-card-bar {
+      flex: 1; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;
+    }
+    .op-card-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+    .op-card-pct  { font-size: 9px; color: #888; min-width: 28px; text-align: right; }
+    .op-card-result { font-size: 10px; color: #bbb; font-style: italic; }
+
     /* Область ввода */
     #input-area {
-      flex: 1;
+      width: 280px;
+      flex-shrink: 0;
       display: flex;
       flex-direction: column;
       padding: 6px 10px;
@@ -6102,6 +6207,20 @@
           <button class="btn-icon" onclick="showTurnSummary()" title="Итоги хода">📋</button>
         </div>
         <div id="log-entries"></div>
+      </div>
+
+      <!-- Приказы и делегирование -->
+      <div id="orders-panel">
+        <div class="op-hdr">
+          📋 Приказы и делегирование
+          <button class="op-new-btn" onclick="showMpOrderForm()">+ Новый приказ</button>
+        </div>
+        <!-- Форма выдачи приказа (скрыта по умолчанию) -->
+        <div id="mp-order-form" style="display:none"></div>
+        <!-- Список активных и завершённых приказов -->
+        <div id="orders-main-list">
+          <div class="op-empty">Загрузка…</div>
+        </div>
       </div>
 
       <!-- Ввод команд -->
