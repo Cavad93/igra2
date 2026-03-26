@@ -287,11 +287,24 @@ function _renderArmyPanel(armyId) {
         &nbsp;·&nbsp; Победы в боях: ${army.battles_won}
       </div>
 
-      ${isPlayer ? `<div class="army-panel-actions">
-        <button class="army-btn" onclick="enterMoveMode('${army.id}')">🗺 Марш</button>
-        <button class="army-btn" onclick="showFormationPicker('${army.id}')">⚔ Строй</button>
-        <button class="army-btn army-btn--secondary" onclick="disbandArmyUI('${army.id}')">❌ Распустить</button>
-      </div>` : ''}
+      ${isPlayer ? (() => {
+        // Марш доступен только если командует правитель лично (или нет командира)
+        const npcCmd = army.commander_id && army.commander_id !== 'ruler';
+        const campaignOrder = npcCmd
+          ? (GAME_STATE.orders ?? []).find(o => o.army_id === army.id && o.status === 'active')
+          : null;
+        const marchBtn = npcCmd && campaignOrder
+          ? `<div class="army-panel-npc-cmd">
+               ⚔️ Командует <b>${campaignOrder.assigned_char_name}</b><br>
+               <small style="color:var(--text-dim)">Маршрут задаёт командующий. Правитель не вмешивается.</small>
+             </div>`
+          : `<button class="army-btn" onclick="enterMoveMode('${army.id}')">🗺 Марш</button>`;
+        return `<div class="army-panel-actions">
+          ${marchBtn}
+          <button class="army-btn" onclick="showFormationPicker('${army.id}')">⚔ Строй</button>
+          <button class="army-btn army-btn--secondary" onclick="disbandArmyUI('${army.id}')">❌ Распустить</button>
+        </div>`;
+      })() : ''}
     </div>`;
 
   panel.style.display = 'block';

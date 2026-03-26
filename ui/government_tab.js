@@ -2395,10 +2395,17 @@ function renderIssueOrderForm(nation) {
       </div>
 
       <div class="order-form-row" id="order-target-row">
-        <label>Цель</label>
+        <label>Цель (нация/регион)</label>
         <select id="order-target-sel">
           <option value="">— не указана —</option>
           ${foreignNations}
+        </select>
+      </div>
+
+      <div class="order-form-row" id="order-army-row" style="display:none">
+        <label>Армия</label>
+        <select id="order-army-sel">
+          <option value="">— выберите армию —</option>
         </select>
       </div>
 
@@ -2445,16 +2452,16 @@ function onOrderTypeChange() {
   const type = document.getElementById('order-type-sel')?.value;
   const targetRow = document.getElementById('order-target-row');
   if (!targetRow) return;
-  // Дипломатические и военные миссии имеют иностранную цель
-  const needsForeignTarget = ['diplomatic_mission', 'military_campaign'].includes(type);
+  const needsForeignTarget = type === 'diplomatic_mission';
   const needsRegionTarget  = ['govern_region', 'economic_project'].includes(type);
+  const isMilitary         = type === 'military_campaign';
 
-  // Перестраиваем select цели
+  // Строка выбора цели-нации/региона
   const targetSel = document.getElementById('order-target-sel');
   if (targetSel) {
     const nationId = GAME_STATE.player_nation;
     const nation   = GAME_STATE.nations[nationId];
-    if (needsForeignTarget) {
+    if (needsForeignTarget || isMilitary) {
       const opts = Object.entries(GAME_STATE.nations ?? {})
         .filter(([id]) => id !== nationId).slice(0, 30)
         .map(([id, n]) => `<option value="${id}">${n.name}</option>`).join('');
@@ -2469,6 +2476,35 @@ function onOrderTypeChange() {
     } else {
       targetRow.style.display = 'none';
     }
+  }
+
+  // Строка выбора армии (только для военного похода)
+  const armyRow = document.getElementById('order-army-row');
+  if (armyRow) {
+    if (isMilitary) {
+      const armies = (GAME_STATE.armies ?? [])
+        .filter(a => a.nation === GAME_STATE.player_nation && a.state !== 'disbanded');
+      const armySel = document.getElementById('order-army-sel');
+      if (armySel) {
+        armySel.innerHTML = `<option value="">— выберите армию —</option>` +
+          armies.map(a => `<option value="${a.id}">${a.name} (${MAP_REGIONS?.[a.position]?.name ?? a.position})</option>`).join('');
+      }
+      armyRow.style.display = '';
+    } else {
+      armyRow.style.display = 'none';
+    }
+  }
+
+  // Персонаж: для военного похода добавляем правителя
+  const charSel = document.getElementById('order-char-sel');
+  if (charSel && isMilitary) {
+    const rulerName = GAME_STATE.nations[GAME_STATE.player_nation]?.government?.ruler?.name ?? 'Правитель';
+    if (!charSel.querySelector('option[value="ruler"]')) {
+      charSel.insertAdjacentHTML('afterbegin', `<option value="ruler">👑 ${rulerName} (лично)</option>`);
+    }
+  } else if (charSel) {
+    const rulerOpt = charSel.querySelector('option[value="ruler"]');
+    if (rulerOpt) rulerOpt.remove();
   }
 
   updateOrderQualityPreview();
@@ -2492,6 +2528,16 @@ function updateOrderQualityPreview() {
   }
 
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
+
+  // Правитель лично
+  if (charId === 'ruler') {
+    const pp = nation?.government?.ruler?.personal_power ?? 60;
+    const q  = Math.min(100, Math.round(pp * 1.05));
+    const color = q >= 70 ? '#4CAF50' : q >= 45 ? '#FF9800' : '#f44336';
+    preview.innerHTML = `Ожидаемое качество: <b style="color:${color}">${q}/100</b> · 👑 Личное командование · Личная власть: ${pp}`;
+    return;
+  }
+
   const char   = (nation?.characters ?? []).find(c => c.id === charId);
   if (!char) { preview.textContent = 'Ожидаемое качество: —'; return; }
 
@@ -2514,6 +2560,7 @@ function submitIssueOrder() {
   const type      = document.getElementById('order-type-sel')?.value;
   const charId    = document.getElementById('order-char-sel')?.value;
   const targetId  = document.getElementById('order-target-sel')?.value || null;
+  const armyId    = document.getElementById('order-army-sel')?.value  || null;
   const oversight = document.getElementById('order-oversight-sel')?.value ?? 'direct';
   const notes     = document.getElementById('order-notes-inp')?.value ?? '';
 
@@ -2521,8 +2568,11 @@ function submitIssueOrder() {
     alert('Выберите тип приказа и исполнителя.');
     return;
   }
+  if (type === 'military_campaign' && !armyId) {
+    alert('Выберите армию для военного похода.');
+    return;
+  }
 
-  const nation      = GAME_STATE.nations[GAME_STATE.player_nation];
   const needsRegion = ['govern_region', 'economic_project'].includes(type);
   let targetLabel;
   if (needsRegion && targetId) {
@@ -2538,7 +2588,7 @@ function submitIssueOrder() {
     return;
   }
 
-  const result = issueOrder({ type, target_id: targetId, target_label: targetLabel, assigned_char_id: charId, oversight, notes });
+  const result = issueOrder({ type, target_id: targetId, target_label: targetLabel, assigned_char_id: charId, army_id: armyId, oversight, notes });
 
   if (result) {
     hideIssueOrderPanel();
@@ -2685,7 +2735,8 @@ function onMpTypeChange() {
   const nationId = GAME_STATE.player_nation;
   const nation   = GAME_STATE.nations?.[nationId];
 
-  const needsForeign = ['diplomatic_mission', 'military_campaign'].includes(type);
+  const isMilitary   = type === 'military_campaign';
+  const needsForeign = type === 'diplomatic_mission' || isMilitary;
   const needsRegion  = ['govern_region', 'economic_project'].includes(type);
 
   if (needsForeign) {
@@ -2701,6 +2752,40 @@ function onMpTypeChange() {
   } else {
     targetFld.style.display = 'none';
   }
+
+  // Выбор армии для военного похода
+  let armyFld = document.getElementById('mp-army-field');
+  if (isMilitary) {
+    if (!armyFld) {
+      armyFld = document.createElement('div');
+      armyFld.id = 'mp-army-field';
+      armyFld.className = 'op-form-row';
+      armyFld.innerHTML = `<label>Армия</label>
+        <select id="mp-order-army" class="op-form-sel"></select>`;
+      targetFld.insertAdjacentElement('afterend', armyFld);
+    }
+    const armies = (GAME_STATE.armies ?? [])
+      .filter(a => a.nation === nationId && a.state !== 'disbanded');
+    document.getElementById('mp-order-army').innerHTML =
+      `<option value="">— выберите армию —</option>` +
+      armies.map(a => `<option value="${a.id}">${_escHtml(a.name)} (${_escHtml(MAP_REGIONS?.[a.position]?.name ?? a.position)})</option>`).join('');
+    armyFld.style.display = '';
+  } else if (armyFld) {
+    armyFld.style.display = 'none';
+  }
+
+  // Добавляем/убираем опцию «Правитель лично» в char select
+  const charSel = document.getElementById('mp-order-char');
+  if (charSel) {
+    const existing = charSel.querySelector('option[value="ruler"]');
+    if (isMilitary && !existing) {
+      const rulerName = nation?.government?.ruler?.name ?? 'Правитель';
+      charSel.insertAdjacentHTML('afterbegin', `<option value="ruler">👑 ${_escHtml(rulerName)} (лично)</option>`);
+    } else if (!isMilitary && existing) {
+      existing.remove();
+    }
+  }
+
   updateMpQuality();
 }
 
@@ -2712,10 +2797,20 @@ function updateMpQuality() {
   const type      = document.getElementById('mp-order-type')?.value;
   const charId    = document.getElementById('mp-order-char')?.value;
   const oversight = document.getElementById('mp-order-oversight')?.value ?? 'direct';
-  if (!type || !charId || typeof calcOrderQuality !== 'function') {
-    preview.textContent = 'Ожидаемое качество: —'; return;
-  }
+  if (!type || !charId) { preview.textContent = 'Ожидаемое качество: —'; return; }
+
   const nation  = GAME_STATE.nations?.[GAME_STATE.player_nation];
+
+  // Правитель лично
+  if (charId === 'ruler') {
+    const pp = nation?.government?.ruler?.personal_power ?? 60;
+    const q  = Math.min(100, Math.round(pp * 1.05));
+    const color = q >= 70 ? '#4CAF50' : q >= 45 ? '#FF9800' : '#f44336';
+    preview.innerHTML = `Ожидаемое качество: <b style="color:${color}">${q}/100</b> (личное командование)`;
+    return;
+  }
+
+  if (typeof calcOrderQuality !== 'function') { preview.textContent = 'Ожидаемое качество: —'; return; }
   const char    = (nation?.characters ?? []).find(c => c.id === charId);
   if (!char) { preview.textContent = 'Ожидаемое качество: —'; return; }
   const typeDef = ORDER_TYPES?.[type];
@@ -2728,9 +2823,11 @@ function submitMpOrder() {
   const type      = document.getElementById('mp-order-type')?.value;
   const charId    = document.getElementById('mp-order-char')?.value;
   const targetId  = document.getElementById('mp-order-target')?.value || null;
+  const armyId    = document.getElementById('mp-order-army')?.value  || null;
   const oversight = document.getElementById('mp-order-oversight')?.value ?? 'direct';
 
   if (!type || !charId) { alert('Выберите тип приказа и исполнителя.'); return; }
+  if (type === 'military_campaign' && !armyId) { alert('Выберите армию для похода.'); return; }
   if (typeof issueOrder !== 'function') { alert('Движок приказов не загружен.'); return; }
 
   const needsRegionTgt = ['govern_region', 'economic_project'].includes(type);
@@ -2743,7 +2840,7 @@ function submitMpOrder() {
     targetLabel = targetNation?.name ?? targetId ?? '—';
   }
 
-  const result = issueOrder({ type, target_id: targetId, target_label: targetLabel, assigned_char_id: charId, oversight });
+  const result = issueOrder({ type, target_id: targetId, target_label: targetLabel, assigned_char_id: charId, army_id: armyId, oversight });
   if (result) {
     hideMpOrderForm();
     renderOrdersPanel();

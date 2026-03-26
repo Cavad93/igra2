@@ -163,11 +163,12 @@ let _orderIdCounter = 1;
 function issueOrder(opts) {
   const {
     type,
-    target_id   = null,
+    target_id    = null,
     target_label = null,
     assigned_char_id,
-    oversight   = 'direct',
-    notes       = '',
+    army_id      = null,   // для military_campaign: какой армией командует
+    oversight    = 'direct',
+    notes        = '',
   } = opts;
 
   const typeDef = ORDER_TYPES[type];
@@ -176,46 +177,77 @@ function issueOrder(opts) {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   if (!nation) return null;
 
-  const char = (nation.characters ?? []).find(c => c.id === assigned_char_id && c.alive);
-  if (!char) return null;
+  // Правитель ведёт лично — специальный случай
+  const isRulerLed = (assigned_char_id === 'ruler');
+  let char = null;
+  let charName = '';
+
+  if (isRulerLed) {
+    charName = nation.government?.ruler?.name ?? 'Правитель';
+  } else {
+    char = (nation.characters ?? []).find(c => c.id === assigned_char_id && c.alive !== false);
+    if (!char) return null;
+    charName = char.name;
+  }
 
   if (!GAME_STATE.orders) GAME_STATE.orders = [];
 
-  // Проверяем: не занят ли персонаж активным приказом?
-  const alreadyBusy = GAME_STATE.orders.some(
-    o => o.status === 'active' && o.assigned_char_id === assigned_char_id
-  );
-  if (alreadyBusy) {
-    addEventLog(`⚠️ ${char.name} уже исполняет приказ.`, 'warning');
-    return null;
+  // Проверяем занятость персонажа (правителя не проверяем — он может лично участвовать)
+  if (!isRulerLed) {
+    const alreadyBusy = GAME_STATE.orders.some(
+      o => o.status === 'active' && o.assigned_char_id === assigned_char_id
+    );
+    if (alreadyBusy) {
+      addEventLog(`⚠️ ${charName} уже исполняет приказ.`, 'warning');
+      return null;
+    }
   }
 
-  const quality = calcOrderQuality(char, typeDef.skill, oversight, nation);
+  // Качество: для правителя — из личной власти
+  let quality;
+  if (isRulerLed) {
+    const pp = nation.government?.ruler?.personal_power ?? 60;
+    quality = Math.min(100, Math.max(20, Math.round(pp * 1.05)));
+  } else {
+    quality = calcOrderQuality(char, typeDef.skill, oversight, nation);
+  }
+
   const id = `ORD_${String(_orderIdCounter++).padStart(4, '0')}`;
 
   const order = {
     id,
     type,
-    label:           typeDef.label,
+    label:            typeDef.label,
     target_id,
-    target_label:    target_label ?? target_id ?? '—',
+    target_label:     target_label ?? target_id ?? '—',
     assigned_char_id,
-    assigned_char_name: char.name,
-    issued_turn:     GAME_STATE.turn,
-    duration:        typeDef.duration,
-    progress:        0,
-    ruler_oversight: oversight,
+    assigned_char_name: charName,
+    is_ruler_led:     isRulerLed,
+    army_id:          army_id ?? null,
+    issued_turn:      GAME_STATE.turn,
+    duration:         typeDef.duration,
+    progress:         0,
+    ruler_oversight:  isRulerLed ? 'personal' : oversight,
     notes,
-    status:          'active',
+    status:           'active',
     expected_quality: quality,
-    result_quality:  null,
-    result_text:     null,
+    result_quality:   null,
+    result_text:      null,
   };
 
   GAME_STATE.orders.push(order);
 
+  // Военный поход: привязываем командира к армии
+  if (type === 'military_campaign' && army_id) {
+    const army = typeof getArmy === 'function' ? getArmy(army_id) : null;
+    if (army) {
+      army.commander_id     = isRulerLed ? 'ruler' : assigned_char_id;
+      army._campaign_order  = id;  // обратная ссылка для UI
+    }
+  }
+
   addEventLog(
-    `📋 Приказ выдан: ${typeDef.label} → ${char.name} (ожидаемое качество: ${quality}/100)`,
+    `📋 Приказ выдан: ${typeDef.label} → ${charName} (ожидаемое качество: ${quality}/100)`,
     'character'
   );
 
@@ -231,6 +263,11 @@ function cancelOrder(orderId) {
   const order = GAME_STATE.orders.find(o => o.id === orderId);
   if (!order || order.status !== 'active') return;
   order.status = 'cancelled';
+  // Освобождаем командира армии
+  if (order.type === 'military_campaign' && order.army_id) {
+    const army = typeof getArmy === 'function' ? getArmy(order.army_id) : null;
+    if (army) { army.commander_id = null; army._campaign_order = null; }
+  }
   addEventLog(`❌ Приказ ${order.label} отменён.`, 'warning');
 }
 
@@ -246,7 +283,44 @@ function processAllOrders() {
 
   for (const order of GAME_STATE.orders) {
     if (order.status !== 'active') continue;
+    // НПЦ-командир военного похода: автоматически двигает армию к цели
+    if (order.type === 'military_campaign' && order.army_id && !order.is_ruler_led) {
+      _processNpcCommanderMove(order);
+    }
     _progressOrder(order, nation);
+  }
+}
+
+/**
+ * Автоматически двигает армию под командованием НПЦ к цели приказа.
+ * Вызывается каждый ход пока приказ активен.
+ */
+function _processNpcCommanderMove(order) {
+  if (typeof getArmy !== 'function' || typeof orderArmyMove !== 'function') return;
+  const army = getArmy(order.army_id);
+  if (!army || army.state === 'disbanded' || army.state === 'sieging') return;
+
+  // Цель — любой регион целевой нации или конкретный регион
+  if (!order.target_id) return;
+
+  // Если уже движется к правильной цели — не переназначаем
+  if (army.state === 'moving' && army.target) return;
+
+  // Ищем ближайший регион цели
+  const targetNation = GAME_STATE.nations?.[order.target_id];
+  let targetRegionId = null;
+
+  if (targetNation) {
+    // Берём первый вражеский регион нации-цели
+    const candidateRegions = targetNation.regions ?? [];
+    targetRegionId = candidateRegions[0] ?? null;
+  } else if (GAME_STATE.regions?.[order.target_id]) {
+    // target_id — уже регион
+    targetRegionId = order.target_id;
+  }
+
+  if (targetRegionId && army.position !== targetRegionId) {
+    orderArmyMove(army.id, targetRegionId);
   }
 }
 
@@ -262,9 +336,20 @@ function _progressOrder(order, nation) {
 }
 
 function _completeOrder(order, nation) {
-  const char = (nation.characters ?? []).find(c => c.id === order.assigned_char_id);
   const typeDef = ORDER_TYPES[order.type];
-  if (!typeDef || !char) { order.status = 'completed'; return; }
+  if (!typeDef) { order.status = 'completed'; return; }
+
+  // Правитель лично — нет персонажа в массиве characters
+  const char = order.is_ruler_led
+    ? null
+    : (nation.characters ?? []).find(c => c.id === order.assigned_char_id);
+  if (!order.is_ruler_led && !char) { order.status = 'completed'; return; }
+
+  // Освобождаем командира армии при завершении похода
+  if (order.type === 'military_campaign' && order.army_id) {
+    const army = typeof getArmy === 'function' ? getArmy(order.army_id) : null;
+    if (army) { army.commander_id = null; army._campaign_order = null; }
+  }
 
   // Финальное качество с небольшим случайным отклонением (±10)
   const jitter = Math.round((Math.random() - 0.5) * 20);
@@ -276,24 +361,25 @@ function _completeOrder(order, nation) {
   const resultText = _applyOrderEffects(order, finalQuality, char, nation);
   order.result_text = resultText;
 
-  // Лояльность: успешное выполнение поднимает лояльность
-  if (finalQuality >= 70) {
-    char.traits.loyalty = Math.min(100, (char.traits.loyalty ?? 50) + 4);
-  } else if (finalQuality < 40) {
-    char.traits.loyalty = Math.max(0, (char.traits.loyalty ?? 50) - 3);
+  // Лояльность: успешное выполнение поднимает лояльность (только у НПЦ)
+  if (char) {
+    if (finalQuality >= 70) {
+      char.traits.loyalty = Math.min(100, (char.traits.loyalty ?? 50) + 4);
+    } else if (finalQuality < 40) {
+      char.traits.loyalty = Math.max(0, (char.traits.loyalty ?? 50) - 3);
+    }
+    (char.history ?? (char.history = [])).push({
+      turn:  GAME_STATE.turn,
+      event: `Исполнил приказ «${order.label}» (качество: ${finalQuality}/100). ${resultText}`,
+    });
   }
-
-  // Запись в историю персонажа
-  (char.history ?? (char.history = [])).push({
-    turn:  GAME_STATE.turn,
-    event: `Исполнил приказ «${order.label}» (качество: ${finalQuality}/100). ${resultText}`,
-  });
 
   const qualLabel = finalQuality >= 80 ? '🏆 Блестяще' :
                     finalQuality >= 60 ? '✅ Хорошо' :
                     finalQuality >= 40 ? '⚠️ Посредственно' : '❌ Провал';
+  const execName = char?.name ?? order.assigned_char_name ?? 'Правитель';
   addEventLog(
-    `${qualLabel}: ${char.name} завершил «${order.label}». ${resultText}`,
+    `${qualLabel}: ${execName} завершил «${order.label}». ${resultText}`,
     finalQuality >= 60 ? 'good' : finalQuality >= 40 ? 'warning' : 'danger'
   );
 }
