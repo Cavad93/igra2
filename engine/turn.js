@@ -916,6 +916,10 @@ async function initGame() {
   // Попытка загрузки сохранения
   const hasSave = await loadGame();
 
+  // Заполняем geo-данные (connections, mapType) для всех регионов из MAP_REGIONS.
+  // Это гарантирует работу поиска пути армий сразу после загрузки.
+  if (typeof initRegionGeoData === 'function') initRegionGeoData();
+
   // Стартовый склад — только для новых игр (не загруженных сохранений).
   // Решает проблему холодного старта для циклических зависимостей:
   //   wheat нужна wheat (семена), barley нужен barley (семена),

@@ -211,7 +211,7 @@ function findArmyPath(fromId, toId, type = 'land') {
 function orderArmyMove(armyId, targetRegionId) {
   const army = getArmy(armyId);
   if (!army)                      return false;
-  if (army.state === 'sieging')   return false;
+  if (army.state === 'sieging')   return 'sieging';
   if (army.state === 'disbanded') return false;
 
   const path = findArmyPath(army.position, targetRegionId, army.type);
@@ -337,9 +337,9 @@ function _getRegionSupplyCapacity(region) {
   // Бонусы от построек порта
   const slots = region.building_slots ?? [];
   for (const slot of slots) {
-    if (slot.status === 'paused' || !slot.building) continue;
-    if (slot.building === 'port')          capacity += ARMY_MOVE.PORT_CAPACITY_BONUS     * (slot.level ?? 1);
-    if (slot.building === 'military_port') capacity += ARMY_MOVE.MIL_PORT_CAPACITY_BONUS * (slot.level ?? 1);
+    if (slot.status === 'paused' || !slot.building_id) continue;
+    if (slot.building_id === 'port')          capacity += ARMY_MOVE.PORT_CAPACITY_BONUS     * (slot.level ?? 1);
+    if (slot.building_id === 'military_port') capacity += ARMY_MOVE.MIL_PORT_CAPACITY_BONUS * (slot.level ?? 1);
   }
   return capacity;
 }
@@ -552,13 +552,27 @@ function _armyLandTotal(u) {
 function _getRegionData(regionId) {
   const gs = GAME_STATE.regions?.[regionId];
   const mr = typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[regionId] : null;
-  if (!gs) return mr;
+  if (!gs) return mr ?? null;
   // GAME_STATE.regions хранит игровые данные но не geo-поля — дополняем из MAP_REGIONS
   if (mr) {
-    if (gs.connections === undefined) gs.connections = mr.connections;
-    if (gs.mapType    === undefined) gs.mapType    = mr.mapType;
+    if (!gs.connections || gs.connections.length === 0) gs.connections = mr.connections;
+    if (!gs.mapType) gs.mapType = mr.mapType;
   }
   return gs;
+}
+
+// Предварительное заполнение geo-данных для всех игровых регионов.
+// Вызывается после initGame/loadGame чтобы гарантировать наличие connections и mapType.
+function initRegionGeoData() {
+  if (typeof MAP_REGIONS === 'undefined') return;
+  const regions = GAME_STATE.regions;
+  if (!regions) return;
+  for (const [rid, gs] of Object.entries(regions)) {
+    const mr = MAP_REGIONS[rid];
+    if (!mr) continue;
+    if (!gs.connections || gs.connections.length === 0) gs.connections = mr.connections;
+    if (!gs.mapType) gs.mapType = mr.mapType;
+  }
 }
 
 function _getOwnRegions(nationId) {

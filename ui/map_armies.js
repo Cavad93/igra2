@@ -346,7 +346,10 @@ function enterMoveMode(armyId) {
 
     if (typeof orderArmyMove === 'function') {
       const path = orderArmyMove(armyId, regionId);
-      if (path) {
+      if (path === 'sieging') {
+        if (typeof addEventLog === 'function')
+          addEventLog(`⚔️ ${army.name} ведёт осаду — нельзя двигаться.`, 'warning');
+      } else if (path && path.length >= 2) {
         const rData = GAME_STATE.regions?.[regionId] ?? MAP_REGIONS?.[regionId];
         const turns = typeof calcArmySpeed === 'function'
           ? Math.ceil((path.length - 1) / calcArmySpeed(army))
@@ -360,8 +363,14 @@ function enterMoveMode(armyId) {
         renderAllArmies();
         _renderArmyPanel(armyId);
       } else {
+        const fromData = GAME_STATE.regions?.[army.position] ?? MAP_REGIONS?.[army.position];
+        const hasConns = fromData?.connections?.length > 0;
         if (typeof addEventLog === 'function')
-          addEventLog(`❌ Нет пути до ${regionId}.`, 'warning');
+          addEventLog(
+            `❌ Нет пути до ${regionId}.`
+            + (!hasConns ? ` (позиция армии ${army.position} не имеет связей — перезапустите игру)` : ''),
+            'warning'
+          );
       }
     }
   };
