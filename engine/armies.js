@@ -471,7 +471,15 @@ function _armyLandTotal(u) {
 }
 
 function _getRegionData(regionId) {
-  return GAME_STATE.regions?.[regionId] ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[regionId] : null);
+  const gs = GAME_STATE.regions?.[regionId];
+  const mr = typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[regionId] : null;
+  if (!gs) return mr;
+  // GAME_STATE.regions хранит игровые данные но не geo-поля — дополняем из MAP_REGIONS
+  if (mr) {
+    if (gs.connections === undefined) gs.connections = mr.connections;
+    if (gs.mapType    === undefined) gs.mapType    = mr.mapType;
+  }
+  return gs;
 }
 
 function _getOwnRegions(nationId) {

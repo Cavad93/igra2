@@ -163,6 +163,7 @@ function respondToCharInitiative(charId, accept) {
 
   _updateInitiativesBadge();
   renderRightPanel();
+  if (typeof renderCharInitiativesPanel === 'function') renderCharInitiativesPanel();
 }
 
 function _updateInitiativesBadge() {
