@@ -268,7 +268,16 @@ function _onPeace(treaty, a, b, cond) {
   rel.truces = (rel.truces ?? []).filter(t => t.until_turn > (GAME_STATE.turn ?? 1));
   rel.truces.push({ until_turn: until });
   rel.flags.no_attack = true;
-  _log(`☮ Мирный договор: ${GAME_STATE.nations[a]?.name} и ${GAME_STATE.nations[b]?.name} прекращают войну.`);
+
+  // Синхронизация с устаревшим форматом nation.relations[x].at_war
+  const natA = GAME_STATE.nations[a];
+  const natB = GAME_STATE.nations[b];
+  if (natA?.relations?.[b]) natA.relations[b].at_war = false;
+  if (natB?.relations?.[a]) natB.relations[a].at_war = false;
+  if (natA?.military?.at_war_with) natA.military.at_war_with = natA.military.at_war_with.filter(id => id !== b);
+  if (natB?.military?.at_war_with) natB.military.at_war_with = natB.military.at_war_with.filter(id => id !== a);
+
+  _log(`☮ Мирный договор: ${natA?.name ?? a} и ${natB?.name ?? b} прекращают войну.`);
 }
 
 function _onMilAccess(treaty, a, b, cond) {

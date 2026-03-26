@@ -406,7 +406,9 @@ function _checkMidOrderEvents(order, nation) {
   const loyalty = char.traits?.loyalty ?? 50;
 
   // Шанс предательства при низкой лояльности (только для военных)
-  if (order.type === 'military_campaign' && loyalty < 25 && order.progress === Math.round(100 / order.duration * 2)) {
+  if (order.type === 'military_campaign' && loyalty < 25
+      && !order._betrayal_checked && order.progress >= Math.round(100 / order.duration * 2)) {
+    order._betrayal_checked = true;
     if (Math.random() < 0.3) {
       order.status = 'failed';
       order.result_quality = 0;

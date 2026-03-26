@@ -1415,7 +1415,7 @@ function _breachNonAggressionPact(breakerNationId, targetNationId, breakerNation
   breakerNation.government.stability = Math.max(0, (breakerNation.government.stability ?? 50) - 10);
 
   addEventLog(
-    `💔 Пакт о ненападении с ${targetNation.name} нарушен! Репутация Сиракуз падает во всём мире.`,
+    `💔 Пакт о ненападении с ${targetNation.name} нарушен! Репутация ${breakerNation.name} падает во всём мире.`,
     'danger'
   );
 }

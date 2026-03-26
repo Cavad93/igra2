@@ -272,9 +272,10 @@ function createTreaty(nationA, nationB, type, conditions, dialogueLog) {
     effects:      { ...tDef.effects, ...( conditions.effects || {}) },
     dialogue_log: dialogueLog || [],
     // duration хранится в годах; 1 год = TURNS_PER_YEAR (12) ходов
-    turn_expires: (conditions.duration ?? tDef.default_duration)
-      ? turn + (conditions.duration ?? tDef.default_duration ?? 0) * TURNS_PER_YEAR
-      : null,
+    turn_expires: (() => {
+      const durationInYears = conditions.duration ?? tDef.default_duration ?? null;
+      return durationInYears ? turn + durationInYears * TURNS_PER_YEAR : null;
+    })(),
   };
 
   GAME_STATE.diplomacy.treaties.push(treaty);

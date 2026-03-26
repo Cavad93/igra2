@@ -371,7 +371,7 @@ function _applySharedLoot(attackerNationId, defenderNationId, capturedRegionId, 
   if (!region || !attacker) return;
 
   // Базовая стоимость добычи: от численности населения региона
-  const regionPop  = region.population ?? region.pop_size ?? 5000;
+  const regionPop  = region.population ?? 5000;
   const baseLoot   = Math.round(regionPop * 0.05);  // 5% населения → монеты
   if (baseLoot <= 0) return;
 
@@ -454,7 +454,7 @@ function processAllianceWars() {
         const enemy = GAME_STATE.nations[enemyId];
         if (!enemy || !enemy.regions?.length) continue;
 
-        processAttackAction(side, enemyId);
+        processAttackAction(side, enemyId, { skipDefensiveAlliances: true });
       }
     }
   }
@@ -591,7 +591,9 @@ function processAttackAction(attackerNationId, defenderNationId, opts = {}) {
   if (!result) return;
 
   // Оборонные союзы: союзники защитника автоматически вступают в войну
-  triggerDefensiveAlliances(attackerNationId, defenderNationId);
+  if (!opts.skipDefensiveAlliances) {
+    triggerDefensiveAlliances(attackerNationId, defenderNationId);
+  }
 
   // Раздел добычи с союзниками по совместному походу
   if (result.capturedRegionId && result.jointAllies?.length) {
