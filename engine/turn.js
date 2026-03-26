@@ -908,27 +908,31 @@ async function initGame() {
   //   tools нужны для шахт и ферм, но tools требуют iron, iron требует charcoal.
   // Используем Math.max — не уменьшаем склад у наций которые уже имеют больше.
   if (!hasSave) {
-    const STARTING_STOCKPILE = {
-      // Еда
-      wheat:      500,   // семена: ферма потребляет ~0.20/ед. выхода
-      barley:     400,   // семена: аналогично пшенице
-      fish:       200,   // быстрый источник белка
-      salt:       150,   // консервирование рыбы и мяса
-      // Производственная цепочка
-      tools:      250,   // кирки/плуги
-      iron:       150,   // запас для кузницы
-      charcoal:   100,   // плавка + отопление
-      timber:     120,   // строительство, плавка
-      // Животноводство
-      cattle:     80,    // тягловая сила для ферм (capital_input)
-      // Ремёсла
-      pottery:    100,   // тара для вина, рыбы, масла
-      leather:    60,    // упряжь, обувь
-    };
+    const FOOD_PP   = CONFIG.BALANCE?.FOOD_PER_PERSON ?? 25;
+    const SALT_PP   = CONFIG.BALANCE?.SALT_PER_PERSON ?? 0.4;
+    const CLOTH_PP  = CONFIG.BALANCE?.CLOTH_PER_PERSON ?? 0.25;
+
     for (const nation of Object.values(GAME_STATE.nations)) {
-      const sp = nation.economy?.stockpile;
+      const sp  = nation.economy?.stockpile;
+      const pop = nation.population?.total || 1000;
       if (!sp) continue;
-      for (const [good, min] of Object.entries(STARTING_STOCKPILE)) {
+
+      // Стартовый запас еды = 3 месяца потребности населения.
+      // avail = wheat + barley*0.8 + fish*0.6 должен покрывать pop * FOOD_PP * 3.
+      // Распределяем: 60% пшеница, 30% ячмень, 10% рыба.
+      const foodBuffer = pop * FOOD_PP * 3;
+      sp.wheat  = Math.max(sp.wheat  || 0, Math.ceil(foodBuffer * 0.60));
+      sp.barley = Math.max(sp.barley || 0, Math.ceil(foodBuffer * 0.30 / 0.8));
+      sp.fish   = Math.max(sp.fish   || 0, Math.ceil(foodBuffer * 0.10 / 0.6));
+      sp.salt   = Math.max(sp.salt   || 0, Math.ceil(pop * SALT_PP  * 3));
+      sp.cloth  = Math.max(sp.cloth  || 0, Math.ceil(pop * CLOTH_PP * 3));
+
+      // Производственная цепочка — фиксированный стартовый запас
+      const BASE = {
+        tools: 250, iron: 150, charcoal: 100, timber: 120,
+        cattle: 80, pottery: 100, leather: 60,
+      };
+      for (const [good, min] of Object.entries(BASE)) {
         sp[good] = Math.max(sp[good] || 0, min);
       }
     }
