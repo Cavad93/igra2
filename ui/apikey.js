@@ -224,8 +224,57 @@ function _akmKeyDown(e) {
 
 // Смена ключа (вызывается из UI)
 function changeAPIKey() {
-  deleteEncryptedAPIKey();
   showAPIKeyModal(null);
+}
+
+// ── Инлайн-форма ключей в правой панели ──────────────────────────
+
+// Обновляет статусную строку под инлайн-формой
+function _updateInlineKeyStatus() {
+  const el = document.getElementById('inline-key-status');
+  if (!el) return;
+  const parts = [];
+  if (CONFIG.GROQ_API_KEY)  parts.push('✅ Groq сохранён');
+  if (CONFIG.API_KEY)       parts.push('✅ Anthropic сохранён');
+  el.textContent = parts.join(' · ') || '⚠️ Ключи не сохранены';
+  el.style.color = parts.length ? '#4caf50' : 'var(--text-dim)';
+}
+
+// Сохраняет ключи из инлайн-формы (без удаления существующих)
+async function saveInlineAPIKeys() {
+  const groqVal      = (document.getElementById('inline-groq-key')?.value ?? '').trim();
+  const anthropicVal = (document.getElementById('inline-anthropic-key')?.value ?? '').trim();
+
+  if (!groqVal && !anthropicVal) {
+    const el = document.getElementById('inline-key-status');
+    if (el) { el.textContent = '⚠️ Введите хотя бы один ключ'; el.style.color = '#f44336'; }
+    return;
+  }
+  if (anthropicVal && !anthropicVal.startsWith('sk-ant-')) {
+    const el = document.getElementById('inline-key-status');
+    if (el) { el.textContent = '❌ Anthropic ключ должен начинаться с sk-ant-'; el.style.color = '#f44336'; }
+    return;
+  }
+
+  try {
+    if (groqVal)      await saveGroqAPIKey(groqVal);
+    if (anthropicVal) await saveEncryptedAPIKey(anthropicVal);
+
+    // Очищаем поля после сохранения
+    const groqInp      = document.getElementById('inline-groq-key');
+    const anthropicInp = document.getElementById('inline-anthropic-key');
+    if (groqInp)      groqInp.value = '';
+    if (anthropicInp) anthropicInp.value = '';
+
+    _updateInlineKeyStatus();
+    if (typeof addEventLog === 'function') {
+      const saved = [groqVal ? 'Groq' : null, anthropicVal ? 'Anthropic' : null].filter(Boolean).join(' + ');
+      addEventLog(`🔑 API ключи сохранены: ${saved}`, 'info');
+    }
+  } catch (e) {
+    const el = document.getElementById('inline-key-status');
+    if (el) { el.textContent = '❌ Ошибка: ' + e.message; el.style.color = '#f44336'; }
+  }
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -237,4 +286,6 @@ async function initAPIKey() {
   const foundGroq      = await loadGroqAPIKey();
   // Показываем модал если нет ни одного ключа
   if (!foundAnthropic && !foundGroq) showAPIKeyModal(null);
+  // Обновляем статус инлайн-формы
+  _updateInlineKeyStatus();
 }
