@@ -53,23 +53,12 @@ async function processTurn() {
     }
 
     // 1. Экономика (детерминировано)
-    //    Внутри:
-    //      0    applyPopSatisfiedToBuildings   (satisfied прошлого тика → _pop_eff)
-    //      0.5  computeWorldMarketQuotas       (квоты мирового рынка)
-    //           procureCapitalInputs           (закупка инструментов/скота)
-    //      0.6  procureSlaves                  (закупка рабов для латифундий)
-    //      1    processAllRecipes + calculateProduction + routeProduction
-    //      1.5  buildProvinceMarket + updateRegionalMarketPrices
-    //      2    calculateConsumption
-    //      3    updateBuildingFinancials
-    //      4а   distributeWages
-    //      4б   distributeClassIncome
-    //      4в   updatePopWealth
-    //      5    updateMarketPrices (world)
-    //      5б   processAutonomousBuilding
-    //      5в   checkClassBankruptcy
-    //      6    processTrade + updateTreasury + события
-    try { runEconomyTick(); } catch (e) { console.error('[economy]', e); }
+    try {
+      runEconomyTick();
+    } catch (e) {
+      console.error('[economy]', e);
+      addEventLog(`⚠ Ошибка экономики: ${e.message}`, 'danger');
+    }
 
     // 1.1. Запись истории экономики (для вкладки «Экономический обзор»)
     if (typeof recordEconomyHistory === 'function') {
@@ -660,6 +649,25 @@ function _recordTurnSummary() {
   }
 
   GAME_STATE._last_turn_snapshot = snap;
+
+  // Итоговая строка в журнале событий
+  const parts = [];
+  if (summary.d_treasury !== 0) {
+    const s = summary.d_treasury >= 0 ? '+' : '';
+    parts.push(`казна ${s}${summary.d_treasury}`);
+  }
+  if (Math.abs(summary.d_pop) >= 1) {
+    const s = summary.d_pop >= 0 ? '+' : '';
+    parts.push(`население ${s}${summary.d_pop}`);
+  }
+  if (Math.abs(summary.d_happiness) >= 1) {
+    const s = summary.d_happiness >= 0 ? '+' : '';
+    parts.push(`счастье ${s}${summary.d_happiness}`);
+  }
+  const line = parts.length > 0
+    ? `Итог хода: ${parts.join(', ')}`
+    : `Итог хода: без изменений`;
+  addEventLog(line, 'economy');
 }
 
 // ──────────────────────────────────────────────────────────────

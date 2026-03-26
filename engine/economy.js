@@ -1127,7 +1127,7 @@ function runEconomyTick() {
       allConsumed[nationId],
       tradeProfit,
     );
-    if (nationId === GAME_STATE.player_nation && Math.abs(delta) > 10) {
+    if (nationId === GAME_STATE.player_nation) {
       const sign = delta >= 0 ? '+' : '';
       addEventLog(
         `Казна: ${sign}${Math.round(delta)} монет (доход ${Math.round(income)}, расход ${Math.round(expense)})`,
