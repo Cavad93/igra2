@@ -4150,10 +4150,69 @@
       border-bottom: 2px solid var(--text-gold);
     }
     .region-tab-build { padding: 0; }
-    .region-tab-diplomacy { padding: 0; }
+    .region-tab-diplomacy { padding: 8px; overflow-y: auto; }
     .region-tab-build.hidden,
     .region-tab-diplomacy.hidden,
     .region-info-body.hidden { display: none; }
+
+    /* ── Дипломатическая вкладка ── */
+    .ri-dipl-panel { display: flex; flex-direction: column; gap: 10px; }
+    .ri-dipl-overlay-btn {
+      width: 100%;
+      padding: 9px 12px;
+      background: linear-gradient(135deg, rgba(107,79,26,.35), rgba(40,28,8,.6));
+      border: 1px solid var(--border-gold);
+      border-radius: 5px;
+      color: var(--text-gold);
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      transition: background .15s;
+    }
+    .ri-dipl-overlay-btn:hover { background: linear-gradient(135deg, rgba(107,79,26,.55), rgba(40,28,8,.8)); }
+    .ri-dipl-mission-form {
+      background: rgba(20,14,4,.5);
+      border: 1px solid rgba(107,79,26,.3);
+      border-radius: 5px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .ri-dipl-form-title {
+      font-size: 12px;
+      color: var(--text-gold);
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+    .ri-dipl-label {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .ri-dipl-sel {
+      width: 100%;
+      background: rgba(20,14,4,.8);
+      border: 1px solid rgba(107,79,26,.4);
+      border-radius: 3px;
+      color: var(--text-light);
+      font-size: 12px;
+      padding: 4px 6px;
+      font-family: inherit;
+    }
+    .ri-dipl-send-btn {
+      margin-top: 4px;
+      padding: 7px 10px;
+      background: rgba(76,175,80,.2);
+      border: 1px solid rgba(76,175,80,.5);
+      border-radius: 4px;
+      color: #81c784;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .ri-dipl-send-btn:hover { background: rgba(76,175,80,.35); }
 
     /* ── Строительная вкладка ── */
     .rbt-wrap { padding: 6px 7px; }

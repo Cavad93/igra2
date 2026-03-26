@@ -809,8 +809,10 @@ function switchRegionTab(tab) {
   _activeRegionTab = tab;
   const infoPane  = document.getElementById('region-tab-info');
   const buildPane = document.getElementById('region-tab-build');
+  const diplPane  = document.getElementById('region-tab-diplomacy');
   if (infoPane)  infoPane.classList.toggle('hidden', tab !== 'info');
   if (buildPane) buildPane.classList.toggle('hidden', tab !== 'build');
+  if (diplPane)  diplPane.classList.toggle('hidden', tab !== 'diplomacy');
   document.querySelectorAll('.ri-tab').forEach(b =>
     b.classList.toggle('ri-tab--active', b.dataset.tab === tab)
   );
@@ -864,9 +866,39 @@ function showRegionInfo(regionId) {
         buildTabHtml = renderConstructionTab(regionId);
     } catch (e) { console.warn('[showRegionInfo] build tab error:', e); }
 
-    // Если текущая вкладка — дипломатия, сбрасываем (дипломатия теперь overlay)
-    let curTab = _activeRegionTab;
-    if (curTab === 'diplomacy') curTab = 'info';
+    const curTab = _activeRegionTab;
+
+    // Вкладка дипломатии: форма отправки советника на миссию
+    let diplTabHtml = '';
+    if (!isPlayer) {
+      const chars = (GAME_STATE.nations[GAME_STATE.player_nation]?.characters ?? [])
+        .filter(c => c.alive !== false);
+      const busyIds = new Set((GAME_STATE.orders ?? []).filter(o => o.status === 'active').map(o => o.assigned_char_id));
+      const charOpts = chars.map(c => {
+        const busy = busyIds.has(c.id) ? ' (занят)' : '';
+        return `<option value="${c.id}"${busyIds.has(c.id) ? ' disabled' : ''}>${c.name}${busy}</option>`;
+      }).join('');
+      diplTabHtml = `
+        <div class="ri-dipl-panel">
+          <button class="ri-dipl-overlay-btn" onclick="showDiplomacyOverlay('${nationId}')">
+            🤝 Открыть дипломатическое окно
+          </button>
+          <div class="ri-dipl-mission-form">
+            <div class="ri-dipl-form-title">📜 Отправить дипломатическую миссию</div>
+            <label class="ri-dipl-label">Советник</label>
+            <select id="ri-dipl-char-sel" class="ri-dipl-sel">${charOpts || '<option value="">— нет персонажей —</option>'}</select>
+            <label class="ri-dipl-label">Надзор</label>
+            <select id="ri-dipl-oversight-sel" class="ri-dipl-sel">
+              <option value="personal">Личный надзор</option>
+              <option value="direct" selected>Прямое управление</option>
+              <option value="distant">Удалённый контроль</option>
+            </select>
+            <button class="ri-dipl-send-btn" onclick="sendDiplomaticMissionFromPanel('${nationId}', '${nationName}')">
+              Отправить миссию
+            </button>
+          </div>
+        </div>`;
+    }
 
     panel.innerHTML = `
       <div class="region-info-header" style="border-left: 4px solid ${nationColor}">
@@ -879,8 +911,8 @@ function showRegionInfo(regionId) {
           onclick="switchRegionTab('info')">Информация</button>
         <button class="ri-tab${curTab === 'build' ? ' ri-tab--active' : ''}" data-tab="build"
           onclick="switchRegionTab('build')">${isPlayer ? '🏗 Строительство' : 'Строительство'}</button>
-        ${!isPlayer ? `<button class="ri-tab" data-tab="diplomacy"
-          onclick="showDiplomacyOverlay('${nationId}')">🤝 Дипломатия</button>` : ''}
+        ${!isPlayer ? `<button class="ri-tab${curTab === 'diplomacy' ? ' ri-tab--active' : ''}" data-tab="diplomacy"
+          onclick="switchRegionTab('diplomacy')">🤝 Дипломатия</button>` : ''}
       </div>
       <div id="region-tab-info" class="region-info-body${curTab !== 'info' ? ' hidden' : ''}">
         <div class="region-info-desc">${mapData.description}</div>
@@ -911,6 +943,9 @@ function showRegionInfo(regionId) {
       <div id="region-tab-build" class="region-tab-build${curTab !== 'build' ? ' hidden' : ''}">
         ${buildTabHtml}
       </div>
+      ${!isPlayer ? `<div id="region-tab-diplomacy" class="region-tab-diplomacy${curTab !== 'diplomacy' ? ' hidden' : ''}">
+        ${diplTabHtml}
+      </div>` : ''}
     `;
   } catch (e) {
     console.error('[showRegionInfo] Error:', e);
@@ -943,6 +978,48 @@ function closeRegionInfo() {
     );
   }
   selectedRegionId = null;
+}
+
+/**
+ * Отправляет дипломатическую миссию прямо из панели региона.
+ */
+function sendDiplomaticMissionFromPanel(targetNationId, targetNationName) {
+  const charId    = document.getElementById('ri-dipl-char-sel')?.value;
+  const oversight = document.getElementById('ri-dipl-oversight-sel')?.value ?? 'direct';
+
+  if (!charId) {
+    alert('Выберите советника для миссии.');
+    return;
+  }
+  if (typeof issueOrder !== 'function') {
+    alert('Движок приказов не загружен.');
+    return;
+  }
+
+  const result = issueOrder({
+    type:             'diplomatic_mission',
+    target_id:        targetNationId,
+    target_label:     targetNationName,
+    assigned_char_id: charId,
+    oversight,
+  });
+
+  if (result) {
+    // Обновляем панели
+    if (typeof renderOrdersPanel === 'function')     renderOrdersPanel();
+    if (typeof renderGovernmentOverlay === 'function') {
+      // Только если overlay открыт
+      const govEl = document.getElementById('government-overlay');
+      if (govEl && !govEl.classList.contains('hidden')) renderGovernmentOverlay();
+    }
+    // Показываем уведомление
+    const charName = (GAME_STATE.nations[GAME_STATE.player_nation]?.characters ?? [])
+      .find(c => c.id === charId)?.name ?? charId;
+    if (typeof addEventLog === 'function')
+      addEventLog(`📜 ${charName} отправлен с дипломатической миссией к ${targetNationName}.`, 'info');
+    // Переключаемся на вкладку информации
+    switchRegionTab('info');
+  }
 }
 
 // ──────────────────────────────────────────────────────────────
