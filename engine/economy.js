@@ -1210,7 +1210,7 @@ function updateHappiness() {
 
     // ── Классовая удовлетворённость ─────────────────────────
     let happiness = 50; // базовое
-    if (typeof calculateClassSatisfaction === 'function') {
+    if (typeof calculateClassSatisfaction === 'function' && nation.population?.by_profession) {
       const classSat = calculateClassSatisfaction(
         nation.population.by_profession,
         economy.stockpile,

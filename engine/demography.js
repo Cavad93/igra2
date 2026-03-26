@@ -538,6 +538,7 @@ function processDemography() {
 
 function _processDemographyForNation(nationId, nation) {
   const pop   = nation.population;
+  if (!pop) return;
   const profs = pop.by_profession;
   if (!profs) return;
 

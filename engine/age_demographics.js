@@ -87,6 +87,7 @@ function updateAgeCohorts(nation) {
   const dem   = nation.demographics;
   const laws  = _getLaborLaws(nation);
   const pop   = nation.population;
+  if (!pop?.total) return;
   const total = pop.total;
   const TURNS = _turnsPerYear();
 

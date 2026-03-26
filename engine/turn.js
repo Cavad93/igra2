@@ -681,10 +681,22 @@ function saveGame() {
     for (const [nationId, mgr] of Object.entries(SENATE_MANAGERS)) {
       senateData[nationId] = mgr.toJSON();
     }
-    const saveData = JSON.stringify({ ...GAME_STATE, _senate: senateData });
+
+    // Исключаем эфемерные данные, которые пересчитываются каждый ход
+    const { _turn_summary_history, _last_turn_snapshot, ...stateToSave } = GAME_STATE;
+
+    // Обрезаем лог до 50 записей чтобы не раздувать сохранение
+    if (stateToSave.events_log?.length > 50) {
+      stateToSave.events_log = stateToSave.events_log.slice(0, 50);
+    }
+
+    const saveData = JSON.stringify({ ...stateToSave, _senate: senateData });
     localStorage.setItem(CONFIG.SAVE_KEY, saveData);
   } catch (e) {
     console.warn('Не удалось сохранить игру:', e);
+    if (e.name === 'QuotaExceededError') {
+      addEventLog('⚠ Сохранение не удалось: переполнен localStorage. Попробуйте сбросить старое сохранение.', 'warning');
+    }
   }
 }
 
