@@ -229,15 +229,25 @@ function changeAPIKey() {
 
 // ── Инлайн-форма ключей в правой панели ──────────────────────────
 
-// Обновляет статусную строку под инлайн-формой
+// Обновляет статусную строку под инлайн-формой и в нижней панели
 function _updateInlineKeyStatus() {
-  const el = document.getElementById('inline-key-status');
-  if (!el) return;
   const parts = [];
-  if (CONFIG.GROQ_API_KEY)  parts.push('✅ Groq сохранён');
-  if (CONFIG.API_KEY)       parts.push('✅ Anthropic сохранён');
-  el.textContent = parts.join(' · ') || '⚠️ Ключи не сохранены';
-  el.style.color = parts.length ? '#4caf50' : 'var(--text-dim)';
+  if (CONFIG.GROQ_API_KEY)  parts.push('Groq');
+  if (CONFIG.API_KEY)       parts.push('Anthropic');
+
+  const inline = document.getElementById('inline-key-status');
+  if (inline) {
+    inline.textContent = parts.length
+      ? '✅ ' + parts.map(p => p + ' сохранён').join(' · ')
+      : '⚠️ Ключи не сохранены';
+    inline.style.color = parts.length ? '#4caf50' : 'var(--text-dim)';
+  }
+
+  const bottom = document.getElementById('ak-section-status');
+  if (bottom) {
+    bottom.textContent = parts.length ? '✅ ' + parts.join(' + ') : '⚠️ нет ключей';
+    bottom.style.color = parts.length ? '#4caf50' : '#f44336';
+  }
 }
 
 // Сохраняет ключи из инлайн-формы (без удаления существующих)

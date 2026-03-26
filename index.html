@@ -1308,8 +1308,8 @@
     }
 
     #event-log {
-      width: 260px;
-      flex-shrink: 0;
+      flex: 1;
+      min-width: 0;
       border-right: 1px solid var(--border-gold);
       overflow: hidden;
       padding: 6px 8px;
@@ -1459,13 +1459,53 @@
 
     /* Область ввода */
     #input-area {
-      width: 280px;
-      flex-shrink: 0;
+      flex: 1;
+      min-width: 0;
       display: flex;
       flex-direction: column;
       padding: 6px 10px;
       gap: 6px;
       overflow: hidden;
+      border-right: 1px solid var(--border-gold);
+    }
+
+    /* Секция API ключа */
+    #api-key-section {
+      width: 160px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 10px;
+      gap: 6px;
+    }
+    #api-key-section .ak-title {
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      text-align: center;
+    }
+    #api-key-section .ak-status {
+      font-size: 10px;
+      color: #4caf50;
+      text-align: center;
+    }
+    #api-key-section .ak-btn {
+      width: 100%;
+      padding: 6px 8px;
+      background: rgba(180,140,60,0.15);
+      border: 1px solid var(--border-gold);
+      color: var(--text-gold);
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: inherit;
+      text-align: center;
+    }
+    #api-key-section .ak-btn:hover {
+      background: rgba(180,140,60,0.3);
     }
 
     #ai-response {
@@ -6497,8 +6537,14 @@
             spellcheck="false"
           >
           <button id="send-btn">⚔ Приказать</button>
-          <button id="api-key-change-btn" title="Сменить API ключ" onclick="changeAPIKey()">🔑</button>
         </div>
+      </div>
+
+      <!-- API ключи -->
+      <div id="api-key-section">
+        <div class="ak-title">🔑 API ключи AI</div>
+        <div id="ak-section-status" class="ak-status"></div>
+        <button class="ak-btn" onclick="changeAPIKey()">Добавить / сменить ключ</button>
       </div>
     </footer>
 
