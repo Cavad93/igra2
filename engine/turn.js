@@ -311,42 +311,67 @@ function maybeSpawnCharacter() {
 // ──────────────────────────────────────────────────────────────
 
 async function processAINations() {
-  const promises = [];
+  // Обновляем кэш дипломатических расстояний
+  if (typeof refreshDiploDistances === 'function') {
+    try { refreshDiploDistances(); } catch (e) { console.warn('[diplo_range]', e); }
+  }
+
+  const promises        = [];
   const pendingNationIds = [];
 
   for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
-    // Пропускаем игрока и малые нации без AI
     if (nation.is_player) continue;
-    if (nation.is_minor) continue;
+    if (nation.is_minor)  continue;
 
     // Каждые 3 хода AI нации принимают решение
-    if (GAME_STATE.turn % 3 === 0) {
-      pendingNationIds.push(nationId);
-      promises.push(
-        getAINationDecision(nationId).catch(err => {
-          // При ошибке — детерминированное fallback решение
-          console.warn(`AI fallback для ${nationId}:`, err.message);
-          applyFallbackDecision(nationId);
-        })
-      );
+    if (GAME_STATE.turn % 3 !== 0) continue;
+
+    // Определяем tier доступности (1=Sonnet, 2=Haiku, 3=только fallback)
+    const tier = typeof getNationTier === 'function'
+      ? getNationTier(nationId)
+      : 1;
+
+    if (tier === 3) {
+      // Дальняя нация — не тратим API, только детерминированный fallback
+      applyFallbackDecision(nationId);
+      continue;
+    }
+
+    // Tier 1 → Sonnet (полный контекст), Tier 2 → Haiku (экономия)
+    const model = tier === 1 ? CONFIG.MODEL_SONNET : CONFIG.MODEL_HAIKU;
+
+    pendingNationIds.push(nationId);
+    promises.push(
+      getAINationDecision(nationId, model).catch(err => {
+        console.warn(`AI fallback для ${nationId} (tier ${tier}):`, err.message);
+        applyFallbackDecision(nationId);
+      })
+    );
+  }
+
+  if (promises.length > 0) {
+    // Таймаут 15 секунд
+    const timeoutId      = { fired: false };
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => { timeoutId.fired = true; reject(new Error('AI timeout')); }, 15000)
+    );
+
+    try {
+      await Promise.race([Promise.all(promises), timeoutPromise]);
+    } catch (err) {
+      if (timeoutId.fired) {
+        console.warn('processAINations: таймаут 15с, применяем fallback');
+        for (const nId of pendingNationIds) applyFallbackDecision(nId);
+      }
     }
   }
 
-  if (promises.length === 0) return;
-
-  // Таймаут 15 секунд — если AI не отвечает, применяем fallback
-  const timeoutId = { fired: false };
-  const timeoutPromise = new Promise((_, reject) =>
-    setTimeout(() => { timeoutId.fired = true; reject(new Error('AI timeout')); }, 15000)
-  );
-
-  try {
-    await Promise.race([Promise.all(promises), timeoutPromise]);
-  } catch (err) {
-    if (timeoutId.fired) {
-      console.warn('processAINations: таймаут 15с, применяем fallback для всех');
-      for (const nId of pendingNationIds) applyFallbackDecision(nId);
-    }
+  // ── Анти-сноуболл (каждый ход для всех AI-наций) ───────────────
+  if (typeof processConquestFatigue === 'function') {
+    try { processConquestFatigue(); } catch (e) { console.warn('[conquest_fatigue]', e); }
+  }
+  if (typeof checkCoalitionReflex === 'function') {
+    try { checkCoalitionReflex(); } catch (e) { console.warn('[coalition_reflex]', e); }
   }
 }
 

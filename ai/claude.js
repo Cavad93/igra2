@@ -287,7 +287,7 @@ function calculatePersonalImpact(char, action) {
 // 3. РЕШЕНИЕ AI-НАЦИИ
 // ──────────────────────────────────────────────────────────────
 
-async function getAINationDecision(nationId) {
+async function getAINationDecision(nationId, model = CONFIG.MODEL_SONNET) {
   const nation = GAME_STATE.nations[nationId];
 
   // Собираем информацию о соседях
@@ -313,7 +313,7 @@ async function getAINationDecision(nationId) {
 
   const prompt = PROMPTS.nationDecision(nationId, nation, neighborsSummary, availableActions, recentDecisions);
 
-  const rawResponse = await callClaude(prompt.system, prompt.user, 300, CONFIG.MODEL_SONNET);
+  const rawResponse = await callClaude(prompt.system, prompt.user, 300, model);
   const decision = parseAIResponse(rawResponse);
 
   if (validateNationDecision(decision)) {

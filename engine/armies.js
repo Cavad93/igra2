@@ -326,6 +326,13 @@ function _processSupply(army) {
 
   army.supply = Math.max(0, Math.min(100, army.supply + delta));
 
+  // Логистический предел: штраф за долгое нахождение вдали от дома
+  if (typeof updateArmyLogisticTimer === 'function') updateArmyLogisticTimer(army);
+  if (typeof calcLogisticPenalty === 'function') {
+    const logPen = calcLogisticPenalty(army);
+    if (logPen > 0) army.supply = Math.max(0, army.supply - logPen);
+  }
+
   if (army.supply < 30) {
     const rate = ARMY_MOVE.ATTRITION_RATE * (1 - army.supply / 30);
     army.units.infantry    = Math.max(0, Math.round(army.units.infantry    * (1 - rate * 0.6)));
@@ -421,8 +428,16 @@ function captureRegion(captorId, regionId, prevOwnerId) {
 
   region.nation = captorId;
 
+  // Отслеживаем для анти-сноуболл механизмов
+  region._conquest_turn = GAME_STATE.turn ?? 1;
+
   const captor   = GAME_STATE.nations[captorId];
   const prev     = GAME_STATE.nations[prevOwnerId];
+
+  // Счётчик расширения для коалиционного рефлекса (не для игрока)
+  if (captor && !captor.is_player) {
+    captor._expansion_this_window = (captor._expansion_this_window ?? 0) + 1;
+  }
 
   if (captor?.regions && !captor.regions.includes(regionId)) captor.regions.push(regionId);
   if (prev?.regions) {
