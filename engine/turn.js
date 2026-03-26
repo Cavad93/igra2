@@ -119,6 +119,11 @@ async function processTurn() {
       }
     } catch (e) { console.error('[demography]', e); }
 
+    // 2.1. Рекрутинг из казарм, конюшен, военных портов
+    if (typeof processRecruitment === 'function') {
+      try { processRecruitment(); } catch (e) { console.warn('[recruitment]', e); }
+    }
+
     // 2.2. Возрастная демография — когорты, рабочая сила, законы труда
     if (typeof processAgeDemographics === 'function') {
       try { processAgeDemographics(); } catch (e) { console.warn('[age_demographics]', e); }

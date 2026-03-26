@@ -192,23 +192,48 @@ function _calcBuildingMods(nation) {
   let   epidChance  = 0;
   let   slaveMort   = 0;
 
+  // Старый механизм: nation.buildings (legacy)
   for (const bId of (nation.buildings || [])) {
     const b = BUILDINGS[bId];
     if (!b) continue;
-
     if (b.profession_growth) {
-      for (const [p, v] of Object.entries(b.profession_growth)) {
-        profMod[p] = (profMod[p] || 0) + v;
+      for (const [p, v] of Object.entries(b.profession_growth)) profMod[p] = (profMod[p] || 0) + v;
+    }
+    if (b.all_growth_mod)       allMod    += b.all_growth_mod;
+    if (b.mortality_mod)        mortalityM += b.mortality_mod;
+    if (b.famine_mortality_mod) famineProt += b.famine_mortality_mod;
+    if (b.famine_protection)    famineProt += b.famine_protection;
+    if (b.mobility_speed_mod)   mobSpeed   *= b.mobility_speed_mod;
+    if (b.mobility)             mobList.push(...b.mobility);
+    if (b.epidemic_chance_mod)  epidChance += b.epidemic_chance_mod;
+    if (b.slave_mortality_mod)  slaveMort  += b.slave_mortality_mod;
+  }
+
+  // Новый механизм: building_slots в регионах нации
+  if (typeof GAME_STATE !== 'undefined' && typeof BUILDINGS !== 'undefined') {
+    for (const regionId of (nation.regions || [])) {
+      const region = GAME_STATE.regions?.[regionId];
+      if (!region) continue;
+      for (const slot of (region.building_slots || [])) {
+        if (slot.status !== 'active') continue;
+        const b = BUILDINGS[slot.building_id];
+        if (!b) continue;
+        const lvl = slot.level ?? 1;
+        if (b.profession_growth) {
+          for (const [p, v] of Object.entries(b.profession_growth)) {
+            profMod[p] = (profMod[p] || 0) + v * lvl;
+          }
+        }
+        if (b.all_growth_mod)       allMod    += b.all_growth_mod * lvl;
+        if (b.mortality_mod)        mortalityM += b.mortality_mod * lvl;
+        if (b.famine_mortality_mod) famineProt += b.famine_mortality_mod * lvl;
+        if (b.famine_protection)    famineProt += b.famine_protection * lvl;
+        if (b.mobility_speed_mod)   mobSpeed   *= b.mobility_speed_mod;
+        if (b.epidemic_chance_mod)  epidChance += b.epidemic_chance_mod * lvl;
+        if (b.slave_mortality_mod)  slaveMort  += b.slave_mortality_mod * lvl;
+        // Мобильность теперь обрабатывается processRecruitment() — не дублируем
       }
     }
-    if (b.all_growth_mod)           allMod      += b.all_growth_mod;
-    if (b.mortality_mod)            mortalityM  += b.mortality_mod;
-    if (b.famine_mortality_mod)     famineProt  += b.famine_mortality_mod;
-    if (b.famine_protection)        famineProt  += b.famine_protection; // treated separately
-    if (b.mobility_speed_mod)       mobSpeed    *= b.mobility_speed_mod;
-    if (b.mobility)                 mobList.push(...b.mobility);
-    if (b.epidemic_chance_mod)      epidChance  += b.epidemic_chance_mod;
-    if (b.slave_mortality_mod)      slaveMort   += b.slave_mortality_mod;
   }
 
   return { profMod, allMod, mortalityM, famineProt, mobSpeed, mobList, epidChance, slaveMort };

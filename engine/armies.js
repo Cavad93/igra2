@@ -529,3 +529,87 @@ function recruitToArmy(armyId, addUnits) {
   }
   return true;
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// РЕКРУТИНГ ИЗ ЗДАНИЙ (вызывается каждый ход из turn.js)
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Обрабатывает производство воинских единиц из зданий:
+ *   казармы   → infantry  (из крестьян)
+ *   конюшни   → cavalry   (из крестьян, дороже)
+ *   воен. порт → light_ships (из моряков)
+ *
+ * Для каждого активного здания с полем recruit_output:
+ *   1. Рассчитывает кол-во единиц = level × per_level_per_turn
+ *   2. Вычитает pop_cost_per_unit × кол-во из population региона
+ *   3. Прибавляет к nation.military[unit_type]
+ *
+ * Ограничения:
+ *   • Не более 2% населения региона за ход (чтобы не опустошить)
+ *   • Минимум 500 жителей в регионе после рекрутинга
+ */
+function processRecruitment() {
+  const nationId = GAME_STATE.player_nation;
+  const nation   = GAME_STATE.nations[nationId];
+  if (!nation) return;
+
+  let totalByType = {};
+
+  for (const regionId of (nation.regions ?? [])) {
+    const region = GAME_STATE.regions[regionId];
+    if (!region) continue;
+
+    for (const slot of (region.building_slots ?? [])) {
+      if (slot.status !== 'active') continue;   // пропускаем paused / снесённые
+
+      const bDef = typeof BUILDINGS !== 'undefined' ? BUILDINGS[slot.building_id] : null;
+      const ro   = bDef?.recruit_output;
+      if (!ro) continue;
+
+      const level   = slot.level ?? 1;
+      const wanted  = level * ro.per_level_per_turn;
+
+      // Ограничение: не более 2% населения региона за ход, минимум 500 после
+      const pop     = region.population ?? 0;
+      const maxDraw = Math.max(0, Math.floor(pop * 0.02));
+      const popNeeded = wanted * ro.pop_cost_per_unit;
+      const popCost   = Math.min(popNeeded, maxDraw);
+      const actual    = Math.floor(popCost / ro.pop_cost_per_unit);
+
+      if (actual <= 0) continue;
+      if (pop - actual * ro.pop_cost_per_unit < 500) continue;
+
+      // Списываем население
+      region.population = pop - actual * ro.pop_cost_per_unit;
+
+      // Добавляем в резерв нации
+      const ut = ro.unit_type;
+      totalByType[ut] = (totalByType[ut] ?? 0) + actual;
+
+      // Логируем в слот (чтобы UI показал выработку)
+      slot._recruited_last_turn = actual;
+      slot._recruited_unit_type = ut;
+    }
+  }
+
+  // Зачисляем в резерв
+  const mil = nation.military;
+  for (const [ut, n] of Object.entries(totalByType)) {
+    if (ut === 'light_ships') {
+      mil.ships      = (mil.ships      ?? 0) + n;
+      mil.light_ships = (mil.light_ships ?? 0) + n;
+    } else {
+      mil[ut] = (mil[ut] ?? 0) + n;
+    }
+  }
+
+  // Уведомление при ненулевом рекрутинге
+  if (Object.keys(totalByType).length > 0 && typeof addEventLog === 'function') {
+    const parts = [];
+    if (totalByType.infantry)    parts.push(`пехота +${totalByType.infantry}`);
+    if (totalByType.cavalry)     parts.push(`конница +${totalByType.cavalry}`);
+    if (totalByType.light_ships) parts.push(`корабли +${totalByType.light_ships}`);
+    addEventLog(`🪖 Рекрутинг: ${parts.join(', ')}`, 'info');
+  }
+}

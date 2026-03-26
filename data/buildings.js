@@ -191,31 +191,100 @@ const BUILDINGS = {
   barracks: {
     name:        'Казармы',
     icon:        '⚔️',
-    description: 'Военные казармы. Солдаты обучаются и квартируют здесь.',
+    description: 'Военные казармы. Каждый ход набирают пехоту из крестьян. Можно поставить на паузу.',
     cost:        700,
     category:    'military',
-    footprint_ha: 6,   // казармы, плац, конюшни
-    // timber×10(220) + iron×5(225) + tools×4(140) = 585; labor=115 → ~700
+    footprint_ha: 6,
     construction_materials: { timber: 15, stone: 20, iron: 8, tools: 6 },
 
     worker_profession: [
       { profession: 'soldiers', count: 500 },
     ],
-    wage_rate:          0.00,   // солдаты получают жалование из казны напрямую
+    wage_rate:          0.00,
     labor_type:         'state',
     build_turns:        3,
     terrain_restriction: null,
     max_per_region:     1,
     max_level:          3,
+    nation_buildable:   true,
 
     production_output: [],
 
-    // legacy
-    profession_growth: { soldiers: 0.020 },
-    mobility: [{ from: 'farmers', to: 'soldiers', rate: 0.006 }],
-    workers_per_unit: 100,
+    // Ежеходный рекрутинг: крестьяне → пехота
+    // per_level_per_turn = кол-во солдат с 1 уровня за ход
+    // pop_cost_per_unit  = сколько крестьян уходит на 1 солдата
+    recruit_output: { unit_type: 'infantry', per_level_per_turn: 20, pop_cost_per_unit: 1 },
+
+    // Бонус к росту имеющихся солдат (профессиональная подготовка)
+    profession_growth: { soldiers: 0.008 },
+
     location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
-    historical_note: "Гарнизонные казармы Сиракуз при Дионисии I вмещали до 10 000 наёмников; казармы совмещали жильё, склады оружия и учебные поля.",
+    historical_note: "Гарнизонные казармы Сиракуз при Дионисии I вмещали до 10 000 наёмников.",
+  },
+
+  stables: {
+    name:        'Конюшни',
+    icon:        '🐴',
+    description: 'Конюшни и манеж для обучения кавалерии. Каждый ход производят всадников из крестьян.',
+    cost:        600,
+    category:    'military',
+    footprint_ha: 8,
+    // timber×12(264) + stone×8(120) + tools×5(175) = 559; labor=241 → ~600
+    construction_materials: { timber: 12, stone: 8, iron: 4, tools: 5 },
+
+    worker_profession: [
+      { profession: 'soldiers', count: 200 },
+    ],
+    wage_rate:          0.00,
+    labor_type:         'state',
+    build_turns:        4,
+    terrain_restriction: null,   // строится на любой суше
+    max_per_region:     1,
+    max_level:          3,
+    nation_buildable:   true,
+
+    production_output: [],
+
+    // Ежеходный рекрутинг: крестьяне → кавалерия
+    // Кавалерия дороже: 1 всадник = 2 крестьянина
+    recruit_output: { unit_type: 'cavalry', per_level_per_turn: 8, pop_cost_per_unit: 2 },
+
+    profession_growth: { soldiers: 0.004 },
+
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Персидские конные заводы могли содержать тысячи лошадей; греческие гиппофорбии снабжали кавалерию ремонтными лошадьми.",
+  },
+
+  military_port: {
+    name:        'Военный порт',
+    icon:        '⚓',
+    description: 'Укреплённая гавань для военного флота. Строит лёгкие корабли из мастеров и моряков.',
+    cost:        1500,
+    category:    'military',
+    footprint_ha: 12,
+    // timber×30(660) + stone×20(300) + iron×15(675) + tools×10(350) = 1985; labor=215 → ~1500
+    construction_materials: { timber: 30, stone: 20, iron: 15, tools: 10 },
+
+    worker_profession: [
+      { profession: 'craftsmen', count: 200 },
+      { profession: 'sailors',   count: 150 },
+    ],
+    wage_rate:          0.00,
+    labor_type:         'state',
+    build_turns:        6,
+    terrain_restriction: ['coastal_city'],   // только прибрежные регионы
+    max_per_region:     1,
+    max_level:          3,
+    nation_buildable:   true,
+
+    production_output: [],
+
+    // Ежеходный рекрутинг: моряки → лёгкие корабли
+    // 1 корабль требует 10 чел. экипажа (моряков)
+    recruit_output: { unit_type: 'light_ships', per_level_per_turn: 1, pop_cost_per_unit: 10 },
+
+    location_requirement: {"type":"none","deposit_key":null,"allowed_biomes":[]},
+    historical_note: "Афинский военный порт Пирей мог вместить 372 триеры; корабли строились и хранились в крытых эллингах — неосях.",
   },
 
   walls: {

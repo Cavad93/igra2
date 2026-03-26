@@ -181,6 +181,7 @@ function _rbtBuiltRow(slot, regionId, region, nation) {
   const level    = slot.level || 1;
   const maxLevel = bDef.max_level ?? Infinity;
   const revenue  = slot.revenue ? Math.round(slot.revenue) : 0;
+  const isPaused = slot.status === 'paused';
 
   // Суммарные работники (level × workers_per_unit)
   const totalWorkers = Object.values(slot.workers || {}).reduce((s, v) => s + v * level, 0);
@@ -189,14 +190,17 @@ function _rbtBuiltRow(slot, regionId, region, nation) {
   const upgrading = (region.construction_queue || [])
     .some(e => e.building_id === slot.building_id && e.is_upgrade);
 
-  const canUpgrade = bDef.nation_buildable !== false && level < maxLevel && !upgrading;
+  const canUpgrade = bDef.nation_buildable !== false && level < maxLevel && !upgrading && !isPaused;
 
-  // Метки: автономное здание / достигнут максимум
+  // Метки: автономное здание / достигнут максимум / пауза
   const autoTag = bDef.autonomous_builder
     ? `<span class="rbt-ac-auto" title="Также строится автономно классом населения">🤝</span>`
     : '';
   const maxTag  = (level >= maxLevel && maxLevel !== Infinity)
     ? `<span class="rbt-ac-lvl" title="Максимальный уровень">макс</span>`
+    : '';
+  const pauseTag = isPaused
+    ? `<span class="rbt-ac-pause-tag" title="На паузе — не производит и не рекрутирует">⏸</span>`
     : '';
 
   const upgBtn = canUpgrade
@@ -205,23 +209,60 @@ function _rbtBuiltRow(slot, regionId, region, nation) {
          onclick="uiOrderConstruction('${regionId}','${slot.building_id}')">▲ +1</button>`
     : (upgrading
         ? `<span class="rbt-ac-building">▲…</span>`
-        : maxTag);
+        : (!isPaused ? maxTag : ''));
 
   const demBtn = `<button class="rbt-ac-btn rbt-ac-btn--dem"
       title="${level > 1 ? 'Снизить уровень' : 'Снести'}"
       onclick="uiDemolishBuilding('${regionId}','${slot.slot_id}')">✕</button>`;
 
+  // Кнопка паузы — для всех зданий
+  const pauseBtn = `<button class="rbt-ac-btn rbt-ac-btn--pause${isPaused ? ' rbt-ac-btn--paused' : ''}"
+      title="${isPaused ? 'Возобновить работу' : 'Приостановить'}"
+      onclick="uiToggleBuildingPause('${regionId}','${slot.slot_id}')">
+      ${isPaused ? '▶' : '⏸'}</button>`;
+
+  // Строка рекрутинга (для казарм, конюшен, военного порта)
+  const ro = bDef.recruit_output;
+  let recruitInfo = '';
+  if (ro) {
+    const unitLabels = { infantry: 'пехота', cavalry: 'конница', light_ships: 'корабли' };
+    const perTurn = isPaused ? 0 : level * ro.per_level_per_turn;
+    const popCost = isPaused ? 0 : perTurn * ro.pop_cost_per_unit;
+    const lastTurn = slot._recruited_last_turn ?? 0;
+    const unitLabel = unitLabels[ro.unit_type] ?? ro.unit_type;
+    recruitInfo = `
+      <div class="rbt-recruit-info${isPaused ? ' rbt-recruit-info--paused' : ''}">
+        🪖 ${isPaused ? '<i>Пауза</i>' : `+${perTurn} ${unitLabel}/ход · −${popCost} нас.`}
+        ${!isPaused && lastTurn > 0 ? `<span class="rbt-recruit-last">(прошл. ход: +${lastTurn})</span>` : ''}
+      </div>`;
+  }
+
   return `
-    <div class="rbt-ac-row rbt-ac-row--built">
+    <div class="rbt-ac-row rbt-ac-row--built${isPaused ? ' rbt-ac-row--paused' : ''}">
       <span class="rbt-ac-bicon">${bDef.icon || '🏛'}</span>
       <span class="rbt-ac-bname">${bDef.name}</span>
-      ${autoTag}
+      ${autoTag}${pauseTag}
       ${level > 1 ? `<span class="rbt-ac-lvl">×${level}</span>` : ''}
       <span class="rbt-ac-workers"><b>${totalWorkers.toLocaleString()}</b> раб.</span>
       <span class="rbt-ac-rev">💰${revenue.toLocaleString()}</span>
-      <span class="rbt-ac-actions">${upgBtn}${demBtn}</span>
+      <span class="rbt-ac-actions">${upgBtn}${pauseBtn}${demBtn}</span>
+      ${recruitInfo}
     </div>
   `;
+}
+
+/**
+ * Переключает паузу здания (active ↔ paused).
+ * Вызывается из HTML кнопки.
+ */
+function uiToggleBuildingPause(regionId, slotId) {
+  const region = GAME_STATE.regions?.[regionId];
+  if (!region) return;
+  const slot = (region.building_slots ?? []).find(s => s.slot_id === slotId);
+  if (!slot) return;
+  slot.status = slot.status === 'paused' ? 'active' : 'paused';
+  if (typeof showRegionInfo === 'function') showRegionInfo(regionId);
+  else if (typeof renderAll === 'function') renderAll();
 }
 
 // ──────────────────────────────────────────────────────────────
