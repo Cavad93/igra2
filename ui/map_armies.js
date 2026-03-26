@@ -266,6 +266,23 @@ function _renderArmyPanel(armyId) {
         ${_statBar('Снабжение',   army.supply,     '#ff9800', '#f44336')}
         ${_statBar('Усталость',   army.fatigue,    '#9c27b0', '#9c27b0', true)}
       </div>
+      ${(() => {
+        const cap  = army._supply_capacity ?? 0;
+        const load = army._supply_region_load ?? 0;
+        const over = army._supply_overload ?? 0;
+        if (!cap && !load) return '';
+        const pct  = cap > 0 ? Math.min(100, Math.round((load / cap) * 100)) : 100;
+        const color = over > 1.2 ? '#f44336' : over > 0.8 ? '#ff9800' : '#4caf50';
+        const overText = over > 1.0 ? `<span class="army-cap-over">▲ Перегрузка ${Math.round(over * 100)}%</span>` : '';
+        return `<div class="army-cap-row">
+          <span class="army-cap-label">Ёмкость региона</span>
+          <div class="army-cap-bar-wrap">
+            <div class="army-cap-bar" style="width:${pct}%;background:${color}"></div>
+          </div>
+          <span class="army-cap-nums">${load.toLocaleString()} / ${cap.toLocaleString()}</span>
+          ${overText}
+        </div>`;
+      })()}
 
       <div class="army-panel-units">${unitsHtml}</div>
 

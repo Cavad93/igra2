@@ -40,14 +40,34 @@ const ARMY_MOVE = {
   FATIGUE_REST_FRIENDLY: -15, // за ход отдыха на дружественной территории
   FATIGUE_REST_ENEMY:    -5,  // за ход отдыха на вражеской
 
-  // Снабжение (в ход)
-  SUPPLY_HOME:      8,
-  SUPPLY_FRIENDLY:  3,
-  SUPPLY_NEUTRAL:  -5,
-  SUPPLY_ENEMY:   -10,
+  // Снабжение (в ход) — базовые дельты до учёта ёмкости региона
+  SUPPLY_HOME:      12,   // дома: ускоренное пополнение
+  SUPPLY_FRIENDLY:   4,
+  SUPPLY_NEUTRAL:   -5,
+  SUPPLY_ENEMY:    -10,
 
   ATTRITION_RATE: 0.02, // 2%/ход при supply < 30
+
+  // ── Ёмкость провианта по типу местности (макс. солдат без штрафа) ──
+  // Превышение → расход провианта пропорционально перегрузке
+  TERRAIN_SUPPLY_CAPACITY: {
+    plains:       6000,   // широкие поля, лёгкий фуражир
+    river_valley: 7000,   // вода и плодородие
+    coastal_city: 9000,   // морской подвоз, рыба, торговля
+    hills:        3500,   // пересечённая местность, мало еды
+    mountains:    1500,   // почти нет ресурсов
+    strait:       5000,   // узкий пролив, ограничен подвоз
+    ocean:           0,   // нельзя стоять
+  },
+
+  // Бонус к ёмкости за порт в регионе
+  PORT_CAPACITY_BONUS:    2500,
+  MIL_PORT_CAPACITY_BONUS: 1000,
+
+  // При перегрузке > 100% — дополнительный расход провианта за ход
+  OVERCAP_SUPPLY_DRAIN: 15,   // за каждые 100% сверх нормы
 };
+
 
 // ── Создание армии ───────────────────────────────────────────────────
 
@@ -308,21 +328,72 @@ function _checkSiegeOnArrival(army) {
   }
 }
 
+// Возвращает максимальную ёмкость провианта для региона (с учётом построек).
+function _getRegionSupplyCapacity(region) {
+  if (!region) return 0;
+  const terrain = region.terrain ?? 'plains';
+  let capacity = ARMY_MOVE.TERRAIN_SUPPLY_CAPACITY[terrain] ?? 3000;
+
+  // Бонусы от построек порта
+  const slots = region.building_slots ?? [];
+  for (const slot of slots) {
+    if (slot.status === 'paused' || !slot.building) continue;
+    if (slot.building === 'port')          capacity += ARMY_MOVE.PORT_CAPACITY_BONUS     * (slot.level ?? 1);
+    if (slot.building === 'military_port') capacity += ARMY_MOVE.MIL_PORT_CAPACITY_BONUS * (slot.level ?? 1);
+  }
+  return capacity;
+}
+
+// Суммарное число войск всех армий в регионе (исключая расформированные).
+function _getTotalTroopsInRegion(regionId) {
+  const armies = GAME_STATE.armies ?? [];
+  let total = 0;
+  for (const a of armies) {
+    if (a.state === 'disbanded' || a.position !== regionId) continue;
+    total += (a.units?.infantry    ?? 0)
+           + (a.units?.cavalry     ?? 0)
+           + (a.units?.mercenaries ?? 0)
+           + (a.units?.artillery   ?? 0);
+  }
+  return total;
+}
+
 function _processSupply(army) {
   const region = _getRegionData(army.position);
   if (!region) return;
 
   const owner = region.nation;
   let delta;
-  if (owner === army.nation)                         delta = ARMY_MOVE.SUPPLY_HOME;
-  else if (_isFriendlyTerritory(army.position, army.nation)) delta = ARMY_MOVE.SUPPLY_FRIENDLY;
-  else if (owner === 'neutral' || owner === 'ocean') delta = ARMY_MOVE.SUPPLY_NEUTRAL;
-  else                                               delta = ARMY_MOVE.SUPPLY_ENEMY;
+  if (owner === army.nation)                                     delta = ARMY_MOVE.SUPPLY_HOME;
+  else if (_isFriendlyTerritory(army.position, army.nation))    delta = ARMY_MOVE.SUPPLY_FRIENDLY;
+  else if (owner === 'neutral' || owner === 'ocean')             delta = ARMY_MOVE.SUPPLY_NEUTRAL;
+  else                                                           delta = ARMY_MOVE.SUPPLY_ENEMY;
 
   // Логистика командира снижает потери снабжения
-  const cmd   = getArmyCommander(army);
-  const log   = (cmd?.skills?.logistics ?? 0) * 0.5;
+  const cmd = getArmyCommander(army);
+  const log = (cmd?.skills?.logistics ?? 0) * 0.5;
   if (delta < 0) delta = Math.min(0, delta + log);
+
+  // ── Штраф за перегрузку региона ─────────────────────────────────────
+  const capacity     = _getRegionSupplyCapacity(region);
+  const totalTroops  = capacity > 0 ? _getTotalTroopsInRegion(army.position) : 0;
+  const overloadRatio = capacity > 0 ? totalTroops / capacity : 0;
+
+  if (capacity === 0 && totalTroops > 0) {
+    // Непроходимый тип (океан) — максимальный штраф
+    delta -= ARMY_MOVE.OVERCAP_SUPPLY_DRAIN * 5;
+  } else if (overloadRatio > 1.0) {
+    // Перегрузка: каждые 100% сверх нормы = -OVERCAP_SUPPLY_DRAIN за ход
+    delta -= ARMY_MOVE.OVERCAP_SUPPLY_DRAIN * (overloadRatio - 1.0);
+  } else if (overloadRatio > 0.8) {
+    // Приближение к пределу: небольшой линейный штраф
+    delta -= ARMY_MOVE.OVERCAP_SUPPLY_DRAIN * 0.3 * ((overloadRatio - 0.8) / 0.2);
+  }
+
+  // Сохраняем диагностику для UI
+  army._supply_capacity     = capacity;
+  army._supply_region_load  = totalTroops;
+  army._supply_overload     = overloadRatio;
 
   army.supply = Math.max(0, Math.min(100, army.supply + delta));
 
@@ -342,6 +413,14 @@ function _processSupply(army) {
     if (army.nation === GAME_STATE.player_nation && army.supply < 10 && GAME_STATE.turn % 3 === 0) {
       if (typeof addEventLog === 'function')
         addEventLog(`⚠️ ${army.name}: критическая нехватка снабжения! Потери от истощения.`, 'warning');
+    }
+  }
+
+  // Предупреждение о перегрузке для игрока
+  if (army.nation === GAME_STATE.player_nation && overloadRatio > 1.2 && GAME_STATE.turn % 4 === 0) {
+    if (typeof addEventLog === 'function') {
+      const regionName = region.name ?? army.position;
+      addEventLog(`⚠️ ${army.name}: перегрузка региона ${regionName} (${Math.round(overloadRatio * 100)}% от ёмкости). Потери снабжения ускорены.`, 'warning');
     }
   }
 }
