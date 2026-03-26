@@ -412,7 +412,7 @@ function _dpRenderTreatiesTab(playerNationId) {
     const oNat  = GAME_STATE.nations[other];
     const sts   = statusDef[t.status] ?? { icon: '📄', label: t.status, cls: '' };
     const turn  = t.turn_signed ? `Ход ${t.turn_signed}` : '';
-    const dur   = t.duration    ? `${t.duration} ходов` : '';
+    const dur   = t.duration    ? `${t.duration} лет` : '';
     const breakBtn = t.status === 'active'
       ? `<button class="dp-arc-break" onclick="dtBreakTreaty('${t.id}')">Разорвать</button>` : '';
     return `<div class="dp-arc-row">

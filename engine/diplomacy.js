@@ -18,21 +18,24 @@
 // ТИПЫ ДОГОВОРОВ
 // ──────────────────────────────────────────────────────────────
 
+// 1 год = 12 ходов (месяцев). Все default_duration хранятся в ГОДАХ.
+const TURNS_PER_YEAR = 12;
+
 const TREATY_TYPES = {
   trade_agreement: {
     label:       'Торговый договор',
     icon:        '💼',
     description: 'Снижение пошлин и взаимный доступ к рынкам.',
     effects: { trade_bonus: 0.15, market_access: true },
-    default_duration: 10,
+    default_duration: 10,   // лет
     ai_weight: 1.2,   // насколько AI склонен принять (multiplier от отношений)
   },
   non_aggression: {
     label:       'Пакт о ненападении',
     icon:        '🕊',
-    description: 'Обе стороны обязуются не нападать N ходов.',
+    description: 'Обе стороны обязуются не нападать N лет.',
     effects: { forbid_attack: true },
-    default_duration: 15,
+    default_duration: 10,   // лет
     ai_weight: 1.1,
   },
   defensive_alliance: {
@@ -40,7 +43,7 @@ const TREATY_TYPES = {
     icon:        '🛡',
     description: 'Автоматическое вступление в войну при нападении на союзника.',
     effects: { auto_defend: true, military_access: true },
-    default_duration: 20,
+    default_duration: 10,   // лет
     ai_weight: 0.8,
   },
   military_alliance: {
@@ -48,7 +51,7 @@ const TREATY_TYPES = {
     icon:        '⚔',
     description: 'Полное военное сотрудничество, совместные кампании.',
     effects: { auto_defend: true, joint_attack: true, military_access: true, trade_bonus: 0.10 },
-    default_duration: 20,
+    default_duration: 15,   // лет
     ai_weight: 0.6,
   },
   marriage_alliance: {
@@ -80,7 +83,7 @@ const TREATY_TYPES = {
     icon:        '🚶',
     description: 'Право прохода армий через территорию другой страны.',
     effects: { military_access: true },
-    default_duration: 8,
+    default_duration: 5,    // лет
     ai_weight: 0.85,
   },
   war_reparations: {
@@ -88,7 +91,7 @@ const TREATY_TYPES = {
     icon:        '💰',
     description: 'Проигравший выплачивает единовременно или по ходам.',
     effects: { reparations: true },
-    default_duration: 5,
+    default_duration: 5,    // лет
     ai_weight: 0.5,
   },
   territorial_exchange: {
@@ -104,7 +107,7 @@ const TREATY_TYPES = {
     icon:        '⚡',
     description: 'Объединённые армии против общего врага. Добыча делится.',
     effects: { joint_attack: true, shared_loot: 0.5 },
-    default_duration: 6,
+    default_duration: 2,    // лет
     ai_weight: 0.7,
   },
   cultural_exchange: {
@@ -112,7 +115,7 @@ const TREATY_TYPES = {
     icon:        '🎭',
     description: '+стабильность, +науки. Снижение культурной напряжённости.',
     effects: { stability_bonus: 3, tech_bonus: 0.05 },
-    default_duration: 12,
+    default_duration: 5,    // лет
     ai_weight: 1.0,
   },
   custom: {
@@ -264,12 +267,13 @@ function createTreaty(nationA, nationB, type, conditions, dialogueLog) {
     status:       'active',
     parties:      [nationA, nationB],
     turn_signed:  turn,
-    duration:     conditions.duration ?? tDef.default_duration,  // null = бессрочный
+    duration:     conditions.duration ?? tDef.default_duration,  // в годах, null = бессрочный
     conditions:   { ...conditions },
     effects:      { ...tDef.effects, ...( conditions.effects || {}) },
     dialogue_log: dialogueLog || [],
-    turn_expires: conditions.duration
-      ? turn + (conditions.duration ?? tDef.default_duration ?? 0)
+    // duration хранится в годах; 1 год = TURNS_PER_YEAR (12) ходов
+    turn_expires: (conditions.duration ?? tDef.default_duration)
+      ? turn + (conditions.duration ?? tDef.default_duration ?? 0) * TURNS_PER_YEAR
       : null,
   };
 

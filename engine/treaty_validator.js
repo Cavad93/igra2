@@ -17,7 +17,7 @@ const TREATY_LIMITS = {
   MAX_REPARATION_TURN_PCT:  0.10,   // макс. контрибуция/ход: 10% казны плательщика
   MAX_REPARATION_TOTAL_PCT: 0.50,   // единовременно: не более 50% казны
   MAX_REGIONS_EXCHANGE:     3,      // передача регионов за раз
-  MAX_DURATION:             50,     // макс. срок договора в ходах
+  MAX_DURATION:             50,     // макс. срок договора в годах
   MIN_REL_ALLIANCE:         20,     // мин. отношения для оборонного союза
   MIN_REL_MILITARY:         40,     // мин. отношения для военного союза
   MIN_REL_MARRIAGE:         10,     // мин. отношения для брачного союза
@@ -151,7 +151,7 @@ function validateTreaty(treaty, playerNationId, aiNationId) {
   if (cond.duration !== null && cond.duration !== undefined) {
     const max = TREATY_LIMITS.MAX_DURATION;
     if (cond.duration > max) {
-      result.issues.push(`Срок ограничен ${max} ходами (было ${cond.duration})`);
+      result.issues.push(`Срок ограничен ${max} годами (было ${cond.duration})`);
       result.modified.duration = max;
     }
   }

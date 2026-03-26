@@ -46,7 +46,7 @@ function _buildInterpreterPrompt(treaty, playerNationId, aiNationId) {
   one_time_payment: number,      // единовременный платёж (монет)
   reparations_per_turn: number,  // платёж каждый ход (монет)
   tribute_pct: number,           // дань (0.0–0.25)
-  duration: number,              // срок (ходов, null=бессрочно)
+  duration: number,              // срок в ГОДАХ (null=бессрочно; 1 год = 12 игровых ходов)
   transfer_regions: string[],    // список id регионов для передачи
   tech_bonus: number,            // бонус к технологиям (0.0–0.15)
   stability_bonus: number,       // бонус стабильности (0–5)

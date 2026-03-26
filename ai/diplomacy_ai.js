@@ -81,6 +81,7 @@ ${treatyList}
 \`\`\`json
 {"treaty_agreed": true, "treaty_type": "тип_из_списка", "conditions": {"duration": 10, "notes": "особые условия если есть"}}
 \`\`\`
+duration — срок договора в ГОДАХ (1 год = 12 игровых ходов). Например: 5 лет = duration:5, 10 лет = duration:10.
 
 Для trade_agreement можно указать дополнительные торговые условия:
 \`\`\`json
@@ -239,7 +240,7 @@ async function callTreatyDraftAI(aiNationId, playerNationId, chatHistory, treaty
 Итог переговоров (последние реплики):
 ${chatSummary}
 
-Особые условия: ${conditions?.notes ?? conditions?.duration ? `срок ${conditions.duration} ходов` : 'не указаны'}
+Особые условия: ${conditions?.notes ?? conditions?.duration ? `срок ${conditions.duration} лет` : 'не указаны'}
 
 Структура документа:
 1. Преамбула (стороны, дата, место)
