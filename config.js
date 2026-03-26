@@ -1,14 +1,17 @@
 // Конфигурация игры — API ключ и константы баланса
 const CONFIG = {
-  // Установите свой ключ API Anthropic здесь или через UI
+  // ── Anthropic (Claude Sonnet — только диалоги с игроком) ────────────
   API_KEY: '',
   API_URL: 'https://api.anthropic.com/v1/messages',
 
-  // Haiku 4.5 — быстрые задачи: парсинг команд, реакции персонажей, генерация
-  MODEL_HAIKU: 'claude-haiku-4-5-20251001',
+  // ── Groq (Llama 3.3 70B — все фоновые AI-задачи вместо Haiku) ───────
+  // Получить бесплатный ключ: https://console.groq.com → API Keys
+  GROQ_API_KEY: '',
+  GROQ_API_URL: 'https://api.groq.com/openai/v1/chat/completions',
 
-  // Sonnet 4.6 — сложные задачи: дипломатия, решения AI-наций, управление государством
-  MODEL_SONNET: 'claude-sonnet-4-6',
+  // Haiku заменён на Groq Llama 3.3 70B (быстрее и дешевле)
+  MODEL_HAIKU:  'llama-3.3-70b-versatile',  // → Groq
+  MODEL_SONNET: 'claude-sonnet-4-6',         // → Anthropic (диалоги)
 
   // ══════════════════════════════════════════════════════════════
   // ЕДИНИЦА ИЗМЕРЕНИЯ ТОВАРОВ — КАНОНИЧЕСКИЙ СТАНДАРТ

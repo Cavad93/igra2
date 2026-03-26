@@ -3262,6 +3262,15 @@
     .akm-btn:disabled { opacity: 0.45; cursor: default; }
     .akm-footer { font-size: 11px; color: var(--text-dim); }
     .akm-footer a { color: var(--text-gold); }
+    .akm-key-section { display: flex; flex-direction: column; gap: 4px; }
+    .akm-key-label { font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .akm-key-badge { font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 3px; }
+    .akm-badge-groq { background: rgba(0,200,100,.2); color: #4caf50; border: 1px solid rgba(0,200,100,.3); }
+    .akm-badge-anthropic { background: rgba(180,120,50,.2); color: var(--text-gold); border: 1px solid rgba(180,120,50,.3); }
+    .akm-key-tag { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: rgba(76,175,80,.15); color: #81c784; border: 1px solid rgba(76,175,80,.2); }
+    .akm-tag-optional { background: rgba(100,100,100,.15); color: #888; border-color: rgba(100,100,100,.2); }
+    .akm-key-hint { font-size: 10px; color: var(--text-dim); }
+    .akm-key-hint a { color: var(--text-gold); }
     .akm-change-link {
       display: inline-block; margin-top: 8px;
       font-size: 11px; color: var(--text-dim);
@@ -6180,22 +6189,43 @@
   <div id="api-key-modal">
     <div class="akm-box">
       <div class="akm-seal">🔑</div>
-      <h2 class="akm-title">API Ключ Anthropic</h2>
+      <h2 class="akm-title">API Ключи</h2>
       <p class="akm-desc">
-        Для работы AI-советников, дипломатии и принятия решений<br>
-        необходим ключ Anthropic API.<br>
-        <strong>Ключ будет зашифрован и сохранён на вашем устройстве.</strong>
+        Введите хотя бы один ключ. Оба ключа шифруются и хранятся на вашем устройстве.
       </p>
-      <input type="password" id="akm-input" class="akm-input"
-             placeholder="sk-ant-api03-..."
-             onkeydown="_akmKeyDown(event)" autocomplete="off" spellcheck="false">
+
+      <div class="akm-key-section">
+        <div class="akm-key-label">
+          <span class="akm-key-badge akm-badge-groq">Groq</span>
+          Llama 3.3 70B — фоновые решения AI-наций
+          <span class="akm-key-tag">Бесплатно</span>
+        </div>
+        <input type="password" id="akm-groq-input" class="akm-input"
+               placeholder="gsk_..."
+               onkeydown="_akmKeyDown(event)" autocomplete="off" spellcheck="false">
+        <div class="akm-key-hint">
+          Получить: <a href="https://console.groq.com" target="_blank">console.groq.com</a> → API Keys
+        </div>
+      </div>
+
+      <div class="akm-key-section" style="margin-top:12px">
+        <div class="akm-key-label">
+          <span class="akm-key-badge akm-badge-anthropic">Anthropic</span>
+          Claude Sonnet — дипломатические диалоги с игроком
+          <span class="akm-key-tag akm-tag-optional">Необязательно</span>
+        </div>
+        <input type="password" id="akm-input" class="akm-input"
+               placeholder="sk-ant-api03-..."
+               onkeydown="_akmKeyDown(event)" autocomplete="off" spellcheck="false">
+        <div class="akm-key-hint">
+          Получить: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>
+        </div>
+      </div>
+
       <div id="akm-error" class="akm-error"></div>
       <button id="akm-btn" class="akm-btn" onclick="submitAPIKey()">
         Сохранить и продолжить
       </button>
-      <div class="akm-footer">
-        Получить ключ: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>
-      </div>
     </div>
   </div>
 
@@ -6333,7 +6363,7 @@
       const btn = document.getElementById('generate-chars-btn');
       if (!btn) return;
 
-      if (!CONFIG.API_KEY) {
+      if (!CONFIG.GROQ_API_KEY && !CONFIG.API_KEY) {
         showAPIKeyPrompt();
         return;
       }

@@ -130,8 +130,8 @@ preferential_goods: товары с преимущественным право�
  * @returns {Promise<string>} — текст ответа AI-лидера
  */
 async function callDiplomacyAI(aiNationId, playerNationId, messages, model) {
-  if (!CONFIG.API_KEY) throw new Error('API ключ не установлен');
   if (!messages || messages.length === 0) throw new Error('Пустая история диалога');
+
   // Если модель не передана — берём из тира, иначе Sonnet по умолчанию
   if (!model) {
     model = typeof getDialogueModel === 'function'
@@ -143,24 +143,42 @@ async function callDiplomacyAI(aiNationId, playerNationId, messages, model) {
   const controller = new AbortController();
   const timer      = setTimeout(() => controller.abort(), 60_000);
 
+  // ── Маршрутизация: Groq (Llama) или Anthropic (Claude) ─────────────
+  const isGroq = model && !model.startsWith('claude-');
+
   let response;
   try {
-    response = await fetch(CONFIG.API_URL, {
-      method:  'POST',
-      signal:  controller.signal,
-      headers: {
-        'Content-Type':                          'application/json',
-        'x-api-key':                             CONFIG.API_KEY,
-        'anthropic-version':                     '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 700,
-        system,
-        messages,
-      }),
-    });
+    if (isGroq) {
+      if (!CONFIG.GROQ_API_KEY) throw new Error('Groq API ключ не установлен');
+      // Groq/OpenAI формат: system как первое сообщение в массиве
+      const groqMessages = [
+        { role: 'system', content: system },
+        ...messages,
+      ];
+      response = await fetch(CONFIG.GROQ_API_URL, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${CONFIG.GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({ model, max_tokens: 700, messages: groqMessages }),
+      });
+    } else {
+      if (!CONFIG.API_KEY) throw new Error('Anthropic API ключ не установлен');
+      // Anthropic формат: system отдельно, messages только user/assistant
+      response = await fetch(CONFIG.API_URL, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type':                              'application/json',
+          'x-api-key':                                 CONFIG.API_KEY,
+          'anthropic-version':                         '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({ model, max_tokens: 700, system, messages }),
+      });
+    }
   } catch (err) {
     if (err.name === 'AbortError') throw new Error('AI таймаут (60с)');
     throw err;
@@ -174,7 +192,8 @@ async function callDiplomacyAI(aiNationId, playerNationId, messages, model) {
   }
 
   const data = await response.json();
-  const text = data.content?.[0]?.text;
+  // Groq: data.choices[0].message.content | Anthropic: data.content[0].text
+  const text = isGroq ? data.choices?.[0]?.message?.content : data.content?.[0]?.text;
   if (!text) throw new Error('Пустой ответ от API');
   return text;
 }

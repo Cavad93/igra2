@@ -1,12 +1,13 @@
-// ui/apikey.js — Управление API ключом
-// Ключ шифруется через Web Crypto API (AES-GCM + PBKDF2) и хранится в localStorage.
-// Открытый текст ключа НИКОГДА не сохраняется напрямую.
+// ui/apikey.js — Управление API ключами (Anthropic + Groq)
+// Ключи шифруются через Web Crypto API (AES-GCM + PBKDF2) и хранятся в localStorage.
+// Открытый текст ключей НИКОГДА не сохраняется напрямую.
 
 'use strict';
 
-const _AK_DATA   = '_akd';                        // зашифрованный ключ
-const _AK_SALT   = '_aks';                        // соль PBKDF2
-const _AK_LEGACY = 'ancient_strategy_api_key';   // старый незашифрованный ключ (миграция)
+const _AK_DATA      = '_akd';                        // зашифрованный Anthropic ключ
+const _AK_GROQ_DATA = '_akgd';                       // зашифрованный Groq ключ
+const _AK_SALT      = '_aks';                        // соль PBKDF2 (общая)
+const _AK_LEGACY    = 'ancient_strategy_api_key';   // старый незашифрованный ключ (миграция)
 
 // ──────────────────────────────────────────────────────────────
 // КРИПТОГРАФИЯ  (AES-256-GCM + PBKDF2-SHA256, 100 000 итераций)
@@ -74,6 +75,7 @@ async function _decrypt(b64) {
 // ПУБЛИЧНОЕ API: загрузка / сохранение / удаление
 // ──────────────────────────────────────────────────────────────
 
+// ── Anthropic ключ ────────────────────────────────────────────
 async function loadEncryptedAPIKey() {
   // Миграция старого открытого ключа → зашифровать и убрать
   const legacy = localStorage.getItem(_AK_LEGACY);
@@ -96,7 +98,7 @@ async function loadEncryptedAPIKey() {
       return true;
     }
   } catch (e) {
-    console.warn('[apikey] Не удалось расшифровать ключ:', e.message);
+    console.warn('[apikey] Не удалось расшифровать Anthropic ключ:', e.message);
     localStorage.removeItem(_AK_DATA);
   }
   return false;
@@ -108,11 +110,37 @@ async function saveEncryptedAPIKey(apiKey) {
   CONFIG.API_KEY = apiKey;
 }
 
+// ── Groq ключ ─────────────────────────────────────────────────
+async function loadGroqAPIKey() {
+  const stored = localStorage.getItem(_AK_GROQ_DATA);
+  if (!stored) return false;
+
+  try {
+    const key = await _decrypt(stored);
+    if (key.length > 10) {
+      CONFIG.GROQ_API_KEY = key;
+      return true;
+    }
+  } catch (e) {
+    console.warn('[apikey] Не удалось расшифровать Groq ключ:', e.message);
+    localStorage.removeItem(_AK_GROQ_DATA);
+  }
+  return false;
+}
+
+async function saveGroqAPIKey(apiKey) {
+  const encrypted = await _encrypt(apiKey);
+  localStorage.setItem(_AK_GROQ_DATA, encrypted);
+  CONFIG.GROQ_API_KEY = apiKey;
+}
+
 function deleteEncryptedAPIKey() {
   localStorage.removeItem(_AK_DATA);
+  localStorage.removeItem(_AK_GROQ_DATA);
   localStorage.removeItem(_AK_SALT);
   localStorage.removeItem(_AK_LEGACY);
-  CONFIG.API_KEY = '';
+  CONFIG.API_KEY      = '';
+  CONFIG.GROQ_API_KEY = '';
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -142,16 +170,24 @@ function hideAPIKeyModal() {
 }
 
 async function submitAPIKey() {
-  const inp = document.getElementById('akm-input');
-  const btn = document.getElementById('akm-btn');
-  if (!inp || !btn) return;
+  const inpAnthropic = document.getElementById('akm-input');
+  const inpGroq      = document.getElementById('akm-groq-input');
+  const btn          = document.getElementById('akm-btn');
+  if (!btn) return;
 
-  const key = inp.value.trim();
-  if (!key.startsWith('sk-ant-')) {
-    _akmSetError('Неверный формат. Ключ должен начинаться с sk-ant-');
-    inp.style.animation = 'none';
-    void inp.offsetWidth;  // reflow для перезапуска анимации
-    inp.style.animation = 'akShake 0.4s ease';
+  const anthropicKey = inpAnthropic?.value.trim() ?? '';
+  const groqKey      = inpGroq?.value.trim() ?? '';
+
+  // Нужен хотя бы один ключ
+  if (!anthropicKey && !groqKey) {
+    _akmSetError('Введите хотя бы один ключ (Groq или Anthropic)');
+    return;
+  }
+  if (anthropicKey && !anthropicKey.startsWith('sk-ant-')) {
+    _akmSetError('Anthropic ключ должен начинаться с sk-ant-');
+    inpAnthropic.style.animation = 'none';
+    void inpAnthropic.offsetWidth;
+    inpAnthropic.style.animation = 'akShake 0.4s ease';
     return;
   }
 
@@ -160,13 +196,19 @@ async function submitAPIKey() {
   _akmSetError('');
 
   try {
-    await saveEncryptedAPIKey(key);
+    if (anthropicKey) await saveEncryptedAPIKey(anthropicKey);
+    if (groqKey)      await saveGroqAPIKey(groqKey);
+
     hideAPIKeyModal();
     const modal = document.getElementById('api-key-modal');
     if (modal && modal._cb) { modal._cb(); modal._cb = null; }
-    // Показываем подтверждение в AI-блоке (если уже инициализирован)
+
+    const saved = [
+      anthropicKey ? 'Anthropic' : null,
+      groqKey      ? 'Groq'      : null,
+    ].filter(Boolean).join(' + ');
     if (typeof showAIResponse === 'function') {
-      showAIResponse('✅ API ключ сохранён и зашифрован на устройстве.', 'success');
+      showAIResponse(`✅ Ключи сохранены и зашифрованы: ${saved}`, 'success');
     }
   } catch (e) {
     _akmSetError('Ошибка шифрования: ' + e.message);
@@ -191,6 +233,8 @@ function changeAPIKey() {
 // ──────────────────────────────────────────────────────────────
 
 async function initAPIKey() {
-  const found = await loadEncryptedAPIKey();
-  if (!found) showAPIKeyModal(null);
+  const foundAnthropic = await loadEncryptedAPIKey();
+  const foundGroq      = await loadGroqAPIKey();
+  // Показываем модал если нет ни одного ключа
+  if (!foundAnthropic && !foundGroq) showAPIKeyModal(null);
 }

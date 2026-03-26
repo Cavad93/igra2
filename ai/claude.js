@@ -93,12 +93,75 @@ function _stripJSONComments(str) {
 // БАЗОВАЯ ФУНКЦИЯ ВЫЗОВА API
 // ──────────────────────────────────────────────────────────────
 
-// Таймаут API-вызовов: 30 с для коротких запросов (haiku), 60 с для длинных
+// Таймаут API-вызовов
 const _API_TIMEOUT_MS = 30_000;
 
-async function callClaude(system, user, maxTokens = 1024, model = CONFIG.MODEL_HAIKU) {
+// ── Определяем является ли модель Groq-моделью ────────────────────────
+function _isGroqModel(model) {
+  // Groq модели — Llama, Mixtral, Gemma и т.д. (не начинаются с "claude-")
+  return model && !model.startsWith('claude-');
+}
+
+// ── Groq API (OpenAI-совместимый формат) ──────────────────────────────
+async function callGroq(system, user, maxTokens = 1024, model = CONFIG.MODEL_HAIKU) {
+  if (!CONFIG.GROQ_API_KEY) {
+    throw new Error('Groq API ключ не установлен (CONFIG.GROQ_API_KEY)');
+  }
+
+  const controller = new AbortController();
+  const timeoutMs  = maxTokens > 512 ? 60_000 : _API_TIMEOUT_MS;
+  const timer      = setTimeout(() => controller.abort(), timeoutMs);
+
+  // Определяем нужен ли JSON-режим (структурированный вывод)
+  // Включаем для задач где ожидаем JSON в ответе
+  const wantsJson = user.includes('"action"') || user.includes('верни JSON') ||
+                    user.includes('Верни JSON') || system.includes('ТОЛЬКО JSON');
+
+  const body = {
+    model,
+    max_tokens: maxTokens,
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user',   content: user },
+    ],
+    ...(wantsJson && { response_format: { type: 'json_object' } }),
+  };
+
+  let response;
+  try {
+    response = await fetch(CONFIG.GROQ_API_URL, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${CONFIG.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error(`Groq timeout (${timeoutMs / 1000}s)`);
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (!response.ok) {
+    const errBody = await response.text().catch(() => '');
+    // 429 = rate limit — пробрасываем явно чтобы вызывающий код мог откатиться к fallback
+    if (response.status === 429) throw new Error(`Groq rate limit (429): ${errBody.slice(0, 100)}`);
+    throw new Error(`Groq API ошибка ${response.status}: ${errBody.slice(0, 200)}`);
+  }
+
+  const data = await response.json();
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error('Пустой ответ от Groq');
+  return text;
+}
+
+// ── Anthropic Claude API ───────────────────────────────────────────────
+async function _callAnthropic(system, user, maxTokens, model) {
   if (!CONFIG.API_KEY) {
-    throw new Error('API ключ не установлен');
+    throw new Error('Anthropic API ключ не установлен (CONFIG.API_KEY)');
   }
 
   const controller = new AbortController();
@@ -120,13 +183,11 @@ async function callClaude(system, user, maxTokens = 1024, model = CONFIG.MODEL_H
         model,
         max_tokens: maxTokens,
         system,
-        messages: [
-          { role: 'user', content: user },
-        ],
+        messages: [{ role: 'user', content: user }],
       }),
     });
   } catch (err) {
-    if (err.name === 'AbortError') throw new Error(`API timeout (${timeoutMs / 1000}s)`);
+    if (err.name === 'AbortError') throw new Error(`Anthropic timeout (${timeoutMs / 1000}s)`);
     throw err;
   } finally {
     clearTimeout(timer);
@@ -134,16 +195,22 @@ async function callClaude(system, user, maxTokens = 1024, model = CONFIG.MODEL_H
 
   if (!response.ok) {
     const errBody = await response.text().catch(() => '');
-    throw new Error(`API ошибка ${response.status}: ${errBody.slice(0, 200)}`);
+    throw new Error(`Anthropic API ошибка ${response.status}: ${errBody.slice(0, 200)}`);
   }
 
   const data = await response.json();
-
-  if (!data.content || !data.content[0]) {
-    throw new Error('Пустой ответ от API');
-  }
-
+  if (!data.content?.[0]) throw new Error('Пустой ответ от Anthropic');
   return data.content[0].text;
+}
+
+// ── Единая точка входа: маршрутизация по модели ───────────────────────
+// MODEL_HAIKU (llama-3.3-70b-versatile) → Groq
+// MODEL_SONNET (claude-sonnet-4-6)      → Anthropic
+async function callClaude(system, user, maxTokens = 1024, model = CONFIG.MODEL_HAIKU) {
+  if (_isGroqModel(model)) {
+    return callGroq(system, user, maxTokens, model);
+  }
+  return _callAnthropic(system, user, maxTokens, model);
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -942,7 +1009,7 @@ async function generateSenateDebateViaLLM(law, speakers, playerSpeech, senateCtx
 // конкретных изменений игровой механики.
 // Возвращает: { changes[], narrative } или null при ошибке
 async function analyzeLawEffectsViaLLM(law, nationId) {
-  if (!CONFIG.API_KEY) return null;
+  if (!CONFIG.GROQ_API_KEY && !CONFIG.API_KEY) return null;
   try {
     const nation = GAME_STATE.nations[nationId];
     const arch = nation?.senate_config?.state_architecture ?? null;

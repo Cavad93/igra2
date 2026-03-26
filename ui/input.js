@@ -69,8 +69,8 @@ async function handleCommand() {
   showAIThinking(true);
 
   try {
-    // Проверяем ключ API
-    if (!CONFIG.API_KEY) {
+    // Проверяем ключ API (Groq для парсинга команд, Anthropic как запасной)
+    if (!CONFIG.GROQ_API_KEY && !CONFIG.API_KEY) {
       showAPIKeyPrompt();
       return;
     }
