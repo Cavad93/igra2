@@ -508,16 +508,16 @@ function _applyOrderEffects(order, quality, char, nation) {
       const maxByBudget  = Math.min(5, Math.floor(budget / costPerLvl));
       const maxByQuality = Math.max(1, Math.round(maxByBudget * qf));
 
-      // Проверяем существующий слот (не превышаем max_level здания)
+      // Проверяем существующий слот
       const existingSlot = (region.building_slots || [])
         .find(s => s.building_id === buildingId && s.status !== 'demolished');
-      const currentLevel  = existingSlot ? (existingSlot.level || 1) : 0;
-      const hardMax       = Math.min(5, bDef.max_level ?? 5);
-      const levelsToAdd   = Math.min(maxByQuality, hardMax - currentLevel);
+      const currentLevel = existingSlot ? (existingSlot.level || 1) : 0;
+      // max_level теперь null = без ограничений; бюджет и качество — единственный лимит
+      const levelsToAdd  = maxByQuality;
 
       if (levelsToAdd <= 0) {
         const rName = MAP_REGIONS?.[regionId]?.name ?? regionId;
-        return `Проект: ${bDef.name} уже на максимальном уровне (${currentLevel}) в ${rName}.`;
+        return `Проект: недостаточно бюджета для строительства ${bDef.name} в ${rName}.`;
       }
 
       const totalCost  = levelsToAdd * costPerLvl;

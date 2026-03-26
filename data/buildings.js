@@ -41,7 +41,7 @@ const BUILDINGS = {
     build_turns:        4,
     terrain_restriction: ['coastal_city'],
     max_per_region:     1,
-    max_level:          1,
+    max_level: null,
 
     production_output: [
       { good: 'fish',        base_rate: 60 },  // +60 рыбы/ход на 1000 моряков
@@ -75,7 +75,7 @@ const BUILDINGS = {
     build_turns:        5,
     terrain_restriction: ['coastal_city'],
     max_per_region:     1,
-    max_level:          1,
+    max_level: null,
 
     production_output: [],   // выход — военные корабли, учитываются отдельно
 
@@ -105,7 +105,7 @@ const BUILDINGS = {
     build_turns:        3,
     terrain_restriction: null,  // строится на любой суше
     max_per_region:     1,
-    max_level:          2,
+    max_level: null,
 
     production_output: [],
 
@@ -142,7 +142,7 @@ const BUILDINGS = {
     build_turns:        5,
     terrain_restriction: null,
     max_per_region:     1,
-    max_level:          1,
+    max_level: null,
 
     production_output: [],
 
@@ -173,7 +173,7 @@ const BUILDINGS = {
     build_turns:        2,
     terrain_restriction: null,
     max_per_region:     1,
-    max_level:          3,
+    max_level: null,
 
     production_output: [],
 
@@ -205,7 +205,7 @@ const BUILDINGS = {
     build_turns:        3,
     terrain_restriction: null,
     max_per_region:     1,
-    max_level:          3,
+    max_level: null,
     nation_buildable:   true,
 
     production_output: [],
@@ -240,7 +240,7 @@ const BUILDINGS = {
     build_turns:        4,
     terrain_restriction: null,   // строится на любой суше
     max_per_region:     1,
-    max_level:          3,
+    max_level: null,
     nation_buildable:   true,
 
     production_output: [],
@@ -274,7 +274,7 @@ const BUILDINGS = {
     build_turns:        6,
     terrain_restriction: ['coastal_city'],   // только прибрежные регионы
     max_per_region:     1,
-    max_level:          3,
+    max_level: null,
     nation_buildable:   true,
 
     production_output: [],
@@ -305,7 +305,7 @@ const BUILDINGS = {
     build_turns:        8,
     terrain_restriction: null,
     max_per_region:     1,
-    max_level:          1,
+    max_level: null,
 
     production_output: [],
 
@@ -340,7 +340,7 @@ const BUILDINGS = {
     build_turns:        2,
     terrain_restriction: ['plains', 'hills', 'mountains'],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
 
     production_output: [
       { good: 'wool',    base_rate: 60 },
@@ -370,7 +370,7 @@ const BUILDINGS = {
     build_turns:        2,
     terrain_restriction: null,
     max_per_region:     1,
-    max_level:          1,
+    max_level: null,
 
     production_output: [],
 
@@ -406,7 +406,7 @@ const BUILDINGS = {
     build_turns:        6,
     terrain_restriction: ['plains', 'river_valley'],
     max_per_region:     1,
-    max_level:          1,
+    max_level: null,
 
     production_output: [],   // мультипликатор урожая, а не прямой выход
 
@@ -442,7 +442,7 @@ const BUILDINGS = {
     build_turns:        4,
     terrain_restriction: null,
     max_per_region:     1,
-    max_level:          2,
+    max_level: null,
 
     production_output: [],
 
@@ -481,7 +481,7 @@ const BUILDINGS = {
     build_turns:        8,
     terrain_restriction: null,
     max_per_region:     1,
-    max_level:          1,
+    max_level: null,
 
     production_output: [],
 
@@ -520,7 +520,7 @@ const BUILDINGS = {
     build_turns:        3,
     terrain_restriction: null,
     max_per_region:     1,
-    max_level:          1,
+    max_level: null,
 
     production_output: [],
 
@@ -548,7 +548,7 @@ const BUILDINGS = {
     build_turns:         3,
     terrain_restriction: null,
     max_per_region:      1,
-    max_level:          1,
+    max_level: null,
 
     production_output: [],
 
@@ -587,7 +587,7 @@ const BUILDINGS = {
     build_turns:        1,
     terrain_restriction: null,
     max_per_region:     null,
-    max_level:          5,
+    max_level: null,
 
     production_output: [],
 
@@ -626,7 +626,7 @@ const BUILDINGS = {
     build_turns:        4,
     terrain_restriction: null,
     max_per_region:     1,
-    max_level:          2,
+    max_level: null,
 
     production_output: [],
 
@@ -668,7 +668,7 @@ const BUILDINGS = {
     build_turns:        3,
     terrain_restriction: null,
     max_per_region:     null,
-    max_level:          5,
+    max_level: null,
 
     production_output: [
       { good: 'tools',   base_rate: 35 },
@@ -704,7 +704,7 @@ const BUILDINGS = {
     build_turns:        5,
     terrain_restriction: ['mountains', 'hills'],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
 
     production_output: [
       { good: 'iron',   base_rate: 80 },
@@ -738,7 +738,7 @@ const BUILDINGS = {
     build_turns:        3,
     terrain_restriction: ['coastal_city'],
     max_per_region:     1,
-    max_level:          3,
+    max_level: null,
 
     production_output: [
       { good: 'salt', base_rate: 120 },
@@ -767,7 +767,7 @@ const BUILDINGS = {
     build_turns:        2,
     terrain_restriction: ['mountains', 'hills'],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
 
     production_output: [
       { good: 'timber', base_rate: 90 },
@@ -795,7 +795,7 @@ const BUILDINGS = {
     build_turns:        2,
     terrain_restriction: ['river_valley', 'coastal_city', 'plains'],
     max_per_region:     null,
-    max_level:          5,
+    max_level: null,
 
     production_output: [
       { good: 'pottery', base_rate: 110 },  // увеличено: низкая цена → нужен объём
@@ -824,7 +824,7 @@ const BUILDINGS = {
     build_turns:        2,
     terrain_restriction: ['hills', 'plains', 'coastal_city'],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
 
     // Требует оливки на входе
     requires_input: [
@@ -858,7 +858,7 @@ const BUILDINGS = {
     build_turns:        3,
     terrain_restriction: ['hills', 'river_valley'],
     max_per_region:     null,
-    max_level:          5,
+    max_level: null,
 
     production_output: [
       { good: 'wine', base_rate: 80 },
@@ -1184,7 +1184,7 @@ const BUILDINGS = {
     terrain_restriction: ['plains', 'steppe', 'mediterranean_hills',
                           'hills', 'river_valley'],
     max_per_region: null,
-    max_level:   6,
+    max_level: null,
 
     production_output: [
       // (8/1000)×60×1.0 = 0.48 головы/мес на уровень
@@ -1224,7 +1224,7 @@ const BUILDINGS = {
     terrain_restriction: ['plains', 'steppe', 'river_valley',
                           'mediterranean_coast', 'mediterranean_hills', 'hills'],
     max_per_region: null,
-    max_level:   8,
+    max_level: null,
 
     production_output: [
       // (6/1000)×80×1.0 = 0.48 головы/мес на уровень
@@ -1261,7 +1261,7 @@ const BUILDINGS = {
     terrain_restriction:     ['mountains', 'hills'],
     region_tag_restriction:  ['sicily'],
     max_per_region:          null,
-    max_level:          4,
+    max_level: null,
 
     production_output: [
       { good: 'sulfur', base_rate: 80 },
@@ -1293,7 +1293,7 @@ const BUILDINGS = {
     terrain_restriction:     ['coastal_city'],
     region_tag_restriction:  ['sicily'],
     max_per_region:          1,
-    max_level:          3,
+    max_level: null,
 
     production_output: [
       { good: 'tuna', base_rate: 140 },  // 140 амфор/1000 рыбаков
@@ -1343,7 +1343,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
     maintenance_cost:   15,
     maintenance_goods:  {},
     effects: {
@@ -1386,7 +1386,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
     maintenance_cost:   20,
     maintenance_goods:  {},
     effects: {},
@@ -1428,7 +1428,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
     maintenance_cost:   18,
     maintenance_goods:  {},
     effects: {},
@@ -1470,7 +1470,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
     maintenance_cost:   25,
     maintenance_goods:  {},
     effects: {},
@@ -1512,7 +1512,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          5,
+    max_level: null,
     maintenance_cost:   3,
     maintenance_goods:  {},
     effects: {},
@@ -1557,7 +1557,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
     maintenance_cost:   12,
     maintenance_goods:  {},
     effects: {},
@@ -1597,7 +1597,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
     maintenance_cost:   6,
     maintenance_goods:  {},
     effects: {},
@@ -1637,7 +1637,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          5,
+    max_level: null,
     maintenance_cost:   8,
     maintenance_goods:  {},
     effects: {},
@@ -1675,7 +1675,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          6,
+    max_level: null,
     maintenance_cost:   2,
     maintenance_goods:  {},
     effects: {},
@@ -1714,7 +1714,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          5,
+    max_level: null,
     maintenance_cost:   5,
     maintenance_goods:  {},
     effects: {},
@@ -1754,7 +1754,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
     maintenance_cost:   5,
     maintenance_goods:  {},
     effects: {},
@@ -1793,7 +1793,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
     maintenance_cost:   4,
     maintenance_goods:  {},
     effects: {},
@@ -1834,7 +1834,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
     maintenance_cost:   8,
     maintenance_goods:  {},
     effects: {},
@@ -1877,7 +1877,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     1,
-    max_level:          3,
+    max_level: null,
     maintenance_cost:   10,
     maintenance_goods:  {},
     effects: {},
@@ -1914,7 +1914,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
     maintenance_cost:   8,
     maintenance_goods:  {},
     effects: {
@@ -1958,7 +1958,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          6,
+    max_level: null,
     maintenance_cost:   5,
     maintenance_goods:  {},
     effects: {},
@@ -1999,7 +1999,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
     maintenance_cost:   30,
     maintenance_goods:  {},
     effects: {},
@@ -2041,7 +2041,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          5,
+    max_level: null,
     maintenance_cost:   3,
     maintenance_goods:  {},
     effects: {},
@@ -2082,7 +2082,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
     maintenance_cost:   4,
     maintenance_goods:  {},
     effects: {},
@@ -2120,7 +2120,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     1,
-    max_level:          3,
+    max_level: null,
     maintenance_cost:   2,
     maintenance_goods:  {},
     effects: {},
@@ -2157,7 +2157,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
     maintenance_cost:   2,
     maintenance_goods:  {},
     effects: {},
@@ -2198,7 +2198,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
     maintenance_cost:   18,
     maintenance_goods:  {},
     effects: {},
@@ -2236,7 +2236,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     null,
-    max_level:          4,
+    max_level: null,
     maintenance_cost:   5,
     maintenance_goods:  {},
     effects: {},
@@ -2271,7 +2271,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     1,
-    max_level:          2,
+    max_level: null,
     maintenance_cost:   6,
     maintenance_goods:  {},
     effects: {
@@ -2315,7 +2315,7 @@ const BUILDINGS = {
     },
     terrain_restriction: [],
     max_per_region:     1,
-    max_level:          3,
+    max_level: null,
     maintenance_cost:   20,
     maintenance_goods:  {},
     effects: {
@@ -2344,7 +2344,7 @@ const BUILDINGS = {
     terrain_restriction:     ['river_valley', 'coastal_city'],
     region_tag_restriction:  ['sicily'],
     max_per_region:          1,
-    max_level:          2,
+    max_level: null,
 
     production_output: [
       { good: 'papyrus', base_rate: 60 },
