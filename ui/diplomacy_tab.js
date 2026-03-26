@@ -197,8 +197,18 @@ function _dpNationRow(n, playerNationId) {
   const treaties = typeof DiplomacyEngine !== 'undefined'
     ? DiplomacyEngine.getActiveTreaties(playerNationId, n.id) : [];
 
+  // Зона дипломатического охвата
+  const tier = typeof getNationTier === 'function' ? getNationTier(n.id) : 1;
+  const dist = typeof getDiploDistance === 'function' ? getDiploDistance(n.id) : null;
+  const TIER_BADGE = {
+    1: { icon: '🟢', label: 'Зона 1', title: 'Полная дипломатия' },
+    2: { icon: '🟡', label: 'Зона 2', title: 'Ограниченный контакт' },
+    3: { icon: '🔴', label: 'Зона 3', title: 'За горизонтом — недоступна' },
+  };
+  const badge = TIER_BADGE[tier] ?? TIER_BADGE[3];
+
   return `
-    <div class="dp-nation-card${active ? ' dp-nation-card--active' : ''}"
+    <div class="dp-nation-card${active ? ' dp-nation-card--active' : ''}${tier === 3 ? ' dp-nation-card--far' : ''}"
       onclick="dpSelectNation('${n.id}')">
       <div class="dp-nation-avatar" style="background:${rel.color ?? '#9e9e9e'}22; border-color:${rel.color ?? '#9e9e9e'}55">
         ${n.flag}
@@ -207,6 +217,7 @@ function _dpNationRow(n, playerNationId) {
         <div class="dp-nation-nm">
           ${n.name}
           ${treaties.length > 0 ? `<span class="dp-treaties-count">${treaties.length}</span>` : ''}
+          <span class="dp-tier-badge dp-tier-${tier}" title="${badge.title}${dist !== null ? ' (' + dist + ' хопов)' : ''}">${badge.icon} ${badge.label}</span>
         </div>
         <div class="dp-nation-rel-bar">
           <div class="dp-nation-rel-fill" style="width:${pct}%;background:${rel.color ?? '#9e9e9e'}"></div>
@@ -531,6 +542,23 @@ function _dtFinalizeTreaty(playerNationId, aiNationId, treaty, dialogueLog) {
 // ══════════════════════════════════════════════════════════════════════════════
 
 function showDipChatModal(aiNationId, firstMessage) {
+  // Проверяем дипломатический охват
+  if (typeof getNationTier === 'function') {
+    const tier = getNationTier(aiNationId);
+    if (tier === 3) {
+      const nation = GAME_STATE.nations?.[aiNationId];
+      const dist   = typeof getDiploDistance === 'function' ? getDiploDistance(aiNationId) : '?';
+      if (typeof addEventLog === 'function') {
+        addEventLog(
+          `🌫 ${nation?.name ?? aiNationId} слишком далека (${dist} хопов). `
+          + `Расширьте территорию или отправьте посла, чтобы установить контакт.`,
+          'warning'
+        );
+      }
+      return;
+    }
+  }
+
   const modal = document.getElementById('dp-chat-modal');
   if (!modal) return;
   _dpChatModalNation = aiNationId;
@@ -902,7 +930,10 @@ async function _dpChatSendActual(aiNationId, text) {
       content: m.text,
     }));
 
-    const raw     = await callDiplomacyAI(aiNationId, playerNationId, apiMessages);
+    const dialogueModel = typeof getDialogueModel === 'function'
+      ? getDialogueModel(aiNationId)
+      : null;
+    const raw     = await callDiplomacyAI(aiNationId, playerNationId, apiMessages, dialogueModel);
     const treaty  = parseDiplomacyTreaty(raw);
     const display = stripDiplomacyJSON(raw);
 

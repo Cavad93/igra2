@@ -49,6 +49,7 @@ const DIPLO_CFG = {
 let _regionDistCache = {};  // regionId → хопов от ближайшего региона игрока
 let _nationDistCache  = {};  // nationId → минимальное расстояние
 let _cacheComputedAt  = -999;
+let _prevNationTiers  = {};  // nationId → предыдущий tier (для детекции изменений)
 
 // ══════════════════════════════════════════════════════════════════════
 // BFS — расстояния от территории игрока
@@ -77,6 +78,56 @@ function refreshDiploDistances(forceRefresh) {
   }
 
   _cacheComputedAt = turn;
+
+  // ── Детекция смены тира ──────────────────────────────────────────
+  for (const nId of Object.keys(_nationDistCache)) {
+    const newTier  = _calcTier(nId);
+    const prevTier = _prevNationTiers[nId];
+
+    if (prevTier !== undefined && prevTier !== newTier) {
+      _onTierChanged(nId, prevTier, newTier);
+    }
+    _prevNationTiers[nId] = newTier;
+  }
+}
+
+function _calcTier(nationId) {
+  const d = _nationDistCache[nationId] ?? 999;
+  if (d <= DIPLO_CFG.RANGE_NEAR) return 1;
+  if (d <= DIPLO_CFG.RANGE_MID)  return 2;
+  return 3;
+}
+
+function _onTierChanged(nationId, prevTier, newTier) {
+  const nation = GAME_STATE.nations?.[nationId];
+  if (!nation) return;
+
+  if (newTier < prevTier) {
+    // Стала ближе — разблокировка
+    const labels = { 1: 'полная дипломатия', 2: 'ограниченный контакт' };
+    if (typeof addEventLog === 'function') {
+      addEventLog(
+        `🌍 ${nation.name} теперь в зоне дипломатического охвата (Зона ${newTier} — ${labels[newTier] ?? ''}).`,
+        'diplomacy'
+      );
+    }
+    if (typeof addMemoryEvent === 'function') {
+      addMemoryEvent(
+        GAME_STATE.player_nation,
+        'diplomacy',
+        `${nation.name} вошла в зону дипломатического охвата (Зона ${newTier}).`,
+        [nationId]
+      );
+    }
+  } else {
+    // Стала дальше — потеря контакта
+    if (newTier === 3 && typeof addEventLog === 'function') {
+      addEventLog(
+        `🌫 ${nation.name} вышла за горизонт дипломатического охвата.`,
+        'diplomacy'
+      );
+    }
+  }
 }
 
 /**
@@ -164,6 +215,19 @@ function canPlayerInteract(nationId) {
  */
 function canPlayerDiplomate(nationId) {
   return getNationTier(nationId) === 1;
+}
+
+/**
+ * Модель Claude для ДИАЛОГА с игроком, исходя из зоны.
+ * Tier 1 → Sonnet (полная дипломатия)
+ * Tier 2 → Haiku  (ограниченный контакт)
+ * Tier 3 → null   (нельзя взаимодействовать)
+ */
+function getDialogueModel(nationId) {
+  const tier = getNationTier(nationId);
+  if (tier === 1) return typeof CONFIG !== 'undefined' ? CONFIG.MODEL_SONNET : null;
+  if (tier === 2) return typeof CONFIG !== 'undefined' ? CONFIG.MODEL_HAIKU  : null;
+  return null; // Tier 3 — заблокировано
 }
 
 // ══════════════════════════════════════════════════════════════════════
