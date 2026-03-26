@@ -113,7 +113,10 @@ function _calcSlotBaseOutput(slot, region, nation) {
 
   // Учитываем замену рабов фермерами при нехватке рабов в нации
   const effectiveWorkers = _getEffectiveWorkers(slot, bDef, nation);
-  const workers = Object.values(effectiveWorkers).reduce((s, v) => s + v, 0) * level;
+  // slot.workers — абсолютное число рабочих для данного уровня здания.
+  // НЕ умножаем на level: данные в slot.workers уже соответствуют текущему уровню.
+  // Влияние уровня на производительность учитывается через effMult здания.
+  const workers = Object.values(effectiveWorkers).reduce((s, v) => s + v, 0);
 
   if (workers <= 0) return {};
 
@@ -129,7 +132,8 @@ function _calcSlotBaseOutput(slot, region, nation) {
 
   // efficiency_mult: масштабный коэффициент урожайности на га (1.0 / 1.3 / 1.8).
   // Задаётся в определении здания; отсутствие поля = 1.0 (не влияет).
-  const effMult = bDef.efficiency_mult ?? 1.0;
+  // Для зданий с уровнями: effMult уже отражает масштаб производства.
+  const effMult = (bDef.efficiency_mult ?? 1.0) * (1 + (level - 1) * 0.15);
 
   // Бонус от месторождений (deposits): регион с iron:1.8 даёт +80% к добыче железа.
   const deposits = region.deposits || {};
@@ -139,7 +143,7 @@ function _calcSlotBaseOutput(slot, region, nation) {
     const terrainBonus  = _terrainGoodBonus(terrain, good);
     const depositBonus  = deposits[good] ?? 1.0;  // 1.0 = нет месторождения (нейтрально)
     // base_rate: канонический выход на 1000 рабочих (без масштабного коэф.)
-    // effMult: умножитель эффективности за счёт масштаба хозяйства
+    // effMult: умножитель эффективности; теперь растёт +15% за каждый уровень выше 1
     // capitalRatio: снижение при нехватке инструментов/тягловых животных
     // depositBonus: множитель месторождения (>1 = богатое, <1 = бедное)
     const amount = (workers / 1000) * base_rate * effMult * fertility * satMod
