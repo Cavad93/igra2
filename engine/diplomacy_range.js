@@ -141,8 +141,11 @@ function _bfsFromNationRegions(nationId) {
   const dist  = {};
   const queue = [];
 
+  // nation.regions — авторитетный список регионов нации (обновляется при захватах).
+  // MAP_REGIONS хранит географические данные (connections); GAME_STATE.regions
+  // изначально пуст и заполняется только для изменённых регионов.
   for (const rId of (nation.regions ?? [])) {
-    if (GAME_STATE.regions?.[rId]) {
+    if (MAP_REGIONS?.[rId]) {
       dist[rId] = 0;
       queue.push(rId);
     }
@@ -151,7 +154,8 @@ function _bfsFromNationRegions(nationId) {
   for (let i = 0; i < queue.length; i++) {
     const rId  = queue[i];
     const d    = dist[rId];
-    const conn = GAME_STATE.regions?.[rId]?.connections;
+    // connections хранятся в MAP_REGIONS, а не в GAME_STATE.regions
+    const conn = MAP_REGIONS?.[rId]?.connections;
     if (!conn) continue;
     for (const nb of conn) {
       if (dist[nb] === undefined) {
@@ -391,9 +395,10 @@ function _getNeighborNations(nationId) {
   const result  = new Set();
 
   for (const rId of (nation?.regions ?? [])) {
-    const conn = GAME_STATE.regions?.[rId]?.connections ?? [];
+    // connections — из MAP_REGIONS; текущий владелец — из GAME_STATE.regions или MAP_REGIONS
+    const conn = MAP_REGIONS?.[rId]?.connections ?? [];
     for (const nb of conn) {
-      const owner = GAME_STATE.regions?.[nb]?.nation;
+      const owner = GAME_STATE.regions?.[nb]?.nation ?? MAP_REGIONS?.[nb]?.nation;
       if (owner && owner !== nationId && owner !== 'neutral' && owner !== 'ocean') {
         result.add(owner);
       }
@@ -430,8 +435,10 @@ function _adjustRelation(fromId, toId, delta) {
  * Вызывается из _processSupply() в armies.js.
  */
 function updateArmyLogisticTimer(army) {
-  const region = GAME_STATE.regions?.[army.position];
-  const isHome = region?.nation === army.nation;
+  // Текущий владелец региона: сначала из игрового состояния, затем из карты
+  const regionNation = GAME_STATE.regions?.[army.position]?.nation
+                    ?? MAP_REGIONS?.[army.position]?.nation;
+  const isHome = regionNation === army.nation;
 
   if (isHome) {
     army._turns_away_from_home = 0;
