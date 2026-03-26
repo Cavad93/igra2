@@ -2103,6 +2103,122 @@
     .gov-section-title.clickable:hover { opacity: 1; }
     .gov-section.collapsed > *:not(.gov-section-title) { display: none; }
 
+    /* ══════════════════════════════════════════════════
+       АРМИИ НА КАРТЕ
+    ══════════════════════════════════════════════════ */
+
+    /* Маркер армии */
+    .army-marker {
+      width: 54px; height: 42px;
+      border: 2px solid var(--army-color, #888);
+      border-radius: 4px;
+      background: rgba(0,0,0,0.7);
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 2px;
+      cursor: pointer; transition: transform .15s, box-shadow .15s;
+      font-size: 11px; color: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    }
+    .army-marker:hover { transform: scale(1.1); box-shadow: 0 2px 8px rgba(0,0,0,0.8); }
+    .army-marker--selected { outline: 2px solid #ffd700; transform: scale(1.12); }
+    .army-marker--player { border-color: #ffd700 !important; }
+    .army-marker__top { display: flex; align-items: center; gap: 3px; line-height: 1; }
+    .army-marker__icon { font-size: 14px; }
+    .army-marker__count { font-weight: 700; font-size: 12px; }
+    .army-marker__state { font-size: 10px; }
+    .army-marker__bars { display: flex; gap: 2px; width: 46px; }
+    .mini-bar { height: 3px; flex: 1; background: rgba(255,255,255,0.15); border-radius: 1px; overflow: hidden; }
+
+    /* Призрак движения */
+    .army-ghost {
+      width: 26px; height: 26px;
+      border: 2px dashed; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: 700; color: #fff;
+      opacity: .75; pointer-events: none;
+    }
+
+    /* Индикатор осады */
+    .siege-indicator {
+      display: flex; align-items: center; gap: 3px;
+      background: rgba(0,0,0,0.75); border: 1px solid #c62828;
+      border-radius: 3px; padding: 2px 5px;
+      font-size: 10px; color: #fff; white-space: nowrap;
+    }
+    .siege-bar { width: 36px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 2px; overflow: hidden; }
+    .siege-bar__fill { height: 100%; transition: width .4s; }
+    .siege-pct { font-size: 9px; color: #ff8a65; }
+
+    /* Режим движения */
+    .map--move-mode { cursor: crosshair !important; }
+    .map--move-mode .leaflet-interactive { cursor: crosshair !important; }
+
+    /* Панель армии */
+    #army-panel {
+      display: none;
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      z-index: 800;
+      width: 360px; max-width: 94vw;
+      background: var(--bg-panel); border: 1px solid var(--border-gold);
+      border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+    }
+    .army-panel-inner { padding: 10px 12px; }
+    .army-panel-header {
+      display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+      font-size: 13px; color: var(--text-primary);
+    }
+    .army-nation-name { color: var(--text-secondary); font-size: 11px; flex: 1; text-align: right; }
+    .army-panel-close {
+      background: none; border: none; color: var(--text-secondary);
+      cursor: pointer; font-size: 14px; padding: 0 4px;
+    }
+    .army-panel-stats { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+    .army-stat-row { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+    .army-stat-label { width: 74px; color: var(--text-secondary); }
+    .army-stat-bar {
+      flex: 1; height: 6px; background: rgba(255,255,255,0.1);
+      border-radius: 3px; overflow: hidden;
+    }
+    .army-stat-bar > div { height: 100%; border-radius: 3px; transition: width .4s; }
+    .army-stat-val { width: 28px; text-align: right; color: var(--text-primary); font-size: 11px; }
+    .army-panel-units { font-size: 11px; color: var(--text-primary); margin-bottom: 6px; line-height: 1.6; }
+    .army-panel-meta { font-size: 10px; color: var(--text-secondary); margin-bottom: 5px; }
+    .army-panel-cmd { font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; padding: 4px 6px; background: rgba(255,255,255,0.04); border-radius: 3px; }
+    .army-siege-info { font-size: 11px; color: #ff8a65; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .army-panel-footer { font-size: 10px; color: var(--text-secondary); margin-bottom: 6px; }
+    .army-panel-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .army-btn {
+      padding: 4px 10px; font-size: 11px; cursor: pointer;
+      border: 1px solid var(--border-gold); border-radius: 3px;
+      background: rgba(107,79,26,0.4); color: var(--text-primary);
+      transition: background .15s;
+    }
+    .army-btn:hover { background: rgba(107,79,26,0.7); }
+    .army-btn--danger { border-color: #c62828; background: rgba(198,40,40,0.25); }
+    .army-btn--danger:hover { background: rgba(198,40,40,0.5); }
+    .army-btn--secondary { border-color: var(--border); background: rgba(255,255,255,0.05); }
+
+    /* Панель сборки армии */
+    #assemble-army-panel {
+      display: none;
+      position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
+      z-index: 810; width: 320px; max-width: 92vw;
+      background: var(--bg-panel); border: 1px solid var(--border-gold);
+      border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+    }
+    .assemble-panel { padding: 12px; }
+    .assemble-panel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;
+    }
+    .assemble-form { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+    .assemble-form label { font-size: 11px; color: var(--text-secondary); }
+    .assemble-form input {
+      background: rgba(255,255,255,0.08); border: 1px solid var(--border);
+      border-radius: 3px; color: var(--text-primary); padding: 4px 7px; font-size: 12px; width: 100%;
+    }
+    .assemble-actions { display: flex; gap: 8px; }
+
     /* ── Система приказов ────────────────────────────────── */
     .orders-new-btn {
       float: right; font-size: 10px; padding: 2px 7px;
@@ -6122,6 +6238,9 @@
   <script src="engine/conspiracy.js"></script>
   <script src="engine/senate.js"></script>
   <script src="engine/battle.js"></script>
+  <script src="engine/armies.js"></script>
+  <script src="engine/combat.js"></script>
+  <script src="engine/siege.js"></script>
   <script src="engine/victory.js"></script>
   <script src="engine/characters_ai.js"></script>
   <script src="engine/orders.js"></script>
@@ -6129,6 +6248,7 @@
   <script src="engine/religion.js"></script>
   <script src="engine/turn.js"></script>
   <script src="ui/map.js"></script>
+  <script src="ui/map_armies.js"></script>
   <script src="ui/region_build_tab.js"></script>
   <script src="ui/diplomacy_tab.js"></script>
   <script src="ui/panels.js"></script>

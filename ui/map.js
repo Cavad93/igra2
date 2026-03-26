@@ -172,6 +172,9 @@ function initLeafletMap() {
   // Названия наций на карте (динамические, зум-адаптивные)
   renderNationLabels();
 
+  // Слои армий и осад (поверх всего)
+  if (typeof initArmyLayers === 'function') initArmyLayers();
+
   // Пересчёт подписей при изменении вида
   // move: пересчитываем позиции через RAF — один раз за кадр, без задержки.
   // latLngToContainerPoint всегда возвращает правильные координаты даже во время пана.
@@ -354,6 +357,9 @@ function buildTooltipContent(regionId, mapData, nationId) {
 // ──────────────────────────────────────────────────────────────
 
 function onRegionClick(regionId) {
+  // Режим выбора цели движения армии — перехватываем клик
+  if (typeof handleRegionClickForArmy === 'function' && handleRegionClickForArmy(regionId)) return;
+
   // Снимаем выделение с предыдущего
   if (selectedRegionId && regionLayers[selectedRegionId]) {
     const prev = GAME_STATE.regions[selectedRegionId];
@@ -894,6 +900,13 @@ function showRegionInfo(regionId) {
         ${socialStructureHtml}
         ${productionLines ? `<div class="region-production"><div class="section-label">Производство:</div>${productionLines}</div>` : ''}
         ${buildings ? `<div class="region-buildings"><div class="section-label">Постройки:</div>${buildings}</div>` : ''}
+        ${nationId === GAME_STATE.player_nation ? `
+          <div class="region-army-actions" style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="army-btn" onclick="showAssembleArmyDialog('${regionId}');closeRegionInfo();">⚔️ Собрать армию</button>
+            ${(GAME_STATE.armies ?? []).some(a => a.position === regionId && a.nation === GAME_STATE.player_nation && a.state !== 'disbanded')
+              ? `<button class="army-btn" onclick="selectArmy((GAME_STATE.armies ?? []).find(a => a.position === '${regionId}' && a.nation === GAME_STATE.player_nation && a.state !== 'disbanded')?.id)">🛡 Выбрать армию</button>`
+              : ''}
+          </div>` : ''}
       </div>
       <div id="region-tab-build" class="region-tab-build${curTab !== 'build' ? ' hidden' : ''}">
         ${buildTabHtml}

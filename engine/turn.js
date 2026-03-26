@@ -166,6 +166,11 @@ async function processTurn() {
       try { processAllianceWars(); } catch (e) { console.warn('[alliance_wars]', e); }
     }
 
+    // 5.4в. Движение армий и обработка осад
+    if (typeof processArmyMovement === 'function') {
+      try { processArmyMovement(); } catch (e) { console.warn('[army_movement]', e); }
+    }
+
     // 5.5. Прогресс активных приказов (делегирование)
     if (typeof processAllOrders === 'function') {
       try { processAllOrders(); } catch (e) { console.warn('[orders]', e); }
@@ -959,4 +964,5 @@ function renderAll() {
   try { if (typeof _applyLogFilter === 'function') _applyLogFilter(); } catch (e) {}
   try { if (typeof refreshPopulationTab  === 'function') refreshPopulationTab();  } catch (e) {}
   try { if (typeof refreshEconomyTab    === 'function') refreshEconomyTab();    } catch (e) {}
+  try { if (typeof renderAllArmies      === 'function') renderAllArmies();      } catch (e) {}
 }
