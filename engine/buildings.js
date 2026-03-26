@@ -814,7 +814,10 @@ function distributeClassIncome(nationId) {
 
       const wages      = slot.wages_paid   ?? 0;  // revenue × wage_rate (руб рабочим)
       const profitLast = slot.profit_last  ?? 0;  // чистая прибыль после всех затрат
-      const slotOwner  = slot.owner        ?? 'nation';
+      // Если owner не задан явно, используем autonomous_builder класс здания
+      // (а не 'nation'). Это предотвращает ошибочную маршрутизацию прибыли
+      // всех зданий без поля owner в казну государства.
+      const slotOwner  = slot.owner ?? bDef.autonomous_builder ?? 'nation';
       const prodType   = slot.building_id  ? slot.building_id.split('_')[0] : null;
       const _ibt       = economy._class_income_by_type;
       const _cwbt      = economy._class_workers_by_type;
