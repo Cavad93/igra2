@@ -295,6 +295,27 @@ function resolveNavalBattle(attackerNationId, defenderNationId) {
 
 // ── Вспомогательные ──────────────────────────────────────────────────
 
+/**
+ * Возвращает true и блокирует атаку, если между нациями действует пакт о ненападении.
+ * AI-атаки отклоняются молча. Если атакует игрок — он обязан сначала объявить войну
+ * через declareWar() (там будет своя проверка с предупреждением).
+ */
+function _isBlockedByNonAggression(attackerNationId, defenderNationId) {
+  if (typeof DiplomacyEngine === 'undefined') return false;
+  const rel = DiplomacyEngine.getRelation(attackerNationId, defenderNationId);
+  if (!rel?.flags?.no_attack) return false;
+
+  // AI пытается атаковать через пакт — блокируем
+  if (attackerNationId !== GAME_STATE.player_nation) {
+    console.info(`[battle] ${attackerNationId} blocked by non-aggression pact with ${defenderNationId}`);
+    return true;
+  }
+
+  // Игрок атакует без объявления войны напрямую (минуя declareWar) — тоже блокируем,
+  // но объявление войны через UI должно идти через declareWar().
+  return true;
+}
+
 function _ensureRelation(nation, targetId) {
   if (!nation.relations) nation.relations = {};
   if (!nation.relations[targetId]) {
@@ -305,6 +326,9 @@ function _ensureRelation(nation, targetId) {
 // ── Внешний API ──────────────────────────────────────────────────────
 
 function processAttackAction(attackerNationId, defenderNationId, opts = {}) {
+  // Проверка пакта о ненападении
+  if (_isBlockedByNonAggression(attackerNationId, defenderNationId)) return null;
+
   const result = opts.type === 'naval'
     ? resolveNavalBattle(attackerNationId, defenderNationId)
     : resolveBattle(attackerNationId, defenderNationId, opts);

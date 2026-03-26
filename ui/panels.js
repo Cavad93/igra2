@@ -1334,6 +1334,23 @@ function declareWar(targetNationId) {
   const target = GAME_STATE.nations[targetNationId];
   if (!player || !target) return;
 
+  // Проверка пакта о ненападении
+  const hasPact = _checkNonAggressionPact(GAME_STATE.player_nation, targetNationId);
+  if (hasPact) {
+    const confirmed = confirm(
+      `⚠️ У вас действует Пакт о ненападении с ${target.name}!\n\n` +
+      `Объявление войны нарушит договор. Последствия:\n` +
+      `  • Репутация −30 (со всеми нациями, кто узнает)\n` +
+      `  • Стабильность −10\n` +
+      `  • Пакт расторгнут\n\n` +
+      `Продолжить?`
+    );
+    if (!confirmed) return;
+
+    // Разрыв пакта с штрафами
+    _breachNonAggressionPact(GAME_STATE.player_nation, targetNationId, player, target);
+  }
+
   _ensureRelation(player, targetNationId);
   _ensureRelation(target, GAME_STATE.player_nation);
 
@@ -1342,16 +1359,59 @@ function declareWar(targetNationId) {
   target.relations[GAME_STATE.player_nation].at_war = true;
   target.relations[GAME_STATE.player_nation].score = Math.max(-100, target.relations[GAME_STATE.player_nation].score - 40);
 
+  // Синхронизация с DiplomacyEngine
+  if (typeof DiplomacyEngine !== 'undefined') {
+    DiplomacyEngine.getRelation(GAME_STATE.player_nation, targetNationId).war = true;
+  }
+
   if (!player.military.at_war_with) player.military.at_war_with = [];
   if (!player.military.at_war_with.includes(targetNationId)) player.military.at_war_with.push(targetNationId);
   if (!target.military.at_war_with) target.military.at_war_with = [];
   if (!target.military.at_war_with.includes(GAME_STATE.player_nation)) target.military.at_war_with.push(GAME_STATE.player_nation);
 
-  addEventLog(`Объявлена война ${target.name}!`, 'danger');
+  addEventLog(`⚔️ Объявлена война ${target.name}!`, 'danger');
   // Падение стабильности и счастья
   player.government.stability = Math.max(0, (player.government.stability ?? 50) - 5);
   player.population.happiness = Math.max(0, (player.population.happiness ?? 50) - 10);
   renderAll();
+}
+
+/** Проверяет наличие активного пакта о ненападении через DiplomacyEngine */
+function _checkNonAggressionPact(nationA, nationB) {
+  if (typeof DiplomacyEngine === 'undefined') return false;
+  const rel = DiplomacyEngine.getRelation(nationA, nationB);
+  return rel?.flags?.no_attack === true;
+}
+
+/** Расторгает пакт о ненападении с репутационными штрафами */
+function _breachNonAggressionPact(breakerNationId, targetNationId, breakerNation, targetNation) {
+  // Находим и аннулируем договор
+  const treaties = GAME_STATE.diplomacy?.treaties ?? [];
+  const pact = treaties.find(t =>
+    t.status === 'active' && t.type === 'non_aggression' &&
+    t.parties.includes(breakerNationId) && t.parties.includes(targetNationId)
+  );
+  if (pact) {
+    pact.status = 'broken';
+    if (typeof removeTreatyEffects === 'function') removeTreatyEffects(pact);
+  }
+
+  // Штраф к репутации — все нации узнают о нарушении слова
+  const BREACH_REL_PENALTY = -30;
+  const dipRel = GAME_STATE.diplomacy?.relations ?? {};
+  for (const [key, rel] of Object.entries(dipRel)) {
+    if (key.includes(breakerNationId)) {
+      rel.score = Math.max(-100, (rel.score ?? 0) + BREACH_REL_PENALTY);
+    }
+  }
+
+  // Штраф стабильности
+  breakerNation.government.stability = Math.max(0, (breakerNation.government.stability ?? 50) - 10);
+
+  addEventLog(
+    `💔 Пакт о ненападении с ${targetNation.name} нарушен! Репутация Сиракуз падает во всём мире.`,
+    'danger'
+  );
 }
 
 function _ensureRelation(nation, targetId) {
