@@ -81,33 +81,90 @@ ${JSON.stringify(politicalContext, null, 2)}
   // ──────────────────────────────────────────────────────────
   // 3. РЕШЕНИЕ AI-НАЦИИ
   // ──────────────────────────────────────────────────────────
-  nationDecision: (nationId, nationState, neighborsSummary, availableActions, recentDecisions = [], memoryContext = '') => ({
-    system: `Ты — правитель ${nationState.name} в 301 BC.
+  nationDecision: (nationId, nationState, neighborsSummary, availableActions, recentDecisions = [], memoryContext = '', enriched = {}) => {
+    const eco  = enriched.economy    ?? {};
+    const mil  = enriched.military   ?? {};
+    const int_ = enriched.internal   ?? {};
+    const ter  = enriched.territory  ?? {};
+    const wars = enriched.active_wars ?? [];
+    const gp   = enriched.global_power ?? [];
+    const sp   = enriched.strategic_phase ?? {};
+    const tradeOpp = enriched.trade_opportunities ?? [];
+
+    // ── Форматирование соседей (компактно) ──────────────────────
+    const neighborsLines = Object.entries(neighborsSummary).map(([id, n]) => {
+      const warLine     = n.at_war ? ' ⚔ВОЙНА' : '';
+      const treatyLine  = n.treaties?.length ? ` [${n.treaties.join(',')}]` : '';
+      const alsoWar     = n.also_at_war_with?.length ? ` (тж.воюет с: ${n.also_at_war_with.slice(0,2).join(',')})` : '';
+      return `  ${n.name}: rel=${n.relation_score}${warLine}${treatyLine} сила=${n.military_strength} казна=${n.treasury} стаб=${n.stability} регионов=${n.region_count}${alsoWar}`;
+    }).join('\n');
+
+    // ── Форматирование войн ──────────────────────────────────────
+    const warsLine = wars.length > 0
+      ? wars.map(w => `  ${w.enemy_name}: соотношение сил=${w.strength_ratio} (${w.strength_ratio >= 1 ? 'мы сильнее' : 'враг сильнее'}), стаб.врага=${w.enemy_stability}`).join('\n')
+      : '  Войн нет';
+
+    // ── Форматирование глобальных сил ───────────────────────────
+    const gpLine = gp.map((n, i) => `  ${i+1}. ${n.name}: сила=${n.strength} регионов=${n.regions}${n.at_war ? ' ⚔' : ''}`).join('\n');
+
+    // ── Армии на карте ───────────────────────────────────────────
+    const armiesLine = (mil.field_armies ?? []).length > 0
+      ? mil.field_armies.map(a => `  [${a.id}] в ${a.position} (${a.state}), сила=${a.size}, снабж=${a.supply}%`).join('\n')
+      : '  Нет полевых армий';
+
+    return {
+    system: `Ты — правитель ${nationState.name} в 301 BC. Античная стратегия.
 Принимаешь решение исходя из интересов своего государства.
 Отвечай ТОЛЬКО JSON. Никакого текста кроме JSON.
-Личность правителя: ${nationState.ai_personality || 'нейтральный'}.
-Приоритет: ${nationState.ai_priority || 'выживание'}.
-Помни историю своих решений и их последствия. Избегай бездумного повторения.`,
+Личность: ${nationState.ai_personality || 'нейтральный'}. Приоритет: ${nationState.ai_priority || 'выживание'}.
+${sp.phase ? `ТЕКУЩАЯ СТРАТЕГИЧЕСКАЯ ФАЗА: ${sp.phase.toUpperCase()} — ${sp.advice}` : ''}
+Избегай бессмысленного повторения одних и тех же действий подряд.`,
 
-    user: `ТВОЁ ГОСУДАРСТВО (ключевые метрики):
-Казна: ${nationState.economy?.treasury ?? '?'} | Армия: ${(nationState.military?.infantry ?? 0) + (nationState.military?.cavalry ?? 0) * 3} | Счастье: ${nationState.population?.happiness ?? '?'}% | Личная власть: ${nationState.government?.ruler?.personal_power ?? '?'}/100
+    user: `═══ ГОСУДАРСТВО ${nationState.name.toUpperCase()} ═══
 
-СОСЕДИ:
-${JSON.stringify(neighborsSummary, null, 2)}
+ЭКОНОМИКА:
+  Казна: ${eco.treasury} | Доход/ход: ${eco.income_per_turn ?? '?'} | Расход/ход: ${eco.expense_per_turn ?? '?'} | Баланс: ${eco.balance >= 0 ? '+' : ''}${eco.balance ?? '?'}
+  Налог: ${((eco.tax_rate ?? 0.1) * 100).toFixed(0)}% | Торг.пути: ${eco.trade_routes ?? 0} | Запасы: ${eco.top_stockpile || 'нет'}
+
+АРМИЯ:
+  Пехота: ${mil.infantry ?? 0} | Кавалерия: ${mil.cavalry ?? 0} | Наёмники: ${mil.mercenaries ?? 0} | Арт.: ${mil.artillery ?? 0} | Флот: ${mil.ships ?? 0}
+  Мораль: ${mil.morale ?? 100} | Лояльность: ${mil.loyalty ?? 100} | Общая сила: ${Math.round(mil.total_strength ?? 0)}
+ПОЛЕВЫЕ АРМИИ:
+${armiesLine}
+
+ТЕРРИТОРИЯ:
+  Регионов: ${ter.count ?? 0} | Пограничных: ${ter.border_regions ?? 0} | Береговых: ${ter.coastal_count ?? 0}
+  Средняя плодородность: ${ter.avg_fertility ?? '?'} | Суммарный гарнизон: ${ter.total_garrison ?? 0}
+
+ВНУТРЕННЯЯ ПОЛИТИКА:
+  Стабильность: ${int_.stability ?? 50}/100 | Легитимность: ${int_.legitimacy ?? 50}/100 | Счастье: ${int_.happiness ?? 50}%
+  Личная власть: ${int_.personal_power ?? 50}/100 | Форма правления: ${int_.government_type ?? '?'}
+${int_.class_satisfaction ? `  Классы: ${Object.entries(int_.class_satisfaction).map(([c,v]) => `${c}=${v}`).join(', ')}` : ''}
+
+АКТИВНЫЕ ВОЙНЫ:
+${warsLine}
+
+СОСЕДИ И ДИПЛОМАТИЯ:
+${neighborsLines || '  Нет данных'}
+${tradeOpp.length ? `\nНЕЗАДЕЙСТВОВАННЫЕ ТОРГОВЫЕ ПАРТНЁРЫ: ${tradeOpp.join(', ')}` : ''}
+
+ТОП-5 ДЕРЖАВ МИРА:
+${gpLine || '  Нет данных'}
 
 ДОСТУПНЫЕ ДЕЙСТВИЯ:
-${JSON.stringify(availableActions, null, 2)}
-${recentDecisions.length ? `\nПОСЛЕДНИЕ РЕШЕНИЯ (не повторяй без причины):\n${recentDecisions.map(d => `Ход ${d.turn}: ${d.action}${d.target ? ' → ' + d.target : ''} (${d.reasoning})`).join('\n')}` : ''}
+${availableActions.map(a => `  ${a.action}${a.target ? '→'+a.target : ''}: ${a.description}`).join('\n')}
+${recentDecisions.length ? `\nПОСЛЕДНИЕ РЕШЕНИЯ (не повторяй без причины):\n${recentDecisions.map(d => `  Ход ${d.turn}: ${d.action}${d.target ? ' → ' + d.target : ''} (${d.reasoning})`).join('\n')}` : ''}
 ${memoryContext ? `\n--- КОНТЕКСТ ИСТОРИИ ---\n${memoryContext}\n---` : ''}
 
 Выбери одно действие и верни JSON:
 {
-  "action": "trade|build|recruit|diplomacy|attack|fortify|wait",
-  "target": "кому/куда (id нации или региона)",
-  "reasoning": "почему (1 предложение)",
+  "action": "trade|build|recruit|recruit_mercs|diplomacy|attack|fortify|wait",
+  "target": "id нации или региона (если применимо)",
+  "reasoning": "почему (1 предложение, опираясь на данные выше)",
   "secondary_action": null
 }`,
-  }),
+    };
+  },
 
   // ──────────────────────────────────────────────────────────
   // 4. ГЕНЕРАЦИЯ ПЕРСОНАЖЕЙ

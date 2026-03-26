@@ -101,7 +101,7 @@ function validateCharacterReaction(parsed) {
 }
 
 function validateNationDecision(parsed) {
-  const validActions = ['trade', 'build', 'recruit', 'diplomacy', 'attack', 'fortify', 'wait'];
+  const validActions = ['trade', 'build', 'recruit', 'recruit_mercs', 'diplomacy', 'attack', 'fortify', 'wait'];
 
   if (!parsed || typeof parsed !== 'object') return false;
   if (!validActions.includes(parsed.action)) parsed.action = 'wait';
@@ -188,6 +188,19 @@ function applyNationDecision(nationId, decision) {
           100,
           nation.relations[decision.target].score + 3,
         );
+      }
+      break;
+    }
+
+    case 'recruit_mercs': {
+      const treasury = nation.economy.treasury;
+      if (treasury > 5000) {
+        const mercs = Math.min(200, Math.floor((treasury - 3000) / 20));
+        if (mercs > 0) {
+          nation.military.mercenaries = (nation.military.mercenaries ?? 0) + mercs;
+          nation.economy.treasury -= mercs * 20;
+          addEventLog(`${nation.name} нанимает ${mercs} наёмников.`, 'military');
+        }
       }
       break;
     }

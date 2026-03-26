@@ -290,22 +290,136 @@ function calculatePersonalImpact(char, action) {
 async function getAINationDecision(nationId, model = CONFIG.MODEL_HAIKU) {
   const nation = GAME_STATE.nations[nationId];
 
-  // Собираем информацию о соседях
+  // ── #1 Улучшение: детальная информация о соседях ──────────────
   const neighborsSummary = {};
   for (const [otherId, rel] of Object.entries(nation.relations)) {
     const otherNation = GAME_STATE.nations[otherId];
     if (!otherNation) continue;
     neighborsSummary[otherId] = {
-      name: otherNation.name,
-      relation_score: rel.score,
-      at_war: rel.at_war,
-      treaties: rel.treaties,
-      military_strength: otherNation.military.infantry + otherNation.military.cavalry * 3,
-      treasury: otherNation.economy.treasury,
+      name:             otherNation.name,
+      relation_score:   rel.score,
+      at_war:           rel.at_war ?? false,
+      treaties:         rel.treaties ?? [],
+      military_strength: otherNation.military.infantry + otherNation.military.cavalry * 3 + (otherNation.military.mercenaries ?? 0),
+      // #8: дипломатическая сеть — кто из соседей с кем воюет
+      also_at_war_with: (otherNation.military.at_war_with ?? [])
+        .filter(id => id !== nationId)
+        .map(id => GAME_STATE.nations[id]?.name ?? id),
+      stability:        otherNation.government?.stability ?? 50,
+      region_count:     (otherNation.regions ?? []).length,
     };
   }
 
-  // Список доступных действий
+  // ── #2 Улучшение: детальная экономика ─────────────────────────
+  const eco = nation.economy ?? {};
+  const economySummary = {
+    treasury:         Math.round(eco.treasury ?? 0),
+    income_per_turn:  Math.round(eco.income_per_turn ?? 0),
+    expense_per_turn: Math.round(eco.expense_per_turn ?? 0),
+    balance:          Math.round((eco.income_per_turn ?? 0) - (eco.expense_per_turn ?? 0)),
+    tax_rate:         eco.tax_rate ?? 0.1,
+    trade_routes:     (eco.trade_routes ?? []).length,
+    // топ-3 ресурса по запасам
+    top_stockpile:    Object.entries(eco.stockpile ?? {})
+      .sort((a, b) => b[1] - a[1]).slice(0, 3)
+      .map(([g, q]) => `${g}:${Math.round(q)}`).join(', ') || 'нет',
+  };
+
+  // ── #3 Улучшение: детальная армия ─────────────────────────────
+  const mil = nation.military ?? {};
+  const myArmies = (GAME_STATE.armies ?? []).filter(a => a.nation === nationId);
+  const militarySummary = {
+    infantry:    mil.infantry ?? 0,
+    cavalry:     mil.cavalry ?? 0,
+    mercenaries: mil.mercenaries ?? 0,
+    artillery:   mil.artillery ?? 0,
+    ships:       mil.ships ?? 0,
+    morale:      mil.morale ?? 100,
+    loyalty:     mil.loyalty ?? 100,
+    total_strength: (mil.infantry ?? 0) + (mil.cavalry ?? 0) * 3 + (mil.mercenaries ?? 0) * 1.5,
+    // #3: позиции армий на карте
+    field_armies: myArmies.map(a => ({
+      id:       a.id,
+      position: a.position,
+      state:    a.state,
+      size:     (a.units?.infantry ?? 0) + (a.units?.cavalry ?? 0) * 3,
+      supply:   a.supply ?? 100,
+    })),
+  };
+
+  // ── #4 Улучшение: активные войны ──────────────────────────────
+  const activeWars = (mil.at_war_with ?? []).map(eid => {
+    const enemy = GAME_STATE.nations[eid];
+    const enemyStr = (enemy?.military?.infantry ?? 0) + (enemy?.military?.cavalry ?? 0) * 3;
+    const myStr = militarySummary.total_strength;
+    return {
+      enemy_id:   eid,
+      enemy_name: enemy?.name ?? eid,
+      enemy_strength: Math.round(enemyStr),
+      strength_ratio: myStr > 0 ? +(myStr / Math.max(enemyStr, 1)).toFixed(2) : 0,
+      enemy_stability: enemy?.government?.stability ?? 50,
+    };
+  });
+
+  // ── #5 Улучшение: внутренняя стабильность ─────────────────────
+  const gov = nation.government ?? {};
+  const pop = nation.population ?? {};
+  const internalSummary = {
+    legitimacy:    gov.legitimacy ?? 50,
+    stability:     gov.stability ?? 50,
+    personal_power: gov.ruler?.personal_power ?? 50,
+    happiness:     pop.happiness ?? 50,
+    // счастье по классам если есть
+    class_satisfaction: pop.class_satisfaction
+      ? Object.fromEntries(
+          Object.entries(pop.class_satisfaction)
+            .map(([cls, v]) => [cls, typeof v === 'object' ? Math.round(v.score ?? 50) : Math.round(v)])
+        )
+      : null,
+    government_type: gov.type ?? 'unknown',
+  };
+
+  // ── #6 Улучшение: глобальный баланс сил ───────────────────────
+  const globalPower = Object.entries(GAME_STATE.nations ?? {})
+    .filter(([id]) => id !== nationId)
+    .map(([id, n]) => ({
+      id,
+      name:     n.name,
+      strength: Math.round((n.military?.infantry ?? 0) + (n.military?.cavalry ?? 0) * 3),
+      regions:  (n.regions ?? []).length,
+      at_war:   (n.military?.at_war_with ?? []).length > 0,
+    }))
+    .sort((a, b) => b.strength - a.strength)
+    .slice(0, 5);
+
+  // ── #1 Улучшение: территориальный обзор ───────────────────────
+  const myRegions = (nation.regions ?? []);
+  const regionSummary = {
+    count: myRegions.length,
+    // агрегированные данные по регионам
+    avg_fertility: myRegions.length > 0
+      ? +(myRegions.reduce((s, rid) => s + (GAME_STATE.regions?.[rid]?.fertility ?? 0.7), 0) / myRegions.length).toFixed(2)
+      : 0,
+    total_garrison: myRegions.reduce((s, rid) => s + (GAME_STATE.regions?.[rid]?.garrison ?? 0), 0),
+    coastal_count:  myRegions.filter(rid => GAME_STATE.regions?.[rid]?.type === 'coastal_city').length,
+    // граничные регионы — ближайшие к врагам (упрощённо: регионы с соседями чужих наций)
+    border_regions: myRegions.filter(rid => {
+      const r = GAME_STATE.regions?.[rid];
+      return (r?.connections ?? []).some(cid => {
+        const cr = GAME_STATE.regions?.[cid];
+        return cr && cr.nation && cr.nation !== nationId;
+      });
+    }).length,
+  };
+
+  // ── #9 Улучшение: торговые возможности ────────────────────────
+  const existingTradePartners = new Set(eco.trade_routes ?? []);
+  const tradeOpportunities = Object.entries(nation.relations ?? {})
+    .filter(([oid, rel]) => !rel.at_war && rel.score > 0 && !existingTradePartners.has(oid))
+    .map(([oid]) => GAME_STATE.nations[oid]?.name ?? oid)
+    .slice(0, 3);
+
+  // ── Список доступных действий (расширен #7) ───────────────────
   const availableActions = buildAvailableActions(nationId, nation);
 
   // Краткосрочная память: последние 5 решений
@@ -316,7 +430,15 @@ async function getAINationDecision(nationId, model = CONFIG.MODEL_HAIKU) {
     ? getDecisionContext(nationId)
     : '';
 
-  const prompt = PROMPTS.nationDecision(nationId, nation, neighborsSummary, availableActions, recentDecisions, memoryContext);
+  // ── #10 Улучшение: стратегическая фаза ───────────────────────
+  const strategicPhase = _calcStrategicPhase(nation, militarySummary, internalSummary, activeWars);
+
+  const prompt = PROMPTS.nationDecision(
+    nationId, nation, neighborsSummary, availableActions, recentDecisions, memoryContext,
+    { economy: economySummary, military: militarySummary, internal: internalSummary,
+      territory: regionSummary, active_wars: activeWars, global_power: globalPower,
+      trade_opportunities: tradeOpportunities, strategic_phase: strategicPhase }
+  );
 
   const rawResponse = await callClaude(prompt.system, prompt.user, 300, model);
   const decision = parseAIResponse(rawResponse);
@@ -351,32 +473,131 @@ async function getAINationDecision(nationId, model = CONFIG.MODEL_HAIKU) {
   }
 }
 
+// ── #10: определить стратегическую фазу ───────────────────────
+function _calcStrategicPhase(nation, milSummary, internalSummary, activeWars) {
+  const stability  = internalSummary.stability ?? 50;
+  const legitimacy = internalSummary.legitimacy ?? 50;
+  const happiness  = internalSummary.happiness ?? 50;
+  const balance    = (nation.economy?.income_per_turn ?? 0) - (nation.economy?.expense_per_turn ?? 0);
+  const strength   = milSummary.total_strength ?? 0;
+  const atWar      = activeWars.length > 0;
+
+  if (stability < 30 || legitimacy < 25 || happiness < 30) {
+    return { phase: 'crisis', advice: 'Внутренний кризис. Приоритет: стабилизация, отказ от войн.' };
+  }
+  if (atWar) {
+    const winning = activeWars.every(w => w.strength_ratio >= 1.2);
+    return winning
+      ? { phase: 'war_winning',  advice: 'Война на победном ходу. Давить врага, захватывать регионы.' }
+      : { phase: 'war_losing',   advice: 'Война складывается неблагоприятно. Рассмотреть мирные переговоры.' };
+  }
+  if (balance < -500) {
+    return { phase: 'economic_strain', advice: 'Дефицит бюджета. Сократить армию или поднять налоги.' };
+  }
+  if (strength > 3000 && stability > 60 && balance > 0) {
+    return { phase: 'expansion', advice: 'Сильная позиция. Возможна экспансия или наступательная дипломатия.' };
+  }
+  if (stability < 55 || happiness < 45) {
+    return { phase: 'consolidation', advice: 'Консолидация. Укрепить внутренние позиции перед активными действиями.' };
+  }
+  return { phase: 'steady_growth', advice: 'Стабильный рост. Расширять торговлю и армию умеренными темпами.' };
+}
+
 function buildAvailableActions(nationId, nation) {
   const actions = [];
+  const mil      = nation.military ?? {};
+  const eco      = nation.economy  ?? {};
+  const treasury = eco.treasury ?? 0;
+  const strength = (mil.infantry ?? 0) + (mil.cavalry ?? 0) * 3 + (mil.mercenaries ?? 0);
+  const atWarIds = mil.at_war_with ?? [];
 
   // Всегда доступно
-  actions.push({ action: 'wait', description: 'Ничего не делать, накапливать ресурсы' });
+  actions.push({ action: 'wait',    description: 'Ничего не делать, накапливать ресурсы' });
   actions.push({ action: 'fortify', description: 'Укрепить позиции, поднять мораль армии' });
 
-  if (nation.economy.treasury > 1000) {
-    actions.push({ action: 'recruit', description: 'Набрать солдат (стоит 5 монет/солдат)' });
+  // Набор войск
+  if (treasury > 1000) {
+    const affordable = Math.min(Math.floor(treasury / 5), 2000);
+    actions.push({ action: 'recruit', description: `Набрать до ${affordable} пехоты (казна позволяет)` });
+  }
+  if (treasury > 5000 && (mil.mercenaries ?? 0) < 500) {
+    actions.push({ action: 'recruit_mercs', description: 'Нанять наёмников (быстрее, дороже)' });
   }
 
   // Дипломатия с доступными нациями
-  for (const [otherId, rel] of Object.entries(nation.relations)) {
-    if (rel.score > -20 && !rel.at_war) {
+  for (const [otherId, rel] of Object.entries(nation.relations ?? {})) {
+    const other = GAME_STATE.nations[otherId];
+    if (!other) continue;
+    const otherName = other.name;
+
+    if (!rel.at_war && rel.score > -20 && !(rel.treaties ?? []).includes('trade')) {
       actions.push({
         action: 'trade',
         target: otherId,
-        description: `Предложить торговый договор ${GAME_STATE.nations[otherId]?.name}`,
+        description: `Торговый договор с ${otherName} (отношения: ${rel.score})`,
       });
     }
-    if (rel.score > 30) {
+    if (!rel.at_war && rel.score > 30 && !(rel.treaties ?? []).includes('alliance')) {
       actions.push({
         action: 'diplomacy',
         target: otherId,
-        description: `Укрепить отношения с ${GAME_STATE.nations[otherId]?.name}`,
+        description: `Улучшить отношения / союз с ${otherName}`,
       });
+    }
+    // #8: поиск союзников против общего врага
+    if (!rel.at_war && rel.score > 0) {
+      const commonEnemies = atWarIds.filter(eid => (other.military?.at_war_with ?? []).includes(eid));
+      if (commonEnemies.length > 0) {
+        const enemyName = GAME_STATE.nations[commonEnemies[0]]?.name ?? commonEnemies[0];
+        actions.push({
+          action: 'diplomacy',
+          target: otherId,
+          description: `Координация с ${otherName} против общего врага ${enemyName}`,
+        });
+      }
+    }
+    // Мирный договор с противниками
+    if (rel.at_war && rel.score > -60) {
+      actions.push({
+        action: 'diplomacy',
+        target: otherId,
+        description: `Предложить мир ${otherName} (score: ${rel.score})`,
+      });
+    }
+  }
+
+  // ── #7: конкретные цели для атаки ─────────────────────────────
+  const myRegions = nation.regions ?? [];
+  if (strength > 500) {
+    for (const rid of myRegions) {
+      const r = GAME_STATE.regions?.[rid];
+      if (!r) continue;
+      for (const cid of (r.connections ?? [])) {
+        const cr = GAME_STATE.regions?.[cid];
+        if (!cr || !cr.nation || cr.nation === nationId) continue;
+        const ownerRel = nation.relations?.[cr.nation];
+        if (ownerRel?.at_war || (ownerRel?.score ?? 0) < -40) {
+          const garrison   = cr.garrison ?? 0;
+          const fortLevel  = cr.fortress_level ?? 0;
+          const difficulty = garrison < strength * 0.3 ? 'лёгкая' : garrison < strength * 0.7 ? 'средняя' : 'тяжёлая';
+          actions.push({
+            action:  'attack',
+            target:  cid,
+            description: `Атаковать ${cr.name} (${cr.terrain ?? cr.type}, гарнизон: ${garrison}, форт: ${fortLevel}, сложность: ${difficulty})`,
+          });
+        }
+      }
+    }
+  }
+
+  // Строительство если есть деньги и свободные слоты
+  if (treasury > 3000) {
+    const hasSlot = myRegions.some(rid => {
+      const r = GAME_STATE.regions?.[rid];
+      return (r?.building_slots ?? []).some(s => !s.building_id || s.status === 'destroyed');
+    });
+    if (hasSlot) {
+      actions.push({ action: 'build', description: 'Построить здание в одном из регионов' });
     }
   }
 
