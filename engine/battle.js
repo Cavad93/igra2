@@ -296,6 +296,97 @@ function resolveNavalBattle(attackerNationId, defenderNationId) {
 // ── Вспомогательные ──────────────────────────────────────────────────
 
 /**
+ * Срабатывает оборонный/военный союз: все союзники defenderNationId
+ * автоматически вступают в войну против attackerNationId.
+ *
+ * defensive_alliance → 85% шанс вступления.
+ * military_alliance  → всегда вступает.
+ *
+ * @returns {string[]} список ID наций, вступивших в войну
+ */
+function triggerDefensiveAlliances(attackerNationId, defenderNationId) {
+  if (typeof DiplomacyEngine === 'undefined') return [];
+  const treaties = GAME_STATE.diplomacy?.treaties ?? [];
+  const triggered = [];
+
+  for (const treaty of treaties) {
+    if (treaty.status !== 'active') continue;
+    if (!['defensive_alliance', 'military_alliance'].includes(treaty.type)) continue;
+    if (!treaty.parties.includes(defenderNationId)) continue;
+
+    const allyId = treaty.parties.find(p => p !== defenderNationId);
+    if (!allyId || allyId === attackerNationId) continue;
+
+    // Уже воюют с агрессором — не нужно повторно втягивать
+    const allyAtkRel = DiplomacyEngine.getRelation(allyId, attackerNationId);
+    if (allyAtkRel?.war) continue;
+
+    // Союзник воюет с самим защитником — нейтралитет
+    const allyDefRel = DiplomacyEngine.getRelation(allyId, defenderNationId);
+    if (allyDefRel?.war) continue;
+
+    const allyNation     = GAME_STATE.nations[allyId];
+    const attackerNation = GAME_STATE.nations[attackerNationId];
+    const defenderNation = GAME_STATE.nations[defenderNationId];
+    if (!allyNation || !attackerNation) continue;
+
+    const joinChance = treaty.type === 'military_alliance' ? 1.0 : 0.85;
+    if (Math.random() > joinChance) {
+      // Не вступил — трусость / нейтралитет, штраф к отношениям с защитником
+      const allyDefRelObj = DiplomacyEngine.getRelation(allyId, defenderNationId);
+      if (allyDefRelObj) allyDefRelObj.score = Math.max(-100, (allyDefRelObj.score ?? 0) - 15);
+      addEventLog(
+        `⚠️ ${allyNation.name} уклонился от исполнения союзного долга перед ${defenderNation?.name ?? defenderNationId}.`,
+        'warning'
+      );
+      continue;
+    }
+
+    // === Союзник вступает в войну ===
+
+    // DiplomacyEngine (канонический источник)
+    DiplomacyEngine.getRelation(allyId, attackerNationId).war = true;
+
+    // Старый формат relations (совместимость)
+    _ensureRelation(allyNation, attackerNationId);
+    _ensureRelation(attackerNation, allyId);
+    allyNation.relations[attackerNationId].at_war = true;
+    attackerNation.relations[allyId].at_war       = true;
+
+    // at_war_with массивы
+    allyNation.military.at_war_with     = allyNation.military.at_war_with     ?? [];
+    attackerNation.military.at_war_with = attackerNation.military.at_war_with ?? [];
+    if (!allyNation.military.at_war_with.includes(attackerNationId))
+      allyNation.military.at_war_with.push(attackerNationId);
+    if (!attackerNation.military.at_war_with.includes(allyId))
+      attackerNation.military.at_war_with.push(allyId);
+
+    const treatyLabel = treaty.type === 'military_alliance' ? 'Военный союз' : 'Оборонный союз';
+
+    if (attackerNationId === GAME_STATE.player_nation) {
+      addEventLog(
+        `🛡 ${allyNation.name} вступил в войну ПРОТИВ ВАС, защищая ${defenderNation?.name ?? defenderNationId} (${treatyLabel})!`,
+        'danger'
+      );
+    } else if (allyId === GAME_STATE.player_nation) {
+      addEventLog(
+        `🛡 ${treatyLabel} с ${defenderNation?.name ?? defenderNationId} обязывает вас вступить в войну против ${attackerNation.name}!`,
+        'danger'
+      );
+    } else {
+      addEventLog(
+        `🛡 ${allyNation.name} вступил в войну на стороне ${defenderNation?.name ?? defenderNationId} против ${attackerNation.name} (${treatyLabel}).`,
+        'info'
+      );
+    }
+
+    triggered.push(allyId);
+  }
+
+  return triggered;
+}
+
+/**
  * Возвращает true и блокирует атаку, если между нациями действует пакт о ненападении.
  * AI-атаки отклоняются молча. Если атакует игрок — он обязан сначала объявить войну
  * через declareWar() (там будет своя проверка с предупреждением).
@@ -333,6 +424,9 @@ function processAttackAction(attackerNationId, defenderNationId, opts = {}) {
     ? resolveNavalBattle(attackerNationId, defenderNationId)
     : resolveBattle(attackerNationId, defenderNationId, opts);
   if (!result) return;
+
+  // Оборонные союзы: союзники защитника автоматически вступают в войну
+  triggerDefensiveAlliances(attackerNationId, defenderNationId);
 
   const attName = GAME_STATE.nations[attackerNationId]?.name ?? attackerNationId;
   const defName = GAME_STATE.nations[defenderNationId]?.name ?? defenderNationId;

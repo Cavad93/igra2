@@ -1373,6 +1373,12 @@ function declareWar(targetNationId) {
   // Падение стабильности и счастья
   player.government.stability = Math.max(0, (player.government.stability ?? 50) - 5);
   player.population.happiness = Math.max(0, (player.population.happiness ?? 50) - 10);
+
+  // Оборонные союзы: союзники цели автоматически вступают в войну против игрока
+  if (typeof triggerDefensiveAlliances === 'function') {
+    triggerDefensiveAlliances(GAME_STATE.player_nation, targetNationId);
+  }
+
   renderAll();
 }
 
