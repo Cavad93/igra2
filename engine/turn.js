@@ -206,7 +206,7 @@ async function processTurn() {
     try { _recordTurnSummary(); } catch (e) { console.warn('[summary]', e); }
 
     // 7. Автосохранение
-    saveGame();
+    await saveGame();
 
     // 8. Обновляем весь UI
     renderAll();
@@ -697,105 +697,70 @@ function _recordTurnSummary() {
 // СОХРАНЕНИЕ / ЗАГРУЗКА
 // ──────────────────────────────────────────────────────────────
 
-function _buildSavePayload(level = 0) {
+function _buildSavePayload() {
   // Сериализуем SENATE_MANAGERS
   const senateData = {};
   for (const [nationId, mgr] of Object.entries(SENATE_MANAGERS)) {
     try { senateData[nationId] = mgr.toJSON(); } catch (_) {}
   }
 
-  // Исключаем всегда: эфемерные данные хода
+  // Исключаем эфемерные данные хода (пересчитываются каждый ход)
   const { _turn_summary_history, _last_turn_snapshot, _pending_char_initiatives, ...base } = GAME_STATE;
 
-  // Уровень обрезки: чем выше level, тем меньше сохраняем
-  if (level >= 1) {
-    // Обрезаем лог событий
-    if (base.events_log?.length > 20) base.events_log = base.events_log.slice(0, 20);
+  // Обрезаем лог событий до 50 записей
+  if (base.events_log?.length > 50) base.events_log = base.events_log.slice(0, 50);
 
-    // Для каждой нации обрезаем тяжёлые поля
-    for (const nation of Object.values(base.nations ?? {})) {
-      // Диалоговая память персонажей (сжимается каждый ход — её можно очистить)
-      for (const char of (nation.characters ?? [])) {
-        if (char.dialogue?.hot_memory?.length) char.dialogue.hot_memory = [];
-        if (char.history?.length > 5) char.history = char.history.slice(-5);
-      }
-      // AI-память нации: оставляем только свежие события
-      if (nation._memory?.events?.length > 30) {
-        nation._memory.events = nation._memory.events.slice(-30);
-      }
-    }
-  }
-
-  if (level >= 2) {
-    // Агрессивная обрезка: только критические поля
-    if (base.events_log?.length > 5) base.events_log = base.events_log.slice(0, 5);
-    for (const nation of Object.values(base.nations ?? {})) {
-      for (const char of (nation.characters ?? [])) {
-        if (char.dialogue) char.dialogue = { hot_memory: [] };
-        char.history = [];
-      }
-      if (nation._memory) nation._memory = { events: [] };
-    }
-  }
-
-  return JSON.stringify({ ...base, _senate: senateData });
+  return { ...base, _senate: senateData };
 }
 
-function saveGame() {
-  for (let level = 0; level <= 2; level++) {
-    try {
-      const data = _buildSavePayload(level);
-      localStorage.setItem(CONFIG.SAVE_KEY, data);
-      return; // успех
-    } catch (e) {
-      if (e.name !== 'QuotaExceededError' || level === 2) {
-        console.warn('Не удалось сохранить игру:', e);
-        addEventLog('⚠ Сохранение не удалось: переполнен localStorage. Сбросьте старое сохранение командой /reset.', 'warning');
-        return;
-      }
-      // Пробуем следующий уровень обрезки
-      console.warn(`[save] QuotaExceeded, пробуем уровень обрезки ${level + 1}`);
-    }
-  }
-}
-
-function loadGame() {
+async function saveGame() {
   try {
-    const saved = localStorage.getItem(CONFIG.SAVE_KEY);
-    if (saved) {
-      const loadedState = JSON.parse(saved);
+    const payload = _buildSavePayload();
+    await GameStorage.save(payload);
+  } catch (e) {
+    console.warn('[save] Ошибка сохранения:', e);
+    addEventLog('⚠ Автосохранение не удалось: ' + e.message, 'warning');
+  }
+}
 
-      // Восстанавливаем SENATE_MANAGERS до Object.assign,
-      // чтобы initSenateForNation() не перезаписывал их заново
-      if (loadedState._senate) {
-        for (const [nationId, data] of Object.entries(loadedState._senate)) {
-          try {
-            SENATE_MANAGERS[nationId] = SenateManager.fromJSON(data);
-          } catch (e) {
-            console.warn(`Не удалось восстановить сенат ${nationId}:`, e);
-          }
-        }
-        delete loadedState._senate;
-      }
+async function loadGame() {
+  try {
+    // Миграция старого сохранения из localStorage (однократно)
+    await GameStorage.migrate(CONFIG.SAVE_KEY);
 
-      Object.assign(GAME_STATE, loadedState);
-      _migrateCharacterIds();
-      _sanitizeInstitutions();
-      _migrateSenateConfig();
-      _migrateCharacterSenateFields();
+    const loadedState = await GameStorage.load();
+    if (!loadedState) return false;
 
-      // Совместимость: применяем REGION_BIOMES к регионам из сохранений
-      // созданных до того как region.biome был введён.
-      if (typeof REGION_BIOMES !== 'undefined') {
-        for (const [rid, biomeId] of Object.entries(REGION_BIOMES)) {
-          const r = GAME_STATE.regions[rid];
-          if (r && !r.biome) r.biome = biomeId;
+    // Восстанавливаем SENATE_MANAGERS до Object.assign,
+    // чтобы initSenateForNation() не перезаписывал их заново
+    if (loadedState._senate) {
+      for (const [nationId, data] of Object.entries(loadedState._senate)) {
+        try {
+          SENATE_MANAGERS[nationId] = SenateManager.fromJSON(data);
+        } catch (e) {
+          console.warn(`Не удалось восстановить сенат ${nationId}:`, e);
         }
       }
-
-      addEventLog('Игра загружена из сохранения.', 'info');
-      return true;
+      delete loadedState._senate;
     }
+
+    Object.assign(GAME_STATE, loadedState);
+    _migrateCharacterIds();
+    _sanitizeInstitutions();
+    _migrateSenateConfig();
+    _migrateCharacterSenateFields();
+
+    // Совместимость: применяем REGION_BIOMES к регионам из сохранений
+    // созданных до того как region.biome был введён.
+    if (typeof REGION_BIOMES !== 'undefined') {
+      for (const [rid, biomeId] of Object.entries(REGION_BIOMES)) {
+        const r = GAME_STATE.regions[rid];
+        if (r && !r.biome) r.biome = biomeId;
+      }
+    }
+
+    addEventLog('Игра загружена из сохранения.', 'info');
+    return true;
   } catch (e) {
     console.warn('Не удалось загрузить игру:', e);
   }
@@ -888,7 +853,7 @@ function _migrateCharacterSenateFields() {
 // ИНИЦИАЛИЗАЦИЯ ИГРЫ
 // ──────────────────────────────────────────────────────────────
 
-function initGame() {
+async function initGame() {
   // Инициализируем GAME_STATE из стартовых данных
   Object.assign(GAME_STATE, JSON.parse(JSON.stringify(INITIAL_GAME_STATE)));
 
@@ -935,7 +900,7 @@ function initGame() {
   }
 
   // Попытка загрузки сохранения
-  const hasSave = loadGame();
+  const hasSave = await loadGame();
 
   // Стартовый склад — только для новых игр (не загруженных сохранений).
   // Решает проблему холодного старта для циклических зависимостей:

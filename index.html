@@ -6293,6 +6293,7 @@
   <script src="engine/orders.js"></script>
   <script src="engine/culture.js"></script>
   <script src="engine/religion.js"></script>
+  <script src="engine/storage.js"></script>
   <script src="engine/turn.js"></script>
   <script src="ui/map.js"></script>
   <script src="ui/map_armies.js"></script>
@@ -6322,17 +6323,17 @@
     // Инициализируем ввод
     initInput();
 
-    // Запускаем игру (внутри initGame вызывается initCultures/initRegionCultures)
-    initGame();
-
-    // Инициализируем сенаты (Lazy Materialization)
-    initAllSenates();
-
-    // Заполняем легенду наций
-    renderNationLegend();
-
-    // Загружаем зашифрованный API ключ; если не найден — показываем модал
-    initAPIKey();
+    // Запускаем игру (async: загружает сохранение из IndexedDB)
+    initGame().then(() => {
+      // Инициализируем сенаты (Lazy Materialization)
+      initAllSenates();
+      // Заполняем легенду наций
+      renderNationLegend();
+      // Загружаем зашифрованный API ключ; если не найден — показываем модал
+      initAPIKey();
+    }).catch(e => {
+      console.error('[initGame] Критическая ошибка:', e);
+    });
 
     // ──────────────────────────────────────────
     // ЛЕГЕНДА НАЦИЙ
