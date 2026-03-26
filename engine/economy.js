@@ -594,8 +594,9 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
                        + taxByClass.commoners   + taxByClass.soldiers;
 
   // ── ДОХОДЫ: ПОРТОВЫЕ ПОШЛИНЫ ───────────────────────────────
+  // GAME_STATE.regions изначально пуст; географические данные хранятся в MAP_REGIONS
   const coastalRegions = nation.regions.filter(rId => {
-    const r = GAME_STATE.regions[rId];
+    const r = GAME_STATE.regions[rId] ?? MAP_REGIONS?.[rId];
     return r && (r.terrain === 'coastal_city');
   }).length;
   const portDuties = Math.round(coastalRegions * 120 + bldBonuses.port_bonus);

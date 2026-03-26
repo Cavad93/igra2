@@ -355,23 +355,32 @@ function _applyOrderEffects(order, quality, char, nation) {
     }
 
     case 'govern_region': {
-      // Управление провинцией → доход региона и счастье
-      const targetRegion = order.target_id
-        ? GAME_STATE.regions?.[order.target_id]
-        : null;
-      const happyDelta = Math.round((qf - 0.5) * 8);
-      if (targetRegion) {
-        targetRegion._governor_bonus = Math.round((qf - 0.5) * 20);  // -10..+10% доход
-      }
+      // Управление провинцией → счастье, стабильность, разовый налоговый бонус
+      const happyDelta  = Math.round((qf - 0.5) * 10);
+      const stabDelta   = Math.round((qf - 0.5) * 6);
+
       nation.population.happiness = Math.min(100, Math.max(0,
         (nation.population.happiness ?? 50) + happyDelta
       ));
-      if (quality >= 70) {
-        return `Провинция хорошо управляется. Счастье +${happyDelta}.`;
-      } else if (quality >= 40) {
-        return `Управление провинцией удовлетворительное.`;
+      nation.government.stability = Math.min(100, Math.max(0,
+        (nation.government.stability ?? 50) + stabDelta
+      ));
+
+      // Разовый налоговый доход от хорошо управляемой провинции
+      if (quality >= 50) {
+        const incomeBonus = Math.round(qf * 300);
+        nation.economy.treasury = (nation.economy.treasury ?? 0) + incomeBonus;
+        if (quality >= 70) {
+          return `Провинция процветает под управлением наместника. Стабильность +${stabDelta}, счастье +${happyDelta}, налоги +${incomeBonus} монет.`;
+        }
+        return `Управление провинцией удовлетворительное. Стабильность +${stabDelta}, счастье +${happyDelta}.`;
       } else {
-        return `Наместник злоупотребляет положением. Счастье ${happyDelta}.`;
+        // Наместник злоупотребляет — крадёт из казны
+        const stolen = Math.round(300 * (0.5 - qf));
+        nation.economy.treasury = Math.max(0, (nation.economy.treasury ?? 0) - stolen);
+        char.resources = char.resources ?? {};
+        char.resources.gold = (char.resources.gold ?? 0) + stolen;
+        return `Наместник злоупотребляет положением. Счастье ${happyDelta}, стабильность ${stabDelta}. Похищено ${stolen} монет из казны.`;
       }
     }
 

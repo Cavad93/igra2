@@ -899,6 +899,9 @@ async function initGame() {
     try { initBuildingOwnership(); } catch (e) { console.warn('[init_ownership]', e); }
   }
 
+  // Инициализируем массив приказов
+  if (typeof initOrders === 'function') initOrders();
+
   // Попытка загрузки сохранения
   const hasSave = await loadGame();
 
