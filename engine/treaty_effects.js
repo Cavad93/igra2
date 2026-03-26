@@ -263,8 +263,8 @@ function _onVassalage(treaty, a, b, natA, natB, cond) {
 function _onPeace(treaty, a, b, cond) {
   const rel = _rel(a, b);
   rel.war = false;
-  // Перемирие на 5 ходов
-  const until = (GAME_STATE.turn ?? 1) + 5;
+  // Перемирие на 5 лет = 60 ходов (1 год = 12 ходов)
+  const until = (GAME_STATE.turn ?? 1) + 5 * 12;
   rel.truces = (rel.truces ?? []).filter(t => t.until_turn > (GAME_STATE.turn ?? 1));
   rel.truces.push({ until_turn: until });
   rel.flags.no_attack = true;
