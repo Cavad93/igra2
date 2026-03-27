@@ -373,27 +373,55 @@ async function processAINations() {
     queue.push(nationId);
   }
 
-  // Запросы к Groq — ПОСЛЕДОВАТЕЛЬНО с паузой 500мс между ними.
-  // Это предотвращает rate limit 429 (Groq free tier: ~30 req/min).
-  const GROQ_PAUSE_MS  = 500;
-  const TOTAL_TIMEOUT  = 45_000; // 45с на всю очередь
+  // ── Батчинг: группируем по 5 наций → 1 запрос к Groq ─────────────
+  // Преимущество: 20 наций = 4 запроса вместо 20. Соблюдаем rate limit.
+  // При 100-200 нациях в tier 1/2 это снижает нагрузку на API в 5x.
+  const BATCH_SIZE     = 5;
+  const BATCH_PAUSE_MS = 800;   // пауза между батчами
+  const TOTAL_TIMEOUT  = 90_000; // 90с на все батчи
   const deadline       = Date.now() + TOTAL_TIMEOUT;
 
-  for (const nationId of queue) {
+  for (let i = 0; i < queue.length; i += BATCH_SIZE) {
     if (Date.now() > deadline) {
       console.warn('processAINations: таймаут, fallback для оставшихся наций');
-      applyFallbackDecision(nationId);
-      continue;
+      queue.slice(i).forEach(nId => applyFallbackDecision(nId));
+      break;
     }
 
-    await getAINationDecision(nationId, CONFIG.MODEL_HAIKU).catch(err => {
-      console.warn(`AI fallback для ${nationId}:`, err.message);
-      applyFallbackDecision(nationId);
-    });
+    const batch = queue.slice(i, i + BATCH_SIZE);
 
-    // Пауза между запросами (кроме последнего)
-    if (queue.indexOf(nationId) < queue.length - 1) {
-      await new Promise(r => setTimeout(r, GROQ_PAUSE_MS));
+    // Сначала пробуем батч-запрос (экономичнее)
+    let batchResults = new Map();
+    if (typeof getAIBatchDecisions === 'function') {
+      batchResults = await getAIBatchDecisions(batch, CONFIG.MODEL_HAIKU).catch(err => {
+        console.warn(`[batch] Ошибка батча (${batch.join(',')}):`, err.message);
+        return new Map();
+      });
+    }
+
+    // Для каждой нации применяем решение или fallback
+    for (const nationId of batch) {
+      const decision = batchResults.get(nationId);
+      if (decision && validateNationDecision(decision)) {
+        applyNationDecision(nationId, decision);
+      } else {
+        // Нация не получила решение от батча → одиночный запрос или fallback
+        const hasAPI = CONFIG.GROQ_API_KEY || CONFIG.API_KEY;
+        if (hasAPI && !batchResults.size) {
+          // Батч полностью провалился → одиночные запросы
+          await getAINationDecision(nationId, CONFIG.MODEL_HAIKU).catch(err => {
+            console.warn(`AI fallback для ${nationId}:`, err.message);
+            applyFallbackDecision(nationId);
+          });
+        } else {
+          applyFallbackDecision(nationId);
+        }
+      }
+    }
+
+    // Пауза между батчами (кроме последнего)
+    if (i + BATCH_SIZE < queue.length) {
+      await new Promise(r => setTimeout(r, BATCH_PAUSE_MS));
     }
   }
 

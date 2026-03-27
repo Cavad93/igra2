@@ -553,6 +553,61 @@ async function getAINationDecision(nationId, model = CONFIG.MODEL_HAIKU) {
   }
 }
 
+// ── Батч-решения: N наций → 1 Groq запрос ─────────────────────────────
+// Возвращает Map<nationId, decision> для всех наций в батче.
+// Нации у которых LLM не вернул решение получат fallback снаружи.
+async function getAIBatchDecisions(nationIds, model = CONFIG.MODEL_HAIKU) {
+  if (!nationIds.length) return new Map();
+
+  // Компактное описание каждой нации
+  const nationBlocks = nationIds.map(id => {
+    const n   = GAME_STATE.nations[id];
+    if (!n) return null;
+    const mil = n.military ?? {};
+    const eco = n.economy  ?? {};
+    const gov = n.government ?? {};
+    const str = (mil.infantry ?? 0) + (mil.cavalry ?? 0) * 3 + (mil.mercenaries ?? 0);
+    const bal = Math.round((eco.income_per_turn ?? 0) - (eco.expense_per_turn ?? 0));
+    const wars = (mil.at_war_with ?? []).map(eid => GAME_STATE.nations[eid]?.name ?? eid);
+
+    // Доступные действия (упрощённые)
+    const actions = buildAvailableActions(id, n).map(a =>
+      a.target ? `${a.action}:${a.target}` : a.action
+    ).slice(0, 8);
+
+    return `[${id}] ${n.name}
+  сила:${Math.round(str)} казна:${Math.round(eco.treasury ?? 0)} баланс:${bal > 0 ? '+' : ''}${bal}
+  стабильность:${gov.stability ?? 50} счастье:${n.population?.happiness ?? 50}
+  войны:[${wars.join(',')}]
+  действия:[${actions.join(',')}]`;
+  }).filter(Boolean).join('\n\n');
+
+  const system = `Ты стратег-советник. Прими решение для каждой нации.
+Верни ТОЛЬКО JSON-массив, без текста вокруг:
+[{"id":"nation_id","action":"действие","target":"цель_или_null","reasoning":"1 предложение"}]
+Допустимые action: wait, fortify, recruit, recruit_mercs, trade, diplomacy, attack, build.
+target: для attack/trade/diplomacy — id нации или региона, иначе null.`;
+
+  const user = `Нации для решения:\n\n${nationBlocks}\n\nВерни JSON-массив решений.`;
+
+  const raw = await callGroq(system, user, 600, model);
+
+  // Парсим ответ
+  const result = new Map();
+  try {
+    const parsed = extractJSON(raw);
+    const arr = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.decisions) ? parsed.decisions : []);
+    for (const item of arr) {
+      if (item?.id && item?.action) {
+        result.set(item.id, { action: item.action, target: item.target ?? null, reasoning: item.reasoning ?? '' });
+      }
+    }
+  } catch (e) {
+    console.warn('[batch] Ошибка парсинга батч-ответа:', e.message);
+  }
+  return result;
+}
+
 // ── #10: определить стратегическую фазу ───────────────────────
 function _calcStrategicPhase(nation, milSummary, internalSummary, activeWars) {
   const stability  = internalSummary.stability ?? 50;
