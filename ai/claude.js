@@ -130,8 +130,9 @@ async function callGroq(system, user, maxTokens = 1024, model = CONFIG.MODEL_HAI
   let response;
   try {
     response = await fetch(CONFIG.GROQ_API_URL, {
-      method: 'POST',
-      signal: controller.signal,
+      method:   'POST',
+      redirect: 'error',
+      signal:   controller.signal,
       headers: {
         'Content-Type':  'application/json',
         'Authorization': `Bearer ${CONFIG.GROQ_API_KEY}`,
