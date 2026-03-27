@@ -2583,6 +2583,23 @@ function canBuildInRegion(buildingId, region) {
     }
   }
 
+  // Крепость: проверяем лимит по размеру страны
+  if (b.is_fortress) {
+    const nationId = region.nation;
+    if (nationId && typeof getFortressLimit === 'function') {
+      const limit = getFortressLimit(nationId);
+      const count = getFortressCount(nationId);
+      // Если крепость уже есть в регионе — это апгрейд, лимит не нужен
+      const alreadyHere = (region.building_slots || [])
+        .some(s => s.building_id === 'fortress' && s.status !== 'demolished');
+      const inQueue = (region.construction_queue || [])
+        .some(e => e.building_id === 'fortress');
+      if (!alreadyHere && !inQueue && count >= limit) {
+        return { ok: false, reason: `Лимит крепостей: ${count}/${limit} (нужно больше регионов)` };
+      }
+    }
+  }
+
   // Крепость использует свой отдельный слот, а не общие строительные слоты
   if (!b.fortress_slot) {
     const maxSlots = getRegionMaxSlots(terrain);

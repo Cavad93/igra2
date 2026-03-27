@@ -124,6 +124,11 @@ async function processTurn() {
       try { processRecruitment(); } catch (e) { console.warn('[recruitment]', e); }
     }
 
+    // 2.15. Гарнизоны крепостей — набор из населения, убыль при недофинансировании
+    if (typeof processFortressGarrisons === 'function') {
+      try { processFortressGarrisons(); } catch (e) { console.warn('[fortress_garrisons]', e); }
+    }
+
     // 2.2. Возрастная демография — когорты, рабочая сила, законы труда
     if (typeof processAgeDemographics === 'function') {
       try { processAgeDemographics(); } catch (e) { console.warn('[age_demographics]', e); }

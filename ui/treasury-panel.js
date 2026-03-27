@@ -434,9 +434,27 @@ function _tpRenderExpenses() {
   });
 
   const fortSlider = _tpExpSliderRow('fortresses', '🏯', 'Крепости', (lvl) => {
-    if (Math.abs(lvl - 1.0) < 0.01) return '';
-    const d = parseFloat(((lvl - 1.0) * 2.0).toFixed(1));
-    return `${d >= 0 ? '✓' : '⚠'} Оборонный потенциал ×${lvl.toFixed(2)}, Стабильность: ${sign(d)}${d}/ход`;
+    // Сводка по крепостям: сколько активных, сколько законсервированных
+    const playerNation = GAME_STATE.player_nation;
+    let activeCount = 0, conservedCount = 0, totalGarrison = 0;
+    for (const rId of (GAME_STATE.nations?.[playerNation]?.regions ?? [])) {
+      const r = GAME_STATE.regions?.[rId];
+      if (!r || (r.fortress_level ?? 0) === 0) continue;
+      if (r.fortress_conserved) conservedCount++; else activeCount++;
+      totalGarrison += r.garrison ?? 0;
+    }
+    const lines = [];
+    if (activeCount > 0 || conservedCount > 0) {
+      lines.push(`Активных: ${activeCount}, законсервированных: ${conservedCount}`);
+      if (totalGarrison > 0) lines.push(`Гарнизон: ${totalGarrison.toLocaleString()} солдат`);
+    }
+    if (Math.abs(lvl - 1.0) > 0.01) {
+      const d = parseFloat(((lvl - 1.0) * 2.0).toFixed(1));
+      lines.push(`${d >= 0 ? '✓' : '⚠'} Оборона ×${lvl.toFixed(2)}, Стабильность: ${sign(d)}${d}/ход`);
+      if (lvl < 0.75) lines.push('⚠ Гарнизоны убывают при недофинансировании');
+    }
+    if (conservedCount > 0) lines.push('🔒 Законсервированные крепости ползунком не управляются');
+    return lines.join(' · ');
   });
 
   const bldSlider = _tpExpSliderRow('buildings', '🏛', 'Здания', (lvl) => {

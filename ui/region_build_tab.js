@@ -112,76 +112,134 @@ function _rbtFortressPanel(regionId, region, nation, queue) {
   const bDef    = (typeof BUILDINGS !== 'undefined') ? BUILDINGS.fortress : null;
   if (!bDef) return '';
 
-  const fortLvl   = region.fortress_level ?? 0;
-  const maxLvl    = bDef.max_level ?? 5;
-  const treasury  = nation?.economy?.treasury ?? 0;
+  const fortLvl      = region.fortress_level ?? 0;
+  const maxLvl       = bDef.max_level ?? 5;
+  const treasury     = nation?.economy?.treasury ?? 0;
+  const isConserved  = region.fortress_conserved === true;
 
-  // Слот крепости в building_slots
-  const fortSlot  = (region.building_slots || []).find(
-    s => s.building_id === 'fortress' && s.status !== 'demolished'
-  );
+  // Лимит крепостей
+  const nationId  = region.nation ?? nation?.id;
+  const fortLimit = (typeof getFortressLimit === 'function' && nationId)
+    ? getFortressLimit(nationId) : null;
+  const fortCount = (typeof getFortressCount === 'function' && nationId)
+    ? getFortressCount(nationId) : null;
+
   // Крепость в очереди?
-  const inQueue   = (queue || []).find(e => e.building_id === 'fortress');
+  const inQueue = (queue || []).find(e => e.building_id === 'fortress');
 
-  // Визуальная полоска уровней: ■ заполненные, □ пустые
+  // Визуальная полоска уровней
   const bars = Array.from({ length: maxLvl }, (_, i) =>
     `<span class="rbt-fort-bar ${i < fortLvl ? 'rbt-fort-bar--filled' : ''}" title="Уровень ${i + 1}"></span>`
   ).join('');
 
-  const label     = fortLvl > 0
+  const label    = fortLvl > 0
     ? (bDef.level_labels?.[fortLvl - 1] ?? `Уровень ${fortLvl}`)
     : 'Нет';
-  const garrison  = fortLvl > 0
-    ? `+${(bDef.level_garrison_bonus?.[fortLvl - 1] ?? 0).toLocaleString()} гарнизон`
+  const garMax   = typeof FORTRESS_GARRISON_MAX !== 'undefined'
+    ? (FORTRESS_GARRISON_MAX[fortLvl] ?? 0) : (bDef.level_garrison_bonus?.[fortLvl - 1] ?? 0);
+  const garrison = region.garrison ?? 0;
+  const garText  = fortLvl > 0
+    ? `Гарнизон: ${garrison.toLocaleString()}/${garMax.toLocaleString()}`
     : '';
 
-  // Состояние кнопки
-  let btn = '';
+  // Текущее содержание
+  let upkeepText = '';
+  if (fortLvl > 0 && typeof calcFortressExpenses === 'function') {
+    const costs = calcFortressExpenses(nationId);
+    const detail = costs.detail?.find(d => d.regionId === regionId);
+    if (detail) {
+      upkeepText = isConserved
+        ? `Содержание: ${detail.baseCost}₴/ход (консервация)`
+        : `Содержание: ~${detail.baseCost}₴/ход`;
+    }
+  }
+
+  // ── Кнопка постройки/улучшения ──────────────────────────────
+  let buildBtn = '';
   if (inQueue) {
     const pct = inQueue.turns_total > 0
-      ? Math.round((1 - inQueue.turns_left / inQueue.turns_total) * 100)
-      : 0;
-    btn = `
+      ? Math.round((1 - inQueue.turns_left / inQueue.turns_total) * 100) : 0;
+    buildBtn = `
       <div class="rbt-fort-inqueue">
         <span>🏗 Строится… ${inQueue.turns_left} ход(а)</span>
         <div class="rbt-ac-prog"><div class="rbt-ac-prog-fill" style="width:${pct}%"></div></div>
         <button class="rbt-ac-btn rbt-ac-btn--cancel"
-          onclick="uiCancelConstruction('${regionId}','${inQueue.slot_id}')">
-          ✕ Отменить
-        </button>
+          onclick="uiCancelConstruction('${regionId}','${inQueue.slot_id}')">✕ Отменить</button>
       </div>`;
   } else if (fortLvl < maxLvl) {
-    const nextLvl  = fortLvl + 1;
-    const cost     = bDef.level_costs?.[nextLvl - 1] ?? bDef.cost;
-    const turns    = bDef.level_build_turns?.[nextLvl - 1] ?? 4;
-    const nextLabel= bDef.level_labels?.[nextLvl - 1] ?? `Уровень ${nextLvl}`;
+    const nextLvl   = fortLvl + 1;
+    const cost      = bDef.level_costs?.[nextLvl - 1] ?? bDef.cost;
+    const turns     = bDef.level_build_turns?.[nextLvl - 1] ?? 4;
+    const nextLabel = bDef.level_labels?.[nextLvl - 1] ?? `Уровень ${nextLvl}`;
     const canAfford = treasury >= cost;
-    const btnCls   = canAfford ? 'rbt-fort-btn' : 'rbt-fort-btn rbt-fort-btn--noafford';
-    const action   = fortLvl === 0 ? 'Построить' : 'Улучшить';
-    btn = `
-      <button class="${btnCls}"
-        ${!canAfford ? 'disabled' : `onclick="uiOrderConstruction('${regionId}','fortress')"`}
-        title="${nextLabel} · ${turns} ход(а) · ${cost} монет">
+    // Проверяем лимит (только если строим новую, не улучшаем)
+    const atLimit   = fortLvl === 0 && fortLimit !== null && fortCount !== null && fortCount >= fortLimit;
+    const disabled  = !canAfford || atLimit;
+    const disReason = atLimit
+      ? `Лимит крепостей: ${fortCount}/${fortLimit}`
+      : (!canAfford ? `Нужно ${cost.toLocaleString()} монет` : '');
+    const action    = fortLvl === 0 ? 'Построить' : 'Улучшить';
+    buildBtn = `
+      <button class="rbt-fort-btn ${disabled ? 'rbt-fort-btn--noafford' : ''}"
+        ${disabled ? 'disabled' : `onclick="uiOrderConstruction('${regionId}','fortress')"`}
+        title="${disReason || `${nextLabel} · ${turns} ход(а) · ${cost} монет`}">
         ${action} ур.${nextLvl} — ${nextLabel}<br>
-        <span class="rbt-fort-cost ${canAfford ? '' : 'rbt-ac-cost--no'}">
+        <span class="rbt-fort-cost ${canAfford && !atLimit ? '' : 'rbt-ac-cost--no'}">
           💰${cost.toLocaleString()} · ${turns} ход${_rbtTurnsSuffix(turns)}
+          ${atLimit ? ` · ${disReason}` : ''}
         </span>
       </button>`;
   } else {
-    btn = `<span class="rbt-fort-maxlvl">Максимальный уровень достигнут</span>`;
+    buildBtn = `<span class="rbt-fort-maxlvl">Максимальный уровень достигнут</span>`;
   }
 
+  // ── Кнопка консервации (только если крепость построена) ─────
+  let conserveBtn = '';
+  if (fortLvl > 0) {
+    if (isConserved) {
+      conserveBtn = `
+        <button class="rbt-fort-conserve-btn rbt-fort-conserve-btn--active"
+          onclick="toggleFortressConservation('${regionId}')"
+          title="Расконсервировать — восстановить полное содержание, начать набор гарнизона">
+          🔓 Расконсервировать
+        </button>`;
+    } else {
+      conserveBtn = `
+        <button class="rbt-fort-conserve-btn"
+          onclick="toggleFortressConservation('${regionId}')"
+          title="Законсервировать — содержание −90%, гарнизон заморожен, ползунок не влияет">
+          🔒 Законсервировать
+        </button>`;
+    }
+  }
+
+  const conservedBadge = isConserved
+    ? `<span class="rbt-fort-conserved-badge">🔒 Законсервирована</span>`
+    : '';
+
+  const limitHint = (fortLimit !== null && fortLvl === 0)
+    ? `<span class="rbt-fort-limit">Крепостей: ${fortCount}/${fortLimit}</span>`
+    : '';
+
   return `
-    <div class="rbt-fort-panel">
+    <div class="rbt-fort-panel ${isConserved ? 'rbt-fort-panel--conserved' : ''}">
       <div class="rbt-fort-hdr">
         <span class="rbt-fort-icon">🏰</span>
         <span class="rbt-fort-title">Крепость</span>
-        <span class="rbt-fort-lvl">${fortLvl > 0 ? `Ур. ${fortLvl}/${maxLvl}` : 'Нет'}</span>
+        ${conservedBadge}
+        <span class="rbt-fort-lvl">${fortLvl > 0 ? `Ур. ${fortLvl}/${maxLvl}` : 'Нет'}${limitHint}</span>
       </div>
       <div class="rbt-fort-body">
         <div class="rbt-fort-bars">${bars}</div>
-        <div class="rbt-fort-label">${label}${garrison ? ` · ${garrison}` : ''}</div>
-        ${btn}
+        <div class="rbt-fort-info">
+          <span class="rbt-fort-label">${label}</span>
+          ${garText ? `<span class="rbt-fort-garrison">${garText}</span>` : ''}
+          ${upkeepText ? `<span class="rbt-fort-upkeep">${upkeepText}</span>` : ''}
+        </div>
+        <div class="rbt-fort-actions">
+          ${buildBtn}
+          ${conserveBtn}
+        </div>
       </div>
     </div>
   `;

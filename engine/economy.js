@@ -635,16 +635,27 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
 
   // ── РАСХОДЫ: КРЕПОСТИ ──────────────────────────────────────
   // Считаем 'walls' в nation.buildings (legacy) и building_slots с типом 'walls'
-  const legacyWalls = (nation.buildings || []).filter(b => b === 'walls').length;
-  let slotWalls = 0;
-  for (const regionId of nation.regions) {
-    const region = GAME_STATE.regions[regionId];
-    if (!region) continue;
-    slotWalls += (region.building_slots || []).filter(
-      s => s.status === 'active' && (s.building_id === 'walls' || s.building_id === 'fortress')
-    ).length;
+  // ── РАСХОДЫ: КРЕПОСТИ ─────────────────────────────────────────
+  // Активные крепости — множитель ползунка применяется.
+  // Законсервированные — 10% стоимости, ползунок НЕ влияет.
+  let expFortresses = 0, expFortressesConserved = 0;
+  if (typeof calcFortressExpenses === 'function') {
+    const fCosts = calcFortressExpenses(nationId);
+    expFortresses          = fCosts.active;
+    expFortressesConserved = fCosts.conserved;
+  } else {
+    // Fallback: плоская формула для legacy-зданий
+    const legacyWalls = (nation.buildings || []).filter(b => b === 'walls').length;
+    let slotWalls = 0;
+    for (const regionId of nation.regions) {
+      const region = GAME_STATE.regions[regionId];
+      if (!region) continue;
+      slotWalls += (region.building_slots || []).filter(
+        s => s.status === 'active' && (s.building_id === 'walls' || s.building_id === 'fortress')
+      ).length;
+    }
+    expFortresses = (legacyWalls + slotWalls) * 80;
   }
-  const expFortresses = (legacyWalls + slotWalls) * 80;
 
   // ── РАСХОДЫ: ЗДАНИЯ ────────────────────────────────────────
   // Обычные здания (без стен — они уже учтены выше)
@@ -689,7 +700,8 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   const effCourtExp     = Math.round(expCourt            * courtLvl);
   const effAdvisorsExp  = Math.round(expAdvisors         * courtLvl);
   const effStabExp      = Math.round(expStability        * stabilLvl);
-  const effFortresses   = Math.round(expFortresses       * fortressLvl);
+  // Законсервированные крепости — фиксированная стоимость, ползунок не влияет
+  const effFortresses   = Math.round(expFortresses * fortressLvl) + expFortressesConserved;
   const effBuildings    = Math.round(expBuildings        * buildingsLvl);
 
   const totalExpense = effArmyInf + effArmyCav + effArmyMerc
@@ -783,9 +795,10 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
     stability:         effStabExp,
     stability_base:    expStability,
     stability_level:   stabilLvl,
-    fortresses:        effFortresses,
-    fortresses_base:   expFortresses,
-    fortresses_level:  fortressLvl,
+    fortresses:           effFortresses,
+    fortresses_base:      expFortresses,
+    fortresses_conserved: expFortressesConserved,
+    fortresses_level:     fortressLvl,
     buildings:         effBuildings,
     buildings_base:    expBuildings,
     buildings_level:   buildingsLvl,

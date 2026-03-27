@@ -4867,6 +4867,54 @@
     .rbt-fort-maxlvl { font-size: 10px; color: #81c784; }
     .rbt-fort-inqueue { display: flex; flex-direction: column; gap: 3px; font-size: 10px; color: #ffb74d; }
 
+    /* Информационная строка гарнизона/содержания */
+    .rbt-fort-info { display: flex; flex-direction: column; gap: 2px; }
+    .rbt-fort-garrison { font-size: 9.5px; color: #90caf9; }
+    .rbt-fort-upkeep   { font-size: 9px;   color: var(--text-dim); }
+    .rbt-fort-limit    { font-size: 9px; color: var(--text-dim); margin-left: auto; }
+
+    /* Действия: кнопка постройки + консервация */
+    .rbt-fort-actions { display: flex; flex-direction: column; gap: 4px; }
+
+    /* Кнопка консервации */
+    .rbt-fort-conserve-btn {
+      display: block; width: 100%; text-align: center;
+      padding: 4px 8px; border-radius: 4px; font-size: 10px;
+      background: transparent;
+      border: 1px solid rgba(150,130,80,.3);
+      color: var(--text-dim); cursor: pointer;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .rbt-fort-conserve-btn:hover {
+      background: rgba(150,130,80,.15); border-color: rgba(200,180,100,.5);
+      color: var(--text-light);
+    }
+    .rbt-fort-conserve-btn--active {
+      background: rgba(100,80,20,.2); border-color: rgba(200,160,60,.4);
+      color: #d4a843;
+    }
+    .rbt-fort-conserve-btn--active:hover {
+      background: rgba(100,80,20,.35);
+    }
+
+    /* Бейдж консервации в заголовке */
+    .rbt-fort-conserved-badge {
+      font-size: 9px; color: #d4a843;
+      background: rgba(100,80,20,.25);
+      border: 1px solid rgba(200,160,60,.3);
+      border-radius: 3px; padding: 1px 5px;
+    }
+
+    /* Панель законсервированной крепости — приглушённый фон */
+    .rbt-fort-panel--conserved {
+      background: rgba(80,60,10,.10);
+      border-color: rgba(150,120,40,.18);
+    }
+    .rbt-fort-panel--conserved .rbt-fort-bar--filled {
+      background: linear-gradient(135deg, #6b5a1a, #9a8030);
+      box-shadow: none; opacity: .7;
+    }
+
     /* ════════════════════════════════════════════════════════════════
        ЭКОНОМИЧЕСКИЙ ОБЗОР (React) — анимации и глобальные стили
        ════════════════════════════════════════════════════════════════ */
@@ -6846,6 +6894,7 @@
   <script src="engine/diplomacy_range.js"></script>
   <script src="engine/memory.js"></script>
   <script src="engine/buildings.js"></script>
+  <script src="engine/fortress.js"></script>
   <script src="engine/market.js"></script>
   <script src="engine/provinces.js"></script>
   <script src="engine/economy.js"></script>
