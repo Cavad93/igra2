@@ -852,6 +852,18 @@ function declareWar(attackerNationId, targetNationId) {
   if (natA?.relations?.[targetNationId]) natA.relations[targetNationId].at_war = true;
   if (natB?.relations?.[attackerNationId]) natB.relations[attackerNationId].at_war = true;
 
+  // Обновляем military.at_war_with — проверяется логикой мобилизации AI
+  if (natA?.military) {
+    if (!natA.military.at_war_with) natA.military.at_war_with = [];
+    if (!natA.military.at_war_with.includes(targetNationId))
+      natA.military.at_war_with.push(targetNationId);
+  }
+  if (natB?.military) {
+    if (!natB.military.at_war_with) natB.military.at_war_with = [];
+    if (!natB.military.at_war_with.includes(attackerNationId))
+      natB.military.at_war_with.push(attackerNationId);
+  }
+
   // Разрываем несовместимые договоры (пакты о ненападении, союзы)
   const incompatible = ['non_aggression', 'defensive_alliance', 'military_alliance', 'military_access'];
   for (const t of (GAME_STATE.diplomacy.treaties ?? [])) {
@@ -870,7 +882,69 @@ function declareWar(attackerNationId, targetNationId) {
     const warn = breakingArmistice ? ' ⚠️ Перемирие нарушено! Штраф к отношениям.' : '';
     addEventLog(`⚔️ ${aN} объявляет войну ${bN}!${warn}`, 'danger');
   }
+
+  // Немедленная мобилизация AI-нации(-й) в ответ на объявление войны.
+  // Не ждём следующего хода — атакованная страна начинает набирать армию сейчас.
+  const playerNation = GAME_STATE.player_nation;
+  for (const [nationId, nation] of [
+    [attackerNationId, natA],
+    [targetNationId,   natB],
+  ]) {
+    if (!nation || nationId === playerNation) continue; // игрок управляет собой
+    _warMobilizationResponse(nationId, nation);
+  }
+
   return { ok: true, breaking_armistice: breakingArmistice };
+}
+
+/**
+ * Немедленная мобилизация AI-нации в ответ на войну.
+ * Вызывается однажды в момент объявления войны — первый экстренный набор.
+ * Регулярная мобилизация продолжается через applyFallbackDecision каждый ход.
+ */
+function _warMobilizationResponse(nationId, nation) {
+  const military = nation.military;
+  const treasury = nation.economy?.treasury ?? 0;
+  const pop      = nation.population?.total ?? 0;
+
+  // Размер экстренного набора: до 3% населения, не дороже 30% казны
+  const maxByPop  = Math.floor(pop * 0.03);
+  const maxByGold = treasury > 0
+    ? Math.floor(treasury * 0.30 / Math.max(1, CONFIG?.BALANCE?.INFANTRY_UPKEEP ?? 2))
+    : 0;
+  const recruits  = Math.max(0, Math.min(maxByPop, maxByGold, 1500));
+
+  if (recruits > 0) {
+    military.infantry = (military.infantry ?? 0) + recruits;
+    const cost = recruits * (CONFIG?.BALANCE?.INFANTRY_UPKEEP ?? 2) * 3;
+    nation.economy.treasury = Math.max(0, treasury - cost);
+
+    if (typeof addEventLog === 'function') {
+      addEventLog(
+        `🛡 ${nation.name ?? nationId} объявляет военную мобилизацию! `
+        + `Набрано ${recruits} солдат.`,
+        'military'
+      );
+    }
+    if (typeof addMemoryEvent === 'function') {
+      addMemoryEvent(nationId, 'military', `Экстренная мобилизация: +${recruits} пехоты в ответ на войну.`);
+    }
+  }
+
+  // Если есть наёмники — нанять дополнительно
+  if (treasury > 4000 && (military.mercenaries ?? 0) < 400) {
+    const mercs = Math.min(200, Math.floor((treasury - 4000) / 25));
+    if (mercs > 0) {
+      military.mercenaries = (military.mercenaries ?? 0) + mercs;
+      nation.economy.treasury -= mercs * (CONFIG?.BALANCE?.MERCENARY_UPKEEP ?? 5) * 3;
+      if (typeof addEventLog === 'function') {
+        addEventLog(
+          `⚔️ ${nation.name ?? nationId} нанимает ${mercs} наёмников.`,
+          'military'
+        );
+      }
+    }
+  }
 }
 
 /** Штраф к отношениям агрессора со всеми его соседями при нарушении перемирия. */

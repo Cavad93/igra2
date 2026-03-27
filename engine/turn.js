@@ -423,6 +423,19 @@ function applyFallbackDecision(nationId) {
     }
   };
 
+  // ── Синхронизация at_war_with с дипломатическими отношениями ─────
+  // Гарантируем, что military.at_war_with актуален (источник истины — rel.war)
+  if (!military.at_war_with) military.at_war_with = [];
+  if (typeof getRelation === 'function') {
+    for (const otherId of Object.keys(GAME_STATE.nations ?? {})) {
+      if (otherId === nationId) continue;
+      const rel = getRelation(nationId, otherId);
+      const inList = military.at_war_with.includes(otherId);
+      if (rel?.war && !inList) military.at_war_with.push(otherId);
+      if (!rel?.war && inList) military.at_war_with = military.at_war_with.filter(id => id !== otherId);
+    }
+  }
+
   // Приоритет 1: если мало армии относительно населения — рекрутируем
   // cavalry * 3: cavalry units count as 3x for military strength purposes (mounted troops are ~3x more effective)
   const armyRatio = (military.infantry + military.cavalry * 3) / Math.max(1, pop.total);
