@@ -1660,8 +1660,15 @@ function renderMap() {
     requestAnimationFrame(() => {
       try {
         initLeafletMap();
-        // invalidateSize на случай если контейнер ещё не получил финальный размер
-        setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 100);
+        // invalidateSize на случай если контейнер ещё не получил финальный размер.
+        // После корректировки размера принудительно обновляем стили регионов —
+        // Canvas-рендерер мог нарисовать полигоны в контейнер нулевого размера.
+        setTimeout(() => {
+          if (leafletMap) {
+            leafletMap.invalidateSize();
+            requestAnimationFrame(() => refreshRegionStyles());
+          }
+        }, 150);
       } catch (e) {
         console.error('Leaflet init error:', e);
       }
