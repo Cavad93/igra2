@@ -347,7 +347,7 @@ function _onReparations(treaty, a, b, natA, natB, cond) {
 
 function _onTerritorialExchange(treaty, a, b, cond) {
   if (!Array.isArray(cond.transfer_regions) || !cond.transfer_regions.length) return;
-  const [fromId, toId] = [a, b]; // по умолчанию: a передаёт b
+  const toId = b; // по умолчанию: a передаёт b
 
   const transferredFrom = new Set();
 

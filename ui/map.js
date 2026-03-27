@@ -369,22 +369,23 @@ function buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor = nu
 }
 
 function buildTooltipContent(regionId, mapData, nationId) {
-  const nation = GAME_STATE.nations[nationId];
   const gameRegion = GAME_STATE.regions[regionId];
-  const nationName = nation ? nation.name : 'Независимые';
+
+  // При оккупации — показываем оригинального владельца как основную нацию,
+  // а захватчика — отдельной строкой
+  const isOccupied  = !!(gameRegion?.occupied_by && gameRegion?.original_nation);
+  const displayNatId = isOccupied ? gameRegion.original_nation : nationId;
+  const nation = GAME_STATE.nations[displayNatId];
+  const nationName  = nation ? nation.name : 'Независимые';
   const nationColor = nation ? nation.color : '#A8A898';
   const pop = gameRegion ? (gameRegion.population || 0).toLocaleString() : '?';
 
   // Оккупация
   let occupyStr = '';
-  if (gameRegion?.occupied_by && gameRegion?.original_nation) {
-    const occNation  = GAME_STATE.nations[gameRegion.occupied_by];
-    const origNation = GAME_STATE.nations[gameRegion.original_nation];
-    const occColor   = occNation?.color ?? '#f44336';
-    occupyStr = `<div class="rt-occupied" style="color:${occColor}">
-      ⚔️ Оккупировано: ${occNation?.name ?? gameRegion.occupied_by}
-      <span style="color:#8a6e3a">(было: ${origNation?.name ?? gameRegion.original_nation})</span>
-    </div>`;
+  if (isOccupied) {
+    const occNation = GAME_STATE.nations[gameRegion.occupied_by];
+    const occColor  = occNation?.color ?? '#f44336';
+    occupyStr = `<div class="rt-occupied" style="color:${occColor}">⚔️ Оккупировано: ${occNation?.name ?? gameRegion.occupied_by}</div>`;
   }
 
   // Индикатор крепости

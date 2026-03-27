@@ -5,8 +5,7 @@
 //             анимацию катапульты, кнопку ШТУРМ с пульсацией.
 // ══════════════════════════════════════════════════════════════════════
 
-let _activeSiegeId   = null;
-let _siegePanelTimer = null;
+let _activeSiegeId = null;
 
 // ── Открыть панель осады ──────────────────────────────────────────────
 
@@ -156,7 +155,7 @@ function _renderSiegePanel(siege) {
   }
 }
 
-function _setBar(id, pct, fillColor, bgColor) {
+function _setBar(id, pct, fillColor) {
   const el = document.getElementById(id);
   if (!el) return;
   el.style.setProperty('--bar-pct',   pct + '%');

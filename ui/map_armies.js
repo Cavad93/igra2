@@ -273,7 +273,7 @@ function _renderArmyPanel(armyId) {
     return s ? `<div class="army-siege-info">
       🏰 Осада ${s.region_name}: <b>${Math.round(s.progress)}%</b>
       <button class="army-btn" onclick="showSiegePanel('${s.id}')">📊 Панель</button>
-      ${s.storm_possible ? `<button class="army-btn army-btn--danger" onclick="siegePanelStorm && (window._activeSiegeId='${s.id}', siegePanelStorm())">⚔️ Штурм</button>` : ''}
+      ${s.storm_possible ? `<button class="army-btn army-btn--danger" onclick="showSiegePanel('${s.id}');setTimeout(()=>siegePanelStorm&&siegePanelStorm(),50)">⚔️ Штурм</button>` : ''}
       <button class="army-btn" onclick="liftSiege('${army.id}');renderAllArmies();">🏃 Снять</button>
     </div>` : '';
   })() : '';

@@ -208,18 +208,24 @@ function _isFortressLineBlocked(regionId, movingNationId) {
 
 /**
  * Проверяет, находятся ли две нации в состоянии войны.
- * Смотрит military.at_war_with и дипломатические отношения.
+ * Проверяет оба источника: military.at_war_with И DiplomacyEngine/getRelation.
+ * Это предотвращает рассинхронизацию между старыми сохранениями и новым кодом.
  */
 function _armiesAtWar(nationA, nationB) {
   if (!nationA || !nationB || nationA === nationB) return false;
   const na = GAME_STATE.nations?.[nationA];
   const nb = GAME_STATE.nations?.[nationB];
+  // Проверяем military.at_war_with (новый формат)
   if (na?.military?.at_war_with?.includes(nationB)) return true;
   if (nb?.military?.at_war_with?.includes(nationA)) return true;
-  if (typeof getRelation === 'function') {
-    const rel = getRelation(nationA, nationB);
+  // Проверяем DiplomacyEngine (основной источник правды)
+  if (typeof DiplomacyEngine !== 'undefined') {
+    const rel = DiplomacyEngine.getRelation?.(nationA, nationB);
     if (rel?.war === true) return true;
   }
+  // Проверяем устаревший формат nation.relations
+  if (na?.relations?.[nationB]?.at_war === true) return true;
+  if (nb?.relations?.[nationA]?.at_war === true) return true;
   return false;
 }
 
@@ -662,25 +668,37 @@ function checkNationElimination(nationId, captorId) {
   nation.is_eliminated = true;
   nation.eliminated_turn = GAME_STATE.turn ?? 1;
 
-  // Снимаем войну между ними
-  if (captorId) {
+  // Снимаем войну со ВСЕМИ нациями, а не только с captorId
+  const warEnemies = [...(nation.military?.at_war_with ?? [])];
+  if (nation.military?.at_war_with) nation.military.at_war_with = [];
+
+  for (const enemyId of warEnemies) {
+    const enemy = GAME_STATE.nations[enemyId];
+    if (enemy?.military?.at_war_with) {
+      enemy.military.at_war_with = enemy.military.at_war_with.filter(id => id !== nationId);
+    }
+    if (typeof getRelation === 'function') {
+      const rel = getRelation(enemyId, nationId);
+      if (rel) rel.war = false;
+    }
+    // Очищаем оккупационные метки на регионах этого врага
+    for (const r of Object.values(GAME_STATE.regions ?? {})) {
+      if (r.original_nation === nationId) {
+        r.occupied_by     = null;
+        r.original_nation = null;
+      }
+    }
+  }
+
+  // Если captorId не был в at_war_with (захват без явной войны) — всё равно чистим
+  if (captorId && !warEnemies.includes(captorId)) {
     const captor = GAME_STATE.nations[captorId];
     if (captor?.military?.at_war_with) {
       captor.military.at_war_with = captor.military.at_war_with.filter(id => id !== nationId);
     }
-    if (nation?.military?.at_war_with) {
-      nation.military.at_war_with = nation.military.at_war_with.filter(id => id !== captorId);
-    }
     if (typeof getRelation === 'function') {
       const rel = getRelation(captorId, nationId);
       if (rel) rel.war = false;
-    }
-    // Очищаем оккупационные метки с регионов захватчика
-    for (const r of Object.values(GAME_STATE.regions ?? {})) {
-      if (r.nation === captorId && r.original_nation === nationId) {
-        r.occupied_by      = null;
-        r.original_nation  = null;
-      }
     }
   }
 
