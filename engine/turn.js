@@ -354,53 +354,46 @@ async function processAINations() {
     try { refreshDiploDistances(); } catch (e) { console.warn('[diplo_range]', e); }
   }
 
-  const promises        = [];
-  const pendingNationIds = [];
+  // Собираем очередь: [nationId, tier] только для наций которые делают AI-запрос
+  const queue = [];
 
   for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
-    if (nation.is_player) continue;
-    if (nation.is_minor)  continue;
-
-    // Каждые 3 хода AI нации принимают решение
+    if (nation.is_player)    continue;
+    if (nation.is_minor)     continue;
+    if (nation.is_eliminated) continue;
     if (GAME_STATE.turn % 3 !== 0) continue;
 
-    // Определяем tier доступности (1=Sonnet, 2=Haiku, 3=только fallback)
-    const tier = typeof getNationTier === 'function'
-      ? getNationTier(nationId)
-      : 1;
+    const tier = typeof getNationTier === 'function' ? getNationTier(nationId) : 1;
 
     if (tier === 3) {
-      // Дальняя нация — не тратим API, только детерминированный fallback
       applyFallbackDecision(nationId);
       continue;
     }
 
-    // Tier 1 → Sonnet (полный контекст), Tier 2 → Haiku (экономия)
-    const model = CONFIG.MODEL_HAIKU; // Sonnet только для реального диалога с игроком
-
-    pendingNationIds.push(nationId);
-    promises.push(
-      getAINationDecision(nationId, model).catch(err => {
-        console.warn(`AI fallback для ${nationId} (tier ${tier}):`, err.message);
-        applyFallbackDecision(nationId);
-      })
-    );
+    queue.push(nationId);
   }
 
-  if (promises.length > 0) {
-    // Таймаут 15 секунд
-    const timeoutId      = { fired: false };
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => { timeoutId.fired = true; reject(new Error('AI timeout')); }, 15000)
-    );
+  // Запросы к Groq — ПОСЛЕДОВАТЕЛЬНО с паузой 500мс между ними.
+  // Это предотвращает rate limit 429 (Groq free tier: ~30 req/min).
+  const GROQ_PAUSE_MS  = 500;
+  const TOTAL_TIMEOUT  = 45_000; // 45с на всю очередь
+  const deadline       = Date.now() + TOTAL_TIMEOUT;
 
-    try {
-      await Promise.race([Promise.all(promises), timeoutPromise]);
-    } catch (err) {
-      if (timeoutId.fired) {
-        console.warn('processAINations: таймаут 15с, применяем fallback');
-        for (const nId of pendingNationIds) applyFallbackDecision(nId);
-      }
+  for (const nationId of queue) {
+    if (Date.now() > deadline) {
+      console.warn('processAINations: таймаут, fallback для оставшихся наций');
+      applyFallbackDecision(nationId);
+      continue;
+    }
+
+    await getAINationDecision(nationId, CONFIG.MODEL_HAIKU).catch(err => {
+      console.warn(`AI fallback для ${nationId}:`, err.message);
+      applyFallbackDecision(nationId);
+    });
+
+    // Пауза между запросами (кроме последнего)
+    if (queue.indexOf(nationId) < queue.length - 1) {
+      await new Promise(r => setTimeout(r, GROQ_PAUSE_MS));
     }
   }
 

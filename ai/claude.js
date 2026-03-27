@@ -108,12 +108,9 @@ async function callGroq(system, user, maxTokens = 1024, model = CONFIG.MODEL_HAI
     throw new Error('Groq API ключ не установлен (CONFIG.GROQ_API_KEY)');
   }
 
-  const controller = new AbortController();
-  const timeoutMs  = maxTokens > 512 ? 60_000 : _API_TIMEOUT_MS;
-  const timer      = setTimeout(() => controller.abort(), timeoutMs);
+  const timeoutMs = maxTokens > 512 ? 60_000 : _API_TIMEOUT_MS;
 
   // Определяем нужен ли JSON-режим (структурированный вывод)
-  // Включаем для задач где ожидаем JSON в ответе
   const wantsJson = user.includes('"action"') || user.includes('верни JSON') ||
                     user.includes('Верни JSON') || system.includes('ТОЛЬКО JSON');
 
@@ -127,36 +124,51 @@ async function callGroq(system, user, maxTokens = 1024, model = CONFIG.MODEL_HAI
     ...(wantsJson && { response_format: { type: 'json_object' } }),
   };
 
-  let response;
-  try {
-    response = await fetch(CONFIG.GROQ_API_URL, {
-      method:   'POST',
-      redirect: 'error',
-      signal:   controller.signal,
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `Bearer ${CONFIG.GROQ_API_KEY}`,
-      },
-      body: JSON.stringify(body),
-    });
-  } catch (err) {
-    if (err.name === 'AbortError') throw new Error(`Groq timeout (${timeoutMs / 1000}s)`);
-    throw err;
-  } finally {
-    clearTimeout(timer);
-  }
+  // До 2 повторных попыток при 429 (rate limit): задержки 3s, 7s
+  const RETRY_DELAYS = [3000, 7000];
 
-  if (!response.ok) {
-    const errBody = await response.text().catch(() => '');
-    // 429 = rate limit — пробрасываем явно чтобы вызывающий код мог откатиться к fallback
-    if (response.status === 429) throw new Error(`Groq rate limit (429): ${errBody.slice(0, 100)}`);
-    throw new Error(`Groq API ошибка ${response.status}: ${errBody.slice(0, 200)}`);
-  }
+  for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
+    const controller = new AbortController();
+    const timer      = setTimeout(() => controller.abort(), timeoutMs);
 
-  const data = await response.json();
-  const text = data.choices?.[0]?.message?.content;
-  if (!text) throw new Error('Пустой ответ от Groq');
-  return text;
+    let response;
+    try {
+      response = await fetch(CONFIG.GROQ_API_URL, {
+        method:   'POST',
+        redirect: 'error',
+        signal:   controller.signal,
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${CONFIG.GROQ_API_KEY}`,
+        },
+        body: JSON.stringify(body),
+      });
+    } catch (err) {
+      if (err.name === 'AbortError') throw new Error(`Groq timeout (${timeoutMs / 1000}s)`);
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
+
+    if (response.status === 429) {
+      const errBody = await response.text().catch(() => '');
+      if (attempt < RETRY_DELAYS.length) {
+        await new Promise(r => setTimeout(r, RETRY_DELAYS[attempt]));
+        continue;
+      }
+      throw new Error(`Groq rate limit (429): ${errBody.slice(0, 100)}`);
+    }
+
+    if (!response.ok) {
+      const errBody = await response.text().catch(() => '');
+      throw new Error(`Groq API ошибка ${response.status}: ${errBody.slice(0, 200)}`);
+    }
+
+    const data = await response.json();
+    const text = data.choices?.[0]?.message?.content;
+    if (!text) throw new Error('Пустой ответ от Groq');
+    return text;
+  }
 }
 
 // ── Anthropic Claude API ───────────────────────────────────────────────
