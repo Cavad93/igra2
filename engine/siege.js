@@ -71,6 +71,7 @@ function beginSiege(attackerArmy, regionId, fortressLevel, garrison) {
     resistance:      SIEGE_CFG.FORTRESS_RESIST[fortressLevel] ?? 50,
 
     garrison,
+    garrison_max:    garrison,   // для отображения в панели
     garrison_morale:  80,
     garrison_supply: 100,
 
@@ -96,6 +97,11 @@ function beginSiege(attackerArmy, regionId, fortressLevel, garrison) {
       + `(уровень крепости: ${fortressLevel}). Гарнизон: ${garrison}.`,
       'military'
     );
+
+  // Автоматически открыть панель если это армия игрока
+  if (attackerArmy.nation === GAME_STATE.player_nation && typeof showSiegePanel === 'function') {
+    setTimeout(() => showSiegePanel(id), 200);
+  }
 
   return siege;
 }
@@ -195,6 +201,9 @@ function processSiegeTicks() {
       );
     }
   }
+
+  // Обновляем открытую панель осады
+  if (typeof refreshSiegePanel === 'function') refreshSiegePanel();
 }
 
 // ── Штурм ─────────────────────────────────────────────────────────────

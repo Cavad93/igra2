@@ -2298,6 +2298,210 @@
     .siege-bar__fill { height: 100%; transition: width .4s; }
     .siege-pct { font-size: 9px; color: #ff8a65; }
 
+    /* ── Улучшенный маркер осады на карте ── */
+    .siege-indicator {
+      display: flex; align-items: center; gap: 3px;
+      background: rgba(0,0,0,0.80); border: 1px solid #c62828;
+      border-radius: 3px; padding: 2px 5px;
+      font-size: 10px; color: #fff; white-space: nowrap;
+      cursor: pointer;
+      animation: si-pulse-border 2s ease-in-out infinite;
+    }
+    .siege-indicator:hover { background: rgba(80,0,0,0.85); }
+    @keyframes si-pulse-border {
+      0%,100% { box-shadow: 0 0 0 0 rgba(198,40,40,0.6); }
+      50%      { box-shadow: 0 0 0 5px rgba(198,40,40,0); }
+    }
+    .siege-ring-wrap { position: relative; width: 22px; height: 22px; }
+    .siege-ring-svg { position: absolute; top:0; left:0; }
+    .siege-ring-icon { position: absolute; top:50%; left:50%; transform: translate(-50%,-50%); font-size: 11px; line-height: 1; }
+
+    /* ══════════════════════════════════════════
+       ПАНЕЛЬ ОСАДЫ (#siege-panel)
+    ══════════════════════════════════════════ */
+    #siege-panel {
+      display: none;
+      flex-direction: column;
+      position: absolute; bottom: 16px; right: 16px;
+      z-index: 820;
+      width: 320px; max-width: 96vw;
+      background: linear-gradient(160deg, #1a0a0a 0%, #1a1208 60%, #0d0a05 100%);
+      border: 1px solid #8B2020;
+      border-radius: 8px;
+      box-shadow: 0 6px 32px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,80,80,0.08);
+      transition: opacity .35s, transform .35s;
+    }
+    .siege-panel--visible { opacity: 1 !important; transform: translateY(0) !important; }
+    .siege-panel--hidden  { opacity: 0 !important; transform: translateY(12px) !important; }
+
+    .sp-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 12px 8px;
+      border-bottom: 1px solid #3a1a1a;
+    }
+    .sp-header-title { flex:1; font-size: 13px; font-weight: 700; color: #ff8a65; letter-spacing: .4px; }
+    .sp-header-sub { font-size: 10px; color: #8a6e3a; }
+    .sp-close {
+      background: none; border: none; color: #8a6e3a; cursor: pointer;
+      font-size: 16px; line-height: 1; padding: 0 2px;
+      transition: color .2s;
+    }
+    .sp-close:hover { color: #ff8a65; }
+
+    /* Поле анимации: кольцо + катапульта */
+    .sp-anim-section {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px 8px;
+      gap: 10px;
+    }
+    .sp-ring-wrap {
+      position: relative; flex-shrink: 0;
+      width: 110px; height: 110px;
+    }
+    .sp-ring-svg { transform: rotate(-90deg); }
+    .sp-ring-track { fill: none; stroke: #2a1a1a; stroke-width: 8; }
+    .sp-ring-fill  {
+      fill: none; stroke-width: 8; stroke-linecap: round;
+      stroke-dasharray: 276.46;
+      transition: stroke-dashoffset 1s ease, stroke 1s;
+    }
+    .sp-ring-center {
+      position: absolute; top:50%; left:50%; transform: translate(-50%,-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 0;
+    }
+    #sp-fort-icon {
+      font-size: 28px; line-height: 1;
+      transition: transform .1s;
+    }
+    .sp-shake {
+      animation: sp-shake-light 1.2s ease-in-out infinite;
+    }
+    .sp-storm-shake {
+      animation: sp-shake-heavy .9s ease-in-out;
+    }
+    @keyframes sp-shake-light {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-2px) rotate(-1deg); }
+      40%      { transform: translateX(2px) rotate(1deg); }
+      60%      { transform: translateX(-1px); }
+      80%      { transform: translateX(1px); }
+    }
+    @keyframes sp-shake-heavy {
+      0%,100% { transform: translateX(0) scale(1); }
+      10%      { transform: translateX(-5px) rotate(-3deg) scale(1.1); }
+      30%      { transform: translateX(5px)  rotate(3deg)  scale(1.1); }
+      50%      { transform: translateX(-4px) rotate(-2deg); }
+      70%      { transform: translateX(4px)  rotate(2deg); }
+      90%      { transform: translateX(-2px); }
+    }
+    #sp-ring-pct { font-size: 12px; font-weight: 700; color: #ff8a65; margin-top: 2px; }
+
+    /* Пламя над крепостью при голоде */
+    #sp-fort-flame {
+      position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
+      font-size: 16px;
+      animation: sp-flame-flicker .6s ease-in-out infinite alternate;
+    }
+    @keyframes sp-flame-flicker {
+      from { opacity: 1;   transform: translateX(-50%) scale(1)   rotate(-2deg); }
+      to   { opacity: .75; transform: translateX(-50%) scale(1.1) rotate(2deg);  }
+    }
+
+    /* Поле с анимацией снаряда */
+    #sp-anim-field {
+      position: relative; flex: 1;
+      height: 110px;
+      overflow: hidden;
+    }
+    .sp-catapult-icon {
+      position: absolute; bottom: 8px; left: 6px;
+      font-size: 22px; line-height: 1;
+    }
+    .sp-castle-icon {
+      position: absolute; bottom: 8px; right: 6px;
+      font-size: 22px; line-height: 1;
+    }
+    .sp-projectile {
+      position: absolute;
+      bottom: 22px; left: 30px;
+      font-size: 14px; line-height: 1;
+      pointer-events: none;
+    }
+    @keyframes sp-fly {
+      0%   { left: 30px; bottom: 22px; opacity: 1; transform: scale(1) rotate(0deg); }
+      40%  { bottom: 72px; }
+      80%  { left: calc(100% - 50px); bottom: 28px; transform: scale(.9) rotate(180deg); }
+      100% { left: calc(100% - 44px); bottom: 14px; opacity: 0; transform: scale(.6) rotate(270deg); }
+    }
+
+    /* Инфо-колонка справа от кольца */
+    .sp-info-col {
+      display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0;
+    }
+    .sp-nation-row { display: flex; gap: 4px; align-items: center; font-size: 11px; }
+    .sp-nation-att { color: #ff8a65; font-weight: 600; }
+    .sp-nation-vs  { color: #5a4a2a; }
+    .sp-nation-def { color: #90caf9; font-weight: 600; }
+
+    .sp-fort-dots { display: flex; gap: 3px; }
+    .sp-fort-dot {
+      width: 10px; height: 10px; border-radius: 2px;
+      background: #2a1a1a; border: 1px solid #5a3a1a;
+    }
+    .sp-fort-dot--active { background: #ff8a65; border-color: #ff5722; }
+
+    .sp-meta { font-size: 10px; color: #6a5a3a; display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* Бары гарнизона/морали/снабжения */
+    .sp-bars { padding: 0 14px 10px; display: flex; flex-direction: column; gap: 5px; }
+    .sp-bar-row { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+    .sp-bar-label { width: 74px; color: #8a6e3a; }
+    .sp-bar-track {
+      flex: 1; height: 7px; background: #1a1010; border-radius: 4px;
+      overflow: hidden; border: 1px solid #2a1a1a;
+    }
+    .sp-bar-fill {
+      height: 100%; border-radius: 4px;
+      width: var(--bar-pct, 0%);
+      background: var(--bar-color, #666);
+      transition: width .9s ease;
+    }
+    .sp-bar-val { width: 60px; text-align: right; color: #c8a060; font-size: 10px; }
+    .sp-warn { color: #f44336; font-size: 10px; font-weight: 700; animation: sp-warn-blink 1s step-end infinite; }
+    @keyframes sp-warn-blink { 50% { opacity: 0; } }
+
+    /* Нижняя полоса с кнопками */
+    .sp-footer {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      padding: 8px 12px 10px;
+      border-top: 1px solid #2a1a1a;
+    }
+    .sp-btn {
+      flex: 1; min-width: 80px;
+      padding: 6px 10px; border-radius: 4px;
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      border: 1px solid #4a3a1a; background: #1a1208; color: #c8a060;
+      transition: background .2s, color .2s;
+    }
+    .sp-btn:hover:not(:disabled) { background: #2a1e0e; color: #ffd700; }
+    .sp-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    #sp-storm-btn {
+      background: #3a0a0a;
+      border-color: #8B2020;
+      color: #ff8a65;
+    }
+    #sp-storm-btn:hover:not(:disabled) { background: #5a1010; color: #fff; }
+    .sp-storm-btn--pulse {
+      animation: sp-storm-pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes sp-storm-pulse {
+      0%,100% { box-shadow: 0 0 0 0  rgba(255,80,50,.6); }
+      50%      { box-shadow: 0 0 0 8px rgba(255,80,50,0);  }
+    }
+
+    #sp-supply-warn { font-size: 10px; min-height: 14px; }
+
     /* Режим движения */
     .map--move-mode { cursor: crosshair !important; }
     .map--move-mode .leaflet-interactive { cursor: crosshair !important; }
@@ -6642,6 +6846,82 @@
           <div id="map-vignette"></div>
         </div>
 
+        <!-- ══ ПАНЕЛЬ ОСАДЫ ══ -->
+        <div id="siege-panel">
+          <div class="sp-header">
+            <span>🏰</span>
+            <span class="sp-header-title">Осада: <span id="sp-region-name">—</span></span>
+            <span class="sp-header-sub">ход <span id="sp-turns">0</span> · осталось: <span id="sp-eta">?</span></span>
+            <button class="sp-close" onclick="closeSiegePanel()">✕</button>
+          </div>
+
+          <div class="sp-anim-section">
+            <!-- SVG прогресс-кольцо -->
+            <div class="sp-ring-wrap">
+              <svg class="sp-ring-svg" width="110" height="110" viewBox="0 0 110 110">
+                <circle class="sp-ring-track" cx="55" cy="55" r="44"/>
+                <circle id="sp-ring" class="sp-ring-fill" cx="55" cy="55" r="44"
+                        stroke="#f44336" stroke-dasharray="276.46" stroke-dashoffset="276.46"/>
+              </svg>
+              <div class="sp-ring-center">
+                <div id="sp-fort-flame" style="display:none">🔥</div>
+                <div id="sp-fort-icon">🏰</div>
+                <div id="sp-ring-pct">0%</div>
+              </div>
+            </div>
+
+            <!-- Анимационное поле катапульта → крепость -->
+            <div id="sp-anim-field">
+              <span class="sp-catapult-icon">⚙️</span>
+              <span class="sp-castle-icon">🗼</span>
+              <!-- Снаряды добавляются динамически -->
+            </div>
+          </div>
+
+          <!-- Нации и уровень крепости -->
+          <div style="padding: 0 14px 8px; display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+            <div class="sp-nation-row">
+              <span class="sp-nation-att" id="sp-att-name">—</span>
+              <span class="sp-nation-vs">⚔️</span>
+              <span class="sp-nation-def" id="sp-def-name">—</span>
+            </div>
+            <div style="flex:1"></div>
+            <div class="sp-fort-dots" id="sp-fort-level"></div>
+          </div>
+          <div style="padding: 0 14px 6px" class="sp-meta">
+            <span>🗡 <span id="sp-troops">0</span> войск</span>
+            <span>💣 <span id="sp-artil">0</span> арт.</span>
+          </div>
+
+          <!-- Бары -->
+          <div class="sp-bars">
+            <div class="sp-bar-row">
+              <span class="sp-bar-label">⚔️ Гарнизон</span>
+              <div class="sp-bar-track"><div class="sp-bar-fill" id="sp-gar-bar"></div></div>
+              <span class="sp-bar-val" id="sp-gar-val">0/0</span>
+            </div>
+            <div class="sp-bar-row">
+              <span class="sp-bar-label">💜 Мораль</span>
+              <div class="sp-bar-track"><div class="sp-bar-fill" id="sp-mor-bar"></div></div>
+              <span class="sp-bar-val" id="sp-mor-val">0%</span>
+            </div>
+            <div class="sp-bar-row">
+              <span class="sp-bar-label">🌾 Снабжение</span>
+              <div class="sp-bar-track"><div class="sp-bar-fill" id="sp-sup-bar"></div></div>
+              <span class="sp-bar-val" id="sp-sup-val">0%</span>
+            </div>
+            <div id="sp-supply-warn"></div>
+          </div>
+
+          <!-- Кнопки -->
+          <div class="sp-footer">
+            <button class="sp-btn" id="sp-storm-btn"
+                    onclick="siegePanelStorm()">⚔️ Штурм!</button>
+            <button class="sp-btn" onclick="siegePanelLift()">🏳 Снять осаду</button>
+          </div>
+        </div>
+        <!-- /ПАНЕЛЬ ОСАДЫ -->
+
         <!-- Инфо о выбранном регионе -->
         <div id="region-info" class="hidden"></div>
       </div>
@@ -6928,6 +7208,7 @@
        все игровые globals (GAME_STATE, GOODS, getConsumptionBasket) готовы -->
   <script src="ui/economy_react.jsx"></script>
   <script src="ui/treasury-panel.js"></script>
+  <script src="ui/siege_panel.js"></script>
   <script src="ai/prompts.js"></script>
   <script src="ai/parser.js"></script>
   <script src="ai/claude.js"></script>

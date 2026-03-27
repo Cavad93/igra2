@@ -171,20 +171,48 @@ function _renderSiegeIndicator(siege) {
 
   const pct   = Math.round(siege.progress);
   const color = _nationColor(siege.attacker_nation);
-  // Сдвигаем вниз чтобы не перекрывать маркер армии
-  const pos   = [center[0] - 0.25, center[1]];
+  const pos   = [center[0] - 0.28, center[1]];
+
+  // SVG кольцо прогресса (радиус 9, circumference = 56.5)
+  const R   = 9;
+  const C   = 2 * Math.PI * R;
+  const off = C * (1 - pct / 100);
+  const ringColor = pct < 40 ? '#4caf50' : pct < 75 ? '#ff9800' : '#f44336';
+
+  const isPlayerInvolved = siege.attacker_nation === (GAME_STATE?.player_nation)
+                        || siege.defender_nation === (GAME_STATE?.player_nation);
+  const clickHint = isPlayerInvolved ? ' (нажмите для деталей)' : '';
 
   const html = `
-    <div class="siege-indicator" title="${siege.region_name}: осада ${pct}%">
-      <span>🏰</span>
-      <div class="siege-bar">
-        <div class="siege-bar__fill" style="width:${pct}%;background:${color}"></div>
+    <div class="siege-indicator" title="${siege.region_name}: осада ${pct}%${clickHint}"
+         style="cursor:${isPlayerInvolved ? 'pointer' : 'default'}">
+      <div class="siege-ring-wrap">
+        <svg class="siege-ring-svg" width="22" height="22" viewBox="0 0 22 22" style="transform:rotate(-90deg)">
+          <circle cx="11" cy="11" r="${R}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="3"/>
+          <circle cx="11" cy="11" r="${R}" fill="none" stroke="${ringColor}" stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${off.toFixed(2)}"/>
+        </svg>
+        <div class="siege-ring-icon">🏰</div>
       </div>
-      <span class="siege-pct">${pct}%</span>
+      <div style="display:flex;flex-direction:column;gap:1px">
+        <span style="font-size:9px;color:${ringColor};font-weight:700">${pct}%</span>
+        <div class="siege-bar" style="width:42px">
+          <div class="siege-bar__fill" style="width:${pct}%;background:${color}"></div>
+        </div>
+      </div>
     </div>`;
 
-  const icon = L.divIcon({ html, className: '', iconSize: [68, 22], iconAnchor: [34, 0] });
+  const icon = L.divIcon({ html, className: '', iconSize: [80, 28], iconAnchor: [40, 0] });
   const m    = L.marker(pos, { icon, zIndexOffset: 850 }).addTo(siegeMarkersLayer);
+
+  if (isPlayerInvolved) {
+    m.on('click', (e) => {
+      L.DomEvent.stopPropagation(e);
+      if (typeof showSiegePanel === 'function') showSiegePanel(siege.id);
+    });
+  }
+
   _siegeIcons[siege.id] = m;
 }
 
@@ -244,7 +272,8 @@ function _renderArmyPanel(armyId) {
     const s = (GAME_STATE.sieges ?? []).find(sg => sg.id === army.siege_id);
     return s ? `<div class="army-siege-info">
       🏰 Осада ${s.region_name}: <b>${Math.round(s.progress)}%</b>
-      ${s.storm_possible ? `<button class="army-btn army-btn--danger" onclick="stormAssault('${army.id}','${s.id}');renderAllArmies();">⚔️ Штурм</button>` : ''}
+      <button class="army-btn" onclick="showSiegePanel('${s.id}')">📊 Панель</button>
+      ${s.storm_possible ? `<button class="army-btn army-btn--danger" onclick="siegePanelStorm && (window._activeSiegeId='${s.id}', siegePanelStorm())">⚔️ Штурм</button>` : ''}
       <button class="army-btn" onclick="liftSiege('${army.id}');renderAllArmies();">🏃 Снять</button>
     </div>` : '';
   })() : '';
