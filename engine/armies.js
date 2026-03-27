@@ -149,11 +149,13 @@ function calcArmySpeed(army) {
   const cmd      = getArmyCommander(army);
   const logBonus = 1 + (cmd?.skills?.logistics ?? 0) * 0.05;
   const fatPen   = 1 - (army.fatigue / 200); // max −50%
+  // Умение swift_marcher: +20% скорость
+  const swiftBonus = (cmd?.commander_skills ?? []).includes('swift_marcher') ? 1.20 : 1.0;
 
   const region      = _getRegionData(army.position);
   const terrainCost = ARMY_MOVE.TERRAIN_COST[region?.terrain] ?? 1.0;
 
-  return (base * logBonus * fatPen) / terrainCost;
+  return (base * logBonus * fatPen * swiftBonus) / terrainCost;
 }
 
 function _calcFleetSpeed(army) {
@@ -226,6 +228,47 @@ function orderArmyMove(armyId, targetRegionId) {
 }
 
 // ── Обработка движения за ход ────────────────────────────────────────
+
+/**
+ * Тактический ИИ для армий с командиром но без активного приказа.
+ * Командир действует автономно: анализирует обстановку и принимает решения.
+ * Вызывается из turn.js после processAllOrders().
+ */
+function processCommanderAI() {
+  if (typeof getCommanderDecisionNow !== 'function') return;
+
+  const playerNation = GAME_STATE.player_nation;
+  const armies = GAME_STATE.armies ?? [];
+
+  for (const army of armies) {
+    if (army.nation !== playerNation) continue;
+    if (army.state === 'disbanded') continue;
+    if (!army.commander_id || army.commander_id === 'ruler') continue;
+
+    // Пропускаем если уже управляется активным приказом
+    const hasOrder = (GAME_STATE.orders ?? []).some(
+      o => o.status === 'active' && o.army_id === army.id && o.type === 'military_campaign'
+    );
+    if (hasOrder) continue;
+
+    // Создаём фиктивный "приказ" из текущей военной обстановки
+    const enemiesAtWar = army.nation
+      ? (GAME_STATE.nations?.[army.nation]?.military?.at_war_with ?? [])
+      : [];
+    const fakeOrder = {
+      target_id:    enemiesAtWar[0] ?? null,
+      target_label: enemiesAtWar[0]
+        ? (GAME_STATE.nations?.[enemiesAtWar[0]]?.name ?? enemiesAtWar[0])
+        : 'патрулировать территорию',
+    };
+
+    const decision = getCommanderDecisionNow(army, fakeOrder);
+    if (decision) {
+      // _applyCommanderDecision определена в orders.js (глобальный скоуп)
+      if (typeof _applyCommanderDecision === 'function') _applyCommanderDecision(army, decision);
+    }
+  }
+}
 
 function processArmyMovement() {
   const armies = GAME_STATE.armies ?? [];
@@ -373,6 +416,9 @@ function _processSupply(army) {
   const cmd = getArmyCommander(army);
   const log = (cmd?.skills?.logistics ?? 0) * 0.5;
   if (delta < 0) delta = Math.min(0, delta + log);
+  // Умение supply_master: -40% потерь снабжения
+  if (delta < 0 && (cmd?.commander_skills ?? []).includes('supply_master'))
+    delta = delta * 0.60;
 
   // ── Штраф за перегрузку региона ─────────────────────────────────────
   const capacity    = _getRegionSupplyCapacity(region);

@@ -204,6 +204,11 @@ async function processTurn() {
       try { processAllOrders(); } catch (e) { console.warn('[orders]', e); }
     }
 
+    // 5.52. Тактический ИИ командующих (армии без активного приказа)
+    if (typeof processCommanderAI === 'function') {
+      try { processCommanderAI(); } catch (e) { console.warn('[commander_ai]', e); }
+    }
+
     // 5.55. Автономное поведение персонажей (fire-and-forget)
     processCharacterAutonomy(GAME_STATE.player_nation).catch(console.warn);
 

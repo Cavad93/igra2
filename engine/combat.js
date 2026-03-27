@@ -289,6 +289,22 @@ function calcArmyCombatStrength(army, terrain, isDefender) {
     cmdMult += isDefender ? _traitSum(cmd, 'def') : _traitSum(cmd, 'atk');
     if ((cmd.traits_list ?? cmd.traits ?? []).includes('inspiring'))
       cmdMult += COMBAT.TRAITS.inspiring.morale;
+
+    // Умения командира (commander_skills)
+    const cSkills = cmd.commander_skills ?? [];
+    if (!isDefender && cSkills.includes('fierce_aggressor')) cmdMult += 0.20;
+    if (isDefender  && cSkills.includes('fierce_aggressor')) cmdMult -= 0.10;
+    if (cSkills.includes('master_tactician'))  cmdMult += 0.15;
+    if (isDefender && cSkills.includes('defensive_genius')) {
+      const defTerrains = ['hills', 'mountains', 'coastal_city'];
+      if (defTerrains.includes(terrain)) cmdMult += 0.25;
+    }
+    if (cSkills.includes('legendary')) cmdMult += 0.10;
+  }
+
+  // Умение cavalry_expert: +30% вклад кавалерии
+  if (cmd && (cmd.commander_skills ?? []).includes('cavalry_expert')) {
+    base += (u.cavalry ?? 0) * 3.0 * terrCav * 0.30;
   }
 
   // Структура: 20-50% конница = сбалансированная

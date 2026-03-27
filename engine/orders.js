@@ -292,36 +292,89 @@ function processAllOrders() {
 }
 
 /**
- * Автоматически двигает армию под командованием НПЦ к цели приказа.
- * Вызывается каждый ход пока приказ активен.
+ * Тактический ИИ командующего — вызывается каждый ход для армий с НПЦ-командиром.
+ * Использует Groq Llama через commander_ai.js; падает на эвристику без ключа.
  */
 function _processNpcCommanderMove(order) {
   if (typeof getArmy !== 'function' || typeof orderArmyMove !== 'function') return;
   const army = getArmy(order.army_id);
-  if (!army || army.state === 'disbanded' || army.state === 'sieging') return;
+  if (!army || army.state === 'disbanded') return;
 
-  // Цель — любой регион целевой нации или конкретный регион
-  if (!order.target_id) return;
+  // Получаем тактическое решение (кэш прошлого хода или эвристика)
+  const decision = typeof getCommanderDecisionNow === 'function'
+    ? getCommanderDecisionNow(army, order)
+    : _legacyMove(army, order);
 
-  // Если уже движется к правильной цели — не переназначаем
-  if (army.state === 'moving' && army.target) return;
+  if (!decision) return;
+  _applyCommanderDecision(army, decision);
+}
 
-  // Ищем ближайший регион цели
-  const targetNation = GAME_STATE.nations?.[order.target_id];
-  let targetRegionId = null;
+/**
+ * Применяет тактическое решение командующего к армии.
+ */
+function _applyCommanderDecision(army, decision) {
+  const char    = typeof getArmyCommander === 'function' ? getArmyCommander(army) : null;
+  const cmdName = char?.name ?? 'Командующий';
 
-  if (targetNation) {
-    // Берём первый вражеский регион нации-цели
-    const candidateRegions = targetNation.regions ?? [];
-    targetRegionId = candidateRegions[0] ?? null;
-  } else if (GAME_STATE.regions?.[order.target_id]) {
-    // target_id — уже регион
-    targetRegionId = order.target_id;
+  switch (decision.action) {
+
+    case 'move': {
+      if (!decision.target_id) break;
+      if (army.state === 'moving' && army.target === decision.target_id) break; // уже идём туда
+      if (army.state === 'sieging') break;
+      const path = orderArmyMove(army.id, decision.target_id);
+      if (path && path.length >= 2) {
+        const tName = GAME_STATE.regions?.[decision.target_id]?.name ?? decision.target_id;
+        if (typeof addEventLog === 'function')
+          addEventLog(`🗺 ${cmdName}: «${decision.reasoning}» → ${tName}`, 'military');
+      }
+      break;
+    }
+
+    case 'storm': {
+      if (!army.siege_id) break;
+      const siege = (GAME_STATE.sieges ?? []).find(s => s.id === army.siege_id);
+      if (siege?.storm_possible && typeof stormAssault === 'function') {
+        stormAssault(army.id, army.siege_id);
+        if (typeof addEventLog === 'function')
+          addEventLog(`⚔️ ${cmdName}: «${decision.reasoning}» → ШТУРМ!`, 'danger');
+      }
+      break;
+    }
+
+    case 'retreat': {
+      if (!decision.target_id || army.state === 'sieging') break;
+      const path = orderArmyMove(army.id, decision.target_id);
+      if (path && path.length >= 2) {
+        const tName = GAME_STATE.regions?.[decision.target_id]?.name ?? decision.target_id;
+        if (typeof addEventLog === 'function')
+          addEventLog(`🏃 ${cmdName}: «${decision.reasoning}» ← отступление на ${tName}`, 'warning');
+      }
+      break;
+    }
+
+    case 'hold':
+      // Ускоренное восстановление: +5 морали и -5 усталости при удержании
+      if (army.morale < 100) army.morale    = Math.min(100, army.morale    + 5);
+      if (army.fatigue > 0)  army.fatigue   = Math.max(0,   army.fatigue   - 5);
+      if (typeof addEventLog === 'function' && decision.reasoning)
+        addEventLog(`⛺ ${cmdName}: «${decision.reasoning}»`, 'military');
+      break;
+
+    case 'siege':
+      // Осада продолжается автоматически через processSiegeTicks() — ничего делать не надо
+      break;
   }
+}
 
-  if (targetRegionId && army.position !== targetRegionId) {
-    orderArmyMove(army.id, targetRegionId);
-  }
+/** Устаревший fallback (без commander_ai.js) */
+function _legacyMove(army, order) {
+  if (army.state === 'moving' && army.target) return null;
+  if (!order.target_id) return null;
+  const tNation = GAME_STATE.nations?.[order.target_id];
+  const tRegion = tNation ? (tNation.regions ?? [])[0] : order.target_id;
+  if (tRegion && army.position !== tRegion) return { action: 'move', target_id: tRegion, reasoning: '' };
+  return null;
 }
 
 function _progressOrder(order, nation) {
