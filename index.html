@@ -4818,6 +4818,55 @@
     }
     .rbt-ac-mat:hover { background: rgba(107,79,26,.35); color: var(--text-light); }
 
+    /* ── Панель крепости ───────────────────────────────────────────── */
+    .rbt-fort-panel {
+      margin: 4px 0 6px;
+      background: rgba(120,80,20,.12);
+      border: 1px solid rgba(200,150,60,.25);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .rbt-fort-hdr {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 8px;
+      background: rgba(120,80,20,.18);
+      border-bottom: 1px solid rgba(200,150,60,.18);
+    }
+    .rbt-fort-icon  { font-size: 14px; }
+    .rbt-fort-title { font-size: 11px; font-weight: 600; color: #d4a843; flex: 1; }
+    .rbt-fort-lvl   { font-size: 9.5px; color: var(--text-dim); }
+    .rbt-fort-body  { padding: 7px 8px; display: flex; flex-direction: column; gap: 5px; }
+
+    /* Полоска уровней */
+    .rbt-fort-bars  { display: flex; gap: 3px; }
+    .rbt-fort-bar   {
+      width: 18px; height: 10px; border-radius: 2px;
+      background: rgba(107,79,26,.25);
+      border: 1px solid rgba(200,150,60,.2);
+      transition: background .2s;
+    }
+    .rbt-fort-bar--filled {
+      background: linear-gradient(135deg, #c8952a, #e8b84b);
+      border-color: rgba(232,184,75,.5);
+      box-shadow: 0 0 4px rgba(232,184,75,.3);
+    }
+    .rbt-fort-label { font-size: 10.5px; color: var(--text-light); }
+
+    /* Кнопка строительства/улучшения крепости */
+    .rbt-fort-btn {
+      display: block; width: 100%; text-align: left;
+      padding: 5px 8px; border-radius: 4px; font-size: 10px; line-height: 1.4;
+      background: rgba(120,80,20,.18);
+      border: 1px solid rgba(200,150,60,.35);
+      color: #e8c97a; cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .rbt-fort-btn:hover { background: rgba(200,150,60,.22); border-color: rgba(200,150,60,.6); }
+    .rbt-fort-btn--noafford { opacity: .4; cursor: not-allowed; }
+    .rbt-fort-cost  { font-size: 9px; color: var(--text-dim); }
+    .rbt-fort-maxlvl { font-size: 10px; color: #81c784; }
+    .rbt-fort-inqueue { display: flex; flex-direction: column; gap: 3px; font-size: 10px; color: #ffb74d; }
+
     /* ════════════════════════════════════════════════════════════════
        ЭКОНОМИЧЕСКИЙ ОБЗОР (React) — анимации и глобальные стили
        ════════════════════════════════════════════════════════════════ */

@@ -436,8 +436,17 @@ function _completeConstruction(entry, region, regionId) {
     if (slot) {
       slot.level = entry.to_level;
     }
-    if (typeof addEventLog === 'function') {
-      addEventLog(`⬆ ${bDef.icon || ''} ${bDef.name} улучшено до уровня ${entry.to_level} в ${rName}!`, 'good');
+    // Крепость: синхронизируем fortress_level региона
+    if (bDef.is_fortress) {
+      region.fortress_level = entry.to_level;
+      const label = bDef.level_labels?.[entry.to_level - 1] ?? `уровень ${entry.to_level}`;
+      if (typeof addEventLog === 'function') {
+        addEventLog(`🏰 ${rName}: крепость улучшена до уровня ${entry.to_level} — ${label}!`, 'good');
+      }
+    } else {
+      if (typeof addEventLog === 'function') {
+        addEventLog(`⬆ ${bDef.icon || ''} ${bDef.name} улучшено до уровня ${entry.to_level} в ${rName}!`, 'good');
+      }
     }
     return;
   }
@@ -487,8 +496,17 @@ function _completeConstruction(entry, region, regionId) {
     _capital_ratio:         1.0,
   });
 
-  if (typeof addEventLog === 'function') {
-    addEventLog(`🏗 ${bDef.icon || ''} ${bDef.name} завершено в ${rName}!`, 'good');
+  // Крепость: устанавливаем fortress_level региона
+  if (bDef.is_fortress) {
+    region.fortress_level = 1;
+    const label = bDef.level_labels?.[0] ?? 'уровень 1';
+    if (typeof addEventLog === 'function') {
+      addEventLog(`🏰 ${rName}: построена крепость — ${label}! fortress_level = 1.`, 'good');
+    }
+  } else {
+    if (typeof addEventLog === 'function') {
+      addEventLog(`🏗 ${bDef.icon || ''} ${bDef.name} завершено в ${rName}!`, 'good');
+    }
   }
 }
 
@@ -1730,8 +1748,18 @@ function orderBuildingConstruction(nationId, regionId, buildingId) {
     : { ok: true, is_upgrade: false };
   if (!check.ok) return check;
 
-  // Стоимость — динамическая (текущие цены материалов)
-  const cost = calcConstructionCost(buildingId);
+  // Стоимость и время постройки — для крепости масштабируются по уровню
+  let cost, buildTurns;
+  if (bDef.is_fortress && bDef.level_costs) {
+    const targetLevel = check.is_upgrade ? check.to_level : 1;
+    const levelIdx    = targetLevel - 1;
+    cost       = bDef.level_costs[levelIdx] ?? bDef.cost;
+    buildTurns = bDef.level_build_turns?.[levelIdx] ?? bDef.build_turns ?? 4;
+  } else {
+    cost       = calcConstructionCost(buildingId);
+    buildTurns = bDef.build_turns || 1;
+  }
+
   if (nation.economy.treasury < cost) {
     return { ok: false, reason: `Нужно ${cost} монет, в казне ${Math.round(nation.economy.treasury)}` };
   }
@@ -1747,8 +1775,8 @@ function orderBuildingConstruction(nationId, regionId, buildingId) {
   const entry = {
     slot_id:      queueId,
     building_id:  buildingId,
-    turns_left:   bDef.build_turns || 1,
-    turns_total:  bDef.build_turns || 1,
+    turns_left:   buildTurns,
+    turns_total:  buildTurns,
     ordered_turn: GAME_STATE.turn,
   };
 

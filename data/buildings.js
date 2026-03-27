@@ -2380,6 +2380,57 @@ const BUILDINGS = {
     historical_note: "Заросли папируса у Сиракуз (река Анапо) — единственное место в Европе, где рос папирус; небольшое местное производство не покрывало нужд и дополнялось египетским импортом.",
   },
 
+  // ══════════════════════════════════════════════════════════════
+  // КРЕПОСТЬ — особое военное сооружение
+  // Одна на регион, уровни 1-5. Не занимает обычный строительный слот.
+  // Увеличивает fortress_level региона при постройке/улучшении.
+  // ══════════════════════════════════════════════════════════════
+
+  fortress: {
+    name:        'Крепость',
+    icon:        '🏰',
+    description: 'Военное укрепление. Замедляет осаду врага и увеличивает сопротивление гарнизона. ' +
+                 'Один объект на регион, улучшается до 5 уровня.',
+    cost:        600,     // базовая стоимость (уровень 1); уровни 2-5 масштабируются
+    category:    'military',
+    footprint_ha: 0,      // не занимает сельскохозяйственные гектары
+
+    construction_materials: { stone: 30, timber: 12, iron: 10 },
+
+    worker_profession: [],   // гарнизон — отдельно; крепость строят государственные рабочие
+    wage_rate:    0.0,
+    labor_type:   'state',
+
+    build_turns:  4,         // уровень 1; для уровней 2-5 см. level_build_turns
+    terrain_restriction: null,
+    max_per_region: 1,
+    max_level:    5,
+
+    // ── Специальные поля крепости ──────────────────────────────
+    is_fortress:       true,   // маркер: обновлять region.fortress_level при завершении
+    fortress_slot:     true,   // не занимает обычный строительный слот
+    nation_buildable:  true,
+
+    // Стоимость каждого уровня (индекс 0 = уровень 1, ..., индекс 4 = уровень 5)
+    level_costs:       [600, 1000, 1600, 2500, 4000],
+    level_build_turns: [4,   5,    6,    7,    8   ],
+
+    // Описания уровней для UI
+    level_labels: [
+      'Частокол',
+      'Деревянные стены',
+      'Каменные стены',
+      'Цитадель',
+      'Неприступная крепость',
+    ],
+
+    // Бонус к гарнизону региона от уровня (только для UI, siege.js читает fortress_level)
+    level_garrison_bonus: [100, 250, 500, 900, 1500],
+
+    historical_note: 'Каменные крепости (акрополи) были нормой для городов Сицилии: ' +
+                     'Сиракузы, Акрагант, Гимера — каждый имел укреплённую цитадель на возвышенности.',
+  },
+
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -2532,13 +2583,15 @@ function canBuildInRegion(buildingId, region) {
     }
   }
 
-  // Свободные слоты (улучшения в очереди не занимают новый слот)
-  const maxSlots = getRegionMaxSlots(terrain);
-  const usedSlots =
-    (region.building_slots || []).filter(s => s.status !== 'demolished').length +
-    (region.construction_queue || []).filter(e => !e.is_upgrade).length;
-  if (usedSlots >= maxSlots) {
-    return { ok: false, reason: 'Нет свободных строительных слотов' };
+  // Крепость использует свой отдельный слот, а не общие строительные слоты
+  if (!b.fortress_slot) {
+    const maxSlots = getRegionMaxSlots(terrain);
+    const usedSlots =
+      (region.building_slots || []).filter(s => s.status !== 'demolished' && !BUILDINGS[s.building_id]?.fortress_slot).length +
+      (region.construction_queue || []).filter(e => !e.is_upgrade && !BUILDINGS[e.building_id]?.fortress_slot).length;
+    if (usedSlots >= maxSlots) {
+      return { ok: false, reason: 'Нет свободных строительных слотов' };
+    }
   }
 
   // Земельная проверка для нового здания

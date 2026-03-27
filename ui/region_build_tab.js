@@ -52,11 +52,16 @@ function renderConstructionTab(regionId) {
   const terrain = _biome || region.terrain || 'plains';
   const maxSlots = (typeof getRegionMaxSlots === 'function') ? getRegionMaxSlots(terrain) : 10;
 
-  const activeSlots = (region.building_slots || []).filter(s => s.status !== 'demolished');
-  const queue       = region.construction_queue || [];
-  const newInQueue  = queue.filter(e => !e.is_upgrade);
-  const usedSlots   = activeSlots.length + newInQueue.length;
-  const slotsLeft   = Math.max(0, maxSlots - usedSlots);
+  const isFortressSlot = s => (typeof BUILDINGS !== 'undefined') && BUILDINGS[s.building_id ?? s.building_id]?.fortress_slot;
+  const isFortressEntry = e => (typeof BUILDINGS !== 'undefined') && BUILDINGS[e.building_id]?.fortress_slot;
+
+  const activeSlots  = (region.building_slots || []).filter(s => s.status !== 'demolished');
+  const queue        = region.construction_queue || [];
+  const newInQueue   = queue.filter(e => !e.is_upgrade);
+  // Крепость не занимает обычный слот
+  const usedSlots    = activeSlots.filter(s => !isFortressSlot(s)).length
+                     + newInQueue.filter(e => !isFortressEntry(e)).length;
+  const slotsLeft    = Math.max(0, maxSlots - usedSlots);
 
   const nation = GAME_STATE.nations[nationId];
 
@@ -88,12 +93,96 @@ function renderConstructionTab(regionId) {
   return `
     <div class="rbt-wrap">
       ${_rbtLandBar(region)}
+      ${_rbtFortressPanel(regionId, region, nation, queue)}
       <div class="rbt-hdr">
         <span class="rbt-slots-lbl">Слоты:</span>
         <span class="rbt-slots-val ${slotsTierCls}">${usedSlots}/${maxSlots}</span>
         <span class="rbt-terrain-tag">${terrainName}</span>
       </div>
       <div class="rbt-accordion">${accordion}</div>
+    </div>
+  `;
+}
+
+// ──────────────────────────────────────────────────────────────
+// ПАНЕЛЬ КРЕПОСТИ — отдельный блок над аккордеоном
+// ──────────────────────────────────────────────────────────────
+
+function _rbtFortressPanel(regionId, region, nation, queue) {
+  const bDef    = (typeof BUILDINGS !== 'undefined') ? BUILDINGS.fortress : null;
+  if (!bDef) return '';
+
+  const fortLvl   = region.fortress_level ?? 0;
+  const maxLvl    = bDef.max_level ?? 5;
+  const treasury  = nation?.economy?.treasury ?? 0;
+
+  // Слот крепости в building_slots
+  const fortSlot  = (region.building_slots || []).find(
+    s => s.building_id === 'fortress' && s.status !== 'demolished'
+  );
+  // Крепость в очереди?
+  const inQueue   = (queue || []).find(e => e.building_id === 'fortress');
+
+  // Визуальная полоска уровней: ■ заполненные, □ пустые
+  const bars = Array.from({ length: maxLvl }, (_, i) =>
+    `<span class="rbt-fort-bar ${i < fortLvl ? 'rbt-fort-bar--filled' : ''}" title="Уровень ${i + 1}"></span>`
+  ).join('');
+
+  const label     = fortLvl > 0
+    ? (bDef.level_labels?.[fortLvl - 1] ?? `Уровень ${fortLvl}`)
+    : 'Нет';
+  const garrison  = fortLvl > 0
+    ? `+${(bDef.level_garrison_bonus?.[fortLvl - 1] ?? 0).toLocaleString()} гарнизон`
+    : '';
+
+  // Состояние кнопки
+  let btn = '';
+  if (inQueue) {
+    const pct = inQueue.turns_total > 0
+      ? Math.round((1 - inQueue.turns_left / inQueue.turns_total) * 100)
+      : 0;
+    btn = `
+      <div class="rbt-fort-inqueue">
+        <span>🏗 Строится… ${inQueue.turns_left} ход(а)</span>
+        <div class="rbt-ac-prog"><div class="rbt-ac-prog-fill" style="width:${pct}%"></div></div>
+        <button class="rbt-ac-btn rbt-ac-btn--cancel"
+          onclick="uiCancelConstruction('${regionId}','${inQueue.slot_id}')">
+          ✕ Отменить
+        </button>
+      </div>`;
+  } else if (fortLvl < maxLvl) {
+    const nextLvl  = fortLvl + 1;
+    const cost     = bDef.level_costs?.[nextLvl - 1] ?? bDef.cost;
+    const turns    = bDef.level_build_turns?.[nextLvl - 1] ?? 4;
+    const nextLabel= bDef.level_labels?.[nextLvl - 1] ?? `Уровень ${nextLvl}`;
+    const canAfford = treasury >= cost;
+    const btnCls   = canAfford ? 'rbt-fort-btn' : 'rbt-fort-btn rbt-fort-btn--noafford';
+    const action   = fortLvl === 0 ? 'Построить' : 'Улучшить';
+    btn = `
+      <button class="${btnCls}"
+        ${!canAfford ? 'disabled' : `onclick="uiOrderConstruction('${regionId}','fortress')"`}
+        title="${nextLabel} · ${turns} ход(а) · ${cost} монет">
+        ${action} ур.${nextLvl} — ${nextLabel}<br>
+        <span class="rbt-fort-cost ${canAfford ? '' : 'rbt-ac-cost--no'}">
+          💰${cost.toLocaleString()} · ${turns} ход${_rbtTurnsSuffix(turns)}
+        </span>
+      </button>`;
+  } else {
+    btn = `<span class="rbt-fort-maxlvl">Максимальный уровень достигнут</span>`;
+  }
+
+  return `
+    <div class="rbt-fort-panel">
+      <div class="rbt-fort-hdr">
+        <span class="rbt-fort-icon">🏰</span>
+        <span class="rbt-fort-title">Крепость</span>
+        <span class="rbt-fort-lvl">${fortLvl > 0 ? `Ур. ${fortLvl}/${maxLvl}` : 'Нет'}</span>
+      </div>
+      <div class="rbt-fort-body">
+        <div class="rbt-fort-bars">${bars}</div>
+        <div class="rbt-fort-label">${label}${garrison ? ` · ${garrison}` : ''}</div>
+        ${btn}
+      </div>
     </div>
   `;
 }
