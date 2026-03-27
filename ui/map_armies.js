@@ -126,10 +126,14 @@ function _renderMovementLine(army) {
   }
   if (pts.length < 2) return;
 
-  // Пунктирная линия всего маршрута
+  // Маршрутная линия: яркая с обводкой
+  const isPlayer = army.nation === GAME_STATE.player_nation;
+  const lineColor = isPlayer ? '#FFD700' : color;
+  // Тёмная обводка для читаемости
+  L.polyline(pts, { color: 'rgba(0,0,0,0.45)', weight: 5, opacity: 0.6 }).addTo(armyPathsLayer);
   const line = L.polyline(pts, {
-    color, weight: 2, opacity: 0.75,
-    dashArray: '7 5',
+    color: lineColor, weight: 3, opacity: 0.9,
+    dashArray: '10 6',
   }).addTo(armyPathsLayer);
 
   // Призрак — позиция через 1 ход
@@ -292,10 +296,33 @@ function _renderArmyPanel(armyId) {
         🏆 ${army.battles_won}W / ${army.battles_lost}L
       </div>
 
-      ${cmd ? `<div class="army-panel-cmd">
-        👤 <b>${cmd.name}</b> — тактика: ${cmd.skills?.tactics ?? cmd.skills?.military ?? 0},
-        логистика: ${cmd.skills?.logistics ?? 0}, осада: ${cmd.skills?.siege ?? 0}
-      </div>` : '<div class="army-panel-cmd">⚠️ Нет командующего</div>'}
+      ${(() => {
+        if (!cmd) return `<div class="army-panel-cmd army-panel-cmd--empty">
+          ⚠️ Нет командующего
+          ${isPlayer ? `<button class="army-btn army-btn--assign" onclick="showCommanderPicker('${army.id}')">👑 Назначить</button>` : ''}
+        </div>`;
+        const lvl    = typeof getCommanderLevel === 'function' ? getCommanderLevel(cmd) : 0;
+        const stars  = '★'.repeat(lvl) + '☆'.repeat(5 - lvl);
+        const tactic = cmd.skills?.tactics ?? cmd.skills?.military ?? 0;
+        const logist = cmd.skills?.logistics ?? 0;
+        const siege  = cmd.skills?.siege ?? 0;
+        const xp     = cmd.commander_xp ?? 0;
+        const skills = cmd.commander_skills ?? [];
+        const skillDefs = typeof COMMANDER_SKILLS_DEF !== 'undefined' ? COMMANDER_SKILLS_DEF : {};
+        const skillsHtml = skills.map(s => {
+          const d = skillDefs[s];
+          return d ? `<span class="cmd-skill-badge" title="${d.desc}">${d.icon} ${d.name}</span>` : '';
+        }).join('');
+        return `<div class="army-panel-cmd">
+          <div class="cmd-row-top">
+            <span class="cmd-name">👤 <b>${cmd.name}</b></span>
+            <span class="cmd-stars" title="${xp} XP">${stars}</span>
+            ${isPlayer ? `<button class="army-btn army-btn--assign" onclick="showCommanderPicker('${army.id}')">🔄</button>` : ''}
+          </div>
+          <div class="cmd-row-stats">Тактика: <b>${tactic}</b> · Логистика: <b>${logist}</b> · Осада: <b>${siege}</b></div>
+          ${skillsHtml ? `<div class="cmd-skills-row">${skillsHtml}</div>` : ''}
+        </div>`;
+      })()}
 
       ${siegeInfo}
 
@@ -333,16 +360,23 @@ function enterMoveMode(armyId) {
   const army = typeof getArmy === 'function' ? getArmy(armyId) : null;
   if (!army || army.nation !== GAME_STATE.player_nation) return;
 
+  // Скрываем панель армии — нужно видеть карту
+  const panel = document.getElementById('army-panel');
+  if (panel) panel.style.display = 'none';
+
   if (leafletMap) leafletMap.getContainer().classList.add('map--move-mode');
 
-  if (typeof addEventLog === 'function')
-    addEventLog(`🗺 ${army.name}: выберите регион-цель на карте.`, 'info');
+  _showMoveBanner(army.name, armyId);
 
   _activeMoveHandler = (regionId) => {
     _activeMoveHandler = null;
     if (leafletMap) leafletMap.getContainer().classList.remove('map--move-mode');
+    _hideMoveBanner();
 
-    if (!regionId || regionId === army.position) return;
+    if (!regionId || regionId === army.position) {
+      _renderArmyPanel(armyId);
+      return;
+    }
 
     if (typeof orderArmyMove === 'function') {
       const path = orderArmyMove(armyId, regionId);
@@ -361,7 +395,6 @@ function enterMoveMode(armyId) {
             'info'
           );
         renderAllArmies();
-        _renderArmyPanel(armyId);
       } else {
         const fromData = GAME_STATE.regions?.[army.position] ?? MAP_REGIONS?.[army.position];
         const hasConns = fromData?.connections?.length > 0;
@@ -373,7 +406,36 @@ function enterMoveMode(armyId) {
           );
       }
     }
+    _renderArmyPanel(armyId);
   };
+}
+
+function _showMoveBanner(armyName, armyId) {
+  let banner = document.getElementById('move-mode-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'move-mode-banner';
+    (document.getElementById('map-container') ?? document.body).appendChild(banner);
+  }
+  banner.innerHTML = `
+    <div class="mmb-inner">
+      <span class="mmb-pulse"></span>
+      <span class="mmb-text">🗺 Выберите цель марша для <b>${armyName}</b></span>
+      <button class="mmb-cancel" onclick="cancelMoveMode('${armyId}')">✕ Отмена</button>
+    </div>`;
+  banner.style.display = 'block';
+}
+
+function _hideMoveBanner() {
+  const banner = document.getElementById('move-mode-banner');
+  if (banner) banner.style.display = 'none';
+}
+
+function cancelMoveMode(armyId) {
+  _activeMoveHandler = null;
+  if (leafletMap) leafletMap.getContainer().classList.remove('map--move-mode');
+  _hideMoveBanner();
+  if (armyId) _renderArmyPanel(armyId);
 }
 
 /**
@@ -557,6 +619,9 @@ function _regionCenter(regionId) {
   if (mr?.center) return mr.center;
   const gr = GAME_STATE.regions?.[regionId];
   if (gr?.center) return gr.center;
+  // Fallback: REGION_CENTROIDS (lat/lon от генератора центроидов)
+  const rc = typeof REGION_CENTROIDS !== 'undefined' ? REGION_CENTROIDS[regionId] : null;
+  if (rc?.lat != null && rc?.lon != null) return [rc.lat, rc.lon];
   return null;
 }
 
@@ -586,4 +651,164 @@ function _statBar(label, value, colorHigh, colorLow, invert = false) {
 
 function _shipLabel(type) {
   return { triremes: 'Триремы', quinqueremes: 'Квинкеремы', light_ships: 'Лёгкие' }[type] ?? type;
+}
+
+// ── Picker командующего ───────────────────────────────────────────────
+
+const _HIRE_GENERAL_NAMES = [
+  'Диокл','Сосипол','Эпимен','Архидам','Никий','Лисандр','Клеомен',
+  'Феодот','Аминий','Главкий','Леонид','Евмен','Пердикка','Филипп',
+];
+const _HIRE_SUFFIXES = [
+  'из Коринфа','Старший','Сиракузец','Наёмник','из Эпира','из Спарты',
+];
+
+function _generateHireGenerals(nationId) {
+  const used = new Set();
+  const result = [];
+  const archetypes = [
+    { label: 'Агрессивный', tBonus: 20, lBonus: -5, sBonus: 5,  traits: { ambition: 80, caution: 25 } },
+    { label: 'Осторожный',  tBonus: -5, lBonus: 15, sBonus: 15, traits: { ambition: 40, caution: 80 } },
+    { label: 'Сбалансированный', tBonus: 8, lBonus: 8, sBonus: 8, traits: { ambition: 60, caution: 55 } },
+  ];
+  for (let i = 0; i < 3; i++) {
+    let name;
+    do { name = _HIRE_GENERAL_NAMES[Math.floor(Math.random() * _HIRE_GENERAL_NAMES.length)]; }
+    while (used.has(name));
+    used.add(name);
+    const arch = archetypes[i];
+    const base = 25 + Math.floor(Math.random() * 30);
+    result.push({
+      id: `gen_hire_${Date.now()}_${i}_${Math.random().toString(36).slice(2)}`,
+      name: `${name} ${_HIRE_SUFFIXES[Math.floor(Math.random() * _HIRE_SUFFIXES.length)]}`,
+      role: 'general',
+      alive: true,
+      _is_hire: true,
+      traits: arch.traits,
+      skills: {
+        military: base,
+        tactics:  Math.max(0, base + arch.tBonus),
+        logistics: Math.max(0, base + arch.lBonus),
+        siege: Math.max(0, base + arch.sBonus),
+      },
+      commander_xp: 0,
+      commander_skills: [],
+      _archetype_label: arch.label,
+    });
+  }
+  return result;
+}
+
+function _cmdCardHtml(char, armyId, isHire) {
+  const lvl    = typeof getCommanderLevel === 'function' ? getCommanderLevel(char) : 0;
+  const stars  = '★'.repeat(lvl) + '☆'.repeat(5 - lvl);
+  const tactic = char.skills?.tactics  ?? char.skills?.military ?? 0;
+  const logist = char.skills?.logistics ?? 0;
+  const siege  = char.skills?.siege     ?? 0;
+  const xp     = char.commander_xp ?? 0;
+  const skills = char.commander_skills ?? [];
+  const skillDefs = typeof COMMANDER_SKILLS_DEF !== 'undefined' ? COMMANDER_SKILLS_DEF : {};
+  const skillsHtml = skills.map(s => {
+    const d = skillDefs[s];
+    return d ? `<span class="cmd-skill-badge" title="${d.desc}">${d.icon} ${d.name}</span>` : '';
+  }).join('');
+  const roleLabel = { general: 'Полководец', senator: 'Сенатор', advisor: 'Советник',
+                      ruler: 'Правитель', priest: 'Жрец' }[char.role] ?? char.role ?? '';
+  const archLabel = char._archetype_label ? `<span class="cmd-archetype">${char._archetype_label}</span>` : '';
+  return `
+    <div class="cmd-pick-card">
+      <div class="cmd-pick-top">
+        <div>
+          <span class="cmd-pick-name">${char.name}</span>
+          ${archLabel}
+          <span class="cmd-pick-role">${roleLabel}</span>
+        </div>
+        <span class="cmd-pick-stars">${stars}</span>
+      </div>
+      <div class="cmd-pick-stats">
+        ⚔️ Тактика: <b>${tactic}</b> &nbsp; 📦 Логистика: <b>${logist}</b> &nbsp; 🏰 Осада: <b>${siege}</b>
+        ${xp > 0 ? `&nbsp; · &nbsp; XP: <b>${xp}</b>` : ''}
+      </div>
+      ${skillsHtml ? `<div class="cmd-skills-row">${skillsHtml}</div>` : ''}
+      <button class="army-btn cmd-pick-assign-btn"
+        onclick="assignCommanderFromPicker('${armyId}','${char.id}',${isHire})">
+        ${isHire ? '⚔ Нанять и назначить' : '✔ Назначить'}
+      </button>
+    </div>`;
+}
+
+function showCommanderPicker(armyId) {
+  closeCommanderPicker();
+  const army = typeof getArmy === 'function' ? getArmy(armyId) : null;
+  if (!army) return;
+
+  const nation = GAME_STATE.nations[army.nation];
+  const courtChars = (nation?.characters ?? []).filter(c => c.alive !== false);
+
+  // Генерируем 3 нанимаемых генерала
+  const hireGens = _generateHireGenerals(army.nation);
+
+  const courtHtml = courtChars.length
+    ? courtChars.map(c => _cmdCardHtml(c, armyId, false)).join('')
+    : '<div class="cmd-pick-empty">Нет доступных персонажей при дворе</div>';
+
+  const hireHtml = hireGens.map(c => _cmdCardHtml(c, armyId, true)).join('');
+
+  const overlay = document.createElement('div');
+  overlay.id = 'cmd-picker-overlay';
+  overlay.onclick = (e) => { if (e.target === overlay) closeCommanderPicker(); };
+  overlay.innerHTML = `
+    <div class="cmd-picker">
+      <div class="cmd-picker-hdr">
+        <span>👑 Назначить командующего</span>
+        <button class="cmd-picker-close" onclick="closeCommanderPicker()">✕</button>
+      </div>
+      <div class="cmd-picker-body">
+        <div class="cmd-picker-section-title">🏛 Двор / Советники</div>
+        ${courtHtml}
+        <div class="cmd-picker-section-title" style="margin-top:10px">⚔ Полководцы (наём)</div>
+        ${hireHtml}
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  // Сохраняем hire-генералов во временное хранилище чтобы они были доступны при назначении
+  overlay._hireGens = hireGens;
+}
+
+function closeCommanderPicker() {
+  document.getElementById('cmd-picker-overlay')?.remove();
+}
+
+function assignCommanderFromPicker(armyId, charId, isHire) {
+  const army = typeof getArmy === 'function' ? getArmy(armyId) : null;
+  if (!army) return;
+
+  let char = null;
+  const nation = GAME_STATE.nations[army.nation];
+
+  if (isHire) {
+    // Найти в временном хранилище picker-а
+    const overlay = document.getElementById('cmd-picker-overlay');
+    const hireGens = overlay?._hireGens ?? [];
+    char = hireGens.find(c => c.id === charId);
+    if (char) {
+      // Добавляем в состав нации
+      if (!nation.characters) nation.characters = [];
+      // Убираем служебный флаг
+      const { _is_hire, _archetype_label, ...cleanChar } = char;
+      char = cleanChar;
+      nation.characters.push(char);
+    }
+  } else {
+    char = (nation?.characters ?? []).find(c => c.id === charId);
+  }
+
+  if (!char) return;
+  army.commander_id = char.id;
+  closeCommanderPicker();
+  _renderArmyPanel(armyId);
+
+  if (typeof addEventLog === 'function')
+    addEventLog(`👑 ${char.name} назначен командующим армии «${army.name}».`, 'character');
 }

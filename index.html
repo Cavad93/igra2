@@ -2367,6 +2367,101 @@
     .army-btn--danger { border-color: #c62828; background: rgba(198,40,40,0.25); }
     .army-btn--danger:hover { background: rgba(198,40,40,0.5); }
     .army-btn--secondary { border-color: var(--border); background: rgba(255,255,255,0.05); }
+    .army-btn--assign { padding: 2px 7px; font-size: 10px; margin-left: auto; }
+
+    /* Командующий — расширенный блок */
+    .army-panel-cmd--empty { display: flex; align-items: center; gap: 8px; color: #f44336; }
+    .cmd-row-top   { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+    .cmd-name      { flex: 1; font-size: 11px; }
+    .cmd-stars     { font-size: 13px; color: #FFD700; letter-spacing: 1px; cursor: default; }
+    .cmd-row-stats { font-size: 10px; color: var(--text-secondary); margin-bottom: 4px; }
+    .cmd-skills-row { display: flex; flex-wrap: wrap; gap: 4px; }
+    .cmd-skill-badge {
+      font-size: 10px; padding: 1px 6px;
+      background: rgba(180,140,60,0.2); border: 1px solid rgba(180,140,60,0.5);
+      border-radius: 10px; color: var(--text-gold); cursor: default; white-space: nowrap;
+    }
+
+    /* Баннер режима марша */
+    #move-mode-banner {
+      display: none;
+      position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+      z-index: 1200; pointer-events: auto;
+    }
+    .mmb-inner {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(10,8,5,0.92); border: 1px solid #FFD700;
+      border-radius: 6px; padding: 8px 14px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.7);
+      font-size: 12px; color: #fff;
+    }
+    .mmb-pulse {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #FFD700;
+      box-shadow: 0 0 0 0 rgba(255,215,0,0.7);
+      animation: mmb-pulse-anim 1.2s infinite;
+      flex-shrink: 0;
+    }
+    @keyframes mmb-pulse-anim {
+      0%   { box-shadow: 0 0 0 0 rgba(255,215,0,0.7); }
+      70%  { box-shadow: 0 0 0 8px rgba(255,215,0,0); }
+      100% { box-shadow: 0 0 0 0 rgba(255,215,0,0); }
+    }
+    .mmb-text b { color: #FFD700; }
+    .mmb-cancel {
+      padding: 3px 9px; font-size: 11px; cursor: pointer;
+      border: 1px solid #f44336; border-radius: 3px;
+      background: rgba(244,67,54,0.2); color: #ef9a9a;
+      transition: background .15s; flex-shrink: 0;
+    }
+    .mmb-cancel:hover { background: rgba(244,67,54,0.4); }
+
+    /* Picker командующего */
+    #cmd-picker-overlay {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.65);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cmd-picker {
+      width: 420px; max-width: 96vw; max-height: 80vh;
+      background: var(--bg-panel); border: 1px solid var(--border-gold);
+      border-radius: 8px; box-shadow: 0 8px 40px rgba(0,0,0,0.85);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .cmd-picker-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-bottom: 1px solid var(--border-gold);
+      font-size: 13px; font-weight: 700; color: var(--text-gold);
+      flex-shrink: 0;
+    }
+    .cmd-picker-close {
+      background: none; border: none; color: #888; font-size: 16px;
+      cursor: pointer; padding: 0 4px;
+    }
+    .cmd-picker-close:hover { color: #fff; }
+    .cmd-picker-body { overflow-y: auto; padding: 10px 12px; flex: 1; }
+    .cmd-picker-section-title {
+      font-size: 10px; color: var(--text-dim); text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 6px; padding-bottom: 4px;
+      border-bottom: 1px solid rgba(107,79,26,0.3);
+    }
+    .cmd-pick-card {
+      background: rgba(0,0,0,0.25); border: 1px solid rgba(107,79,26,0.4);
+      border-radius: 5px; padding: 8px 10px; margin-bottom: 6px;
+    }
+    .cmd-pick-card:hover { border-color: var(--border-gold); }
+    .cmd-pick-top { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
+    .cmd-pick-name { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+    .cmd-pick-role { font-size: 10px; color: #888; margin-left: 5px; }
+    .cmd-pick-stars { font-size: 14px; color: #FFD700; flex-shrink: 0; }
+    .cmd-archetype {
+      font-size: 9px; padding: 1px 5px; border-radius: 8px;
+      background: rgba(33,150,243,0.2); border: 1px solid rgba(33,150,243,0.4);
+      color: #90CAF9; margin-left: 4px; vertical-align: middle;
+    }
+    .cmd-pick-stats { font-size: 10px; color: var(--text-secondary); margin-bottom: 5px; }
+    .cmd-pick-empty { font-size: 11px; color: #666; font-style: italic; padding: 6px 0; }
+    .cmd-pick-assign-btn { margin-top: 6px; width: 100%; }
 
     /* Панель сборки армии */
     #assemble-army-panel {

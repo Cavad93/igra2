@@ -174,6 +174,10 @@ function resolveArmyBattle(atkArmy, defArmy, regionId) {
   defArmy.battles_won  += atkWins ? 0 : 1;
   defArmy.battles_lost += atkWins ? 1 : 0;
 
+  // XP командующим: победитель +10..25, проигравший +3..8 (за храбрость)
+  _awardCommanderXP(atkWins ? atkArmy : defArmy, 10 + Math.round((defCas + atkCas) / 400));
+  _awardCommanderXP(atkWins ? defArmy : atkArmy, 3  + Math.round((defCas + atkCas) / 800));
+
   const wsGain = Math.round(5 + (atkTotal + defTotal) / 500);
   if (atkWins) atkArmy.war_score_earned += wsGain + (capturedRegionId ? 10 : 0);
   else         defArmy.war_score_earned += wsGain;
@@ -449,6 +453,30 @@ function _landTotal(u) {
 function _getRegionData(regionId) {
   return GAME_STATE.regions?.[regionId]
     ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[regionId] : null);
+}
+
+/** Начисляет XP командующему армии и разблокирует новые умения при достижении порогов */
+function _awardCommanderXP(army, xpGain) {
+  if (!army?.commander_id) return;
+  const nation = GAME_STATE.nations?.[army.nation];
+  const char = (nation?.characters ?? []).find(c => c.id === army.commander_id);
+  if (!char) return;
+  const prevXp = char.commander_xp ?? 0;
+  char.commander_xp = prevXp + xpGain;
+  // Проверяем разблокировку умений на каждом пороге
+  if (typeof COMMANDER_XP_LEVELS !== 'undefined' && typeof grantCommanderSkill === 'function') {
+    for (const threshold of COMMANDER_XP_LEVELS) {
+      if (threshold > 0 && prevXp < threshold && char.commander_xp >= threshold) {
+        const newSkill = grantCommanderSkill(char);
+        if (newSkill && typeof COMMANDER_SKILLS_DEF !== 'undefined') {
+          const def = COMMANDER_SKILLS_DEF[newSkill];
+          if (def && typeof addEventLog === 'function') {
+            addEventLog(`${def.icon} ${char.name} получает умение «${def.name}»!`, 'character');
+          }
+        }
+      }
+    }
+  }
 }
 
 /** Суммарный бонус черты командира по полю (atk/def/pursuit/naval) */

@@ -545,6 +545,53 @@ function getArmyCommander(army) {
   return (nation?.characters ?? []).find(c => c.id === army.commander_id) ?? null;
 }
 
+// ── Система уровней командующих ──────────────────────────────────────
+
+const COMMANDER_XP_LEVELS = [0, 10, 40, 100, 250, 500]; // XP для звёзд 0-5
+
+const COMMANDER_SKILLS_DEF = {
+  siege_master:     { name: 'Мастер осады',      icon: '🏰', desc: '+25% скорость осады' },
+  fierce_aggressor: { name: 'Неистовый агрессор', icon: '⚔️', desc: '+20% атака, −10% защита' },
+  iron_discipline:  { name: 'Железная воля',      icon: '🛡', desc: 'Дисциплина ≥ 40 в бою' },
+  swift_marcher:    { name: 'Быстрый марш',       icon: '🏃', desc: '+20% скорость движения' },
+  defensive_genius: { name: 'Гений обороны',      icon: '🏔', desc: '+25% защита в горах/городах' },
+  supply_master:    { name: 'Мастер снабжения',   icon: '📦', desc: '−40% потери снабжения' },
+  master_tactician: { name: 'Тактик',             icon: '🎯', desc: '+15% боевая эффективность' },
+  cavalry_expert:   { name: 'Мастер конницы',     icon: '🐴', desc: '+30% эффективность кавалерии' },
+  legendary:        { name: 'Легендарный',        icon: '👑', desc: 'Все боевые бонусы +10%' },
+};
+
+function getCommanderLevel(char) {
+  const xp = char?.commander_xp ?? 0;
+  let level = 0;
+  for (let i = COMMANDER_XP_LEVELS.length - 1; i >= 0; i--) {
+    if (xp >= COMMANDER_XP_LEVELS[i]) { level = i; break; }
+  }
+  return level;
+}
+
+function grantCommanderSkill(char) {
+  if (!char) return;
+  if (!char.commander_skills) char.commander_skills = [];
+  const existing = new Set(char.commander_skills);
+  const t = char.traits ?? {};
+  // Кандидаты зависят от черт персонажа
+  const candidates = [];
+  if (!existing.has('siege_master')     && (t.caution    ?? 50) > 55) candidates.push('siege_master');
+  if (!existing.has('fierce_aggressor') && (t.ambition   ?? 50) > 65) candidates.push('fierce_aggressor');
+  if (!existing.has('iron_discipline')  && (t.loyalty    ?? 50) > 60) candidates.push('iron_discipline');
+  if (!existing.has('swift_marcher'))                                  candidates.push('swift_marcher');
+  if (!existing.has('defensive_genius') && (t.caution    ?? 50) > 50) candidates.push('defensive_genius');
+  if (!existing.has('supply_master'))                                  candidates.push('supply_master');
+  if (!existing.has('master_tactician'))                               candidates.push('master_tactician');
+  if (!existing.has('cavalry_expert')   && (t.ambition   ?? 50) > 45) candidates.push('cavalry_expert');
+  if (!existing.has('legendary') && (char.commander_xp ?? 0) >= 500)  candidates.push('legendary');
+  if (!candidates.length) return;
+  const skill = candidates[Math.floor(Math.random() * candidates.length)];
+  char.commander_skills.push(skill);
+  return skill; // возвращаем для лога
+}
+
 function _armyLandTotal(u) {
   return (u.infantry ?? 0) + (u.cavalry ?? 0) + (u.mercenaries ?? 0) + (u.artillery ?? 0);
 }
