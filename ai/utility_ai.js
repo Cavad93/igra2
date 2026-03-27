@@ -772,6 +772,11 @@ function _findDistantEnemy(army, order, enemies) {
       const nr = GAME_STATE.regions?.[next] ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[next] : null);
       if (nr?.mapType === 'Ocean') continue;
 
+      // Блокировка линией крепостей (не блокируем саму цель — надо осадить)
+      if (next !== goalId && typeof _isFortressLineBlocked === 'function') {
+        if (_isFortressLineBlocked(next, army.nation)) continue;
+      }
+
       const step = firstStep ?? next; // первый шаг от стартовой позиции
       if (next === goalId) return step;
 

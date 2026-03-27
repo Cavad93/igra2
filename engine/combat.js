@@ -390,7 +390,7 @@ function _setRetreatPath(army) {
     army.path = [adj];
   } else {
     const path = typeof findArmyPath === 'function'
-      ? findArmyPath(army.position, ownRegions[0], army.type)
+      ? findArmyPath(army.position, ownRegions[0], army.type, army.nation)
       : null;
     if (path && path.length > 1) army.path = path.slice(1, 3);
     else army.state = 'disbanded';

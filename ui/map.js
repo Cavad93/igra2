@@ -345,10 +345,28 @@ function buildTooltipContent(regionId, mapData, nationId) {
   const nationColor = nation ? nation.color : '#A8A898';
   const pop = gameRegion ? (gameRegion.population || 0).toLocaleString() : '?';
 
+  // Индикатор крепости
+  let fortStr = '';
+  if ((gameRegion?.fortress_level ?? 0) > 0) {
+    const lvl = gameRegion.fortress_level;
+    const lvlLabels = ['','Частокол','Деревянные стены','Каменные стены','Цитадель','Неприступная крепость'];
+    const conserved = gameRegion.fortress_conserved ? ' (законсервирована)' : '';
+    fortStr = `<div class="rt-fort">🏰 ${lvlLabels[lvl] ?? 'Крепость ур.' + lvl}${conserved}</div>`;
+  }
+
+  // Блокировка линией крепостей для армии игрока
+  let blockStr = '';
+  if (typeof _isFortressLineBlocked === 'function' && GAME_STATE.player_nation) {
+    if (_isFortressLineBlocked(regionId, GAME_STATE.player_nation)) {
+      blockStr = `<div class="rt-blocked">⛔ Заблокировано линией крепостей</div>`;
+    }
+  }
+
   return `
     <div class="rt-name">${mapData.name}</div>
     <div class="rt-nation" style="color:${nationColor}">${nationName}</div>
     <div class="rt-pop">👥 ${pop}</div>
+    ${fortStr}${blockStr}
   `;
 }
 

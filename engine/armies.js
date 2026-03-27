@@ -177,9 +177,58 @@ function _calcFleetSpeed(army) {
   return (weighted / total) * navBonus * fatPen;
 }
 
-// ── Поиск пути (BFS по connections) ─────────────────────────────────
+// ── Линия крепостей — блокировка прохода ─────────────────────────────
+//
+// Регион считается заблокированным для армии нации N если:
+//   он имеет ≥2 соседних регионов с активными крепостями (fortress_level≥1,
+//   garrison>0) принадлежащих нации M, с которой N находится в состоянии войны.
+// Исключение: если целевой регион сам является крепостью (осада обязательна).
 
-function findArmyPath(fromId, toId, type = 'land') {
+function _isFortressLineBlocked(regionId, movingNationId) {
+  if (!movingNationId) return false;
+  const region = _getRegionData(regionId);
+  if (!region) return false;
+
+  // Если в самом регионе есть крепость врага — это цель осады, не блокировка
+  if ((region.fortress_level ?? 0) > 0 && region.nation !== movingNationId) return false;
+
+  let hostileFortCount = 0;
+  for (const adjId of (region.connections ?? [])) {
+    const adj = _getRegionData(adjId);
+    if (!adj) continue;
+    if ((adj.fortress_level ?? 0) === 0) continue;       // нет крепости
+    if ((adj.garrison ?? 0) <= 0) continue;              // пустая крепость не блокирует
+    if (!adj.nation || adj.nation === movingNationId) continue; // своя или нейтральная
+    if (!_armiesAtWar(movingNationId, adj.nation)) continue;    // не в войне
+    hostileFortCount++;
+    if (hostileFortCount >= 2) return true;
+  }
+  return false;
+}
+
+/**
+ * Проверяет, находятся ли две нации в состоянии войны.
+ * Смотрит military.at_war_with и дипломатические отношения.
+ */
+function _armiesAtWar(nationA, nationB) {
+  if (!nationA || !nationB || nationA === nationB) return false;
+  const na = GAME_STATE.nations?.[nationA];
+  const nb = GAME_STATE.nations?.[nationB];
+  if (na?.military?.at_war_with?.includes(nationB)) return true;
+  if (nb?.military?.at_war_with?.includes(nationA)) return true;
+  if (typeof getRelation === 'function') {
+    const rel = getRelation(nationA, nationB);
+    if (rel?.war === true) return true;
+  }
+  return false;
+}
+
+// ── Поиск пути (BFS по connections) ─────────────────────────────────
+//
+// nationId — нация армии (опционально). Если передан, учитывается
+// блокировка линиями крепостей.
+
+function findArmyPath(fromId, toId, type = 'land', nationId = null) {
   if (fromId === toId) return [fromId];
 
   const visited = new Set([fromId]);
@@ -199,6 +248,11 @@ function findArmyPath(fromId, toId, type = 'land') {
       if (type === 'land'  && nr.mapType === 'Ocean') continue;
       if (type === 'naval' && nr.mapType === 'Land')  continue;
 
+      // Блокировка линиями крепостей (только для наземных армий)
+      if (type === 'land' && nationId && next !== toId) {
+        if (_isFortressLineBlocked(next, nationId)) continue;
+      }
+
       visited.add(next);
       const newPath = [...path, next];
       if (next === toId) return newPath;
@@ -216,7 +270,7 @@ function orderArmyMove(armyId, targetRegionId) {
   if (army.state === 'sieging')   return 'sieging';
   if (army.state === 'disbanded') return false;
 
-  const path = findArmyPath(army.position, targetRegionId, army.type);
+  const path = findArmyPath(army.position, targetRegionId, army.type, army.nation);
   if (!path || path.length < 2) return false;
 
   army.target        = targetRegionId;
@@ -488,7 +542,7 @@ function _processRout(army) {
     army.state    = 'stationed';
     army.fatigue  = Math.min(100, army.fatigue + 20);
   } else {
-    const path = findArmyPath(army.position, ownRegions[0], army.type);
+    const path = findArmyPath(army.position, ownRegions[0], army.type, army.nation);
     if (path && path.length > 1) {
       army.position = path[1];
       army.path     = path.slice(2, 4); // следующие 2 шага
