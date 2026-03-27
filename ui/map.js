@@ -301,13 +301,22 @@ function renderRegionPolygons() {
     const isPlayerRegion = (nationId === GAME_STATE.player_nation);
     const isSelected   = (selectedRegionId === regionId);
 
+    // Оккупация: оригинальный цвет владельца для штриховки
+    const originalNationId = gameRegion?.original_nation;
+    const occupierColor    = gameRegion?.occupied_by
+      ? (GAME_STATE.nations[gameRegion.occupied_by]?.color ?? null)
+      : null;
+    const originalColor    = originalNationId
+      ? (GAME_STATE.nations[originalNationId]?.color ?? null)
+      : null;
+
     // Сглаживание только для небольших полигонов (Ocean уже отсеян выше)
     const coords = mapData.coords.length <= 60
       ? smoothChaikin(mapData.coords, 2)
       : mapData.coords;
 
     const polygon = L.polygon(coords, {
-      ...buildPolygonStyle(color, isPlayerRegion, isSelected),
+      ...buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor, occupierColor),
       renderer: canvasRenderer,
     });
 
@@ -327,7 +336,28 @@ function renderRegionPolygons() {
   }
 }
 
-function buildPolygonStyle(color, isPlayerRegion, isSelected) {
+/**
+ * Стиль полигона региона.
+ * @param {string}      color        — цвет нации-владельца
+ * @param {boolean}     isPlayerRegion
+ * @param {boolean}     isSelected
+ * @param {string|null} originalColor  — цвет оригинального владельца (оккупация)
+ * @param {string|null} occupierColor  — цвет оккупанта (для границы)
+ */
+function buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor = null, occupierColor = null) {
+  // Оккупированный регион: показываем цвет оригинального владельца (светлее),
+  // а толстую штрихованную границу — в цвете захватчика
+  if (originalColor && occupierColor && !isSelected) {
+    return {
+      fillColor:   originalColor,   // оригинальный владелец виден как фон
+      fillOpacity: 0.45,            // чуть прозрачнее обычного
+      color:       occupierColor,   // граница = цвет захватчика
+      weight:      2.5,
+      opacity:     1.0,
+      dashArray:   '8 4',           // штриховая граница — признак оккупации
+    };
+  }
+
   return {
     color:        isSelected ? '#FFD700' : 'rgba(70,50,25,0.45)',
     weight:       isSelected ? 3.0 : 1.0,
@@ -344,6 +374,18 @@ function buildTooltipContent(regionId, mapData, nationId) {
   const nationName = nation ? nation.name : 'Независимые';
   const nationColor = nation ? nation.color : '#A8A898';
   const pop = gameRegion ? (gameRegion.population || 0).toLocaleString() : '?';
+
+  // Оккупация
+  let occupyStr = '';
+  if (gameRegion?.occupied_by && gameRegion?.original_nation) {
+    const occNation  = GAME_STATE.nations[gameRegion.occupied_by];
+    const origNation = GAME_STATE.nations[gameRegion.original_nation];
+    const occColor   = occNation?.color ?? '#f44336';
+    occupyStr = `<div class="rt-occupied" style="color:${occColor}">
+      ⚔️ Оккупировано: ${occNation?.name ?? gameRegion.occupied_by}
+      <span style="color:#8a6e3a">(было: ${origNation?.name ?? gameRegion.original_nation})</span>
+    </div>`;
+  }
 
   // Индикатор крепости
   let fortStr = '';
@@ -366,13 +408,22 @@ function buildTooltipContent(regionId, mapData, nationId) {
     <div class="rt-name">${mapData.name}</div>
     <div class="rt-nation" style="color:${nationColor}">${nationName}</div>
     <div class="rt-pop">👥 ${pop}</div>
-    ${fortStr}${blockStr}
+    ${occupyStr}${fortStr}${blockStr}
   `;
 }
 
 // ──────────────────────────────────────────────────────────────
 // ВЗАИМОДЕЙСТВИЕ
 // ──────────────────────────────────────────────────────────────
+
+/** Получить цвета оккупации для региона (originalColor, occupierColor) */
+function _regionOccupationColors(regionId) {
+  const gr = GAME_STATE.regions?.[regionId];
+  if (!gr?.occupied_by || !gr?.original_nation) return [null, null];
+  const origColor = GAME_STATE.nations[gr.original_nation]?.color ?? null;
+  const occColor  = GAME_STATE.nations[gr.occupied_by]?.color ?? null;
+  return [origColor, occColor];
+}
 
 function onRegionClick(regionId) {
   // Режим выбора цели движения армии — перехватываем клик
@@ -385,11 +436,11 @@ function onRegionClick(regionId) {
     const prevNation = GAME_STATE.nations[prevNationId];
     const prevColor = prevNation ? prevNation.color : '#A8A898';
     const prevIsPlayer = (prevNationId === GAME_STATE.player_nation);
-    regionLayers[selectedRegionId].setStyle(buildPolygonStyle(prevColor, prevIsPlayer, false));
+    const [origC, occC] = _regionOccupationColors(selectedRegionId);
+    regionLayers[selectedRegionId].setStyle(buildPolygonStyle(prevColor, prevIsPlayer, false, origC, occC));
   }
 
   if (selectedRegionId === regionId) {
-    // Клик по уже выбранному — снимаем выбор
     selectedRegionId = null;
     closeRegionInfo();
     return;
@@ -397,7 +448,7 @@ function onRegionClick(regionId) {
 
   selectedRegionId = regionId;
 
-  // Выделяем новый регион
+  // Выделяем новый регион (selected всегда без штриховки — чтобы видеть)
   const layer = regionLayers[regionId];
   if (layer) {
     const gameRegion = GAME_STATE.regions[regionId];
@@ -425,7 +476,8 @@ function onRegionHover(e, regionId, entering, color, isPlayerRegion) {
     });
     layer.bringToFront();
   } else {
-    layer.setStyle(buildPolygonStyle(color, isPlayerRegion, false));
+    const [origC, occC] = _regionOccupationColors(regionId);
+    layer.setStyle(buildPolygonStyle(color, isPlayerRegion, false, origC, occC));
   }
 }
 
@@ -1650,7 +1702,8 @@ function refreshRegionStyles() {
     const color = blendColor ?? (nation ? nation.color : '#A8A898');
     const isPlayer = (nationId === GAME_STATE.player_nation);
     const isSelected = (regionId === selectedRegionId);
-    layer.setStyle(buildPolygonStyle(color, isPlayer, isSelected));
+    const [origC, occC] = _regionOccupationColors(regionId);
+    layer.setStyle(buildPolygonStyle(color, isPlayer, isSelected, origC, occC));
 
     if (layer.getTooltip && layer.getTooltip()) {
       layer.setTooltipContent(buildTooltipContent(regionId, mapData, nationId));

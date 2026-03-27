@@ -605,15 +605,28 @@ function captureRegion(captorId, regionId, prevOwnerId) {
   const region   = GAME_STATE.regions?.[regionId];
   if (!region) return;
 
-  region.nation = captorId;
+  const prevNation = prevOwnerId ?? region.nation;
 
-  // Отслеживаем для анти-сноуболл механизмов
+  // Если регион захватывается во время войны — помечаем оккупацию.
+  // Визуально показывается штриховка цветом захватчика поверх цвета владельца.
+  const duringWar = prevNation && prevNation !== captorId
+    && typeof _armiesAtWar === 'function' && _armiesAtWar(captorId, prevNation);
+
+  if (duringWar) {
+    region.occupied_by      = captorId;
+    region.original_nation  = prevNation;
+  } else {
+    // Мирный захват (нет войны) — сразу окончательный, без штриховки
+    region.occupied_by     = null;
+    region.original_nation = null;
+  }
+
+  region.nation         = captorId;
   region._conquest_turn = GAME_STATE.turn ?? 1;
 
-  const captor   = GAME_STATE.nations[captorId];
-  const prev     = GAME_STATE.nations[prevOwnerId];
+  const captor = GAME_STATE.nations[captorId];
+  const prev   = GAME_STATE.nations[prevNation];
 
-  // Счётчик расширения для коалиционного рефлекса (не для игрока)
   if (captor && !captor.is_player) {
     captor._expansion_this_window = (captor._expansion_this_window ?? 0) + 1;
   }
@@ -626,6 +639,66 @@ function captureRegion(captorId, regionId, prevOwnerId) {
 
   if (typeof addEventLog === 'function')
     addEventLog(`🏴 ${captor?.name ?? captorId} захватывает ${region.name ?? regionId}!`, 'military');
+
+  // Проверяем елиминацию: если у нации не осталось регионов — она уничтожена
+  if (duringWar) checkNationElimination(prevNation, captorId);
+}
+
+/**
+ * Проверяет, осталась ли нация без регионов.
+ * Если да — помечает её как уничтоженную, завершает войну и очищает оккупацию.
+ * @param {string} nationId - нация которая могла лишиться последнего региона
+ * @param {string} [captorId] - захватчик (для очистки оккупационных маркеров)
+ */
+function checkNationElimination(nationId, captorId) {
+  const nation = GAME_STATE.nations?.[nationId];
+  if (!nation || nation.is_eliminated) return;
+
+  // Считаем оставшиеся регионы
+  const remaining = Object.values(GAME_STATE.regions ?? {}).filter(r => r.nation === nationId);
+  if (remaining.length > 0) return;
+
+  // Нация уничтожена
+  nation.is_eliminated = true;
+  nation.eliminated_turn = GAME_STATE.turn ?? 1;
+
+  // Снимаем войну между ними
+  if (captorId) {
+    const captor = GAME_STATE.nations[captorId];
+    if (captor?.military?.at_war_with) {
+      captor.military.at_war_with = captor.military.at_war_with.filter(id => id !== nationId);
+    }
+    if (nation?.military?.at_war_with) {
+      nation.military.at_war_with = nation.military.at_war_with.filter(id => id !== captorId);
+    }
+    if (typeof getRelation === 'function') {
+      const rel = getRelation(captorId, nationId);
+      if (rel) rel.war = false;
+    }
+    // Очищаем оккупационные метки с регионов захватчика
+    for (const r of Object.values(GAME_STATE.regions ?? {})) {
+      if (r.nation === captorId && r.original_nation === nationId) {
+        r.occupied_by      = null;
+        r.original_nation  = null;
+      }
+    }
+  }
+
+  // Расформировываем армии уничтоженной нации
+  for (const army of (GAME_STATE.armies ?? [])) {
+    if (army.nation === nationId && army.state !== 'disbanded') {
+      army.state = 'disbanded';
+    }
+  }
+
+  if (typeof addEventLog === 'function') {
+    const captorName = GAME_STATE.nations[captorId]?.name ?? captorId;
+    addEventLog(
+      `💀 ${nation.name} уничтожена! ${captorName} завоевал все её территории. `
+      + `Нация исчезает с карты.`,
+      'danger'
+    );
+  }
 }
 
 // ── Вспомогательные геттеры ───────────────────────────────────────────

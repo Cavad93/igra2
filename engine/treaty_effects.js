@@ -304,6 +304,25 @@ function _onPeace(treaty, a, b, cond) {
   if (natA?.military?.at_war_with) natA.military.at_war_with = natA.military.at_war_with.filter(id => id !== b);
   if (natB?.military?.at_war_with) natB.military.at_war_with = natB.military.at_war_with.filter(id => id !== a);
 
+  // ── Снятие оккупационных маркеров ────────────────────────────────
+  // Все регионы занятые одной стороной у другой — становятся официально их
+  for (const region of Object.values(GAME_STATE.regions ?? {})) {
+    const occ  = region.occupied_by;
+    const orig = region.original_nation;
+    if (!occ || !orig) continue;
+    // Если оккупация была между a и b — снимаем метки
+    const isAB = (occ === a && orig === b) || (occ === b && orig === a);
+    if (!isAB) continue;
+    region.occupied_by     = null;
+    region.original_nation = null;
+  }
+
+  // ── Проверка елиминации обоих участников ─────────────────────────
+  if (typeof checkNationElimination === 'function') {
+    checkNationElimination(a, b);
+    checkNationElimination(b, a);
+  }
+
   _log(`☮ Мирный договор: ${natA?.name ?? a} и ${natB?.name ?? b} прекращают войну.`);
 }
 
@@ -330,11 +349,17 @@ function _onTerritorialExchange(treaty, a, b, cond) {
   if (!Array.isArray(cond.transfer_regions) || !cond.transfer_regions.length) return;
   const [fromId, toId] = [a, b]; // по умолчанию: a передаёт b
 
+  const transferredFrom = new Set();
+
   for (const regionId of cond.transfer_regions) {
     const region = GAME_STATE.regions?.[regionId];
     if (!region) continue;
     const prevOwner = region.nation;
-    region.nation = toId;
+    region.nation          = toId;
+    region.occupied_by     = null;
+    region.original_nation = null;
+
+    transferredFrom.add(prevOwner);
 
     // Обновляем списки регионов наций
     const fromNat = GAME_STATE.nations[prevOwner];
@@ -346,6 +371,13 @@ function _onTerritorialExchange(treaty, a, b, cond) {
       if (!toNat.regions.includes(regionId)) toNat.regions.push(regionId);
     }
     _log(`🗺 Регион «${region.name ?? regionId}» передан ${toNat?.name ?? toId}.`);
+  }
+
+  // Проверяем елиминацию наций которые лишились регионов
+  if (typeof checkNationElimination === 'function') {
+    for (const prevOwner of transferredFrom) {
+      checkNationElimination(prevOwner, toId);
+    }
   }
 }
 
