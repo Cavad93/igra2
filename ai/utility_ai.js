@@ -20,6 +20,7 @@ const UAI_W = {
   fortress_penalty:  22,   // штраф за уровень укреплений
   distance:          12,   // штраф за дальность пути
   population_bonus:   8,   // богатые регионы ценнее
+  enemy_army_threat: 18,   // штраф за вражескую армию в регионе-цели
 };
 
 // ── Ценность регионов по типу рельефа ────────────────────────────────
@@ -94,6 +95,16 @@ function utilityAIDecide(army, order) {
     ? (GAME_STATE.sieges ?? []).find(s => s.id === army.siege_id) ?? null
     : null;
 
+  // Карта вражеских армий: { regionId: totalStrength }
+  const enemyArmies = _scanEnemyArmies(nearby, enemies);
+  const myStr       = _armyStrength(army, nearby[army.position]?.terrain ?? 'plains');
+  // Модификаторы состава войск (конница / артиллерия)
+  const compMods    = _armyCompositionMods(army);
+  // Столичные регионы врагов — цели с наивысшим приоритетом
+  const capitals    = _getCapitalRegions(enemies);
+  // Союзные армии в радиусе: где стоят, куда идут, что осаждают
+  const allyInfo    = _scanAllyArmies(nearby, army.nation);
+
   // ── 1. КРИТИЧЕСКОЕ СОСТОЯНИЕ: принудительное отступление ────────────
   if (readiness < mods.retreat_threshold) {
     const retreatId = _findBestRetreat(army, nearby);
@@ -105,7 +116,37 @@ function utilityAIDecide(army, order) {
              reasoning: _phrase('hold') };
   }
 
-  // ── 2. Набираем кандидатов и считаем score для каждого ───────────────
+  // ── 2. Угроза от вражеской армии рядом: отступить если враг сильнее ─
+  for (const [rid, eStr] of Object.entries(enemyArmies)) {
+    if (rid === army.position) continue;
+    const dist = _bfsDistanceInNearby(army.position, rid, nearby);
+    // Враг в соседнем регионе и превосходит нас в 1.6 раза — отходим
+    if (dist === 1 && eStr > myStr * 1.6 && readiness < 0.70) {
+      const retreatId = _findBestRetreat(army, nearby);
+      if (retreatId) {
+        const rName = nearby[rid]?.name ?? rid;
+        return {
+          action: 'retreat', target_id: retreatId, score: 950,
+          reasoning: `Превосходящая армия врага в "${rName}" — отходим.`,
+        };
+      }
+    }
+  }
+
+  // ── 2б. Угроза окружения: большинство соседей — враги ───────────────
+  const encirclement = _encirclementRisk(army, nearby, enemies);
+  // При >60% соседей-врагов и не идеальной боеготовности — пробиваться
+  if (encirclement >= 0.60 && readiness < 0.80) {
+    const breakoutId = _findBestRetreat(army, nearby);
+    if (breakoutId) {
+      return {
+        action: 'retreat', target_id: breakoutId, score: 980,
+        reasoning: `Угроза окружения (${Math.round(encirclement * 100)}% соседей — враги) — прорыв.`,
+      };
+    }
+  }
+
+  // ── 3. Набираем кандидатов и считаем score для каждого ───────────────
   const candidates = [];
 
   // Держать позицию
@@ -123,7 +164,7 @@ function utilityAIDecide(army, order) {
       candidates.push({
         action:    'storm',
         target_id: null,
-        score:     _scoreStorm(army, activeSiege, mods, readiness),
+        score:     _scoreStorm(army, activeSiege, mods, readiness, compMods),
         reasoning: _phrase('storm'),
       });
     }
@@ -131,9 +172,25 @@ function utilityAIDecide(army, order) {
     candidates.push({
       action:    'siege',
       target_id: null,
-      score:     _scoreSiege(army, activeSiege, mods, readiness),
+      score:     _scoreSiege(army, activeSiege, mods, readiness, compMods),
       reasoning: `Продолжать осаду ${activeSiege.region_name} (${Math.round(activeSiege.progress)}%).`,
     });
+  }
+
+  // Если союзник осаждает крепость рядом — идти на помощь (высокий приоритет)
+  for (const siegeTarget of allyInfo.allySiegeTargets) {
+    if (nearby[siegeTarget] && enemies.includes(nearby[siegeTarget].nation)) {
+      const dist = _bfsDistanceInNearby(army.position, siegeTarget, nearby);
+      if (dist <= 2 && !activeSiege) {
+        const reinforceScore = 55 + readiness * 20 - dist * 8;
+        candidates.push({
+          action:    'move',
+          target_id: siegeTarget,
+          score:     reinforceScore,
+          reasoning: 'Подкрепить союзную осаду.',
+        });
+      }
+    }
   }
 
   // Атаковать вражеские регионы в радиусе
@@ -141,9 +198,22 @@ function utilityAIDecide(army, order) {
     if (rid === army.position) continue;
     if (!enemies.includes(region.nation)) continue;
 
-    const sc = _scoreAttack(army, region, nearby, mods, readiness);
+    let sc = _scoreAttack(army, region, nearby, mods, readiness, enemyArmies, compMods, capitals);
+
+    // Координация: союзник тоже движется к этой цели — вместе сильнее
+    if (allyInfo.allyMoveTargets.has(rid)) {
+      sc *= 1.25;
+    }
+    // Союзник уже стоит рядом с целью — атаковать с двух сторон
+    const allyNearTarget = Object.entries(allyInfo.allyStrByRegion).some(([arid]) => {
+      const r = GAME_STATE.regions?.[arid] ?? MAP_REGIONS?.[arid];
+      return (r?.connections ?? []).includes(rid);
+    });
+    if (allyNearTarget) sc *= 1.15;
+
     if (sc > 5) {
-      const isOpen = region.fortress === 0 && region.garrison < 300;
+      const eStr   = enemyArmies[rid] ?? 0;
+      const isOpen = region.fortress === 0 && region.garrison < 300 && eStr === 0;
       candidates.push({
         action:    'move',
         target_id: rid,
@@ -167,7 +237,7 @@ function utilityAIDecide(army, order) {
     }
   }
 
-  // ── 3. Выбираем действие с максимальным score ─────────────────────
+  // ── 4. Выбираем действие с максимальным score ──────────────────────
   candidates.sort((a, b) => b.score - a.score);
 
   // Если лучшее действие не превышает порог активности — лучше держать
@@ -190,25 +260,33 @@ function utilityAIDecide(army, order) {
 
 /**
  * Score для движения к вражескому региону.
- * Учитывает: ценность цели, соотношение сил, дальность, укреплённость.
+ * Учитывает: ценность цели, соотношение сил (гарнизон + армии), дальность, укреплённость.
  */
-function _scoreAttack(army, targetRegion, nearby, mods, readiness) {
+function _scoreAttack(army, targetRegion, nearby, mods, readiness, enemyArmies, compMods, capitals) {
   // Ценность типа региона
   const regionValue = UAI_REGION_VALUE[targetRegion.terrain] ?? 0.40;
   const valueScore  = regionValue * UAI_W.target_value;
 
-  // Соотношение сил: сила армии vs гарнизон
-  const armyStr  = _armyStrength(army, targetRegion.terrain);
-  const garrison = Math.max(targetRegion.garrison, 50);
-  const ratio    = Math.min(armyStr / garrison, 8.0);
+  // Суммарная сила защитников = гарнизон + все вражеские армии в регионе
+  const armyStr        = _armyStrength(army, targetRegion.terrain);
+  const garrison       = Math.max(targetRegion.garrison, 50);
+  const enemyArmyStr   = enemyArmies[targetRegion.id] ?? 0;
+  const totalDefense   = garrison + enemyArmyStr;
+
+  const ratio = Math.min(armyStr / totalDefense, 8.0);
   // Нелинейная кривая: ratio=1 → 0.35, ratio=3 → 0.75, ratio=6 → 0.95
   const weakScore = (1 - 1 / (1 + ratio * 0.3)) * UAI_W.enemy_weakness;
+
+  // Дополнительный штраф если в регионе стоит значимая армия врага
+  const armyThreatPenalty = enemyArmyStr > 0
+    ? -(Math.min(enemyArmyStr / Math.max(armyStr, 1), 2.5) * UAI_W.enemy_army_threat)
+    : 0;
 
   // Штраф за укреплённость
   const fortPenalty = -(targetRegion.fortress * 0.18) * UAI_W.fortress_penalty;
 
   // Штраф за дальность
-  const dist      = _bfsDistanceInNearby(army.position, targetRegion.id, nearby);
+  const dist        = _bfsDistanceInNearby(army.position, targetRegion.id, nearby);
   const distPenalty = -(dist * 0.09) * UAI_W.distance;
 
   // Боеготовность армии
@@ -217,19 +295,41 @@ function _scoreAttack(army, targetRegion, nearby, mods, readiness) {
   // Бонус за крупное население (богатая добыча)
   const popBonus = Math.min(targetRegion.population / 15000, 1.0) * UAI_W.population_bonus;
 
-  let score = valueScore + weakScore + fortPenalty + distPenalty + readScore + popBonus;
+  // Бонус за столицу: политически и стратегически важнейшая цель
+  const capitalBonus = capitals?.has(targetRegion.id) ? 22 : 0;
+
+  let score = valueScore + weakScore + armyThreatPenalty + fortPenalty + distPenalty + readScore + popBonus + capitalBonus;
 
   // Модификаторы личности
   score *= mods.attack_mult;
 
   // Тактик предпочитает слабые незащищённые цели
-  if (targetRegion.fortress === 0 && targetRegion.garrison < 200) {
+  if (targetRegion.fortress === 0 && garrison < 200 && enemyArmyStr === 0) {
     score *= mods.prefer_weak_bonus;
   }
 
   // Мастер осады избегает открытых городов (предпочитает брать в осаду)
   if (mods.siege_specialist && targetRegion.fortress === 0) {
     score *= 0.75;
+  }
+
+  // Конница обожает открытые равнинные цели
+  if (compMods) {
+    const terrain = targetRegion.terrain;
+    if (compMods.is_cavalry_heavy) {
+      if (terrain === 'plains' || terrain === 'river_valley') {
+        score *= compMods.cavalry_open_bonus;
+      } else if (terrain === 'mountains' || terrain === 'hills') {
+        score *= compMods.cavalry_mountain_pen;
+      }
+      if (targetRegion.fortress > 1) {
+        score *= compMods.cavalry_fort_pen;
+      }
+    }
+    // Тяжёлая артиллерия немного медленнее добирается до целей
+    if (compMods.is_artillery_heavy) {
+      score *= compMods.artillery_move_pen;
+    }
   }
 
   return Math.max(0, score);
@@ -239,7 +339,7 @@ function _scoreAttack(army, targetRegion, nearby, mods, readiness) {
  * Score для штурма крепости.
  * Высокий прогресс осады и агрессивный командир = высокий score.
  */
-function _scoreStorm(army, siege, mods, readiness) {
+function _scoreStorm(army, siege, mods, readiness, compMods) {
   const progress = siege.progress ?? 0;
 
   // Базовый score растёт с прогрессом: 50% → 40 очков, 100% → 80 очков
@@ -255,6 +355,12 @@ function _scoreStorm(army, siege, mods, readiness) {
   const str = _armyStrength(army, 'plains');
   if (str < 500) score *= 0.5;
 
+  // Артиллерия делает штурм значительно эффективнее
+  if (compMods?.is_artillery_heavy) score *= compMods.artillery_storm_bonus;
+
+  // Кавалерия плохо берёт стены
+  if (compMods?.is_cavalry_heavy) score *= 0.60;
+
   return Math.max(0, score);
 }
 
@@ -262,7 +368,7 @@ function _scoreStorm(army, siege, mods, readiness) {
  * Score для продолжения осады (не штурм).
  * Осадные специалисты, хорошее снабжение, сильные укрепления → выше score.
  */
-function _scoreSiege(army, siege, mods, readiness) {
+function _scoreSiege(army, siege, mods, readiness, compMods) {
   const progress = siege.progress ?? 0;
 
   let score = 35 + progress * 0.25;
@@ -279,6 +385,12 @@ function _scoreSiege(army, siege, mods, readiness) {
   if (army.fatigue > 70) score *= 0.75;
 
   score *= (0.5 + readiness * 0.5);
+
+  // Артиллерия делает осаду эффективнее
+  if (compMods?.is_artillery_heavy) score *= compMods.artillery_siege_bonus;
+
+  // Конница не умеет осаждать — сильный штраф
+  if (compMods?.is_cavalry_heavy) score *= 0.45;
 
   return Math.max(0, score);
 }
@@ -376,6 +488,41 @@ function _personalityMods(char) {
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // ══════════════════════════════════════════════════════════════════════
 
+/**
+ * Анализирует состав армии и возвращает модификаторы решений.
+ * cavalry_ratio  — доля конницы (0..1)
+ * artillery_ratio — доля артиллерии (0..1)
+ * Кавалерия: быстрые удары по открытым целям, штраф к осаде и горам
+ * Артиллерия: бонус к осаде и штурму, штраф к быстрым маршам
+ */
+function _armyCompositionMods(army) {
+  const u    = army.units ?? {};
+  const inf  = u.infantry    ?? 0;
+  const cav  = u.cavalry     ?? 0;
+  const merc = u.mercenaries ?? 0;
+  const art  = u.artillery   ?? 0;
+  const total = Math.max(inf + cav + merc + art, 1);
+
+  const cavRatio = cav / total;
+  const artRatio = art / total;
+
+  return {
+    // Конная армия быстрее атакует лёгкие цели
+    cavalry_open_bonus:   1.0 + cavRatio * 0.55,
+    // Конница не любит горы и крепости (она там бесполезна)
+    cavalry_mountain_pen: 1.0 - cavRatio * 0.50,
+    cavalry_fort_pen:     1.0 - cavRatio * 0.40,
+    // Артиллерия усиливает осаду и штурм
+    artillery_siege_bonus: 1.0 + artRatio * 1.20,
+    artillery_storm_bonus: 1.0 + artRatio * 0.80,
+    // Тяжёлая артиллерия замедляет марш
+    artillery_move_pen:   1.0 - artRatio * 0.30,
+    // Флаги для удобных проверок
+    is_cavalry_heavy:  cavRatio > 0.45,
+    is_artillery_heavy: artRatio > 0.25,
+  };
+}
+
 /** Боеготовность 0..1 */
 function _calcReadiness(army) {
   const morale  = (army.morale  ?? 50) / 100;
@@ -458,6 +605,25 @@ function _bfsDistanceInNearby(fromId, toId, nearby) {
   return 6; // fallback: регион не найден в радиусе
 }
 
+/**
+ * Проверяет риск окружения: считает долю вражеских соседей.
+ * Возвращает 0..1 (0 = нет угрозы, 1 = полное окружение).
+ */
+function _encirclementRisk(army, nearby, enemies) {
+  const curRegion = GAME_STATE.regions?.[army.position]
+    ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[army.position] : null);
+  const connections = curRegion?.connections ?? [];
+  if (connections.length === 0) return 0;
+
+  let enemyCount = 0;
+  for (const nid of connections) {
+    const nr = nearby[nid];
+    if (!nr) continue; // за пределами видимости — не считаем
+    if (enemies.includes(nr.nation)) enemyCount++;
+  }
+  return enemyCount / connections.length;
+}
+
 /** Лучший регион для отступления (ближайший дружественный) */
 function _findBestRetreat(army, nearby) {
   const nationId = army.nation;
@@ -474,25 +640,145 @@ function _findBestRetreat(army, nearby) {
 }
 
 /**
+ * Сканирует союзные армии в видимом радиусе.
+ * Возвращает:
+ *   allyStrByRegion — { regionId: totalAllyStrength } (где стоят союзники)
+ *   allySiegeTargets — Set регионов, которые союзники осаждают
+ *   allyMoveTargets  — Set регионов, к которым союзники двигаются
+ */
+function _scanAllyArmies(nearby, nationId) {
+  const allyStrByRegion  = {};
+  const allySiegeTargets = new Set();
+  const allyMoveTargets  = new Set();
+
+  for (const a of (GAME_STATE.armies ?? [])) {
+    if (a.state === 'disbanded') continue;
+    if (a.nation !== nationId) continue;
+    if (!nearby[a.position]) continue;
+
+    const str = _armyStrength(a, nearby[a.position]?.terrain ?? 'plains');
+    allyStrByRegion[a.position] = (allyStrByRegion[a.position] ?? 0) + str;
+
+    // Союзник осаждает — фиксируем цель осады
+    if (a.siege_id) {
+      const siege = (GAME_STATE.sieges ?? []).find(s => s.id === a.siege_id);
+      if (siege?.region_id) allySiegeTargets.add(siege.region_id);
+    }
+    // Союзник в движении — фиксируем куда идёт
+    if (a.state === 'marching' && a.march_target) {
+      allyMoveTargets.add(a.march_target);
+    }
+  }
+  return { allyStrByRegion, allySiegeTargets, allyMoveTargets };
+}
+
+/**
+ * Возвращает Set идентификаторов столичных регионов для списка наций.
+ * Проверяет nation.capital (строка regionId) и region.is_capital (флаг).
+ */
+function _getCapitalRegions(nationIds) {
+  const capitals = new Set();
+  for (const nid of nationIds) {
+    const nation = GAME_STATE.nations?.[nid];
+    if (nation?.capital) capitals.add(nation.capital);
+  }
+  // Дополнительно — регионы с флагом is_capital
+  for (const [rid, r] of Object.entries(GAME_STATE.regions ?? {})) {
+    if (r.is_capital) capitals.add(rid);
+  }
+  return capitals;
+}
+
+/**
+ * Сканирует GAME_STATE.armies и возвращает суммарную силу вражеских армий
+ * по регионам, которые видны в радиусе (nearby).
+ * Результат: { regionId: totalStrength }
+ */
+function _scanEnemyArmies(nearby, enemies) {
+  const result  = {};
+  const armies  = GAME_STATE.armies ?? [];
+  for (const a of armies) {
+    if (a.state === 'disbanded') continue;
+    if (!enemies.includes(a.nation)) continue;
+    if (!nearby[a.position]) continue;
+    const terrain = nearby[a.position]?.terrain ?? 'plains';
+    const str = _armyStrength(a, terrain);
+    result[a.position] = (result[a.position] ?? 0) + str;
+  }
+  return result;
+}
+
+/**
  * Находит регион врага за пределами радиуса BFS (для дальних маршей).
  * Берёт случайный регион нации-цели из приказа или первого врага.
  */
+/**
+ * Многошаговый путь к стратегической цели.
+ * Возвращает ПЕРВЫЙ шаг маршрута (сосед армии), а не саму цель.
+ *
+ * Логика выбора цели:
+ *   1. Регион из приказа (если указан)
+ *   2. Столица ближайшего врага
+ *   3. Самый богатый/крупный регион врага (по population)
+ *
+ * Маршрут: BFS от позиции армии до цели, без вражеских армий на пути
+ * (осторожный командир обходит регионы с сильным врагом).
+ */
 function _findDistantEnemy(army, order, enemies) {
-  // Сначала пробуем цель из приказа
+  // ── Выбираем стратегическую цель ─────────────────────────────────
+  let goalId = null;
+
   if (order?.target_id) {
     const tNation = GAME_STATE.nations?.[order.target_id];
-    if (tNation) {
-      const regions = tNation.regions ?? [];
-      if (regions.length > 0) return regions[0];
-    }
-    if (GAME_STATE.regions?.[order.target_id]) return order.target_id;
+    if (tNation?.capital) { goalId = tNation.capital; }
+    else if (tNation?.regions?.length) { goalId = tNation.regions[0]; }
+    else if (GAME_STATE.regions?.[order.target_id]) { goalId = order.target_id; }
   }
 
-  // Иначе — первый регион первого врага
-  for (const enemyId of enemies) {
-    const eNation = GAME_STATE.nations?.[enemyId];
-    const regions = eNation?.regions ?? [];
-    if (regions.length > 0) return regions[0];
+  if (!goalId) {
+    // Ищем столицу ближайшего врага
+    for (const enemyId of enemies) {
+      const cap = GAME_STATE.nations?.[enemyId]?.capital;
+      if (cap && GAME_STATE.regions?.[cap]) { goalId = cap; break; }
+    }
   }
-  return null;
+
+  if (!goalId) {
+    // Самый богатый регион врага
+    let bestPop = -1;
+    for (const [rid, r] of Object.entries(GAME_STATE.regions ?? {})) {
+      if (!enemies.includes(r.nation)) continue;
+      const pop = r.population ?? 0;
+      if (pop > bestPop) { bestPop = pop; goalId = rid; }
+    }
+  }
+
+  if (!goalId || goalId === army.position) return null;
+
+  // ── BFS от позиции к цели, возвращаем первый шаг ─────────────────
+  const queue   = [[army.position, null]]; // [текущий, первый шаг]
+  const visited = new Set([army.position]);
+  const MAX_BFS = 60;
+  let steps = 0;
+
+  while (queue.length > 0 && steps++ < MAX_BFS) {
+    const [cur, firstStep] = queue.shift();
+    const r = GAME_STATE.regions?.[cur] ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[cur] : null);
+
+    for (const next of (r?.connections ?? [])) {
+      if (visited.has(next)) continue;
+      visited.add(next);
+
+      const nr = GAME_STATE.regions?.[next] ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[next] : null);
+      if (nr?.mapType === 'Ocean') continue;
+
+      const step = firstStep ?? next; // первый шаг от стартовой позиции
+      if (next === goalId) return step;
+
+      queue.push([next, step]);
+    }
+  }
+
+  // BFS не дошёл — отдаём саму цель (orders engine разберётся)
+  return goalId;
 }
