@@ -249,7 +249,8 @@ async function processTurn() {
     }
 
     // 5.55. Автономное поведение персонажей (fire-and-forget)
-    processCharacterAutonomy(GAME_STATE.player_nation).catch(console.warn);
+    // Запускаем с задержкой чтобы не перекрываться с processAINations (rate limit)
+    setTimeout(() => processCharacterAutonomy(GAME_STATE.player_nation).catch(console.warn), 8000);
 
     // 5.6. Условия победы / поражения
     try { checkVictoryConditions(); } catch (e) { console.warn('[victory]', e); }
@@ -436,23 +437,21 @@ async function processAINations() {
     }
 
     // Для каждой нации применяем решение или fallback
+    // ВАЖНО: если батч упал с 429, НЕ делаем одиночные запросы —
+    // это только умножает нагрузку и вызывает каскад 429.
+    const batchFailed = batchResults.size === 0;
     for (const nationId of batch) {
       const decision = batchResults.get(nationId);
       if (decision && validateNationDecision(decision)) {
         applyNationDecision(nationId, decision);
       } else {
-        // Нация не получила решение от батча → одиночный запрос или fallback
-        const hasAPI = CONFIG.GROQ_API_KEY || CONFIG.API_KEY;
-        if (hasAPI && !batchResults.size) {
-          // Батч полностью провалился → одиночные запросы
-          await getAINationDecision(nationId, CONFIG.MODEL_HAIKU).catch(err => {
-            console.warn(`AI fallback для ${nationId}:`, err.message);
-            applyFallbackDecision(nationId);
-          });
-        } else {
-          applyFallbackDecision(nationId);
-        }
+        applyFallbackDecision(nationId);
       }
+    }
+
+    // Если батч упал — добавляем паузу перед следующим (rate limit backoff)
+    if (batchFailed) {
+      await new Promise(r => setTimeout(r, 1500));
     }
 
     // Пауза между батчами (кроме последнего)

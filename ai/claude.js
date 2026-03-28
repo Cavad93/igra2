@@ -102,12 +102,44 @@ function _isGroqModel(model) {
   return model && !model.startsWith('claude-');
 }
 
+// ── Глобальный семафор: не более 1 одновременного Groq-запроса ──────────
+// Предотвращает каскад 429 при параллельных вызовах из processAINations,
+// processCharacterAutonomy, DIALOGUE_ENGINE и т.д.
+let _groqBusy = false;
+const _groqQueue = [];
+
+function _groqEnqueue(fn) {
+  return new Promise((resolve, reject) => {
+    _groqQueue.push({ fn, resolve, reject });
+    _groqDrain();
+  });
+}
+
+async function _groqDrain() {
+  if (_groqBusy || _groqQueue.length === 0) return;
+  _groqBusy = true;
+  const { fn, resolve, reject } = _groqQueue.shift();
+  try {
+    resolve(await fn());
+  } catch (e) {
+    reject(e);
+  } finally {
+    _groqBusy = false;
+    if (_groqQueue.length > 0) setTimeout(_groqDrain, 200); // 200мс между запросами
+  }
+}
+
 // ── Groq API (OpenAI-совместимый формат) ──────────────────────────────
 async function callGroq(system, user, maxTokens = 1024, model = CONFIG.MODEL_HAIKU) {
   if (!CONFIG.GROQ_API_KEY) {
     throw new Error('Groq API ключ не установлен (CONFIG.GROQ_API_KEY)');
   }
 
+  // Проходим через очередь — не более 1 одновременного запроса
+  return _groqEnqueue(() => _callGroqRaw(system, user, maxTokens, model));
+}
+
+async function _callGroqRaw(system, user, maxTokens, model) {
   const timeoutMs = maxTokens > 512 ? 60_000 : _API_TIMEOUT_MS;
 
   // Определяем нужен ли JSON-режим (структурированный вывод)
@@ -124,7 +156,7 @@ async function callGroq(system, user, maxTokens = 1024, model = CONFIG.MODEL_HAI
     ...(wantsJson && { response_format: { type: 'json_object' } }),
   };
 
-  // До 2 повторных попыток при 429 (rate limit): задержки 3s, 7s
+  // До 2 повторных попыток при 429 (rate limit)
   const RETRY_DELAYS = [1000, 2000];
 
   for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
