@@ -136,7 +136,8 @@ function processSiegeTicks() {
     const cmdBonus      = siegeSkill * SIEGE_CFG.CMD_SIEGE_BONUS;
 
     // Умение siege_master (traits_list ИЛИ commander_skills)
-    const hasSiegeMaster = (cmd?.traits_list ?? []).includes('siege_master')
+    const _cmdTraitsList = cmd?.traits_list ?? (Array.isArray(cmd?.traits) ? cmd.traits : Object.keys(cmd?.traits ?? {}));
+    const hasSiegeMaster = _cmdTraitsList.includes('siege_master')
                         || (cmd?.commander_skills ?? []).includes('siege_master');
     const traitBonus     = hasSiegeMaster ? 0.30 * SIEGE_CFG.SIEGE_BASE : 0;
 

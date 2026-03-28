@@ -287,7 +287,7 @@ function calcArmyCombatStrength(army, terrain, isDefender) {
     const tactics = cmd.skills?.tactics ?? cmd.skills?.military ?? 0;
     cmdMult += tactics * 0.02;
     cmdMult += isDefender ? _traitSum(cmd, 'def') : _traitSum(cmd, 'atk');
-    if ((cmd.traits_list ?? cmd.traits ?? []).includes('inspiring'))
+    if ((cmd.traits_list ?? (Array.isArray(cmd.traits) ? cmd.traits : Object.keys(cmd.traits ?? {}))).includes('inspiring'))
       cmdMult += COMBAT.TRAITS.inspiring.morale;
 
     // Умения командира (commander_skills)
