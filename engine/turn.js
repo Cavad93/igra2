@@ -821,6 +821,14 @@ async function loadGame() {
     _migrateSenateConfig();
     _migrateCharacterSenateFields();
 
+    // Восстанавливаем поля из INITIAL_GAME_STATE которые могут отсутствовать
+    // в старых сохранениях (например color добавленный позже).
+    for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
+      const initial = INITIAL_GAME_STATE.nations?.[nationId];
+      if (initial && !nation.color && initial.color) nation.color = initial.color;
+      if (initial && !nation.flag_emoji && initial.flag_emoji) nation.flag_emoji = initial.flag_emoji;
+    }
+
     // Совместимость: применяем REGION_BIOMES к регионам из сохранений
     // созданных до того как region.biome был введён.
     if (typeof REGION_BIOMES !== 'undefined') {

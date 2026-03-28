@@ -1732,15 +1732,19 @@ function renderMap() {
     requestAnimationFrame(() => {
       try {
         initLeafletMap();
-        // invalidateSize на случай если контейнер ещё не получил финальный размер.
-        // После корректировки размера принудительно обновляем стили регионов —
-        // Canvas-рендерер мог нарисовать полигоны в контейнер нулевого размера.
+        // invalidateSize корректирует размер Canvas если контейнер изменился.
+        // После этого вызываем refreshRegionStyles() НАПРЯМУЮ (без RAF-обёртки),
+        // затем ещё раз через 400мс как страховку — это обходит race condition
+        // где invalidateSize() очищает Canvas уже после того как RAF с
+        // refreshRegionStyles() успел отработать.
         setTimeout(() => {
-          if (leafletMap) {
-            leafletMap.invalidateSize();
-            requestAnimationFrame(() => refreshRegionStyles());
-          }
-        }, 150);
+          if (!leafletMap) return;
+          leafletMap.invalidateSize();
+          // Первый вызов — сразу после resize
+          refreshRegionStyles();
+          // Страховочный вызов — после того как Leaflet завершит внутренние RAF
+          setTimeout(() => { if (leafletMap) refreshRegionStyles(); }, 400);
+        }, 200);
       } catch (e) {
         console.error('Leaflet init error:', e);
       }
