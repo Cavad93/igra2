@@ -391,15 +391,6 @@ async function processAINations() {
     try { refreshDiploDistances(); } catch (e) { console.warn('[diplo_range]', e); }
   }
 
-  // ── Детерминированный fallback для всех наций (tier 3, minor, war reflex) ──
-  // Выполняется каждый ход без API
-  for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
-    if (nation.is_player || nation.is_eliminated) continue;
-    if (nation.is_minor) { applyFallbackDecision(nationId); continue; }
-    const tier = typeof getNationTier === 'function' ? getNationTier(nationId) : 1;
-    if (tier === 3) { applyFallbackDecision(nationId); continue; }
-  }
-
   // ── Ротация AI-запросов: 1 батч за ход ────────────────────────────
   // Полный список tier 1/2 наций, отсортированный стабильно
   const allAI = Object.keys(GAME_STATE.nations).filter(nId => {
@@ -473,18 +464,8 @@ function applyFallbackDecision(nationId) {
     }
   };
 
-  // ── Синхронизация at_war_with с дипломатическими отношениями ─────
-  // Гарантируем, что military.at_war_with актуален (источник истины — rel.war)
+  // at_war_with должен поддерживаться дипломатическим движком, не здесь
   if (!military.at_war_with) military.at_war_with = [];
-  if (typeof getRelation === 'function') {
-    for (const otherId of Object.keys(GAME_STATE.nations ?? {})) {
-      if (otherId === nationId) continue;
-      const rel = getRelation(nationId, otherId);
-      const inList = military.at_war_with.includes(otherId);
-      if (rel?.war && !inList) military.at_war_with.push(otherId);
-      if (!rel?.war && inList) military.at_war_with = military.at_war_with.filter(id => id !== otherId);
-    }
-  }
 
   // Приоритет 1: если мало армии относительно населения — рекрутируем
   // cavalry * 3: cavalry units count as 3x for military strength purposes (mounted troops are ~3x more effective)
