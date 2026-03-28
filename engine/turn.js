@@ -277,6 +277,7 @@ async function processTurn() {
     try { renderAll(); }   catch (_) {}
   } finally {
     IS_PROCESSING_TURN = false;
+    _endStep('Ход идёт...');
     if (btn) {
       btn.disabled = false;
       btn.textContent = '⚔ Следующий ход';
