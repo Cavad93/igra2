@@ -391,72 +391,61 @@ async function processAINations() {
     try { refreshDiploDistances(); } catch (e) { console.warn('[diplo_range]', e); }
   }
 
-  // Собираем очередь: [nationId, tier] только для наций которые делают AI-запрос
-  const queue = [];
-
+  // ── Детерминированный fallback для всех наций (tier 3, minor, war reflex) ──
+  // Выполняется каждый ход без API
   for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
-    if (nation.is_player)    continue;
-    if (nation.is_minor)     continue;
-    if (nation.is_eliminated) continue;
-    if (GAME_STATE.turn % 3 !== 0) continue;
-
+    if (nation.is_player || nation.is_eliminated) continue;
+    if (nation.is_minor) { applyFallbackDecision(nationId); continue; }
     const tier = typeof getNationTier === 'function' ? getNationTier(nationId) : 1;
-
-    if (tier === 3) {
-      applyFallbackDecision(nationId);
-      continue;
-    }
-
-    queue.push(nationId);
+    if (tier === 3) { applyFallbackDecision(nationId); continue; }
   }
 
-  // ── Батчинг: группируем по 5 наций → 1 запрос к Groq ─────────────
-  // Преимущество: 20 наций = 4 запроса вместо 20. Соблюдаем rate limit.
-  // При 100-200 нациях в tier 1/2 это снижает нагрузку на API в 5x.
-  const BATCH_SIZE     = 5;
-  const BATCH_PAUSE_MS = 300;   // пауза между батчами
-  const TOTAL_TIMEOUT  = 4_500; // 4.5с — лимит внутри 5с Promise.race в processTurn
-  const deadline       = Date.now() + TOTAL_TIMEOUT;
+  // ── Ротация AI-запросов: 1 батч за ход ────────────────────────────
+  // Полный список tier 1/2 наций, отсортированный стабильно
+  const allAI = Object.keys(GAME_STATE.nations).filter(nId => {
+    const n = GAME_STATE.nations[nId];
+    if (n.is_player || n.is_minor || n.is_eliminated) return false;
+    const tier = typeof getNationTier === 'function' ? getNationTier(nId) : 1;
+    return tier <= 2;
+  });
 
-  for (let i = 0; i < queue.length; i += BATCH_SIZE) {
-    if (Date.now() > deadline) {
-      console.warn('processAINations: таймаут, fallback для оставшихся наций');
-      queue.slice(i).forEach(nId => applyFallbackDecision(nId));
-      break;
-    }
+  if (allAI.length === 0) return _finishAINations();
 
-    const batch = queue.slice(i, i + BATCH_SIZE);
+  // Курсор сохраняется между ходами
+  if (!GAME_STATE._ai_cursor) GAME_STATE._ai_cursor = 0;
+  if (GAME_STATE._ai_cursor >= allAI.length) GAME_STATE._ai_cursor = 0;
 
-    // Сначала пробуем батч-запрос (экономичнее)
-    let batchResults = new Map();
-    if (typeof getAIBatchDecisions === 'function') {
-      batchResults = await getAIBatchDecisions(batch, CONFIG.MODEL_HAIKU).catch(err => {
-        console.warn(`[batch] Ошибка батча (${batch.join(',')}):`, err.message);
-        return new Map();
-      });
-    }
+  // Нации в войне получают приоритет — ставим в начало текущего батча
+  const BATCH_SIZE = 5;
+  const cursor     = GAME_STATE._ai_cursor;
+  const slice      = allAI.slice(cursor, cursor + BATCH_SIZE);
 
-    // Для каждой нации применяем решение или fallback
-    // ВАЖНО: если батч упал с 429, НЕ делаем одиночные запросы —
-    // это только умножает нагрузку и вызывает каскад 429.
-    const batchFailed = batchResults.size === 0;
-    for (const nationId of batch) {
-      const decision = batchResults.get(nationId);
-      if (decision && validateNationDecision(decision)) {
-        applyNationDecision(nationId, decision);
-      } else {
-        applyFallbackDecision(nationId);
-      }
-    }
+  // Нации которые воюют прямо сейчас — добавляем поверх слайса
+  const atWar = allAI.filter(nId => {
+    const n = GAME_STATE.nations[nId];
+    return (n.military?.at_war_with?.length ?? 0) > 0 && !slice.includes(nId);
+  }).slice(0, 3); // не более 3 дополнительных воюющих наций
 
-    // Если батч упал — добавляем паузу перед следующим (rate limit backoff)
-    if (batchFailed) {
-      await new Promise(r => setTimeout(r, 1500));
-    }
+  const batch = [...new Set([...slice, ...atWar])];
 
-    // Пауза между батчами (кроме последнего)
-    if (i + BATCH_SIZE < queue.length) {
-      await new Promise(r => setTimeout(r, BATCH_PAUSE_MS));
+  GAME_STATE._ai_cursor = cursor + BATCH_SIZE;
+  console.log(`[ai_nations] ход ${GAME_STATE.turn}: батч ${cursor}–${cursor + batch.length - 1} из ${allAI.length} (война: ${atWar.length})`);
+
+  // ── Один батч-запрос к Groq ────────────────────────────────────────
+  let batchResults = new Map();
+  if (typeof getAIBatchDecisions === 'function') {
+    batchResults = await getAIBatchDecisions(batch, CONFIG.MODEL_HAIKU).catch(err => {
+      console.warn(`[batch] Ошибка (${err.message}) — fallback для батча`);
+      return new Map();
+    });
+  }
+
+  for (const nationId of batch) {
+    const decision = batchResults.get(nationId);
+    if (decision && validateNationDecision(decision)) {
+      applyNationDecision(nationId, decision);
+    } else {
+      applyFallbackDecision(nationId);
     }
   }
 
