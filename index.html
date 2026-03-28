@@ -2324,101 +2324,197 @@
     ══════════════════════════════════════════ */
     #battle-result-overlay {
       position: fixed; inset: 0; z-index: 1200;
-      background: rgba(0,0,0,0.75);
-      display: none; align-items: center; justify-content: center;
+      background: transparent;
+      display: none; align-items: stretch; justify-content: stretch;
       cursor: pointer;
     }
-    #battle-result-overlay.br-fade-out { animation: br-fadeout 0.3s forwards; }
+    #battle-result-overlay.br-fade-out { animation: br-fadeout 0.35s forwards; }
     @keyframes br-fadeout { to { opacity: 0; } }
 
-    .br-box {
-      background: linear-gradient(160deg, #0c0904 0%, #1a110a 60%, #0c0904 100%);
-      border: 1px solid rgba(255,215,0,0.3);
-      border-radius: 12px; padding: 0; width: 520px; max-width: 96vw;
-      box-shadow: 0 12px 60px rgba(0,0,0,0.8);
-      animation: br-slidein 0.35s cubic-bezier(.22,.68,0,1.2);
-      cursor: default;
+    /* Кино-полосы сверху/снизу */
+    .br-cinematic-top, .br-cinematic-bot {
+      position: fixed; left: 0; right: 0; height: 0;
+      background: #000; z-index: 1201;
+      transition: height 0.4s cubic-bezier(.4,0,.2,1);
+    }
+    .br-cinematic-top { top: 0; }
+    .br-cinematic-bot { bottom: 0; }
+    .br-bar--open { height: 48px; }
+
+    /* Игровая сцена */
+    .br-stage {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 64px 0 80px;
       overflow: hidden;
     }
-    @keyframes br-slidein { from { opacity:0; transform: scale(0.88) translateY(-20px); } to { opacity:1; transform: none; } }
+    .br-vignette {
+      position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%);
+    }
+    .br-canvas {
+      position: absolute; inset: 0; pointer-events: none;
+      width: 100%; height: 100%;
+    }
 
-    .br-victory { border-color: rgba(255,215,0,0.55); }
-    .br-defeat  { border-color: rgba(200,50,50,0.55); }
+    /* Shock ring */
+    .br-shockwave {
+      position: absolute; top: 50%; left: 50%;
+      width: 20px; height: 20px;
+      margin: -10px 0 0 -10px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,200,0,0);
+      pointer-events: none;
+    }
+    .br-shock--active {
+      animation: br-shockwave 0.7s ease-out forwards;
+    }
+    @keyframes br-shockwave {
+      0%   { transform: scale(1);   border-color: rgba(255,215,0,0.9); opacity: 1; }
+      100% { transform: scale(28);  border-color: rgba(255,215,0,0);   opacity: 0; }
+    }
 
-    .br-header {
-      padding: 18px 20px 12px;
+    /* Стороны */
+    .br-faction {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      width: 240px; max-width: 30vw;
+      opacity: 0; transition: opacity 0.5s, transform 0.5s cubic-bezier(.22,.68,0,1.2);
+    }
+    .br-faction--left  { transform: translateX(-120px); margin-left: 40px; }
+    .br-faction--right { transform: translateX(120px);  margin-right: 40px; }
+    .br-faction--visible {
+      opacity: 1; transform: translateX(0) !important;
+    }
+    .br-faction--winner { }
+    .br-faction--loser  {
+      filter: brightness(0.55) saturate(0.4);
+      transform: translateX(0) rotate(2deg) !important;
+      transition: filter 0.5s, transform 0.5s;
+    }
+    .br-faction--left.br-faction--loser  { transform: translateX(-8px) rotate(-2deg) !important; }
+    .br-faction--right.br-faction--loser { transform: translateX(8px)  rotate(2deg)  !important; }
+
+    .br-faction-banner {
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(255,215,0,0.25);
+      border-radius: 10px;
+      padding: 16px 20px;
       text-align: center;
-      border-bottom: 1px solid rgba(255,215,0,0.12);
+      backdrop-filter: blur(4px);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+      width: 100%;
     }
-    .br-result-title { font-size: 24px; font-weight: bold; letter-spacing: 2px; margin-bottom: 4px; }
-    .br-location { font-size: 12px; color: var(--text-dim); }
+    .br-faction--winner .br-faction-banner {
+      border-color: rgba(255,215,0,0.7);
+      box-shadow: 0 0 32px rgba(255,215,0,0.25), 0 4px 24px rgba(0,0,0,0.5);
+      animation: br-winner-pulse 2s ease-in-out infinite alternate;
+    }
+    @keyframes br-winner-pulse {
+      from { box-shadow: 0 0 20px rgba(255,215,0,0.2), 0 4px 24px rgba(0,0,0,0.5); }
+      to   { box-shadow: 0 0 48px rgba(255,215,0,0.5), 0 4px 24px rgba(0,0,0,0.5); }
+    }
+    .br-faction-flag   { font-size: 54px; line-height: 1; margin-bottom: 6px; }
+    .br-faction-name   { font-size: 16px; font-weight: bold; color: #fff; margin-bottom: 2px; }
+    .br-faction-cmd    { font-size: 11px; color: rgba(255,215,0,0.7); margin-bottom: 6px; }
+    .br-faction-troops { font-size: 18px; letter-spacing: 2px; margin-bottom: 4px; }
+    .br-faction-count  { font-size: 12px; color: rgba(255,255,255,0.5); }
 
-    .br-sides {
-      display: flex; align-items: center; gap: 0;
-      padding: 20px 16px 12px;
+    /* Бейджи победителя/проигравшего */
+    .br-winner-badge, .br-loser-badge {
+      font-size: 11px; font-weight: bold; letter-spacing: 2px;
+      padding: 4px 12px; border-radius: 3px;
+      opacity: 0; transform: scale(0.7);
+      transition: opacity 0.4s, transform 0.4s cubic-bezier(.22,.68,0,1.5);
     }
-    .br-side {
-      flex: 1; text-align: center; padding: 0 8px;
-      display: flex; flex-direction: column; align-items: center; gap: 5px;
-    }
-    .br-side--loser { opacity: 0.65; }
-    .br-side--winner { }
+    .br-badge--visible { opacity: 1 !important; transform: scale(1) !important; }
+    .br-winner-badge { background: rgba(255,215,0,0.2); border: 1px solid rgba(255,215,0,0.6); color: #ffd700; }
+    .br-loser-badge  { background: rgba(200,50,50,0.2); border: 1px solid rgba(200,50,50,0.5); color: #ef9a9a; }
 
-    .br-flag      { font-size: 40px; line-height: 1; }
-    .br-nation-name { font-size: 14px; font-weight: bold; color: var(--text-main); }
-    .br-cmd       { font-size: 11px; color: var(--text-dim); }
-    .br-troops-before { font-size: 11px; color: var(--text-dim); }
-    .br-cas       { font-size: 20px; font-weight: bold; margin-top: 4px; }
-    .br-cas--green { color: #66bb6a; }
-    .br-cas--red   { color: #ef5350; }
-    .br-cas-label  { font-size: 11px; font-weight: normal; color: var(--text-dim); }
+    /* Потери */
+    .br-cas-block {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      opacity: 0; transform: translateY(10px);
+      transition: opacity 0.4s, transform 0.4s;
+    }
+    .br-cas--visible { opacity: 1 !important; transform: none !important; }
+    .br-cas-num  { font-size: 28px; font-weight: bold; color: #ef5350; text-shadow: 0 0 12px rgba(239,83,80,0.6); }
+    .br-cas-lbl  { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
 
-    .br-center {
-      display: flex; flex-direction: column; align-items: center;
-      gap: 6px; padding: 0 12px; flex-shrink: 0;
+    /* Центр */
+    .br-center-zone {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      flex-shrink: 0;
     }
-    .br-swords-wrap { position: relative; width: 56px; height: 44px; }
-    .br-sword {
-      position: absolute; font-size: 26px;
-      animation: br-clash 1.2s ease-in-out infinite alternate;
+    .br-terrain-label {
+      font-size: 12px; color: rgba(255,255,255,0.45);
+      text-transform: uppercase; letter-spacing: 2px;
     }
-    .br-sword--left  { left: 0;  top: 0; transform-origin: right bottom; animation-delay: 0s; }
-    .br-sword--right { right: 0; top: 0; transform-origin: left bottom;  animation-delay: 0.6s; transform: scaleX(-1); }
-    @keyframes br-clash {
-      0%   { transform: rotate(-20deg); }
-      100% { transform: rotate(10deg); }
+    .br-vs-text {
+      font-size: 40px; font-weight: bold; color: rgba(255,255,255,0.7);
+      text-shadow: 0 0 20px rgba(255,255,255,0.3);
+      transition: transform 0.2s;
     }
-    .br-sword--right { transform: scaleX(-1); }
-    @keyframes br-clash-r {
-      0%   { transform: scaleX(-1) rotate(-20deg); }
-      100% { transform: scaleX(-1) rotate(10deg); }
-    }
-    .br-sword--right { animation-name: br-clash-r; }
+    .br-vs--pulse  { animation: br-vs-pulse 0.4s ease-in-out; }
+    .br-vs--clash  { font-size: 52px !important; animation: br-clash-pop 0.3s cubic-bezier(.22,.68,0,1.5); }
+    @keyframes br-vs-pulse  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4)} }
+    @keyframes br-clash-pop { 0%{transform:scale(0.5)} 100%{transform:scale(1)} }
 
-    .br-dominance { font-size: 11px; color: var(--gold); text-align: center; white-space: nowrap; }
-    .br-margin    { font-size: 12px; color: var(--text-dim); }
-
-    .br-capture {
-      margin: 0 16px 8px; padding: 8px 12px;
-      background: rgba(255,100,0,0.12); border: 1px solid rgba(255,100,0,0.3);
-      border-radius: 5px; font-size: 13px; color: #ff9800; text-align: center;
+    .br-dominance-badge {
+      background: rgba(255,215,0,0.12); border: 1px solid rgba(255,215,0,0.4);
+      border-radius: 4px; padding: 6px 14px;
+      font-size: 13px; color: #ffd700; letter-spacing: 1px;
+      display: flex; align-items: center; gap: 6px;
+      opacity: 0; transform: scale(0.8);
+      transition: opacity 0.4s, transform 0.4s cubic-bezier(.22,.68,0,1.4);
     }
+    .br-dom--visible { opacity: 1 !important; transform: scale(1) !important; }
 
-    .br-footer {
-      padding: 10px 16px 14px;
-      border-top: 1px solid rgba(255,215,0,0.1);
-      display: flex; align-items: center; gap: 12px;
+    /* Нижняя полоса */
+    .br-result-strip {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 1202;
+      display: flex; align-items: center; gap: 16px;
+      padding: 12px 28px;
+      background: rgba(0,0,0,0.82);
+      border-top: 2px solid rgba(255,215,0,0.15);
+      transform: translateY(100%);
+      transition: transform 0.5s cubic-bezier(.22,.68,0,1.2);
+      backdrop-filter: blur(6px);
+    }
+    .br-strip--visible { transform: translateY(0) !important; }
+    .br-result-text {
+      font-size: 20px; font-weight: bold; letter-spacing: 3px;
+      flex-shrink: 0;
+    }
+    .br-victory .br-result-text { color: #ffd700; text-shadow: 0 0 16px rgba(255,215,0,0.5); }
+    .br-defeat  .br-result-text { color: #ef5350; text-shadow: 0 0 16px rgba(239,83,80,0.5); }
+    .br-captured {
+      font-size: 13px; color: #ff9800; flex-shrink: 0;
     }
     .br-progress-wrap {
-      flex: 1; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;
+      flex: 1; height: 3px; background: rgba(255,255,255,0.1);
+      border-radius: 2px; overflow: hidden; min-width: 60px;
     }
     .br-progress-bar { height: 100%; background: var(--gold); width: 100%; }
     .br-close-btn {
-      background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3);
-      color: var(--text-dim); padding: 5px 14px; border-radius: 4px;
+      background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.35);
+      color: rgba(255,255,255,0.7); padding: 7px 18px; border-radius: 4px;
       cursor: pointer; font-size: 12px; flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
     }
-    .br-close-btn:hover { background: rgba(255,215,0,0.2); color: var(--text-main); }
+    .br-close-btn:hover { background: rgba(255,215,0,0.22); color: #fff; }
+
+    /* Тряска экрана */
+    @keyframes br-shake {
+      0%,100%{ transform: translate(0,0) rotate(0); }
+      15%    { transform: translate(-6px, 4px) rotate(-0.5deg); }
+      30%    { transform: translate(7px, -3px) rotate(0.3deg); }
+      45%    { transform: translate(-5px, 5px) rotate(-0.4deg); }
+      60%    { transform: translate(4px, -2px) rotate(0.2deg); }
+      75%    { transform: translate(-3px, 3px) rotate(-0.1deg); }
+    }
+    .br-shake { animation: br-shake 0.55s cubic-bezier(.36,.07,.19,.97); }
 
     /* ══════════════════════════════════════════
        ПАНЕЛЬ ОСАДЫ (#siege-panel)
