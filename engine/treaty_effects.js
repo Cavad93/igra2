@@ -216,6 +216,23 @@ function processAllTreatyTicks() {
       nation.government._diplomacy_legitimacy = te.legitimacy_bonus;
     }
   }
+
+  // 5. Вассальная дань (из peace_panel вассалитетов)
+  for (const [vasId, vasNat] of Object.entries(GAME_STATE.nations ?? {})) {
+    if (!vasNat.is_vassal || vasNat.is_eliminated) continue;
+    const suzId  = vasNat.suzerain;
+    if (!suzId) continue;
+    const suzNat = GAME_STATE.nations?.[suzId];
+    if (!suzNat) continue;
+    const tribute = vasNat.vassal_tribute ?? 0;
+    if (tribute <= 0) continue;
+    // Раз в 12 ходов (ежегодно)
+    if (turn % 12 !== 0) continue;
+    if (vasNat.economy) vasNat.economy.treasury = Math.max(0, (vasNat.economy.treasury ?? 0) - tribute);
+    if (suzNat.economy) suzNat.economy.treasury = (suzNat.economy.treasury ?? 0) + tribute;
+    if (typeof _log === 'function')
+      _log(`💰 Дань: ${vasNat.name ?? vasId} → ${suzNat.name ?? suzId}: ${tribute} монет.`);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────

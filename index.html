@@ -3594,6 +3594,51 @@
     .negative { color: #f44336; }
 
     /* ═══════════════════════════════════════════════
+       ПАНЕЛЬ МИРНЫХ ПЕРЕГОВОРОВ
+    ═══════════════════════════════════════════════ */
+    #peace-offer-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.80);
+      display: none; align-items: center; justify-content: center; z-index: 1100;
+    }
+    #peace-offer-box {
+      background: linear-gradient(160deg, #0d0a05 0%, #1c1308 60%, #110e06 100%);
+      border: 1px solid var(--border-gold); border-radius: 10px;
+      padding: 0; width: 420px; max-width: 95vw; max-height: 90vh;
+      overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+    }
+    .po-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px 10px; border-bottom: 1px solid rgba(255,215,0,0.2);
+    }
+    .po-icon   { font-size: 28px; }
+    .po-title  { font-size: 16px; font-weight: bold; color: var(--gold); }
+    .po-subtitle { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+    .po-close  {
+      margin-left: auto; background: none; border: none;
+      color: var(--text-dim); font-size: 16px; cursor: pointer; padding: 4px 8px;
+    }
+    .po-close:hover { color: var(--text-main); }
+    .po-desc {
+      padding: 10px 16px 4px; font-size: 12px; color: var(--text-dim);
+    }
+    .po-option {
+      display: flex; align-items: flex-start; gap: 12px;
+      width: 100%; padding: 12px 16px; text-align: left;
+      background: rgba(255,215,0,0.04); border: none;
+      border-top: 1px solid rgba(255,215,0,0.10);
+      color: var(--text-main); cursor: pointer; transition: background 0.15s;
+    }
+    .po-option:hover { background: rgba(255,215,0,0.10); }
+    .po-option--danger { border-left: 3px solid #c0392b; }
+    .po-option--danger:hover { background: rgba(192,57,43,0.12); }
+    .po-option--vassal { border-left: 3px solid #8e44ad; }
+    .po-option--vassal:hover { background: rgba(142,68,173,0.10); }
+    .po-option--neutral { border-left: 3px solid #555; }
+    .po-opt-icon  { font-size: 22px; flex-shrink: 0; padding-top: 2px; }
+    .po-opt-title { font-size: 13px; font-weight: bold; color: var(--gold); margin-bottom: 3px; }
+    .po-opt-desc  { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
+
+    /* ═══════════════════════════════════════════════
        КОНЕЦ ИГРЫ
     ═══════════════════════════════════════════════ */
     #endgame-overlay {
@@ -7087,6 +7132,11 @@
   <!-- Модал: переговорный зал (мессенджер-стиль) -->
   <div id="dp-chat-modal" class="dp-cm-root hidden"></div>
 
+  <!-- Модал: мирные переговоры после победы -->
+  <div id="peace-offer-overlay" onclick="if(event.target===this)closePeacePanel()">
+    <div id="peace-offer-box"></div>
+  </div>
+
   <!-- Модал: ввод API ключа при первом запуске или смене ключа -->
   <div id="api-key-modal">
     <div class="akm-box">
@@ -7212,6 +7262,7 @@
   <script src="ui/economy_react.jsx"></script>
   <script src="ui/treasury-panel.js"></script>
   <script src="ui/siege_panel.js"></script>
+  <script src="ui/peace_panel.js"></script>
   <script src="ai/prompts.js"></script>
   <script src="ai/parser.js"></script>
   <script src="ai/claude.js"></script>
