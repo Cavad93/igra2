@@ -38,10 +38,14 @@ async function processTurn() {
   IS_PROCESSING_TURN = true;
 
   const btn = document.getElementById('end-turn-btn');
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = '⏳ Ход идёт...';
-  }
+  const _setStep = (label) => {
+    if (btn) btn.textContent = `⏳ ${label}`;
+    console.time(`[turn] ${label}`);
+  };
+  const _endStep = (label) => console.timeEnd(`[turn] ${label}`);
+
+  if (btn) btn.disabled = true;
+  _setStep('Ход идёт...');
 
   try {
     // Инициализируем поля у всех наций перед обработкой
@@ -54,9 +58,11 @@ async function processTurn() {
     addEventLog(`── Ход ${GAME_STATE.turn}: ${monthName} ${Math.abs(date.year)} г. до н.э. ──`, 'turn');
 
     // 0.8. Договоры — сброс флагов, финансовые потоки (дань, контрибуции), истечение
+    _setStep('Договоры...');
     if (typeof processAllTreatyTicks === 'function') {
       try { processAllTreatyTicks(); } catch (e) { console.warn('[treaty_effects]', e); }
     }
+    _endStep('Договоры...');
 
     // 0.85. Научная конвергенция дипломатических отношений (α-drift)
     if (typeof DiplomacyEngine !== 'undefined' && typeof DiplomacyEngine.processGlobalTick === 'function') {
@@ -76,12 +82,14 @@ async function processTurn() {
     }
 
     // 1. Экономика (детерминировано)
+    _setStep('Экономика...');
     try {
       runEconomyTick();
     } catch (e) {
       console.error('[economy]', e);
       addEventLog(`⚠ Ошибка экономики: ${e.message}`, 'danger');
     }
+    _endStep('Экономика...');
 
     // 1.1. Запись истории экономики (для вкладки «Экономический обзор»)
     if (typeof recordEconomyHistory === 'function') {
@@ -94,10 +102,20 @@ async function processTurn() {
     // 1.6. Конституционный движок — тирания, гражданская война
     try { CONSTITUTIONAL_ENGINE.tick(GAME_STATE.player_nation); } catch (e) { console.error('[constitutional]', e); }
 
-    // 1.7. Движок заговоров — инкубация, вербовка, Час Икс (для всех наций)
+    // 1.7. Движок заговоров — только игрок + нации со своими заговорами
+    _setStep('Заговоры...');
     for (const _conspNationId of Object.keys(GAME_STATE.nations)) {
+      const _cn = GAME_STATE.nations[_conspNationId];
+      // Пропускаем AI-нации без активных заговоров (оптимизация)
+      if (_conspNationId !== GAME_STATE.player_nation) {
+        const hasActive = (_cn?.conspiracies ?? []).some(
+          c => c.status === 'incubating' || c.status === 'growing'
+        );
+        if (!hasActive) continue;
+      }
       try { await CONSPIRACY_ENGINE.tick(_conspNationId); } catch (e) { console.warn('[conspiracy]', _conspNationId, e); }
     }
+    _endStep('Заговоры...');
 
     // 1.8. Культура — опыт, мутации, ассимиляция
     if (typeof cultureTick === 'function') {
@@ -111,6 +129,7 @@ async function processTurn() {
 
     // 2. Население (детерминировано)
     // processDemography обновляет by_profession + total для всех наций
+    _setStep('Население...');
     try {
       if (typeof processDemography === 'function') {
         processDemography();
@@ -118,6 +137,7 @@ async function processTurn() {
         updatePopulationGrowth(); // fallback
       }
     } catch (e) { console.error('[demography]', e); }
+    _endStep('Население...');
 
     // 2.1. Рекрутинг из казарм, конюшен, военных портов
     if (typeof processRecruitment === 'function') {
@@ -155,11 +175,15 @@ async function processTurn() {
     try { checkCharacterDeaths(); } catch (e) { console.warn('[deaths]', e); }
     try { maybeSpawnCharacter(); }  catch (e) { console.warn('[spawn]', e); }
 
-    // 3.5–3.6. Диалоговый движок — сжимаем горячую память для ВСЕХ наций
+    // 3.5–3.6. Диалоговый движок — только персонажи с активной горячей памятью
+    _setStep('Персонажи...');
     for (const nId of Object.keys(GAME_STATE.nations ?? {})) {
       try {
         // nation.characters (советники, генералы, жрецы, купцы...)
-        await DIALOGUE_ENGINE.tick(nId);
+        const _nChars = GAME_STATE.nations[nId]?.characters ?? [];
+        const hasHotMem = _nChars.some(c => c.alive && c.dialogue?.hot_memory?.length);
+        if (hasHotMem) await DIALOGUE_ENGINE.tick(nId);
+
         // Сенаторы и члены советов (хранятся вне nation.characters)
         const _mgr = getSenateManager(nId);
         if (_mgr) {
@@ -169,9 +193,17 @@ async function processTurn() {
         }
       } catch (e) { console.warn('[dialogue]', nId, e); }
     }
+    _endStep('Персонажи...');
 
-    // 4. AI нации — решения (Claude, параллельно)
-    try { await processAINations(); } catch (e) { console.warn('[ai_nations]', e); }
+    // 4. AI нации — решения (Claude/Groq, ограничено 5 секундами)
+    _setStep('ИИ думает...');
+    try {
+      await Promise.race([
+        processAINations(),
+        new Promise(r => setTimeout(r, 5000)),
+      ]);
+    } catch (e) { console.warn('[ai_nations]', e); }
+    _endStep('ИИ думает...');
 
     // 5. Случайные события (10% шанс)
     if (Math.random() < CONFIG.RANDOM_EVENT_CHANCE) {
@@ -200,9 +232,11 @@ async function processTurn() {
     }
 
     // 5.4в. Движение армий и обработка осад
+    _setStep('Армии...');
     if (typeof processArmyMovement === 'function') {
       try { processArmyMovement(); } catch (e) { console.warn('[army_movement]', e); }
     }
+    _endStep('Армии...');
 
     // 5.5. Прогресс активных приказов (делегирование)
     if (typeof processAllOrders === 'function') {
@@ -227,7 +261,9 @@ async function processTurn() {
     try { _recordTurnSummary(); } catch (e) { console.warn('[summary]', e); }
 
     // 7. Автосохранение
+    _setStep('Сохранение...');
     await saveGame();
+    _endStep('Сохранение...');
 
     // 8. Обновляем весь UI
     renderAll();
@@ -378,7 +414,7 @@ async function processAINations() {
   // При 100-200 нациях в tier 1/2 это снижает нагрузку на API в 5x.
   const BATCH_SIZE     = 5;
   const BATCH_PAUSE_MS = 300;   // пауза между батчами
-  const TOTAL_TIMEOUT  = 90_000; // 90с на все батчи
+  const TOTAL_TIMEOUT  = 4_500; // 4.5с — лимит внутри 5с Promise.race в processTurn
   const deadline       = Date.now() + TOTAL_TIMEOUT;
 
   for (let i = 0; i < queue.length; i += BATCH_SIZE) {
