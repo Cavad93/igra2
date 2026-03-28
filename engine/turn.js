@@ -377,7 +377,7 @@ async function processAINations() {
   // Преимущество: 20 наций = 4 запроса вместо 20. Соблюдаем rate limit.
   // При 100-200 нациях в tier 1/2 это снижает нагрузку на API в 5x.
   const BATCH_SIZE     = 5;
-  const BATCH_PAUSE_MS = 800;   // пауза между батчами
+  const BATCH_PAUSE_MS = 300;   // пауза между батчами
   const TOTAL_TIMEOUT  = 90_000; // 90с на все батчи
   const deadline       = Date.now() + TOTAL_TIMEOUT;
 

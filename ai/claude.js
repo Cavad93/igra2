@@ -125,7 +125,7 @@ async function callGroq(system, user, maxTokens = 1024, model = CONFIG.MODEL_HAI
   };
 
   // До 2 повторных попыток при 429 (rate limit): задержки 3s, 7s
-  const RETRY_DELAYS = [3000, 7000];
+  const RETRY_DELAYS = [1000, 2000];
 
   for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
     const controller = new AbortController();

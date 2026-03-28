@@ -317,7 +317,8 @@ function processCommanderAI() {
     } else {
       // ── AI нация: двигаем армию если ведём войну ────────────────────
       const nation = GAME_STATE.nations?.[army.nation];
-      if (!nation || nation.is_eliminated) continue;
+      // Разгромленные нации ждут мирных переговоров — не атакуют
+      if (!nation || nation.is_eliminated || nation.is_defeated) continue;
 
       const atWar = nation.military?.at_war_with ?? [];
       if (atWar.length === 0) continue; // не в войне — не двигаемся
@@ -346,6 +347,8 @@ function processCommanderAI() {
 
 function processArmyMovement() {
   const armies = GAME_STATE.armies ?? [];
+  let   battlesThisTurn = 0;       // глобальный лимит битв за ход
+  const MAX_BATTLES_PER_TURN = 12; // защита от каскада
 
   for (const army of armies) {
     if (army.state === 'disbanded') continue;
@@ -379,13 +382,26 @@ function processArmyMovement() {
 
     army.move_progress += speed;
 
-    while (army.move_progress >= 1.0 && army.path.length > 0) {
+    let stepsThisArmy = 0;
+    const MAX_STEPS   = 4; // не более 4 регионов за ход (защита от длинных путей)
+
+    while (army.move_progress >= 1.0 && army.path.length > 0 && stepsThisArmy < MAX_STEPS) {
       army.move_progress -= 1.0;
+      stepsThisArmy++;
       const nextRegion    = army.path.shift();
       army.position       = nextRegion;
       army.fatigue        = Math.min(100, army.fatigue + ARMY_MOVE.FATIGUE_MARCH);
 
-      _onArmyEnterRegion(army, nextRegion);
+      // Глобальный лимит битв за ход
+      const hadBattle = battlesThisTurn >= MAX_BATTLES_PER_TURN;
+      if (!hadBattle) {
+        const prevBattles = battlesThisTurn;
+        _onArmyEnterRegion(army, nextRegion);
+        // Грубая оценка: если состояние сменилось — была битва
+        if (army.state !== 'moving') battlesThisTurn++;
+        else if (GAME_STATE.armies?.some(a => a.state === 'routing' && a.position === nextRegion))
+          battlesThisTurn++;
+      }
       if (army.state !== 'moving') break; // бой или осада остановили
     }
 
