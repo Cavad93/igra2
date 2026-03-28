@@ -475,7 +475,7 @@ function applyFallbackDecision(nationId) {
     return;
   }
 
-  // Приоритет 2: если в войне — усилить армию
+  // Приоритет 2: если в войне — усилить армию и создать полевую армию если её нет
   const atWar = (military.at_war_with || []).length > 0;
   if (atWar && treasury > 3000) {
     const recruits = Math.min(Math.floor(treasury * 0.02), 500);
@@ -488,6 +488,22 @@ function applyFallbackDecision(nationId) {
       const mercs = Math.min(100, Math.floor((treasury - 3000) / 20));
       military.mercenaries += mercs;
       nation.economy.treasury -= mercs * CONFIG.BALANCE.MERCENARY_UPKEEP * 5;
+    }
+
+    // Создать полевую армию если у нации нет ни одной
+    const existingArmies = (GAME_STATE.armies ?? []).filter(
+      a => a.nation === nationId && a.state !== 'disbanded'
+    );
+    if (existingArmies.length === 0 && typeof createArmy === 'function') {
+      const homeRegion = nation.regions?.[0];
+      if (homeRegion && military.infantry > 200) {
+        const fieldTroops = Math.floor(military.infantry * 0.6);
+        military.infantry -= fieldTroops;
+        createArmy(nationId, homeRegion, { infantry: fieldTroops }, {
+          name: `Армия ${nation.name ?? nationId}`,
+        });
+        _recordFallback('raise_army', `сформирована полевая армия (${fieldTroops} пехоты)`);
+      }
     }
     return;
   }

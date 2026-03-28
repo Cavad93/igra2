@@ -301,15 +301,30 @@ function processCommanderAI() {
   const armies = GAME_STATE.armies ?? [];
 
   for (const army of armies) {
-    if (army.nation !== playerNation) continue;
     if (army.state === 'disbanded') continue;
-    if (!army.commander_id || army.commander_id === 'ruler') continue;
 
-    // Пропускаем если уже управляется активным приказом
-    const hasOrder = (GAME_STATE.orders ?? []).some(
-      o => o.status === 'active' && o.army_id === army.id && o.type === 'military_campaign'
-    );
-    if (hasOrder) continue;
+    const isPlayer = army.nation === playerNation;
+
+    if (isPlayer) {
+      // ── Игрок: только армии с назначенным командиром (не правитель) ──
+      if (!army.commander_id || army.commander_id === 'ruler') continue;
+
+      // Пропускаем если уже управляется активным приказом
+      const hasOrder = (GAME_STATE.orders ?? []).some(
+        o => o.status === 'active' && o.army_id === army.id && o.type === 'military_campaign'
+      );
+      if (hasOrder) continue;
+    } else {
+      // ── AI нация: двигаем армию если ведём войну ────────────────────
+      const nation = GAME_STATE.nations?.[army.nation];
+      if (!nation || nation.is_eliminated) continue;
+
+      const atWar = nation.military?.at_war_with ?? [];
+      if (atWar.length === 0) continue; // не в войне — не двигаемся
+
+      // Не трогаем осаждающие и бегущие армии
+      if (army.state === 'sieging' || army.state === 'routing') continue;
+    }
 
     // Создаём фиктивный "приказ" из текущей военной обстановки
     const enemiesAtWar = army.nation
@@ -324,7 +339,6 @@ function processCommanderAI() {
 
     const decision = getCommanderDecisionNow(army, fakeOrder);
     if (decision) {
-      // _applyCommanderDecision определена в orders.js (глобальный скоуп)
       if (typeof _applyCommanderDecision === 'function') _applyCommanderDecision(army, decision);
     }
   }

@@ -929,6 +929,36 @@ function _warMobilizationResponse(nationId, nation) {
     if (typeof addMemoryEvent === 'function') {
       addMemoryEvent(nationId, 'military', `Экстренная мобилизация: +${recruits} пехоты в ответ на войну.`);
     }
+
+    // Создаём полевую армию — 70% рекрутов идут в поле, 30% остаются гарнизоном
+    const homeRegion = nation.regions?.[0];
+    if (homeRegion && typeof createArmy === 'function') {
+      // Проверяем: у нации уже есть полевая армия?
+      const existing = (GAME_STATE.armies ?? []).filter(
+        a => a.nation === nationId && a.state !== 'disbanded'
+      );
+      if (existing.length === 0) {
+        const fieldTroops = Math.floor(recruits * 0.70);
+        military.infantry = Math.max(0, military.infantry - fieldTroops);
+        const mercs = military.mercenaries ?? 0;
+        const fieldMercs = Math.floor(mercs * 0.5);
+        if (fieldMercs > 0) military.mercenaries -= fieldMercs;
+
+        createArmy(nationId, homeRegion, {
+          infantry:    fieldTroops,
+          cavalry:     Math.floor((military.cavalry ?? 0) * 0.5),
+          mercenaries: fieldMercs,
+        }, {
+          name: `Армия ${nation.name ?? nationId}`,
+        });
+      } else {
+        // Усиливаем существующую армию
+        const army = existing[0];
+        const fieldTroops = Math.floor(recruits * 0.50);
+        military.infantry = Math.max(0, military.infantry - fieldTroops);
+        army.units.infantry = (army.units.infantry ?? 0) + fieldTroops;
+      }
+    }
   }
 
   // Если есть наёмники — нанять дополнительно
