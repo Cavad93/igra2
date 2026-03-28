@@ -217,6 +217,26 @@ function resolveArmyBattle(atkArmy, defArmy, regionId) {
       addEventLog(`🏴 ${atkName} захватывает ${region?.name ?? regionId}!`, 'military');
   }
 
+  // ── Анимация результата (только если участвует игрок) ────────────
+  const playerInBattle = atkArmy.nation === GAME_STATE.player_nation
+    || defArmy.nation === GAME_STATE.player_nation;
+  if (playerInBattle && typeof showBattleResult === 'function') {
+    setTimeout(() => showBattleResult({
+      terrain,    terrainLabel: TERRAIN_LABELS[terrain] ?? terrain,
+      regionName: region?.name ?? regionId,
+      atkName,    defName,
+      atkFlag:    atkNation?.flag_emoji ?? '⚔️',
+      defFlag:    defNation?.flag_emoji ?? '🛡',
+      atkWins,
+      atkCas,     defCas: defCas + pursuitCas,
+      atkTotal,   defTotal,
+      margin,
+      capturedRegionName: capturedRegionId ? (region?.name ?? regionId) : null,
+      atkCmd: typeof getArmyCommander === 'function' ? getArmyCommander(atkArmy)?.name : null,
+      defCmd: typeof getArmyCommander === 'function' ? getArmyCommander(defArmy)?.name : null,
+    }), 100);
+  }
+
   // Записываем сражение в долгосрочную память обеих сторон
   if (typeof addMemoryEvent === 'function') {
     const battleText = `Сражение у ${region?.name ?? regionId} (${TERRAIN_LABELS[terrain] ?? terrain}): `
@@ -379,22 +399,36 @@ function _syncArmyToNation(army) {
 function _setRetreatPath(army) {
   const ownRegions = Object.entries(GAME_STATE.regions ?? {})
     .filter(([, r]) => r.nation === army.nation).map(([id]) => id);
-  if (ownRegions.length === 0) { army.state = 'disbanded'; return; }
 
   const region = _getRegionData(army.position);
-  const adj    = (region?.connections ?? []).find(
-    id => _getRegionData(id)?.nation === army.nation
-  );
+  const connections = region?.connections ?? [];
 
-  if (adj) {
-    army.path = [adj];
-  } else {
+  // 1. Ближайший свой регион рядом — отступаем туда
+  const adjOwn = connections.find(id => _getRegionData(id)?.nation === army.nation);
+  if (adjOwn) { army.path = [adjOwn]; return; }
+
+  // 2. Своих нет рядом — ищем путь до ближайшего своего региона
+  if (ownRegions.length > 0 && ownRegions[0] !== army.position) {
     const path = typeof findArmyPath === 'function'
       ? findArmyPath(army.position, ownRegions[0], army.type, army.nation)
       : null;
-    if (path && path.length > 1) army.path = path.slice(1, 3);
-    else army.state = 'disbanded';
+    if (path && path.length > 1) { army.path = path.slice(1, 3); return; }
   }
+
+  // 3. Последний регион нации захвачен / единственная провинция —
+  //    отступаем в любой соседний регион (бегство без направления)
+  const anyAdj = connections.find(id => id !== army.position);
+  if (anyAdj) {
+    army.path = [anyAdj];
+    if (typeof addEventLog === 'function')
+      addEventLog(`💨 ${army.name} бежит в ${_getRegionData(anyAdj)?.name ?? anyAdj}!`, 'military');
+    return;
+  }
+
+  // 4. Полное окружение — капитуляция
+  army.state = 'disbanded';
+  if (typeof addEventLog === 'function')
+    addEventLog(`💀 ${army.name} окружена и капитулировала!`, 'danger');
 }
 
 // ── Морской бой ───────────────────────────────────────────────────────
