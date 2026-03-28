@@ -416,6 +416,9 @@ function processAllianceWars() {
   // Только каждые 3 хода и не каждый раз (30% шанс на пару)
   if (GAME_STATE.turn % 3 !== 0) return;
 
+  let allianceBattles = 0;
+  const MAX_ALLIANCE_BATTLES = 4;
+
   const treaties = GAME_STATE.diplomacy?.treaties ?? [];
 
   for (const treaty of treaties) {
@@ -449,12 +452,14 @@ function processAllianceWars() {
           if (!otherRelEnemy?.war) continue;
         }
 
+        if (allianceBattles >= MAX_ALLIANCE_BATTLES) break;
         if (Math.random() > attackChance) continue;
 
         const enemy = GAME_STATE.nations[enemyId];
         if (!enemy || !enemy.regions?.length) continue;
 
         processAttackAction(side, enemyId, { skipDefensiveAlliances: true });
+        allianceBattles++;
       }
     }
   }
