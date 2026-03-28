@@ -449,106 +449,216 @@ async function processAINations() {
   }
 }
 
-// Детерминированное решение при недоступности AI
+// ══════════════════════════════════════════════════════════════════════
+// OU (Ornstein-Uhlenbeck) — стохастические "настроения" нации
+// Каждое настроение дрейфует случайно, но возвращается к своему μ.
+// Формула: x(t+1) = x(t) + θ·(μ−x(t)) + σ·N(0,1)
+// ══════════════════════════════════════════════════════════════════════
+
+const _OU_THETA = 0.12; // скорость возврата к среднему
+const _OU_SIGMA = 0.07; // амплитуда шума
+
+// Естественное среднее (μ) на основе текущей ситуации нации
+function _ouNaturalMu(nation) {
+  const treasury  = nation.economy?.treasury    ?? 0;
+  const military  = nation.military             ?? {};
+  const pop       = nation.population           ?? {};
+  const atWar     = (military.at_war_with ?? []).length > 0;
+  const armyStr   = (military.infantry ?? 0) + (military.cavalry ?? 0) * 3;
+  const armyRatio = armyStr / Math.max(1, pop.total ?? 1);
+
+  return {
+    // Воинственность: растёт в войне и при сильной армии
+    aggression: atWar ? 0.45 : (armyRatio > 0.05 ? 0.15 : -0.10),
+    // Экспансия: растёт с казной
+    expansion:  treasury > 5000 ? 0.25 : (treasury > 1000 ? 0.0 : -0.20),
+    // Дипломатичность: падает в войне, растёт в мире с деньгами
+    diplomacy:  atWar ? -0.35 : (treasury > 2000 ? 0.30 : 0.0),
+  };
+}
+
+// Один шаг OU (Box-Muller для N(0,1))
+function _ouStep(x, mu) {
+  const u1 = Math.random() || 1e-10;
+  const u2 = Math.random();
+  const normal = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  return Math.max(-1, Math.min(1, x + _OU_THETA * (mu - x) + _OU_SIGMA * normal));
+}
+
+// Обновить/инициализировать OU-состояние нации, вернуть текущее
+function _tickOU(nationId, nation) {
+  const mu = _ouNaturalMu(nation);
+  if (!nation._ou) {
+    // Первый вызов — стартуем в естественном среднем плюс небольшой шум
+    nation._ou = {
+      aggression: mu.aggression + (Math.random() - 0.5) * 0.2,
+      expansion:  mu.expansion  + (Math.random() - 0.5) * 0.2,
+      diplomacy:  mu.diplomacy  + (Math.random() - 0.5) * 0.2,
+    };
+  }
+  const ou = nation._ou;
+  ou.aggression = _ouStep(ou.aggression, mu.aggression);
+  ou.expansion  = _ouStep(ou.expansion,  mu.expansion);
+  ou.diplomacy  = _ouStep(ou.diplomacy,  mu.diplomacy);
+  return ou;
+}
+
+// Softmax с температурой (temp > 1 → равномернее, temp < 1 → жёстче)
+function _softmax(scoreMap, temp = 1.2) {
+  const entries = Object.entries(scoreMap);
+  const exps    = entries.map(([k, v]) => [k, Math.exp(v / temp)]);
+  const sum     = exps.reduce((s, [, e]) => s + e, 0);
+  return Object.fromEntries(exps.map(([k, e]) => [k, e / sum]));
+}
+
+// Взвешенный случайный выбор из вероятностного словаря
+function _weightedPick(probMap) {
+  const r = Math.random();
+  let cum = 0;
+  for (const [key, p] of Object.entries(probMap)) {
+    cum += p;
+    if (r <= cum) return key;
+  }
+  return Object.keys(probMap).at(-1);
+}
+
+// ── Fallback с OU-вероятностями ──────────────────────────────────────────
 function applyFallbackDecision(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
-  const treasury = nation.economy.treasury;
-  const military = nation.military;
-  const pop = nation.population;
 
-  // ── Запись в память для преемственности между моделями ──────────
-  const _recordFallback = (action, detail) => {
-    if (typeof addMemoryEvent === 'function') {
-      addMemoryEvent(nationId, 'decision', `${action}${detail ? ': ' + detail : ''}`, [], 'fallback');
-    }
-  };
+  const treasury = nation.economy?.treasury   ?? 0;
+  const military = nation.military            ?? {};
+  const pop      = nation.population          ?? {};
 
-  // at_war_with должен поддерживаться дипломатическим движком, не здесь
   if (!military.at_war_with) military.at_war_with = [];
 
-  // Приоритет 1: если мало армии относительно населения — рекрутируем
-  // cavalry * 3: cavalry units count as 3x for military strength purposes (mounted troops are ~3x more effective)
-  const armyRatio = (military.infantry + military.cavalry * 3) / Math.max(1, pop.total);
-  if (armyRatio < 0.01 && treasury > 2000) {
-    const recruits = Math.min(Math.floor(treasury / 10), Math.floor(pop.total * 0.005));
-    if (recruits > 0) {
-      military.infantry += recruits;
-      nation.economy.treasury -= recruits * CONFIG.BALANCE.INFANTRY_UPKEEP * 5;
-      _recordFallback('recruit', `+${recruits} пехоты (армия мала)`);
-    }
-    return;
-  }
+  const _rec = (action, detail) => {
+    if (typeof addMemoryEvent === 'function')
+      addMemoryEvent(nationId, 'decision', `${action}${detail ? ': ' + detail : ''}`, [], 'fallback');
+  };
 
-  // Приоритет 2: если в войне — усилить армию и создать полевую армию если её нет
-  const atWar = (military.at_war_with || []).length > 0;
-  if (atWar && treasury > 3000) {
-    const recruits = Math.min(Math.floor(treasury * 0.02), 500);
-    military.infantry += recruits;
-    nation.economy.treasury -= recruits * CONFIG.BALANCE.INFANTRY_UPKEEP * 3;
-    _recordFallback('war_recruit', `+${recruits} пехоты (идёт война)`);
+  // ── Обновляем OU-состояние нации ──────────────────────────────────
+  const ou = _tickOU(nationId, nation);
 
-    // Нанять наёмников если есть деньги
-    if (treasury > 5000 && military.mercenaries < 300) {
-      const mercs = Math.min(100, Math.floor((treasury - 3000) / 20));
-      military.mercenaries += mercs;
-      nation.economy.treasury -= mercs * CONFIG.BALANCE.MERCENARY_UPKEEP * 5;
-    }
+  const atWar     = military.at_war_with.length > 0;
+  const armyStr   = (military.infantry ?? 0) + (military.cavalry ?? 0) * 3;
+  const armyRatio = armyStr / Math.max(1, pop.total ?? 1);
+  const hasArmy   = (GAME_STATE.armies ?? []).some(
+    a => a.nation === nationId && a.state !== 'disbanded'
+  );
 
-    // Создать полевую армию если у нации нет ни одной
-    const existingArmies = (GAME_STATE.armies ?? []).filter(
-      a => a.nation === nationId && a.state !== 'disbanded'
-    );
-    if (existingArmies.length === 0 && typeof createArmy === 'function') {
-      const homeRegion = nation.regions?.[0];
-      if (homeRegion && military.infantry > 200) {
-        const fieldTroops = Math.floor(military.infantry * 0.6);
-        military.infantry -= fieldTroops;
-        createArmy(nationId, homeRegion, { infantry: fieldTroops }, {
-          name: `Армия ${nation.name ?? nationId}`,
-        });
-        _recordFallback('raise_army', `сформирована полевая армия (${fieldTroops} пехоты)`);
+  // ── Скоринг действий ─────────────────────────────────────────────
+  const scores = {
+
+    // Рекрутинг пехоты: выгоден при малой армии, в войне, при агрессии
+    recruit:
+      ou.aggression * 2.0
+      + (armyRatio < 0.01 ? 2.5 : armyRatio < 0.03 ? 0.5 : -1.0)
+      + (atWar ? 1.5 : 0)
+      + (treasury < 800 ? -5 : treasury > 4000 ? 0.5 : 0),
+
+    // Выставить полевую армию из резерва
+    raise_army:
+      ou.aggression * 1.5 + ou.expansion * 1.0
+      + (!hasArmy && military.infantry > 200 ? 3.0 : -4.0)
+      + (atWar ? 2.0 : 0),
+
+    // Нанять наёмников: быстро, но дорого
+    recruit_mercs:
+      ou.aggression * 1.5
+      + (atWar ? 2.0 : -1.0)
+      + (treasury > 5000 ? 1.0 : -4.0)
+      + ((military.mercenaries ?? 0) > 300 ? -3 : 0),
+
+    // Торговый договор: дипломатия в мирное время
+    trade:
+      ou.diplomacy * 2.5
+      + (!atWar ? 1.0 : -5.0)
+      + (treasury > 2000 ? 0.5 : -1.0)
+      + (GAME_STATE.turn % 6 === 0 ? 1.0 : -1.5),
+
+    // Ничего не делать: базовая опция
+    wait:
+      -ou.aggression * 0.5 + 0.3,
+  };
+
+  // ── Выбираем действие по взвешенной вероятности ───────────────────
+  const action = _weightedPick(_softmax(scores));
+
+  // ── Выполняем ─────────────────────────────────────────────────────
+  switch (action) {
+
+    case 'recruit': {
+      if (treasury < 800) { _rec('wait', 'казна мала'); break; }
+      const n = Math.min(
+        Math.floor(treasury / 10),
+        Math.floor(Math.max(1, pop.total ?? 1) * 0.005)
+      );
+      if (n > 0) {
+        military.infantry = (military.infantry ?? 0) + n;
+        nation.economy.treasury -= n * (CONFIG.BALANCE?.INFANTRY_UPKEEP ?? 1) * 5;
+        _rec('recruit', `+${n} пехоты [agg:${ou.aggression.toFixed(2)}]`);
       }
+      break;
     }
-    return;
-  }
 
-  // Приоритет 3: дипломатия — попытаться заключить торговый договор
-  if (!atWar && treasury > 1000 && GAME_STATE.turn % 12 === 0) {
-    let tradeMade = false;
-    for (const [otherId, rel] of Object.entries(nation.relations || {})) {
-      if (rel.at_war || (rel.treaties || []).includes('trade')) continue;
-      if (rel.score > -10) {
-        // Предлагаем торговлю
-        const chance = (rel.score + 50) / 100;
-        if (Math.random() < chance * 0.5) {
+    case 'raise_army': {
+      if (!hasArmy && (military.infantry ?? 0) > 200 && typeof createArmy === 'function') {
+        const homeRegion = nation.regions?.[0];
+        if (homeRegion) {
+          const troops = Math.floor(military.infantry * 0.6);
+          military.infantry -= troops;
+          createArmy(nationId, homeRegion, { infantry: troops },
+            { name: `Армия ${nation.name ?? nationId}` });
+          _rec('raise_army', `${troops} пехоты → поле [exp:${ou.expansion.toFixed(2)}]`);
+        }
+      } else {
+        _rec('wait', 'армия уже в поле');
+      }
+      break;
+    }
+
+    case 'recruit_mercs': {
+      if (treasury > 5000 && (military.mercenaries ?? 0) < 300) {
+        const m = Math.min(100, Math.floor((treasury - 3000) / 20));
+        military.mercenaries = (military.mercenaries ?? 0) + m;
+        nation.economy.treasury -= m * (CONFIG.BALANCE?.MERCENARY_UPKEEP ?? 2) * 5;
+        _rec('recruit_mercs', `+${m} наёмников [agg:${ou.aggression.toFixed(2)}]`);
+      } else {
+        _rec('wait', 'наёмники недоступны');
+      }
+      break;
+    }
+
+    case 'trade': {
+      if (atWar) { _rec('wait', 'война — торговля невозможна'); break; }
+      let done = false;
+      for (const [otherId, rel] of Object.entries(nation.relations || {})) {
+        if (rel.at_war || (rel.treaties ?? []).includes('trade')) continue;
+        if (rel.score > -10 && Math.random() < (rel.score + 50) / 200) {
           rel.treaties = rel.treaties || [];
           rel.treaties.push('trade');
           rel.score = Math.min(100, rel.score + 10);
-          // Взаимно
           const other = GAME_STATE.nations[otherId];
           if (other?.relations?.[nationId]) {
             other.relations[nationId].treaties = other.relations[nationId].treaties || [];
-            if (!other.relations[nationId].treaties.includes('trade')) {
+            if (!other.relations[nationId].treaties.includes('trade'))
               other.relations[nationId].treaties.push('trade');
-            }
             other.relations[nationId].score = Math.min(100, other.relations[nationId].score + 10);
           }
-          const otherName = other?.name ?? otherId;
-          _recordFallback('trade_deal', `торговый договор с ${otherName}`);
-          tradeMade = true;
-          break; // одно действие за ход
+          _rec('trade_deal', `${other?.name ?? otherId} [dip:${ou.diplomacy.toFixed(2)}]`);
+          done = true;
+          break;
         }
       }
+      if (!done) _rec('wait', 'нет партнёров для торговли');
+      break;
     }
-    if (!tradeMade) {
-      _recordFallback('diplomacy_idle', 'не найдено подходящих партнёров для торговли');
-    }
-    return;
-  }
 
-  // Приоритет 4: накапливать деньги (ничего не делаем)
-  _recordFallback('accumulate', `казна: ${Math.round(treasury)} золота`);
+    default:
+      _rec('wait', `казна:${Math.round(treasury)} agg:${ou.aggression.toFixed(2)}`);
+  }
 }
 
 // ──────────────────────────────────────────────────────────────
