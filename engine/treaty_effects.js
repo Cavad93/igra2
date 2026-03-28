@@ -318,9 +318,9 @@ function _onPeace(treaty, a, b, cond) {
   }
 
   // ── Проверка елиминации обоих участников ─────────────────────────
-  if (typeof checkNationElimination === 'function') {
-    checkNationElimination(a, b);
-    checkNationElimination(b, a);
+  if (typeof checkNationDefeated === 'function') {
+    checkNationDefeated(a, b);
+    checkNationDefeated(b, a);
   }
 
   _log(`☮ Мирный договор: ${natA?.name ?? a} и ${natB?.name ?? b} прекращают войну.`);
@@ -374,9 +374,9 @@ function _onTerritorialExchange(treaty, a, b, cond) {
   }
 
   // Проверяем елиминацию наций которые лишились регионов
-  if (typeof checkNationElimination === 'function') {
+  if (typeof checkNationDefeated === 'function') {
     for (const prevOwner of transferredFrom) {
-      checkNationElimination(prevOwner, toId);
+      checkNationDefeated(prevOwner, toId);
     }
   }
 }

@@ -660,8 +660,8 @@ function captureRegion(captorId, regionId, prevOwnerId) {
   if (typeof addEventLog === 'function')
     addEventLog(`🏴 ${captor?.name ?? captorId} захватывает ${region.name ?? regionId}!`, 'military');
 
-  // Проверяем елиминацию: если у нации не осталось регионов — она уничтожена
-  if (duringWar) checkNationElimination(prevNation, captorId);
+  // Проверяем: если у нации не осталось регионов — она разгромлена
+  if (duringWar) checkNationDefeated(prevNation, captorId);
 }
 
 /**
@@ -670,53 +670,28 @@ function captureRegion(captorId, regionId, prevOwnerId) {
  * @param {string} nationId - нация которая могла лишиться последнего региона
  * @param {string} [captorId] - захватчик (для очистки оккупационных маркеров)
  */
-function checkNationElimination(nationId, captorId) {
+/**
+ * Вызывается когда у нации заканчиваются все регионы.
+ * Помечает нацию как ПОБЕЖДЁННУЮ (is_defeated), но НЕ уничтожает её.
+ * Уничтожение (is_eliminated) происходит только через мирный договор с аннексией.
+ * Оккупационные маркеры (occupied_by/original_nation) сохраняются до переговоров.
+ */
+function checkNationDefeated(nationId, captorId) {
   const nation = GAME_STATE.nations?.[nationId];
-  if (!nation || nation.is_eliminated) return;
+  if (!nation || nation.is_defeated || nation.is_eliminated) return;
 
-  // Считаем оставшиеся регионы
-  const remaining = Object.values(GAME_STATE.regions ?? {}).filter(r => r.nation === nationId);
+  // Считаем оставшиеся регионы (не оккупированные — nation = nationId)
+  const remaining = Object.values(GAME_STATE.regions ?? {}).filter(
+    r => r.nation === nationId
+  );
   if (remaining.length > 0) return;
 
-  // Нация уничтожена
-  nation.is_eliminated = true;
-  nation.eliminated_turn = GAME_STATE.turn ?? 1;
+  // Нация разгромлена — все регионы захвачены
+  nation.is_defeated       = true;
+  nation.defeated_turn     = GAME_STATE.turn ?? 1;
+  nation.defeated_by       = captorId ?? null;
 
-  // Снимаем войну со ВСЕМИ нациями, а не только с captorId
-  const warEnemies = [...(nation.military?.at_war_with ?? [])];
-  if (nation.military?.at_war_with) nation.military.at_war_with = [];
-
-  for (const enemyId of warEnemies) {
-    const enemy = GAME_STATE.nations[enemyId];
-    if (enemy?.military?.at_war_with) {
-      enemy.military.at_war_with = enemy.military.at_war_with.filter(id => id !== nationId);
-    }
-    if (typeof getRelation === 'function') {
-      const rel = getRelation(enemyId, nationId);
-      if (rel) rel.war = false;
-    }
-    // Очищаем оккупационные метки на регионах этого врага
-    for (const r of Object.values(GAME_STATE.regions ?? {})) {
-      if (r.original_nation === nationId) {
-        r.occupied_by     = null;
-        r.original_nation = null;
-      }
-    }
-  }
-
-  // Если captorId не был в at_war_with (захват без явной войны) — всё равно чистим
-  if (captorId && !warEnemies.includes(captorId)) {
-    const captor = GAME_STATE.nations[captorId];
-    if (captor?.military?.at_war_with) {
-      captor.military.at_war_with = captor.military.at_war_with.filter(id => id !== nationId);
-    }
-    if (typeof getRelation === 'function') {
-      const rel = getRelation(captorId, nationId);
-      if (rel) rel.war = false;
-    }
-  }
-
-  // Расформировываем армии уничтоженной нации
+  // Расформировываем оставшиеся армии побеждённой нации
   for (const army of (GAME_STATE.armies ?? [])) {
     if (army.nation === nationId && army.state !== 'disbanded') {
       army.state = 'disbanded';
@@ -726,10 +701,15 @@ function checkNationElimination(nationId, captorId) {
   if (typeof addEventLog === 'function') {
     const captorName = GAME_STATE.nations[captorId]?.name ?? captorId;
     addEventLog(
-      `💀 ${nation.name} уничтожена! ${captorName} завоевал все её территории. `
-      + `Нация исчезает с карты.`,
+      `⚔️ ${nation.name} разгромлена! ${captorName} занял все её территории. `
+      + `Начните мирные переговоры чтобы закрепить победу.`,
       'danger'
     );
+  }
+
+  // Уведомляем игрока если он победитель — показываем кнопку переговоров
+  if (captorId === GAME_STATE.player_nation && typeof showPeaceOfferPanel === 'function') {
+    setTimeout(() => showPeaceOfferPanel(nationId), 500);
   }
 }
 

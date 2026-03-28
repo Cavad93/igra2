@@ -1556,7 +1556,7 @@ function _getForeignNations(playerNationId) {
   const diplomacy = GAME_STATE.diplomacy;
 
   return Object.entries(GAME_STATE.nations ?? {})
-    .filter(([id, n]) => id !== playerNationId && !n.is_eliminated)
+    .filter(([id, n]) => id !== playerNationId && !n.is_eliminated && !n.is_defeated)
     .map(([id, n]) => {
       // Читаем score напрямую из relations — НЕ вызываем getRelationScore,
       // чтобы не провоцировать ленивую инициализацию 1900+ пар при открытии UI.
