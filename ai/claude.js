@@ -993,6 +993,20 @@ ${recentPlayerEvents ? `Recent player actions:\n${recentPlayerEvents}` : ''}`;
     : `⚠ DEFICIT ${bal}/t → T+1:${t1}g T+2:${t2}g T+3:${t3}g${bankruptIn !== null ? ` — BANKRUPT in ~${bankruptIn} turns!` : ''}`;
 
 
+  // ── #11 Реакция на предательство — детекция неожиданного нападения ──
+  const betrayalWarnings = [];
+  for (const eid of atWar) {
+    const rel = n.relations?.[eid];
+    const prevScore = rel?.score ?? 0;
+    // Считаем предательством: были в союзе или score > 30, а теперь война
+    const hadTreaty = (rel?.treaties ?? []).length > 0;
+    if (prevScore > 30 || hadTreaty) {
+      const en = GAME_STATE.nations[eid];
+      betrayalWarnings.push(`⚠ BETRAYAL: ${en?.name ?? eid} attacked despite ${hadTreaty ? 'treaty' : `score:${prevScore}`} — punish by refusing any peace for 5+ turns or seek revenge`);
+    }
+  }
+  const betrayalBlock = betrayalWarnings.length ? '\n' + betrayalWarnings.join('\n') : '';
+
   // ── #10 Приоритет регионов — лучшая цель для захвата ────────────────
   let bestConquestTarget = null;
   let bestConquestValue  = -Infinity;
@@ -1167,7 +1181,7 @@ Treasury:${treasury}g | Income:+${income} Expenses:-${expense} Balance:${bal >= 
 ${econForecast}
 Army:${Math.round(str)} (${mil.infantry ?? 0}inf+${mil.cavalry ?? 0}cav+${mil.mercenaries ?? 0}mercs)
 Pop:${pop.total ?? 0} Happiness:${happiness} Stability:${stability} Legitimacy:${gov.legitimacy ?? 50}${supplyWarning}
-Threat Index: ${threatScore}/100 ${threatLabel}
+Threat Index: ${threatScore}/100 ${threatLabel}${betrayalBlock}
 ${warLine}
 ${playerBlock}
 ${personalityBlock}
