@@ -993,6 +993,18 @@ ${recentPlayerEvents ? `Recent player actions:\n${recentPlayerEvents}` : ''}`;
     : `⚠ DEFICIT ${bal}/t → T+1:${t1}g T+2:${t2}g T+3:${t3}g${bankruptIn !== null ? ` — BANKRUPT in ~${bankruptIn} turns!` : ''}`;
 
 
+  // ── #12 Истощение армии — % потерь от пиковой силы ──────────────────
+  const peakStr  = mil._peak_strength ?? str;
+  // Запоминаем пиковую силу для будущих сравнений
+  if (str > peakStr) mil._peak_strength = str;
+  const lossPercent = peakStr > 0 ? Math.round((1 - str / peakStr) * 100) : 0;
+  let armyExhaustionNote = '';
+  if (lossPercent >= 50) {
+    armyExhaustionNote = `\n⚠ ARMY EXHAUSTED: lost ${lossPercent}% of peak strength — recruit before engaging or seek armistice`;
+  } else if (lossPercent >= 25) {
+    armyExhaustionNote = `\n⚠ ATTRITION: lost ${lossPercent}% of peak strength — consider recruiting to reinforce`;
+  }
+
   // ── #11 Реакция на предательство — детекция неожиданного нападения ──
   const betrayalWarnings = [];
   for (const eid of atWar) {
@@ -1179,7 +1191,7 @@ RULES:
 ## State
 Treasury:${treasury}g | Income:+${income} Expenses:-${expense} Balance:${bal >= 0 ? '+' : ''}${bal}/turn
 ${econForecast}
-Army:${Math.round(str)} (${mil.infantry ?? 0}inf+${mil.cavalry ?? 0}cav+${mil.mercenaries ?? 0}mercs)
+Army:${Math.round(str)} (${mil.infantry ?? 0}inf+${mil.cavalry ?? 0}cav+${mil.mercenaries ?? 0}mercs)${armyExhaustionNote}
 Pop:${pop.total ?? 0} Happiness:${happiness} Stability:${stability} Legitimacy:${gov.legitimacy ?? 50}${supplyWarning}
 Threat Index: ${threatScore}/100 ${threatLabel}${betrayalBlock}
 ${warLine}
