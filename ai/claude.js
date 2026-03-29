@@ -993,6 +993,22 @@ ${recentPlayerEvents ? `Recent player actions:\n${recentPlayerEvents}` : ''}`;
     : `⚠ DEFICIT ${bal}/t → T+1:${t1}g T+2:${t2}g T+3:${t3}g${bankruptIn !== null ? ` — BANKRUPT in ~${bankruptIn} turns!` : ''}`;
 
 
+  // ── #14 Пиратство и торговые маршруты ────────────────────────────────
+  const tradePartners = Object.entries(n.relations ?? {})
+    .filter(([, r]) => (r.treaties ?? []).some(t => t.includes('trade')))
+    .map(([oid]) => oid);
+  const disrupted = tradePartners.filter(oid => {
+    const r = n.relations?.[oid];
+    return r?.at_war || (r?.score ?? 0) < -10;
+  });
+  let tradeNote = '';
+  if (disrupted.length > 0) {
+    const names = disrupted.map(oid => GAME_STATE.nations[oid]?.name ?? oid).join(', ');
+    tradeNote = `\n⚠ TRADE DISRUPTED: active routes with ${names} at risk — sign armistice or find new partners`;
+  } else if (tradePartners.length === 0 && income < expense * 1.2) {
+    tradeNote = '\nNo trade agreements — seek_trade with neighbors to boost income';
+  }
+
   // ── #13 Сезонность — зима/лето стратегические модификаторы ──────────
   const seasonTurn = currentTurn % 4; // 0=spring,1=summer,2=autumn,3=winter
   const SEASONS = ['Spring', 'Summer', 'Autumn', 'Winter'];
@@ -1201,7 +1217,7 @@ RULES:
   const user = `## ${n.name} (id:${nationId}) | Turn ${currentTurn}
 
 ## State
-Treasury:${treasury}g | Income:+${income} Expenses:-${expense} Balance:${bal >= 0 ? '+' : ''}${bal}/turn
+Treasury:${treasury}g | Income:+${income} Expenses:-${expense} Balance:${bal >= 0 ? '+' : ''}${bal}/turn${tradeNote}
 ${econForecast}
 Army:${Math.round(str)} (${mil.infantry ?? 0}inf+${mil.cavalry ?? 0}cav+${mil.mercenaries ?? 0}mercs)${armyExhaustionNote}
 Pop:${pop.total ?? 0} Happiness:${happiness} Stability:${stability} Legitimacy:${gov.legitimacy ?? 50}${supplyWarning}
