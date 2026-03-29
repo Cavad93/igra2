@@ -856,6 +856,15 @@ async function getAISingleDecision(nationId) {
     return `  region:${rid} | free_slots:${freeSlots} | already_built:[${builtIds.join(',')||'none'}]\n    can_build: ${avail.join(', ')}`;
   }).filter(Boolean).join('\n') || '  (no free building slots)';
 
+  // ── #3 Военная разведка — приблизительные оценки вражеских сил ──────
+  // Чем меньше торговли/дипломатии — тем хуже разведка
+  function _scoutEstimate(exactStr, relScore) {
+    const intel = relScore ?? 0;
+    if (intel > 40) return `~${Math.round(exactStr)}`;         // хорошие отношения — точная оценка
+    if (intel > 0)  return `~${Math.round(exactStr * (0.8 + Math.random() * 0.4))}`; // ±20%
+    return exactStr > 5000 ? 'massive' : exactStr > 2000 ? 'large' : exactStr > 800 ? 'medium' : 'small'; // враги — только категория
+  }
+
   // ── Дипломатия — топ 8 по важности ───────────────────────────────
   const relLines = Object.entries(n.relations ?? {})
     .map(([oid, r]) => {
@@ -865,8 +874,9 @@ async function getAISingleDecision(nationId) {
       const power    = oStr > str * 1.3 ? 'STRONGER' : oStr < str * 0.7 ? 'weaker' : 'equal';
       const treaties = (r.treaties ?? []).join(',') || 'none';
       const war      = r.at_war ? ' ⚔AT_WAR' : '';
+      const scoutStr = _scoutEstimate(oStr, r.score);
       return { score: Math.abs(r.score ?? 0), line:
-        `  id:${oid.padEnd(18)} ${on.name.padEnd(16)} score:${(r.score ?? 0) >= 0 ? '+' : ''}${r.score ?? 0}  treaties:${treaties}  str:${Math.round(oStr)}(${power})${war}` };
+        `  id:${oid.padEnd(18)} ${on.name.padEnd(16)} score:${(r.score ?? 0) >= 0 ? '+' : ''}${r.score ?? 0}  treaties:${treaties}  str:${scoutStr}(${power})${war}` };
     })
     .filter(Boolean)
     .sort((a, b) => b.score - a.score)
