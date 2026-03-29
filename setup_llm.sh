@@ -70,17 +70,23 @@ else
   warn "URL: $HF_URL"
 
   # Скачать с прогрессом, возобновить если прервалось (-C -)
+  # -f: упасть если HTTP ошибка (4xx/5xx) — иначе curl качает HTML-страницу ошибки
+  # -A: User-Agent нужен HuggingFace иначе блокирует
   if command -v curl &>/dev/null; then
-    curl -L --progress-bar -C - "$HF_URL" -o "$MODEL_PATH"
+    curl -L -f --progress-bar -C - \
+      -A "Mozilla/5.0 (compatible; curl)" \
+      -H "Accept: application/octet-stream" \
+      "$HF_URL" -o "$MODEL_PATH" \
+      || { rm -f "$MODEL_PATH"; error "Ошибка скачивания. Проверь интернет или попробуй позже."; }
   else
     error "curl не найден. Установи: brew install curl"
   fi
 
-  # Проверить что файл скачался (минимум 100 МБ)
+  # Проверить что файл скачался (минимум 1 ГБ — модель ~2.5 ГБ)
   FILE_SIZE=$(stat -f%z "$MODEL_PATH" 2>/dev/null || stat -c%s "$MODEL_PATH" 2>/dev/null || echo 0)
-  if [[ "$FILE_SIZE" -lt 104857600 ]]; then
+  if [[ "$FILE_SIZE" -lt 1073741824 ]]; then
     rm -f "$MODEL_PATH"
-    error "Файл повреждён или скачался неполностью. Запусти скрипт ещё раз."
+    error "Файл слишком маленький (${FILE_SIZE} байт). HuggingFace вернул ошибку или редирект. Запусти скрипт ещё раз."
   fi
 
   info "Модель скачана: $(du -sh "$MODEL_PATH" | cut -f1)"
