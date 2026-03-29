@@ -993,6 +993,27 @@ ${recentPlayerEvents ? `Recent player actions:\n${recentPlayerEvents}` : ''}`;
     : `⚠ DEFICIT ${bal}/t → T+1:${t1}g T+2:${t2}g T+3:${t3}g${bankruptIn !== null ? ` — BANKRUPT in ~${bankruptIn} turns!` : ''}`;
 
 
+  // ── #8 Дипломатический момент — лучший кандидат для альянса ─────────
+  let bestAllyCandidate = null;
+  let bestAllyScore = -Infinity;
+  for (const [oid, r] of Object.entries(n.relations ?? {})) {
+    if (r.at_war) continue;
+    const on = GAME_STATE.nations[oid];
+    if (!on || on.is_eliminated) continue;
+    const alreadyAllied = (r.treaties ?? []).some(t => t.includes('alliance'));
+    if (alreadyAllied) continue;
+    const os = (on.military?.infantry ?? 0) + (on.military?.cavalry ?? 0) * 3;
+    // Хорошо: высокие отношения + примерно равная сила
+    const score = (r.score ?? 0) + (os > str * 0.5 && os < str * 2 ? 20 : 0);
+    if (score > 30 && score > bestAllyScore) {
+      bestAllyScore = score;
+      bestAllyCandidate = `${on.name}(id:${oid}, score:${r.score ?? 0}, str:~${_scoutEstimate(os, r.score)})`;
+    }
+  }
+  const allyHint = bestAllyCandidate
+    ? `Best alliance opportunity: ${bestAllyCandidate} — use form_alliance action`
+    : 'No strong alliance candidates right now';
+
   // ── #7 Индекс угрозы 0-100 ───────────────────────────────────────
   let threatScore = 0;
   // Активные войны
@@ -1112,6 +1133,7 @@ Avoid: ${phase.avoid.join(', ')}
 
 ## Strategic Options (choose or combine)
 ${strategicOptions}
+Diplomacy: ${allyHint}
 
 ## Your Goal (multi-turn plan)
 ${prevGoal}
