@@ -749,13 +749,58 @@ async function getAISingleDecision(nationId) {
     .slice(0, 2)
     .join(', ') || 'none';
 
+  // ── Блок игрока ───────────────────────────────────────────────────
+  const playerNationId = GAME_STATE.player_nation ?? 'syracuse';
+  const pn  = GAME_STATE.nations[playerNationId];
+  let playerBlock = '';
+  if (pn && playerNationId !== nationId) {
+    const pMil = pn.military ?? {};
+    const pEco = pn.economy  ?? {};
+    const pStr = (pMil.infantry ?? 0) + (pMil.cavalry ?? 0) * 3 + (pMil.mercenaries ?? 0);
+    const relWithPlayer = n.relations?.[playerNationId];
+    const pScore    = relWithPlayer?.score ?? 0;
+    const pTreaties = (relWithPlayer?.treaties ?? []).join(',') || 'none';
+    const pAtWar    = relWithPlayer?.at_war ? 'AT WAR WITH YOU' : 'not at war with you';
+    const pPower    = pStr > str * 1.3 ? 'stronger than you' : pStr < str * 0.7 ? 'weaker than you' : 'equal strength';
+
+    // Армии игрока у наших границ
+    const myRegionSet = new Set(n.regions ?? []);
+    const playerArmiesNearby = (GAME_STATE.armies ?? [])
+      .filter(a => a.nation === playerNationId && a.state !== 'disbanded')
+      .filter(a => {
+        const neighbors = GAME_STATE.regions?.[a.position]?.connections ?? [];
+        return myRegionSet.has(a.position) || neighbors.some(c => myRegionSet.has(c));
+      })
+      .map(a => `${a.id}@${a.position}(${a.units?.infantry ?? 0}inf+${a.units?.cavalry ?? 0}cav)`);
+
+    // Последние события с участием игрока из event_log (последние 5 ходов)
+    const currentTurn = GAME_STATE.turn ?? 0;
+    const playerName  = pn.name ?? playerNationId;
+    const recentPlayerEvents = (GAME_STATE.events_log ?? [])
+      .filter(e => (currentTurn - (e.turn ?? 0)) <= 5
+        && (e.type === 'military' || e.type === 'diplomacy')
+        && e.message?.includes(playerName))
+      .slice(0, 5)
+      .map(e => `  Turn ${e.turn}: ${e.message}`)
+      .join('\n');
+
+    playerBlock = `
+## Player Nation: ${playerName} (id: ${playerNationId})
+Treasury: ${Math.round(pEco.treasury ?? 0)} gold | Army: ${Math.round(pStr)} (${pMil.infantry ?? 0}inf+${pMil.cavalry ?? 0}cav) | ${pPower}
+Your relations: score:${pScore >= 0 ? '+' : ''}${pScore}  treaties:${pTreaties}  ${pAtWar}
+Player currently at war with: ${(pMil.at_war_with ?? []).map(id => GAME_STATE.nations[id]?.name ?? id).join(', ') || 'nobody'}
+${playerArmiesNearby.length ? `⚠ Player armies near your border: ${playerArmiesNearby.join(', ')}` : 'No player armies near your border'}
+${recentPlayerEvents ? `Recent player actions:\n${recentPlayerEvents}` : 'No recent player military/diplomatic actions'}`;
+  }
+
   // ── Сборка промпта ────────────────────────────────────────────────
   const system = `You are the strategic advisor for an ancient nation in a grand strategy game.
 Your job: choose ONE best action for this turn.
 Respond ONLY with a JSON object — no explanation outside JSON.
 Format: {"action":"...","target":"nation_or_region_id or null","building":"building_id or null","region":"region_id or null","army_id":"army_id or null","tactic":"aggressive|defensive|standard|null","tax_commoners":null_or_0.05-0.28,"tax_aristocrats":null_or_0.02-0.18,"reasoning":"1 sentence"}
 Actions: wait recruit recruit_mercs fortify trade diplomacy form_alliance attack declare_war seek_peace armistice build set_taxes move_army
-Rules: attack→target=region_id from Attack Targets; declare_war→target=nation_id from War Targets; seek_peace/armistice→target=nation_id from At war; build→building+region from Build Options`;
+Rules: attack→target=region_id from Attack Targets; declare_war→target=nation_id from War Targets; seek_peace/armistice→target=nation_id from At war; build→building+region from Build Options
+IMPORTANT: The player is a human opponent — react to their actions logically.`;
 
   const user = `## Nation: ${n.name} (id: ${nationId}) | Turn ${GAME_STATE.turn ?? 0}
 
@@ -764,7 +809,7 @@ Treasury: ${treasury} gold | Income: +${income}/turn | Expenses: -${expense}/tur
 Army strength: ${Math.round(str)} (${mil.infantry ?? 0} inf + ${mil.cavalry ?? 0} cav + ${mil.mercenaries ?? 0} mercs)
 Population: ${pop.total ?? 0} | Happiness: ${pop.happiness ?? 50}/100 | Stability: ${gov.stability ?? 50}/100 | Legitimacy: ${gov.legitimacy ?? 50}/100
 ${warLine}
-
+${playerBlock}
 ## Diplomatic Relations
 ${relLines || '  (no relations)'}
 
@@ -785,7 +830,7 @@ ${recentDecisions}
 
 Choose the best strategic action now.`;
 
-  const raw = await _callOllama(system, user, 250);
+  const raw = await _callOllama(system, user, 300);
 
   try {
     const parsed = extractJSON(raw);
