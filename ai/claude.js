@@ -970,6 +970,19 @@ ${recentPlayerEvents ? `Recent player actions:\n${recentPlayerEvents}` : ''}`;
   // ── #1 Личность нации ─────────────────────────────────────────────
   const personalityBlock = _buildPersonalityBlock(n);
 
+  // ── #5 Голод/кризис поставок ─────────────────────────────────────
+  const happiness  = pop.happiness  ?? 50;
+  const stability  = gov.stability  ?? 50;
+  const food       = eco.food_supply ?? eco.food ?? null;
+  let supplyWarning = '';
+  if (food !== null && food < 100) {
+    supplyWarning = `\n⚠ FOOD SHORTAGE: supply=${food} — build granary/farm or population will revolt!`;
+  } else if (happiness < 30) {
+    supplyWarning = `\n⚠ POPULATION UNREST: happiness=${happiness} — tax cuts or entertainment buildings needed.`;
+  } else if (happiness < 45 || stability < 35) {
+    supplyWarning = `\n⚠ LOW MORALE: happiness=${happiness} stability=${stability} — address before expanding.`;
+  }
+
   // ── #2 Экономический прогноз — 3-ходовой прогноз казны ───────────
   const t1 = treasury + bal;
   const t2 = t1 + bal;
@@ -1038,7 +1051,7 @@ RULES:
 Treasury:${treasury}g | Income:+${income} Expenses:-${expense} Balance:${bal >= 0 ? '+' : ''}${bal}/turn
 ${econForecast}
 Army:${Math.round(str)} (${mil.infantry ?? 0}inf+${mil.cavalry ?? 0}cav+${mil.mercenaries ?? 0}mercs)
-Pop:${pop.total ?? 0} Happiness:${pop.happiness ?? 50} Stability:${gov.stability ?? 50} Legitimacy:${gov.legitimacy ?? 50}
+Pop:${pop.total ?? 0} Happiness:${happiness} Stability:${stability} Legitimacy:${gov.legitimacy ?? 50}${supplyWarning}
 ${warLine}
 ${playerBlock}
 ${personalityBlock}
