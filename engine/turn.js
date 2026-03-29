@@ -650,6 +650,24 @@ function applyFallbackDecision(nationId) {
 
   const ou = _tickOU(nationId, nation);
 
+  // ── #17 Fallback иерархия — личность влияет на OU-баллы ─────────────
+  const personality = nation.ai_personality ?? 'defensive';
+  const priority    = nation.ai_priority    ?? 'survival';
+  // Модификатор: усиливаем склонности нации в fallback
+  const pMod = {
+    aggression:    personality === 'aggressive'   ? 1.5 : personality === 'expansionist' ? 1.2 : 1.0,
+    economy_focus: personality === 'merchant'     ? 1.5 : priority === 'trade'          ? 1.3 : 1.0,
+    diplomacy:     personality === 'diplomatic'   ? 1.5 : 1.0,
+    caution:       personality === 'defensive'    ? 1.5 : personality === 'survival'    ? 1.8 : 1.0,
+    expansion:     personality === 'expansionist' ? 1.5 : 1.0,
+  };
+  // Применяем модификаторы к ou
+  ou.aggression    = (ou.aggression    ?? 0.5) * pMod.aggression;
+  ou.economy_focus = (ou.economy_focus ?? 0.5) * pMod.economy_focus;
+  ou.diplomacy     = (ou.diplomacy     ?? 0.5) * pMod.diplomacy;
+  ou.caution       = (ou.caution       ?? 0.5) * pMod.caution;
+  ou.expansion     = (ou.expansion     ?? 0.5) * pMod.expansion;
+
   const atWar       = military.at_war_with.length > 0;
   const warCount    = military.at_war_with.length;
   const armyStr     = (military.infantry ?? 0) + (military.cavalry ?? 0) * 3;
