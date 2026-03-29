@@ -960,6 +960,16 @@ ${recentPlayerEvents ? `Recent player actions:\n${recentPlayerEvents}` : ''}`;
   // ── #1 Личность нации ─────────────────────────────────────────────
   const personalityBlock = _buildPersonalityBlock(n);
 
+  // ── #2 Экономический прогноз — 3-ходовой прогноз казны ───────────
+  const t1 = treasury + bal;
+  const t2 = t1 + bal;
+  const t3 = t2 + bal;
+  const bankruptIn = bal < 0 ? Math.max(0, Math.floor(treasury / Math.abs(bal))) : null;
+  const econForecast = bal >= 0
+    ? `Forecast: +${bal}/t → T+1:${t1}g T+2:${t2}g T+3:${t3}g (growing)`
+    : `⚠ DEFICIT ${bal}/t → T+1:${t1}g T+2:${t2}g T+3:${t3}g${bankruptIn !== null ? ` — BANKRUPT in ~${bankruptIn} turns!` : ''}`;
+
+
   // ── [FIX] Стратегическая фаза — вычислено JS, не моделью ─────────
   const phase = _computeNationPhase(n, str, playerStr, playerNearby, atWar);
 
@@ -1002,6 +1012,7 @@ RULES:
 
 ## State
 Treasury:${treasury}g | Income:+${income} Expenses:-${expense} Balance:${bal >= 0 ? '+' : ''}${bal}/turn
+${econForecast}
 Army:${Math.round(str)} (${mil.infantry ?? 0}inf+${mil.cavalry ?? 0}cav+${mil.mercenaries ?? 0}mercs)
 Pop:${pop.total ?? 0} Happiness:${pop.happiness ?? 50} Stability:${gov.stability ?? 50} Legitimacy:${gov.legitimacy ?? 50}
 ${warLine}
