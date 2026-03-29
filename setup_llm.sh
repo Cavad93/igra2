@@ -1,14 +1,16 @@
 #!/bin/bash
 # ══════════════════════════════════════════════════════════════════════
-# setup_llm.sh — Локальный AI для игры (llama.cpp + phi4-mini)
+# setup_llm.sh — Локальный AI для игры (llama.cpp + модель)
 #
 # Что делает:
 #   1. Устанавливает llama.cpp через Homebrew
-#   2. Скачивает модель phi4-mini (~2.5 ГБ) с HuggingFace
+#   2. Скачивает модель Qwen2.5-3B (свободная) или Phi-4-Mini (токен HF)
 #   3. Запускает локальный AI сервер на http://localhost:11434
 #
 # Требования: macOS 10.15+, Homebrew (brew.sh)
-# Запуск: bash setup_llm.sh
+# Запуск:
+#   bash setup_llm.sh                        # Qwen2.5-3B (без регистрации)
+#   HF_TOKEN=hf_xxx bash setup_llm.sh        # Phi-4-Mini (токен с huggingface.co)
 # ══════════════════════════════════════════════════════════════════════
 
 set -e
@@ -18,18 +20,33 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 MODELS_DIR="$SCRIPT_DIR/models"
 SERVER_PORT=11434
 SERVER_HOST="127.0.0.1"
-MODEL_FILE="phi4-mini-q4.gguf"
-MODEL_PATH="$MODELS_DIR/$MODEL_FILE"
 
-# HuggingFace: модель phi-4-mini в формате GGUF (Q4_K_M — баланс качество/размер)
-HF_REPO="bartowski/Phi-4-Mini-Instruct-GGUF"
-HF_FILE="Phi-4-Mini-Instruct-Q4_K_M.gguf"
-HF_URL="https://huggingface.co/${HF_REPO}/resolve/main/${HF_FILE}"
+# ── Выбор модели ──────────────────────────────────────────────────────
+# Если передан HF_TOKEN — скачиваем Phi-4-Mini (лучше, требует токен)
+# Иначе — Qwen2.5-3B-Instruct (свободная, comparable quality)
+if [[ -n "$HF_TOKEN" ]]; then
+  MODEL_FILE="phi4-mini-q4.gguf"
+  MODEL_NAME="Phi-4-Mini-Instruct"
+  MODEL_SIZE="~2.5 ГБ"
+  MODEL_URL="https://huggingface.co/bartowski/Phi-4-Mini-Instruct-GGUF/resolve/main/Phi-4-Mini-Instruct-Q4_K_M.gguf"
+  AUTH_HEADER="-H \"Authorization: Bearer $HF_TOKEN\""
+  OLLAMA_MODEL_ID="phi4-mini"
+else
+  MODEL_FILE="qwen2.5-3b-q4.gguf"
+  MODEL_NAME="Qwen2.5-3B-Instruct"
+  MODEL_SIZE="~2.0 ГБ"
+  MODEL_URL="https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf"
+  AUTH_HEADER=""
+  OLLAMA_MODEL_ID="qwen2.5:3b"
+fi
+
+MODEL_PATH="$MODELS_DIR/$MODEL_FILE"
 
 # ── Цвета для вывода ───────────────────────────────────────────────────
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
+CYAN='\033[0;36m'
 NC='\033[0m'
 
 info()    { echo -e "${GREEN}[✓]${NC} $1"; }
@@ -42,7 +59,6 @@ step "Проверка Homebrew"
 if ! command -v brew &>/dev/null; then
   warn "Homebrew не найден. Устанавливаю..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  # Apple Silicon: добавить brew в PATH
   if [[ -f "/opt/homebrew/bin/brew" ]]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
   fi
@@ -60,33 +76,43 @@ else
 fi
 
 # ── Шаг 3: Скачать модель ─────────────────────────────────────────────
-step "Загрузка модели phi4-mini"
+step "Загрузка модели $MODEL_NAME"
 mkdir -p "$MODELS_DIR"
+
+if [[ -n "$HF_TOKEN" ]]; then
+  echo -e "${CYAN}  Режим: Phi-4-Mini (HuggingFace токен)${NC}"
+else
+  echo -e "${CYAN}  Режим: Qwen2.5-3B (без токена, свободная)${NC}"
+  echo -e "${CYAN}  Хочешь Phi-4-Mini? Получи бесплатный токен:${NC}"
+  echo -e "${CYAN}    1. Зарегистрируйся на huggingface.co${NC}"
+  echo -e "${CYAN}    2. huggingface.co/settings/tokens → New token (Read)${NC}"
+  echo -e "${CYAN}    3. HF_TOKEN=hf_xxx bash setup_llm.sh${NC}"
+fi
 
 if [[ -f "$MODEL_PATH" ]]; then
   info "Модель уже скачана: $MODEL_PATH"
 else
-  warn "Скачиваю $HF_FILE (~2.5 ГБ), это займёт несколько минут..."
-  warn "URL: $HF_URL"
+  warn "Скачиваю $MODEL_NAME ($MODEL_SIZE)..."
+  warn "URL: $MODEL_URL"
 
-  # Скачать с прогрессом, возобновить если прервалось (-C -)
-  # -f: упасть если HTTP ошибка (4xx/5xx) — иначе curl качает HTML-страницу ошибки
-  # -A: User-Agent нужен HuggingFace иначе блокирует
-  if command -v curl &>/dev/null; then
-    curl -L -f --progress-bar -C - \
-      -A "Mozilla/5.0 (compatible; curl)" \
-      -H "Accept: application/octet-stream" \
-      "$HF_URL" -o "$MODEL_PATH" \
-      || { rm -f "$MODEL_PATH"; error "Ошибка скачивания. Проверь интернет или попробуй позже."; }
-  else
-    error "curl не найден. Установи: brew install curl"
+  # Собираем аргументы curl
+  CURL_ARGS=(-L -f --progress-bar -C -
+    -A "Mozilla/5.0 (compatible; curl)"
+    -H "Accept: application/octet-stream"
+  )
+  if [[ -n "$HF_TOKEN" ]]; then
+    CURL_ARGS+=(-H "Authorization: Bearer $HF_TOKEN")
   fi
+  CURL_ARGS+=("$MODEL_URL" -o "$MODEL_PATH")
 
-  # Проверить что файл скачался (минимум 1 ГБ — модель ~2.5 ГБ)
+  curl "${CURL_ARGS[@]}" \
+    || { rm -f "$MODEL_PATH"; error "Ошибка скачивания. Проверь интернет или токен."; }
+
+  # Проверить размер (минимум 1 ГБ)
   FILE_SIZE=$(stat -f%z "$MODEL_PATH" 2>/dev/null || stat -c%s "$MODEL_PATH" 2>/dev/null || echo 0)
   if [[ "$FILE_SIZE" -lt 1073741824 ]]; then
     rm -f "$MODEL_PATH"
-    error "Файл слишком маленький (${FILE_SIZE} байт). HuggingFace вернул ошибку или редирект. Запусти скрипт ещё раз."
+    error "Файл слишком маленький (${FILE_SIZE} байт). Возможно ошибка скачивания."
   fi
 
   info "Модель скачана: $(du -sh "$MODEL_PATH" | cut -f1)"
@@ -116,6 +142,8 @@ llama-server \
 
 SERVER_PID=$!
 echo "$SERVER_PID" > "$SCRIPT_DIR/llm_server.pid"
+# Сохраняем имя модели для start_llm.sh
+echo "$MODEL_PATH" > "$SCRIPT_DIR/llm_model.path"
 
 # Подождать пока сервер запустится (до 30 сек)
 warn "Жду запуска сервера (PID $SERVER_PID)..."
@@ -139,8 +167,8 @@ echo -e "${GREEN}═════════════════════
 echo -e "${GREEN}  Локальный AI готов к работе!${NC}"
 echo -e "${GREEN}══════════════════════════════════════════${NC}"
 echo ""
+echo "  Модель:  $MODEL_NAME"
 echo "  Сервер:  http://$SERVER_HOST:$SERVER_PORT"
-echo "  Модель:  $MODEL_FILE"
 echo "  Лог:     $LOG_FILE"
 echo "  PID:     $SERVER_PID"
 echo ""

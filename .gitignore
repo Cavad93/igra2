@@ -7,3 +7,4 @@ models/
 *.gguf
 llm_server.log
 llm_server.pid
+llm_model.path
