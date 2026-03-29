@@ -9,8 +9,14 @@ const CONFIG = {
   GROQ_API_KEY: '',
   GROQ_API_URL: 'https://api.groq.com/openai/v1/chat/completions',
 
+  // ── Ollama (локальная модель — fallback при Groq 429 / офлайн) ──────
+  // Установка: https://ollama.com → затем: ollama pull phi4-mini
+  // Оставить пустым чтобы отключить Ollama
+  OLLAMA_URL:   'http://localhost:11434/v1/chat/completions',
+  OLLAMA_MODEL: 'phi4-mini',   // или llama3.2:3b, qwen2.5:7b, gemma3:4b
+
   // Haiku заменён на Groq Llama 3.3 70B (быстрее и дешевле)
-  MODEL_HAIKU:  'llama-3.3-70b-versatile',  // → Groq
+  MODEL_HAIKU:  'llama-3.3-70b-versatile',  // → Groq (или Ollama fallback)
   MODEL_SONNET: 'claude-sonnet-4-6',         // → Anthropic (диалоги)
 
   // ══════════════════════════════════════════════════════════════

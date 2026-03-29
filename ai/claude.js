@@ -129,14 +129,78 @@ async function _groqDrain() {
   }
 }
 
+// ── Ollama (локальная модель, OpenAI-совместимый формат) ──────────────
+async function _callOllama(system, user, maxTokens = 1024) {
+  const url   = CONFIG.OLLAMA_URL   || 'http://localhost:11434/v1/chat/completions';
+  const model = CONFIG.OLLAMA_MODEL || 'phi4-mini';
+
+  const wantsJson = user.includes('"action"') || user.includes('верни JSON') ||
+                    user.includes('Верни JSON') || system.includes('ТОЛЬКО JSON');
+
+  const body = {
+    model,
+    max_tokens: maxTokens,
+    stream: false,
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user',   content: user },
+    ],
+    ...(wantsJson && { response_format: { type: 'json_object' } }),
+  };
+
+  const controller = new AbortController();
+  // Ollama на CPU медленнее — даём 3 минуты
+  const timer = setTimeout(() => controller.abort(), 180_000);
+
+  let response;
+  try {
+    response = await fetch(url, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(body),
+      signal:  controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timer);
+    if (err.name === 'AbortError') throw new Error('Ollama timeout (180s)');
+    throw new Error(`Ollama недоступен (запущен? ollama serve): ${err.message}`);
+  }
+  clearTimeout(timer);
+
+  if (!response.ok) {
+    const errBody = await response.text().catch(() => '');
+    throw new Error(`Ollama ошибка ${response.status}: ${errBody.slice(0, 200)}`);
+  }
+
+  const data = await response.json();
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error('Пустой ответ от Ollama');
+  console.log(`[ollama] ${model} → ${text.length} символов`);
+  return text;
+}
+
 // ── Groq API (OpenAI-совместимый формат) ──────────────────────────────
 async function callGroq(system, user, maxTokens = 1024, model = CONFIG.MODEL_HAIKU) {
+  // Нет ключа Groq — сразу идём в Ollama (если настроен)
   if (!CONFIG.GROQ_API_KEY) {
+    if (CONFIG.OLLAMA_URL) {
+      console.log('[groq→ollama] Нет Groq ключа — используем Ollama');
+      return _callOllama(system, user, maxTokens);
+    }
     throw new Error('Groq API ключ не установлен (CONFIG.GROQ_API_KEY)');
   }
 
-  // Проходим через очередь — не более 1 одновременного запроса
-  return _groqEnqueue(() => _callGroqRaw(system, user, maxTokens, model));
+  try {
+    // Проходим через очередь — не более 1 одновременного запроса
+    return await _groqEnqueue(() => _callGroqRaw(system, user, maxTokens, model));
+  } catch (err) {
+    // Groq упал (429, timeout, сеть) — пробуем Ollama
+    if (CONFIG.OLLAMA_URL) {
+      console.warn(`[groq→ollama] ${err.message} — переключаюсь на Ollama`);
+      return _callOllama(system, user, maxTokens);
+    }
+    throw err;
+  }
 }
 
 async function _callGroqRaw(system, user, maxTokens, model) {
