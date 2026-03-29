@@ -1,3 +1,9 @@
 node_modules/
 package-lock.json
 data/backups/
+
+# Локальные AI модели (большие файлы, не коммитить)
+models/
+*.gguf
+llm_server.log
+llm_server.pid
