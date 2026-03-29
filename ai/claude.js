@@ -993,6 +993,33 @@ ${recentPlayerEvents ? `Recent player actions:\n${recentPlayerEvents}` : ''}`;
     : `⚠ DEFICIT ${bal}/t → T+1:${t1}g T+2:${t2}g T+3:${t3}g${bankruptIn !== null ? ` — BANKRUPT in ~${bankruptIn} turns!` : ''}`;
 
 
+  // ── #6 Многоходовые стратегии A/B/C ──────────────────────────────
+  function _buildStrategicOptions(treasury, bal, str, atWar, happiness, stability) {
+    const options = [];
+    // Вариант A: экономический
+    if (bal < 0 || treasury < 1000) {
+      options.push('A) ECONOMY FIRST: set_taxes + build market/granary → fix deficit in 2-3 turns, then expand');
+    } else {
+      options.push('A) ECONOMY BOOST: build market/road → increase income +20% over 3 turns');
+    }
+    // Вариант B: военный
+    if (atWar.length > 0) {
+      options.push('B) WAR FOCUS: recruit + move_army to front → press advantage or stabilise line');
+    } else if (str < 1000) {
+      options.push('B) MILITARY BUILDUP: build barracks + recruit × 2 turns → reach 1500 str before declaring war');
+    } else {
+      options.push('B) EXPANSION: identify weakest neighbor → declare_war + move_army → capture 1 region');
+    }
+    // Вариант C: дипломатический
+    if (happiness < 50 || stability < 50) {
+      options.push('C) STABILITY: reduce taxes + build temple → happiness +15 in 2 turns, then resume expansion');
+    } else {
+      options.push('C) DIPLOMACY: form_alliance with nearest strong nation → deter attacks + unlock trade bonuses');
+    }
+    return options.join('\n');
+  }
+  const strategicOptions = _buildStrategicOptions(treasury, bal, str, atWar, happiness, stability);
+
   // ── [FIX] Стратегическая фаза — вычислено JS, не моделью ─────────
   const phase = _computeNationPhase(n, str, playerStr, playerNearby, atWar);
 
@@ -1060,6 +1087,9 @@ ${personalityBlock}
 ${phase.advice}
 Recommended actions: ${phase.recommended.join(', ')}
 Avoid: ${phase.avoid.join(', ')}
+
+## Strategic Options (choose or combine)
+${strategicOptions}
 
 ## Your Goal (multi-turn plan)
 ${prevGoal}
