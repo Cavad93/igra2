@@ -409,20 +409,58 @@ async function processAINations() {
 
   const rotationList = [...tier1, ...tier2];
   const currentTurn  = GAME_STATE.turn ?? 0;
-  // Решение считается свежим если было подготовлено не раньше чем 3 хода назад
   const MAX_STALE    = 3;
+  const playerNationId = GAME_STATE.player_nation;
 
-  let fromCache = 0, fromFallback = 0;
+  // ── Haiku 4.5: нации воюющие с игроком (макс 2 чтобы не тормозить) ─
+  const warWithPlayer = rotationList.filter(nId =>
+    playerNationId &&
+    (GAME_STATE.nations[nId]?.military?.at_war_with ?? []).includes(playerNationId)
+  ).slice(0, 2);
 
-  // ── Применяем кэшированные решения (мгновенно) ────────────────────
+  const warSet = new Set(warWithPlayer);
+
+  // Запускаем Haiku параллельно для всех воюющих наций
+  const warResults = new Map();
+  if (warWithPlayer.length > 0 && typeof getAIWarDecision === 'function' && CONFIG.API_KEY) {
+    const warPromises = warWithPlayer.map(async nId => {
+      const decision = await getAIWarDecision(nId).catch(err => {
+        console.warn(`[war_ai] Haiku недоступен для ${nId} (${err.message}) — fallback`);
+        return null;
+      });
+      if (decision) warResults.set(nId, decision);
+    });
+    await Promise.all(warPromises);
+    if (warResults.size > 0) {
+      addEventLog(`⚔ Военный AI (Haiku) обработал ${warResults.size} нации`, 'ai');
+    }
+  }
+
+  let fromCache = 0, fromFallback = 0, fromWarAI = 0;
+
+  // ── Применяем военные решения Haiku ───────────────────────────────
+  for (const nId of warWithPlayer) {
+    const decision = warResults.get(nId);
+    if (decision && validateNationDecision(decision)) {
+      applyNationDecision(nId, decision);
+      // Инвалидируем кэш phi4-mini — Haiku взял управление
+      _aiPending.delete(nId);
+      fromWarAI++;
+    } else {
+      applyFallbackDecision(nId);
+      fromFallback++;
+    }
+  }
+
+  // ── Применяем кэшированные решения phi4-mini (мгновенно) ──────────
   for (const nId of rotationList) {
+    if (warSet.has(nId)) continue; // уже обработано Haiku
     const cached = _aiPending.get(nId);
     if (cached && (currentTurn - cached.turn) <= MAX_STALE && validateNationDecision(cached.decision)) {
       applyNationDecision(nId, cached.decision);
       _aiPending.delete(nId);
       fromCache++;
     } else {
-      // Устаревшее или отсутствующее решение → OU Fallback
       if (cached) _aiPending.delete(nId);
       applyFallbackDecision(nId);
       fromFallback++;
@@ -434,7 +472,7 @@ async function processAINations() {
     applyFallbackDecision(nId);
   }
 
-  console.log(`[ai_nations] ход ${currentTurn}: cache:${fromCache} fallback:${fromFallback} pending:${_aiPending.size} tier3:${tier3.length}`);
+  console.log(`[ai_nations] ход ${currentTurn}: warAI(Haiku):${fromWarAI} cache(phi4):${fromCache} fallback(OU):${fromFallback} tier3:${tier3.length}`);
 
   // ── Анти-сноуболл ─────────────────────────────────────────────────
   if (typeof processConquestFatigue === 'function') {
@@ -948,7 +986,13 @@ async function _aiBgProcess() {
   const currentTurn = GAME_STATE.turn ?? 0;
 
   // Нация считается «свежей» если кэш не старше 2 ходов
+  // Нации воюющие с игроком пропускаем — их обрабатывает Haiku во время хода
+  const playerNationIdBg = GAME_STATE.player_nation;
   const needsUpdate = nId => {
+    if (playerNationIdBg &&
+        (GAME_STATE.nations[nId]?.military?.at_war_with ?? []).includes(playerNationIdBg)) {
+      return false; // Haiku обрабатывает во время хода
+    }
     const c = _aiPending.get(nId);
     return !c || (currentTurn - c.turn) > 2;
   };
