@@ -1304,7 +1304,21 @@ Choose the best action for this turn. Follow Strategic Phase advice. Update your
         item.building = null;
       }
     }
-    // ── конец валидации ───────────────────────────────────────────────
+    // ── #16 Confidence score — fallback если модель не уверена ──────────
+    const VALID_ACTIONS = [
+      'trade','build','recruit','recruit_mercs','diplomacy','attack','fortify','wait',
+      'declare_war','seek_peace','armistice','set_taxes','move_army','form_alliance',
+    ];
+    if (!VALID_ACTIONS.includes(item.action)) {
+      console.warn(`[#16] ${nationId}: unknown action "${item.action}" → wait`);
+      item.action = 'wait';
+    }
+    const reasoning = typeof item.reasoning === 'string' ? item.reasoning.trim() : '';
+    if (reasoning.length < 5) {
+      // Модель не дала обоснования — подозрительно, но не fallback; только лог
+      console.warn(`[#16] ${nationId}: short/missing reasoning for action "${item.action}"`);
+    }
+    // ── конец confidence ──────────────────────────────────────────────
 
     // Сохраняем цель нации если модель её обновила
     if (item.goal && typeof item.goal === 'string' && item.goal.length > 3) {
