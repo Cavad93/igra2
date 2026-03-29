@@ -993,6 +993,27 @@ ${recentPlayerEvents ? `Recent player actions:\n${recentPlayerEvents}` : ''}`;
     : `⚠ DEFICIT ${bal}/t → T+1:${t1}g T+2:${t2}g T+3:${t3}g${bankruptIn !== null ? ` — BANKRUPT in ~${bankruptIn} turns!` : ''}`;
 
 
+  // ── #7 Индекс угрозы 0-100 ───────────────────────────────────────
+  let threatScore = 0;
+  // Активные войны
+  threatScore += atWar.length * 20;
+  // Враждебные соседи сильнее нас
+  for (const [oid, r] of Object.entries(n.relations ?? {})) {
+    if ((r.score ?? 0) < -20) {
+      const en = GAME_STATE.nations[oid];
+      if (!en || en.is_eliminated) continue;
+      const es = (en.military?.infantry ?? 0) + (en.military?.cavalry ?? 0) * 3;
+      if (es > str) threatScore += 10;
+    }
+  }
+  // Игрок рядом
+  if (playerNearby) threatScore += 15;
+  // Плохая экономика
+  if (bal < -200) threatScore += 10;
+  if (happiness < 30) threatScore += 10;
+  threatScore = Math.min(100, threatScore);
+  const threatLabel = threatScore >= 70 ? '🔴 CRITICAL' : threatScore >= 40 ? '🟡 HIGH' : threatScore >= 20 ? '🟠 MODERATE' : '🟢 LOW';
+
   // ── #6 Многоходовые стратегии A/B/C ──────────────────────────────
   function _buildStrategicOptions(treasury, bal, str, atWar, happiness, stability) {
     const options = [];
@@ -1079,6 +1100,7 @@ Treasury:${treasury}g | Income:+${income} Expenses:-${expense} Balance:${bal >= 
 ${econForecast}
 Army:${Math.round(str)} (${mil.infantry ?? 0}inf+${mil.cavalry ?? 0}cav+${mil.mercenaries ?? 0}mercs)
 Pop:${pop.total ?? 0} Happiness:${happiness} Stability:${stability} Legitimacy:${gov.legitimacy ?? 50}${supplyWarning}
+Threat Index: ${threatScore}/100 ${threatLabel}
 ${warLine}
 ${playerBlock}
 ${personalityBlock}
