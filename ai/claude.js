@@ -1272,6 +1272,40 @@ Choose the best action for this turn. Follow Strategic Phase advice. Update your
     const item   = Array.isArray(parsed) ? parsed[0] : parsed;
     if (!item?.action) return null;
 
+    // ── #15 Валидация решений — JS проверяет перед применением ─────────
+    const validArmyIds = new Set(myArmies.map(a => String(a.id)));
+    // Если army_id указан но не существует — обнуляем
+    if (item.army_id != null && !validArmyIds.has(String(item.army_id))) {
+      console.warn(`[#15] ${nationId}: invalid army_id "${item.army_id}" — cleared`);
+      item.army_id = null;
+      // Если действие требует армию — откатываемся на wait
+      if (['move_army', 'attack', 'fortify'].includes(item.action)) item.action = 'wait';
+    }
+    // Если move_army/attack — target должен быть в valid_move_targets одной из армий
+    if (['move_army', 'attack'].includes(item.action) && item.target) {
+      const allValidTargets = new Set(
+        myArmies.flatMap(a => GAME_STATE.regions?.[a.position]?.connections ?? []).map(String)
+      );
+      // Также принимаем atkTargets (регионы из Attack Targets)
+      const atkRegionIds = new Set(atkTargets.map(l => l.match(/region:(\S+)/)?.[1]).filter(Boolean));
+      if (!allValidTargets.has(String(item.target)) && !atkRegionIds.has(String(item.target))) {
+        console.warn(`[#15] ${nationId}: invalid move target "${item.target}" — cleared`);
+        item.target = null;
+        item.action = 'wait';
+      }
+    }
+    // Если build — region и building должны совпадать с buildLines
+    if (item.action === 'build' && item.region && item.building) {
+      const regionData = GAME_STATE.regions?.[item.region];
+      if (!regionData || regionData.nation !== nationId) {
+        console.warn(`[#15] ${nationId}: build in non-owned region "${item.region}" — cleared`);
+        item.action = 'wait';
+        item.region = null;
+        item.building = null;
+      }
+    }
+    // ── конец валидации ───────────────────────────────────────────────
+
     // Сохраняем цель нации если модель её обновила
     if (item.goal && typeof item.goal === 'string' && item.goal.length > 3) {
       n._ai_goal = { text: item.goal, turn: currentTurn, progress: null };
