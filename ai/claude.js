@@ -988,6 +988,20 @@ ${recentPlayerEvents ? `Recent player actions:\n${recentPlayerEvents}` : ''}`;
     ? `Current goal (set turn ${n._ai_goal.turn}): "${n._ai_goal.text}"\n  Progress: ${n._ai_goal.progress ?? 'in progress'}`
     : 'No goal set yet';
 
+  // ── #4 Память побед и поражений ──────────────────────────────────
+  const warHistory = (GAME_STATE.events_log ?? [])
+    .filter(e => e.type === 'military'
+      && (e.message?.includes(n.name) || e.nations?.includes(nationId))
+      && (currentTurn - (e.turn ?? 0)) <= 20)
+    .slice(-5)
+    .map(e => {
+      const isVictory = e.message?.match(/captured|routed|defeated|victory/i);
+      const isLoss    = e.message?.match(/lost|retreat|forced back|eliminated/i);
+      const marker    = isVictory ? '⚔ WIN' : isLoss ? '✗ LOSS' : '—';
+      return `  T${e.turn} ${marker}: ${e.message}`;
+    })
+    .join('\n') || '  (no recent battles)';
+
   // ── История решений ────────────────────────────────────────────────
   const recentDecisions = (n.memory?.events ?? [])
     .filter(e => e.type === 'decision')
@@ -1054,6 +1068,9 @@ ${buildLines}
 
 ## Recent Decisions
 ${recentDecisions}
+
+## Battle History (last 20 turns)
+${warHistory}
 
 Choose the best action for this turn. Follow Strategic Phase advice. Update your goal.`;
 
