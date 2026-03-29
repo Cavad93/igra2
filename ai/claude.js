@@ -993,6 +993,18 @@ ${recentPlayerEvents ? `Recent player actions:\n${recentPlayerEvents}` : ''}`;
     : `⚠ DEFICIT ${bal}/t → T+1:${t1}g T+2:${t2}g T+3:${t3}g${bankruptIn !== null ? ` — BANKRUPT in ~${bankruptIn} turns!` : ''}`;
 
 
+  // ── #13 Сезонность — зима/лето стратегические модификаторы ──────────
+  const seasonTurn = currentTurn % 4; // 0=spring,1=summer,2=autumn,3=winter
+  const SEASONS = ['Spring', 'Summer', 'Autumn', 'Winter'];
+  const SEASON_ADVICE = [
+    'Spring: good time to begin campaigns — armies march well, harvests approaching.',
+    'Summer: peak campaign season — maximise military operations.',
+    'Autumn: harvest season — build granaries, gather resources before winter.',
+    'Winter: harsh conditions — avoid long marches, focus on economy and diplomacy.',
+  ];
+  const season     = SEASONS[seasonTurn];
+  const seasonNote = SEASON_ADVICE[seasonTurn];
+
   // ── #12 Истощение армии — % потерь от пиковой силы ──────────────────
   const peakStr  = mil._peak_strength ?? str;
   // Запоминаем пиковую силу для будущих сравнений
@@ -1197,6 +1209,9 @@ Threat Index: ${threatScore}/100 ${threatLabel}${betrayalBlock}
 ${warLine}
 ${playerBlock}
 ${personalityBlock}
+
+## Season: ${season}
+${seasonNote}
 
 ## ⚡ Strategic Phase: ${phase.phase}
 ${phase.advice}
