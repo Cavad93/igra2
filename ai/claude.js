@@ -750,6 +750,58 @@ function _computeChainReactions(nationId, targetId) {
   return chains.slice(0, 3);
 }
 
+// ── #1 Личность нации — поведенческие инструкции по типу нации ────────
+const _PERSONALITY_TRAITS = {
+  expansionist: {
+    style:  'EXPANSIONIST empire — you seek to grow by conquest and colonisation.',
+    prefer: 'declare_war on weak neighbors, move_army to borders, recruit before striking',
+    avoid:  'staying idle when you have military advantage, excessive diplomacy',
+  },
+  merchant: {
+    style:  'MERCHANT state — wealth and trade are your power.',
+    prefer: 'trade agreements, building markets/roads, bribing rather than fighting',
+    avoid:  'costly land wars, high military upkeep, neglecting treasury',
+  },
+  aggressive: {
+    style:  'AGGRESSIVE warrior nation — war is your answer to every problem.',
+    prefer: 'attack first, heavy recruitment, forge/stables before barracks',
+    avoid:  'defensive postures when you can strike, long peace treaties',
+  },
+  diplomatic: {
+    style:  'DIPLOMATIC city-state — alliances and clever politics are your strength.',
+    prefer: 'form_alliance, diplomacy actions, treaties, balancing against the strongest',
+    avoid:  'starting wars without allies, economic neglect',
+  },
+  defensive: {
+    style:  'DEFENSIVE nation — you protect your homeland and wait for enemies to exhaust.',
+    prefer: 'fortify, build walls, recruit only when threatened, seek_peace to end costly wars',
+    avoid:  'expensive offensive wars, overextension',
+  },
+  survival: {
+    style:  'SURVIVAL tribe — every resource matters; you fight only to survive.',
+    prefer: 'granary/farm before anything else, armistice when losing, seek_peace early',
+    avoid:  'declaring war, recruiting beyond what you can afford, ignoring food',
+  },
+};
+
+const _PRIORITY_NOTES = {
+  military: 'Military priority: spend surplus on recruitment first, then buildings.',
+  trade:    'Trade priority: always maintain at least one active trade agreement.',
+  survival: 'Survival priority: keep treasury positive above all else.',
+};
+
+function _buildPersonalityBlock(nation) {
+  const personality = nation.ai_personality ?? 'defensive';
+  const priority    = nation.ai_priority    ?? 'survival';
+  const traits = _PERSONALITY_TRAITS[personality] ?? _PERSONALITY_TRAITS.defensive;
+  const prioNote = _PRIORITY_NOTES[priority] ?? '';
+  return `## Nation Character
+You are ${nation.name} — a ${traits.style}
+Preferred actions: ${traits.prefer}.
+Avoid: ${traits.avoid}.
+${prioNote}`;
+}
+
 async function getAISingleDecision(nationId) {
   const n = GAME_STATE.nations?.[nationId];
   if (!n) return null;
@@ -905,6 +957,9 @@ ${playerChainWarn}
 ${recentPlayerEvents ? `Recent player actions:\n${recentPlayerEvents}` : ''}`;
   }
 
+  // ── #1 Личность нации ─────────────────────────────────────────────
+  const personalityBlock = _buildPersonalityBlock(n);
+
   // ── [FIX] Стратегическая фаза — вычислено JS, не моделью ─────────
   const phase = _computeNationPhase(n, str, playerStr, playerNearby, atWar);
 
@@ -951,6 +1006,8 @@ Army:${Math.round(str)} (${mil.infantry ?? 0}inf+${mil.cavalry ?? 0}cav+${mil.me
 Pop:${pop.total ?? 0} Happiness:${pop.happiness ?? 50} Stability:${gov.stability ?? 50} Legitimacy:${gov.legitimacy ?? 50}
 ${warLine}
 ${playerBlock}
+${personalityBlock}
+
 ## ⚡ Strategic Phase: ${phase.phase}
 ${phase.advice}
 Recommended actions: ${phase.recommended.join(', ')}
@@ -1164,8 +1221,12 @@ CRITICAL RULES:
 - seek_peace/armistice target: "${playerNationId}" (the player)
 - build: ONLY from ## War Buildings`;
 
+  const warPersonalityBlock = _buildPersonalityBlock(n);
+
   const user = `## WAR COMMAND: ${n.name} (id:${nationId}) vs Player: ${playerName} (id:${playerNationId})
 Turn ${currentTurn} | War duration: ${warDuration} turns | Exhaustion: ${exhaustion}
+
+${warPersonalityBlock}
 
 ## Forces
 Your army:   ${Math.round(str)} (${mil.infantry ?? 0}inf+${mil.cavalry ?? 0}cav+${mil.mercenaries ?? 0}mercs)
