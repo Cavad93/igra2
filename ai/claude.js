@@ -642,6 +642,174 @@ Rules:
   return result;
 }
 
+// ══════════════════════════════════════════════════════════════════════
+// ОДИНОЧНЫЙ ЗАПРОС — богатый контекст для 1 нации
+// Вызывается фоновым циклом (_aiBgProcess): 1 нация за тик → модель
+// видит полный контекст и принимает более осмысленные решения.
+// ══════════════════════════════════════════════════════════════════════
+
+async function getAISingleDecision(nationId) {
+  const n = GAME_STATE.nations?.[nationId];
+  if (!n) return null;
+
+  const mil = n.military   ?? {};
+  const eco = n.economy    ?? {};
+  const gov = n.government ?? {};
+  const pop = n.population ?? {};
+
+  const str      = (mil.infantry ?? 0) + (mil.cavalry ?? 0) * 3 + (mil.mercenaries ?? 0);
+  const treasury = Math.round(eco.treasury ?? 0);
+  const income   = Math.round(eco.income_per_turn  ?? 0);
+  const expense  = Math.round(eco.expense_per_turn ?? 0);
+  const bal      = income - expense;
+  const atWar    = (mil.at_war_with ?? []);
+
+  // ── Состояние ─────────────────────────────────────────────────────
+  const warLine = atWar.length
+    ? `At war with: ${atWar.map(eid => {
+        const en = GAME_STATE.nations[eid];
+        const turns = GAME_STATE.turn - (mil._war_start?.[eid] ?? GAME_STATE.turn);
+        return `${en?.name ?? eid}(${turns}t)`;
+      }).join(', ')}`
+    : 'Not at war';
+
+  // ── Дипломатия — топ 8 по |score| ────────────────────────────────
+  const relLines = Object.entries(n.relations ?? {})
+    .map(([oid, r]) => {
+      const on = GAME_STATE.nations[oid];
+      if (!on || on.is_eliminated) return null;
+      const oStr  = (on.military?.infantry ?? 0) + (on.military?.cavalry ?? 0) * 3;
+      const power = oStr > str * 1.3 ? 'stronger' : oStr < str * 0.7 ? 'weaker' : 'equal';
+      const treaties = (r.treaties ?? []).join(',') || 'none';
+      const war = r.at_war ? ' AT_WAR' : '';
+      return { score: Math.abs(r.score ?? 0), line:
+        `  ${on.name.padEnd(16)} score:${(r.score ?? 0) >= 0 ? '+' : ''}${r.score ?? 0}  treaties:${treaties}  army:${Math.round(oStr)}(${power})${war}` };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8)
+    .map(x => x.line)
+    .join('\n');
+
+  // ── История решений — последние 5 ────────────────────────────────
+  const recentDecisions = (n.memory?.events ?? [])
+    .filter(e => e.type === 'decision')
+    .slice(-5)
+    .map(e => `  Turn ${e.turn ?? '?'}: ${e.text}`)
+    .join('\n') || '  (no history)';
+
+  // ── Варианты строительства ────────────────────────────────────────
+  const PRIO_BLDS = ['barracks','granary','market','road','temple','stables','workshop','forge','farm','wall'];
+  const buildLines = (n.regions ?? []).slice(0, 5).map(rid => {
+    const region = GAME_STATE.regions?.[rid];
+    if (!region) return null;
+    if ((region.construction_queue ?? []).length >= 2) return null;
+    const builtIds = new Set((region.building_slots ?? []).map(s => s.building_id));
+    const avail = PRIO_BLDS
+      .filter(b => !builtIds.has(b) && (typeof BUILDINGS === 'undefined' || BUILDINGS[b]?.nation_buildable !== false))
+      .slice(0, 3)
+      .map(b => {
+        const cost = BUILDINGS?.[b]?.cost ?? '?';
+        return `${b}(${cost}g)`;
+      });
+    if (!avail.length) return null;
+    const freeSlots = 3 - (region.building_slots ?? []).length;
+    return `  ${rid} (${freeSlots} free): ${avail.join(', ')}`;
+  }).filter(Boolean).join('\n') || '  (no free slots)';
+
+  // ── Армии ─────────────────────────────────────────────────────────
+  const armyLines = (GAME_STATE.armies ?? [])
+    .filter(a => a.nation === nationId && a.state !== 'disbanded')
+    .map(a => `  ${a.id} @ ${a.position}(${a.state}) — ${a.units?.infantry ?? 0}inf ${a.units?.cavalry ?? 0}cav`)
+    .join('\n') || '  (no field army)';
+
+  // ── Цели атаки (соседние вражеские регионы) ───────────────────────
+  const atkTargets = [];
+  outer: for (const rid of (n.regions ?? []).slice(0, 5)) {
+    for (const cid of (GAME_STATE.regions?.[rid]?.connections ?? []).slice(0, 5)) {
+      const cr = GAME_STATE.regions?.[cid];
+      if (!cr || !cr.nation || cr.nation === nationId) continue;
+      const rel = n.relations?.[cr.nation];
+      if (rel?.at_war || (rel?.score ?? 0) < -25) {
+        const ease = (cr.garrison ?? 0) < str * 0.4 ? 'easy' : 'hard';
+        atkTargets.push(`${cid}(${GAME_STATE.nations[cr.nation]?.name ?? cr.nation},${ease})`);
+        if (atkTargets.length >= 3) break outer;
+      }
+    }
+  }
+
+  // ── Потенциальные враги для объявления войны ──────────────────────
+  const warTargets = Object.entries(n.relations ?? {})
+    .filter(([, r]) => !r.at_war && (r.score ?? 0) < -30)
+    .map(([oid]) => {
+      const on = GAME_STATE.nations[oid];
+      const os = (on?.military?.infantry ?? 0) + (on?.military?.cavalry ?? 0) * 3;
+      return `${oid}(${on?.name ?? oid},str:${Math.round(os)})`;
+    })
+    .slice(0, 2)
+    .join(', ') || 'none';
+
+  // ── Сборка промпта ────────────────────────────────────────────────
+  const system = `You are the strategic advisor for an ancient nation in a grand strategy game.
+Your job: choose ONE best action for this turn.
+Respond ONLY with a JSON object — no explanation outside JSON.
+Format: {"action":"...","target":"nation_or_region_id or null","building":"building_id or null","region":"region_id or null","army_id":"army_id or null","tactic":"aggressive|defensive|standard|null","tax_commoners":null_or_0.05-0.28,"tax_aristocrats":null_or_0.02-0.18,"reasoning":"1 sentence"}
+Actions: wait recruit recruit_mercs fortify trade diplomacy form_alliance attack declare_war seek_peace armistice build set_taxes move_army
+Rules: attack→target=region_id from Attack Targets; declare_war→target=nation_id from War Targets; seek_peace/armistice→target=nation_id from At war; build→building+region from Build Options`;
+
+  const user = `## Nation: ${n.name} (id: ${nationId}) | Turn ${GAME_STATE.turn ?? 0}
+
+## State
+Treasury: ${treasury} gold | Income: +${income}/turn | Expenses: -${expense}/turn | Balance: ${bal >= 0 ? '+' : ''}${bal}
+Army strength: ${Math.round(str)} (${mil.infantry ?? 0} inf + ${mil.cavalry ?? 0} cav + ${mil.mercenaries ?? 0} mercs)
+Population: ${pop.total ?? 0} | Happiness: ${pop.happiness ?? 50}/100 | Stability: ${gov.stability ?? 50}/100 | Legitimacy: ${gov.legitimacy ?? 50}/100
+${warLine}
+
+## Diplomatic Relations
+${relLines || '  (no relations)'}
+
+## Attack Targets (adjacent hostile regions)
+${atkTargets.length ? atkTargets.map(t => `  ${t}`).join('\n') : '  none'}
+
+## War Targets (hostile nations, no war yet)
+  ${warTargets}
+
+## Build Options
+${buildLines}
+
+## Field Armies
+${armyLines}
+
+## Recent Decisions (last 5 turns)
+${recentDecisions}
+
+Choose the best strategic action now.`;
+
+  const raw = await _callOllama(system, user, 250);
+
+  try {
+    const parsed = extractJSON(raw);
+    // Нормализуем: допускаем и объект и массив[0]
+    const item = Array.isArray(parsed) ? parsed[0] : parsed;
+    if (!item?.action) return null;
+    return {
+      action:          item.action,
+      target:          item.target          ?? null,
+      building:        item.building        ?? null,
+      region:          item.region          ?? null,
+      army_id:         item.army_id         ?? null,
+      tactic:          item.tactic          ?? null,
+      tax_commoners:   item.tax_commoners   ?? null,
+      tax_aristocrats: item.tax_aristocrats ?? null,
+      tax_clergy:      item.tax_clergy      ?? null,
+      reasoning:       item.reasoning       ?? '',
+    };
+  } catch (e) {
+    console.warn(`[single] Ошибка парсинга ответа для ${nationId}:`, e.message);
+    return null;
+  }
+}
+
 // ── #10: определить стратегическую фазу ───────────────────────
 function _calcStrategicPhase(nation, milSummary, internalSummary, activeWars) {
   const stability  = internalSummary.stability ?? 50;

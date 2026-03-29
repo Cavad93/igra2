@@ -921,14 +921,19 @@ async function _aiBgTick() {
   } catch (e) {
     console.warn('[ai_bg] Ошибка тика:', e.message);
   }
-  // Следующий тик через 800 мс — даёт phi4-mini время завершить ответ
-  if (_aiBgRunning) setTimeout(_aiBgTick, 800);
+  // Следующий тик через 200 мс после завершения — phi4-mini сам регулирует скорость
+  // (запрос занимает 2-5 сек на 1 нацию, поэтому пауза минимальная)
+  if (_aiBgRunning) setTimeout(_aiBgTick, 200);
 }
 
 async function _aiBgProcess() {
   if (!GAME_STATE?.nations || IS_PROCESSING_TURN) return;
+  if (typeof getAISingleDecision !== 'function') return;
 
-  // Собираем список (tier1 + tier2), исключаем уже готовые в кэше
+  // ── Строим список приоритетов ──────────────────────────────────────
+  // 1. Воюющие нации без свежего кэша — срочно
+  // 2. Tier1 без кэша — важно
+  // 3. Tier2 без кэша — по ротации
   const tier1 = [], tier2 = [];
   for (const [nId, n] of Object.entries(GAME_STATE.nations)) {
     if (n.is_player || n.is_eliminated) continue;
@@ -940,52 +945,56 @@ async function _aiBgProcess() {
   const rotationList = [...tier1, ...tier2];
   if (rotationList.length === 0) return;
 
-  const BATCH_SIZE = CONFIG.OLLAMA_BATCH ?? 5;
-
-  // Курсор фонового цикла — отдельный от курсора хода
-  if (GAME_STATE._ai_bg_cursor == null || GAME_STATE._ai_bg_cursor >= rotationList.length)
-    GAME_STATE._ai_bg_cursor = 0;
-
-  const cursor = GAME_STATE._ai_bg_cursor;
-
-  // Приоритизируем нации у которых нет свежего кэша
   const currentTurn = GAME_STATE.turn ?? 0;
-  const uncached = rotationList.filter(nId => {
+
+  // Нация считается «свежей» если кэш не старше 2 ходов
+  const needsUpdate = nId => {
     const c = _aiPending.get(nId);
-    return !c || (currentTurn - c.turn) > 1;
-  });
+    return !c || (currentTurn - c.turn) > 2;
+  };
 
-  // Берём слайс из некэшированных начиная с курсора (с wrap-around)
-  const fromCursor = [...uncached.slice(cursor), ...uncached.slice(0, cursor)];
-  const slice = fromCursor.slice(0, BATCH_SIZE);
+  // Выбираем 1 нацию: сначала воюющие без кэша, затем по курсору
+  const atWarUncached = rotationList.filter(
+    nId => (GAME_STATE.nations[nId]?.military?.at_war_with?.length ?? 0) > 0 && needsUpdate(nId)
+  );
 
-  // Воюющие нации вне слайса — добавляем приоритетно
-  const atWarExtra = rotationList
-    .filter(nId => (GAME_STATE.nations[nId]?.military?.at_war_with?.length ?? 0) > 0
-      && !slice.includes(nId))
-    .slice(0, 2);
+  let nationId;
+  if (atWarUncached.length > 0) {
+    // Воюющая нация — приоритет
+    nationId = atWarUncached[0];
+  } else {
+    // Двигаем курсор по всему списку, ищем первую без свежего кэша
+    if (GAME_STATE._ai_bg_cursor == null || GAME_STATE._ai_bg_cursor >= rotationList.length)
+      GAME_STATE._ai_bg_cursor = 0;
 
-  const batch = [...new Set([...slice, ...atWarExtra])];
-  if (batch.length === 0) {
-    // Весь кэш актуален — сдвигаем курсор, ждём
-    GAME_STATE._ai_bg_cursor = (cursor + BATCH_SIZE) % Math.max(1, rotationList.length);
-    return;
+    let found = false;
+    for (let i = 0; i < rotationList.length; i++) {
+      const idx = (GAME_STATE._ai_bg_cursor + i) % rotationList.length;
+      if (needsUpdate(rotationList[idx])) {
+        nationId = rotationList[idx];
+        GAME_STATE._ai_bg_cursor = (idx + 1) % rotationList.length;
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      // Все нации свежие — ждём следующего тика
+      return;
+    }
   }
 
-  GAME_STATE._ai_bg_cursor = (cursor + BATCH_SIZE) % Math.max(1, rotationList.length);
+  // ── Запрос к phi4-mini с богатым контекстом ───────────────────────
+  const t0 = Date.now();
+  const decision = await getAISingleDecision(nationId);
+  const ms = Date.now() - t0;
 
-  if (typeof getAIBatchDecisions !== 'function') return;
-
-  const results = await getAIBatchDecisions(batch, CONFIG.MODEL_HAIKU);
-
-  const processedTurn = GAME_STATE.turn ?? 0;
-  let stored = 0;
-  for (const [nationId, decision] of results) {
-    _aiPending.set(nationId, { decision, turn: processedTurn, processedAt: Date.now() });
-    stored++;
+  if (decision) {
+    _aiPending.set(nationId, { decision, turn: currentTurn, processedAt: Date.now() });
+    const nation = GAME_STATE.nations[nationId];
+    console.log(`[ai_bg] ${nation?.name ?? nationId}: ${decision.action}${decision.target ? '→' + decision.target : ''} | ${ms}ms | pending:${_aiPending.size}/${rotationList.length} | "${decision.reasoning?.slice(0, 60) ?? ''}"`);
+  } else {
+    console.warn(`[ai_bg] ${nationId}: нет решения (${ms}ms) — OU fallback при ходе`);
   }
-
-  console.log(`[ai_bg] обработано ${stored}/${batch.length} | cursor:${cursor}→${GAME_STATE._ai_bg_cursor}/${rotationList.length} | pending:${_aiPending.size}`);
 }
 
 // ──────────────────────────────────────────────────────────────
