@@ -454,31 +454,39 @@ async function processAINations() {
 // OU (Ornstein-Uhlenbeck) — стохастические "настроения" нации
 // Каждое настроение дрейфует случайно, но возвращается к своему μ.
 // Формула: x(t+1) = x(t) + θ·(μ−x(t)) + σ·N(0,1)
+//
+// Измерения:
+//   aggression    [-1..+1]  склонность к войне и рекрутингу
+//   expansion     [-1..+1]  склонность к захвату территорий
+//   diplomacy     [-1..+1]  склонность к союзам и торговле
+//   economy_focus [-1..+1]  склонность к строительству и налогам
+//   caution       [-1..+1]  склонность к миру и осторожности
 // ══════════════════════════════════════════════════════════════════════
 
 const _OU_THETA = 0.12; // скорость возврата к среднему
 const _OU_SIGMA = 0.07; // амплитуда шума
 
-// Естественное среднее (μ) на основе текущей ситуации нации
 function _ouNaturalMu(nation) {
-  const treasury  = nation.economy?.treasury    ?? 0;
-  const military  = nation.military             ?? {};
-  const pop       = nation.population           ?? {};
+  const treasury  = nation.economy?.treasury ?? 0;
+  const military  = nation.military          ?? {};
+  const pop       = nation.population        ?? {};
+  const gov       = nation.government        ?? {};
   const atWar     = (military.at_war_with ?? []).length > 0;
   const armyStr   = (military.infantry ?? 0) + (military.cavalry ?? 0) * 3;
   const armyRatio = armyStr / Math.max(1, pop.total ?? 1);
+  const happiness = pop.happiness ?? 50;
+  const stability = gov.stability ?? 50;
 
   return {
-    // Воинственность: растёт в войне и при сильной армии
-    aggression: atWar ? 0.45 : (armyRatio > 0.05 ? 0.15 : -0.10),
-    // Экспансия: растёт с казной
-    expansion:  treasury > 5000 ? 0.25 : (treasury > 1000 ? 0.0 : -0.20),
-    // Дипломатичность: падает в войне, растёт в мире с деньгами
-    diplomacy:  atWar ? -0.35 : (treasury > 2000 ? 0.30 : 0.0),
+    aggression:     atWar ? 0.45 : (armyRatio > 0.05 ? 0.15 : -0.10),
+    expansion:      treasury > 5000 ? 0.25 : (treasury > 1000 ? 0.0 : -0.20),
+    diplomacy:      atWar ? -0.35 : (treasury > 2000 ? 0.30 : 0.0),
+    economy_focus:  atWar ? -0.20 : (treasury > 3000 ? 0.35 : (treasury > 800 ? 0.10 : -0.30)),
+    caution:        (happiness < 30 || stability < 30) ? 0.50
+                    : (atWar && armyRatio < 0.02 ? 0.40 : 0.0),
   };
 }
 
-// Один шаг OU (Box-Muller для N(0,1))
 function _ouStep(x, mu) {
   const u1 = Math.random() || 1e-10;
   const u2 = Math.random();
@@ -486,25 +494,30 @@ function _ouStep(x, mu) {
   return Math.max(-1, Math.min(1, x + _OU_THETA * (mu - x) + _OU_SIGMA * normal));
 }
 
-// Обновить/инициализировать OU-состояние нации, вернуть текущее
 function _tickOU(nationId, nation) {
   const mu = _ouNaturalMu(nation);
   if (!nation._ou) {
-    // Первый вызов — стартуем в естественном среднем плюс небольшой шум
     nation._ou = {
-      aggression: mu.aggression + (Math.random() - 0.5) * 0.2,
-      expansion:  mu.expansion  + (Math.random() - 0.5) * 0.2,
-      diplomacy:  mu.diplomacy  + (Math.random() - 0.5) * 0.2,
+      aggression:    mu.aggression    + (Math.random() - 0.5) * 0.2,
+      expansion:     mu.expansion     + (Math.random() - 0.5) * 0.2,
+      diplomacy:     mu.diplomacy     + (Math.random() - 0.5) * 0.2,
+      economy_focus: mu.economy_focus + (Math.random() - 0.5) * 0.2,
+      caution:       mu.caution       + (Math.random() - 0.5) * 0.2,
     };
   }
   const ou = nation._ou;
-  ou.aggression = _ouStep(ou.aggression, mu.aggression);
-  ou.expansion  = _ouStep(ou.expansion,  mu.expansion);
-  ou.diplomacy  = _ouStep(ou.diplomacy,  mu.diplomacy);
+  // Инициализировать новые измерения у старых наций
+  if (ou.economy_focus === undefined) ou.economy_focus = mu.economy_focus + (Math.random() - 0.5) * 0.2;
+  if (ou.caution       === undefined) ou.caution       = mu.caution       + (Math.random() - 0.5) * 0.2;
+
+  ou.aggression    = _ouStep(ou.aggression,    mu.aggression);
+  ou.expansion     = _ouStep(ou.expansion,     mu.expansion);
+  ou.diplomacy     = _ouStep(ou.diplomacy,     mu.diplomacy);
+  ou.economy_focus = _ouStep(ou.economy_focus, mu.economy_focus);
+  ou.caution       = _ouStep(ou.caution,       mu.caution);
   return ou;
 }
 
-// Softmax с температурой (temp > 1 → равномернее, temp < 1 → жёстче)
 function _softmax(scoreMap, temp = 1.2) {
   const entries = Object.entries(scoreMap);
   const exps    = entries.map(([k, v]) => [k, Math.exp(v / temp)]);
@@ -512,7 +525,6 @@ function _softmax(scoreMap, temp = 1.2) {
   return Object.fromEntries(exps.map(([k, e]) => [k, e / sum]));
 }
 
-// Взвешенный случайный выбор из вероятностного словаря
 function _weightedPick(probMap) {
   const r = Math.random();
   let cum = 0;
@@ -523,14 +535,78 @@ function _weightedPick(probMap) {
   return Object.keys(probMap).at(-1);
 }
 
-// ── Fallback с OU-вероятностями ──────────────────────────────────────────
+// ── Найти враждебного соседа для объявления войны (max 20 отношений) ───
+function _findWarTarget(nationId, nation) {
+  const military = nation.military ?? {};
+  if ((military.at_war_with ?? []).length >= 2) return null;
+  const ownStr = (military.infantry ?? 0) + (military.cavalry ?? 0) * 3;
+  let best = null, bestScore = -Infinity;
+  const entries = Object.entries(nation.relations || {}).slice(0, 20);
+  for (const [otherId, rel] of entries) {
+    if (rel.at_war) continue;
+    if ((rel.treaties ?? []).some(t => ['non_aggression','defensive_alliance','military_alliance','vassalage'].includes(t))) continue;
+    if (typeof getArmistice === 'function' && getArmistice(nationId, otherId)) continue;
+    const other = GAME_STATE.nations?.[otherId];
+    if (!other || other.is_defeated) continue;
+    const enemyStr = (other.military?.infantry ?? 0) + (other.military?.cavalry ?? 0) * 3;
+    const relScore = rel.score ?? 0;
+    const attractiveness = -relScore * 0.03
+      + (ownStr > enemyStr * 1.5 ? 1.5 : 0)
+      + (ownStr > enemyStr * 2.0 ? 1.0 : 0);
+    if (relScore < -20 && attractiveness > bestScore) {
+      bestScore = attractiveness;
+      best = otherId;
+    }
+  }
+  return best;
+}
+
+// ── Найти дружественного партнёра для союза/торговли ───────────────────
+function _findDiplomacyPartner(nationId, nation, minScore = 20, excludeTreaty = null) {
+  let best = null, bestScore = -Infinity;
+  const entries = Object.entries(nation.relations || {}).slice(0, 20);
+  for (const [otherId, rel] of entries) {
+    if (rel.at_war) continue;
+    const score = rel.score ?? 0;
+    if (score < minScore) continue;
+    if (excludeTreaty && (rel.treaties ?? []).includes(excludeTreaty)) continue;
+    const other = GAME_STATE.nations?.[otherId];
+    if (!other || other.is_defeated) continue;
+    if (score > bestScore) { bestScore = score; best = otherId; }
+  }
+  return best;
+}
+
+// ── Подобрать здание для строительства (max 10 регионов) ───────────────
+const _FALLBACK_BUILD_PRIORITY = [
+  'barracks', 'granary', 'market', 'road', 'warehouse',
+  'temple', 'forum', 'stables', 'workshop', 'farm',
+];
+function _findBuildTarget(nationId, nation) {
+  const regions = (nation.regions ?? []).slice(0, 10);
+  for (const regionId of regions) {
+    const region = GAME_STATE.regions?.[regionId];
+    if (!region) continue;
+    if ((region.construction_queue ?? []).length >= 2) continue;
+    const existingIds = (region.building_slots ?? []).map(s => s.building_id);
+    for (const bid of _FALLBACK_BUILD_PRIORITY) {
+      if (existingIds.includes(bid)) continue;
+      if (typeof BUILDINGS !== 'undefined' && BUILDINGS[bid]?.nation_buildable === false) continue;
+      return { regionId, buildingId: bid };
+    }
+  }
+  return null;
+}
+
+// ── Fallback с OU-вероятностями — полный набор действий ────────────────
 function applyFallbackDecision(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
-  const treasury = nation.economy?.treasury   ?? 0;
-  const military = nation.military            ?? {};
-  const pop      = nation.population          ?? {};
+  const treasury = nation.economy?.treasury ?? 0;
+  const military = nation.military          ?? {};
+  const pop      = nation.population        ?? {};
+  const gov      = nation.government        ?? {};
 
   if (!military.at_war_with) military.at_war_with = [];
 
@@ -539,55 +615,92 @@ function applyFallbackDecision(nationId) {
       addMemoryEvent(nationId, 'decision', `${action}${detail ? ': ' + detail : ''}`, [], 'fallback');
   };
 
-  // ── Обновляем OU-состояние нации ──────────────────────────────────
   const ou = _tickOU(nationId, nation);
 
-  const atWar     = military.at_war_with.length > 0;
-  const armyStr   = (military.infantry ?? 0) + (military.cavalry ?? 0) * 3;
-  const armyRatio = armyStr / Math.max(1, pop.total ?? 1);
-  const hasArmy   = (GAME_STATE.armies ?? []).some(
+  const atWar       = military.at_war_with.length > 0;
+  const warCount    = military.at_war_with.length;
+  const armyStr     = (military.infantry ?? 0) + (military.cavalry ?? 0) * 3;
+  const armyRatio   = armyStr / Math.max(1, pop.total ?? 1);
+  const hasArmy     = (GAME_STATE.armies ?? []).some(
     a => a.nation === nationId && a.state !== 'disbanded'
   );
+  const happiness   = pop.happiness ?? 50;
+  const stability   = gov.stability ?? 50;
+  const warExhausted = atWar && armyRatio < 0.01;
 
-  // ── Скоринг действий ─────────────────────────────────────────────
+  // ── Скоринг ────────────────────────────────────────────────────────
   const scores = {
 
-    // Рекрутинг пехоты: выгоден при малой армии, в войне, при агрессии
     recruit:
       ou.aggression * 2.0
       + (armyRatio < 0.01 ? 2.5 : armyRatio < 0.03 ? 0.5 : -1.0)
       + (atWar ? 1.5 : 0)
       + (treasury < 800 ? -5 : treasury > 4000 ? 0.5 : 0),
 
-    // Выставить полевую армию из резерва
     raise_army:
       ou.aggression * 1.5 + ou.expansion * 1.0
       + (!hasArmy && military.infantry > 200 ? 3.0 : -4.0)
       + (atWar ? 2.0 : 0),
 
-    // Нанять наёмников: быстро, но дорого
     recruit_mercs:
       ou.aggression * 1.5
       + (atWar ? 2.0 : -1.0)
       + (treasury > 5000 ? 1.0 : -4.0)
       + ((military.mercenaries ?? 0) > 300 ? -3 : 0),
 
-    // Торговый договор: дипломатия в мирное время
+    declare_war:
+      ou.aggression * 3.0 + ou.expansion * 1.5
+      + (atWar ? -4.0 : 0)
+      + (warExhausted ? -10 : 0)
+      + (ou.caution * -2.0)
+      + (treasury < 1000 ? -3 : 0)
+      + (armyRatio < 0.01 ? -5 : 0),
+
+    seek_peace:
+      ou.caution * 3.0
+      + (warExhausted ? 4.0 : -2.0)
+      + (!atWar ? -10 : 0)
+      + (warCount >= 2 ? 2.0 : 0),
+
+    armistice:
+      ou.caution * 2.0 + ou.diplomacy * 1.0
+      + (atWar && !warExhausted ? 1.0 : -3.0),
+
+    build:
+      ou.economy_focus * 3.0
+      + (!atWar ? 1.0 : -2.0)
+      + (treasury > 2000 ? 1.5 : treasury > 800 ? 0 : -5.0),
+
+    set_taxes:
+      ou.economy_focus * 1.5
+      + (treasury < 500 ? 2.0 : treasury > 8000 ? 1.5 : 0)
+      + (GAME_STATE.turn % 4 === 0 ? 0.5 : -1.0),
+
+    form_alliance:
+      ou.diplomacy * 2.5 + ou.caution * 1.0
+      + (!atWar ? 1.0 : -3.0)
+      + (GAME_STATE.turn % 5 === 0 ? 1.0 : -1.5),
+
     trade:
       ou.diplomacy * 2.5
       + (!atWar ? 1.0 : -5.0)
       + (treasury > 2000 ? 0.5 : -1.0)
       + (GAME_STATE.turn % 6 === 0 ? 1.0 : -1.5),
 
-    // Ничего не делать: базовая опция
+    counter_conspiracy:
+      (nation.conspiracies?.some(c => c.status === 'detected') ? 4.0 : -10.0)
+      + (stability < 40 ? 1.0 : 0),
+
+    move_army:
+      ou.aggression * 2.0 + ou.expansion * 1.5
+      + (hasArmy && atWar ? 3.0 : -4.0),
+
     wait:
       -ou.aggression * 0.5 + 0.3,
   };
 
-  // ── Выбираем действие по взвешенной вероятности ───────────────────
   const action = _weightedPick(_softmax(scores));
 
-  // ── Выполняем ─────────────────────────────────────────────────────
   switch (action) {
 
     case 'recruit': {
@@ -632,6 +745,98 @@ function applyFallbackDecision(nationId) {
       break;
     }
 
+    case 'declare_war': {
+      if (typeof declareWar !== 'function') { _rec('wait', 'declareWar N/A'); break; }
+      if (atWar) { _rec('wait', 'уже в войне'); break; }
+      if (armyStr < 100) { _rec('wait', 'армия слишком мала'); break; }
+      const warTarget = _findWarTarget(nationId, nation);
+      if (warTarget) {
+        const result = declareWar(nationId, warTarget);
+        if (result?.ok !== false) {
+          _rec('declare_war', `→ ${GAME_STATE.nations?.[warTarget]?.name ?? warTarget} [agg:${ou.aggression.toFixed(2)}]`);
+        } else {
+          _rec('wait', result?.reason ?? 'война невозможна');
+        }
+      } else {
+        _rec('wait', 'нет подходящей цели для войны');
+      }
+      break;
+    }
+
+    case 'seek_peace': {
+      if (!atWar || typeof concludePeace !== 'function') { _rec('wait', 'нет войны'); break; }
+      const enemy = military.at_war_with[0];
+      if (!enemy) { _rec('wait', 'враг не найден'); break; }
+      concludePeace(nationId, enemy, { loser: null, winner: null, ceded_regions: [] });
+      _rec('seek_peace', `мир с ${GAME_STATE.nations?.[enemy]?.name ?? enemy} [cau:${ou.caution.toFixed(2)}]`);
+      break;
+    }
+
+    case 'armistice': {
+      if (!atWar || typeof createTreaty !== 'function') { _rec('wait', 'нет войны'); break; }
+      const enemy = military.at_war_with[0];
+      if (!enemy) { _rec('wait', 'враг не найден'); break; }
+      if (typeof getArmistice === 'function' && getArmistice(nationId, enemy)) {
+        _rec('wait', 'перемирие уже есть'); break;
+      }
+      createTreaty(nationId, enemy, 'armistice', { duration_years: 3 });
+      _rec('armistice', `перемирие с ${GAME_STATE.nations?.[enemy]?.name ?? enemy} [dip:${ou.diplomacy.toFixed(2)}]`);
+      break;
+    }
+
+    case 'build': {
+      if (typeof orderBuildingConstruction !== 'function') { _rec('wait', 'build N/A'); break; }
+      if (treasury < 800) { _rec('wait', 'казна мала для строительства'); break; }
+      const bt = _findBuildTarget(nationId, nation);
+      if (bt) {
+        const res = orderBuildingConstruction(nationId, bt.regionId, bt.buildingId);
+        if (res?.ok !== false) {
+          _rec('build', `${bt.buildingId} в ${bt.regionId} [eco:${ou.economy_focus.toFixed(2)}]`);
+        } else {
+          _rec('wait', res?.reason ?? 'стройка невозможна');
+        }
+      } else {
+        _rec('wait', 'нет свободных стройслотов');
+      }
+      break;
+    }
+
+    case 'set_taxes': {
+      if (!nation.economy) { _rec('wait', 'экономика N/A'); break; }
+      nation.economy.tax_rates_by_class = nation.economy.tax_rates_by_class ?? {};
+      const tr = nation.economy.tax_rates_by_class;
+      let label = '';
+      if (treasury < 500) {
+        tr.commoners   = Math.min(0.30, (tr.commoners   ?? 0.10) + 0.05);
+        tr.aristocrats = Math.min(0.20, (tr.aristocrats ?? 0.05) + 0.03);
+        label = 'повышение налогов';
+      } else if (treasury > 8000) {
+        tr.commoners   = Math.max(0.03, (tr.commoners   ?? 0.10) - 0.03);
+        tr.aristocrats = Math.max(0.02, (tr.aristocrats ?? 0.05) - 0.02);
+        label = 'снижение налогов';
+      } else {
+        tr.commoners   = tr.commoners   ?? 0.12;
+        tr.aristocrats = tr.aristocrats ?? 0.08;
+        tr.clergy      = tr.clergy      ?? 0.05;
+        tr.soldiers    = tr.soldiers    ?? 0.00;
+        label = 'стандартные налоги';
+      }
+      _rec('set_taxes', `${label} [eco:${ou.economy_focus.toFixed(2)}]`);
+      break;
+    }
+
+    case 'form_alliance': {
+      if (typeof createTreaty !== 'function') { _rec('wait', 'treaty N/A'); break; }
+      const partner = _findDiplomacyPartner(nationId, nation, 30, 'defensive_alliance');
+      if (partner) {
+        createTreaty(nationId, partner, 'defensive_alliance', {});
+        _rec('form_alliance', `союз с ${GAME_STATE.nations?.[partner]?.name ?? partner} [dip:${ou.diplomacy.toFixed(2)}]`);
+      } else {
+        _rec('wait', 'нет партнёра для союза');
+      }
+      break;
+    }
+
     case 'trade': {
       if (atWar) { _rec('wait', 'война — торговля невозможна'); break; }
       let done = false;
@@ -654,6 +859,39 @@ function applyFallbackDecision(nationId) {
         }
       }
       if (!done) _rec('wait', 'нет партнёров для торговли');
+      break;
+    }
+
+    case 'counter_conspiracy': {
+      const detected = (nation.conspiracies ?? []).find(c => c.status === 'detected');
+      if (detected) {
+        detected.preparation      = Math.max(0, (detected.preparation ?? 50) - 15);
+        detected.conspiracy_stealth = Math.max(5, (detected.conspiracy_stealth ?? 50) - 10);
+        if (detected.preparation <= 0) detected.status = 'resolved';
+        _rec('counter_conspiracy', `${detected.secret_name ?? detected.id}`);
+      } else {
+        _rec('wait', 'заговоров не обнаружено');
+      }
+      break;
+    }
+
+    case 'move_army': {
+      if (!hasArmy || typeof orderArmyMove !== 'function') { _rec('wait', 'армия N/A'); break; }
+      const myArmy = (GAME_STATE.armies ?? []).find(
+        a => a.nation === nationId && a.state === 'stationed'
+      );
+      if (!myArmy) { _rec('wait', 'нет стоячей армии'); break; }
+      const enemy = military.at_war_with[0];
+      if (!enemy) { _rec('wait', 'нет врага для движения'); break; }
+      const enemyNation  = GAME_STATE.nations?.[enemy];
+      const enemyRegion  = enemyNation?.regions?.[0];
+      if (!enemyRegion) { _rec('wait', 'регион врага не найден'); break; }
+      const moved = orderArmyMove(myArmy.id, enemyRegion);
+      if (moved) {
+        _rec('move_army', `→ ${enemyRegion} (${enemyNation?.name ?? enemy}) [agg:${ou.aggression.toFixed(2)}]`);
+      } else {
+        _rec('wait', 'путь к врагу недоступен');
+      }
       break;
     }
 
