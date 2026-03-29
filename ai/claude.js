@@ -993,6 +993,32 @@ ${recentPlayerEvents ? `Recent player actions:\n${recentPlayerEvents}` : ''}`;
     : `⚠ DEFICIT ${bal}/t → T+1:${t1}g T+2:${t2}g T+3:${t3}g${bankruptIn !== null ? ` — BANKRUPT in ~${bankruptIn} turns!` : ''}`;
 
 
+  // ── #10 Приоритет регионов — лучшая цель для захвата ────────────────
+  let bestConquestTarget = null;
+  let bestConquestValue  = -Infinity;
+  for (const rid of (n.regions ?? []).slice(0, 6)) {
+    for (const cid of (GAME_STATE.regions?.[rid]?.connections ?? []).slice(0, 6)) {
+      const cr = GAME_STATE.regions?.[cid];
+      if (!cr || !cr.nation || cr.nation === nationId) continue;
+      const owner  = GAME_STATE.nations[cr.nation];
+      if (!owner) continue;
+      const relToOwner = n.relations?.[cr.nation];
+      if ((relToOwner?.score ?? 0) > 20) continue; // не атакуем друзей
+      const garrison = cr.garrison ?? 0;
+      const wealth   = cr.tax_income ?? cr.income ?? 0;
+      // Ценность = доход - % гарнизона от нашей силы
+      const value = wealth * 10 - (garrison / Math.max(str, 1)) * 50;
+      if (value > bestConquestValue) {
+        bestConquestValue = value;
+        const ease = garrison < str * 0.3 ? 'easy' : garrison < str * 0.6 ? 'medium' : 'hard';
+        bestConquestTarget = `${cid} (owner:${owner.name}, garrison:${garrison}, income:${wealth}, ease:${ease})`;
+      }
+    }
+  }
+  const conquestHint = bestConquestTarget
+    ? `Best expansion target: region ${bestConquestTarget}`
+    : 'No profitable expansion targets adjacent';
+
   // ── #9 Контр-стратегия против игрока — детекция возможной коалиции ──
   let coalitionBlock = '';
   if (pn && playerNationId !== nationId) {
@@ -1153,6 +1179,7 @@ Avoid: ${phase.avoid.join(', ')}
 
 ## Strategic Options (choose or combine)
 ${strategicOptions}
+Expansion: ${conquestHint}
 Diplomacy: ${allyHint}${coalitionBlock}
 
 ## Your Goal (multi-turn plan)
