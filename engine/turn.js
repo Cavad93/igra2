@@ -2,6 +2,11 @@
 
 let IS_PROCESSING_TURN = false;
 
+// ── Фоновый AI: кэш решений и флаг цикла ────────────────────────────────
+// Ключ: nationId → { decision, turn, processedAt }
+const _aiPending = new Map();
+let _aiBgRunning = false;
+
 // Названия месяцев в греческой традиции
 const MONTH_NAMES = [
   '', // индекс 0 не используется
@@ -402,58 +407,34 @@ async function processAINations() {
     else                 tier3.push(nId);
   }
 
-  // ── Единая ротация: Tier1 первыми, затем Tier2 ────────────────────
-  // phi4-mini получает ровно BATCH_SIZE наций за ход
-  // Tier1 обрабатываются чаще (короткий список идёт первым)
   const rotationList = [...tier1, ...tier2];
-  const BATCH_SIZE   = CONFIG.OLLAMA_BATCH ?? 5;
+  const currentTurn  = GAME_STATE.turn ?? 0;
+  // Решение считается свежим если было подготовлено не раньше чем 3 хода назад
+  const MAX_STALE    = 3;
 
-  if (!GAME_STATE._ai_cursor || GAME_STATE._ai_cursor >= rotationList.length)
-    GAME_STATE._ai_cursor = 0;
+  let fromCache = 0, fromFallback = 0;
 
-  const cursor = GAME_STATE._ai_cursor;
-  const slice  = rotationList.slice(cursor, cursor + BATCH_SIZE);
-
-  // Воюющие нации вне слайса — добавляем приоритетно (не более 2)
-  const atWarExtra = rotationList
-    .filter(nId => (GAME_STATE.nations[nId]?.military?.at_war_with?.length ?? 0) > 0
-      && !slice.includes(nId))
-    .slice(0, 2);
-
-  const batch    = [...new Set([...slice, ...atWarExtra])];
-  const batchSet = new Set(batch);
-
-  GAME_STATE._ai_cursor = cursor + BATCH_SIZE;
-
-  // ── Запрос к phi4-mini для батча ──────────────────────────────────
-  let batchResults = new Map();
-  if (batch.length > 0 && typeof getAIBatchDecisions === 'function') {
-    batchResults = await getAIBatchDecisions(batch, CONFIG.MODEL_HAIKU).catch(err => {
-      console.warn(`[ai_nations] phi4-mini недоступен (${err.message}) — OU fallback для батча`);
-      return new Map();
-    });
-  }
-
-  console.log(`[ai_nations] ход ${GAME_STATE.turn}: батч ${cursor}–${cursor + batch.length - 1}/${rotationList.length} | phi4:${batchResults.size} | war_extra:${atWarExtra.length}`);
-
-  // Применить результаты батча
-  for (const nationId of batch) {
-    const decision = batchResults.get(nationId);
-    if (decision && validateNationDecision(decision)) {
-      applyNationDecision(nationId, decision);
+  // ── Применяем кэшированные решения (мгновенно) ────────────────────
+  for (const nId of rotationList) {
+    const cached = _aiPending.get(nId);
+    if (cached && (currentTurn - cached.turn) <= MAX_STALE && validateNationDecision(cached.decision)) {
+      applyNationDecision(nId, cached.decision);
+      _aiPending.delete(nId);
+      fromCache++;
     } else {
-      applyFallbackDecision(nationId);
+      // Устаревшее или отсутствующее решение → OU Fallback
+      if (cached) _aiPending.delete(nId);
+      applyFallbackDecision(nId);
+      fromFallback++;
     }
   }
 
-  // ── OU Fallback для всех кто не попал в батч ──────────────────────
-  for (const nId of rotationList) {
-    if (!batchSet.has(nId)) applyFallbackDecision(nId);
-  }
   // Tier3 — всегда только OU Fallback
   for (const nId of tier3) {
     applyFallbackDecision(nId);
   }
+
+  console.log(`[ai_nations] ход ${currentTurn}: cache:${fromCache} fallback:${fromFallback} pending:${_aiPending.size} tier3:${tier3.length}`);
 
   // ── Анти-сноуболл ─────────────────────────────────────────────────
   if (typeof processConquestFatigue === 'function') {
@@ -912,6 +893,99 @@ function applyFallbackDecision(nationId) {
     default:
       _rec('wait', `казна:${Math.round(treasury)} agg:${ou.aggression.toFixed(2)}`);
   }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ФОНОВЫЙ AI-ЦИКЛ
+// phi4-mini обрабатывает нации непрерывно в фоне.
+// Решения сохраняются в _aiPending и применяются при следующем нажатии
+// «Следующий ход» — ход игрока становится мгновенным.
+// ══════════════════════════════════════════════════════════════════════
+
+function startAIBackgroundLoop() {
+  if (_aiBgRunning) return;
+  _aiBgRunning = true;
+  console.log('[ai_bg] Фоновый AI-цикл запущен');
+  _aiBgTick();
+}
+
+function stopAIBackgroundLoop() {
+  _aiBgRunning = false;
+  console.log('[ai_bg] Фоновый AI-цикл остановлен');
+}
+
+async function _aiBgTick() {
+  if (!_aiBgRunning) return;
+  try {
+    await _aiBgProcess();
+  } catch (e) {
+    console.warn('[ai_bg] Ошибка тика:', e.message);
+  }
+  // Следующий тик через 800 мс — даёт phi4-mini время завершить ответ
+  if (_aiBgRunning) setTimeout(_aiBgTick, 800);
+}
+
+async function _aiBgProcess() {
+  if (!GAME_STATE?.nations || IS_PROCESSING_TURN) return;
+
+  // Собираем список (tier1 + tier2), исключаем уже готовые в кэше
+  const tier1 = [], tier2 = [];
+  for (const [nId, n] of Object.entries(GAME_STATE.nations)) {
+    if (n.is_player || n.is_eliminated) continue;
+    const tier = typeof getNationTier === 'function' ? getNationTier(nId) : 3;
+    if      (tier === 1) tier1.push(nId);
+    else if (tier === 2) tier2.push(nId);
+  }
+
+  const rotationList = [...tier1, ...tier2];
+  if (rotationList.length === 0) return;
+
+  const BATCH_SIZE = CONFIG.OLLAMA_BATCH ?? 5;
+
+  // Курсор фонового цикла — отдельный от курсора хода
+  if (GAME_STATE._ai_bg_cursor == null || GAME_STATE._ai_bg_cursor >= rotationList.length)
+    GAME_STATE._ai_bg_cursor = 0;
+
+  const cursor = GAME_STATE._ai_bg_cursor;
+
+  // Приоритизируем нации у которых нет свежего кэша
+  const currentTurn = GAME_STATE.turn ?? 0;
+  const uncached = rotationList.filter(nId => {
+    const c = _aiPending.get(nId);
+    return !c || (currentTurn - c.turn) > 1;
+  });
+
+  // Берём слайс из некэшированных начиная с курсора (с wrap-around)
+  const fromCursor = [...uncached.slice(cursor), ...uncached.slice(0, cursor)];
+  const slice = fromCursor.slice(0, BATCH_SIZE);
+
+  // Воюющие нации вне слайса — добавляем приоритетно
+  const atWarExtra = rotationList
+    .filter(nId => (GAME_STATE.nations[nId]?.military?.at_war_with?.length ?? 0) > 0
+      && !slice.includes(nId))
+    .slice(0, 2);
+
+  const batch = [...new Set([...slice, ...atWarExtra])];
+  if (batch.length === 0) {
+    // Весь кэш актуален — сдвигаем курсор, ждём
+    GAME_STATE._ai_bg_cursor = (cursor + BATCH_SIZE) % Math.max(1, rotationList.length);
+    return;
+  }
+
+  GAME_STATE._ai_bg_cursor = (cursor + BATCH_SIZE) % Math.max(1, rotationList.length);
+
+  if (typeof getAIBatchDecisions !== 'function') return;
+
+  const results = await getAIBatchDecisions(batch, CONFIG.MODEL_HAIKU);
+
+  const processedTurn = GAME_STATE.turn ?? 0;
+  let stored = 0;
+  for (const [nationId, decision] of results) {
+    _aiPending.set(nationId, { decision, turn: processedTurn, processedAt: Date.now() });
+    stored++;
+  }
+
+  console.log(`[ai_bg] обработано ${stored}/${batch.length} | cursor:${cursor}→${GAME_STATE._ai_bg_cursor}/${rotationList.length} | pending:${_aiPending.size}`);
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -1502,6 +1576,10 @@ async function initGame() {
   if (typeof initializeAllMarketEntries === 'function') {
     initializeAllMarketEntries(GAME_STATE.market);
   }
+
+  // Запускаем фоновый AI-цикл — phi4-mini обрабатывает нации непрерывно,
+  // решения кэшируются в _aiPending и применяются мгновенно при нажатии хода.
+  startAIBackgroundLoop();
 }
 
 // Рендерим всё разом — каждая функция изолирована, чтобы ошибка в одной не ломала остальные
