@@ -4,6 +4,11 @@ const CONFIG = {
   API_KEY: '',
   API_URL: 'https://api.anthropic.com/v1/messages',
 
+  // ── Groq (Llama-3 70B — военный AI во время войны с игроком) ────────
+  // Бесплатный ключ: console.groq.com → API Keys
+  GROQ_API_KEY: '',
+  GROQ_API_URL: 'https://api.groq.com/openai/v1/chat/completions',
+
   // ── Ollama (локальная модель — решения AI-наций) ─────────────────────
   // Запуск: bash setup_llm.sh (один раз), затем bash start_llm.sh
   OLLAMA_URL:   'http://localhost:11434/v1/chat/completions',
@@ -11,9 +16,9 @@ const CONFIG = {
   OLLAMA_BATCH: 5,            // наций за 1 запрос (оптимально для 3B модели)
 
   // ── Модели ───────────────────────────────────────────────────────────
-  MODEL_HAIKU:     'phi4-mini',                  // → Ollama   (фоновые нации)
-  MODEL_WAR_AI:    'claude-haiku-4-5-20251001',  // → Anthropic (нация воюет с игроком)
-  MODEL_SONNET:    'claude-sonnet-4-6',          // → Anthropic (диалоги с игроком)
+  MODEL_HAIKU:     'phi4-mini',                        // → Ollama   (фоновые нации)
+  MODEL_WAR_AI:    'llama-3.3-70b-versatile',          // → Groq     (война с игроком)
+  MODEL_SONNET:    'claude-sonnet-4-6',                // → Anthropic (диалоги с игроком)
 
   // ══════════════════════════════════════════════════════════════
   // ЕДИНИЦА ИЗМЕРЕНИЯ ТОВАРОВ — КАНОНИЧЕСКИЙ СТАНДАРТ

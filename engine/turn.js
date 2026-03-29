@@ -438,10 +438,10 @@ async function processAINations() {
 
   // Запускаем Haiku параллельно для всех воюющих наций
   const warResults = new Map();
-  if (warWithPlayer.length > 0 && typeof getAIWarDecision === 'function' && CONFIG.API_KEY) {
+  if (warWithPlayer.length > 0 && typeof getAIWarDecision === 'function' && CONFIG.GROQ_API_KEY) {
     const warPromises = warWithPlayer.map(async nId => {
       const decision = await getAIWarDecision(nId).catch(err => {
-        console.warn(`[war_ai] Haiku недоступен для ${nId} (${err.message}) — fallback`);
+        console.warn(`[war_ai] Groq недоступен для ${nId} (${err.message}) — fallback`);
         return null;
       });
       if (decision) warResults.set(nId, decision);

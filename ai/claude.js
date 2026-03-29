@@ -189,8 +189,54 @@ async function _callAnthropic(system, user, maxTokens, model) {
   return data.content[0].text;
 }
 
+// ── Groq API (OpenAI-совместимый) — Llama-3 70B для военного AI ──────
+async function _callGroq(system, user, maxTokens) {
+  if (!CONFIG.GROQ_API_KEY) {
+    throw new Error('Groq API ключ не установлен (CONFIG.GROQ_API_KEY)');
+  }
+
+  const controller = new AbortController();
+  const timer      = setTimeout(() => controller.abort(), 30_000);
+
+  let response;
+  try {
+    response = await fetch(CONFIG.GROQ_API_URL, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${CONFIG.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model:      CONFIG.MODEL_WAR_AI,
+        max_tokens: maxTokens,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user',   content: user   },
+        ],
+      }),
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('Groq timeout (30s)');
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (!response.ok) {
+    const errBody = await response.text().catch(() => '');
+    throw new Error(`Groq API ошибка ${response.status}: ${errBody.slice(0, 200)}`);
+  }
+
+  const data = await response.json();
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error('Пустой ответ от Groq');
+  return text;
+}
+
 // ── Единая точка входа: маршрутизация по модели ───────────────────────
-// MODEL_HAIKU  (phi4-mini)        → Ollama (решения AI-наций)
+// MODEL_HAIKU  (phi4-mini)        → Ollama   (фоновые нации)
+// MODEL_WAR_AI (llama-3.3-70b)    → Groq     (война с игроком)
 // MODEL_SONNET (claude-sonnet-4-6) → Anthropic (диалоги с игроком)
 async function callClaude(system, user, maxTokens = 1024, model = CONFIG.MODEL_HAIKU) {
   if (model && model.startsWith('claude-')) {
@@ -1544,7 +1590,7 @@ ${recentDecisions}
 
 Choose ONE decisive action this turn. Update your war goal.`;
 
-  const raw = await _callAnthropic(system, user, 400, CONFIG.MODEL_WAR_AI);
+  const raw = await _callGroq(system, user, 400);
 
   try {
     const parsed = extractJSON(raw);
