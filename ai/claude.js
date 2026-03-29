@@ -643,10 +643,112 @@ Rules:
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// ОДИНОЧНЫЙ ЗАПРОС — богатый контекст для 1 нации
-// Вызывается фоновым циклом (_aiBgProcess): 1 нация за тик → модель
-// видит полный контекст и принимает более осмысленные решения.
+// ОДИНОЧНЫЙ ЗАПРОС — стратегический советник для 1 нации
+//
+// Архитектура «JS думает, модель выбирает»:
+//   1. JS вычисляет стратегическую фазу и рекомендованные действия
+//   2. Модель видит только валидные ID армий и незанятые здания
+//   3. Цепные реакции вычисляются заранее («если атакуешь X — Y вступит»)
+//   4. Цель нации (_ai_goal) сохраняется между ходами
 // ══════════════════════════════════════════════════════════════════════
+
+// ── Вычислить стратегическую фазу нации ───────────────────────────────
+function _computeNationPhase(n, str, playerStr, playerNearby, atWar) {
+  const treasury  = n.economy?.treasury    ?? 0;
+  const bal       = (n.economy?.income_per_turn ?? 0) - (n.economy?.expense_per_turn ?? 0);
+  const happiness = n.population?.happiness ?? 50;
+  const stability = n.government?.stability ?? 50;
+  const warCount  = atWar.length;
+
+  if (stability < 30 || happiness < 25) {
+    return {
+      phase: 'CRISIS',
+      advice: 'Internal crisis. Focus on stability. Avoid new wars.',
+      recommended: ['set_taxes','wait','fortify'],
+      avoid: ['declare_war','attack','recruit'],
+    };
+  }
+  if (warCount > 0) {
+    const enemies = atWar.map(eid => {
+      const en = GAME_STATE.nations[eid];
+      const es = (en?.military?.infantry ?? 0) + (en?.military?.cavalry ?? 0) * 3;
+      return es;
+    });
+    const totalEnemyStr = enemies.reduce((a, b) => a + b, 0);
+    if (str > totalEnemyStr * 1.3) {
+      return {
+        phase: 'WAR_WINNING',
+        advice: 'You are stronger than your enemies. Press the attack.',
+        recommended: ['attack','move_army','recruit'],
+        avoid: ['seek_peace','trade'],
+      };
+    }
+    if (str < totalEnemyStr * 0.7) {
+      return {
+        phase: 'WAR_LOSING',
+        advice: 'You are losing. Seek peace or armistice before army collapses.',
+        recommended: ['seek_peace','armistice','recruit_mercs','fortify'],
+        avoid: ['declare_war','build'],
+      };
+    }
+    return {
+      phase: 'WAR_STALEMATE',
+      advice: 'War is balanced. Reinforce or seek armistice to recover.',
+      recommended: ['recruit','fortify','armistice','move_army'],
+      avoid: ['trade','build'],
+    };
+  }
+  if (playerNearby && playerStr > str * 0.8) {
+    return {
+      phase: 'DEFENSIVE',
+      advice: 'Player army near your border. Defend and seek allies.',
+      recommended: ['fortify','recruit','form_alliance','diplomacy'],
+      avoid: ['declare_war'],
+    };
+  }
+  if (treasury < 500 || bal < -100) {
+    return {
+      phase: 'ECONOMIC',
+      advice: 'Treasury is low. Fix economy before military expansion.',
+      recommended: ['set_taxes','build','trade'],
+      avoid: ['recruit','declare_war','recruit_mercs'],
+    };
+  }
+  if (treasury > 5000 && str > 2000) {
+    return {
+      phase: 'EXPANSION',
+      advice: 'Strong position. Good time to expand — build, recruit, or declare war on weak neighbors.',
+      recommended: ['declare_war','build','recruit','form_alliance'],
+      avoid: ['wait'],
+    };
+  }
+  return {
+    phase: 'BUILDUP',
+    advice: 'Stable but not yet dominant. Build economy and military.',
+    recommended: ['build','recruit','trade','diplomacy'],
+    avoid: ['declare_war'],
+  };
+}
+
+// ── Вычислить цепные реакции (кто вступит в войну если атаковать цель) ─
+function _computeChainReactions(nationId, targetId) {
+  if (!targetId || !GAME_STATE.nations[targetId]) return [];
+  const chains = [];
+  for (const [oid, on] of Object.entries(GAME_STATE.nations)) {
+    if (oid === nationId || oid === targetId || on.is_eliminated) continue;
+    const relWithTarget = on.relations?.[targetId];
+    if (!relWithTarget) continue;
+    const hasDefAlliance = (relWithTarget.treaties ?? []).some(
+      t => ['defensive_alliance','military_alliance'].includes(t)
+    );
+    const veryFriendly = (relWithTarget.score ?? 0) > 60;
+    if (hasDefAlliance || veryFriendly) {
+      const os = (on.military?.infantry ?? 0) + (on.military?.cavalry ?? 0) * 3;
+      chains.push(`${on.name}(str:${Math.round(os)},${hasDefAlliance ? 'ally' : 'friend'})`);
+    }
+  }
+  return chains.slice(0, 3);
+}
 
 async function getAISingleDecision(nationId) {
   const n = GAME_STATE.nations?.[nationId];
@@ -663,27 +765,56 @@ async function getAISingleDecision(nationId) {
   const expense  = Math.round(eco.expense_per_turn ?? 0);
   const bal      = income - expense;
   const atWar    = (mil.at_war_with ?? []);
+  const currentTurn = GAME_STATE.turn ?? 0;
 
-  // ── Состояние ─────────────────────────────────────────────────────
-  const warLine = atWar.length
-    ? `At war with: ${atWar.map(eid => {
-        const en = GAME_STATE.nations[eid];
-        const turns = GAME_STATE.turn - (mil._war_start?.[eid] ?? GAME_STATE.turn);
-        return `${en?.name ?? eid}(${turns}t)`;
-      }).join(', ')}`
-    : 'Not at war';
+  // ── [FIX] Армии — только реальные ID + валидные регионы движения ───
+  const myArmies = (GAME_STATE.armies ?? [])
+    .filter(a => a.nation === nationId && a.state !== 'disbanded');
 
-  // ── Дипломатия — топ 8 по |score| ────────────────────────────────
+  const armyLines = myArmies.map(a => {
+    // Валидные соседние регионы для движения
+    const validMoveTargets = (GAME_STATE.regions?.[a.position]?.connections ?? [])
+      .slice(0, 4)
+      .map(cid => {
+        const cr = GAME_STATE.regions?.[cid];
+        if (!cr) return null;
+        const owner = cr.nation ? (GAME_STATE.nations[cr.nation]?.name ?? cr.nation) : 'unowned';
+        return `${cid}(${owner})`;
+      })
+      .filter(Boolean)
+      .join(', ');
+    return `  id:${a.id} @ ${a.position}(${a.state}) — ${a.units?.infantry ?? 0}inf ${a.units?.cavalry ?? 0}cav\n    valid_move_targets: ${validMoveTargets || 'none'}`;
+  }).join('\n') || '  (no field army — use recruit/raise_army first)';
+
+  // ── [FIX] Здания — явно показываем что уже есть, предлагаем только новое ─
+  const PRIO_BLDS = ['barracks','granary','market','road','temple','stables','workshop','forge','farm','wall'];
+  const buildLines = (n.regions ?? []).slice(0, 4).map(rid => {
+    const region = GAME_STATE.regions?.[rid];
+    if (!region) return null;
+    const builtIds   = (region.building_slots ?? []).map(s => s.building_id);
+    const inQueue    = (region.construction_queue ?? []).map(q => q.building_id ?? q);
+    const takenIds   = new Set([...builtIds, ...inQueue]);
+    const freeSlots  = Math.max(0, 3 - builtIds.length);
+    if (freeSlots === 0 || inQueue.length >= 2) return null;
+    const avail = PRIO_BLDS
+      .filter(b => !takenIds.has(b) && (typeof BUILDINGS === 'undefined' || BUILDINGS[b]?.nation_buildable !== false))
+      .slice(0, 3)
+      .map(b => `${b}(${BUILDINGS?.[b]?.cost ?? '?'}g)`);
+    if (!avail.length) return null;
+    return `  region:${rid} | free_slots:${freeSlots} | already_built:[${builtIds.join(',')||'none'}]\n    can_build: ${avail.join(', ')}`;
+  }).filter(Boolean).join('\n') || '  (no free building slots)';
+
+  // ── Дипломатия — топ 8 по важности ───────────────────────────────
   const relLines = Object.entries(n.relations ?? {})
     .map(([oid, r]) => {
       const on = GAME_STATE.nations[oid];
       if (!on || on.is_eliminated) return null;
-      const oStr  = (on.military?.infantry ?? 0) + (on.military?.cavalry ?? 0) * 3;
-      const power = oStr > str * 1.3 ? 'stronger' : oStr < str * 0.7 ? 'weaker' : 'equal';
+      const oStr     = (on.military?.infantry ?? 0) + (on.military?.cavalry ?? 0) * 3;
+      const power    = oStr > str * 1.3 ? 'STRONGER' : oStr < str * 0.7 ? 'weaker' : 'equal';
       const treaties = (r.treaties ?? []).join(',') || 'none';
-      const war = r.at_war ? ' AT_WAR' : '';
+      const war      = r.at_war ? ' ⚔AT_WAR' : '';
       return { score: Math.abs(r.score ?? 0), line:
-        `  ${on.name.padEnd(16)} score:${(r.score ?? 0) >= 0 ? '+' : ''}${r.score ?? 0}  treaties:${treaties}  army:${Math.round(oStr)}(${power})${war}` };
+        `  id:${oid.padEnd(18)} ${on.name.padEnd(16)} score:${(r.score ?? 0) >= 0 ? '+' : ''}${r.score ?? 0}  treaties:${treaties}  str:${Math.round(oStr)}(${power})${war}` };
     })
     .filter(Boolean)
     .sort((a, b) => b.score - a.score)
@@ -691,39 +822,7 @@ async function getAISingleDecision(nationId) {
     .map(x => x.line)
     .join('\n');
 
-  // ── История решений — последние 5 ────────────────────────────────
-  const recentDecisions = (n.memory?.events ?? [])
-    .filter(e => e.type === 'decision')
-    .slice(-5)
-    .map(e => `  Turn ${e.turn ?? '?'}: ${e.text}`)
-    .join('\n') || '  (no history)';
-
-  // ── Варианты строительства ────────────────────────────────────────
-  const PRIO_BLDS = ['barracks','granary','market','road','temple','stables','workshop','forge','farm','wall'];
-  const buildLines = (n.regions ?? []).slice(0, 5).map(rid => {
-    const region = GAME_STATE.regions?.[rid];
-    if (!region) return null;
-    if ((region.construction_queue ?? []).length >= 2) return null;
-    const builtIds = new Set((region.building_slots ?? []).map(s => s.building_id));
-    const avail = PRIO_BLDS
-      .filter(b => !builtIds.has(b) && (typeof BUILDINGS === 'undefined' || BUILDINGS[b]?.nation_buildable !== false))
-      .slice(0, 3)
-      .map(b => {
-        const cost = BUILDINGS?.[b]?.cost ?? '?';
-        return `${b}(${cost}g)`;
-      });
-    if (!avail.length) return null;
-    const freeSlots = 3 - (region.building_slots ?? []).length;
-    return `  ${rid} (${freeSlots} free): ${avail.join(', ')}`;
-  }).filter(Boolean).join('\n') || '  (no free slots)';
-
-  // ── Армии ─────────────────────────────────────────────────────────
-  const armyLines = (GAME_STATE.armies ?? [])
-    .filter(a => a.nation === nationId && a.state !== 'disbanded')
-    .map(a => `  ${a.id} @ ${a.position}(${a.state}) — ${a.units?.infantry ?? 0}inf ${a.units?.cavalry ?? 0}cav`)
-    .join('\n') || '  (no field army)';
-
-  // ── Цели атаки (соседние вражеские регионы) ───────────────────────
+  // ── Цели атаки (только при войне или враждебных) ───────────────────
   const atkTargets = [];
   outer: for (const rid of (n.regions ?? []).slice(0, 5)) {
     for (const cid of (GAME_STATE.regions?.[rid]?.connections ?? []).slice(0, 5)) {
@@ -731,112 +830,170 @@ async function getAISingleDecision(nationId) {
       if (!cr || !cr.nation || cr.nation === nationId) continue;
       const rel = n.relations?.[cr.nation];
       if (rel?.at_war || (rel?.score ?? 0) < -25) {
-        const ease = (cr.garrison ?? 0) < str * 0.4 ? 'easy' : 'hard';
-        atkTargets.push(`${cid}(${GAME_STATE.nations[cr.nation]?.name ?? cr.nation},${ease})`);
+        const ease    = (cr.garrison ?? 0) < str * 0.4 ? 'easy' : 'hard';
+        const chains  = _computeChainReactions(nationId, cr.nation);
+        const warning = chains.length ? ` ⚠chain:${chains.join('+')}` : '';
+        atkTargets.push(`  region:${cid} owner:${GAME_STATE.nations[cr.nation]?.name ?? cr.nation}(${ease})${warning}`);
         if (atkTargets.length >= 3) break outer;
       }
     }
   }
 
-  // ── Потенциальные враги для объявления войны ──────────────────────
-  const warTargets = Object.entries(n.relations ?? {})
+  // ── [FIX] Цепные реакции для declare_war ──────────────────────────
+  const warTargetLines = Object.entries(n.relations ?? {})
     .filter(([, r]) => !r.at_war && (r.score ?? 0) < -30)
+    .slice(0, 3)
     .map(([oid]) => {
-      const on = GAME_STATE.nations[oid];
-      const os = (on?.military?.infantry ?? 0) + (on?.military?.cavalry ?? 0) * 3;
-      return `${oid}(${on?.name ?? oid},str:${Math.round(os)})`;
+      const on     = GAME_STATE.nations[oid];
+      const os     = (on?.military?.infantry ?? 0) + (on?.military?.cavalry ?? 0) * 3;
+      const chains = _computeChainReactions(nationId, oid);
+      const risk   = chains.length ? ` ⚠ IF YOU ATTACK: ${chains.join(', ')} may join against you` : ' (no known allies)';
+      return `  id:${oid} ${on?.name ?? oid} str:${Math.round(os)}${risk}`;
     })
-    .slice(0, 2)
-    .join(', ') || 'none';
+    .join('\n') || '  none';
 
   // ── Блок игрока ───────────────────────────────────────────────────
   const playerNationId = GAME_STATE.player_nation ?? 'syracuse';
-  const pn  = GAME_STATE.nations[playerNationId];
+  const pn = GAME_STATE.nations[playerNationId];
   let playerBlock = '';
+  let playerStr = 0;
+  let playerNearby = false;
   if (pn && playerNationId !== nationId) {
-    const pMil = pn.military ?? {};
-    const pEco = pn.economy  ?? {};
-    const pStr = (pMil.infantry ?? 0) + (pMil.cavalry ?? 0) * 3 + (pMil.mercenaries ?? 0);
+    const pMil  = pn.military ?? {};
+    const pEco  = pn.economy  ?? {};
+    playerStr   = (pMil.infantry ?? 0) + (pMil.cavalry ?? 0) * 3 + (pMil.mercenaries ?? 0);
     const relWithPlayer = n.relations?.[playerNationId];
     const pScore    = relWithPlayer?.score ?? 0;
     const pTreaties = (relWithPlayer?.treaties ?? []).join(',') || 'none';
-    const pAtWar    = relWithPlayer?.at_war ? 'AT WAR WITH YOU' : 'not at war with you';
-    const pPower    = pStr > str * 1.3 ? 'stronger than you' : pStr < str * 0.7 ? 'weaker than you' : 'equal strength';
+    const pAtWar    = relWithPlayer?.at_war ? '⚔ AT WAR WITH YOU' : 'not at war with you';
+    const pPower    = playerStr > str * 1.3 ? 'STRONGER than you' : playerStr < str * 0.7 ? 'weaker than you' : 'equal strength';
 
-    // Армии игрока у наших границ
     const myRegionSet = new Set(n.regions ?? []);
     const playerArmiesNearby = (GAME_STATE.armies ?? [])
       .filter(a => a.nation === playerNationId && a.state !== 'disbanded')
       .filter(a => {
         const neighbors = GAME_STATE.regions?.[a.position]?.connections ?? [];
         return myRegionSet.has(a.position) || neighbors.some(c => myRegionSet.has(c));
-      })
-      .map(a => `${a.id}@${a.position}(${a.units?.infantry ?? 0}inf+${a.units?.cavalry ?? 0}cav)`);
+      });
+    playerNearby = playerArmiesNearby.length > 0;
+    const playerArmyStr = playerArmiesNearby
+      .map(a => `  id:${a.id} @ ${a.position} — ${a.units?.infantry ?? 0}inf+${a.units?.cavalry ?? 0}cav`)
+      .join('\n');
 
-    // Последние события с участием игрока из event_log (последние 5 ходов)
-    const currentTurn = GAME_STATE.turn ?? 0;
-    const playerName  = pn.name ?? playerNationId;
+    // Цепные реакции если атаковать игрока
+    const playerChains = _computeChainReactions(nationId, playerNationId);
+    const playerChainWarn = playerChains.length
+      ? `  ⚠ IF YOU ATTACK PLAYER: ${playerChains.join(', ')} may join against you`
+      : '';
+
+    const playerName = pn.name ?? playerNationId;
     const recentPlayerEvents = (GAME_STATE.events_log ?? [])
       .filter(e => (currentTurn - (e.turn ?? 0)) <= 5
         && (e.type === 'military' || e.type === 'diplomacy')
         && e.message?.includes(playerName))
-      .slice(0, 5)
+      .slice(0, 4)
       .map(e => `  Turn ${e.turn}: ${e.message}`)
       .join('\n');
 
     playerBlock = `
-## Player Nation: ${playerName} (id: ${playerNationId})
-Treasury: ${Math.round(pEco.treasury ?? 0)} gold | Army: ${Math.round(pStr)} (${pMil.infantry ?? 0}inf+${pMil.cavalry ?? 0}cav) | ${pPower}
-Your relations: score:${pScore >= 0 ? '+' : ''}${pScore}  treaties:${pTreaties}  ${pAtWar}
-Player currently at war with: ${(pMil.at_war_with ?? []).map(id => GAME_STATE.nations[id]?.name ?? id).join(', ') || 'nobody'}
-${playerArmiesNearby.length ? `⚠ Player armies near your border: ${playerArmiesNearby.join(', ')}` : 'No player armies near your border'}
-${recentPlayerEvents ? `Recent player actions:\n${recentPlayerEvents}` : 'No recent player military/diplomatic actions'}`;
+## Player Nation: ${playerName} (id:${playerNationId})
+Treasury: ${Math.round(pEco.treasury ?? 0)}g | Army: ${Math.round(playerStr)} (${pMil.infantry ?? 0}inf+${pMil.cavalry ?? 0}cav) | ${pPower}
+Relations: score:${pScore >= 0 ? '+' : ''}${pScore}  treaties:${pTreaties}  ${pAtWar}
+Player at war with: ${(pMil.at_war_with ?? []).map(id => GAME_STATE.nations[id]?.name ?? id).join(', ') || 'nobody'}
+${playerNearby ? `⚠ PLAYER ARMIES AT YOUR BORDER:\n${playerArmyStr}` : 'No player armies near your border'}
+${playerChainWarn}
+${recentPlayerEvents ? `Recent player actions:\n${recentPlayerEvents}` : ''}`;
   }
 
-  // ── Сборка промпта ────────────────────────────────────────────────
-  const system = `You are the strategic advisor for an ancient nation in a grand strategy game.
-Your job: choose ONE best action for this turn.
-Respond ONLY with a JSON object — no explanation outside JSON.
-Format: {"action":"...","target":"nation_or_region_id or null","building":"building_id or null","region":"region_id or null","army_id":"army_id or null","tactic":"aggressive|defensive|standard|null","tax_commoners":null_or_0.05-0.28,"tax_aristocrats":null_or_0.02-0.18,"reasoning":"1 sentence"}
-Actions: wait recruit recruit_mercs fortify trade diplomacy form_alliance attack declare_war seek_peace armistice build set_taxes move_army
-Rules: attack→target=region_id from Attack Targets; declare_war→target=nation_id from War Targets; seek_peace/armistice→target=nation_id from At war; build→building+region from Build Options
-IMPORTANT: The player is a human opponent — react to their actions logically.`;
+  // ── [FIX] Стратегическая фаза — вычислено JS, не моделью ─────────
+  const phase = _computeNationPhase(n, str, playerStr, playerNearby, atWar);
 
-  const user = `## Nation: ${n.name} (id: ${nationId}) | Turn ${GAME_STATE.turn ?? 0}
+  // ── [FIX] Многоходовая цель — сохраняется между ходами ────────────
+  const prevGoal = n._ai_goal
+    ? `Current goal (set turn ${n._ai_goal.turn}): "${n._ai_goal.text}"\n  Progress: ${n._ai_goal.progress ?? 'in progress'}`
+    : 'No goal set yet';
+
+  // ── История решений ────────────────────────────────────────────────
+  const recentDecisions = (n.memory?.events ?? [])
+    .filter(e => e.type === 'decision')
+    .slice(-4)
+    .map(e => `  Turn ${e.turn ?? '?'}: ${e.text}`)
+    .join('\n') || '  (none)';
+
+  // ── War status ────────────────────────────────────────────────────
+  const warLine = atWar.length
+    ? `At war with: ${atWar.map(eid => {
+        const en    = GAME_STATE.nations[eid];
+        const turns = currentTurn - (mil._war_start?.[eid] ?? currentTurn);
+        const es    = (en?.military?.infantry ?? 0) + (en?.military?.cavalry ?? 0) * 3;
+        return `${en?.name ?? eid}(${turns}t,str:${Math.round(es)})`;
+      }).join(', ')}`
+    : 'Not at war';
+
+  // ── Промпт ────────────────────────────────────────────────────────
+  const system = `You are a strategic advisor for an ancient nation. Each turn you choose ONE action.
+You think like a real ruler: react to threats, pursue goals, exploit opportunities.
+Respond ONLY with a JSON object — no text outside JSON.
+Format: {"action":"...","target":"exact_id or null","building":"exact_id or null","region":"exact_region_id or null","army_id":"exact_army_id or null","tactic":"aggressive|defensive|standard|null","tax_commoners":null,"tax_aristocrats":null,"goal":"your 3-turn plan as short sentence","reasoning":"1 sentence"}
+RULES:
+- army_id: ONLY use id values from ## Field Armies section (copy exactly)
+- move_army/attack: target ONLY from valid_move_targets or Attack Targets (copy exactly)
+- build: building ONLY from can_build list; region ONLY from that building's region id
+- declare_war: target ONLY from ## War Targets section (use the id: value)
+- seek_peace/armistice: target ONLY from "At war with" list
+- set goal: describe your plan for next 2-3 turns in the "goal" field`;
+
+  const user = `## ${n.name} (id:${nationId}) | Turn ${currentTurn}
 
 ## State
-Treasury: ${treasury} gold | Income: +${income}/turn | Expenses: -${expense}/turn | Balance: ${bal >= 0 ? '+' : ''}${bal}
-Army strength: ${Math.round(str)} (${mil.infantry ?? 0} inf + ${mil.cavalry ?? 0} cav + ${mil.mercenaries ?? 0} mercs)
-Population: ${pop.total ?? 0} | Happiness: ${pop.happiness ?? 50}/100 | Stability: ${gov.stability ?? 50}/100 | Legitimacy: ${gov.legitimacy ?? 50}/100
+Treasury:${treasury}g | Income:+${income} Expenses:-${expense} Balance:${bal >= 0 ? '+' : ''}${bal}/turn
+Army:${Math.round(str)} (${mil.infantry ?? 0}inf+${mil.cavalry ?? 0}cav+${mil.mercenaries ?? 0}mercs)
+Pop:${pop.total ?? 0} Happiness:${pop.happiness ?? 50} Stability:${gov.stability ?? 50} Legitimacy:${gov.legitimacy ?? 50}
 ${warLine}
 ${playerBlock}
+## ⚡ Strategic Phase: ${phase.phase}
+${phase.advice}
+Recommended actions: ${phase.recommended.join(', ')}
+Avoid: ${phase.avoid.join(', ')}
+
+## Your Goal (multi-turn plan)
+${prevGoal}
+
 ## Diplomatic Relations
-${relLines || '  (no relations)'}
+${relLines || '  (none)'}
 
-## Attack Targets (adjacent hostile regions)
-${atkTargets.length ? atkTargets.map(t => `  ${t}`).join('\n') : '  none'}
+## War Targets (declare_war candidates)
+${warTargetLines}
 
-## War Targets (hostile nations, no war yet)
-  ${warTargets}
+## Attack Targets (move_army / attack — use exact region id)
+${atkTargets.length ? atkTargets.join('\n') : '  none'}
 
-## Build Options
-${buildLines}
-
-## Field Armies
+## Field Armies (use EXACT id values below)
 ${armyLines}
 
-## Recent Decisions (last 5 turns)
+## Build Options (use EXACT region and building ids below)
+${buildLines}
+
+## Recent Decisions
 ${recentDecisions}
 
-Choose the best strategic action now.`;
+Choose the best action for this turn. Follow Strategic Phase advice. Update your goal.`;
 
-  const raw = await _callOllama(system, user, 300);
+  const raw = await _callOllama(system, user, 320);
 
   try {
     const parsed = extractJSON(raw);
-    // Нормализуем: допускаем и объект и массив[0]
-    const item = Array.isArray(parsed) ? parsed[0] : parsed;
+    const item   = Array.isArray(parsed) ? parsed[0] : parsed;
     if (!item?.action) return null;
+
+    // Сохраняем цель нации если модель её обновила
+    if (item.goal && typeof item.goal === 'string' && item.goal.length > 3) {
+      n._ai_goal = { text: item.goal, turn: currentTurn, progress: null };
+    } else if (n._ai_goal) {
+      // Обновляем прогресс на основе последнего действия
+      n._ai_goal.progress = `last action: ${item.action}`;
+    }
+
     return {
       action:          item.action,
       target:          item.target          ?? null,
@@ -850,7 +1007,7 @@ Choose the best strategic action now.`;
       reasoning:       item.reasoning       ?? '',
     };
   } catch (e) {
-    console.warn(`[single] Ошибка парсинга ответа для ${nationId}:`, e.message);
+    console.warn(`[single] Ошибка парсинга для ${nationId}:`, e.message);
     return null;
   }
 }
