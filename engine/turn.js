@@ -396,7 +396,7 @@ async function processAINations() {
   // Полный список tier 1/2 наций, отсортированный стабильно
   const allAI = Object.keys(GAME_STATE.nations).filter(nId => {
     const n = GAME_STATE.nations[nId];
-    if (n.is_player || n.is_minor || n.is_eliminated) return false;
+    if (n.is_player || n.is_eliminated) return false;
     const tier = typeof getNationTier === 'function' ? getNationTier(nId) : 1;
     return tier <= 2;
   });
