@@ -392,7 +392,7 @@ async function processAINations() {
     try { refreshDiploDistances(); } catch (e) { console.warn('[diplo_range]', e); }
   }
 
-  // ── Разделить все нации по тирам ──────────────────────────────────
+  // ── Разделить нации по тирам ───────────────────────────────────────
   const tier1 = [], tier2 = [], tier3 = [];
   for (const [nId, n] of Object.entries(GAME_STATE.nations)) {
     if (n.is_player || n.is_eliminated) continue;
@@ -402,69 +402,60 @@ async function processAINations() {
     else                 tier3.push(nId);
   }
 
-  const _runBatch = async (ids, label) => {
-    if (!ids.length || typeof getAIBatchDecisions !== 'function') return new Map();
-    return getAIBatchDecisions(ids, CONFIG.MODEL_HAIKU).catch(err => {
-      console.warn(`[${label}] Ошибка (${err.message}) — fallback`);
+  // ── Единая ротация: Tier1 первыми, затем Tier2 ────────────────────
+  // phi4-mini получает ровно BATCH_SIZE наций за ход
+  // Tier1 обрабатываются чаще (короткий список идёт первым)
+  const rotationList = [...tier1, ...tier2];
+  const BATCH_SIZE   = CONFIG.OLLAMA_BATCH ?? 5;
+
+  if (!GAME_STATE._ai_cursor || GAME_STATE._ai_cursor >= rotationList.length)
+    GAME_STATE._ai_cursor = 0;
+
+  const cursor = GAME_STATE._ai_cursor;
+  const slice  = rotationList.slice(cursor, cursor + BATCH_SIZE);
+
+  // Воюющие нации вне слайса — добавляем приоритетно (не более 2)
+  const atWarExtra = rotationList
+    .filter(nId => (GAME_STATE.nations[nId]?.military?.at_war_with?.length ?? 0) > 0
+      && !slice.includes(nId))
+    .slice(0, 2);
+
+  const batch    = [...new Set([...slice, ...atWarExtra])];
+  const batchSet = new Set(batch);
+
+  GAME_STATE._ai_cursor = cursor + BATCH_SIZE;
+
+  // ── Запрос к phi4-mini для батча ──────────────────────────────────
+  let batchResults = new Map();
+  if (batch.length > 0 && typeof getAIBatchDecisions === 'function') {
+    batchResults = await getAIBatchDecisions(batch, CONFIG.MODEL_HAIKU).catch(err => {
+      console.warn(`[ai_nations] phi4-mini недоступен (${err.message}) — OU fallback для батча`);
       return new Map();
     });
-  };
-
-  const _applyResults = (ids, results) => {
-    for (const nationId of ids) {
-      const decision = results.get(nationId);
-      if (decision && validateNationDecision(decision)) {
-        applyNationDecision(nationId, decision);
-      } else {
-        applyFallbackDecision(nationId);
-      }
-    }
-  };
-
-  // ── Tier 1: Groq каждый ход (все нации в одном батче) ─────────────
-  if (tier1.length > 0) {
-    const results1 = await _runBatch(tier1, 'tier1');
-    _applyResults(tier1, results1);
-    console.log(`[ai_nations] ход ${GAME_STATE.turn}: tier1=${tier1.length} (groq: ${results1.size})`);
   }
 
-  // ── Tier 2: ротация (5/ход) + OU Fallback для остальных ───────────
-  if (tier2.length > 0) {
-    if (!GAME_STATE._ai_cursor || GAME_STATE._ai_cursor >= tier2.length)
-      GAME_STATE._ai_cursor = 0;
+  console.log(`[ai_nations] ход ${GAME_STATE.turn}: батч ${cursor}–${cursor + batch.length - 1}/${rotationList.length} | phi4:${batchResults.size} | war_extra:${atWarExtra.length}`);
 
-    const BATCH_SIZE = 5;
-    const cursor = GAME_STATE._ai_cursor;
-    const slice  = tier2.slice(cursor, cursor + BATCH_SIZE);
-
-    // Воюющие tier2-нации вне слайса — добавить приоритетно
-    const atWar2 = tier2.filter(nId =>
-      (GAME_STATE.nations[nId].military?.at_war_with?.length ?? 0) > 0
-      && !slice.includes(nId)
-    ).slice(0, 2);
-
-    const batch2   = [...new Set([...slice, ...atWar2])];
-    const batch2Set = new Set(batch2);
-
-    GAME_STATE._ai_cursor = cursor + BATCH_SIZE;
-    console.log(`[ai_nations] ход ${GAME_STATE.turn}: tier2 батч ${cursor}–${cursor + batch2.length - 1}/${tier2.length}`);
-
-    // Groq для батча
-    const results2 = await _runBatch(batch2, 'tier2');
-    _applyResults(batch2, results2);
-
-    // OU Fallback для tier2-наций вне батча
-    for (const nId of tier2) {
-      if (!batch2Set.has(nId)) applyFallbackDecision(nId);
+  // Применить результаты батча
+  for (const nationId of batch) {
+    const decision = batchResults.get(nationId);
+    if (decision && validateNationDecision(decision)) {
+      applyNationDecision(nationId, decision);
+    } else {
+      applyFallbackDecision(nationId);
     }
   }
 
-  // ── Tier 3: только OU Fallback ────────────────────────────────────
+  // ── OU Fallback для всех кто не попал в батч ──────────────────────
+  for (const nId of rotationList) {
+    if (!batchSet.has(nId)) applyFallbackDecision(nId);
+  }
+  // Tier3 — всегда только OU Fallback
   for (const nId of tier3) {
     applyFallbackDecision(nId);
   }
 
-  // ── Анти-сноуболл (каждый ход для всех AI-наций) ─────────────────
+  // ── Анти-сноуболл ─────────────────────────────────────────────────
   if (typeof processConquestFatigue === 'function') {
     try { processConquestFatigue(); } catch (e) { console.warn('[conquest_fatigue]', e); }
   }

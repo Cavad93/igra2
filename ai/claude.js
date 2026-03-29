@@ -96,46 +96,13 @@ function _stripJSONComments(str) {
 // Таймаут API-вызовов
 const _API_TIMEOUT_MS = 30_000;
 
-// ── Определяем является ли модель Groq-моделью ────────────────────────
-function _isGroqModel(model) {
-  // Groq модели — Llama, Mixtral, Gemma и т.д. (не начинаются с "claude-")
-  return model && !model.startsWith('claude-');
-}
-
-// ── Глобальный семафор: не более 1 одновременного Groq-запроса ──────────
-// Предотвращает каскад 429 при параллельных вызовах из processAINations,
-// processCharacterAutonomy, DIALOGUE_ENGINE и т.д.
-let _groqBusy = false;
-const _groqQueue = [];
-
-function _groqEnqueue(fn) {
-  return new Promise((resolve, reject) => {
-    _groqQueue.push({ fn, resolve, reject });
-    _groqDrain();
-  });
-}
-
-async function _groqDrain() {
-  if (_groqBusy || _groqQueue.length === 0) return;
-  _groqBusy = true;
-  const { fn, resolve, reject } = _groqQueue.shift();
-  try {
-    resolve(await fn());
-  } catch (e) {
-    reject(e);
-  } finally {
-    _groqBusy = false;
-    if (_groqQueue.length > 0) setTimeout(_groqDrain, 200); // 200мс между запросами
-  }
-}
-
-// ── Ollama (локальная модель, OpenAI-совместимый формат) ──────────────
+// ── Ollama — основной AI для решений наций ────────────────────────────
 async function _callOllama(system, user, maxTokens = 1024) {
   const url   = CONFIG.OLLAMA_URL   || 'http://localhost:11434/v1/chat/completions';
   const model = CONFIG.OLLAMA_MODEL || 'phi4-mini';
 
   const wantsJson = user.includes('"action"') || user.includes('верни JSON') ||
-                    user.includes('Верни JSON') || system.includes('ТОЛЬКО JSON');
+                    user.includes('Верни JSON') || system.includes('JSON');
 
   const body = {
     model,
@@ -149,8 +116,7 @@ async function _callOllama(system, user, maxTokens = 1024) {
   };
 
   const controller = new AbortController();
-  // Ollama на CPU медленнее — даём 3 минуты
-  const timer = setTimeout(() => controller.abort(), 180_000);
+  const timer = setTimeout(() => controller.abort(), 300_000); // 5 мин для CPU
 
   let response;
   try {
@@ -162,8 +128,8 @@ async function _callOllama(system, user, maxTokens = 1024) {
     });
   } catch (err) {
     clearTimeout(timer);
-    if (err.name === 'AbortError') throw new Error('Ollama timeout (180s)');
-    throw new Error(`Ollama недоступен (запущен? ollama serve): ${err.message}`);
+    if (err.name === 'AbortError') throw new Error('Ollama timeout (5min)');
+    throw new Error(`Ollama недоступен. Запусти: bash start_llm.sh (${err.message})`);
   }
   clearTimeout(timer);
 
@@ -175,96 +141,7 @@ async function _callOllama(system, user, maxTokens = 1024) {
   const data = await response.json();
   const text = data.choices?.[0]?.message?.content;
   if (!text) throw new Error('Пустой ответ от Ollama');
-  console.log(`[ollama] ${model} → ${text.length} символов`);
   return text;
-}
-
-// ── Groq API (OpenAI-совместимый формат) ──────────────────────────────
-async function callGroq(system, user, maxTokens = 1024, model = CONFIG.MODEL_HAIKU) {
-  // Нет ключа Groq — сразу идём в Ollama (если настроен)
-  if (!CONFIG.GROQ_API_KEY) {
-    if (CONFIG.OLLAMA_URL) {
-      console.log('[groq→ollama] Нет Groq ключа — используем Ollama');
-      return _callOllama(system, user, maxTokens);
-    }
-    throw new Error('Groq API ключ не установлен (CONFIG.GROQ_API_KEY)');
-  }
-
-  try {
-    // Проходим через очередь — не более 1 одновременного запроса
-    return await _groqEnqueue(() => _callGroqRaw(system, user, maxTokens, model));
-  } catch (err) {
-    // Groq упал (429, timeout, сеть) — пробуем Ollama
-    if (CONFIG.OLLAMA_URL) {
-      console.warn(`[groq→ollama] ${err.message} — переключаюсь на Ollama`);
-      return _callOllama(system, user, maxTokens);
-    }
-    throw err;
-  }
-}
-
-async function _callGroqRaw(system, user, maxTokens, model) {
-  const timeoutMs = maxTokens > 512 ? 60_000 : _API_TIMEOUT_MS;
-
-  // Определяем нужен ли JSON-режим (структурированный вывод)
-  const wantsJson = user.includes('"action"') || user.includes('верни JSON') ||
-                    user.includes('Верни JSON') || system.includes('ТОЛЬКО JSON');
-
-  const body = {
-    model,
-    max_tokens: maxTokens,
-    messages: [
-      { role: 'system', content: system },
-      { role: 'user',   content: user },
-    ],
-    ...(wantsJson && { response_format: { type: 'json_object' } }),
-  };
-
-  // До 2 повторных попыток при 429 (rate limit)
-  const RETRY_DELAYS = [1000, 2000];
-
-  for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
-    const controller = new AbortController();
-    const timer      = setTimeout(() => controller.abort(), timeoutMs);
-
-    let response;
-    try {
-      response = await fetch(CONFIG.GROQ_API_URL, {
-        method:   'POST',
-        redirect: 'error',
-        signal:   controller.signal,
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': `Bearer ${CONFIG.GROQ_API_KEY}`,
-        },
-        body: JSON.stringify(body),
-      });
-    } catch (err) {
-      if (err.name === 'AbortError') throw new Error(`Groq timeout (${timeoutMs / 1000}s)`);
-      throw err;
-    } finally {
-      clearTimeout(timer);
-    }
-
-    if (response.status === 429) {
-      const errBody = await response.text().catch(() => '');
-      if (attempt < RETRY_DELAYS.length) {
-        await new Promise(r => setTimeout(r, RETRY_DELAYS[attempt]));
-        continue;
-      }
-      throw new Error(`Groq rate limit (429): ${errBody.slice(0, 100)}`);
-    }
-
-    if (!response.ok) {
-      const errBody = await response.text().catch(() => '');
-      throw new Error(`Groq API ошибка ${response.status}: ${errBody.slice(0, 200)}`);
-    }
-
-    const data = await response.json();
-    const text = data.choices?.[0]?.message?.content;
-    if (!text) throw new Error('Пустой ответ от Groq');
-    return text;
-  }
 }
 
 // ── Anthropic Claude API ───────────────────────────────────────────────
@@ -313,13 +190,13 @@ async function _callAnthropic(system, user, maxTokens, model) {
 }
 
 // ── Единая точка входа: маршрутизация по модели ───────────────────────
-// MODEL_HAIKU (llama-3.3-70b-versatile) → Groq
-// MODEL_SONNET (claude-sonnet-4-6)      → Anthropic
+// MODEL_HAIKU  (phi4-mini)        → Ollama (решения AI-наций)
+// MODEL_SONNET (claude-sonnet-4-6) → Anthropic (диалоги с игроком)
 async function callClaude(system, user, maxTokens = 1024, model = CONFIG.MODEL_HAIKU) {
-  if (_isGroqModel(model)) {
-    return callGroq(system, user, maxTokens, model);
+  if (model && model.startsWith('claude-')) {
+    return _callAnthropic(system, user, maxTokens, model);
   }
-  return _callAnthropic(system, user, maxTokens, model);
+  return _callOllama(system, user, maxTokens);
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -655,130 +532,88 @@ async function getAINationDecision(nationId, model = CONFIG.MODEL_HAIKU) {
 async function getAIBatchDecisions(nationIds, model = CONFIG.MODEL_HAIKU) {
   if (!nationIds.length) return new Map();
 
-  // Компактное описание каждой нации — обогащённое
+  // ── Компактный блок нации (оптимизирован для 3B модели) ──────────────
   const nationBlocks = nationIds.map(id => {
     const n   = GAME_STATE.nations[id];
     if (!n) return null;
-    const mil = n.military  ?? {};
-    const eco = n.economy   ?? {};
+    const mil = n.military   ?? {};
+    const eco = n.economy    ?? {};
     const gov = n.government ?? {};
 
-    const str = (mil.infantry ?? 0) + (mil.cavalry ?? 0) * 3 + (mil.mercenaries ?? 0);
-    const bal = Math.round((eco.income_per_turn ?? 0) - (eco.expense_per_turn ?? 0));
+    const str  = (mil.infantry ?? 0) + (mil.cavalry ?? 0) * 3 + (mil.mercenaries ?? 0);
+    const bal  = Math.round((eco.income_per_turn ?? 0) - (eco.expense_per_turn ?? 0));
     const wars = (mil.at_war_with ?? []).map(eid => GAME_STATE.nations[eid]?.name ?? eid);
 
-    // Налоги
-    const tr   = eco.tax_rates_by_class ?? {};
-    const taxes = `общ:${Math.round((tr.commoners ?? 0.1) * 100)}% знать:${Math.round((tr.aristocrats ?? 0.05) * 100)}%`;
-
-    // Доступные здания (топ-3 доступных по цене)
-    const myRegions  = (n.regions ?? []).slice(0, 5);
-    const builtIds   = new Set(myRegions.flatMap(rid => (GAME_STATE.regions?.[rid]?.building_slots ?? []).map(s => s.building_id)));
-    const queuedIds  = new Set(myRegions.flatMap(rid => (GAME_STATE.regions?.[rid]?.construction_queue ?? []).map(e => e.building_id)));
-    const PRIO_BUILDS = ['barracks','granary','market','road','temple','stables','workshop','forge','walls','port'];
-    const availBuildings = PRIO_BUILDS
-      .filter(bid => !builtIds.has(bid) && !queuedIds.has(bid)
-        && (typeof BUILDINGS === 'undefined' || BUILDINGS[bid]?.nation_buildable !== false))
-      .slice(0, 3);
-
-    // Регионы для строительства (первый без очереди)
-    const buildRegion = myRegions.find(rid => !(GAME_STATE.regions?.[rid]?.construction_queue ?? []).length) ?? myRegions[0];
-
-    // Цели для атаки (соседние вражеские регионы)
-    const attackTargets = [];
-    for (const rid of myRegions.slice(0, 3)) {
-      const r = GAME_STATE.regions?.[rid];
-      if (!r) continue;
-      for (const cid of (r.connections ?? []).slice(0, 3)) {
+    // Цели атаки (соседние вражеские регионы — не более 2)
+    const myRegions = (n.regions ?? []).slice(0, 4);
+    const atkTargets = [];
+    outer: for (const rid of myRegions) {
+      for (const cid of (GAME_STATE.regions?.[rid]?.connections ?? []).slice(0, 4)) {
         const cr = GAME_STATE.regions?.[cid];
         if (!cr || !cr.nation || cr.nation === id) continue;
         const rel = n.relations?.[cr.nation];
         if (rel?.at_war || (rel?.score ?? 0) < -30) {
-          const diff = (cr.garrison ?? 0) < str * 0.4 ? 'лёгкая' : (cr.garrison ?? 0) < str * 0.8 ? 'средняя' : 'тяжёлая';
-          attackTargets.push(`${cid}(${cr.name ?? cid},гарн:${cr.garrison ?? 0},${diff})`);
+          const ease = (cr.garrison ?? 0) < str * 0.4 ? 'easy' : 'hard';
+          atkTargets.push(`${cid}(${ease})`);
+          if (atkTargets.length >= 2) break outer;
         }
       }
     }
 
-    // Армии нации
-    const myArmies = (GAME_STATE.armies ?? [])
-      .filter(a => a.nation === id && a.state !== 'disbanded')
-      .map(a => `${a.id}:${a.position}(${(a.units?.infantry ?? 0) + (a.units?.cavalry ?? 0) * 3}чел,${a.state})`)
-      .slice(0, 2);
+    // Доступные здания (топ-2)
+    const builtIds  = new Set(myRegions.flatMap(rid => (GAME_STATE.regions?.[rid]?.building_slots ?? []).map(s => s.building_id)));
+    const PRIO_BLDS = ['barracks','granary','market','road','temple','stables','workshop','forge'];
+    const availBlds = PRIO_BLDS.filter(b => !builtIds.has(b)
+      && (typeof BUILDINGS === 'undefined' || BUILDINGS[b]?.nation_buildable !== false)).slice(0, 2);
+    const bldRegion = myRegions.find(rid => !(GAME_STATE.regions?.[rid]?.construction_queue ?? []).length) ?? myRegions[0];
 
-    // Активные договоры
-    const treaties = Object.entries(n.relations ?? {})
-      .filter(([, rel]) => (rel.treaties ?? []).length > 0)
-      .map(([oid, rel]) => `${GAME_STATE.nations?.[oid]?.name ?? oid}:${rel.treaties.join('+')}`)
-      .slice(0, 3);
+    // Враждебные без войны (для declare_war)
+    const hostile = Object.entries(n.relations ?? {})
+      .filter(([, r]) => !r.at_war && (r.score ?? 0) < -30).map(([oid]) => oid).slice(0, 1);
 
-    // Нации с которыми можно объявить войну (враждебные, нет перемирия)
-    const warTargets = Object.entries(n.relations ?? {})
-      .filter(([, rel]) => !rel.at_war && (rel.score ?? 0) < -30)
-      .map(([oid]) => GAME_STATE.nations?.[oid]?.name ? `${oid}(${GAME_STATE.nations[oid].name})` : oid)
-      .slice(0, 2);
+    // Первая армия
+    const army = (GAME_STATE.armies ?? []).find(a => a.nation === id && a.state !== 'disbanded');
+    const armyStr = army ? `${army.id}@${army.position}` : '';
 
-    // Последние решения (OU + предыдущие AI)
-    const recentOU = (n.memory?.events ?? [])
-      .filter(e => e.type === 'decision')
-      .slice(-3)
-      .map(e => `[${e.turn}]${e.text.slice(0, 60)}`)
-      .join(' | ');
+    // Последнее авто-решение
+    const lastOU = (n.memory?.events ?? []).filter(e => e.type === 'decision').slice(-1)[0];
+    const ouStr  = lastOU ? `prev:[${lastOU.text.slice(0, 40)}]` : '';
 
-    const lines = [
-      `[${id}] ${n.name}`,
-      `  сила:${Math.round(str)} казна:${Math.round(eco.treasury ?? 0)} баланс:${bal >= 0 ? '+' : ''}${bal}`,
-      `  стаб:${gov.stability ?? 50} счастье:${n.population?.happiness ?? 50} налоги:${taxes}`,
-      `  войны:[${wars.join(',') || 'нет'}]`,
-    ];
-    if (attackTargets.length)   lines.push(`  цели_атаки:[${attackTargets.join(', ')}]`);
-    if (warTargets.length)       lines.push(`  враждебные:[${warTargets.join(', ')}]`);
-    if (myArmies.length)         lines.push(`  армии:[${myArmies.join(', ')}]`);
-    if (availBuildings.length)   lines.push(`  здания_доступны:[${availBuildings.join(',')}] регион:${buildRegion ?? 'нет'}`);
-    if (treaties.length)         lines.push(`  договоры:[${treaties.join(', ')}]`);
-    if (recentOU)                lines.push(`  авто_решения:${recentOU}`);
+    // Одна строка на нацию
+    const parts = [
+      `[${id}]${n.name}`,
+      `str:${Math.round(str)}`,
+      `gold:${Math.round(eco.treasury ?? 0)}`,
+      `bal:${bal >= 0 ? '+' : ''}${bal}`,
+      `stab:${gov.stability ?? 50}`,
+      wars.length   ? `WAR:[${wars.join(',')}]`       : '',
+      atkTargets.length ? `atk:[${atkTargets.join(',')}]` : '',
+      hostile.length    ? `hostile:[${hostile[0]}]`       : '',
+      availBlds.length  ? `bld:[${availBlds.join(',')}]@${bldRegion ?? ''}` : '',
+      armyStr           ? `army:${armyStr}`                : '',
+      ouStr,
+    ].filter(Boolean).join(' ');
 
-    return lines.join('\n');
-  }).filter(Boolean).join('\n\n');
+    return parts;
+  }).filter(Boolean).join('\n');
 
-  const system = `Ты стратег-советник античного мира. Прими ОДНО решение для каждой нации на этот ход.
-Учитывай авто_решения — это что делал автопилот между твоими ходами.
+  // ── Системный промпт: короткий и чёткий для 3B модели ─────────────
+  const system = `You are a strategy AI for an ancient world game. Choose ONE action per nation.
+Return ONLY a JSON array, no extra text.
+Format: [{"id":"...","action":"...","target":"nation_or_region_id_or_null","building":"building_id_or_null","region":"region_id_or_null","army_id":"army_id_or_null","tactic":"aggressive|defensive|standard|null","tax_commoners":0.0-0.3_or_null,"tax_aristocrats":0.0-0.2_or_null}]
+Actions: wait recruit recruit_mercs fortify trade diplomacy form_alliance attack declare_war seek_peace armistice build set_taxes move_army
+Rules:
+- attack/move_army: target=region_id from atk[], army_id from army:
+- declare_war: target=nation_id from hostile[]
+- seek_peace/armistice: target=nation_id from WAR[]
+- build: building from bld[], region from bld[]@ field
+- set_taxes: tax_commoners 0.05-0.28, tax_aristocrats 0.02-0.18`;
 
-Верни ТОЛЬКО JSON-массив без текста вокруг:
-[{
-  "id": "nation_id",
-  "action": "действие",
-  "target": "id_нации_или_региона_или_null",
-  "building": "id_здания_если_build_иначе_null",
-  "region": "id_региона_если_build_иначе_null",
-  "army_id": "id_армии_если_move_army_или_attack_иначе_null",
-  "tactic": "aggressive|defensive|standard_или_null",
-  "tax_commoners": число_или_null,
-  "tax_aristocrats": число_или_null,
-  "reasoning": "1 предложение"
-}]
+  const user = `Turn ${GAME_STATE.turn ?? 0}:\n${nationBlocks}\nReturn JSON array.`;
 
-Допустимые action:
-  wait          — ничего не делать
-  recruit       — набрать пехоту
-  recruit_mercs — нанять наёмников (нужна казна>5000)
-  fortify       — укрепить позиции
-  trade         — торговый договор (target=id_нации)
-  diplomacy     — улучшить отношения (target=id_нации)
-  form_alliance — оборонительный союз (target=id_нации)
-  attack        — атаковать регион (target=id_региона, army_id, tactic)
-  declare_war   — объявить войну нации (target=id_нации из враждебные[])
-  seek_peace    — заключить мир (target=id_нации из войны[])
-  armistice     — перемирие на 3 года (target=id_нации из войны[])
-  build         — построить здание (building=из здания_доступны[], region=из регион:)
-  set_taxes     — изменить налоги (tax_commoners=0.05-0.30, tax_aristocrats=0.02-0.20)
-  move_army     — двинуть армию (army_id, target=id_региона, tactic)`;
-
-  const user = `Ход ${GAME_STATE.turn ?? 0}. Нации для решения:\n\n${nationBlocks}\n\nВерни JSON-массив.`;
-
-  // Масштабируем токены: каждая нация ~150 токенов в ответе
-  const responseTokens = Math.min(3000, Math.max(800, nationIds.length * 150));
-  const raw = await callGroq(system, user, responseTokens, model);
+  // ~80 токенов на нацию в ответе достаточно для компактного JSON
+  const responseTokens = Math.min(1200, Math.max(300, nationIds.length * 80));
+  const raw = await _callOllama(system, user, responseTokens);
 
   // Парсим ответ
   const result = new Map();

@@ -4,20 +4,15 @@ const CONFIG = {
   API_KEY: '',
   API_URL: 'https://api.anthropic.com/v1/messages',
 
-  // ── Groq (Llama 3.3 70B — все фоновые AI-задачи вместо Haiku) ───────
-  // Получить бесплатный ключ: https://console.groq.com → API Keys
-  GROQ_API_KEY: '',
-  GROQ_API_URL: 'https://api.groq.com/openai/v1/chat/completions',
-
-  // ── Ollama (локальная модель — fallback при Groq 429 / офлайн) ──────
-  // Установка: https://ollama.com → затем: ollama pull phi4-mini
-  // Оставить пустым чтобы отключить Ollama
+  // ── Ollama (локальная модель — решения AI-наций) ─────────────────────
+  // Запуск: bash setup_llm.sh (один раз), затем bash start_llm.sh
   OLLAMA_URL:   'http://localhost:11434/v1/chat/completions',
-  OLLAMA_MODEL: 'phi4-mini',   // или llama3.2:3b, qwen2.5:7b, gemma3:4b
+  OLLAMA_MODEL: 'phi4-mini',  // рекомендуется; альтернативы: qwen2.5:7b, gemma3:4b
+  OLLAMA_BATCH: 5,            // наций за 1 запрос (оптимально для 3B модели)
 
-  // Haiku заменён на Groq Llama 3.3 70B (быстрее и дешевле)
-  MODEL_HAIKU:  'llama-3.3-70b-versatile',  // → Groq (или Ollama fallback)
-  MODEL_SONNET: 'claude-sonnet-4-6',         // → Anthropic (диалоги)
+  // ── Модели ───────────────────────────────────────────────────────────
+  MODEL_HAIKU:  'phi4-mini',         // → Ollama (решения AI-наций)
+  MODEL_SONNET: 'claude-sonnet-4-6', // → Anthropic (диалоги с игроком)
 
   // ══════════════════════════════════════════════════════════════
   // ЕДИНИЦА ИЗМЕРЕНИЯ ТОВАРОВ — КАНОНИЧЕСКИЙ СТАНДАРТ
