@@ -412,6 +412,22 @@ async function processAINations() {
   const MAX_STALE    = 3;
   const playerNationId = GAME_STATE.player_nation;
 
+  // ── #18 Приоритизация по событиям — инвалидируем кэш после событий игрока ─
+  // Если игрок совершил военное/дипломатическое действие в прошлом ходу,
+  // сбрасываем кэш для нации которая затронута, чтобы она переосмыслила стратегию.
+  const recentPlayerEvents = (GAME_STATE.events_log ?? [])
+    .filter(e => (currentTurn - (e.turn ?? 0)) <= 1
+      && (e.type === 'military' || e.type === 'diplomacy')
+      && e.actor === playerNationId);
+  for (const evt of recentPlayerEvents) {
+    // evt.target может быть nationId которую задел игрок
+    const affectedNation = evt.target ?? evt.nation;
+    if (affectedNation && _aiPending.has(affectedNation)) {
+      console.log(`[#18] Инвалидируем кэш ${affectedNation} — игрок совершил ${evt.type} действие`);
+      _aiPending.delete(affectedNation);
+    }
+  }
+
   // ── Haiku 4.5: нации воюющие с игроком (макс 2 чтобы не тормозить) ─
   const warWithPlayer = rotationList.filter(nId =>
     playerNationId &&
