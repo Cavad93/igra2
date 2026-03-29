@@ -1031,15 +1031,29 @@ async function _aiBgProcess() {
     return !c || (currentTurn - c.turn) > 2;
   };
 
-  // Выбираем 1 нацию: сначала воюющие без кэша, затем по курсору
+  // ── #19 Горячие события — нации задействованные в событиях идут первыми ─
+  const currentTurnBg = GAME_STATE.turn ?? 0;
+  const hotNations = new Set(
+    (GAME_STATE.events_log ?? [])
+      .filter(e => (currentTurnBg - (e.turn ?? 0)) <= 2
+        && (e.type === 'military' || e.type === 'diplomacy'))
+      .flatMap(e => [e.actor, e.target, e.nation].filter(Boolean))
+  );
+
+  // Выбираем 1 нацию: сначала воюющие без кэша, затем «горячие», затем по курсору
   const atWarUncached = rotationList.filter(
     nId => (GAME_STATE.nations[nId]?.military?.at_war_with?.length ?? 0) > 0 && needsUpdate(nId)
   );
+  // «Горячие» нации — участники недавних событий без свежего кэша
+  const hotUncached = rotationList.filter(nId => hotNations.has(nId) && needsUpdate(nId));
 
   let nationId;
   if (atWarUncached.length > 0) {
-    // Воюющая нация — приоритет
+    // Воюющая нация — наивысший приоритет
     nationId = atWarUncached[0];
+  } else if (hotUncached.length > 0) {
+    // «Горячая» нация — второй приоритет
+    nationId = hotUncached[0];
   } else {
     // Двигаем курсор по всему списку, ищем первую без свежего кэша
     if (GAME_STATE._ai_bg_cursor == null || GAME_STATE._ai_bg_cursor >= rotationList.length)
