@@ -454,10 +454,28 @@ async function processAINations() {
 
   let fromCache = 0, fromFallback = 0, fromWarAI = 0;
 
+  // ── #20 Логирование стратегии в UI ────────────────────────────────
+  // Показываем игроку reasoning для важных решений (война, альянс, мир)
+  const NOTABLE_ACTIONS = new Set(['declare_war','seek_peace','armistice','form_alliance','move_army']);
+  function _logAIStrategy(nId, decision, source) {
+    if (!decision?.action || !NOTABLE_ACTIONS.has(decision.action)) return;
+    const nName = GAME_STATE.nations[nId]?.name ?? nId;
+    const tName = decision.target
+      ? (GAME_STATE.nations[decision.target]?.name ?? decision.target)
+      : null;
+    const reasoning = decision.reasoning ? ` — «${decision.reasoning}»` : '';
+    const targetStr  = tName ? ` → ${tName}` : '';
+    const sourceTag  = source === 'haiku' ? ' [⚔]' : source === 'llm' ? ' [AI]' : '';
+    if (typeof addEventLog === 'function') {
+      addEventLog(`${nName}${sourceTag}: ${decision.action}${targetStr}${reasoning}`, 'diplomacy');
+    }
+  }
+
   // ── Применяем военные решения Haiku ───────────────────────────────
   for (const nId of warWithPlayer) {
     const decision = warResults.get(nId);
     if (decision && validateNationDecision(decision)) {
+      _logAIStrategy(nId, decision, 'haiku');
       applyNationDecision(nId, decision);
       // Инвалидируем кэш phi4-mini — Haiku взял управление
       _aiPending.delete(nId);
@@ -473,6 +491,7 @@ async function processAINations() {
     if (warSet.has(nId)) continue; // уже обработано Haiku
     const cached = _aiPending.get(nId);
     if (cached && (currentTurn - cached.turn) <= MAX_STALE && validateNationDecision(cached.decision)) {
+      _logAIStrategy(nId, cached.decision, 'llm');
       applyNationDecision(nId, cached.decision);
       _aiPending.delete(nId);
       fromCache++;
