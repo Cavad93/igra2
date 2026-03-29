@@ -993,6 +993,26 @@ ${recentPlayerEvents ? `Recent player actions:\n${recentPlayerEvents}` : ''}`;
     : `⚠ DEFICIT ${bal}/t → T+1:${t1}g T+2:${t2}g T+3:${t3}g${bankruptIn !== null ? ` — BANKRUPT in ~${bankruptIn} turns!` : ''}`;
 
 
+  // ── #9 Контр-стратегия против игрока — детекция возможной коалиции ──
+  let coalitionBlock = '';
+  if (pn && playerNationId !== nationId) {
+    const potentialCoalitionMembers = [];
+    for (const [oid, r] of Object.entries(n.relations ?? {})) {
+      if (oid === playerNationId) continue;
+      const on = GAME_STATE.nations[oid];
+      if (!on || on.is_eliminated) continue;
+      const pRel = on.relations?.[playerNationId];
+      // Нации, враждебные к игроку И дружественные к нам
+      if ((pRel?.score ?? 0) < -20 && (r.score ?? 0) > 20) {
+        const os = (on.military?.infantry ?? 0) + (on.military?.cavalry ?? 0) * 3;
+        potentialCoalitionMembers.push(`${on.name}(str:${Math.round(os)})`);
+      }
+    }
+    if (potentialCoalitionMembers.length > 0 && playerStr > str * 0.9) {
+      coalitionBlock = `\n⚡ COALITION OPPORTUNITY: ${potentialCoalitionMembers.slice(0,3).join(', ')} also oppose the player — coordinate attacks via form_alliance`;
+    }
+  }
+
   // ── #8 Дипломатический момент — лучший кандидат для альянса ─────────
   let bestAllyCandidate = null;
   let bestAllyScore = -Infinity;
@@ -1133,7 +1153,7 @@ Avoid: ${phase.avoid.join(', ')}
 
 ## Strategic Options (choose or combine)
 ${strategicOptions}
-Diplomacy: ${allyHint}
+Diplomacy: ${allyHint}${coalitionBlock}
 
 ## Your Goal (multi-turn plan)
 ${prevGoal}
