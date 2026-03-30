@@ -106,6 +106,9 @@ function utilityAIDecide(army, order) {
   const allyInfo    = _scanAllyArmies(nearby, army.nation);
   // Клещи/фланг: определить синхронные возможности
   const pincerInfo  = _detectPincerOpportunity(army, nearby, enemies);
+  // MIL_002: Установить формацию армии перед боем
+  const currentTerrain = nearby[army.position]?.terrain ?? 'plains';
+  army.formation = _chooseFormation(army, currentTerrain, readiness, activeSiege);
 
   // ── 1. КРИТИЧЕСКОЕ СОСТОЯНИЕ: принудительное отступление ────────────
   if (readiness < mods.retreat_threshold) {
@@ -552,6 +555,29 @@ function _armyCompositionMods(army) {
     is_cavalry_heavy:  cavRatio > 0.45,
     is_artillery_heavy: artRatio > 0.25,
   };
+}
+
+/**
+ * MIL_002: Выбор формации на основе состояния армии и ситуации.
+ * @param {object} army
+ * @param {string} terrain — местность текущей позиции
+ * @param {number} readiness — 0..1
+ * @param {object|null} activeSiege
+ * @returns {string} название формации
+ */
+function _chooseFormation(army, terrain, readiness, activeSiege) {
+  const u     = army.units ?? {};
+  const total = Math.max(
+    (u.infantry ?? 0) + (u.cavalry ?? 0) + (u.mercenaries ?? 0) + (u.artillery ?? 0), 1
+  );
+  const cavRatio = (u.cavalry   ?? 0) / total;
+  const artRatio = (u.artillery ?? 0) / total;
+
+  if (readiness < 0.50)                          return 'defensive';
+  if (cavRatio > 0.45 && terrain === 'plains')   return 'flanking';
+  if (artRatio > 0.25 && activeSiege)            return 'siege';
+  if (readiness >= 0.80)                         return 'aggressive';
+  return 'standard';
 }
 
 /** Боеготовность 0..1 */

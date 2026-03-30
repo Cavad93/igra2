@@ -54,9 +54,10 @@ const COMBAT = {
   // Формации
   FORMATIONS: {
     standard:   { atk: 1.00, def: 1.00 },
-    aggressive: { atk: 1.25, def: 0.75, cav_bonus: 0.0  },
+    aggressive: { atk: 1.20, def: 0.85 },
     defensive:  { atk: 0.80, def: 1.30, cav_bonus: -0.1 },
-    flanking:   { atk: 1.10, def: 0.90, cav_bonus: 0.15 },
+    flanking:   { atk: 1.10, def: 0.90, cav_bonus: 0.40, inf_bonus: -0.10 },
+    siege:      { atk: 1.00, def: 0.90, art_bonus: 0.50 },
   },
 
   // Черты командира: бонусы к полям силы
@@ -298,6 +299,16 @@ function calcArmyCombatStrength(army, terrain, isDefender) {
   if (fmtCavMod !== 0) {
     // Корректируем вклад кавалерии
     base += (u.cavalry ?? 0) * 3.0 * terrCav * fmtCavMod;
+  }
+  // Осадная формация: артиллерия ×1.50
+  const fmtArtMod = fmt.art_bonus ?? 0;
+  if (fmtArtMod !== 0) {
+    base += (u.artillery ?? 0) * 0.5 * fmtArtMod;
+  }
+  // Фланговая формация: пехота ×0.90 (inf_bonus = -0.10)
+  const fmtInfMod = fmt.inf_bonus ?? 0;
+  if (fmtInfMod !== 0) {
+    base += (u.infantry ?? 0) * 1.0 * fmtInfMod;
   }
 
   // Командир
