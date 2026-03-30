@@ -1100,12 +1100,58 @@ const MODIFIERS_BATCH9 = [
   },
 ];
 
+// ─── BATCH 10: MIL_041–MIL_050 ─────────────────────────────────────────────
+// Альянсы, изоляция, ВПК, потери, расцвет боеспособности
+
+const MODIFIERS_BATCH10 = [
+  { id:'MIL_041', label:'Мощная коалиция союзников — союзные легионы на марше',
+    cond:(_n,ou)=>{ const ma=_findVar(ou,'military','military_alliances'); return ma&&ma.current>0.70; },
+    adj:[{c:'military',n:'force_multiplier',d:+0.07},{c:'military',n:'mobilization_speed',d:+0.05},{c:'military',n:'army_size',d:+0.04},{c:'economy',n:'military_spending',d:-0.03}]
+  },
+  { id:'MIL_042', label:'Военная изоляция — нет союзников в беде',
+    cond:(_n,ou)=>{ const ma=_findVar(ou,'military','military_alliances'); return ma&&ma.current<0.10; },
+    adj:[{c:'military',n:'force_multiplier',d:-0.06},{c:'military',n:'strategic_depth',d:-0.05},{c:'military',n:'troop_morale',d:-0.04},{c:'military',n:'mobilization_speed',d:-0.04}]
+  },
+  { id:'MIL_043', label:'Нехватка оружия — склады пусты',
+    cond:(_n,ou)=>{ const as=_findVar(ou,'military','arms_stockpile'); return as&&as.current<0.10; },
+    adj:[{c:'military',n:'equipment_quality',d:-0.07},{c:'military',n:'equipment_quantity',d:-0.08},{c:'military',n:'military_readiness',d:-0.08},{c:'economy',n:'military_spending',d:+0.05}]
+  },
+  { id:'MIL_044', label:'Полные склады — оружия с избытком',
+    cond:(_n,ou)=>{ const as=_findVar(ou,'military','arms_stockpile'); return as&&as.current>1.50; },
+    adj:[{c:'military',n:'equipment_quality',d:+0.05},{c:'military',n:'military_readiness',d:+0.05},{c:'military',n:'weapon_exports',d:+0.05},{c:'economy',n:'military_industry',d:+0.04}]
+  },
+  { id:'MIL_045', label:'Молниеносная мобилизация — легионы в строю за дни',
+    cond:(_n,ou)=>{ const ms=_findVar(ou,'military','mobilization_speed'),rf=_findVar(ou,'military','reserve_forces'); return ms&&rf&&ms.current>0.80&&rf.current>0.50; },
+    adj:[{c:'military',n:'military_readiness',d:+0.08},{c:'military',n:'army_size',d:+0.05},{c:'military',n:'force_multiplier',d:+0.06},{c:'economy',n:'labor_participation',d:-0.04}]
+  },
+  { id:'MIL_046', label:'Застрявшая демобилизация — войска не расходятся по домам',
+    cond:(_n,ou)=>{ const dmr=_findVar(ou,'military','demobilization_rate'),we=_findVar(ou,'military','war_exhaustion'); return dmr&&we&&dmr.current<0.10&&we.current>0.30; },
+    adj:[{c:'military',n:'war_exhaustion',d:+0.05},{c:'economy',n:'military_spending',d:+0.04},{c:'economy',n:'labor_participation',d:-0.04},{c:'military',n:'troop_morale',d:-0.05}]
+  },
+  { id:'MIL_047', label:'Расцвет военной промышленности — кузницы не умолкают',
+    cond:(_n,ou)=>{ const mi=_findVar(ou,'military','military_industry'); return mi&&mi.current>0.80; },
+    adj:[{c:'military',n:'equipment_quality',d:+0.06},{c:'military',n:'equipment_quantity',d:+0.07},{c:'military',n:'ammunition_stock',d:+0.06},{c:'economy',n:'manufacturing_output',d:+0.04}]
+  },
+  { id:'MIL_048', label:'Паравоенные группировки выходят из-под контроля',
+    cond:(_n,ou)=>{ const pm=_findVar(ou,'military','paramilitary'),is=_findVar(ou,'military','internal_security'); return pm&&is&&pm.current>0.60&&is.current<0.40; },
+    adj:[{c:'military',n:'coup_risk',d:+0.06},{c:'military',n:'internal_security',d:-0.06},{c:'economy',n:'consumer_confidence',d:-0.05},{c:'economy',n:'gdp_growth',d:-0.03}]
+  },
+  { id:'MIL_049', label:'Катастрофические потери — армия истекает кровью',
+    cond:(_n,ou)=>{ const cr=_findVar(ou,'military','casualty_rate'); return cr&&cr.current>0.20; },
+    adj:[{c:'military',n:'army_size',d:-0.08},{c:'military',n:'veteran_ratio',d:-0.05},{c:'military',n:'troop_morale',d:-0.09},{c:'economy',n:'population_growth',d:-0.03}]
+  },
+  { id:'MIL_050', label:'Пик боеспособности — легионы непобедимы',
+    cond:(_n,ou)=>{ const mr=_findVar(ou,'military','military_readiness'),tm=_findVar(ou,'military','troop_morale'); return mr&&tm&&mr.current>0.85&&tm.current>0.70; },
+    adj:[{c:'military',n:'force_multiplier',d:+0.10},{c:'military',n:'active_conflicts',d:+0.04},{c:'military',n:'power_projection_land',d:+0.07},{c:'military',n:'mobilization_speed',d:+0.05}]
+  },
+];
+
   const allMods = [
-    ...MODIFIERS_BATCH1, ...MODIFIERS_BATCH2,
-    ...MODIFIERS_BATCH3, ...MODIFIERS_BATCH4,
-    ...MODIFIERS_BATCH5, ...MODIFIERS_BATCH6,
-    ...MODIFIERS_BATCH7, ...MODIFIERS_BATCH8,
-    ...MODIFIERS_BATCH9,
+    ...MODIFIERS_BATCH1,  ...MODIFIERS_BATCH2,
+    ...MODIFIERS_BATCH3,  ...MODIFIERS_BATCH4,
+    ...MODIFIERS_BATCH5,  ...MODIFIERS_BATCH6,
+    ...MODIFIERS_BATCH7,  ...MODIFIERS_BATCH8,
+    ...MODIFIERS_BATCH9,  ...MODIFIERS_BATCH10,
   ];
   for (const mod of allMods) {
     if (mod.cond(nation, ou)) _applyAdj(ou, mod.adj, ouState, mod.id);
