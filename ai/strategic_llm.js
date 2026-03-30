@@ -181,9 +181,121 @@ Respond with JSON:
  * @returns {Promise<Object>} plan
  */
 async function createPlan(nation, ou, gameState) {
-  // TODO ST_003: реализовать запрос к Groq
-  void ou; void gameState;
-  return _buildFallbackPlan(nation, ou);
+  const { system, user } = _buildStrategicPrompt(nation, ou, gameState);
+  let plan = null;
+
+  if (STRATEGIC_CONFIG.enableGroq &&
+      typeof CONFIG !== 'undefined' && CONFIG.GROQ_API_KEY) {
+    try {
+      const raw    = await _callGroqStrategic(system, user);
+      const parsed = JSON.parse(raw);
+      plan = _validatePlan(parsed, nation, ou);
+    } catch (err) {
+      console.warn(`[StrategicLLM] Groq failed for ${nation.name ?? nation.id}: ${err.message}`);
+    }
+  }
+
+  if (!plan) plan = _buildFallbackPlan(nation, ou);
+
+  // Сохраняем план в нацию
+  nation._strategic_plan = plan;
+
+  // Логируем в events_log
+  const tick = ou?.tick ?? 0;
+  const logEntry = {
+    tick,
+    type:     'strategic_plan',
+    nationId: nation.id ?? nation.name,
+    strategy: plan.strategy,
+    goal:     plan.goal,
+    phases:   plan.phases.length,
+    fallback: plan.fallback,
+  };
+  if (Array.isArray(gameState?.events_log)) gameState.events_log.push(logEntry);
+  if (typeof events_log !== 'undefined' && Array.isArray(events_log)) {
+    events_log.push(logEntry);
+  }
+
+  return plan;
+}
+
+// ─── ВЫЗОВ GROQ ───────────────────────────────────────────────────────────────
+
+/**
+ * Делает запрос к Groq API и возвращает сырой текст ответа.
+ * @param {string} system
+ * @param {string} user
+ * @returns {Promise<string>}
+ */
+async function _callGroqStrategic(system, user) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), STRATEGIC_CONFIG.timeoutMs);
+  let response;
+  try {
+    response = await fetch(CONFIG.GROQ_API_URL, {
+      method:  'POST',
+      signal:  controller.signal,
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${CONFIG.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model:      STRATEGIC_CONFIG.groqModel,
+        max_tokens: STRATEGIC_CONFIG.maxTokens,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user',   content: user   },
+        ],
+        response_format: { type: 'json_object' },
+      }),
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('Groq timeout (strategic)');
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!response.ok) {
+    const errText = await response.text().catch(() => '');
+    throw new Error(`Groq ${response.status}: ${errText.slice(0, 120)}`);
+  }
+  const data = await response.json();
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error('Groq: empty response');
+  return text;
+}
+
+// ─── ВАЛИДАЦИЯ ПЛАНА ──────────────────────────────────────────────────────────
+
+/**
+ * Валидирует и нормализует JSON-план от Groq.
+ * @param {Object} parsed
+ * @param {Object} nation
+ * @param {Object} ou
+ * @returns {Object} валидный план
+ */
+function _validatePlan(parsed, nation, ou) {
+  if (!parsed || typeof parsed !== 'object')       throw new Error('plan: not object');
+  if (!parsed.strategy || !parsed.goal)            throw new Error('plan: missing strategy/goal');
+  if (!Array.isArray(parsed.phases) || !parsed.phases.length) throw new Error('plan: no phases');
+
+  const plan       = _emptyPlan();
+  plan.createdAt   = ou?.tick ?? 0;
+  plan.horizon     = STRATEGIC_CONFIG.planHorizon;
+  plan.strategy    = String(parsed.strategy).slice(0, 64);
+  plan.goal        = String(parsed.goal).slice(0, 256);
+  plan.fallback    = false;
+
+  plan.phases = parsed.phases.slice(0, 5).map(p => ({
+    name:               String(p.name ?? 'phase').slice(0, 32),
+    duration:           Math.min(Math.max(Number(p.duration) || 10, 1), 40),
+    priority_actions:   Array.isArray(p.priority_actions)  ? p.priority_actions.slice(0, 5)  : [],
+    forbidden_actions:  Array.isArray(p.forbidden_actions) ? p.forbidden_actions.slice(0, 5) : [],
+    ou_overrides:       (p.ou_overrides  && typeof p.ou_overrides  === 'object') ? p.ou_overrides  : {},
+    trigger_conditions: (p.trigger_conditions && typeof p.trigger_conditions === 'object') ? p.trigger_conditions : {},
+  }));
+
+  return plan;
 }
 
 /**
@@ -230,7 +342,7 @@ function _buildFallbackPlan(nation, ou) {
 // ─── ЭКСПОРТ ──────────────────────────────────────────────────────────────────
 
 export { shouldPlan, createPlan, executePlan, _broadcastCoalitionPlan,
-         _buildFallbackPlan, _buildStrategicPrompt,
+         _buildFallbackPlan, _buildStrategicPrompt, _validatePlan,
          STRATEGIC_CONFIG, STRATEGY_TEMPLATES };
 
 if (typeof window !== 'undefined') {
