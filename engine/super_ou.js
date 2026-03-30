@@ -463,14 +463,127 @@ export function _initPoliticsVector(nation) {
   }));
 }
 
+// ─── GOALS SCHEMA ─────────────────────────────────────────────────────────────
+
+export const GOALS_SCHEMA = [
+  { name:'expansion_drive',         mu:0.30, sigma:0.05, theta:0.08, min:0.0, max:1.0, category:'goals' },
+  { name:'survival_imperative',     mu:0.70, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'goals' },
+  { name:'wealth_accumulation',     mu:0.55, sigma:0.05, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'military_supremacy',      mu:0.35, sigma:0.05, theta:0.08, min:0.0, max:1.0, category:'goals' },
+  { name:'diplomatic_dominance',    mu:0.30, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'tech_leadership',         mu:0.40, sigma:0.05, theta:0.08, min:0.0, max:1.0, category:'goals' },
+  { name:'cultural_hegemony',       mu:0.25, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'resource_security',       mu:0.60, sigma:0.05, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'population_growth',       mu:0.45, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'goals' },
+  { name:'regional_stability',      mu:0.55, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'alliance_building',       mu:0.45, sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'goals' },
+  { name:'isolation_preference',    mu:0.20, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'regime_preservation',     mu:0.65, sigma:0.05, theta:0.06, min:0.0, max:1.0, category:'goals' },
+  { name:'ideological_spread',      mu:0.25, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'trade_dominance',         mu:0.40, sigma:0.05, theta:0.08, min:0.0, max:1.0, category:'goals' },
+  { name:'territorial_integrity',   mu:0.75, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'goals' },
+  { name:'infrastructure_dev',      mu:0.50, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'food_self_sufficiency',   mu:0.60, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'energy_independence',     mu:0.55, sigma:0.05, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'naval_power_goal',        mu:0.30, sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'goals' },
+  { name:'air_power_goal',          mu:0.30, sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'goals' },
+  { name:'nuclear_ambition',        mu:0.15, sigma:0.03, theta:0.05, min:0.0, max:1.0, category:'goals' },
+  { name:'cyber_dominance',         mu:0.25, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'space_ambition',          mu:0.15, sigma:0.03, theta:0.05, min:0.0, max:1.0, category:'goals' },
+  { name:'social_welfare_goal',     mu:0.50, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'education_investment',    mu:0.55, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'healthcare_investment',   mu:0.55, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'environmental_care',      mu:0.35, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'gdp_growth_target',       mu:0.50, sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'goals' },
+  { name:'low_inflation_goal',      mu:0.60, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'employment_goal',         mu:0.65, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'debt_reduction_goal',     mu:0.45, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'currency_stability_goal', mu:0.60, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'border_control_goal',     mu:0.55, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'crime_reduction_goal',    mu:0.60, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'sovereignty_protection',  mu:0.75, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'goals' },
+  { name:'historical_claim_pursuit',mu:0.20, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'goals' },
+  { name:'diaspora_repatriation',   mu:0.20, sigma:0.03, theta:0.06, min:0.0, max:1.0, category:'goals' },
+  { name:'economic_sanctions_goal', mu:0.15, sigma:0.03, theta:0.06, min:0.0, max:1.0, category:'goals' },
+  { name:'nation_branding_goal',    mu:0.35, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'tourism_development',     mu:0.35, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'foreign_investment_goal', mu:0.50, sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'goals' },
+  { name:'innovation_ecosystem',    mu:0.40, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'startup_promotion',       mu:0.35, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'urbanization_goal',       mu:0.45, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'rural_development_goal',  mu:0.40, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'minority_integration',    mu:0.45, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'gender_equality_goal',    mu:0.50, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'anti_corruption_goal',    mu:0.55, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'justice_reform_goal',     mu:0.45, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'press_freedom_goal',      mu:0.50, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'religious_unity_goal',    mu:0.40, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'national_identity_goal',  mu:0.55, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'language_preservation',   mu:0.45, sigma:0.03, theta:0.06, min:0.0, max:1.0, category:'goals' },
+  { name:'heritage_preservation',   mu:0.45, sigma:0.03, theta:0.06, min:0.0, max:1.0, category:'goals' },
+  { name:'nuclear_deterrence',      mu:0.25, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'goals' },
+  { name:'conventional_deterrence', mu:0.50, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'proxy_war_willingness',   mu:0.20, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'peacekeeping_role',       mu:0.30, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'humanitarian_role',       mu:0.35, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'green_energy_transition', mu:0.35, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'fossil_fuel_reliance',    mu:0.45, sigma:0.05, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'water_security_goal',     mu:0.60, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'food_export_goal',        mu:0.35, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'arms_export_goal',        mu:0.20, sigma:0.03, theta:0.06, min:0.0, max:1.0, category:'goals' },
+  { name:'arms_import_reduction',   mu:0.35, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'debt_forgiveness_goal',   mu:0.15, sigma:0.03, theta:0.06, min:0.0, max:1.0, category:'goals' },
+  { name:'aid_donor_goal',          mu:0.25, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'aid_recipient_goal',      mu:0.20, sigma:0.03, theta:0.06, min:0.0, max:1.0, category:'goals' },
+  { name:'globalization_embrace',   mu:0.45, sigma:0.05, theta:0.08, min:0.0, max:1.0, category:'goals' },
+  { name:'protectionism_goal',      mu:0.30, sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'goals' },
+  { name:'multilateral_engagement', mu:0.50, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'bilateral_focus',         mu:0.40, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'superpower_alignment',    mu:0.35, sigma:0.05, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'non_alignment_goal',      mu:0.35, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'imperial_legacy_goal',    mu:0.15, sigma:0.03, theta:0.05, min:0.0, max:1.0, category:'goals' },
+  { name:'decolonization_support',  mu:0.30, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'goals' },
+  { name:'crypto_adoption_goal',    mu:0.20, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'ai_development_goal',     mu:0.30, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+  { name:'biotech_investment',      mu:0.30, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'goals' },
+];
+
+/**
+ * Initialise goals OU variables for a nation.
+ * @param {object} nation
+ * @returns {Array} array of variable state objects
+ */
+export function _initGoalsVector(nation) {
+  const src = (nation && nation.goals) || {};
+  return GOALS_SCHEMA.map(s => ({
+    name:     s.name,
+    mu:       s.mu,
+    sigma:    s.sigma,
+    theta:    s.theta,
+    min:      s.min,
+    max:      s.max,
+    category: s.category,
+    current:  (src[s.name] !== undefined) ? src[s.name] : s.mu,
+  }));
+}
+
 // ─── PUBLIC API ───────────────────────────────────────────────────────────────
 
 /**
  * Initialise OU state for a nation.
+ * Calls all 5 _init functions and stores results in nation._ou
  * @param {object} nation
  */
 export function initNation(nation) {
-  // TODO
+  nation._ou = {
+    economy:   _initEconomyVector(nation),
+    military:  _initMilitaryVector(nation),
+    diplomacy: _initDiplomacyVector(nation),
+    politics:  _initPoliticsVector(nation),
+    goals:     _initGoalsVector(nation),
+    tick:      0,
+    activeModifiers: [],
+  };
 }
 
 /**
