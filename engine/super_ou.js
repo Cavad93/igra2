@@ -359,6 +359,110 @@ export function _initDiplomacyVector(nation) {
   }));
 }
 
+// ─── POLITICS SCHEMA ──────────────────────────────────────────────────────────
+
+export const POLITICS_SCHEMA = [
+  { name:'regime_stability',        mu:0.65, sigma:0.06, theta:0.10, min:0.0, max:1.0, category:'politics' },
+  { name:'government_legitimacy',   mu:0.60, sigma:0.05, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'popular_support',         mu:0.55, sigma:0.07, theta:0.12, min:0.0, max:1.0, category:'politics' },
+  { name:'opposition_strength',     mu:0.30, sigma:0.05, theta:0.10, min:0.0, max:1.0, category:'politics' },
+  { name:'ruling_party_cohesion',   mu:0.70, sigma:0.05, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'electoral_integrity',     mu:0.60, sigma:0.05, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'voter_turnout',           mu:0.60, sigma:0.05, theta:0.10, min:0.1, max:1.0, category:'politics' },
+  { name:'political_polarization',  mu:0.35, sigma:0.06, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'civil_liberties',         mu:0.60, sigma:0.05, theta:0.06, min:0.0, max:1.0, category:'politics' },
+  { name:'rule_of_law',             mu:0.60, sigma:0.05, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'corruption_index',        mu:0.35, sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'bureaucratic_efficiency', mu:0.55, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'politics' },
+  { name:'press_freedom',           mu:0.55, sigma:0.05, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'censorship_level',        mu:0.25, sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'protest_frequency',       mu:0.15, sigma:0.04, theta:0.20, min:0.0, max:1.0, category:'politics' },
+  { name:'protest_intensity',       mu:0.10, sigma:0.04, theta:0.25, min:0.0, max:1.0, category:'politics' },
+  { name:'political_violence',      mu:0.05, sigma:0.03, theta:0.30, min:0.0, max:1.0, category:'politics' },
+  { name:'terrorism_risk',          mu:0.08, sigma:0.03, theta:0.20, min:0.0, max:1.0, category:'politics' },
+  { name:'insurgency_level',        mu:0.05, sigma:0.03, theta:0.15, min:0.0, max:1.0, category:'politics' },
+  { name:'separatism_risk',         mu:0.10, sigma:0.03, theta:0.10, min:0.0, max:1.0, category:'politics' },
+  { name:'nationalist_sentiment',   mu:0.40, sigma:0.05, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'populism_index',          mu:0.30, sigma:0.05, theta:0.10, min:0.0, max:1.0, category:'politics' },
+  { name:'left_wing_influence',     mu:0.35, sigma:0.05, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'right_wing_influence',    mu:0.35, sigma:0.05, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'religious_influence',     mu:0.30, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'secularism_index',        mu:0.55, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'politics' },
+  { name:'federalism_degree',       mu:0.40, sigma:0.03, theta:0.04, min:0.0, max:1.0, category:'politics' },
+  { name:'centralization',          mu:0.55, sigma:0.04, theta:0.05, min:0.0, max:1.0, category:'politics' },
+  { name:'technocracy_index',       mu:0.30, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'politics' },
+  { name:'oligarchy_index',         mu:0.25, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'democracy_score',         mu:0.55, sigma:0.05, theta:0.06, min:0.0, max:1.0, category:'politics' },
+  { name:'autocracy_score',         mu:0.30, sigma:0.05, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'state_capacity',          mu:0.60, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'policy_effectiveness',    mu:0.55, sigma:0.05, theta:0.09, min:0.0, max:1.0, category:'politics' },
+  { name:'legislative_power',       mu:0.50, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'politics' },
+  { name:'executive_power',         mu:0.55, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'judicial_independence',   mu:0.55, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'politics' },
+  { name:'constitutional_order',    mu:0.65, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'politics' },
+  { name:'political_trust',         mu:0.40, sigma:0.05, theta:0.10, min:0.0, max:1.0, category:'politics' },
+  { name:'institutional_trust',     mu:0.45, sigma:0.05, theta:0.09, min:0.0, max:1.0, category:'politics' },
+  { name:'media_trust',             mu:0.40, sigma:0.05, theta:0.10, min:0.0, max:1.0, category:'politics' },
+  { name:'social_cohesion',         mu:0.55, sigma:0.05, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'ethnic_tension',          mu:0.20, sigma:0.04, theta:0.10, min:0.0, max:1.0, category:'politics' },
+  { name:'class_conflict',          mu:0.25, sigma:0.04, theta:0.10, min:0.0, max:1.0, category:'politics' },
+  { name:'urban_rural_divide',      mu:0.30, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'gender_equality',         mu:0.60, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'politics' },
+  { name:'minority_rights',         mu:0.55, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'immigration_policy',      mu:0.50, sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'refugee_burden',          mu:0.15, sigma:0.04, theta:0.15, min:0.0, max:1.0, category:'politics' },
+  { name:'welfare_state',           mu:0.50, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'politics' },
+  { name:'public_services',         mu:0.55, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'healthcare_access',       mu:0.60, sigma:0.05, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'education_access',        mu:0.65, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'politics' },
+  { name:'environmental_policy',    mu:0.45, sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'energy_policy',           mu:0.50, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'fiscal_policy',           mu:0.50, sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'monetary_autonomy',       mu:0.60, sigma:0.03, theta:0.05, min:0.0, max:1.0, category:'politics' },
+  { name:'foreign_policy_hawkish',  mu:0.35, sigma:0.05, theta:0.10, min:0.0, max:1.0, category:'politics' },
+  { name:'foreign_policy_dovish',   mu:0.45, sigma:0.05, theta:0.10, min:0.0, max:1.0, category:'politics' },
+  { name:'isolationism',            mu:0.20, sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'globalism',               mu:0.55, sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'protectionism',           mu:0.30, sigma:0.04, theta:0.09, min:0.0, max:1.0, category:'politics' },
+  { name:'free_trade_policy',       mu:0.55, sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'cabinet_stability',       mu:0.70, sigma:0.05, theta:0.12, min:0.0, max:1.0, category:'politics' },
+  { name:'party_discipline',        mu:0.65, sigma:0.05, theta:0.10, min:0.0, max:1.0, category:'politics' },
+  { name:'coalition_fragility',     mu:0.20, sigma:0.04, theta:0.15, min:0.0, max:1.0, category:'politics' },
+  { name:'election_cycle',          mu:0.50, sigma:0.05, theta:0.04, min:0.0, max:1.0, category:'politics' },
+  { name:'propaganda_effectiveness',mu:0.35, sigma:0.04, theta:0.10, min:0.0, max:1.0, category:'politics' },
+  { name:'disinformation_level',    mu:0.25, sigma:0.04, theta:0.12, min:0.0, max:1.0, category:'politics' },
+  { name:'civic_engagement',        mu:0.50, sigma:0.05, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'ngo_influence',           mu:0.30, sigma:0.03, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'labor_union_power',       mu:0.35, sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'business_lobby_power',    mu:0.40, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'military_lobby_power',    mu:0.30, sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'austerity_policy',        mu:0.25, sigma:0.04, theta:0.10, min:0.0, max:1.0, category:'politics' },
+  { name:'stimulus_policy',         mu:0.30, sigma:0.04, theta:0.10, min:0.0, max:1.0, category:'politics' },
+  { name:'surveillance_state',      mu:0.30, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'privacy_rights',          mu:0.55, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'politics' },
+  { name:'internet_freedom',        mu:0.60, sigma:0.05, theta:0.08, min:0.0, max:1.0, category:'politics' },
+  { name:'transparency_index',      mu:0.50, sigma:0.04, theta:0.07, min:0.0, max:1.0, category:'politics' },
+];
+
+/**
+ * Initialise politics OU variables for a nation.
+ * @param {object} nation
+ * @returns {Array} array of variable state objects
+ */
+export function _initPoliticsVector(nation) {
+  const src = (nation && nation.politics) || {};
+  return POLITICS_SCHEMA.map(s => ({
+    name:     s.name,
+    mu:       s.mu,
+    sigma:    s.sigma,
+    theta:    s.theta,
+    min:      s.min,
+    max:      s.max,
+    category: s.category,
+    current:  (src[s.name] !== undefined) ? src[s.name] : s.mu,
+  }));
+}
+
 // ─── PUBLIC API ───────────────────────────────────────────────────────────────
 
 /**
