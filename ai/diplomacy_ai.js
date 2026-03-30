@@ -75,10 +75,23 @@ function _buildLeaderSystemPrompt(aiNationId, playerNationId) {
     ? getHandoffContext(aiNationId, 'sonnet')
     : '';
 
+  // SuperOU контекст настроения и состояния нации
+  const ouCtx = (typeof SuperOU !== 'undefined' && aiNation)
+    ? SuperOU.getContextForSonnet(aiNation) : null;
+  const moodBlock = ouCtx && !ouCtx.error ? `
+=== ТВОЁ СОСТОЯНИЕ ===
+Кризисы: ${ouCtx.active_crises.map(c => c.name).join(', ') || 'нет'}
+Страх перед игроком: ${ouCtx.mood.fear_of_player > 0.6 ? 'ВЫСОКИЙ' : ouCtx.mood.fear_of_player > 0.3 ? 'умеренный' : 'низкий'}
+Армия: ${ouCtx.military_posture}
+Доверие: ${ouCtx.player_relation.betrayals > 0 ? 'нет (предательство)' : ouCtx.player_relation.trust > 0.5 ? 'высокое' : 'нейтральное'}
+Цели: ${ouCtx.current_goals.join(', ') || 'не определены'}
+Стратегия: ${ouCtx.strategic_context?.reasoning ?? ouCtx.strategic_context?.strategy_type ?? 'нет активной стратегии'}` : '';
+
   return `Ты — ${aiRuler}, правитель государства ${aiName}.
 Форма правления: ${aiGovType}.
 Год: ${era}, месяц ${month}.
 Жанр: стратегия в духе «Imperator Rome».
+${moodBlock}
 ${nationHistory ? `\nКОНТЕКСТ ИСТОРИИ НАЦИИ:\n${nationHistory.slice(0, 1000)}\n` : ''}
 ${handoffContext ? `\nПЕРЕДАЧА ОТ ФОНОВОГО AI:\n${handoffContext}\n` : ''}
 ${dialogueHistory ? `\n${dialogueHistory}\n` : ''}

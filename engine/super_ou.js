@@ -2231,30 +2231,83 @@ export function getContextForSonnet(nation) {
   const ou = nation._ou;
   if (!ou) return { error: 'not_initialised' };
 
+  // ── Mood derived from key OU variables ──────────────────────────────────────
+  const armySz  = _getVal(ou, 'military', 'army_size')              ?? 0.3;
+  const morale  = _getVal(ou, 'military', 'troop_morale')           ?? 0.65;
+  const warExh  = _getVal(ou, 'military', 'war_exhaustion')         ?? 0.1;
+  const tradeB  = _getVal(ou, 'economy',  'trade_balance')          ?? 0;
+  const tradeO  = _getVal(ou, 'economy',  'trade_openness')         ?? 0.5;
+  const regStab = _getVal(ou, 'politics', 'regime_stability')       ?? 0.65;
+  const dipInc  = _getVal(ou, 'diplomacy','diplomatic_incidents')   ?? 0.05;
+  const dipIso  = _getVal(ou, 'diplomacy','diplomatic_isolation_risk') ?? 0.1;
+  const treasury= _getVal(ou, 'economy',  'treasury')               ?? 0;
+  const mood = {
+    fear_of_player:      +Math.min(1, dipIso * 2 + dipInc * 3).toFixed(3),
+    military_confidence: +Math.min(1, (armySz + morale) / 2).toFixed(3),
+    trade_satisfaction:  +Math.min(1, Math.max(0, (tradeB + 0.5 + tradeO) / 2)).toFixed(3),
+    resentment:          +Math.min(1, dipInc * 5).toFixed(3),
+    desperation:         +Math.min(1, (1 - regStab) + Math.max(0, -treasury) * 2).toFixed(3),
+    war_weary:           +warExh.toFixed(3),
+  };
+
+  // ── Active crises: modifiers with effective severity > 0.5 ──────────────────
+  const active_crises = (ou.activeModifiers || [])
+    .map(m => ({ name: m.name, severity: Math.abs(m.delta ?? m.severity ?? 0) }))
+    .filter(m => m.severity > 0.5)
+    .sort((a, b) => b.severity - a.severity)
+    .slice(0, 3)
+    .map(m => ({ name: m.name, severity: +m.severity.toFixed(2) }));
+
+  // ── Current goals ────────────────────────────────────────────────────────────
+  const goalsStack = nation._ou?.goals_stack ?? [];
+  const current_goals = goalsStack.slice(0, 3).map(g => g.name ?? String(g));
+  if (current_goals.length === 0) {
+    (ou.goals || []).slice().sort((a, b) => b.current - a.current)
+      .slice(0, 3).forEach(g => current_goals.push(g.name));
+  }
+
+  // ── Player relation ──────────────────────────────────────────────────────────
+  const pr = nation._player_relation ?? {};
+  const player_relation = { trust: pr.trust ?? 0, loyalty: pr.loyalty ?? 0,
+    resentment: pr.resentment ?? 0, betrayals: pr.betrayals ?? 0 };
+
+  // ── Military posture ─────────────────────────────────────────────────────────
+  const mc = mood.military_confidence;
+  const military_posture = mc > 0.65 ? 'strong' : mc < 0.40 ? 'weak' : 'neutral';
+
+  // ── Strategic context ────────────────────────────────────────────────────────
+  const sp = nation._strategic_plan;
+  const strategic_context = sp
+    ? { strategy_type: sp.strategy, target: sp.goal,
+        reasoning: sp.reasoning ?? null, phase: sp.currentPhase ?? 0 }
+    : null;
+
+  // ── Diplomatic memory ────────────────────────────────────────────────────────
+  const diplomatic_memory = (typeof getHandoffContext === 'function')
+    ? getHandoffContext(nation.id ?? nation.name, 'sonnet') : null;
+
+  // ── Statistical outliers ─────────────────────────────────────────────────────
   const cats = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
   const outliers = [];
   for (const cat of cats) {
     for (const v of (ou[cat] || [])) {
       const z = v.sigma > 0 ? Math.abs(v.current - v.mu) / v.sigma : 0;
-      if (z > 2.0) outliers.push({ cat, name: v.name, current: +v.current.toFixed(3), mu: +v.mu.toFixed(3), z: +z.toFixed(2) });
+      if (z > 2.0) outliers.push({ cat, name: v.name, current: +v.current.toFixed(3),
+        mu: +v.mu.toFixed(3), z: +z.toFixed(2) });
     }
   }
   outliers.sort((a, b) => b.z - a.z);
 
   return {
-    nationId:          nation.id ?? null,
-    name:              nation.name ?? null,
-    personality:       nation.ai_personality ?? null,
-    priority:          nation.ai_priority ?? null,
-    tick:              ou.tick,
+    nationId: nation.id ?? null, name: nation.name ?? null,
+    personality: nation.ai_personality ?? null, priority: nation.ai_priority ?? null,
+    tick: ou.tick,
+    mood, active_crises, current_goals, player_relation, military_posture,
+    strategic_context, diplomatic_memory,
     top_outliers:      outliers.slice(0, 10),
     active_modifiers:  (ou.activeModifiers || []).map(m => m.name),
     priority_actions:  ou.priority_actions ?? [],
     forbidden_actions: ou.forbidden_actions ?? [],
-    strategic_context: nation._strategic_plan
-      ? { strategy: nation._strategic_plan.strategy, goal: nation._strategic_plan.goal,
-          phase: nation._strategic_plan.currentPhase ?? 0 }
-      : null,
   };
 }
 
