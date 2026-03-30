@@ -1008,11 +1008,57 @@ const MODIFIERS_BATCH7 = [
   },
 ];
 
+// ─── BATCH 8: MIL_021–MIL_030 ────────────────────────────────────────────────
+// Призыв, разведка, конница, осадные машины, наёмники
+
+const MODIFIERS_BATCH8 = [
+  { id:'MIL_021', label:'Массовый призыв — всеобщая мобилизация',
+    cond:(_n,ou)=>{ const cr=_findVar(ou,'military','conscription_rate'); return cr&&cr.current>0.35; },
+    adj:[{c:'military',n:'army_size',d:+0.07},{c:'military',n:'veteran_ratio',d:-0.06},{c:'economy',n:'labor_participation',d:-0.05},{c:'economy',n:'agricultural_output',d:-0.04}]
+  },
+  { id:'MIL_022', label:'Профессиональная армия добровольцев',
+    cond:(_n,ou)=>{ const cr=_findVar(ou,'military','conscription_rate'),as=_findVar(ou,'military','army_size'); return cr&&as&&cr.current<0.02&&as.current>0.50; },
+    adj:[{c:'military',n:'military_training',d:+0.06},{c:'military',n:'veteran_ratio',d:+0.05},{c:'military',n:'troop_morale',d:+0.06},{c:'military',n:'doctrine_quality',d:+0.04}]
+  },
+  { id:'MIL_023', label:'Внутреннее восстание — провинции бунтуют',
+    cond:(_n,ou)=>{ const is=_findVar(ou,'military','internal_security'),pm=_findVar(ou,'military','paramilitary'); return is&&pm&&is.current<0.20&&pm.current>0.50; },
+    adj:[{c:'military',n:'active_conflicts',d:+0.06},{c:'military',n:'army_size',d:-0.04},{c:'economy',n:'tax_revenue',d:-0.06},{c:'economy',n:'gdp_growth',d:-0.04}]
+  },
+  { id:'MIL_024', label:'Полицейское государство — жёсткий контроль',
+    cond:(_n,ou)=>{ const pm=_findVar(ou,'military','police_militarization'); return pm&&pm.current>0.80; },
+    adj:[{c:'military',n:'internal_security',d:+0.07},{c:'military',n:'coup_risk',d:-0.05},{c:'economy',n:'consumer_confidence',d:-0.06},{c:'economy',n:'black_market_size',d:+0.04}]
+  },
+  { id:'MIL_025', label:'Разведка слепа — враг неизвестен',
+    cond:(_n,ou)=>{ const iq=_findVar(ou,'military','intelligence_quality'); return iq&&iq.current<0.10; },
+    adj:[{c:'military',n:'border_control',d:-0.06},{c:'military',n:'military_readiness',d:-0.05},{c:'military',n:'counterintelligence',d:-0.05},{c:'military',n:'strategic_depth',d:-0.04}]
+  },
+  { id:'MIL_026', label:'Разведывательное превосходство — знание — сила',
+    cond:(_n,ou)=>{ const iq=_findVar(ou,'military','intelligence_quality'),ci=_findVar(ou,'military','counterintelligence'); return iq&&ci&&iq.current>0.80&&ci.current>0.70; },
+    adj:[{c:'military',n:'force_multiplier',d:+0.07},{c:'military',n:'command_coordination',d:+0.06},{c:'military',n:'border_control',d:+0.05},{c:'military',n:'special_forces',d:+0.05}]
+  },
+  { id:'MIL_027', label:'Горные крепости — неприступная оборона в горах',
+    cond:(_n,ou)=>{ const fl=_findVar(ou,'military','fortification_level'),mw=_findVar(ou,'military','mountain_warfare'); return fl&&mw&&fl.current>0.70&&mw.current>0.70; },
+    adj:[{c:'military',n:'strategic_depth',d:+0.07},{c:'military',n:'border_control',d:+0.06},{c:'military',n:'force_multiplier',d:+0.06},{c:'military',n:'logistics_capacity',d:-0.04}]
+  },
+  { id:'MIL_028', label:'Партизанская война — враг в каждом лесу',
+    cond:(_n,ou)=>{ const gc=_findVar(ou,'military','guerrilla_capacity'),as=_findVar(ou,'military','army_size'); return gc&&as&&gc.current>0.70&&as.current<0.30; },
+    adj:[{c:'military',n:'internal_security',d:-0.06},{c:'military',n:'logistics_capacity',d:-0.06},{c:'military',n:'war_exhaustion',d:+0.05},{c:'military',n:'special_forces',d:+0.06}]
+  },
+  { id:'MIL_029', label:'Спецподразделения — отряды быстрого реагирования',
+    cond:(_n,ou)=>{ const sf=_findVar(ou,'military','special_forces'); return sf&&sf.current>0.70; },
+    adj:[{c:'military',n:'intelligence_quality',d:+0.05},{c:'military',n:'counterintelligence',d:+0.04},{c:'military',n:'force_multiplier',d:+0.06},{c:'military',n:'spy_network_capacity',d:+0.05}]
+  },
+  { id:'MIL_030', label:'Тяжёлая конница — бронированные всадники сметают пехоту',
+    cond:(_n,ou)=>{ const ac=_findVar(ou,'military','armor_count'),mt=_findVar(ou,'military','military_training'); return ac&&mt&&ac.current>1.0&&mt.current>0.70; },
+    adj:[{c:'military',n:'force_multiplier',d:+0.08},{c:'military',n:'power_projection_land',d:+0.07},{c:'military',n:'mobilization_speed',d:+0.05},{c:'economy',n:'livestock_count',d:-0.03}]
+  },
+];
+
   const allMods = [
     ...MODIFIERS_BATCH1, ...MODIFIERS_BATCH2,
     ...MODIFIERS_BATCH3, ...MODIFIERS_BATCH4,
     ...MODIFIERS_BATCH5, ...MODIFIERS_BATCH6,
-    ...MODIFIERS_BATCH7,
+    ...MODIFIERS_BATCH7, ...MODIFIERS_BATCH8,
   ];
   for (const mod of allMods) {
     if (mod.cond(nation, ou)) _applyAdj(ou, mod.adj, ouState, mod.id);
