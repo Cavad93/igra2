@@ -372,4 +372,24 @@ NEXT_TASK: TASK_DONE
 
 ### Статус: ЗАВЕРШЕНО
 
-NEXT_TASK: COMPLETE
+NEXT_TASK: ST_002
+
+---
+
+## Session 18 — 2026-03-30 — ST_001: каркас strategic_llm.js
+
+### Задача: ST_001
+### Сделано:
+- Создан /home/user/igra2/ai/strategic_llm.js (127 строк)
+- STRATEGIC_CONFIG: planInterval=20, planHorizon=40, tier1Threshold=3 и др.
+- STRATEGY_TEMPLATES = {} (пустой, заполнится в ST_004)
+- _emptyPlan() — фабрика пустой структуры плана (createdAt, horizon, phases, commitments...)
+- Заглушки публичных функций: shouldPlan / createPlan / executePlan
+- Заглушки внутренних: _broadcastCoalitionPlan / _buildFallbackPlan
+- _buildFallbackPlan возвращает базовый план 'consolidation' без LLM
+- ES module export + window.StrategicLLM для браузера
+- Проверка: node --input-type=module — OK, ALL CHECKS PASSED
+
+### Строк добавлено: ~127
+### Статус: OK
+NEXT_TASK: ST_002
