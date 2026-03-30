@@ -877,3 +877,61 @@ NEXT_TASK: DONE_ALL
 ### Покрытые задачи: OU_001 – OU_015, EX_001 – EX_004, ST_001 – ST_020
 ### Статус: OK ✓
 NEXT_TASK: —
+
+---
+
+## Session Chronicle — 2026-03-30 — CH_001–CH_006: Система Хронист
+
+### Сделано:
+
+#### CH_001: Каркас chronicle.js
+- Создан /home/user/igra2/ai/chronicle.js
+- ChronicleSystem объект: INTERVAL=50, MAX_EVENTS=5, MAX_TOKENS=600, EFFECT_RADIUS=6
+- Пустые методы: collectSnapshot, buildPrompt, parseEvents, applyEffects, generate
+- window.ChronicleSystem для доступа из non-module скриптов
+
+#### CH_002: collectSnapshot(gameState)
+- Топ нации: strongest (max регионов), weakest (min), richest (max treasury)
+- Войны: парный список at_war_with без дублей, max 5
+- Недавние завоевания из events_log за 50 ходов
+- Кризисы из Super-OU: regime_stability < 0.3, food_security < 0.25, gold_reserves < 0.1
+- Голод, банкротства, торговые маршруты
+- Крупнейшая коалиция против игрока
+- player_share_regions, player_reputation, era (_detectEra)
+- Тест: node — OK
+
+#### CH_003: buildPrompt(snapshot)
+- system: роль хрониста в стиле Фукидида/Полибия, требование JSON
+- user: полный срез состояния мира — войны, кризисы, завоевания, голод, банкротства
+- JSON-формат с chronicle_title и events[]: id/title/text/type/affected_nations/effect
+- Тест: node — OK
+
+#### CH_004: parseEvents + applyEffects
+- parseEvents: regex JSON extraction, markdown fence, хвостовые запятые, валидация
+- applyEffects: SuperOU.onDiplomacyEvent('CHRONICLE_EVENT', {variable, delta, duration})
+- Радиус эффекта: расширение по radius_hops на соседние нации
+- CHRONICLE_EVENT в super_ou.js: ищет variable во всех OU категориях, вызывает _mod
+- Тест: node — OK
+
+#### CH_005: async generate(gameState)
+- collectSnapshot → buildPrompt → callClaude(Sonnet) → parseEvents → applyEffects
+- addEventLog с иконками: 🏛⚔️💰🌿📜
+- Сохранение до 20 хроник в gameState._chronicles
+- Graceful degradation: при недоступном Sonnet возвращает []
+- Тест: node — OK
+
+#### CH_006: Интеграция в turn.js
+- Добавлен триггер в processTurn() после шага 5.55
+- if (turn > 0 && turn % 50 === 0) → ChronicleSystem.generate(GAME_STATE) fire-and-forget
+- Добавлен <script type="module" src="ai/chronicle.js"> в index.html
+- Тест: node (turn%50 logic) — OK
+
+### Итог файлов:
+- ai/chronicle.js   — 334 строк (CH_001–CH_006)
+- engine/super_ou.js — 2859 строк (+ CHRONICLE_EVENT)
+- engine/turn.js    — интеграция хроники
+- index.html        — подключение chronicle.js
+
+### Покрытые задачи: CH_001 – CH_006
+### Статус: OK ✓
+NEXT_TASK: —
