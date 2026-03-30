@@ -295,6 +295,7 @@ function _tpRenderIncome() {
       <span class="tp-item-label">Итого доходов</span>
       <span class="tp-item-value tp-val-pos">${totalPreview.toLocaleString()} ₴</span>
     </div>
+    ${buildWorldMarketPanel(nation)}
     ${(() => {
       const diagnostics = buildDeficitDiagnostics(nation);
       if (!diagnostics.length) return '';
@@ -584,6 +585,45 @@ function _tpRenderChart() {
       <span class="tp-chart-zero-lbl">— 0 —</span>
       <span>Ход ${maxTurn}</span>
     </div>`;
+}
+
+// ── Панель мирового рынка (ECO_004) ──────────────────────────
+function buildWorldMarketPanel(nation) {
+  const market    = GAME_STATE.market || {};
+  const nationId  = nation.id;
+  const hasCoast  = (nation.regions||[]).some(rId => {
+    const r = GAME_STATE.regions?.[rId];
+    return r?.type === 'coastal_city' || r?.terrain === 'coastal_city'
+      || window.MAP_REGIONS?.[rId]?.terrain === 'coastal_city';
+  });
+  const hasRoutes = (nation.economy?.trade_routes||[]).length > 0;
+  const hasAccess = hasCoast && hasRoutes;
+
+  if (!hasAccess) {
+    const reasons = [];
+    if (!hasCoast)  reasons.push('нет прибрежных регионов');
+    if (!hasRoutes) reasons.push('нет торговых маршрутов');
+    return `<div class="wm-panel no-access">🚫 Мировой рынок недоступен: ${reasons.join(', ')}</div>`;
+  }
+
+  // Топ-3 товара по объёму покупок в этом тике
+  const topGoods = Object.entries(market)
+    .filter(([,m]) => m._world_bought_tick?.[nationId] > 0)
+    .sort(([,a],[,b]) => (b._world_bought_tick[nationId]||0) - (a._world_bought_tick[nationId]||0))
+    .slice(0, 3);
+
+  const goodsHtml = topGoods.map(([good, m]) => {
+    const bought = Math.round(m._world_bought_tick[nationId] || 0);
+    const quota  = Math.round(m._quota_per_buyer || 9999);
+    const pct    = quota > 0 ? Math.min(100, Math.round(bought/quota*100)) : 0;
+    return `<div class="wm-good">${good}: ${bought}/${quota} ед
+      <div class="wm-bar"><div style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+
+  return `<div class="wm-panel has-access">🌍 Мировой рынок: доступен
+    ${goodsHtml || '<i>нет покупок в этом ходу</i>'}
+  </div>`;
 }
 
 // ── Диагностика дефицита бюджета ─────────────────────────────
