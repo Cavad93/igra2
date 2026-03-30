@@ -224,6 +224,26 @@ function utilityAIDecide(army, order) {
     });
     if (allyNearTarget) sc *= 1.15;
 
+    // ── MIL_004: Supply-aware path penalty ──────────────────────────────
+    if (army.supply < 40 && army.type !== 'naval' &&
+        typeof findArmyPath === 'function') {
+      const supPath = findArmyPath(army.position, rid, 'land', army.nation, false);
+      if (supPath && supPath.length > 1) {
+        const badTerrains = new Set(['mountains', 'hills']);
+        const hasBadTerrain = supPath.some(prid => {
+          const pr = nearby[prid] ?? (GAME_STATE.regions?.[prid] ?? MAP_REGIONS?.[prid]);
+          return pr && badTerrains.has(pr.terrain);
+        });
+        if (hasBadTerrain) {
+          sc -= 25;
+          moveReasoning += ' supply_warning:rough_terrain';
+        }
+      }
+    }
+    if (army.supply < 35 && !moveReasoning.includes('supply_warning')) {
+      moveReasoning += ' supply_warning';
+    }
+
     if (sc > 5) {
       candidates.push({
         action:    'move',

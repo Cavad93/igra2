@@ -234,9 +234,45 @@ function _armiesAtWar(nationA, nationB) {
 // nationId — нация армии (опционально). Если передан, учитывается
 // блокировка линиями крепостей.
 
-function findArmyPath(fromId, toId, type = 'land', nationId = null) {
+function findArmyPath(fromId, toId, type = 'land', nationId = null, checkSupply = false) {
   if (fromId === toId) return [fromId];
 
+  // ── MIL_004: Supply-aware Dijkstra (checkSupply=true) ───────────────
+  if (checkSupply) {
+    const INF  = Infinity;
+    const dist = new Map([[fromId, 0]]);
+    const prev = new Map();
+    const open = [[0, fromId]]; // [cost, regionId]
+
+    while (open.length) {
+      open.sort((a, b) => a[0] - b[0]);
+      const [d, cur] = open.shift();
+      if (cur === toId) break;
+      if (d > (dist.get(cur) ?? INF)) continue;
+      const reg = _getRegionData(cur);
+      if (!reg) continue;
+      for (const next of (reg.connections ?? [])) {
+        const nr = _getRegionData(next);
+        if (!nr) continue;
+        if (type === 'land'  && nr.mapType === 'Ocean') continue;
+        if (type === 'naval' && nr.mapType === 'Land')  continue;
+        if (type === 'land' && nationId && next !== toId &&
+            _isFortressLineBlocked(next, nationId)) continue;
+        // Low-supply terrain costs 1.8× (mountains / ocean-like)
+        const cap   = _getRegionSupplyCapacity(nr);
+        const nd    = d + (cap < 2000 ? 1.8 : 1.0);
+        if (nd < (dist.get(next) ?? INF)) {
+          dist.set(next, nd); prev.set(next, cur); open.push([nd, next]);
+        }
+      }
+    }
+    if (!prev.has(toId)) return null;
+    const p = []; let c = toId;
+    while (c !== fromId) { p.unshift(c); c = prev.get(c); if (c === undefined) return null; }
+    return [fromId, ...p];
+  }
+
+  // ── Original BFS (unchanged behaviour) ──────────────────────────────
   const visited = new Set([fromId]);
   const queue   = [[fromId, [fromId]]];
 
