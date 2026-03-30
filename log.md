@@ -194,3 +194,30 @@ NEXT_TASK: TASK_010
 ### Файл: super_ou.js — 1553 строки
 
 NEXT_TASK: TASK_011
+
+---
+
+## Session 11 — 2026-03-30 — TASK_011: PERSONALITY_MATRIX
+
+### Сделано:
+- Добавлен массив PERSONALITY_TRAITS — 20 именованных осей личности:
+  aggression, expansionism, merchantism, diplomacy, defensiveness,
+  piety, populism, autocracy, innovation, colonialism, navalism,
+  isolationism, tributarism, patronage, militarism, pragmatism,
+  loyalty, greed, paranoia, glory_seeking
+- Добавлены PERSONALITY_ARCHETYPES — 18 архетипов (Афины, Спарта, Рим,
+  Карфаген, Персия, Парфия, кельты, германцы, гунны и др.)
+- Добавлены PRIORITY_AMPLIFIERS — 10 стратегических приоритетов
+  с коэффициентами усиления по чертам личности
+- Реализована _buildPersonalityMatrix(nation) → Float32Array(1000)
+  (20 traits × 50 слотов):
+  - Блок A (0-19): базовые веса черт с небольшим шумом
+  - Блок B (20-29): веса, модулированные приоритетом
+  - Блок C (30-44): перекрёстные произведения взаимодействующих черт
+  - Блок D (45-49): уникальный шум на нацию
+- Добавлены вспомогательные: _hashString(str), _seededRng(seed) — Mulberry32
+- Проверка: node — OK, length=1000, sum≈552
+
+### Файл: super_ou.js — 1733 строки
+
+NEXT_TASK: TASK_012

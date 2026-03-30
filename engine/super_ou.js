@@ -1522,6 +1522,186 @@ export function applyModifiers(nation, ouState) {
   _modGroup30_EventsEpochal(ouState);
 }
 
+// ─── PERSONALITY MATRIX ───────────────────────────────────────────────────────
+
+/**
+ * Personality trait definitions — 20 named axes, each mapped to indices.
+ * The 1000-element vector is 20 traits × 50 action-weights each.
+ */
+const PERSONALITY_TRAITS = [
+  'aggression',       // 0  — willingness to wage war, raid, expand by force
+  'expansionism',     // 1  — drive to acquire territory
+  'merchantism',      // 2  — preference for trade over war
+  'diplomacy',        // 3  — preference for alliances, treaties
+  'defensiveness',    // 4  — focus on borders, fortifications
+  'piety',            // 5  — religious building, sacrifice, oracle
+  'populism',         // 6  — favour low taxes, grain doles, games
+  'autocracy',        // 7  — centralise power, purge rivals
+  'innovation',       // 8  — invest in new technology, infrastructure
+  'colonialism',      // 9  — found colonies, settle frontier
+  'navalism',         // 10 — build fleets, control sea lanes
+  'isolationism',     // 11 — avoid foreign entanglements
+  'tributarism',      // 12 — prefer tribute-extraction over annexation
+  'patronage',        // 13 — spend on culture, monuments, scholars
+  'militarism',       // 14 — maintain large standing army regardless
+  'pragmatism',       // 15 — react to events rather than long-term plan
+  'loyalty',          // 16 — strong general-faction loyalty
+  'greed',            // 17 — hoard wealth, delay spending
+  'paranoia',         // 18 — pre-emptive strikes, spy heavily
+  'glory_seeking',    // 19 — value prestige actions above economic ones
+];
+
+/**
+ * AI personality archetypes for ancient nations (300 BCE – 476 CE).
+ * Each maps to base trait weights [0..1] for all 20 traits.
+ */
+const PERSONALITY_ARCHETYPES = {
+  // Greek city-state flavours
+  athenian:       [0.3,0.4,0.9,0.7,0.4,0.5,0.6,0.3,0.8,0.5,0.8,0.3,0.2,0.9,0.3,0.7,0.4,0.4,0.3,0.6],
+  spartan:        [0.9,0.4,0.2,0.3,0.9,0.6,0.3,0.7,0.3,0.2,0.3,0.5,0.4,0.2,1.0,0.4,0.8,0.3,0.5,0.7],
+  corinthian:     [0.4,0.5,0.8,0.6,0.5,0.5,0.5,0.4,0.6,0.6,0.7,0.3,0.3,0.7,0.4,0.7,0.5,0.6,0.3,0.5],
+  theban:         [0.7,0.5,0.3,0.5,0.7,0.5,0.5,0.5,0.5,0.3,0.3,0.4,0.3,0.5,0.7,0.5,0.7,0.4,0.4,0.7],
+  macedonian:     [0.9,0.9,0.4,0.6,0.5,0.4,0.5,0.8,0.7,0.8,0.5,0.2,0.5,0.6,0.9,0.5,0.6,0.5,0.6,0.9],
+  // Hellenistic kingdoms
+  seleucid:       [0.7,0.8,0.6,0.6,0.5,0.5,0.5,0.7,0.6,0.7,0.4,0.3,0.6,0.7,0.7,0.6,0.5,0.5,0.5,0.7],
+  ptolemaic:      [0.5,0.5,0.8,0.7,0.6,0.8,0.7,0.7,0.7,0.4,0.6,0.4,0.5,0.9,0.5,0.6,0.5,0.7,0.4,0.6],
+  // Roman phases
+  roman_republic: [0.7,0.8,0.5,0.6,0.6,0.6,0.6,0.5,0.7,0.7,0.5,0.3,0.7,0.6,0.8,0.6,0.7,0.5,0.4,0.7],
+  roman_empire:   [0.8,0.7,0.6,0.5,0.7,0.6,0.6,0.9,0.7,0.6,0.6,0.4,0.7,0.7,0.9,0.5,0.6,0.6,0.7,0.8],
+  roman_late:     [0.6,0.4,0.5,0.5,0.8,0.7,0.7,0.8,0.5,0.3,0.5,0.5,0.6,0.5,0.7,0.8,0.5,0.7,0.8,0.4],
+  // Carthaginian / Phoenician
+  carthaginian:   [0.5,0.6,1.0,0.7,0.6,0.5,0.4,0.6,0.6,0.9,0.9,0.3,0.6,0.6,0.5,0.7,0.5,0.8,0.4,0.5],
+  // Persian / Achaemenid successors
+  persian:        [0.7,0.8,0.7,0.7,0.6,0.7,0.6,0.9,0.6,0.7,0.5,0.3,0.8,0.8,0.7,0.6,0.6,0.7,0.5,0.7],
+  parthian:       [0.7,0.5,0.5,0.5,0.7,0.6,0.5,0.7,0.4,0.4,0.3,0.5,0.7,0.5,0.8,0.7,0.7,0.5,0.6,0.5],
+  // Barbarian / frontier
+  celtic:         [0.9,0.6,0.3,0.4,0.5,0.8,0.5,0.4,0.4,0.5,0.3,0.4,0.3,0.5,0.8,0.5,0.7,0.3,0.4,0.9],
+  germanic:       [0.9,0.5,0.3,0.3,0.5,0.6,0.5,0.4,0.3,0.4,0.2,0.5,0.3,0.4,0.9,0.6,0.6,0.3,0.5,0.8],
+  hunnic:         [1.0,0.7,0.4,0.2,0.3,0.4,0.3,0.6,0.3,0.6,0.2,0.4,0.8,0.3,1.0,0.8,0.4,0.5,0.6,0.9],
+  // Eastern
+  indian:         [0.4,0.5,0.7,0.6,0.5,0.8,0.6,0.6,0.7,0.5,0.4,0.4,0.6,0.8,0.5,0.6,0.6,0.5,0.3,0.5],
+  // Default
+  default:        [0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],
+};
+
+/**
+ * Priority axes — 10 strategic objectives mapped to trait amplifiers.
+ * Each priority biases certain personality dimensions.
+ */
+const PRIORITY_AMPLIFIERS = {
+  military_supremacy: { aggression:1.4, militarism:1.3, defensiveness:1.1 },
+  economic_growth:    { merchantism:1.4, innovation:1.3, greed:0.8 },
+  territorial_expansion: { expansionism:1.5, colonialism:1.3, aggression:1.2 },
+  diplomatic_dominance:  { diplomacy:1.5, tributarism:1.3, patronage:1.2 },
+  cultural_hegemony:  { patronage:1.4, piety:1.3, glory_seeking:1.2 },
+  naval_power:        { navalism:1.5, merchantism:1.2, colonialism:1.3 },
+  survival:           { defensiveness:1.5, pragmatism:1.4, isolationism:1.3 },
+  population_growth:  { populism:1.3, merchantism:1.2, piety:1.1 },
+  religious_spread:   { piety:1.5, patronage:1.2, glory_seeking:1.2 },
+  internal_stability: { autocracy:1.3, loyalty:1.4, populism:1.2 },
+};
+
+/**
+ * Build a Float32Array(1000) personality matrix for a nation.
+ * Layout: 20 traits × 50 slots.
+ * - Slots 0-19: base trait weights (from archetype)
+ * - Slots 20-29: priority-amplified weights
+ * - Slots 30-39: interaction cross-products (aggression×expansion, etc.)
+ * - Slots 40-49: noise perturbation (unique per nation)
+ * This block repeats for all 20 traits → 20 × 50 = 1000 elements.
+ * @param {object} nation
+ * @returns {Float32Array}
+ */
+export function _buildPersonalityMatrix(nation) {
+  const matrix = new Float32Array(1000);
+
+  // Resolve archetype
+  const archetypeName = (nation.ai_personality || 'default').toLowerCase();
+  const baseWeights = PERSONALITY_ARCHETYPES[archetypeName]
+    || PERSONALITY_ARCHETYPES.default;
+
+  // Clone base weights so we can mutate
+  const weights = baseWeights.slice();
+
+  // Apply priority amplifiers
+  const priorityKey = (nation.ai_priority || '').toLowerCase().replace(/\s+/g, '_');
+  const amp = PRIORITY_AMPLIFIERS[priorityKey];
+  if (amp) {
+    for (const [traitName, factor] of Object.entries(amp)) {
+      const idx = PERSONALITY_TRAITS.indexOf(traitName);
+      if (idx >= 0) weights[idx] = Math.min(1.0, weights[idx] * factor);
+    }
+  }
+
+  // Seeded deterministic noise — use nation.id as seed
+  const seed = _hashString(String(nation.id || nation.name || 'default'));
+  const rng  = _seededRng(seed);
+
+  // Interaction pairs: aggression×expansionism, diplomacy×isolationism, etc.
+  const INTERACTIONS = [
+    [0,1],[0,4],[1,9],[2,3],[2,10],[3,11],[4,14],[5,6],
+    [6,7],[7,18],[8,13],[9,10],[12,15],[16,17],[18,19],
+  ];
+
+  for (let t = 0; t < 20; t++) {
+    const base = t * 50;
+
+    // Block A (0-19): raw trait weight replicated with slight variation
+    for (let i = 0; i < 20; i++) {
+      matrix[base + i] = Math.max(0, Math.min(1, weights[i] + (rng() - 0.5) * 0.05));
+    }
+
+    // Block B (20-29): priority-modulated weights for decision dimensions
+    for (let i = 0; i < 10; i++) {
+      matrix[base + 20 + i] = Math.max(0, Math.min(1, weights[t] * (0.8 + rng() * 0.4)));
+    }
+
+    // Block C (30-44): interaction cross-products
+    for (let i = 0; i < 15; i++) {
+      const [a, b] = INTERACTIONS[i];
+      matrix[base + 30 + i] = weights[a] * weights[b];
+    }
+
+    // Block D (45-49): noise perturbation unique to this nation+trait
+    for (let i = 0; i < 5; i++) {
+      matrix[base + 45 + i] = rng();
+    }
+  }
+
+  return matrix;
+}
+
+/**
+ * Simple djb2-style string hash → unsigned 32-bit int.
+ * @param {string} str
+ * @returns {number}
+ */
+function _hashString(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) + h + str.charCodeAt(i)) >>> 0;
+  }
+  return h;
+}
+
+/**
+ * Mulberry32 seeded PRNG — returns function that yields [0,1) floats.
+ * @param {number} seed
+ * @returns {function}
+ */
+function _seededRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s += 0x6D2B79F5;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// ─── DECISION ENGINE ─────────────────────────────────────────────────────────
+
 /**
  * Choose actions based on current OU state.
  * @param {object} nation
