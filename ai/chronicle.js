@@ -275,7 +275,56 @@ JSON формат:
       }
     }
   },
-  async generate(gameState) {},
+  async generate(gameState) {
+    // 1. Сбор данных
+    const snapshot = this.collectSnapshot(gameState);
+
+    // 2. Формирование промпта
+    const { system, user } = this.buildPrompt(snapshot);
+
+    // 3. Вызов Sonnet
+    let raw;
+    try {
+      // callClaude — глобальная функция из ai/claude.js
+      const callFn = (typeof callClaude !== 'undefined' && callClaude)
+        ?? (typeof window !== 'undefined' && window.callClaude);
+      if (!callFn) throw new Error('callClaude недоступен');
+
+      const MODEL_SONNET = (typeof CONFIG !== 'undefined' && CONFIG.MODEL_SONNET)
+        ?? (typeof window !== 'undefined' && window.CONFIG?.MODEL_SONNET)
+        ?? 'claude-sonnet-4-6';
+
+      raw = await callFn(system, user, this.MAX_TOKENS, MODEL_SONNET);
+    } catch (e) {
+      console.warn('[Chronicle] Sonnet недоступен:', e.message);
+      return [];
+    }
+
+    // 4. Парсинг
+    const parsed = this.parseEvents(raw, gameState);
+    if (!parsed) return [];
+
+    // 5. Применить эффекты
+    this.applyEffects(parsed.events ?? [], gameState);
+
+    // 6. Отобразить в event log
+    const _log = (typeof addEventLog !== 'undefined' && addEventLog)
+      ?? (typeof window !== 'undefined' && window.addEventLog)
+      ?? console.log;
+    _log(`━━━ ${parsed.chronicle_title ?? 'Хроники'} ━━━`);
+    const ICONS = { political:'🏛', military:'⚔️', economic:'💰', natural:'🌿', cultural:'📜' };
+    for (const evt of (parsed.events ?? [])) {
+      const icon = ICONS[evt.type] ?? '📖';
+      _log(`${icon} ${evt.title}: ${evt.text}`);
+    }
+
+    // 7. Сохранить в gameState
+    gameState._chronicles = gameState._chronicles ?? [];
+    gameState._chronicles.push({ turn: gameState.turn, ...parsed });
+    if (gameState._chronicles.length > 20) gameState._chronicles.shift();
+
+    return parsed.events ?? [];
+  },
 };
 
 export default ChronicleSystem;
