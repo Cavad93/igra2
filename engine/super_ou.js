@@ -671,7 +671,7 @@ function _applyBetrayalMemorySlowdown(nation, ou) {
 
   const categories = ['diplomacy', 'politics'];
   for (const cat of categories) {
-    if (!ou[cat]) continue;
+    if (!Array.isArray(ou[cat])) continue;
     for (const v of ou[cat]) {
       if (SLOW_VARS.has(v.name)) {
         v._theta_override = v.theta * (1 - slowFactor);
@@ -690,6 +690,7 @@ function updateState(nation) {
   const dt = SUPER_OU_CONFIG.dt;
   const categories = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
   for (const cat of categories) {
+    if (!Array.isArray(ou[cat])) continue;
     for (const variable of ou[cat]) {
       variable.current = _ouStep(variable, dt);
     }
@@ -2445,7 +2446,8 @@ function tick(gameState, nationId) {
   }
 
   // 1. Initialise OU state if this nation has never been processed
-  if (!nation._ou) {
+  // Check for proper Super-OU structure (arrays), not legacy scalar _ou from turn.js
+  if (!nation._ou || !Array.isArray(nation._ou.economy)) {
     initNation(nation);
   }
 
