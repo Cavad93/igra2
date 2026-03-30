@@ -916,10 +916,56 @@ const MODIFIERS_BATCH5 = [
   },
 ];
 
+// ─── BATCH 6: MIL_001–MIL_010 ────────────────────────────────────────────────
+// Война, мобилизация, усталость, дезертирство, моральный дух
+
+const MODIFIERS_BATCH6 = [
+  { id:'MIL_001', label:'Активная война — легионы в походе',
+    cond:(_n,ou)=>{ const ac=_findVar(ou,'military','active_conflicts'); return ac&&ac.current>0.50; },
+    adj:[{c:'military',n:'war_exhaustion',d:+0.06},{c:'military',n:'casualty_rate',d:+0.04},{c:'economy',n:'military_spending',d:+0.06},{c:'economy',n:'gold_reserves',d:-0.04}]
+  },
+  { id:'MIL_002', label:'Военное истощение — войска измотаны',
+    cond:(_n,ou)=>{ const we=_findVar(ou,'military','war_exhaustion'); return we&&we.current>0.70; },
+    adj:[{c:'military',n:'troop_morale',d:-0.10},{c:'military',n:'military_readiness',d:-0.08},{c:'military',n:'desertion_rate',d:+0.08},{c:'economy',n:'consumer_confidence',d:-0.06}]
+  },
+  { id:'MIL_003', label:'Массовое дезертирство — армия распадается',
+    cond:(_n,ou)=>{ const dr=_findVar(ou,'military','desertion_rate'); return dr&&dr.current>0.20; },
+    adj:[{c:'military',n:'army_size',d:-0.06},{c:'military',n:'troop_morale',d:-0.08},{c:'military',n:'military_readiness',d:-0.07},{c:'military',n:'internal_security',d:-0.05}]
+  },
+  { id:'MIL_004', label:'Закалённые ветераны — опытная элитная армия',
+    cond:(_n,ou)=>{ const vr=_findVar(ou,'military','veteran_ratio'),tm=_findVar(ou,'military','troop_morale'); return vr&&tm&&vr.current>0.70&&tm.current>0.80; },
+    adj:[{c:'military',n:'military_readiness',d:+0.08},{c:'military',n:'doctrine_quality',d:+0.05},{c:'military',n:'force_multiplier',d:+0.10},{c:'military',n:'officer_quality',d:+0.04}]
+  },
+  { id:'MIL_005', label:'Крах боевого духа — армия не хочет воевать',
+    cond:(_n,ou)=>{ const tm=_findVar(ou,'military','troop_morale'); return tm&&tm.current<0.20; },
+    adj:[{c:'military',n:'military_readiness',d:-0.10},{c:'military',n:'desertion_rate',d:+0.10},{c:'military',n:'coup_risk',d:+0.06},{c:'military',n:'conscription_rate',d:+0.05}]
+  },
+  { id:'MIL_006', label:'Осадная война — осада крепостей',
+    cond:(_n,ou)=>{ const se=_findVar(ou,'military','siege_engineering'),fl=_findVar(ou,'military','fortification_level'); return se&&fl&&se.current>0.70&&fl.current>0.60; },
+    adj:[{c:'military',n:'active_conflicts',d:+0.04},{c:'military',n:'ammunition_stock',d:-0.06},{c:'military',n:'force_multiplier',d:+0.07},{c:'economy',n:'construction_activity',d:-0.04}]
+  },
+  { id:'MIL_007', label:'Разрыв линий снабжения — армия без еды и оружия',
+    cond:(_n,ou)=>{ const lc=_findVar(ou,'military','logistics_capacity'); return lc&&lc.current<0.20; },
+    adj:[{c:'military',n:'food_supply_military',d:-0.09},{c:'military',n:'ammunition_stock',d:-0.07},{c:'military',n:'troop_morale',d:-0.08},{c:'military',n:'military_readiness',d:-0.08}]
+  },
+  { id:'MIL_008', label:'Господство на море — флот контролирует воды',
+    cond:(_n,ou)=>{ const ns=_findVar(ou,'military','navy_size'),nv=_findVar(ou,'military','naval_vessels'); return ns&&nv&&ns.current>0.80&&nv.current>1.0; },
+    adj:[{c:'military',n:'naval_power_projection',d:+0.10},{c:'military',n:'amphibious_ops',d:+0.07},{c:'economy',n:'port_activity',d:+0.07},{c:'economy',n:'trade_balance',d:+0.05}]
+  },
+  { id:'MIL_009', label:'Слабый флот — уязвимое побережье',
+    cond:(_n,ou)=>{ const ns=_findVar(ou,'military','navy_size'); return ns&&ns.current<0.05; },
+    adj:[{c:'military',n:'coastal_defense',d:-0.07},{c:'military',n:'naval_power_projection',d:-0.08},{c:'economy',n:'port_activity',d:-0.05},{c:'economy',n:'trade_balance',d:-0.03}]
+  },
+  { id:'MIL_010', label:'Неприступные укрепления — мощные стены и форты',
+    cond:(_n,ou)=>{ const fl=_findVar(ou,'military','fortification_level'); return fl&&fl.current>0.80; },
+    adj:[{c:'military',n:'border_control',d:+0.07},{c:'military',n:'strategic_depth',d:+0.05},{c:'military',n:'internal_security',d:+0.04},{c:'military',n:'siege_engineering',d:-0.03}]
+  },
+];
+
   const allMods = [
     ...MODIFIERS_BATCH1, ...MODIFIERS_BATCH2,
     ...MODIFIERS_BATCH3, ...MODIFIERS_BATCH4,
-    ...MODIFIERS_BATCH5,
+    ...MODIFIERS_BATCH5, ...MODIFIERS_BATCH6,
   ];
   for (const mod of allMods) {
     if (mod.cond(nation, ou)) _applyAdj(ou, mod.adj, ouState, mod.id);
