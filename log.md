@@ -660,3 +660,22 @@ NEXT_TASK: ST_010
 ### Строк добавлено: ~22 (diplomacy_ai.js +22)
 ### Статус: OK
 NEXT_TASK: ST_011
+
+---
+
+## Session 29 — 2026-03-30 — ST_011: память обид _checkResentmentRevenge
+
+### Задача: ST_011
+### Сделано:
+- Добавлена функция _checkResentmentRevenge(nation, ou, currentTurn) в super_ou.js
+- Условие: resentment > 0.85 AND military_confidence > 0.5 AND нет cooldown
+- Действия: добавляет REVENGE в goals_stack с priority 0.9
+- Модификаторы: aggression+0.40/40t, expansion_drive+0.35/40t, diplomatic_openness-0.30/30t
+- _revenge_cooldown = currentTurn + 50
+- Вызывает window.addEventLog("[⚔] нация ищет реванш")
+- Вызов в tick() после applyModifiers()
+- Тест: node — OK, REVENGE добавляется в goals_stack, cooldown=50
+
+### Строк добавлено: ~43 (super_ou.js +43)
+### Статус: OK
+NEXT_TASK: ST_012
