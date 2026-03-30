@@ -5,7 +5,7 @@
 
 // ─── CONFIGURATION ────────────────────────────────────────────────────────────
 
-export const SUPER_OU_CONFIG = {
+const SUPER_OU_CONFIG = {
   // Core OU parameters
   defaultTheta:        0.15,   // mean-reversion speed
   defaultSigma:        0.05,   // volatility scale
@@ -48,7 +48,7 @@ export const SUPER_OU_CONFIG = {
 
 // ─── STATE VECTOR SCHEMA — ECONOMY (80 vars) ─────────────────────────────────
 
-export const ECONOMY_SCHEMA = [
+const ECONOMY_SCHEMA = [
   { name:'gdp_growth',            mu:0.03,  sigma:0.02, theta:0.2, min:-0.3,  max:0.3,  category:'economy' },
   { name:'inflation_rate',        mu:0.04,  sigma:0.02, theta:0.2, min:-0.1,  max:1.0,  category:'economy' },
   { name:'unemployment_rate',     mu:0.07,  sigma:0.02, theta:0.15,min:0.0,   max:0.5,  category:'economy' },
@@ -137,7 +137,7 @@ export const ECONOMY_SCHEMA = [
  * @param {object} nation
  * @returns {Array} array of variable state objects
  */
-export function _initEconomyVector(nation) {
+function _initEconomyVector(nation) {
   const src = (nation && nation.economy) || {};
   return ECONOMY_SCHEMA.map(s => ({
     name:     s.name,
@@ -153,7 +153,7 @@ export function _initEconomyVector(nation) {
 
 // ─── STATE VECTOR SCHEMA — MILITARY (80 vars) ────────────────────────────────
 
-export const MILITARY_SCHEMA = [
+const MILITARY_SCHEMA = [
   { name:'army_size',               mu:0.3,   sigma:0.04, theta:0.1, min:0.0,   max:1.0,  category:'military' },
   { name:'navy_size',               mu:0.2,   sigma:0.03, theta:0.1, min:0.0,   max:1.0,  category:'military' },
   { name:'air_force_size',          mu:0.2,   sigma:0.03, theta:0.1, min:0.0,   max:1.0,  category:'military' },
@@ -241,7 +241,7 @@ export const MILITARY_SCHEMA = [
  * @param {object} nation
  * @returns {Array} array of variable state objects
  */
-export function _initMilitaryVector(nation) {
+function _initMilitaryVector(nation) {
   const src = (nation && nation.military) || {};
   return MILITARY_SCHEMA.map(s => ({
     name:     s.name,
@@ -257,7 +257,7 @@ export function _initMilitaryVector(nation) {
 
 // ─── STATE VECTOR SCHEMA — DIPLOMACY (80 vars) ───────────────────────────────
 
-export const DIPLOMACY_SCHEMA = [
+const DIPLOMACY_SCHEMA = [
   { name:'global_reputation',        mu:0.5,  sigma:0.04, theta:0.05, min:0.0, max:1.0, category:'diplomacy' },
   { name:'alliance_count',           mu:0.3,  sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'diplomacy' },
   { name:'enemy_count',              mu:0.1,  sigma:0.03, theta:0.1,  min:0.0, max:1.0, category:'diplomacy' },
@@ -345,7 +345,7 @@ export const DIPLOMACY_SCHEMA = [
  * @param {object} nation
  * @returns {Array} array of variable state objects
  */
-export function _initDiplomacyVector(nation) {
+function _initDiplomacyVector(nation) {
   const src = (nation && nation.diplomacy) || {};
   return DIPLOMACY_SCHEMA.map(s => ({
     name:     s.name,
@@ -361,7 +361,7 @@ export function _initDiplomacyVector(nation) {
 
 // ─── POLITICS SCHEMA ──────────────────────────────────────────────────────────
 
-export const POLITICS_SCHEMA = [
+const POLITICS_SCHEMA = [
   { name:'regime_stability',        mu:0.65, sigma:0.06, theta:0.10, min:0.0, max:1.0, category:'politics' },
   { name:'government_legitimacy',   mu:0.60, sigma:0.05, theta:0.08, min:0.0, max:1.0, category:'politics' },
   { name:'popular_support',         mu:0.55, sigma:0.07, theta:0.12, min:0.0, max:1.0, category:'politics' },
@@ -449,7 +449,7 @@ export const POLITICS_SCHEMA = [
  * @param {object} nation
  * @returns {Array} array of variable state objects
  */
-export function _initPoliticsVector(nation) {
+function _initPoliticsVector(nation) {
   const src = (nation && nation.politics) || {};
   return POLITICS_SCHEMA.map(s => ({
     name:     s.name,
@@ -465,7 +465,7 @@ export function _initPoliticsVector(nation) {
 
 // ─── GOALS SCHEMA ─────────────────────────────────────────────────────────────
 
-export const GOALS_SCHEMA = [
+const GOALS_SCHEMA = [
   { name:'expansion_drive',         mu:0.30, sigma:0.05, theta:0.08, min:0.0, max:1.0, category:'goals' },
   { name:'survival_imperative',     mu:0.70, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'goals' },
   { name:'wealth_accumulation',     mu:0.55, sigma:0.05, theta:0.07, min:0.0, max:1.0, category:'goals' },
@@ -553,7 +553,7 @@ export const GOALS_SCHEMA = [
  * @param {object} nation
  * @returns {Array} array of variable state objects
  */
-export function _initGoalsVector(nation) {
+function _initGoalsVector(nation) {
   const src = (nation && nation.goals) || {};
   return GOALS_SCHEMA.map(s => ({
     name:     s.name,
@@ -610,7 +610,7 @@ function _ouStep(variable, dt = 1) {
  * Calls all 5 _init functions and stores results in nation._ou
  * @param {object} nation
  */
-export function initNation(nation) {
+function initNation(nation) {
   nation._ou = {
     economy:   _initEconomyVector(nation),
     military:  _initMilitaryVector(nation),
@@ -685,7 +685,7 @@ function _applyBetrayalMemorySlowdown(nation, ou) {
  * Iterates over all 5 categories in nation._ou and applies _ouStep to each.
  * @param {object} nation
  */
-export function updateState(nation) {
+function updateState(nation) {
   const ou = nation._ou;
   const dt = SUPER_OU_CONFIG.dt;
   const categories = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
@@ -1653,7 +1653,7 @@ function _applySeasonalModifier(nation, ou) {
 
 // ─── PUBLIC: applyModifiers ───────────────────────────────────────────────────
 
-export function applyModifiers(nation, ouState, gameState) {
+function applyModifiers(nation, ouState, gameState) {
   // First: seasonal behavioral modifiers (confidence, aggression, expansion, mobilization)
   _applySeasonalModifier(nation, ouState);
   // Religion modifier (ST_015)
@@ -1799,7 +1799,7 @@ const PRIORITY_AMPLIFIERS = {
  * @param {object} nation
  * @returns {Float32Array}
  */
-export function _buildPersonalityMatrix(nation) {
+function _buildPersonalityMatrix(nation) {
   const matrix = new Float32Array(1000);
 
   // Resolve archetype
@@ -2061,7 +2061,7 @@ function _applyEconomicDependencyConstraint(ou, nation, results) {
  * @param {object} ouState  (nation._ou)
  * @returns {Array<{action:string, probability:number, score:number}>}
  */
-export function decideActions(nation, ouState) {
+function decideActions(nation, ouState) {
   const ou = ouState || nation._ou;
   if (!ou) return [{ action: 'pass', probability: 1.0, score: 0 }];
 
@@ -2310,7 +2310,7 @@ function _anomalyCat7_ModifierSaturation(ouState) {
  * @param {object} ouState
  * @returns {{ total: number, categories: object[], isAnomaly: boolean }}
  */
-export function calculateAnomalyScore(nation, ouState) {
+function calculateAnomalyScore(nation, ouState) {
   const ou = ouState || nation._ou;
   const cats = [
     _anomalyCat1_Outliers(ou),
@@ -2344,7 +2344,7 @@ export function calculateAnomalyScore(nation, ouState) {
  * Call this AFTER updateState, BEFORE the next tick.
  * @param {object} ouState
  */
-export function snapshotState(ouState) {
+function snapshotState(ouState) {
   const cats = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
   ouState._prev = {};
   for (const cat of cats) {
@@ -2434,7 +2434,7 @@ function _updateConquestFatigue(nation, ou) {
  * @param {string} nationId   — id of the nation to process
  * @returns {object}          — { nationId, actions, anomaly, debug? }
  */
-export function tick(gameState, nationId) {
+function tick(gameState, nationId) {
   const nation = gameState.nations
     ? gameState.nations[nationId] || gameState.nations.find?.(n => n.id === nationId)
     : null;
@@ -2518,7 +2518,7 @@ export function tick(gameState, nationId) {
  * @param {object} nation
  * @returns {object}
  */
-export function getDebugVector(nation) {
+function getDebugVector(nation) {
   const ou = nation._ou;
   if (!ou) return { error: 'nation not initialised' };
   const cats = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
@@ -2548,7 +2548,7 @@ export function getDebugVector(nation) {
  * @param {object} nation
  * @returns {object}
  */
-export function getContextForSonnet(nation) {
+function getContextForSonnet(nation) {
   const ou = nation._ou;
   if (!ou) return { error: 'not_initialised' };
 
@@ -2635,7 +2635,7 @@ export function getContextForSonnet(nation) {
 // ─── ST_009: EVENT_DELTA_MAP + onDiplomacyEvent ────────────────────────────────
 // Format: [category, varName, deltaMu, durationTurns] — 9999 = permanent
 const _PERM = 9999;
-export const EVENT_DELTA_MAP = {
+const EVENT_DELTA_MAP = {
   ALLIANCE_SIGNED:   [['diplomacy','alliance_reliability',+0.55,80],['diplomacy','international_trust',+0.45,80],
                       ['military','war_exhaustion',-0.30,60],['goals','expansion_drive',-0.20,80]],
   ALLIANCE_BROKEN:   [['diplomacy','alliance_reliability',-0.60,_PERM],['diplomacy','international_trust',-0.50,_PERM],
@@ -2662,7 +2662,7 @@ export const EVENT_DELTA_MAP = {
 /** Apply diplomacy event deltas to nation's OU state.
  *  nationId: nation ID string or nation object
  *  data: { severity?, gameState? } — extra context */
-export function onDiplomacyEvent(nationId, eventType, data = {}) {
+function onDiplomacyEvent(nationId, eventType, data = {}) {
   const gs = data?.gameState ?? (typeof GAME_STATE !== 'undefined' ? GAME_STATE : null);
   const ouKey = nationId?.id ?? nationId;
   const nation = nationId?.name ? nationId : (gs?.nations?.[ouKey] ?? null);
@@ -2723,7 +2723,7 @@ export function onDiplomacyEvent(nationId, eventType, data = {}) {
  * Применить кризис преемственности: stability↓, legitimacy↓, coalition*0.7,
  * _force_anomaly=true для немедленного вызова LLM-обработчика в tick().
  */
-export function onRulerDied(nationId, gameState) {
+function onRulerDied(nationId, gameState) {
   const gs = gameState ?? (typeof GAME_STATE !== 'undefined' ? GAME_STATE : null);
   const ouKey = nationId?.id ?? nationId;
   const nation = nationId?.name ? nationId : (gs?.nations?.[ouKey] ?? null);
@@ -2759,7 +2759,7 @@ export function onRulerDied(nationId, gameState) {
  * При PROMISE_BROKEN или BETRAYED_ALLY применить штраф доверия к игроку
  * всем нациям Tier1+Tier2 (tier <= 2), не являющимся самим игроком.
  */
-export function onPlayerReputationEvent(eventType, gameState) {
+function onPlayerReputationEvent(eventType, gameState) {
   const gs = gameState ?? (typeof GAME_STATE !== 'undefined' ? GAME_STATE : null);
   if (!gs) return;
 
@@ -2796,7 +2796,7 @@ export function onPlayerReputationEvent(eventType, gameState) {
  * Если игрок контролирует > 15% регионов — все Tier1+Tier2 нации ощущают страх.
  * Вызывать из turn.js каждые 5 ходов (turn % 5 === 0).
  */
-export function applyHegemonModifier(gameState) {
+function applyHegemonModifier(gameState) {
   const gs = gameState ?? (typeof GAME_STATE !== 'undefined' ? GAME_STATE : null);
   if (!gs) return;
 

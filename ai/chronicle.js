@@ -38,7 +38,7 @@ function _playerReputation(playerNation, nations) {
 
 // ── Основной объект ───────────────────────────────────────────────────────────
 
-export const ChronicleSystem = {
+const ChronicleSystem = {
   INTERVAL:      50,
   MAX_EVENTS:    5,
   MAX_TOKENS:    600,
@@ -327,7 +327,7 @@ JSON формат:
   },
 };
 
-export default ChronicleSystem;
+// export default ChronicleSystem;
 
 if (typeof window !== 'undefined') {
   window.ChronicleSystem = ChronicleSystem;
