@@ -728,3 +728,21 @@ NEXT_TASK: ST_014
 ### Строк добавлено: ~35 (super_ou.js +35)
 ### Статус: OK
 NEXT_TASK: ST_015
+
+---
+
+## Session 26 — 2026-03-30 — ST_015: религиозный модификатор
+
+### Задача: ST_015
+### Сделано:
+- Добавлена _applyReligionModifier(nation, ou, gameState) ~40 строк в engine/super_ou.js
+- Одна религия с игроком: international_trust+0.20/3t, coalition_loyalty+0.15/3t
+- Разные религии: rivalry_index+0.15/3t, international_trust-0.10/3t
+- Греческая религия (Greek/Hellen/Olymp): 2% шанс oracle_blessing → military_readiness+0.12/8t
+- Вызов в applyModifiers() сразу после _applySeasonalModifier()
+- tick() теперь передаёт gameState в applyModifiers() для доступа к игроку
+- Тест: same_religion trust/coalition подтверждены, diff_religion rivalry/distrust подтверждены
+
+### Строк добавлено: ~45 (super_ou.js +45)
+### Статус: OK
+NEXT_TASK: ST_016
