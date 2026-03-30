@@ -595,7 +595,9 @@ function clamp(x, min, max) {
  * @returns {number} new value (clamped)
  */
 function _ouStep(variable, dt = 1) {
-  const { current, mu, sigma, theta, min, max } = variable;
+  const { current, mu, sigma, min, max } = variable;
+  // ST_020: use theta override if set (betrayal memory slowdown)
+  const theta = variable._theta_override ?? variable.theta;
   const drift = theta * (mu - current) * dt;
   const diffusion = sigma * Math.sqrt(dt) * gaussian();
   return clamp(current + drift + diffusion, min, max);
@@ -628,6 +630,56 @@ export function initNation(nation) {
  */
 // tick — implemented below near line 2129
 
+// ─── ST_020: Betrayal Memory Slowdown ────────────────────────────────────────
+/**
+ * _applyBetrayalMemorySlowdown(nation, ou)
+ * Slow down trust/coalition/diplomatic_openness mean-reversion when
+ * the nation has accumulated betrayal memories.
+ *
+ * severity weights: humiliation=3, high=2, normal=1
+ * slowFactor = min(0.9, weight * 0.15)
+ * Memories older than 200 turns are forgotten.
+ * Sets v._theta_override for affected variables (used in _ouStep).
+ */
+function _applyBetrayalMemorySlowdown(nation, ou) {
+  if (!ou._betrayal_memory || ou._betrayal_memory.length === 0) return;
+
+  const currentTurn = ou.tick ?? 0;
+
+  // Forget betrayals older than 200 turns
+  ou._betrayal_memory = ou._betrayal_memory.filter(
+    b => (currentTurn - (b.turn ?? 0)) <= 200
+  );
+
+  if (ou._betrayal_memory.length === 0) return;
+
+  // Compute total severity weight
+  let weight = 0;
+  for (const b of ou._betrayal_memory) {
+    if (b.severity === 'humiliation') weight += 3;
+    else if (b.severity === 'high')   weight += 2;
+    else                              weight += 1;
+  }
+
+  const slowFactor = Math.min(0.9, weight * 0.15);
+
+  // Apply theta override to slow-recovery variables
+  const SLOW_VARS = new Set([
+    'international_trust', 'coalition_loyalty', 'diplomatic_openness',
+    'alliance_reliability', 'diplomatic_capital',
+  ]);
+
+  const categories = ['diplomacy', 'politics'];
+  for (const cat of categories) {
+    if (!ou[cat]) continue;
+    for (const v of ou[cat]) {
+      if (SLOW_VARS.has(v.name)) {
+        v._theta_override = v.theta * (1 - slowFactor);
+      }
+    }
+  }
+}
+
 /**
  * Advance all OU variables by one step.
  * Iterates over all 5 categories in nation._ou and applies _ouStep to each.
@@ -642,6 +694,8 @@ export function updateState(nation) {
       variable.current = _ouStep(variable, dt);
     }
   }
+  // ST_020: apply betrayal memory slowdown AFTER _ouStep cycle
+  _applyBetrayalMemorySlowdown(nation, ou);
   // ST_014: conquest fatigue — после обновления переменных
   _updateConquestFatigue(nation, ou);
   ou.tick++;
