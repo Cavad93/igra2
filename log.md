@@ -787,3 +787,24 @@ NEXT_TASK: ST_017
 ### Строк добавлено: ~46
 ### Статус: OK
 NEXT_TASK: ST_018
+
+## Session 29 — 2026-03-30 — ST_018: Гегемониальный страх
+
+### Задача: ST_018
+### Сделано:
+- Добавлена applyHegemonModifier(gameState) ~40 строк в engine/super_ou.js
+  * playerShare = player_regions / total_regions
+  * если playerShare > 0.15:
+    intensity = min(1.0, (playerShare-0.15)/0.25)
+    всем Tier1+Tier2: fear+intensity*0.20/5t,
+                      coalition_loyalty+intensity*0.15/5t,
+                      diplomatic_openness+intensity*0.10/5t
+  * если intensity>0.5: addEventLog("[⚖] Гегемония — нации сплачиваются")
+- Экспортирована в window.SuperOU
+- Интегрирована в turn.js processAINations():
+  * if (currentTurn % 5 === 0) → applyHegemonModifier(GAME_STATE)
+- Тест: node без ошибок, applyHegemonModifier: function
+
+### Строк добавлено: ~52
+### Статус: OK
+NEXT_TASK: ST_019
