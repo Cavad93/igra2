@@ -67,3 +67,20 @@ NEXT_TASK: TASK_004
 
 NEXT_TASK: TASK_005
 
+---
+
+## Session 5 — 2026-03-30 — TASK_005: политические переменные STATE_VECTOR
+
+### Сделано:
+- Добавлен POLITICS_SCHEMA — 80 политических переменных (category:'politics')
+  формат: { name, mu, sigma, theta, min, max, category, current }
+- Переменные охватывают: стабильность режима, легитимность, народную поддержку,
+  демократию/автократию, коррупцию, протесты, политическое насилие, разделение
+  властей, гражданские свободы, партийные системы, лоббирование и др.
+- Добавлена функция _initPoliticsVector(nation)
+- Проверка: node — OK, POLITICS_SCHEMA.length=80, vector=80
+
+### Файл: super_ou.js — 531 строк
+
+NEXT_TASK: TASK_006
+
