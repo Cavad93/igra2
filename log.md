@@ -124,3 +124,28 @@ NEXT_TASK: TASK_007
 
 NEXT_TASK: TASK_008
 
+---
+
+## Session 8 — 2026-03-30 — TASK_008: первые 100 ситуационных модификаторов
+
+### Сделано:
+- Реализованы 100 ситуационных модификаторов (10 групп × 10): экономика + военное дело
+- Вспомогательные функции: _getVal, _mod, _decayModifiers
+- Группы модификаторов:
+  1. Урожай и сельское хозяйство (bumper_harvest, harvest_failure, drought, locust_plague ...)
+  2. Торговля и коммерция (trade_route_open, piracy_spike, currency_debasement ...)
+  3. Инфраструктура и ресурсы (road_construction_boom, mine_discovery, iron_supply_crisis ...)
+  4. Налогообложение и финансы (high_tax_revolt, debt_crisis, silver_mine_windfall ...)
+  5. Кризис и восстановление (plague_economic, war_economy, economic_boom ...)
+  6. Состояние войны (at_war_drain, victory_euphoria, defeat_demoralisation ...)
+  7. Качество армии (elite_unit_formation, mercenary_influx, drill_reform ...)
+  8. Флот и логистика (fleet_expansion, supply_line_cut, naval_dominance ...)
+  9. Оборона и укрепления (walls_built, fortress_besieged, border_fortification ...)
+  10. Мораль и дисциплина (triumph_ceremony, pay_arrears, generous_donative ...)
+- Модификаторы сдвигают mu переменных; хранятся в ouState.activeModifiers с auto-decay
+- Проверка: node — OK
+
+### Файл: super_ou.js — 982 строки
+
+NEXT_TASK: TASK_009
+

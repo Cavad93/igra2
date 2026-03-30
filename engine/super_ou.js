@@ -647,13 +647,308 @@ export function updateState(nation) {
   ou.tick++;
 }
 
+// ─── MODIFIER HELPERS ────────────────────────────────────────────────────────
+
+/** Get current value of an OU variable by category + name. */
+function _getVal(ouState, category, name) {
+  const arr = ouState[category];
+  if (!arr) return 0;
+  const v = arr.find(x => x.name === name);
+  return v ? v.current : 0;
+}
+
+/** Temporarily shift mu of a variable; record in activeModifiers. */
+function _mod(ouState, modName, category, varName, deltaMu, duration = 6) {
+  if (!ouState.activeModifiers) ouState.activeModifiers = [];
+  const existing = ouState.activeModifiers.find(m => m.name === modName);
+  if (existing) {
+    existing.duration = Math.max(existing.duration, duration);
+    return;
+  }
+  const arr = ouState[category];
+  if (arr) {
+    const v = arr.find(x => x.name === varName);
+    if (v) {
+      const cap = SUPER_OU_CONFIG.modifierCapMu;
+      v.mu = Math.min(cap, Math.max(0.02, v.mu + deltaMu));
+    }
+  }
+  ouState.activeModifiers.push({ name: modName, category, varName, deltaMu, duration });
+}
+
+/** Tick down active modifiers; reverse mu shift when expired. */
+function _decayModifiers(ouState) {
+  if (!ouState.activeModifiers) return;
+  ouState.activeModifiers = ouState.activeModifiers.filter(m => {
+    m.duration--;
+    if (m.duration <= 0) {
+      const arr = ouState[m.category];
+      if (arr) {
+        const v = arr.find(x => x.name === m.varName);
+        if (v) v.mu = Math.min(SUPER_OU_CONFIG.modifierCapMu, Math.max(0.02, v.mu - m.deltaMu));
+      }
+      return false;
+    }
+    return true;
+  });
+}
+
+// ─── GROUP 1 — ECONOMIC: HARVEST & AGRICULTURE ───────────────────────────────
+
+function _modGroup1_Harvest(ou) {
+  const fp  = _getVal(ou, 'economy', 'food_production');
+  const fc  = _getVal(ou, 'economy', 'food_consumption');
+  const ao  = _getVal(ou, 'economy', 'agricultural_output');
+  const lp  = _getVal(ou, 'economy', 'land_productivity');
+  const wa  = _getVal(ou, 'economy', 'water_availability');
+  const lc  = _getVal(ou, 'economy', 'livestock_count');
+  const sl  = _getVal(ou, 'economy', 'slave_labor_dependency');
+
+  if (fp > 0.85)                        _mod(ou, 'bumper_harvest',        'economy', 'agricultural_output',  +0.12, 4);
+  if (fp < 0.2)                         _mod(ou, 'harvest_failure',       'economy', 'food_production',      -0.15, 5);
+  if (wa < 0.2)                         _mod(ou, 'drought',               'economy', 'land_productivity',    -0.18, 6);
+  if (ao < 0.12)                        _mod(ou, 'locust_plague',         'economy', 'food_production',      -0.25, 4);
+  if (lp > 0.75 && wa > 0.6)           _mod(ou, 'irrigation_boom',       'economy', 'land_productivity',    +0.10, 8);
+  if (lc < 0.18)                        _mod(ou, 'livestock_epidemic',    'economy', 'food_production',      -0.12, 5);
+  if (fp - fc > 0.3)                    _mod(ou, 'grain_surplus',         'economy', 'trade_balance',        +0.10, 4);
+  if (fp < fc * 0.55)                   _mod(ou, 'famine_crisis',         'economy', 'population_growth',    -0.04, 6);
+  if (ao > 0.85)                        _mod(ou, 'olive_harvest_boom',    'economy', 'export_volume',        +0.12, 3);
+  if (sl > 0.8 && ao < 0.35)           _mod(ou, 'slave_revolt_agri',     'economy', 'agricultural_output',  -0.15, 4);
+}
+
+// ─── GROUP 2 — ECONOMIC: TRADE & COMMERCE ────────────────────────────────────
+
+function _modGroup2_Trade(ou) {
+  const to  = _getVal(ou, 'economy', 'trade_openness');
+  const tb  = _getVal(ou, 'economy', 'trade_balance');
+  const pa  = _getVal(ou, 'economy', 'port_activity');
+  const fi  = _getVal(ou, 'economy', 'foreign_investment');
+  const cc  = _getVal(ou, 'economy', 'consumer_confidence');
+  const cs  = _getVal(ou, 'economy', 'currency_strength');
+
+  if (to > 0.7)                         _mod(ou, 'trade_route_open',      'economy', 'export_volume',        +0.12, 5);
+  if (tb < -0.3)                        _mod(ou, 'trade_route_blocked',   'economy', 'import_volume',        -0.12, 4);
+  if (pa > 0.65 && tb < 0.1)           _mod(ou, 'piracy_spike',          'economy', 'trade_balance',        -0.10, 4);
+  if (tb > 0.22)                        _mod(ou, 'merchant_prosperity',   'economy', 'gold_reserves',        +0.08, 5);
+  if (cc < 0.2)                         _mod(ou, 'market_collapse',       'economy', 'retail_sales',         -0.15, 5);
+  if (fi > 0.32)                        _mod(ou, 'foreign_trade_boom',    'economy', 'export_volume',        +0.10, 5);
+  if (to > 0.6 && pa > 0.5)            _mod(ou, 'silk_road_access',      'economy', 'import_volume',        +0.10, 6);
+  if (pa > 0.8)                         _mod(ou, 'port_expansion',        'economy', 'logistics_efficiency', +0.10, 7);
+  if (to < 0.18)                        _mod(ou, 'trade_embargo',         'economy', 'export_volume',        -0.18, 5);
+  if (cs < 0.35)                        _mod(ou, 'currency_debasement',   'economy', 'inflation_rate',       +0.18, 5);
+}
+
+// ─── GROUP 3 — ECONOMIC: INFRASTRUCTURE & RESOURCES ──────────────────────────
+
+function _modGroup3_Infra(ou) {
+  const rn  = _getVal(ou, 'economy', 'road_network_index');
+  const mo  = _getVal(ou, 'economy', 'mining_output');
+  const rd  = _getVal(ou, 'economy', 'resource_depletion');
+  const ii  = _getVal(ou, 'economy', 'infrastructure_index');
+  const fo  = _getVal(ou, 'economy', 'forestry_output');
+  const rm  = _getVal(ou, 'economy', 'raw_materials_stock');
+  const pa  = _getVal(ou, 'economy', 'port_activity');
+
+  if (rn > 0.72)                        _mod(ou, 'road_construction_boom','economy', 'logistics_efficiency', +0.10, 8);
+  if (mo > 0.82)                        _mod(ou, 'mine_discovery',        'economy', 'gold_reserves',        +0.12, 5);
+  if (rd > 0.82)                        _mod(ou, 'mine_exhaustion',       'economy', 'mining_output',        -0.14, 6);
+  if (ii > 0.76)                        _mod(ou, 'aqueduct_built',        'economy', 'population_growth',    +0.02, 9);
+  if (pa > 0.72 && rn > 0.5)           _mod(ou, 'harbor_improvement',    'economy', 'export_volume',        +0.10, 6);
+  if (rn < 0.18)                        _mod(ou, 'road_network_decay',    'economy', 'logistics_efficiency', -0.12, 6);
+  if (fo < 0.14)                        _mod(ou, 'forest_depletion',      'economy', 'construction_activity',-0.12, 5);
+  if (rm < 0.18)                        _mod(ou, 'iron_supply_crisis',    'economy', 'manufacturing_output', -0.15, 5);
+  if (fo > 0.82)                        _mod(ou, 'timber_surplus',        'economy', 'construction_activity',+0.12, 4);
+  if (mo > 0.72)                        _mod(ou, 'quarry_boom',           'economy', 'construction_activity',+0.10, 5);
+}
+
+// ─── GROUP 4 — ECONOMIC: TAXATION & FINANCE ──────────────────────────────────
+
+function _modGroup4_Finance(ou) {
+  const tr  = _getVal(ou, 'economy', 'tax_revenue');
+  const ci  = _getVal(ou, 'economy', 'corruption_index');
+  const dr  = _getVal(ou, 'economy', 'debt_ratio');
+  const gr  = _getVal(ou, 'economy', 'gold_reserves');
+  const ir  = _getVal(ou, 'economy', 'inflation_rate');
+  const bs  = _getVal(ou, 'economy', 'banking_stability');
+  const ca  = _getVal(ou, 'economy', 'credit_availability');
+
+  if (tr > 0.5)                         _mod(ou, 'high_tax_revolt',       'economy', 'consumer_confidence',  -0.12, 4);
+  if (ci < 0.2)                         _mod(ou, 'tax_collection_boom',   'economy', 'tax_revenue',          +0.10, 5);
+  if (ci > 0.62)                        _mod(ou, 'corrupt_tax_farming',   'economy', 'tax_revenue',          -0.12, 5);
+  if (dr > 2.0)                         _mod(ou, 'debt_crisis',           'economy', 'gold_reserves',        -0.15, 5);
+  if (gr > 0.72)                        _mod(ou, 'treasury_surplus',      'economy', 'domestic_investment',  +0.10, 5);
+  if (gr > 0.82)                        _mod(ou, 'silver_mine_windfall',  'economy', 'currency_strength',    +0.14, 4);
+  if (ir > 0.4)                         _mod(ou, 'inflation_spiral',      'economy', 'consumer_confidence',  -0.14, 5);
+  if (ir < -0.01)                       _mod(ou, 'deflation_trap',        'economy', 'gdp_growth',           -0.08, 5);
+  if (bs < 0.2)                         _mod(ou, 'banking_panic',         'economy', 'credit_availability',  -0.18, 4);
+  if (ca > 0.82)                        _mod(ou, 'lending_boom',          'economy', 'domestic_investment',  +0.12, 5);
+}
+
+// ─── GROUP 5 — ECONOMIC: CRISIS & RECOVERY ───────────────────────────────────
+
+function _modGroup5_Crisis(ou) {
+  const pg  = _getVal(ou, 'economy', 'population_growth');
+  const ms  = _getVal(ou, 'economy', 'military_spending');
+  const sl  = _getVal(ou, 'economy', 'slave_labor_dependency');
+  const gg  = _getVal(ou, 'economy', 'gdp_growth');
+  const gn  = _getVal(ou, 'economy', 'gini_coefficient');
+  const ur  = _getVal(ou, 'economy', 'urbanization_rate');
+
+  if (pg < -0.02)                       _mod(ou, 'plague_economic',       'economy', 'labor_participation',  -0.14, 6);
+  if (ms > 0.2)                         _mod(ou, 'war_economy',           'economy', 'consumer_confidence',  -0.10, 5);
+  if (ms < 0.015)                       _mod(ou, 'post_war_recovery',     'economy', 'construction_activity',+0.12, 6);
+  if (sl > 0.62)                        _mod(ou, 'slave_supply_increase', 'economy', 'agricultural_output',  +0.10, 5);
+  if (sl < 0.28)                        _mod(ou, 'slave_manumission',     'economy', 'wage_growth',          +0.06, 5);
+  if (gg > 0.1)                         _mod(ou, 'economic_boom',         'economy', 'consumer_confidence',  +0.14, 5);
+  if (gg < -0.05)                       _mod(ou, 'economic_recession',    'economy', 'tax_revenue',          -0.10, 5);
+  if (gn > 0.76)                        _mod(ou, 'gini_crisis',           'economy', 'consumer_confidence',  -0.12, 5);
+  if (ur > 0.72)                        _mod(ou, 'urbanization_boom',     'economy', 'manufacturing_output', +0.10, 6);
+  if (ur > 0.62 && pg > 0.005)         _mod(ou, 'rural_exodus',          'economy', 'agricultural_output',  -0.09, 5);
+}
+
+// ─── GROUP 6 — MILITARY: WARFARE STATE ───────────────────────────────────────
+
+function _modGroup6_Warfare(ou) {
+  const ac  = _getVal(ou, 'military', 'active_conflicts');
+  const we  = _getVal(ou, 'military', 'war_exhaustion');
+  const cr  = _getVal(ou, 'military', 'casualty_rate');
+  const ml  = _getVal(ou, 'military', 'military_loyalty');
+  const fe  = _getVal(ou, 'military', 'military_experience');
+  const sl2 = _getVal(ou, 'military', 'supply_line_security');
+  const gr  = _getVal(ou, 'economy',  'gold_reserves');
+
+  if (ac > 0.5)                         _mod(ou, 'at_war_drain',          'economy', 'gold_reserves',        -0.12, 5);
+  if (ac > 0.5 && we < 0.25)           _mod(ou, 'victory_euphoria',      'military', 'troop_morale',         +0.14, 4);
+  if (ac > 0.3 && cr > 0.2)            _mod(ou, 'defeat_demoralisation', 'military', 'troop_morale',         -0.15, 5);
+  if (ac > 0.4 && sl2 < 0.35)          _mod(ou, 'siege_under_way',       'economy', 'food_production',      -0.10, 4);
+  if (ac > 0.6 && we > 0.6)            _mod(ou, 'war_exhaustion_peak',   'military', 'troop_morale',         -0.18, 5);
+  if (ac > 0.3 && we < 0.15 && fe>0.6) _mod(ou, 'quick_victory',        'economy', 'gold_reserves',        +0.10, 4);
+  if (ac > 0.4 && we > 0.4)            _mod(ou, 'prolonged_campaign',    'military', 'supply_line_security', -0.12, 5);
+  if (ac > 0.0 && ac < 0.25)           _mod(ou, 'border_skirmish',       'economy', 'gold_reserves',        -0.05, 3);
+  if (ml < 0.3 && ac > 0.2)            _mod(ou, 'civil_war_outbreak',    'military', 'army_size',            -0.15, 6);
+  if (cr > 0.3)                         _mod(ou, 'heavy_casualties',      'military', 'reserve_forces',       -0.14, 5);
+}
+
+// ─── GROUP 7 — MILITARY: ARMY QUALITY ────────────────────────────────────────
+
+function _modGroup7_ArmyQuality(ou) {
+  const oq  = _getVal(ou, 'military', 'officer_quality');
+  const vr  = _getVal(ou, 'military', 'veteran_ratio');
+  const dr  = _getVal(ou, 'military', 'desertion_rate');
+  const mt  = _getVal(ou, 'military', 'military_training');
+  const eq  = _getVal(ou, 'military', 'equipment_quality');
+  const cr2 = _getVal(ou, 'military', 'conscription_rate');
+  const fe2 = _getVal(ou, 'military', 'military_experience');
+  const gr2 = _getVal(ou, 'economy',  'gold_reserves');
+
+  if (vr > 0.6 && oq > 0.6)            _mod(ou, 'elite_unit_formation',  'military', 'military_readiness',   +0.12, 6);
+  if (gr2 > 0.5 && oq < 0.4)           _mod(ou, 'mercenary_influx',      'military', 'army_size',            +0.10, 4);
+  if (gr2 < 0.2 && oq < 0.4)           _mod(ou, 'mercenary_defection',   'military', 'army_size',            -0.10, 4);
+  if (vr > 0.5 && fe2 > 0.5)           _mod(ou, 'veteran_cohort',        'military', 'military_readiness',   +0.10, 6);
+  if (cr2 > 0.35)                       _mod(ou, 'conscript_army',        'military', 'military_readiness',   -0.10, 5);
+  if (mt > 0.75)                        _mod(ou, 'drill_reform',          'military', 'command_coordination', +0.10, 7);
+  if (eq < 0.2)                         _mod(ou, 'equipment_shortage',    'military', 'military_readiness',   -0.14, 5);
+  if (eq > 0.75)                        _mod(ou, 'new_weapon_tech',       'military', 'military_readiness',   +0.12, 6);
+  if (oq < 0.25)                        _mod(ou, 'officer_corruption',    'military', 'command_coordination', -0.12, 5);
+  if (dr > 0.25)                        _mod(ou, 'soldier_desertion',     'military', 'army_size',            -0.12, 4);
+}
+
+// ─── GROUP 8 — MILITARY: NAVAL & LOGISTICS ───────────────────────────────────
+
+function _modGroup8_Naval(ou) {
+  const nv  = _getVal(ou, 'military', 'naval_vessels');
+  const ns  = _getVal(ou, 'military', 'navy_size');
+  const sl3 = _getVal(ou, 'military', 'supply_line_security');
+  const lc  = _getVal(ou, 'military', 'logistics_capacity');
+  const fp  = _getVal(ou, 'economy',  'food_production');
+  const pa2 = _getVal(ou, 'economy',  'port_activity');
+  const np  = _getVal(ou, 'military', 'naval_power_projection');
+
+  if (nv > 0.7 && ns > 0.6)            _mod(ou, 'fleet_expansion',       'military', 'naval_power_projection',+0.12, 7);
+  if (ns < 0.2 && np > 0.3)            _mod(ou, 'naval_defeat',          'military', 'naval_power_projection',-0.15, 5);
+  if (sl3 > 0.75 && lc > 0.6)          _mod(ou, 'supply_line_secured',   'military', 'logistics_capacity',   +0.10, 6);
+  if (sl3 < 0.25)                       _mod(ou, 'supply_line_cut',       'military', 'troop_morale',         -0.12, 4);
+  if (np > 0.65 && pa2 > 0.6)          _mod(ou, 'sea_lanes_controlled',  'economy', 'trade_balance',         +0.10, 6);
+  if (pa2 > 0.6 && np > 0.5)           _mod(ou, 'pirates_suppressed',    'economy', 'port_activity',         +0.08, 5);
+  if (lc > 0.75)                        _mod(ou, 'logistics_reform',      'military', 'logistics_capacity',   +0.10, 7);
+  if (fp < 0.3 && sl3 < 0.4)           _mod(ou, 'army_food_crisis',      'military', 'troop_morale',         -0.12, 4);
+  if (np > 0.75 && ns > 0.7)           _mod(ou, 'naval_dominance',       'economy', 'trade_balance',         +0.12, 6);
+  if (nv < 0.1 && ns > 0.3)            _mod(ou, 'fleet_lost_storm',      'military', 'naval_power_projection',-0.18, 4);
+}
+
+// ─── GROUP 9 — MILITARY: DEFENCE & FORTIFICATION ─────────────────────────────
+
+function _modGroup9_Defence(ou) {
+  const fl  = _getVal(ou, 'military', 'fortification_level');
+  const fn  = _getVal(ou, 'military', 'fortress_network');
+  const bc  = _getVal(ou, 'military', 'border_control');
+  const iq  = _getVal(ou, 'military', 'intelligence_quality');
+  const is  = _getVal(ou, 'military', 'internal_security');
+  const ac2 = _getVal(ou, 'military', 'active_conflicts');
+  const gr3 = _getVal(ou, 'economy',  'gold_reserves');
+
+  if (fl > 0.72 && gr3 > 0.4)          _mod(ou, 'walls_built',           'military', 'fortification_level',  +0.10, 9);
+  if (fl < 0.25 && ac2 > 0.3)          _mod(ou, 'fortress_besieged',     'military', 'fortification_level',  -0.14, 4);
+  if (bc > 0.72)                        _mod(ou, 'border_fortification',  'military', 'border_control',       +0.10, 8);
+  if (iq > 0.72)                        _mod(ou, 'watchtower_network',    'military', 'intelligence_quality', +0.10, 7);
+  if (is > 0.7 && fn > 0.3)            _mod(ou, 'garrison_stationed',    'military', 'internal_security',    +0.08, 6);
+  if (fl < 0.15 && ac2 > 0.4)          _mod(ou, 'city_walls_breach',     'military', 'internal_security',    -0.15, 4);
+  if (fn < 0.08)                        _mod(ou, 'fortification_decay',   'military', 'fortification_level',  -0.10, 5);
+  if (bc > 0.65 && iq > 0.5)           _mod(ou, 'strategic_pass_held',   'military', 'border_control',       +0.10, 6);
+  if (ac2 > 0.3 && fn > 0.4)           _mod(ou, 'naval_blockade',        'economy', 'trade_balance',         -0.12, 4);
+  if (bc > 0.6 && iq > 0.55)           _mod(ou, 'cavalry_patrol',        'military', 'border_control',       +0.08, 5);
+}
+
+// ─── GROUP 10 — MILITARY: MORALE & DISCIPLINE ────────────────────────────────
+
+function _modGroup10_Morale(ou) {
+  const tm  = _getVal(ou, 'military', 'troop_morale');
+  const ml2 = _getVal(ou, 'military', 'military_loyalty');
+  const oq2 = _getVal(ou, 'military', 'officer_quality');
+  const we2 = _getVal(ou, 'military', 'war_exhaustion');
+  const dr2 = _getVal(ou, 'military', 'desertion_rate');
+  const bh  = _getVal(ou, 'military', 'battle_hardened');
+  const gr4 = _getVal(ou, 'economy',  'gold_reserves');
+  const ac3 = _getVal(ou, 'military', 'active_conflicts');
+
+  if (tm > 0.8 && ac3 < 0.3)           _mod(ou, 'triumph_ceremony',      'military', 'military_loyalty',     +0.12, 5);
+  if (ml2 > 0.8 && tm > 0.7)           _mod(ou, 'legionary_loyalty_high','military', 'military_readiness',   +0.10, 6);
+  if (ml2 < 0.35 && tm < 0.4)          _mod(ou, 'legionary_loyalty_low', 'military', 'military_readiness',   -0.12, 5);
+  if (oq2 > 0.75 && tm > 0.6)          _mod(ou, 'general_charisma',      'military', 'troop_morale',         +0.12, 6);
+  if (oq2 < 0.22)                       _mod(ou, 'general_incompetence',  'military', 'troop_morale',         -0.14, 5);
+  if (tm > 0.7 && we2 < 0.3)           _mod(ou, 'religious_fervor_army', 'military', 'troop_morale',         +0.10, 5);
+  if (tm < 0.35 && dr2 > 0.2)          _mod(ou, 'mutiny_risk',           'military', 'military_loyalty',     -0.15, 4);
+  if (gr4 < 0.15 && tm < 0.5)          _mod(ou, 'pay_arrears',           'military', 'troop_morale',         -0.14, 5);
+  if (gr4 > 0.55 && ml2 > 0.6)         _mod(ou, 'generous_donative',     'military', 'troop_morale',         +0.12, 4);
+  if (bh > 0.65 && ac3 > 0.2)          _mod(ou, 'battle_hardened_bonus', 'military', 'military_readiness',   +0.12, 6);
+}
+
+// ─── PUBLIC: applyModifiers ───────────────────────────────────────────────────
+
 /**
- * Apply situational modifiers to OU mu values.
+ * Apply 100 situational modifiers (economic + military) to OU mu values.
+ * Modifiers are organised in 10 groups of 10.
+ * Active modifiers are stored in ouState.activeModifiers and auto-expire.
  * @param {object} nation
- * @param {object} ouState
+ * @param {object} ouState  (= nation._ou)
  */
 export function applyModifiers(nation, ouState) {
-  // TODO
+  // Decay existing modifiers first
+  _decayModifiers(ouState);
+
+  // ── Economic groups (1-5) ──────────────────────────────────────────────────
+  _modGroup1_Harvest(ouState);
+  _modGroup2_Trade(ouState);
+  _modGroup3_Infra(ouState);
+  _modGroup4_Finance(ouState);
+  _modGroup5_Crisis(ouState);
+
+  // ── Military groups (6-10) ────────────────────────────────────────────────
+  _modGroup6_Warfare(ouState);
+  _modGroup7_ArmyQuality(ouState);
+  _modGroup8_Naval(ouState);
+  _modGroup9_Defence(ouState);
+  _modGroup10_Morale(ouState);
 }
 
 /**
