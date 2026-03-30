@@ -261,6 +261,15 @@ async function processTurn() {
     // Запускаем с задержкой чтобы не перекрываться с processAINations (rate limit)
     setTimeout(() => processCharacterAutonomy(GAME_STATE.player_nation).catch(console.warn), 8000);
 
+    // 5.56. Хронист — каждые 50 ходов генерирует нарративные события (fire-and-forget)
+    if (GAME_STATE.turn > 0 && GAME_STATE.turn % 50 === 0) {
+      const _chronicle = window.ChronicleSystem;
+      if (_chronicle) {
+        _chronicle.generate(GAME_STATE)
+          .catch(e => console.warn('[Chronicle] ошибка:', e.message));
+      }
+    }
+
     // 5.6. Условия победы / поражения
     try { checkVictoryConditions(); } catch (e) { console.warn('[victory]', e); }
 
