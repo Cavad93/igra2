@@ -746,3 +746,22 @@ NEXT_TASK: ST_015
 ### Строк добавлено: ~45 (super_ou.js +45)
 ### Статус: OK
 NEXT_TASK: ST_016
+
+---
+
+## Session 27 — 2026-03-30 — ST_016: смерть правителя
+
+### Задача: ST_016
+### Сделано:
+- Добавлена onRulerDied(nationId, gameState) ~35 строк в engine/super_ou.js
+  * stability-0.35/perm, legitimacy-0.25/30t, military_readiness-0.20/20t
+  * coalition_loyalty*0.7 (permanent cut modifier)
+  * _force_anomaly=true, _anomaly_reason='Succession crisis'
+- tick(): обработка _force_anomaly → anomaly.total=max(total,95), сброс флага
+- Интеграция в turn.js: checkCharacterDeaths() → SuperOU.onRulerDied()
+- onRulerDied экспортирована в window.SuperOU
+- Тест: node без ошибок, force_anomaly=95 подтверждён
+
+### Строк добавлено: ~49
+### Статус: OK
+NEXT_TASK: ST_017
