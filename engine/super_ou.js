@@ -2370,7 +2370,15 @@ export function tick(gameState, nationId) {
   const actions = decideActions(nation, ouState);
 
   // 6. Calculate anomaly score across 7 categories
+  // If _force_anomaly is set (e.g., ruler died), override score to critical level
   const anomaly = calculateAnomalyScore(nation, ouState);
+  if (ouState._force_anomaly) {
+    anomaly.total = Math.max(anomaly.total, 95);
+    anomaly.isAnomaly = true;
+    anomaly._forced_reason = ouState._anomaly_reason ?? 'forced';
+    ouState._force_anomaly  = false;
+    ouState._anomaly_reason = null;
+  }
 
   // 7. Record decision to history for memory modifiers
   if (!ouState.history) ouState.history = [];
@@ -2588,6 +2596,42 @@ export function onDiplomacyEvent(nationId, eventType, data = {}) {
   pr.resentment = Math.max(0, Math.min(1, pr.resentment ?? 0));
 }
 
+// ─── ST_016: onRulerDied ──────────────────────────────────────────────────────
+/**
+ * onRulerDied(nationId, gameState)
+ * Применить кризис преемственности: stability↓, legitimacy↓, coalition*0.7,
+ * _force_anomaly=true для немедленного вызова LLM-обработчика в tick().
+ */
+export function onRulerDied(nationId, gameState) {
+  const gs = gameState ?? (typeof GAME_STATE !== 'undefined' ? GAME_STATE : null);
+  const ouKey = nationId?.id ?? nationId;
+  const nation = nationId?.name ? nationId : (gs?.nations?.[ouKey] ?? null);
+  if (!nation) return;
+  if (!nation._ou) initNation(nation);
+  const ou = nation._ou;
+
+  // Permanent stability and legitimacy hit
+  _mod(ou, 'RULER_DIED_STAB',  'politics',  'state_stability',      -0.35, 9999);
+  _mod(ou, 'RULER_DIED_LEGIT', 'politics',  'government_legitimacy',-0.25, 30);
+  _mod(ou, 'RULER_DIED_MIL',   'military',  'military_readiness',   -0.20, 20);
+
+  // Coalition weakening: reduce coalition_loyalty by 30%
+  const coalVar = (ou.diplomacy ?? []).find(v => v.name === 'coalition_loyalty');
+  if (coalVar) {
+    const cut = coalVar.current * 0.30;
+    _mod(ou, 'RULER_DIED_COAL', 'diplomacy', 'coalition_loyalty', -cut, 9999);
+  }
+
+  // Mark for forced anomaly handling on next tick
+  ou._force_anomaly   = true;
+  ou._anomaly_reason  = 'Succession crisis';
+
+  if (typeof window !== 'undefined' && window.addEventLog) {
+    const name = nation.name ?? ouKey;
+    window.addEventLog(`[👑] Правитель ${name} умер — кризис преемственности`);
+  }
+}
+
 // ─── GLOBAL BROWSER EXPORT ────────────────────────────────────────────────────
 // Expose SuperOU as window.SuperOU so non-module scripts (turn.js) can call it.
 if (typeof window !== 'undefined') {
@@ -2601,6 +2645,7 @@ if (typeof window !== 'undefined') {
     getDebugVector,
     getContextForSonnet,
     onDiplomacyEvent,
+    onRulerDied,
     EVENT_DELTA_MAP,
     SUPER_OU_CONFIG,
   };

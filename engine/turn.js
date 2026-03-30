@@ -370,6 +370,10 @@ function checkCharacterDeaths() {
         const govRuler = GAME_STATE.nations[nationId]?.government?.ruler;
         if (govRuler && (govRuler.character_id === char.id || govRuler.name === char.name)) {
           triggerSuccessionCrisis(nationId);
+          // ST_016: notify SuperOU — succession crisis
+          if (typeof window !== 'undefined' && window.SuperOU?.onRulerDied) {
+            try { window.SuperOU.onRulerDied(nationId, GAME_STATE); } catch (e) { console.warn('[super_ou] onRulerDied:', e); }
+          }
         }
       }
     }
