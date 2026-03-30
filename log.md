@@ -808,3 +808,19 @@ NEXT_TASK: ST_018
 ### Строк добавлено: ~52
 ### Статус: OK
 NEXT_TASK: ST_019
+
+---
+
+## Session 20 — 2026-03-30 — ST_019: торговые цепочки
+
+### Задача: ST_019
+### Сделано:
+- Добавлена _applyTradeChainPressure(nation, ou, gameState) в super_ou.js
+- Если торговый партнёр воюет с X: diplomatic_openness-0.10/3t, aggression-0.05/3t
+- Если X — игрок: international_trust-0.08/4t
+- Вызов в applyModifiers() после _applyReligionModifier
+- Тест: 3 модификатора TRADE_CHAIN применены корректно
+
+### Строк добавлено: ~50
+### Статус: OK
+NEXT_TASK: ST_020
