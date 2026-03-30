@@ -233,6 +233,8 @@ function _armiesAtWar(nationA, nationB) {
 //
 // nationId — нация армии (опционально). Если передан, учитывается
 // блокировка линиями крепостей.
+// checkSupply — если true, использует взвешенный поиск (Dijkstra),
+// увеличивая стоимость горных/холмистых регионов на вражеской территории ×1.8
 
 function findArmyPath(fromId, toId, type = 'land', nationId = null, checkSupply = false) {
   if (fromId === toId) return [fromId];
