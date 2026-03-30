@@ -824,3 +824,24 @@ NEXT_TASK: ST_019
 ### Строк добавлено: ~50
 ### Статус: OK
 NEXT_TASK: ST_020
+
+---
+
+## Session N — 2026-03-30 — ST_020: Betrayal Memory Slowdown
+
+### Задача: ST_020
+### Сделано:
+- _applyBetrayalMemorySlowdown(nation, ou):
+  - weight = sum(severity): humiliation=3, high=2, normal=1
+  - slowFactor = min(0.9, weight * 0.15)
+  - Устанавливает _theta_override для trust/coalition/diplomatic_openness
+  - Предательства старше 200 ходов забываются (filter)
+- _ouStep(): theta = v._theta_override ?? v.theta
+- updateState(): вызывает _applyBetrayalMemorySlowdown после цикла _ouStep
+- Тест: slowFactor=0.75 при high+humiliation → override=theta*0.25 ✓
+  Забывание через 200 ходов ✓
+- Финальная проверка: node import super_ou/anomaly_handler/strategic_llm — все OK
+
+### Строк добавлено: ~55
+### Статус: OK
+NEXT_TASK: DONE_ALL
