@@ -315,4 +315,30 @@ NEXT_TASK: TASK_016
 
 ### Файл: super_ou.js — ~2200 строк
 
-NEXT_TASK: TASK_015
+NEXT_TASK: TASK_DONE
+
+---
+
+## Session 16 — 2026-03-30 — TASK_016: anomaly_handler.js (Groq)
+
+### Сделано:
+- Создан /home/user/igra2/ai/anomaly_handler.js (253 строки)
+- handleAnomaly(nation, ouState, anomalyResult) — главная точка входа:
+  - Throttle: не чаще 1 Groq-вызова на нацию каждые 5 тиков
+  - Graceful degradation: если Groq недоступен → локальная коррекция
+- _buildAnomalyPrompt(): исторически контекстуализированный промпт:
+  - Исторический год (300 до н.э. — 476 н.э.) из game tick
+  - Топ-5 переменных с выбросами, конфликтующие пары
+  - JSON-формат ответа: diagnosis, historical_event, corrections[], priority_action
+- _callGroqAnomaly(): fetch к GROQ_API_URL (llama-3.3-70b-versatile),
+  response_format: json_object, таймаут 20s
+- _applyCorrection(): применяет Groq-рекомендации к OU-переменным (сдвиг current)
+- _applyLocalCorrection(): авто-коррекция без LLM — топ-N выбросов → mu
+- getAnomalyLog(n): кэш последних 20 ответов для дебага
+- resetThrottle(nationId): для тестов
+- Экспорт: ES module + window.AnomalyHandler для non-module скриптов
+- Проверка: node import — OK
+
+### Файл: ai/anomaly_handler.js — 253 строки
+
+NEXT_TASK: TASK_DONE
