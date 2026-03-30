@@ -679,3 +679,21 @@ NEXT_TASK: ST_011
 ### Строк добавлено: ~43 (super_ou.js +43)
 ### Статус: OK
 NEXT_TASK: ST_012
+
+---
+
+## Session 30 — 2026-03-30 — ST_012: экономическая зависимость блокирует войну
+
+### Задача: ST_012
+### Сделано:
+- Добавлена функция _applyEconomicDependencyConstraint(ou, nation, results) в super_ou.js
+- Вызов в decideActions() перед финальной сортировкой
+- Прокси: trade_openness (схемная переменная) + activeModifiers economic_dependency
+- При dep > 0.6: war actions *= max(0, 1-(dep-0.6)*2.5)
+- Бусты: seek_alliance *1.3, trade actions *1.5
+- При war_prob > 0.4 → < 0.15: addEventLog("[🤝] торговля удерживает от войны")
+- Тест: trade_openness=0.85 → mobilize=0.0000 (было 0.0967), seek_alliance растёт
+
+### Строк добавлено: ~48 (super_ou.js +48)
+### Статус: OK
+NEXT_TASK: ST_013
