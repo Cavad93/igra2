@@ -1513,6 +1513,54 @@ function _applyReligionModifier(nation, ou, gameState) {
   }
 }
 
+// ─── ST_019: Торговые цепочки ──────────────────────────────────────────────────
+/**
+ * _applyTradeChainPressure(nation, ou, gameState)
+ * Если торговый партнёр нации воюет с третьей стороной:
+ *   diplomatic_openness-0.10/3t, aggression-0.05/3t
+ * Если эта третья сторона — игрок: trust_index_player-0.08/4t
+ */
+function _applyTradeChainPressure(nation, ou, gameState) {
+  const gs = gameState ?? (typeof GAME_STATE !== 'undefined' ? GAME_STATE : null);
+  if (!gs || !gs.nations) return;
+
+  const allNations = Object.values(gs.nations);
+  const playerNation = allNations.find(n => n.isPlayer || n.is_player) ?? null;
+  const playerId = playerNation ? (playerNation.id ?? playerNation.nation_id) : null;
+
+  // Collect trade partners of this nation
+  const tradePartners = nation.trade_partners
+    ?? nation.tradePartners
+    ?? nation.trade_agreements?.map(a => a.partner_id ?? a.partnerId)
+    ?? [];
+
+  let pressureApplied = false;
+
+  for (const partnerId of tradePartners) {
+    const partner = allNations.find(n =>
+      (n.id ?? n.nation_id) === partnerId);
+    if (!partner) continue;
+
+    // Get list of nations this partner is at war with
+    const partnerEnemies = partner.at_war_with
+      ?? partner.war_targets
+      ?? partner.wars?.map(w => w.enemy_id ?? w.enemyId)
+      ?? [];
+
+    for (const enemyId of partnerEnemies) {
+      if (!pressureApplied) {
+        _mod(ou, `TRADE_CHAIN_PRESSURE_${partnerId}`, 'diplomacy', 'diplomatic_openness', -0.10, 3);
+        _mod(ou, `TRADE_CHAIN_AGGR_${partnerId}`,     'military',  'power_projection_land', -0.05, 3);
+        pressureApplied = true;
+      }
+      // Extra penalty if player is involved
+      if (playerId !== null && enemyId === playerId) {
+        _mod(ou, `TRADE_CHAIN_TRUST_PLAYER_${partnerId}`, 'diplomacy', 'international_trust', -0.08, 4);
+      }
+    }
+  }
+}
+
 /**
  * Season-based behavioral modifier — affects high-level behavioral variables:
  * military_confidence (military_readiness + troop_morale),
@@ -1556,6 +1604,8 @@ export function applyModifiers(nation, ouState, gameState) {
   _applySeasonalModifier(nation, ouState);
   // Religion modifier (ST_015)
   _applyReligionModifier(nation, ouState, gameState);
+  // Trade chain pressure (ST_019)
+  _applyTradeChainPressure(nation, ouState, gameState);
 
   // Decay existing modifiers first
   _decayModifiers(ouState);
