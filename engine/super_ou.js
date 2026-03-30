@@ -1472,6 +1472,47 @@ function _modGroup30_EventsEpochal(ou) {
 }
 
 // ─── SEASONAL BEHAVIORAL MODIFIER ─────────────────────────────────────────────
+// ─── ST_015: Религиозный модификатор ─────────────────────────────────────────
+/**
+ * _applyReligionModifier(nation, ou, gameState)
+ * - Одна религия с игроком: international_trust+0.20/3t, coalition_loyalty+0.15/3t
+ * - Разные религии: rivalry_index+0.15/3t, international_trust-0.10/3t
+ * - Греческая религия (Hellenism/Greek): 2% шанс oracle_blessing → military_readiness+0.12/8t
+ */
+function _applyReligionModifier(nation, ou, gameState) {
+  const natRel = nation.religion ?? nation.state_religion ?? null;
+  if (!natRel) return;
+
+  // Find player nation
+  const gs = gameState ?? (typeof GAME_STATE !== 'undefined' ? GAME_STATE : null);
+  const playerNation = gs
+    ? (Object.values(gs.nations ?? {}).find(n => n.isPlayer || n.is_player) ?? null)
+    : null;
+  const playerRel = playerNation
+    ? (playerNation.religion ?? playerNation.state_religion ?? null)
+    : null;
+
+  if (playerRel) {
+    const sameReligion = natRel.toLowerCase() === playerRel.toLowerCase();
+    if (sameReligion) {
+      _mod(ou, 'RELIG_SHARED_TRUST',     'diplomacy', 'international_trust',  +0.20, 3);
+      _mod(ou, 'RELIG_SHARED_COALITION', 'diplomacy', 'coalition_loyalty',    +0.15, 3);
+    } else {
+      _mod(ou, 'RELIG_DIFF_RIVALRY',     'diplomacy', 'rivalry_index',        +0.15, 3);
+      _mod(ou, 'RELIG_DIFF_DISTRUST',    'diplomacy', 'international_trust',  -0.10, 3);
+    }
+  }
+
+  // Greek/Hellenistic oracle blessing — 2% chance per turn
+  const isGreek = /hell?en|greek|olymp/i.test(natRel);
+  if (isGreek && Math.random() < 0.02) {
+    _mod(ou, `ORACLE_BLESSING_${ou.tick}`, 'military', 'military_readiness', +0.12, 8);
+    if (typeof window !== 'undefined' && window.addEventLog) {
+      window.addEventLog(`[🏛] Оракул благословил ${nation.name ?? nationId} — армия усилена`);
+    }
+  }
+}
+
 /**
  * Season-based behavioral modifier — affects high-level behavioral variables:
  * military_confidence (military_readiness + troop_morale),
@@ -1510,9 +1551,11 @@ function _applySeasonalModifier(nation, ou) {
 
 // ─── PUBLIC: applyModifiers ───────────────────────────────────────────────────
 
-export function applyModifiers(nation, ouState) {
+export function applyModifiers(nation, ouState, gameState) {
   // First: seasonal behavioral modifiers (confidence, aggression, expansion, mobilization)
   _applySeasonalModifier(nation, ouState);
+  // Religion modifier (ST_015)
+  _applyReligionModifier(nation, ouState, gameState);
 
   // Decay existing modifiers first
   _decayModifiers(ouState);
@@ -2307,7 +2350,7 @@ export function tick(gameState, nationId) {
   snapshotState(ouState);
 
   // 3. Apply situational modifiers — shift mu values temporarily
-  applyModifiers(nation, ouState);
+  applyModifiers(nation, ouState, gameState);
 
   // 3b. Check resentment-driven revenge impulse
   _checkResentmentRevenge(nation, ouState, ouState.tick);
