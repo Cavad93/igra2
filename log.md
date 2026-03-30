@@ -442,3 +442,28 @@ NEXT_TASK: ST_003
 ### Строк добавлено: ~116
 ### Статус: OK
 NEXT_TASK: ST_004
+
+---
+
+## Session 21 — 2026-03-30 — ST_004: _buildFallbackPlan (6 шаблонов)
+
+### Задача: ST_004
+### Сделано:
+- Заполнен STRATEGY_TEMPLATES — 5 шаблонов по personalities:
+  1. military_buildup (aggressive): Mobilisation → Campaign → Consolidation
+  2. consolidation (defensive): Fortification → Recovery → Stability
+  3. economic_strangulation (merchant): Trade Expansion → Monopoly → Leverage
+  4. opportunism (expansionist/expansion): Preparation → Exploitation → Digestion
+  5. survival (survival): Emergency → Endurance → Rebuilding
+- Каждый шаблон: strategy, goal, 3 фазы с duration/priority_actions/
+  forbidden_actions/ou_overrides/trigger_conditions
+- Реализован _buildFallbackPlan(nation, ou) — маппинг personality → шаблон:
+  aggressive→military_buildup, defensive→consolidation,
+  merchant→economic_strangulation, expansionist/expansion→opportunism,
+  survival→survival, default→consolidation
+- Deep-copy фаз для защиты от мутаций шаблона
+- Проверка: node — OK, ALL ST_004 CHECKS PASSED (5 тестов)
+
+### Строк добавлено: ~87
+### Статус: OK
+NEXT_TASK: ST_005
