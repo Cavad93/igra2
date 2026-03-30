@@ -697,3 +697,18 @@ NEXT_TASK: ST_012
 ### Строк добавлено: ~48 (super_ou.js +48)
 ### Статус: OK
 NEXT_TASK: ST_013
+
+## Session 24 — 2026-03-30
+### Задача: ST_013
+### Сделано:
+- Добавлена _applySeasonalModifier(nation, ou) ~37 строк в engine/super_ou.js
+- Вызывается первой в applyModifiers() до _decayModifiers
+- Весна/лето: military_readiness+0.15, troop_morale+0.10, power_projection_land+0.20
+- Весна дополнительно: spring_campaign_conf/mora буст (+0.12/+0.08)
+- Осень: trade_balance+0.10, trade_openness+0.05
+- Зима: expansion_drive-0.25, mobilization_speed-0.20
+- Тест: node без ошибок, все дельты подтверждены
+
+### Строк добавлено: ~40 (super_ou.js +40)
+### Статус: OK
+NEXT_TASK: ST_014
