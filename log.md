@@ -1258,6 +1258,7 @@ NEXT_TASK: MIL_004
 - `supply_warning:rough_terrain` добавляется в reasoning при штрафе ✓
 - `supply_warning` добавляется в reasoning если supply < 35 ✓
 - Тесты: 16/16 ✅ (tests/mil_004_supply_path_test.cjs)
+- Регрессии: MIL_002 16/16, MIL_003 18/18 ✅
 
 ### Файлы: engine/armies.js (+37 строк), ai/utility_ai.js (+19 строк)
 
