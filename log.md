@@ -618,3 +618,27 @@ NEXT_TASK: ST_009
 ### Строк добавлено: ~76 (super_ou.js +66, diplomacy_ai.js +10)
 ### Статус: OK
 NEXT_TASK: ST_009
+
+---
+
+## Session 27 — 2026-03-30 — ST_009: EVENT_DELTA_MAP + onDiplomacyEvent
+
+### Задача: ST_009
+### Сделано:
+- Добавлен EVENT_DELTA_MAP в super_ou.js (11 типов дипломатических событий):
+  ALLIANCE_SIGNED, ALLIANCE_BROKEN, TRADE_AGREEMENT, TRADE_CANCELLED,
+  PROMISE_BROKEN, TRIBUTE_AGREED, HUMILIATING_PEACE, HONORABLE_PEACE,
+  INSULT_RECEIVED, GIFT_RECEIVED, MARRIAGE_ALLIANCE
+- Добавлена функция onDiplomacyEvent(nationId, eventType, data):
+  - применяет дельты через _mod() с указанной длительностью
+  - для _betrayal_push: записывает в _betrayal_memory, накладывает штрафы
+  - обновляет nation._player_relation (trust, resentment, betrayals)
+- Экспортированы onDiplomacyEvent и EVENT_DELTA_MAP в window.SuperOU
+- Интеграция в ui/diplomacy_tab.js hideDipChatModal():
+  - вызов SuperOU.onDiplomacyEvent() при подписании договора
+  - маппинг treaty types → OU event types (alliance, trade, peace, tribute, marriage)
+- Тест: node — OK, ALLIANCE_SIGNED добавляет 4 модификатора, PROMISE_BROKEN записывает betrayal_memory
+
+### Строк добавлено: ~84 (super_ou.js +73, diplomacy_tab.js +11)
+### Статус: OK
+NEXT_TASK: ST_010
