@@ -1192,6 +1192,285 @@ function _modGroup20_PoliticsGovernance(ou) {
   if (pro > 0.65)             _mod(ou, 'protectionist_walls',   'economy',   'trade_tariff',            +0.12, 5);
 }
 
+// ─── GROUP 21 — SEASONAL: SPRING (CAMPAIGNING SEASON) ────────────────────────
+
+function _modGroup21_SeasonSpring(ou) {
+  const tick  = ou.tick || 0;
+  const phase = tick % 4; // 0=spring, 1=summer, 2=autumn, 3=winter
+  if (phase !== 0) return;
+
+  const ar  = _getVal(ou, 'military', 'army_readiness');
+  const ms  = _getVal(ou, 'military', 'soldier_morale');
+  const lp  = _getVal(ou, 'economy',  'land_productivity');
+  const fp  = _getVal(ou, 'economy',  'food_production');
+  const to  = _getVal(ou, 'economy',  'trade_openness');
+  const pa  = _getVal(ou, 'economy',  'port_activity');
+  const ae  = _getVal(ou, 'diplomacy','academic_exchange');
+  const ri  = _getVal(ou, 'politics', 'religious_influence');
+  const ci  = _getVal(ou, 'diplomacy','cultural_influence');
+  const coh = _getVal(ou, 'politics', 'social_cohesion');
+
+  if (ar > 0.5)  _mod(ou, 'spring_march',        'military',  'army_readiness',       +0.10, 2);
+  if (ms > 0.5)  _mod(ou, 'spring_optimism',      'military',  'soldier_morale',       +0.08, 2);
+  if (lp > 0.4)  _mod(ou, 'spring_planting',      'economy',   'agricultural_output',  +0.10, 2);
+  if (fp > 0.3)  _mod(ou, 'spring_growth',         'economy',   'food_production',      +0.06, 2);
+  if (to > 0.4)  _mod(ou, 'spring_trade',          'economy',   'export_volume',        +0.08, 2);
+  if (pa > 0.4)  _mod(ou, 'seas_open',             'economy',   'port_activity',        +0.10, 2);
+  if (ae > 0.4)  _mod(ou, 'spring_festival',       'diplomacy', 'soft_power_index',     +0.06, 2);
+  if (ri > 0.5)  _mod(ou, 'spring_rites',          'politics',  'popular_support',      +0.06, 2);
+  if (ci > 0.4)  _mod(ou, 'spring_games',          'diplomacy', 'global_reputation',    +0.06, 2);
+  if (coh > 0.5) _mod(ou, 'spring_renewal',        'politics',  'social_cohesion',      +0.06, 2);
+}
+
+// ─── GROUP 22 — SEASONAL: SUMMER (PEAK CAMPAIGN) ─────────────────────────────
+
+function _modGroup22_SeasonSummer(ou) {
+  const tick  = ou.tick || 0;
+  const phase = tick % 4;
+  if (phase !== 1) return;
+
+  const aw  = _getVal(ou, 'military', 'active_wars');
+  const le  = _getVal(ou, 'military', 'logistics_efficiency');
+  const wa  = _getVal(ou, 'economy',  'water_availability');
+  const fp  = _getVal(ou, 'economy',  'food_production');
+  const tr  = _getVal(ou, 'economy',  'tax_revenue');
+  const pa  = _getVal(ou, 'economy',  'port_activity');
+  const tb  = _getVal(ou, 'economy',  'trade_balance');
+  const ps  = _getVal(ou, 'politics', 'popular_support');
+  const ms  = _getVal(ou, 'military', 'soldier_morale');
+  const gr  = _getVal(ou, 'diplomacy','global_reputation');
+
+  if (aw > 0.4)  _mod(ou, 'summer_campaign',      'military',  'active_wars',          +0.06, 2);
+  if (le > 0.5)  _mod(ou, 'summer_supply_push',   'military',  'logistics_efficiency', +0.08, 2);
+  if (wa < 0.25) _mod(ou, 'summer_drought',        'economy',   'food_production',      -0.12, 2);
+  if (fp > 0.6)  _mod(ou, 'summer_abundance',      'economy',   'food_production',      +0.06, 2);
+  if (tr > 0.5)  _mod(ou, 'summer_revenues',       'economy',   'tax_revenue',          +0.06, 2);
+  if (pa > 0.5)  _mod(ou, 'summer_trade_peak',     'economy',   'trade_balance',        +0.08, 2);
+  if (tb > 0.2)  _mod(ou, 'summer_merchant_fair',  'economy',   'retail_sales',         +0.08, 2);
+  if (ps > 0.6)  _mod(ou, 'summer_games',          'politics',  'popular_support',      +0.06, 2);
+  if (ms > 0.6)  _mod(ou, 'summer_glory',          'military',  'soldier_morale',       +0.06, 2);
+  if (gr > 0.6)  _mod(ou, 'olympiad_prestige',     'diplomacy', 'global_reputation',    +0.10, 2);
+}
+
+// ─── GROUP 23 — SEASONAL: AUTUMN (HARVEST & CONSOLIDATION) ───────────────────
+
+function _modGroup23_SeasonAutumn(ou) {
+  const tick  = ou.tick || 0;
+  const phase = tick % 4;
+  if (phase !== 2) return;
+
+  const ao  = _getVal(ou, 'economy',  'agricultural_output');
+  const fp  = _getVal(ou, 'economy',  'food_production');
+  const gr  = _getVal(ou, 'economy',  'gold_reserves');
+  const tb  = _getVal(ou, 'economy',  'trade_balance');
+  const ar  = _getVal(ou, 'military', 'army_readiness');
+  const ms  = _getVal(ou, 'military', 'soldier_morale');
+  const ps  = _getVal(ou, 'politics', 'popular_support');
+  const ri  = _getVal(ou, 'politics', 'religious_influence');
+  const wa  = _getVal(ou, 'economy',  'water_availability');
+  const lp  = _getVal(ou, 'economy',  'land_productivity');
+
+  if (ao > 0.5)  _mod(ou, 'autumn_harvest',        'economy',   'agricultural_output',  +0.12, 2);
+  if (fp > 0.5)  _mod(ou, 'autumn_granary',        'economy',   'food_production',      +0.08, 2);
+  if (gr > 0.5)  _mod(ou, 'autumn_tax_collection', 'economy',   'gold_reserves',        +0.06, 2);
+  if (tb > 0.1)  _mod(ou, 'autumn_trade_close',    'economy',   'trade_balance',        +0.06, 2);
+  if (ar > 0.4)  _mod(ou, 'armies_return',         'military',  'army_readiness',       -0.06, 2);
+  if (ms > 0.4)  _mod(ou, 'soldier_rest',          'military',  'soldier_morale',       +0.06, 2);
+  if (ps > 0.5)  _mod(ou, 'harvest_festival',      'politics',  'popular_support',      +0.08, 2);
+  if (ri > 0.5)  _mod(ou, 'autumn_sacrifice',      'politics',  'government_legitimacy',+0.06, 2);
+  if (wa > 0.5)  _mod(ou, 'autumn_rains',          'economy',   'water_availability',   +0.08, 2);
+  if (lp > 0.5)  _mod(ou, 'soil_enrichment',       'economy',   'land_productivity',    +0.06, 2);
+}
+
+// ─── GROUP 24 — SEASONAL: WINTER (HARDSHIP & REST) ───────────────────────────
+
+function _modGroup24_SeasonWinter(ou) {
+  const tick  = ou.tick || 0;
+  const phase = tick % 4;
+  if (phase !== 3) return;
+
+  const fp  = _getVal(ou, 'economy',  'food_production');
+  const pa  = _getVal(ou, 'economy',  'port_activity');
+  const to  = _getVal(ou, 'economy',  'trade_openness');
+  const ar  = _getVal(ou, 'military', 'army_readiness');
+  const le  = _getVal(ou, 'military', 'logistics_efficiency');
+  const ms  = _getVal(ou, 'military', 'soldier_morale');
+  const ps  = _getVal(ou, 'politics', 'popular_support');
+  const gr  = _getVal(ou, 'economy',  'gold_reserves');
+  const ri  = _getVal(ou, 'politics', 'religious_influence');
+  const rn  = _getVal(ou, 'economy',  'road_network_index');
+
+  if (fp < 0.5)  _mod(ou, 'winter_shortage',       'economy',   'food_production',      -0.10, 2);
+  if (pa > 0.3)  _mod(ou, 'seas_closed',           'economy',   'port_activity',        -0.12, 2);
+  if (to > 0.3)  _mod(ou, 'winter_trade_freeze',   'economy',   'trade_openness',       -0.08, 2);
+  if (ar > 0.3)  _mod(ou, 'winter_quarters',       'military',  'army_readiness',       -0.10, 2);
+  if (le > 0.3)  _mod(ou, 'winter_supply_trouble', 'military',  'logistics_efficiency', -0.10, 2);
+  if (ms > 0.3)  _mod(ou, 'winter_morale_drop',    'military',  'soldier_morale',       -0.08, 2);
+  if (ps > 0.3)  _mod(ou, 'winter_hardship',       'politics',  'popular_support',      -0.08, 2);
+  if (gr > 0.5)  _mod(ou, 'winter_reserves_good',  'economy',   'gold_reserves',        +0.02, 2);
+  if (ri > 0.5)  _mod(ou, 'winter_solstice_rites', 'politics',  'social_cohesion',      +0.06, 2);
+  if (rn < 0.3)  _mod(ou, 'winter_road_ruin',      'economy',   'logistics_efficiency', -0.08, 2);
+}
+
+// ─── GROUP 25 — MEMORY: RECENT VICTORIES & DEFEATS ───────────────────────────
+
+function _modGroup25_MemoryWar(ou) {
+  const hist = ou.history || {};
+  const recentWins  = hist.recentWins  || 0;
+  const recentLoss  = hist.recentLoss  || 0;
+  const warStreak   = hist.warStreak   || 0;
+  const peaceStreak = hist.peaceStreak || 0;
+  const ms  = _getVal(ou, 'military', 'soldier_morale');
+  const ar  = _getVal(ou, 'military', 'army_readiness');
+  const gr  = _getVal(ou, 'diplomacy','global_reputation');
+  const ps  = _getVal(ou, 'politics', 'popular_support');
+  const gl  = _getVal(ou, 'politics', 'government_legitimacy');
+  const tr  = _getVal(ou, 'economy',  'tax_revenue');
+
+  if (recentWins >= 2)              _mod(ou, 'victory_streak',      'military',  'soldier_morale',       +0.12, 3);
+  if (recentLoss >= 2)              _mod(ou, 'defeat_trauma',        'military',  'soldier_morale',       -0.15, 4);
+  if (warStreak >= 3)               _mod(ou, 'war_weary',            'military',  'army_readiness',       -0.10, 3);
+  if (peaceStreak >= 4)             _mod(ou, 'long_peace_dividend',  'economy',   'gdp_growth',           +0.04, 3);
+  if (recentWins >= 1 && ms > 0.5) _mod(ou, 'conqueror_aura',       'diplomacy', 'global_reputation',    +0.10, 3);
+  if (recentLoss >= 1 && gr < 0.4) _mod(ou, 'defeated_reputation',  'diplomacy', 'global_reputation',    -0.12, 4);
+  if (warStreak >= 2 && tr < 0.4)  _mod(ou, 'war_debt_burden',      'economy',   'tax_revenue',          -0.08, 3);
+  if (peaceStreak >= 3 && ps > 0.5)_mod(ou, 'peace_popularity',     'politics',  'popular_support',      +0.08, 3);
+  if (recentWins >= 3)              _mod(ou, 'empire_momentum',      'goals',     'territorial_expansion',+0.08, 3);
+  if (recentLoss >= 3 && gl < 0.4) _mod(ou, 'regime_questioned',    'politics',  'government_legitimacy',-0.15, 4);
+}
+
+// ─── GROUP 26 — MEMORY: ECONOMIC BOOM & BUST CYCLES ──────────────────────────
+
+function _modGroup26_MemoryEconomy(ou) {
+  const hist = ou.history || {};
+  const growthStreak = hist.growthStreak || 0;
+  const recessionStr = hist.recessionStr || 0;
+  const inflationStr = hist.inflationStr || 0;
+  const surplusStr   = hist.surplusStr   || 0;
+  const gdp = _getVal(ou, 'economy', 'gdp_growth');
+  const inf = _getVal(ou, 'economy', 'inflation_rate');
+  const gr  = _getVal(ou, 'economy', 'gold_reserves');
+  const cc  = _getVal(ou, 'economy', 'consumer_confidence');
+  const tb  = _getVal(ou, 'economy', 'trade_balance');
+  const ir  = _getVal(ou, 'economy', 'innovation_rate');
+
+  if (growthStreak >= 3)            _mod(ou, 'golden_age_economy',  'economy',   'consumer_confidence',  +0.12, 4);
+  if (recessionStr >= 2)            _mod(ou, 'prolonged_slump',      'economy',   'gdp_growth',           -0.06, 4);
+  if (inflationStr >= 3)            _mod(ou, 'hyperinflation_fear',  'economy',   'currency_strength',    -0.15, 4);
+  if (surplusStr >= 3)              _mod(ou, 'trade_empire',         'economy',   'trade_openness',       +0.10, 4);
+  if (gdp > 0.06 && cc > 0.6)      _mod(ou, 'boom_confidence',      'economy',   'consumer_confidence',  +0.10, 3);
+  if (inf > 0.6)                    _mod(ou, 'inflation_erodes',     'economy',   'gold_reserves',        -0.06, 3);
+  if (gr > 0.7)                     _mod(ou, 'treasury_surplus',     'economy',   'gold_reserves',        +0.06, 3);
+  if (cc < 0.2)                     _mod(ou, 'panic_selling',        'economy',   'retail_sales',         -0.15, 3);
+  if (tb > 0.3 && growthStreak >= 2)_mod(ou, 'trade_powerhouse',    'diplomacy', 'economic_partnerships', +0.08, 4);
+  if (ir > 0.6 && growthStreak >= 2)_mod(ou, 'tech_boom',           'economy',   'innovation_rate',      +0.08, 3);
+}
+
+// ─── GROUP 27 — MEMORY: POLITICAL STABILITY STREAKS ──────────────────────────
+
+function _modGroup27_MemoryPolitics(ou) {
+  const hist = ou.history || {};
+  const stabStr   = hist.stabilityStreak || 0;
+  const crisisStr = hist.crisisStreak    || 0;
+  const coupStr   = hist.coupStreak      || 0;
+  const reformStr = hist.reformStreak    || 0;
+  const rs  = _getVal(ou, 'politics', 'regime_stability');
+  const gl  = _getVal(ou, 'politics', 'government_legitimacy');
+  const sc  = _getVal(ou, 'politics', 'state_capacity');
+  const be  = _getVal(ou, 'politics', 'bureaucratic_efficiency');
+  const pt  = _getVal(ou, 'politics', 'political_trust');
+  const rl  = _getVal(ou, 'politics', 'rule_of_law');
+
+  if (stabStr >= 4)                 _mod(ou, 'pax_established',      'politics',  'regime_stability',     +0.10, 4);
+  if (crisisStr >= 2)               _mod(ou, 'perpetual_crisis',      'politics',  'regime_stability',     -0.15, 4);
+  if (coupStr >= 2)                 _mod(ou, 'praetorian_state',      'military',  'coup_risk',            +0.15, 5);
+  if (reformStr >= 2)               _mod(ou, 'reform_momentum',       'politics',  'policy_effectiveness', +0.10, 4);
+  if (rs > 0.7 && stabStr >= 3)    _mod(ou, 'golden_age_politics',   'politics',  'government_legitimacy',+0.12, 4);
+  if (gl < 0.3 && crisisStr >= 2)  _mod(ou, 'legitimacy_collapse',   'politics',  'government_legitimacy',-0.18, 5);
+  if (sc > 0.7 && stabStr >= 3)    _mod(ou, 'strong_institutions',   'politics',  'state_capacity',       +0.10, 4);
+  if (be > 0.7)                    _mod(ou, 'admin_legacy',          'politics',  'bureaucratic_efficiency',+0.08, 4);
+  if (pt < 0.2 && crisisStr >= 2)  _mod(ou, 'trust_deficit',         'politics',  'political_trust',      -0.15, 5);
+  if (rl > 0.7 && reformStr >= 2)  _mod(ou, 'legal_tradition',       'politics',  'rule_of_law',          +0.10, 4);
+}
+
+// ─── GROUP 28 — EVENTS: NATURAL DISASTERS ────────────────────────────────────
+
+function _modGroup28_EventsNature(ou) {
+  const wa  = _getVal(ou, 'economy',  'water_availability');
+  const fp  = _getVal(ou, 'economy',  'food_production');
+  const ii  = _getVal(ou, 'economy',  'infrastructure_index');
+  const rn  = _getVal(ou, 'economy',  'road_network_index');
+  const pop = _getVal(ou, 'economy',  'population_growth');
+  const ms  = _getVal(ou, 'military', 'soldier_morale');
+  const ps  = _getVal(ou, 'politics', 'popular_support');
+  const gl  = _getVal(ou, 'politics', 'government_legitimacy');
+  const ar  = _getVal(ou, 'military', 'army_readiness');
+  const coh = _getVal(ou, 'politics', 'social_cohesion');
+
+  if (wa < 0.1 && fp < 0.2)       _mod(ou, 'great_drought',         'economy',   'agricultural_output',  -0.25, 6);
+  if (ii < 0.12)                   _mod(ou, 'earthquake',            'economy',   'infrastructure_index', -0.20, 5);
+  if (fp < 0.12 && pop < 0)        _mod(ou, 'plague_outbreak',       'economy',   'population_growth',    -0.08, 7);
+  if (rn < 0.1)                    _mod(ou, 'flood_damage',          'economy',   'road_network_index',   -0.18, 4);
+  if (wa < 0.15)                   _mod(ou, 'volcanic_winter',       'economy',   'food_production',      -0.20, 5);
+  if (ms < 0.15)                   _mod(ou, 'pestilence_in_camps',   'military',  'soldier_morale',       -0.20, 5);
+  if (ps < 0.15 && gl < 0.3)      _mod(ou, 'gods_wrath',            'politics',  'popular_support',      -0.18, 5);
+  if (ar < 0.15)                   _mod(ou, 'storm_destroys_fleet',  'military',  'fleet_strength',       -0.20, 4);
+  if (coh < 0.15)                  _mod(ou, 'locust_apocalypse',     'economy',   'food_production',      -0.22, 5);
+  if (ii > 0.7 && wa > 0.6)       _mod(ou, 'aqueduct_saves_city',   'economy',   'population_growth',    +0.04, 6);
+}
+
+// ─── GROUP 29 — EVENTS: GREAT MEN & LEADERS ──────────────────────────────────
+
+function _modGroup29_EventsLeaders(ou) {
+  const gl  = _getVal(ou, 'politics', 'government_legitimacy');
+  const rs  = _getVal(ou, 'politics', 'regime_stability');
+  const ms  = _getVal(ou, 'military', 'soldier_morale');
+  const ar  = _getVal(ou, 'military', 'army_readiness');
+  const gr  = _getVal(ou, 'diplomacy','global_reputation');
+  const be  = _getVal(ou, 'politics', 'bureaucratic_efficiency');
+  const ir  = _getVal(ou, 'economy',  'innovation_rate');
+  const ps  = _getVal(ou, 'politics', 'popular_support');
+  const ac  = _getVal(ou, 'military', 'commander_quality');
+  const phf = _getVal(ou, 'politics', 'philosopher_influence');
+
+  if (gl > 0.85 && rs > 0.8)      _mod(ou, 'great_emperor',         'politics',  'government_legitimacy',+0.15, 6);
+  if (ac > 0.85 && ms > 0.7)      _mod(ou, 'great_general',         'military',  'army_readiness',       +0.15, 5);
+  if (gr > 0.85 && gl > 0.7)      _mod(ou, 'philosopher_king',      'politics',  'policy_effectiveness',  +0.15, 5);
+  if (be > 0.85)                   _mod(ou, 'master_administrator',  'politics',  'bureaucratic_efficiency',+0.15, 5);
+  if (ir > 0.85)                   _mod(ou, 'great_inventor',        'economy',   'innovation_rate',      +0.15, 5);
+  if (ps > 0.85 && gl > 0.7)      _mod(ou, 'beloved_leader',        'politics',  'popular_support',      +0.12, 5);
+  if (ac > 0.75 && ar > 0.75)     _mod(ou, 'military_genius',       'military',  'tactical_superiority', +0.15, 5);
+  if (phf > 0.8 && gr > 0.6)      _mod(ou, 'stoic_emperor',         'politics',  'political_trust',      +0.12, 5);
+  if (gl < 0.1 && rs < 0.15)      _mod(ou, 'mad_emperor',           'politics',  'regime_stability',     -0.20, 5);
+  if (ms < 0.15 && ac < 0.2)      _mod(ou, 'incompetent_general',   'military',  'army_readiness',       -0.18, 4);
+}
+
+// ─── GROUP 30 — EVENTS: CIVILIZATIONAL & EPOCHAL ─────────────────────────────
+
+function _modGroup30_EventsEpochal(ou) {
+  const gl  = _getVal(ou, 'politics', 'government_legitimacy');
+  const gr  = _getVal(ou, 'diplomacy','global_reputation');
+  const ir  = _getVal(ou, 'economy',  'innovation_rate');
+  const ri  = _getVal(ou, 'politics', 'religious_influence');
+  const ms  = _getVal(ou, 'military', 'soldier_morale');
+  const ar  = _getVal(ou, 'military', 'army_readiness');
+  const tb  = _getVal(ou, 'economy',  'trade_balance');
+  const ci  = _getVal(ou, 'diplomacy','cultural_influence');
+  const sc  = _getVal(ou, 'politics', 'state_capacity');
+  const pop = _getVal(ou, 'economy',  'population_growth');
+
+  if (ir > 0.85 && tb > 0.3)      _mod(ou, 'pax_mercatoria',        'economy',   'trade_openness',       +0.12, 8);
+  if (gl > 0.9 && sc > 0.85)      _mod(ou, 'golden_age',            'economy',   'gdp_growth',           +0.08, 8);
+  if (ri > 0.85 && gr > 0.7)      _mod(ou, 'holy_age',              'diplomacy', 'soft_power_index',     +0.15, 6);
+  if (ci > 0.85 && ir > 0.7)      _mod(ou, 'cultural_renaissance',  'economy',   'innovation_rate',      +0.12, 7);
+  if (ms > 0.85 && ar > 0.8)      _mod(ou, 'legions_invincible',    'military',  'army_readiness',       +0.15, 6);
+  if (gl < 0.05 && sc < 0.1)      _mod(ou, 'empire_collapsing',     'politics',  'state_capacity',       -0.25, 8);
+  if (gr < 0.05 && ci < 0.1)      _mod(ou, 'dark_age',              'economy',   'innovation_rate',      -0.20, 8);
+  if (pop < -0.04)                 _mod(ou, 'population_collapse',   'economy',   'labor_participation',  -0.25, 7);
+  if (tb < -0.4)                   _mod(ou, 'economic_ruin',         'economy',   'gold_reserves',        -0.20, 6);
+  if (ar < 0.05 && gl < 0.1)      _mod(ou, 'barbarian_flood',       'military',  'border_security',      -0.25, 7);
+}
+
 // ─── PUBLIC: applyModifiers ───────────────────────────────────────────────────
 
 export function applyModifiers(nation, ouState) {
@@ -1225,6 +1504,22 @@ export function applyModifiers(nation, ouState) {
   _modGroup18_PoliticsCorruption(ouState);
   _modGroup19_PoliticsCrisis(ouState);
   _modGroup20_PoliticsGovernance(ouState);
+
+  // ── Seasonal groups (21-24) ───────────────────────────────────────────────
+  _modGroup21_SeasonSpring(ouState);
+  _modGroup22_SeasonSummer(ouState);
+  _modGroup23_SeasonAutumn(ouState);
+  _modGroup24_SeasonWinter(ouState);
+
+  // ── Memory groups (25-27) ─────────────────────────────────────────────────
+  _modGroup25_MemoryWar(ouState);
+  _modGroup26_MemoryEconomy(ouState);
+  _modGroup27_MemoryPolitics(ouState);
+
+  // ── Event groups (28-30) ──────────────────────────────────────────────────
+  _modGroup28_EventsNature(ouState);
+  _modGroup29_EventsLeaders(ouState);
+  _modGroup30_EventsEpochal(ouState);
 }
 
 /**
