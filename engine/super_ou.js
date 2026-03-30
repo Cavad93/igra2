@@ -1703,14 +1703,200 @@ function _seededRng(seed) {
 // ─── DECISION ENGINE ─────────────────────────────────────────────────────────
 
 /**
- * Choose actions based on current OU state.
+ * Available actions for a nation (ancient-world context).
+ */
+const ACTION_LIST = [
+  'build_farm',
+  'build_barracks',
+  'build_market',
+  'recruit_infantry',
+  'recruit_cavalry',
+  'seek_alliance',
+  'mobilize',
+  'demobilize',
+  'buy_food',
+  'sell_goods',
+  'pass',
+];
+
+/**
+ * Personality trait indices that support each action.
+ * Format: [traitIndex, weight]
+ * PERSONALITY_TRAITS order:
+ *   0:aggression, 1:expansionism, 2:merchantism, 3:diplomacy, 4:defensiveness,
+ *   5:piety, 6:populism, 7:autocracy, 8:innovation, 9:colonialism,
+ *   10:navalism, 11:isolationism, 12:tributarism, 13:patronage, 14:militarism,
+ *   15:pragmatism, 16:loyalty, 17:greed, 18:paranoia, 19:glory_seeking
+ */
+const ACTION_TRAIT_AFFINITY = {
+  build_farm:        [[2,1.2],[15,1.1],[6,0.9],[13,0.8]],
+  build_barracks:    [[14,1.3],[0,1.1],[4,1.0],[7,0.8]],
+  build_market:      [[2,1.4],[17,1.2],[8,1.0],[10,0.7]],
+  recruit_infantry:  [[14,1.3],[0,1.2],[19,1.1],[7,0.9]],
+  recruit_cavalry:   [[14,1.2],[1,1.1],[0,1.0],[19,0.9]],
+  seek_alliance:     [[3,1.4],[16,1.1],[15,1.0],[5,0.8]],
+  mobilize:          [[0,1.3],[18,1.1],[14,1.2],[19,1.0]],
+  demobilize:        [[3,1.2],[15,1.1],[16,1.0],[4,0.9]],
+  buy_food:          [[15,1.1],[6,1.0],[17,0.9],[2,0.8]],
+  sell_goods:        [[2,1.3],[17,1.2],[10,1.0],[15,0.8]],
+  pass:              [[15,0.9],[11,1.1],[16,0.8],[5,0.7]],
+};
+
+/**
+ * Softmax with temperature scaling.
+ * @param {number[]} scores
+ * @param {number} temperature
+ * @returns {number[]} probabilities
+ */
+function _softmax(scores, temperature = 1.0) {
+  const scaled = scores.map(s => s / temperature);
+  const maxS = Math.max(...scaled);
+  const exps = scaled.map(s => Math.exp(s - maxS));
+  const sum  = exps.reduce((a, b) => a + b, 0);
+  return exps.map(e => e / sum);
+}
+
+/**
+ * Extract a compact feature vector from the current OU state.
+ * Returns array of 20 values, one per personality trait dimension.
+ * @param {object} ouState  nation._ou
+ * @returns {number[]}
+ */
+function _buildStateFeatures(ouState) {
+  const features = new Array(20).fill(0);
+  if (!ouState || !ouState.economy) return features;
+
+  // Helper: find variable value by name in a category array
+  const val = (arr, name) => {
+    const v = arr.find(x => x.name === name);
+    return v ? v.current : 0.5;
+  };
+
+  const eco = ouState.economy;
+  const mil = ouState.military;
+  const dip = ouState.diplomacy;
+  const pol = ouState.politics;
+  const gol = ouState.goals;
+
+  // 0: aggression — driven by military threat + paranoia
+  features[0]  = (val(mil,'military_threat_level') + val(pol,'fear_of_enemies')) * 0.5;
+  // 1: expansionism — driven by territory goals + population pressure
+  features[1]  = (val(gol,'territorial_expansion') + val(eco,'population_pressure')) * 0.5;
+  // 2: merchantism — driven by trade volume + market activity
+  features[2]  = (val(eco,'trade_volume') + val(eco,'market_activity')) * 0.5;
+  // 3: diplomacy — driven by reputation + alliance count
+  features[3]  = (val(dip,'diplomatic_reputation') + val(dip,'alliance_count') / 10) * 0.5;
+  // 4: defensiveness — driven by border vulnerability + threat
+  features[4]  = (val(mil,'border_vulnerability') + val(mil,'military_threat_level')) * 0.5;
+  // 5: piety — driven by religious legitimacy
+  features[5]  = val(pol,'religious_legitimacy');
+  // 6: populism — driven by public support
+  features[6]  = val(pol,'public_support');
+  // 7: autocracy — driven by regime centralisation
+  features[7]  = val(pol,'regime_centralisation');
+  // 8: innovation — driven by tech investment + education
+  features[8]  = (val(eco,'technology_investment') + val(eco,'education_spending')) * 0.5;
+  // 9: colonialism — driven by exploration activity
+  features[9]  = val(gol,'colonial_expansion');
+  // 10: navalism — driven by fleet strength
+  features[10] = val(mil,'fleet_strength');
+  // 11: isolationism — inverse of trade openness
+  features[11] = 1.0 - val(dip,'trade_openness');
+  // 12: tributarism — driven by tribute income
+  features[12] = val(eco,'tribute_income');
+  // 13: patronage — driven by cultural spending + arts
+  features[13] = (val(eco,'cultural_spending') + val(pol,'patronage_spending')) * 0.5;
+  // 14: militarism — driven by army size relative to economy
+  features[14] = (val(mil,'army_size') + val(mil,'military_budget_share')) * 0.5;
+  // 15: pragmatism — driven by treasury health + stability
+  features[15] = (val(eco,'treasury_reserves') + val(pol,'regime_stability')) * 0.5;
+  // 16: loyalty — driven by cohesion + elite satisfaction
+  features[16] = (val(pol,'social_cohesion') + val(pol,'elite_satisfaction')) * 0.5;
+  // 17: greed — driven by GDP growth desire + wealth gap
+  features[17] = (val(gol,'wealth_accumulation') + val(eco,'wealth_inequality')) * 0.5;
+  // 18: paranoia — driven by espionage threat + coup risk
+  features[18] = (val(dip,'espionage_threat') + val(pol,'coup_risk')) * 0.5;
+  // 19: glory_seeking — driven by glory goals + prestige
+  features[19] = (val(gol,'prestige_pursuit') + val(dip,'diplomatic_prestige')) * 0.5;
+
+  return features;
+}
+
+/**
+ * Choose actions based on current OU state and personality matrix.
+ * Uses dot product of personality weights × state features to score each action,
+ * then applies softmax to get probabilities. Returns top-3 actions.
  * @param {object} nation
- * @param {object} ouState
- * @returns {Array} top actions with probabilities
+ * @param {object} ouState  (nation._ou)
+ * @returns {Array<{action:string, probability:number, score:number}>}
  */
 export function decideActions(nation, ouState) {
-  // TODO
+  const ou = ouState || nation._ou;
+  if (!ou) return [{ action: 'pass', probability: 1.0, score: 0 }];
+
+  // Build or retrieve personality matrix
+  if (!nation._personalityMatrix) {
+    nation._personalityMatrix = _buildPersonalityMatrix(nation);
+  }
+  const pm = nation._personalityMatrix;
+
+  // State feature vector (20 values, one per personality trait)
+  const features = _buildStateFeatures(ou);
+
+  // Score each action via weighted dot product over personality traits
+  const rawScores = ACTION_LIST.map(action => {
+    const affinities = ACTION_TRAIT_AFFINITY[action] || [];
+    let score = 0;
+    for (const [traitIdx, traitWeight] of affinities) {
+      // Use slot 0 of each trait's block (base weight) from the personality matrix
+      const pmWeight = pm[traitIdx * 50];         // base trait weight
+      const stateVal = features[traitIdx] ?? 0.5; // current state signal
+      score += pmWeight * traitWeight * stateVal;
+    }
+    // Bonus from active modifiers matching action
+    if (ou.activeModifiers) {
+      for (const mod of ou.activeModifiers) {
+        const tag = mod.tag || '';
+        if (ACTION_MOD_TAGS[action] && ACTION_MOD_TAGS[action].some(t => tag.includes(t))) {
+          score += 0.1 * (mod.strength || 0.5);
+        }
+      }
+    }
+    return score;
+  });
+
+  // Softmax with configured temperature
+  const temp = (nation.ai_temperature) || SUPER_OU_CONFIG.actionSoftmaxTemp;
+  const probs = _softmax(rawScores, temp);
+
+  // Build result array and sort descending by probability
+  const results = ACTION_LIST.map((action, i) => ({
+    action,
+    probability: probs[i],
+    score: rawScores[i],
+  }));
+  results.sort((a, b) => b.probability - a.probability);
+
+  // Return top-N actions
+  return results.slice(0, SUPER_OU_CONFIG.topActionsCount);
 }
+
+/**
+ * Modifier tags that boost specific actions.
+ */
+const ACTION_MOD_TAGS = {
+  build_farm:        ['harvest','agriculture','irrigation','grain'],
+  build_barracks:    ['barracks','drill','recruit','garrison'],
+  build_market:      ['trade_route','market','commerce','merchant'],
+  recruit_infantry:  ['recruit','infantry','levy','manpower'],
+  recruit_cavalry:   ['cavalry','horse','nomad','equestrian'],
+  seek_alliance:     ['alliance','treaty','pact','diplomatic'],
+  mobilize:          ['mobilize','war','military_emergency','threat'],
+  demobilize:        ['peace','demobilize','truce','ceasefire'],
+  buy_food:          ['food','famine','grain','supply'],
+  sell_goods:        ['export','surplus','trade_boom','merchant'],
+  pass:              ['stability','inaction','isolationism','winter'],
+};
 
 /**
  * Compute anomaly score across all state categories.
