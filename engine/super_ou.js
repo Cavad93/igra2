@@ -2632,6 +2632,43 @@ export function onRulerDied(nationId, gameState) {
   }
 }
 
+// ─── ST_017: onPlayerReputationEvent ─────────────────────────────────────────
+/**
+ * onPlayerReputationEvent(eventType, gameState)
+ * При PROMISE_BROKEN или BETRAYED_ALLY применить штраф доверия к игроку
+ * всем нациям Tier1+Tier2 (tier <= 2), не являющимся самим игроком.
+ */
+export function onPlayerReputationEvent(eventType, gameState) {
+  const gs = gameState ?? (typeof GAME_STATE !== 'undefined' ? GAME_STATE : null);
+  if (!gs) return;
+
+  const trustHit = eventType === 'BETRAYED_ALLY' ? -0.25 : -0.15; // PROMISE_BROKEN default
+  const nations = gs.nations ?? {};
+  const nationList = Array.isArray(nations) ? nations : Object.values(nations);
+  const playerId = gs.player_nation;
+
+  let affected = 0;
+  for (const nation of nationList) {
+    const nid = nation.id ?? nation.name;
+    if (nid === playerId) continue;
+    const tier = nation.tier ?? nation.ai_tier ?? 99;
+    if (tier > 2) continue; // Tier1+Tier2 only
+
+    if (!nation._ou) initNation(nation);
+    const ou = nation._ou;
+
+    // trust_index_player += trustHit / 30 turns
+    _mod(ou, `REP_TRUST_${eventType}`, 'diplomacy', 'trust_index_player', trustHit, 30);
+    // rivalry += |trustHit|*0.8 / 25 turns
+    _mod(ou, `REP_RIVAL_${eventType}`, 'diplomacy', 'rivalry_index',      Math.abs(trustHit) * 0.8, 25);
+    affected++;
+  }
+
+  if (affected > 0 && typeof window !== 'undefined' && window.addEventLog) {
+    window.addEventLog(`[📢] Репутация игрока упала — ${affected} наций узнали о нарушении слова`);
+  }
+}
+
 // ─── GLOBAL BROWSER EXPORT ────────────────────────────────────────────────────
 // Expose SuperOU as window.SuperOU so non-module scripts (turn.js) can call it.
 if (typeof window !== 'undefined') {
@@ -2646,6 +2683,7 @@ if (typeof window !== 'undefined') {
     getContextForSonnet,
     onDiplomacyEvent,
     onRulerDied,
+    onPlayerReputationEvent,
     EVENT_DELTA_MAP,
     SUPER_OU_CONFIG,
   };

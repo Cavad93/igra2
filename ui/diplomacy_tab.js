@@ -855,7 +855,15 @@ function dtClearDialogue(aiNationId) {
 function dtBreakTreaty(treatyId) {
   const playerNationId = GAME_STATE.player_nation;
   if (typeof DiplomacyEngine !== 'undefined') {
+    // ST_017: определить тип договора до разрыва
+    const treaty = DiplomacyEngine.getTreaty?.(treatyId);
     DiplomacyEngine.breakTreaty(treatyId, playerNationId);
+    // Уведомить SuperOU о репутационном ударе
+    if (typeof SuperOU !== 'undefined' && typeof SuperOU.onPlayerReputationEvent === 'function') {
+      const evtType = (treaty?.treaty_type === 'alliance' || treaty?.treaty_type === 'marriage')
+        ? 'BETRAYED_ALLY' : 'PROMISE_BROKEN';
+      SuperOU.onPlayerReputationEvent(evtType, GAME_STATE);
+    }
   }
   _dpRender();
 }
