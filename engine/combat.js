@@ -505,36 +505,53 @@ function resolveNavalArmyBattle(atkFleet, defFleet, regionId) {
   return { attackerWins: atkWins, atkShipLoss, defShipLoss };
 }
 
-// ── Морская блокада ───────────────────────────────────────────────────
+// ── Морская блокада ────────────────────────────────────────────────────
 
 /**
- * MIL_003: Проверяет наличие морской блокады региона.
- * Блокада активна если вражеских кораблей суммарно > 5 в регионе.
- * @param {string} regionId - регион для проверки
- * @param {string} nationId - нация, чью блокаду проверяем (её враги блокируют)
+ * MIL_003: Проверить морскую блокаду региона.
+ * Блокада активна если враг держит > 5 кораблей в регионе или соседних акваториях.
+ * @param {string} regionId - прибрежный регион
+ * @param {string} nationId - нация которую проверяем (владелец региона)
  * @returns {{ isBlockaded: boolean, blockadePower: number }}
  */
 function checkNavalBlockade(regionId, nationId) {
-  const region = _getRegionData(regionId);
-  if (!region || region.terrain !== 'coastal_city') {
+  const region = _getRegionData(regionId)
+    ?? GAME_STATE.regions?.[regionId]
+    ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[regionId] : null);
+  if (!region) return { isBlockaded: false, blockadePower: 0 };
+
+  // Только прибрежные и речные регионы могут быть блокированы
+  const blockadeableTypes = new Set(['coastal_city', 'strait', 'river_valley']);
+  if (!blockadeableTypes.has(region.terrain ?? region.type ?? '')) {
     return { isBlockaded: false, blockadePower: 0 };
   }
 
-  const atWarWith = GAME_STATE.nations?.[nationId]?.military?.at_war_with ?? [];
-  if (atWarWith.length === 0) return { isBlockaded: false, blockadePower: 0 };
-
-  let totalEnemyShips = 0;
-  for (const fleet of (GAME_STATE.armies ?? [])) {
-    if (fleet.state === 'disbanded') continue;
-    if (fleet.type !== 'naval') continue;
-    if (fleet.position !== regionId) continue;
-    if (!atWarWith.includes(fleet.nation)) continue;
-    const s = fleet.ships ?? {};
-    totalEnemyShips += (s.triremes ?? 0) + (s.quinqueremes ?? 0) + (s.light_ships ?? 0);
+  // Собираем соседние океанские регионы
+  const seaNeighbors = new Set([regionId]);
+  for (const connId of (region.connections ?? [])) {
+    const cr = GAME_STATE.regions?.[connId]
+      ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[connId] : null);
+    if (cr?.mapType === 'Ocean' || cr?.terrain === 'ocean') seaNeighbors.add(connId);
   }
 
-  const isBlockaded = totalEnemyShips > 5;
-  return { isBlockaded, blockadePower: totalEnemyShips };
+  let blockadePower = 0;
+  for (const fleet of (GAME_STATE.armies ?? [])) {
+    if (fleet.type !== 'naval') continue;
+    if (fleet.state === 'disbanded') continue;
+    if (fleet.nation === nationId) continue;
+    if (!seaNeighbors.has(fleet.position)) continue;
+    // Враг к нации?
+    const fNation = GAME_STATE.nations?.[nationId];
+    const atWar = fNation?.relations?.[fleet.nation]?.at_war === true
+      || fNation?.military?.at_war_with?.includes(fleet.nation);
+    if (!atWar) continue;
+
+    const s = fleet.ships ?? {};
+    blockadePower += (s.triremes ?? 0) + (s.quinqueremes ?? 0) + (s.light_ships ?? 0);
+  }
+
+  const isBlockaded = blockadePower > 5;
+  return { isBlockaded, blockadePower };
 }
 
 // ── Утилиты ───────────────────────────────────────────────────────────

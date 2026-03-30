@@ -257,11 +257,16 @@ function utilityAIDecide(army, order) {
     }
   }
 
-  // MIL_003: Морская блокада — флот ИИ блокирует прибрежную столицу врага
+  // MIL_003: Морская блокада — для флотов
   if (army.type === 'naval') {
-    const navalBlockadeScore = _scoreNavalBlockade(army, enemies, capitals);
-    if (navalBlockadeScore > 0) {
-      candidates.push(navalBlockadeScore);
+    const blockadeOpt = _scoreNavalBlockade(army, enemies, nearby);
+    if (blockadeOpt.target && blockadeOpt.score > 0) {
+      candidates.push({
+        action:    'move',
+        target_id: blockadeOpt.target,
+        score:     blockadeOpt.score,
+        reasoning: blockadeOpt.reasoning,
+      });
     }
   }
 
@@ -299,60 +304,6 @@ function utilityAIDecide(army, order) {
 // ══════════════════════════════════════════════════════════════════════
 // ФУНКЦИИ ОЦЕНКИ (одна на каждый тип действия)
 // ══════════════════════════════════════════════════════════════════════
-
-/**
- * MIL_003: Score для морской блокады.
- * Флот ищет прибрежные столицы врагов в радиусе и идёт их блокировать.
- * @returns {object|null} candidate объект или null
- */
-function _scoreNavalBlockade(army, enemies, capitals) {
-  // Ищем прибрежные столицы врагов в GAME_STATE
-  let bestTarget = null;
-  let bestScore  = 0;
-
-  for (const enemyId of enemies) {
-    const nation   = GAME_STATE.nations?.[enemyId];
-    if (!nation) continue;
-    const capitalId = nation.capital;
-    if (!capitalId) continue;
-
-    const region = GAME_STATE.regions?.[capitalId]
-      ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[capitalId] : null);
-    if (!region || region.terrain !== 'coastal_city') continue;
-
-    // Базовый score + бонус за столицу
-    const capitalBonus = capitals?.has(capitalId) ? 25 : 5;
-    const score = 45 + capitalBonus;
-
-    if (score > bestScore) {
-      bestScore  = score;
-      bestTarget = capitalId;
-    }
-  }
-
-  if (!bestTarget) return null;
-
-  // Добавить event о блокаде
-  if (typeof addEventLog === 'function') {
-    const nation   = GAME_STATE.nations?.[army.nation];
-    const region   = GAME_STATE.regions?.[bestTarget]
-      ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[bestTarget] : null);
-    const natName  = nation?.name ?? army.nation;
-    const regName  = region?.name ?? bestTarget;
-    if (army.position !== bestTarget) {
-      addEventLog(`⚓ Флот ${natName} выдвигается для блокады ${regName}.`, 'military');
-    } else {
-      addEventLog(`⚓ Флот ${natName} блокировал ${regName}.`, 'military');
-    }
-  }
-
-  return {
-    action:    'move',
-    target_id: bestTarget,
-    score:     bestScore,
-    reasoning: `naval_blockade:${bestTarget}`,
-  };
-}
 
 /**
  * Score для движения к вражескому региону.
@@ -945,4 +896,52 @@ function _detectPincerOpportunity(army, nearby, enemies) {
   }
 
   return { isPincer: false, pincerTarget: null, allies: [] };
+}
+
+/**
+ * MIL_003: Найти лучшую цель для морской блокады.
+ * Ищет вражеские прибрежные столицы и ключевые порты в радиусе флота.
+ * @returns {{ target: string|null, score: number, reasoning: string }}
+ */
+function _scoreNavalBlockade(fleet, enemies, nearby) {
+  if (fleet.type !== 'naval') return { target: null, score: 0, reasoning: '' };
+
+  const s = fleet.ships ?? {};
+  const totalShips = (s.triremes ?? 0) + (s.quinqueremes ?? 0) + (s.light_ships ?? 0);
+  if (totalShips < 3) return { target: null, score: 0, reasoning: '' };
+
+  const blockadeableTypes = new Set(['coastal_city', 'strait', 'river_valley']);
+  let bestTarget = null;
+  let bestScore  = 0;
+  let bestReason = '';
+
+  for (const [rid, region] of Object.entries(nearby)) {
+    if (!enemies.includes(region.nation)) continue;
+    if (!blockadeableTypes.has(region.terrain ?? region.type ?? '')) continue;
+
+    // Базовый score
+    let sc = 45;
+
+    // Бонус за столицу
+    const nation = GAME_STATE.nations?.[region.nation];
+    if (nation?.capital === rid) {
+      sc += 30; // capitalBonus
+      bestReason = `naval_blockade_capital:${rid}`;
+    } else {
+      bestReason = `naval_blockade:${rid}`;
+    }
+
+    // Бонус за население (богатый порт важнее)
+    sc += Math.min(20, Math.floor((region.population ?? 0) / 10000));
+
+    // Штраф за уже занятый регион союзным флотом
+    const alreadyBlockading = (GAME_STATE.armies ?? []).some(a =>
+      a.type === 'naval' && a.nation === fleet.nation && a.position === rid && a.id !== fleet.id
+    );
+    if (alreadyBlockading) sc -= 20;
+
+    if (sc > bestScore) { bestScore = sc; bestTarget = rid; }
+  }
+
+  return { target: bestTarget, score: bestScore, reasoning: bestReason };
 }

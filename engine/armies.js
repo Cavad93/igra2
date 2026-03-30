@@ -510,18 +510,25 @@ function _processSupply(army) {
   if (delta < 0 && (cmd?.commander_skills ?? []).includes('supply_master'))
     delta = delta * 0.60;
 
-  // ── MIL_003: Штраф морской блокады ───────────────────────────────────
-  if (region.terrain === 'coastal_city') {
-    const blockade = typeof checkNavalBlockade === 'function'
-      ? checkNavalBlockade(army.position, army.nation)
-      : { isBlockaded: false, blockadePower: 0 };
+  // ── MIL_003: Штраф морской блокады ──────────────────────────────────
+  if (typeof checkNavalBlockade === 'function') {
+    const blockade = checkNavalBlockade(army.position, army.nation);
     if (blockade.isBlockaded) {
-      delta -= 6;
-      if (army.nation === GAME_STATE.player_nation && GAME_STATE.turn % 3 === 0) {
-        if (typeof addEventLog === 'function') {
-          const rName = region.name ?? army.position;
-          addEventLog(`⚓ Флот противника блокирует ${rName}! Снабжение армии сокращено.`, 'warning');
-        }
+      delta -= 6; // блокада перекрывает морской подвоз
+      if (typeof addEventLog === 'function' && GAME_STATE.turn % 5 === 0) {
+        const regionName = region.name ?? army.position;
+        // Найти блокирующий флот для лога
+        const blockadingFleet = (GAME_STATE.armies ?? []).find(a =>
+          a.type === 'naval' && a.state !== 'disbanded' && a.nation !== army.nation
+          && (a.position === army.position || (region.connections ?? []).includes(a.position))
+        );
+        const blockaderName = blockadingFleet
+          ? (GAME_STATE.nations?.[blockadingFleet.nation]?.name ?? blockadingFleet.nation)
+          : 'Враг';
+        addEventLog(
+          `⚓ Флот ${blockaderName} блокирует ${regionName}. ${army.name} несёт потери снабжения.`,
+          'military'
+        );
       }
     }
   }
