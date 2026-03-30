@@ -274,6 +274,29 @@ NEXT_TASK: TASK_015
 
 ---
 
+## Session 15 — 2026-03-30 — TASK_015: интеграция SuperOU в engine/turn.js
+
+### Сделано:
+- В super_ou.js добавлен глобальный экспорт window.SuperOU:
+  { tick, initNation, updateState, applyModifiers, decideActions,
+    calculateAnomalyScore, getDebugVector, SUPER_OU_CONFIG }
+- В index.html добавлен `<script type="module" src="engine/super_ou.js">`
+  перед turn.js — загружается как ES-модуль, устанавливает window.SuperOU
+- В turn.js:
+  1. _ensureNationDefaults() → вызывает window.SuperOU.initNation(nation)
+     при первом встрече нации (идемпотентно через !nation._ou)
+  2. applyFallbackDecision() → вызывает window.SuperOU.tick(GAME_STATE, nationId)
+     в начале функции (с try/catch — graceful degradation)
+  3. Добавлен _SUPER_OU_ACTION_MAP — маппинг SuperOU actions → turn.js scores
+  4. Скоры усиливаются через SuperOU boost (+4.0 × probability) перед _weightedPick
+- Проверка: node --check turn.js OK, node super_ou.js OK
+
+### Файл: super_ou.js — 2230 строк, turn.js — +35 строк
+
+NEXT_TASK: TASK_016
+
+---
+
 ## Session 14 — 2026-03-30 — TASK_014: главная функция tick()
 
 ### Сделано:
