@@ -34,7 +34,8 @@ const _DEFICIT_INTENSITY = 0.10;   // базовый множитель дель
 //   2.0 = реализована примерно половина наций
 //   3.0 = реализована ~треть (текущее состояние разработки)
 // Убирать постепенно по мере добавления новых наций.
-const _MISSING_NATIONS_DEMAND_MULT = 3.0;
+// ECO_010: используем CONFIG.BALANCE.MISSING_NATIONS_MULT (default 2.0)
+const _MISSING_NATIONS_DEMAND_MULT = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.MISSING_NATIONS_MULT) || 2.0;
 
 // ──────────────────────────────────────────────────────────────
 // updateMarketPrices(totalProduced, totalConsumed)
@@ -110,7 +111,9 @@ function updateMarketPrices(totalProduced, totalConsumed) {
       // ЗОНА ДЕФИЦИТА — экспоненциальный рост
       const shortage_mult = Math.exp(streak * 0.15);
       price_delta = base * shortage_mult * _DEFICIT_INTENSITY * elasticity;
-      market.shortage_streak = streak + 1;
+      // ECO_010: cap shortage_streak
+      const streakCap = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.SHORTAGE_STREAK_CAP) || 8;
+      market.shortage_streak = Math.min(streak + 1, streakCap);
 
     } else if (stockpile <= 2.0 * stockpileTarget) {
       // ЗОНА БАЛАНСА — плавные колебания ±5% / тик

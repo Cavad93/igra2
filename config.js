@@ -88,8 +88,24 @@ const CONFIG = {
     HAPPINESS_FROM_WAR: -15,
 
     // Торговля
-    PIRACY_BASE: 0.05,             // базовый риск пиратства
+    PIRACY_BASE: 0.03,             // базовый риск пиратства (ECO_010: снижено с 0.05)
     BASE_TARIFF: 0.08,             // базовая пошлина
+    TRADE_PROFIT_RATE:      0.05,  // 5% от объёма — базовая доходность маршрута
+    TRADE_TARIFF_FRIENDLY:  0.05,  // тариф при отношениях > 50
+    TRADE_TARIFF_NEUTRAL:   0.15,  // тариф при 0–50
+    TRADE_TARIFF_HOSTILE:   0.30,  // тариф при < 0
+
+    // Производство (ECO_010)
+    SUBSISTENCE_FACTOR:    0.65,   // неорганизованное = 65% эффективности
+    ORGANIZED_BONUS:       1.20,   // здания дают +20% к базовому
+
+    // Рынок (ECO_010)
+    MISSING_NATIONS_MULT:  2.0,    // снижено с 3.0 → более честный спрос
+    SHORTAGE_STREAK_CAP:   8,      // максимум 8 ходов подряд дефицита
+    PRICE_SMOOTH_FACTOR:   0.30,   // сглаживание цен
+
+    // Население (ECO_010)
+    HAPPINESS_TAX_MULT:    0.015,  // каждые -10 счастья = -15% налогов
 
     // Профессии — эффективность по типу местности
     TERRAIN_MULTIPLIERS: {
