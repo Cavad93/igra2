@@ -512,3 +512,25 @@ NEXT_TASK: ST_005
 ### Строк добавлено: ~92
 ### Статус: OK
 NEXT_TASK: ST_006
+
+---
+
+## Session 23 — 2026-03-30 — ST_006: _broadcastCoalitionPlan
+
+### Задача: ST_006
+### Сделано:
+- Реализована _broadcastCoalitionPlan(nation, plan, gameState):
+  - Сигнатура расширена: добавлен параметр nation (инициатор)
+  - Строит summary плана: fromId, strategy, goal, horizon, phase1, shared_priorities(3)
+  - Ищет союзников через nation.allies или gameState.diplomacy[nationId].allies
+  - Для каждого союзника: инициализирует _coalition_commitments[], удаляет
+    старое обязательство от той же нации, добавляет новое (идемпотентно)
+  - Сохраняет список союзников в nation._strategic_plan.commitments
+  - Логирует событие coalition_broadcast в gameState.events_log и global events_log
+  - Возвращает { broadcastCount, allies }
+- window.StrategicLLM дополнен _broadcastCoalitionPlan
+- Проверка: node — OK, ALL ST_006 CHECKS PASSED (5 тестов)
+
+### Строк добавлено: ~71
+### Статус: OK
+NEXT_TASK: ST_007
