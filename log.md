@@ -1199,3 +1199,26 @@ NEXT_TASK: —
 ### Файл: ai/utility_ai.js (+72 строки)
 
 NEXT_TASK: MIL_002
+
+---
+
+## MIL_002 — Выбор формации ИИ (2026-03-30)
+
+### Сделано:
+- Обновлены FORMATIONS в combat.js:
+  - `aggressive`: atk 1.25→1.20, def 0.75→0.85 ✓
+  - `flanking`: cav_bonus 0.15→0.40, добавлен inf_bonus: -0.10 (пехота ×0.90) ✓
+  - Добавлена `siege`: atk 1.00, def 0.90, art_bonus 0.50 (артиллерия ×1.50) ✓
+- В calcArmyCombatStrength добавлена поддержка art_bonus и inf_bonus ✓
+- В utility_ai.js добавлена `_chooseFormation(army, terrain, readiness, activeSiege)`:
+  - readiness < 0.50 → 'defensive' ✓
+  - cavRatio > 0.45 && terrain === 'plains' → 'flanking' ✓
+  - artRatio > 0.25 && activeSiege → 'siege' ✓
+  - readiness >= 0.80 → 'aggressive' ✓
+  - иначе → 'standard' ✓
+- В utilityAIDecide() вызов _chooseFormation, army.formation установлен перед боем ✓
+- Тесты: 16/16 ✅ (tests/mil_002_formation_test.cjs)
+
+### Файлы: engine/combat.js (+14 строк), ai/utility_ai.js (+23 строки)
+
+NEXT_TASK: MIL_003
