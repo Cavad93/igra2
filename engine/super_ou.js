@@ -2669,6 +2669,52 @@ export function onPlayerReputationEvent(eventType, gameState) {
   }
 }
 
+// ─── ST_018: applyHegemonModifier ─────────────────────────────────────────────
+/**
+ * applyHegemonModifier(gameState)
+ * Если игрок контролирует > 15% регионов — все Tier1+Tier2 нации ощущают страх.
+ * Вызывать из turn.js каждые 5 ходов (turn % 5 === 0).
+ */
+export function applyHegemonModifier(gameState) {
+  const gs = gameState ?? (typeof GAME_STATE !== 'undefined' ? GAME_STATE : null);
+  if (!gs) return;
+
+  // Подсчёт регионов
+  const allNations = Object.values(gs.nations ?? {});
+  const totalRegions = allNations.reduce((s, n) => s + (n.regions?.length ?? n.region_count ?? 0), 0);
+  if (totalRegions === 0) return;
+
+  const playerId = gs.player_nation;
+  const playerNation = gs.nations?.[playerId];
+  if (!playerNation) return;
+
+  const playerRegions = playerNation.regions?.length ?? playerNation.region_count ?? 0;
+  const playerShare = playerRegions / totalRegions;
+  if (playerShare <= 0.15) return;
+
+  const intensity = Math.min(1.0, (playerShare - 0.15) / 0.25);
+  let affected = 0;
+
+  for (const nation of allNations) {
+    const nid = nation.id ?? nation.name;
+    if (nid === playerId || nation.is_eliminated) continue;
+    const tier = nation.tier ?? nation.ai_tier ?? 99;
+    if (tier > 2) continue;
+
+    if (!nation._ou) initNation(nation);
+    const ou = nation._ou;
+
+    _mod(ou, 'HEGEMON_FEAR',        'diplomacy', 'fear_index',            intensity * 0.20, 5);
+    _mod(ou, 'HEGEMON_COALITION',   'diplomacy', 'coalition_loyalty',     intensity * 0.15, 5);
+    _mod(ou, 'HEGEMON_OPENNESS',    'diplomacy', 'diplomatic_openness',   intensity * 0.10, 5);
+    affected++;
+  }
+
+  if (intensity > 0.5 && affected > 0 && typeof window !== 'undefined' && window.addEventLog) {
+    window.addEventLog(`[⚖] Гегемония игрока (${Math.round(playerShare * 100)}% регионов) — ${affected} наций сплачиваются`);
+  }
+}
+
 // ─── GLOBAL BROWSER EXPORT ────────────────────────────────────────────────────
 // Expose SuperOU as window.SuperOU so non-module scripts (turn.js) can call it.
 if (typeof window !== 'undefined') {
@@ -2684,6 +2730,7 @@ if (typeof window !== 'undefined') {
     onDiplomacyEvent,
     onRulerDied,
     onPlayerReputationEvent,
+    applyHegemonModifier,
     EVENT_DELTA_MAP,
     SUPER_OU_CONFIG,
   };

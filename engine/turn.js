@@ -420,6 +420,11 @@ async function processAINations() {
   const MAX_STALE    = 3;
   const playerNationId = GAME_STATE.player_nation;
 
+  // ── ST_018: Гегемониальный страх — каждые 5 ходов ─────────────────────────
+  if (currentTurn % 5 === 0 && typeof window !== 'undefined' && window.SuperOU?.applyHegemonModifier) {
+    try { window.SuperOU.applyHegemonModifier(GAME_STATE); } catch (e) { console.warn('[super_ou] applyHegemonModifier:', e); }
+  }
+
   // ── #18 Приоритизация по событиям — инвалидируем кэш после событий игрока ─
   // Если игрок совершил военное/дипломатическое действие в прошлом ходу,
   // сбрасываем кэш для нации которая затронута, чтобы она переосмыслила стратегию.
