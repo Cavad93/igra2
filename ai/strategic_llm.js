@@ -25,9 +25,61 @@ const STRATEGIC_CONFIG = {
   tier1Threshold:    3,     // Tier ≤ 3 → получает стратегический план
 };
 
-// ─── ШАБЛОНЫ СТРАТЕГИЙ (будут заполнены в ST_004) ────────────────────────────
+// ─── ШАБЛОНЫ СТРАТЕГИЙ ────────────────────────────────────────────────────────
 
-const STRATEGY_TEMPLATES = {};
+const STRATEGY_TEMPLATES = {
+
+  military_buildup: {
+    strategy: 'military_buildup',
+    goal: 'Achieve military dominance through rapid force expansion and conquest',
+    phases: [
+      { name: 'Mobilisation',  duration: 8,  priority_actions: ['recruit_infantry','recruit_cavalry','build_barracks'], forbidden_actions: ['demobilize'], ou_overrides: {'military.army_size':0.15,'military.readiness':0.10,'economy.treasury':-0.05}, trigger_conditions: { abort: 'army_size>0.85', early_trigger: 'enemy_weakness' } },
+      { name: 'Campaign',      duration: 15, priority_actions: ['mobilize','recruit_cavalry','sell_goods'],             forbidden_actions: ['seek_alliance','demobilize'], ou_overrides: {'military.morale':0.10,'military.army_size':0.10,'economy.trade_balance':-0.05}, trigger_conditions: { abort: 'treasury<0', early_trigger: 'victory' } },
+      { name: 'Consolidation', duration: 10, priority_actions: ['build_farm','build_market','demobilize'],              forbidden_actions: ['mobilize'], ou_overrides: {'economy.food_supply':0.10,'politics.stability':0.08}, trigger_conditions: { abort: 'none', early_trigger: 'none' } },
+    ],
+  },
+
+  consolidation: {
+    strategy: 'consolidation',
+    goal: 'Secure existing holdings and build a resilient defensive base',
+    phases: [
+      { name: 'Fortification', duration: 10, priority_actions: ['build_barracks','build_farm','seek_alliance'],  forbidden_actions: ['mobilize'], ou_overrides: {'military.readiness':0.08,'economy.food_supply':0.08,'politics.stability':0.05}, trigger_conditions: { abort: 'invasion', early_trigger: 'none' } },
+      { name: 'Recovery',      duration: 12, priority_actions: ['build_market','build_farm','buy_food'],          forbidden_actions: ['mobilize'], ou_overrides: {'economy.treasury':0.10,'economy.trade_balance':0.08,'politics.happiness':0.05}, trigger_conditions: { abort: 'none', early_trigger: 'surplus' } },
+      { name: 'Stability',     duration: 8,  priority_actions: ['seek_alliance','sell_goods','build_market'],     forbidden_actions: ['recruit_cavalry'], ou_overrides: {'diplomacy.reputation':0.08,'politics.legitimacy':0.07}, trigger_conditions: { abort: 'none', early_trigger: 'none' } },
+    ],
+  },
+
+  economic_strangulation: {
+    strategy: 'economic_strangulation',
+    goal: 'Dominate trade networks and bankrupt rivals through commercial superiority',
+    phases: [
+      { name: 'Trade Expansion', duration: 10, priority_actions: ['build_market','build_port','seek_alliance'],     forbidden_actions: ['mobilize'], ou_overrides: {'economy.trade_balance':0.15,'economy.treasury':0.10,'diplomacy.trade_agreements':0.10}, trigger_conditions: { abort: 'trade_blocked', early_trigger: 'monopoly' } },
+      { name: 'Monopoly',        duration: 12, priority_actions: ['sell_goods','build_port','seek_alliance'],        forbidden_actions: ['buy_food'], ou_overrides: {'economy.trade_balance':0.12,'diplomacy.reputation':0.08}, trigger_conditions: { abort: 'treasury<0', early_trigger: 'none' } },
+      { name: 'Leverage',        duration: 10, priority_actions: ['seek_alliance','sell_goods','recruit_infantry'],  forbidden_actions: ['mobilize'], ou_overrides: {'economy.treasury':0.10,'diplomacy.alliance_count':0.08}, trigger_conditions: { abort: 'none', early_trigger: 'none' } },
+    ],
+  },
+
+  opportunism: {
+    strategy: 'opportunism',
+    goal: 'Expand opportunistically by exploiting neighbour weaknesses and crises',
+    phases: [
+      { name: 'Preparation',  duration: 8,  priority_actions: ['build_farm','recruit_infantry','seek_alliance'], forbidden_actions: ['demobilize'], ou_overrides: {'economy.food_supply':0.08,'military.readiness':0.10}, trigger_conditions: { abort: 'none', early_trigger: 'enemy_crisis' } },
+      { name: 'Exploitation', duration: 12, priority_actions: ['mobilize','recruit_cavalry','sell_goods'],        forbidden_actions: ['demobilize'], ou_overrides: {'military.army_size':0.12,'military.morale':0.08}, trigger_conditions: { abort: 'treasury<0', early_trigger: 'victory' } },
+      { name: 'Digestion',    duration: 10, priority_actions: ['build_farm','build_market','demobilize'],          forbidden_actions: ['mobilize'], ou_overrides: {'economy.treasury':0.10,'politics.stability':0.08}, trigger_conditions: { abort: 'none', early_trigger: 'none' } },
+    ],
+  },
+
+  survival: {
+    strategy: 'survival',
+    goal: 'Survive immediate threats and preserve the nation at any cost',
+    phases: [
+      { name: 'Emergency',  duration: 6,  priority_actions: ['buy_food','recruit_infantry','seek_alliance'],   forbidden_actions: ['sell_goods','mobilize'], ou_overrides: {'economy.food_supply':0.20,'military.readiness':0.12,'politics.stability':0.05}, trigger_conditions: { abort: 'none', early_trigger: 'crisis_resolved' } },
+      { name: 'Endurance',  duration: 14, priority_actions: ['build_farm','seek_alliance','build_barracks'],   forbidden_actions: ['mobilize','sell_goods'], ou_overrides: {'economy.food_supply':0.10,'politics.happiness':0.08,'military.morale':0.05}, trigger_conditions: { abort: 'treasury<-50', early_trigger: 'stability>0.5' } },
+      { name: 'Rebuilding', duration: 10, priority_actions: ['build_farm','build_market','sell_goods'],        forbidden_actions: ['recruit_cavalry'], ou_overrides: {'economy.treasury':0.12,'economy.trade_balance':0.08}, trigger_conditions: { abort: 'none', early_trigger: 'none' } },
+    ],
+  },
+
+};
 
 // ─── СТРУКТУРА СТРАТЕГИЧЕСКОГО ПЛАНА ─────────────────────────────────────────
 
@@ -323,19 +375,44 @@ function _broadcastCoalitionPlan(plan, gameState) {
 
 /**
  * Строит локальный план без LLM на основе шаблона по personality.
+ * 6 шаблонов: aggressive→military_buildup, defensive→consolidation,
+ *             merchant→economic_strangulation, expansionist→opportunism,
+ *             survival→survival, default→consolidation
  * @param {Object} nation
  * @param {Object} ou
  * @returns {Object} plan
  */
 function _buildFallbackPlan(nation, ou) {
-  // TODO ST_004: реализовать 6 шаблонов по personality
-  void ou;
-  const plan = _emptyPlan();
-  plan.createdAt  = nation._ou?.tick ?? 0;
-  plan.horizon    = STRATEGIC_CONFIG.planHorizon;
-  plan.strategy   = 'consolidation';
-  plan.goal       = 'Maintain stability';
-  plan.fallback   = true;
+  const personality = nation.ai_personality ?? '';
+  const PERSONALITY_MAP = {
+    aggressive:    'military_buildup',
+    defensive:     'consolidation',
+    merchant:      'economic_strangulation',
+    expansionist:  'opportunism',
+    expansion:     'opportunism',
+    survival:      'survival',
+  };
+
+  const templateKey = PERSONALITY_MAP[personality] ?? 'consolidation';
+  const template    = STRATEGY_TEMPLATES[templateKey];
+
+  const plan        = _emptyPlan();
+  plan.createdAt    = ou?.tick ?? nation._ou?.tick ?? 0;
+  plan.horizon      = STRATEGIC_CONFIG.planHorizon;
+  plan.strategy     = template.strategy;
+  plan.goal         = template.goal;
+  plan.fallback     = true;
+
+  // Deep-copy phases so mutations don't affect the template
+  plan.phases = template.phases.map(p => ({
+    name:               p.name,
+    duration:           p.duration,
+    priority_actions:   [...p.priority_actions],
+    forbidden_actions:  [...p.forbidden_actions],
+    ou_overrides:       { ...p.ou_overrides },
+    trigger_conditions: { ...p.trigger_conditions },
+  }));
+
   return plan;
 }
 
