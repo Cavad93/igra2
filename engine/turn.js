@@ -1093,7 +1093,9 @@ async function _aiBgTick() {
 
 async function _aiBgProcess() {
   if (!GAME_STATE?.nations || IS_PROCESSING_TURN) return;
-  if (typeof getAISingleDecision !== 'function') return;
+  // Super-OU заменяет Ollama — фоновый цикл теперь запускает SuperOU.tick()
+  const superOU = typeof window !== 'undefined' ? window.SuperOU : null;
+  if (!superOU) return;
 
   // ── Строим список приоритетов ──────────────────────────────────────
   // 1. Воюющие нации без свежего кэша — срочно
@@ -1168,17 +1170,24 @@ async function _aiBgProcess() {
     }
   }
 
-  // ── Запрос к phi4-mini с богатым контекстом ───────────────────────
+  // ── Super-OU tick (заменяет Ollama) ──────────────────────────────
   const t0 = Date.now();
-  const decision = await getAISingleDecision(nationId);
+  let decision = null;
+  try {
+    const ouResult = superOU.tick(GAME_STATE, nationId);
+    if (ouResult?.actions?.length) {
+      const top = ouResult.actions[0];
+      decision = { action: top.action, target: top.target ?? null, reasoning: `SuperOU p=${top.prob?.toFixed(2)}` };
+    }
+  } catch (e) {
+    console.warn(`[ai_bg] SuperOU tick error for ${nationId}:`, e.message);
+  }
   const ms = Date.now() - t0;
 
   if (decision) {
     _aiPending.set(nationId, { decision, turn: currentTurn, processedAt: Date.now() });
     const nation = GAME_STATE.nations[nationId];
-    console.log(`[ai_bg] ${nation?.name ?? nationId}: ${decision.action}${decision.target ? '→' + decision.target : ''} | ${ms}ms | pending:${_aiPending.size}/${rotationList.length} | "${decision.reasoning?.slice(0, 60) ?? ''}"`);
-  } else {
-    console.warn(`[ai_bg] ${nationId}: нет решения (${ms}ms) — OU fallback при ходе`);
+    console.log(`[ai_bg] ${nation?.name ?? nationId}: ${decision.action} | ${ms}ms | SuperOU`);
   }
 }
 

@@ -96,52 +96,11 @@ function _stripJSONComments(str) {
 // Таймаут API-вызовов
 const _API_TIMEOUT_MS = 30_000;
 
-// ── Ollama — основной AI для решений наций ────────────────────────────
-async function _callOllama(system, user, maxTokens = 1024) {
-  const url   = CONFIG.OLLAMA_URL   || 'http://localhost:11434/v1/chat/completions';
-  const model = CONFIG.OLLAMA_MODEL || 'phi4-mini';
-
-  const wantsJson = user.includes('"action"') || user.includes('верни JSON') ||
-                    user.includes('Верни JSON') || system.includes('JSON');
-
-  const body = {
-    model,
-    max_tokens: maxTokens,
-    stream: false,
-    messages: [
-      { role: 'system', content: system },
-      { role: 'user',   content: user },
-    ],
-    ...(wantsJson && { response_format: { type: 'json_object' } }),
-  };
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 300_000); // 5 мин для CPU
-
-  let response;
-  try {
-    response = await fetch(url, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(body),
-      signal:  controller.signal,
-    });
-  } catch (err) {
-    clearTimeout(timer);
-    if (err.name === 'AbortError') throw new Error('Ollama timeout (5min)');
-    throw new Error(`Ollama недоступен. Запусти: bash start_llm.sh (${err.message})`);
-  }
-  clearTimeout(timer);
-
-  if (!response.ok) {
-    const errBody = await response.text().catch(() => '');
-    throw new Error(`Ollama ошибка ${response.status}: ${errBody.slice(0, 200)}`);
-  }
-
-  const data = await response.json();
-  const text = data.choices?.[0]?.message?.content;
-  if (!text) throw new Error('Пустой ответ от Ollama');
-  return text;
+// ── Ollama — удалён, заменён на Super-OU ─────────────────────────────
+// Локальный LLM сервер больше не используется.
+// Фоновые решения наций обрабатывает engine/super_ou.js
+async function _callOllama(_system, _user, _maxTokens = 1024) {
+  throw new Error('Ollama отключён — используется Super-OU');
 }
 
 // ── Anthropic Claude API ───────────────────────────────────────────────
@@ -235,14 +194,15 @@ async function _callGroq(system, user, maxTokens) {
 }
 
 // ── Единая точка входа: маршрутизация по модели ───────────────────────
-// MODEL_HAIKU  (phi4-mini)        → Ollama   (фоновые нации)
 // MODEL_WAR_AI (llama-3.3-70b)    → Groq     (война с игроком)
 // MODEL_SONNET (claude-sonnet-4-6) → Anthropic (диалоги с игроком)
-async function callClaude(system, user, maxTokens = 1024, model = CONFIG.MODEL_HAIKU) {
+// Фоновые нации → Super-OU (engine/super_ou.js), без LLM
+async function callClaude(system, user, maxTokens = 1024, model = CONFIG.MODEL_SONNET) {
   if (model && model.startsWith('claude-')) {
     return _callAnthropic(system, user, maxTokens, model);
   }
-  return _callOllama(system, user, maxTokens);
+  // Groq для war AI и anomaly handler
+  return _callGroq(system, user, maxTokens);
 }
 
 // ──────────────────────────────────────────────────────────────
