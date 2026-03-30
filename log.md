@@ -534,3 +534,24 @@ NEXT_TASK: ST_006
 ### Строк добавлено: ~71
 ### Статус: OK
 NEXT_TASK: ST_007
+
+---
+
+## Session 24 — 2026-03-30 — ST_007: интеграция StrategicLLM в tick() и processAINations()
+
+### Задача: ST_007
+### Сделано:
+- В super_ou.js tick(): добавлен вызов window.StrategicLLM.executePlan() (шаг 5a)
+  перед decideActions() — с graceful degradation (try/catch)
+  результат strategic_context передаётся в возвращаемый объект
+- В turn.js processAINations(): добавлен блок StrategicLLM.shouldPlan() после Tier3:
+  для каждой нации из tier1 проверяет shouldPlan(), при true вызывает createPlan() асинхронно
+- В super_ou.js добавлена функция getContextForSonnet(nation):
+  возвращает компактный объект для Sonnet: personality, tick, top_outliers (10),
+  active_modifiers, priority_actions, forbidden_actions, strategic_context
+- window.SuperOU расширен: добавлен getContextForSonnet
+- Проверка: node — OK, ALL ST_007 CHECKS PASSED
+
+### Строк добавлено: ~67
+### Статус: OK
+NEXT_TASK: DONE
