@@ -765,3 +765,25 @@ NEXT_TASK: ST_016
 ### Строк добавлено: ~49
 ### Статус: OK
 NEXT_TASK: ST_017
+
+---
+
+## Session 28 — 2026-03-30 — ST_017: репутационный эффект
+
+### Задача: ST_017
+### Сделано:
+- Добавлена onPlayerReputationEvent(eventType, gameState) ~35 строк в engine/super_ou.js
+  * PROMISE_BROKEN: trust_hit = -0.15
+  * BETRAYED_ALLY:  trust_hit = -0.25
+  * Применяет к всем нациям с tier <= 2 (Tier1+Tier2)
+  * trust_index_player += trust_hit / 30t, rivalry += |trust_hit|*0.8 / 25t
+  * addEventLog("[📢] Репутация игрока упала — N наций узнали")
+- Экспортирована в window.SuperOU
+- Интегрирована в dtBreakTreaty() в ui/diplomacy_tab.js
+  * alliance/marriage разрыв → BETRAYED_ALLY
+  * прочие договоры → PROMISE_BROKEN
+- Тест: node без ошибок, onPlayerReputationEvent: function
+
+### Строк добавлено: ~46
+### Статус: OK
+NEXT_TASK: ST_018
