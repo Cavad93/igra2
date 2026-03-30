@@ -393,3 +393,27 @@ NEXT_TASK: ST_002
 ### Строк добавлено: ~127
 ### Статус: OK
 NEXT_TASK: ST_002
+
+---
+
+## Session 19 — 2026-03-30 — ST_002: shouldPlan + _buildStrategicPrompt
+
+### Задача: ST_002
+### Сделано:
+- Реализован shouldPlan(nation, currentTurn):
+  - Проверяет tier <= tier1Threshold (3)
+  - Проверяет treasury > minTreasury (0) из nation._ou.economy
+  - Проверяет отсутствие активной аномалии (ou.lastAnomaly.isAnomaly !== true)
+  - Проверяет что прошло >= planInterval (20) ходов с последнего плана
+- Реализована _buildStrategicPrompt(nation, ou, gameState):
+  - Вычисляет исторический год (BC/AD) из gameState.year или тика
+  - Собирает ключевые метрики: treasury, food, trade, army, morale, stability и др.
+  - Добавляет топ-5 активных модификаторов и топ-3 целей
+  - Генерирует { system, user } промпт ~850 символов (< 500 токенов)
+  - Включает JSON-схему ответа с phases, ou_overrides, trigger_conditions
+- Добавлен в экспорт ES module и window.StrategicLLM
+- Проверка: node — OK, ALL ST_002 CHECKS PASSED (6 тестов)
+
+### Строк добавлено: ~118
+### Статус: OK
+NEXT_TASK: ST_003
