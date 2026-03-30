@@ -248,6 +248,18 @@
     }
     .trade-routes-toggle-btn.active { background: #2196F3 !important; color: white !important; border-color: #1565C0 !important; }
 
+    /* Панель балансировки развития (ECO_005) */
+    .balance-panel  { padding: 8px; background: #111; border-radius: 4px; margin: 6px 0; }
+    .balance-title  { font-size: 11px; font-weight: bold; color: #d4a853; margin-bottom: 4px; }
+    .balance-row    { display:flex; align-items:center; gap:8px; margin:3px 0; font-size:11px; }
+    .balance-row > span:first-child { width: 80px; flex-shrink:0; }
+    .balance-bar    { flex:1; height:8px; background:#333; border-radius:4px; }
+    .bar-fill       { height:100%; border-radius:4px; }
+    .bar-fill.trade { background:#2196F3; }
+    .bar-fill.agri  { background:#4CAF50; }
+    .bar-fill.mil   { background:#F44336; }
+    .balance-hint   { font-size:10px; color:#9E9E9E; margin-top:6px; font-style:italic; }
+
     /* Панель мирового рынка (ECO_004) */
     .wm-panel { margin: 6px 0; padding: 6px; background: #1a1a2e; border-radius: 4px; font-size: 11px; }
     .wm-good  { margin: 3px 0; }

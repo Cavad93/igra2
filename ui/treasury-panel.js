@@ -587,6 +587,46 @@ function _tpRenderChart() {
     </div>`;
 }
 
+// ── Панель балансировки развития (ECO_005) ───────────────────
+function buildBalancePanel(nation) {
+  const eco = nation.economy || {};
+  const mil = nation.military || {};
+
+  const tradeScore = (eco.trade_routes?.length || 0) * 15
+    + (eco._tariff_income_tick || eco._income_breakdown?.tariff_income || 0);
+
+  const agriScore  = Object.entries(eco.stockpile || {})
+    .filter(([g]) => ['wheat','barley','olive_oil'].includes(g))
+    .reduce((s,[,q]) => s + Math.max(0,q) * 0.1, 0);
+
+  const milScore   = ((mil.infantry||0) + (mil.cavalry||0)*2 + (mil.ships||0)*3) * 0.01;
+
+  const total = tradeScore + agriScore + milScore || 1;
+  const tPct  = Math.min(100, Math.round(tradeScore/total*100));
+  const aPct  = Math.min(100, Math.round(agriScore/total*100));
+  const mPct  = Math.min(100, Math.round(milScore/total*100));
+
+  const hint = tradeScore >= agriScore && tradeScore >= milScore
+    ? '💡 Торговая держава — развивай флот и порты'
+    : agriScore >= milScore
+    ? '💡 Аграрная экономика — строй виллы и латифундии'
+    : '💡 Военная держава — расширяй налоговую базу завоеваниями';
+
+  return `<div class="balance-panel">
+    <div class="balance-title">⚖ Баланс развития</div>
+    <div class="balance-row"><span>🚢 Торговля</span>
+      <div class="balance-bar"><div class="bar-fill trade" style="width:${tPct}%"></div></div>
+      <span>${Math.round(tradeScore)}</span></div>
+    <div class="balance-row"><span>🌾 С/х</span>
+      <div class="balance-bar"><div class="bar-fill agri" style="width:${aPct}%"></div></div>
+      <span>${Math.round(agriScore)}</span></div>
+    <div class="balance-row"><span>⚔️ Армия</span>
+      <div class="balance-bar"><div class="bar-fill mil" style="width:${mPct}%"></div></div>
+      <span>${Math.round(milScore)}</span></div>
+    <div class="balance-hint">${hint}</div>
+  </div>`;
+}
+
 // ── Панель мирового рынка (ECO_004) ──────────────────────────
 function buildWorldMarketPanel(nation) {
   const market    = GAME_STATE.market || {};
@@ -803,6 +843,8 @@ function _tpRender() {
       <div class="tp-chart-section">
         ${_tpRenderChart()}
       </div>
+
+      ${buildBalancePanel(nation)}
 
     </div>`;
 }
