@@ -454,12 +454,78 @@ function executePlan(nation, ou, currentTurn) {
 
 /**
  * Рассылает упрощённый план союзникам нации.
- * @param {Object} plan
+ * Сохраняет _coalition_commitment в каждого союзника и логирует событие.
+ * @param {Object} nation     — нация-инициатор
+ * @param {Object} plan       — стратегический план
  * @param {Object} gameState
  */
-function _broadcastCoalitionPlan(plan, gameState) {
-  // TODO ST_006: реализовать рассылку
-  void plan; void gameState;
+function _broadcastCoalitionPlan(nation, plan, gameState) {
+  // Упрощённое резюме плана для союзников
+  const summary = {
+    fromId:    nation.id ?? nation.name,
+    strategy:  plan.strategy,
+    goal:      plan.goal,
+    horizon:   plan.horizon,
+    phase1:    plan.phases[0]?.name ?? '',
+    // передаём только разрешённые действия первой фазы
+    shared_priorities: (plan.phases[0]?.priority_actions ?? []).slice(0, 3),
+    createdAt: plan.createdAt,
+  };
+
+  // Найти союзников через gameState.diplomacy или nation.allies
+  const allies = [];
+  if (Array.isArray(nation.allies)) {
+    allies.push(...nation.allies);
+  } else if (gameState?.diplomacy) {
+    // diplomacy[nationId] = { allies: [...] }
+    const dip = gameState.diplomacy[nation.id ?? nation.name];
+    if (Array.isArray(dip?.allies)) allies.push(...dip.allies);
+  }
+
+  const nations = gameState?.nations ?? {};
+  const nationList = Array.isArray(nations) ? nations : Object.values(nations);
+
+  let broadcastCount = 0;
+  for (const allyId of allies) {
+    const ally = nationList.find(n => (n.id ?? n.name) === allyId);
+    if (!ally) continue;
+
+    // Сохраняем обязательство в союзнике
+    if (!Array.isArray(ally._coalition_commitments)) {
+      ally._coalition_commitments = [];
+    }
+    // Убираем старое обязательство от той же нации
+    ally._coalition_commitments = ally._coalition_commitments
+      .filter(c => c.fromId !== summary.fromId);
+    ally._coalition_commitments.push({ ...summary, receivedAt: plan.createdAt });
+
+    broadcastCount++;
+  }
+
+  // Сохраняем в самой нации список розосланных обязательств
+  if (!Array.isArray(nation._strategic_plan?.commitments)) {
+    if (nation._strategic_plan) nation._strategic_plan.commitments = [];
+  }
+  if (nation._strategic_plan) {
+    nation._strategic_plan.commitments = allies.slice();
+  }
+
+  // Логируем в events_log
+  const tick = nation._ou?.tick ?? plan.createdAt ?? 0;
+  const logEntry = {
+    tick,
+    type:           'coalition_broadcast',
+    nationId:       nation.id ?? nation.name,
+    strategy:       plan.strategy,
+    alliesNotified: broadcastCount,
+    allies:         allies.slice(),
+  };
+  if (Array.isArray(gameState?.events_log)) gameState.events_log.push(logEntry);
+  if (typeof events_log !== 'undefined' && Array.isArray(events_log)) {
+    events_log.push(logEntry);
+  }
+
+  return { broadcastCount, allies };
 }
 
 /**
@@ -513,6 +579,7 @@ export { shouldPlan, createPlan, executePlan, _broadcastCoalitionPlan,
 
 if (typeof window !== 'undefined') {
   window.StrategicLLM = { shouldPlan, createPlan, executePlan,
+                           _broadcastCoalitionPlan,
                            _buildFallbackPlan, _buildStrategicPrompt,
                            STRATEGIC_CONFIG };
 }
