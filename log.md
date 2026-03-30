@@ -248,3 +248,26 @@ NEXT_TASK: TASK_012
 ### Файл: super_ou.js — 1919 строк
 
 NEXT_TASK: TASK_013
+
+---
+
+## Session 13 — 2026-03-30 — TASK_013: calculateAnomalyScore
+
+### Сделано:
+- Реализована функция calculateAnomalyScore(nation, ouState) с 7 категориями:
+  1. outliers — статистические выбросы (|current - mu| > 3σ)
+  2. rapid_change — резкие изменения между тиками (delta > 2.5σ)
+  3. conflicts — противоречивые высокие значения одновременно (8 пар)
+  4. boundaries — переменные застряли у min/max (в пределах 2%)
+  5. consistency — коррелированные переменные расходятся (8 пар с весами)
+  6. goal_alignment — цели не совпадают с реальным состоянием (10 пар)
+  7. modifier_saturation — слишком много активных модификаторов
+- Функция возвращает { total:[0,1], isAnomaly, nation, tick, categories }
+- SUPER_OU_CONFIG.anomalyThreshold исправлен: 3.5 → 0.45 (нормализованный [0,1])
+- Добавлена вспомогательная snapshotState(ouState) для delta-детекции
+- Реализована getDebugVector(nation) — полный снимок всех 400 переменных
+- Проверка: node — OK, total=1.0, isAnomaly=true, все 7 категорий считаются
+
+### Файл: super_ou.js — 2146 строк
+
+NEXT_TASK: TASK_014

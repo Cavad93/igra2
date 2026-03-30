@@ -29,7 +29,7 @@ export const SUPER_OU_CONFIG = {
   actionSoftmaxTemp:   1.2,
 
   // Anomaly detection
-  anomalyThreshold:    3.5,    // z-score threshold
+  anomalyThreshold:    0.45,   // normalised [0,1] composite score
   anomalyCategories:   7,
   anomalyWindowTicks:  20,
 
@@ -1898,14 +1898,223 @@ const ACTION_MOD_TAGS = {
   pass:              ['stability','inaction','isolationism','winter'],
 };
 
+// ─── ANOMALY SCORE — 7 CATEGORIES ────────────────────────────────────────────
+
 /**
- * Compute anomaly score across all state categories.
+ * Cat 1: Statistical outliers — variables whose |current - mu| > 3σ
+ */
+function _anomalyCat1_Outliers(ouState) {
+  const cats = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
+  let score = 0;
+  let count = 0;
+  for (const cat of cats) {
+    for (const v of ouState[cat] || []) {
+      const z = Math.abs(v.current - v.mu) / (v.sigma || 0.1);
+      if (z > 3) {
+        score += (z - 3) * 0.4;
+        count++;
+      }
+    }
+  }
+  return { score: Math.min(score, 10), count, label: 'outliers' };
+}
+
+/**
+ * Cat 2: Rapid change detection — delta since last tick too large
+ */
+function _anomalyCat2_RapidChange(ouState) {
+  if (!ouState._prev) return { score: 0, count: 0, label: 'rapid_change' };
+  const cats = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
+  let score = 0;
+  let count = 0;
+  for (const cat of cats) {
+    const prev = ouState._prev[cat] || [];
+    const curr = ouState[cat] || [];
+    for (let i = 0; i < curr.length; i++) {
+      if (!prev[i]) continue;
+      const delta = Math.abs(curr[i].current - prev[i]);
+      const threshold = curr[i].sigma * 2.5;
+      if (delta > threshold) {
+        score += (delta - threshold) / (curr[i].sigma || 0.1) * 0.3;
+        count++;
+      }
+    }
+  }
+  return { score: Math.min(score, 10), count, label: 'rapid_change' };
+}
+
+/**
+ * Cat 3: Conflict detection — contradictory high values simultaneously
+ * e.g. high mobilization + high demobilization pressure
+ */
+function _anomalyCat3_Conflicts(ouState) {
+  const pairs = [
+    ['military', 'army_mobilization', 'military', 'army_demobilization'],
+    ['economy',  'trade_volume',      'economy',  'trade_embargo_risk'],
+    ['politics', 'regime_stability',  'politics', 'coup_risk'],
+    ['diplomacy','alliance_strength', 'diplomacy','international_isolation'],
+    ['goals',    'territorial_expansion_drive','goals','territorial_consolidation'],
+    ['military', 'offensive_capability',       'military','defensive_posture'],
+    ['economy',  'surplus_production',         'economy', 'resource_scarcity'],
+    ['politics', 'popular_support',            'politics','protest_intensity'],
+  ];
+  let score = 0;
+  let count = 0;
+  for (const [c1, n1, c2, n2] of pairs) {
+    const v1 = _getVal(ouState, c1, n1);
+    const v2 = _getVal(ouState, c2, n2);
+    // Both high simultaneously is a contradiction
+    const product = Math.max(0, v1 - 0.55) * Math.max(0, v2 - 0.55);
+    if (product > 0.03) {
+      score += product * 8;
+      count++;
+    }
+  }
+  return { score: Math.min(score, 10), count, label: 'conflicts' };
+}
+
+/**
+ * Cat 4: Boundary violations — values stuck near min or max
+ */
+function _anomalyCat4_Boundaries(ouState) {
+  const cats = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
+  let score = 0;
+  let count = 0;
+  for (const cat of cats) {
+    for (const v of ouState[cat] || []) {
+      const range = (v.max - v.min) || 1;
+      const posNorm = (v.current - v.min) / range;
+      // Within 2% of boundary
+      if (posNorm < 0.02 || posNorm > 0.98) {
+        score += 0.25;
+        count++;
+      }
+    }
+  }
+  return { score: Math.min(score, 10), count, label: 'boundaries' };
+}
+
+/**
+ * Cat 5: Consistency — strongly correlated variable pairs diverging
+ */
+function _anomalyCat5_Consistency(ouState) {
+  const correlated = [
+    ['economy','gdp_growth',      'economy','trade_volume',         0.7],
+    ['economy','food_production', 'economy','population_growth',    0.6],
+    ['military','army_size',      'military','army_supply',         0.8],
+    ['military','navy_size',      'military','naval_supply',        0.8],
+    ['politics','regime_stability','politics','government_effectiveness', 0.65],
+    ['diplomacy','alliance_strength','diplomacy','international_reputation', 0.6],
+    ['goals','economic_growth_goal','economy','gdp_growth',          0.55],
+    ['goals','military_dominance_goal','military','army_strength',   0.55],
+  ];
+  let score = 0;
+  let count = 0;
+  for (const [c1, n1, c2, n2, expectedCorr] of correlated) {
+    const v1 = _getVal(ouState, c1, n1);
+    const v2 = _getVal(ouState, c2, n2);
+    // If both are defined (nonzero), check divergence
+    if (v1 > 0.01 && v2 > 0.01) {
+      const diff = Math.abs(v1 - v2);
+      const threshold = (1 - expectedCorr) + 0.25;
+      if (diff > threshold) {
+        score += (diff - threshold) * expectedCorr * 3;
+        count++;
+      }
+    }
+  }
+  return { score: Math.min(score, 10), count, label: 'consistency' };
+}
+
+/**
+ * Cat 6: Goal alignment — goals vs actual state mismatch
+ */
+function _anomalyCat6_GoalAlignment(ouState) {
+  const alignments = [
+    // [goal_cat, goal_var, actual_cat, actual_var]
+    ['goals','economic_growth_goal',        'economy','gdp_growth'],
+    ['goals','military_dominance_goal',     'military','army_strength'],
+    ['goals','diplomatic_influence_goal',   'diplomacy','international_reputation'],
+    ['goals','regime_survival_goal',        'politics','regime_stability'],
+    ['goals','territorial_expansion_drive', 'military','offensive_capability'],
+    ['goals','resource_security_goal',      'economy','resource_access'],
+    ['goals','population_welfare_goal',     'economy','living_standards'],
+    ['goals','technological_leadership',    'economy','technological_development'],
+    ['goals','religious_authority_goal',    'politics','religious_authority'],
+    ['goals','naval_dominance_goal',        'military','navy_strength'],
+  ];
+  let score = 0;
+  let count = 0;
+  for (const [gc, gn, ac, an] of alignments) {
+    const goal   = _getVal(ouState, gc, gn);
+    const actual = _getVal(ouState, ac, an);
+    // High goal but low actual = misalignment
+    const gap = Math.max(0, goal - actual - 0.25);
+    if (gap > 0) {
+      score += gap * 1.5;
+      count++;
+    }
+  }
+  return { score: Math.min(score, 10), count, label: 'goal_alignment' };
+}
+
+/**
+ * Cat 7: Modifier saturation — too many simultaneous active modifiers
+ */
+function _anomalyCat7_ModifierSaturation(ouState) {
+  const mods = (ouState.activeModifiers || []).length;
+  const threshold = SUPER_OU_CONFIG.maxActiveModifiers || 15;
+  if (mods <= threshold) return { score: 0, count: mods, label: 'modifier_saturation' };
+  const score = Math.min((mods - threshold) * 0.5, 10);
+  return { score, count: mods, label: 'modifier_saturation' };
+}
+
+/**
+ * Compute anomaly score across all 7 categories.
  * @param {object} nation
  * @param {object} ouState
- * @returns {number} anomaly score
+ * @returns {{ total: number, categories: object[], isAnomaly: boolean }}
  */
 export function calculateAnomalyScore(nation, ouState) {
-  // TODO
+  const ou = ouState || nation._ou;
+  const cats = [
+    _anomalyCat1_Outliers(ou),
+    _anomalyCat2_RapidChange(ou),
+    _anomalyCat3_Conflicts(ou),
+    _anomalyCat4_Boundaries(ou),
+    _anomalyCat5_Consistency(ou),
+    _anomalyCat6_GoalAlignment(ou),
+    _anomalyCat7_ModifierSaturation(ou),
+  ];
+
+  const weights = [1.5, 1.2, 1.3, 0.6, 0.8, 1.0, 0.7];
+  let total = 0;
+  for (let i = 0; i < cats.length; i++) {
+    total += cats[i].score * weights[i];
+  }
+  total = Math.min(total / 10, 1.0); // normalise to [0,1]
+
+  const threshold = SUPER_OU_CONFIG.anomalyThreshold || 0.45;
+  return {
+    total,
+    isAnomaly: total >= threshold,
+    nation: nation.id || nation.name,
+    tick: ou.tick || 0,
+    categories: cats,
+  };
+}
+
+/**
+ * Save a snapshot of current values for next-tick delta detection.
+ * Call this AFTER updateState, BEFORE the next tick.
+ * @param {object} ouState
+ */
+export function snapshotState(ouState) {
+  const cats = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
+  ouState._prev = {};
+  for (const cat of cats) {
+    ouState._prev[cat] = (ouState[cat] || []).map(v => v.current);
+  }
 }
 
 /**
@@ -1914,6 +2123,24 @@ export function calculateAnomalyScore(nation, ouState) {
  * @returns {object}
  */
 export function getDebugVector(nation) {
-  // TODO
+  const ou = nation._ou;
+  if (!ou) return { error: 'nation not initialised' };
+  const cats = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
+  const snapshot = {};
+  for (const cat of cats) {
+    snapshot[cat] = (ou[cat] || []).map(v => ({
+      name: v.name,
+      current: +v.current.toFixed(4),
+      mu: +v.mu.toFixed(4),
+      sigma: v.sigma,
+      theta: v.theta,
+    }));
+  }
+  return {
+    tick: ou.tick,
+    activeModifiers: (ou.activeModifiers || []).length,
+    modifierNames: (ou.activeModifiers || []).map(m => m.name),
+    state: snapshot,
+  };
 }
 
