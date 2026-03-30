@@ -491,3 +491,24 @@ NEXT_TASK: ST_004
 ### Строк добавлено: ~87
 ### Статус: OK
 NEXT_TASK: ST_005
+
+---
+
+## Session 22 — 2026-03-30 — ST_005: executePlan (фазы плана)
+
+### Задача: ST_005
+### Сделано:
+- Реализована функция executePlan(nation, ou, currentTurn):
+  1. Инициализация phaseStartTurn/currentPhase при первом вызове
+  2. _evalTrigger(condition, ou) — разбирает строки "var op number" (treasury<0, army_size>0.85)
+     поиск переменной по OU-категориям, поддержка <, <=, >, >=
+  3. Проверка abort-триггера → досрочное завершение плана (currentPhase = phases.length)
+  4. Переход к следующей фазе: elapsed >= duration ИЛИ early_trigger срабатывает
+  5. _applyOuOverrides(ou, overrides) — сдвигает mu OU-переменных по ключам "cat.varName"
+  6. ou.priority_actions / ou.forbidden_actions — передаются в ou для decideActions
+- Рекурсия при переходе фазы (один шаг → сразу применяет новую фазу)
+- Проверка: node — OK, ALL ST_005 CHECKS PASSED (6 тестов)
+
+### Строк добавлено: ~92
+### Статус: OK
+NEXT_TASK: ST_006
