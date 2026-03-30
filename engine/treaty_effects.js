@@ -114,6 +114,11 @@ function removeTreatyEffects(treaty) {
       if (!stillHasTrade) {
         if (natA2?.economy?.trade_routes) natA2.economy.trade_routes = natA2.economy.trade_routes.filter(id => id !== pb);
         if (natB2?.economy?.trade_routes) natB2.economy.trade_routes = natB2.economy.trade_routes.filter(id => id !== pa);
+        // ECO_009: обновить визуализацию
+        if (typeof window !== 'undefined' && window.showTradeRoutes) {
+          window.clearTradeRouteLines?.();
+          window.renderTradeRouteLines?.();
+        }
       }
       break;
     case 'marriage_alliance':
@@ -257,6 +262,11 @@ function _onTrade(treaty, a, b, natA, natB, cond) {
   if (!natB.economy.trade_routes) natB.economy.trade_routes = [];
   if (!natA.economy.trade_routes.includes(b)) natA.economy.trade_routes.push(b);
   if (!natB.economy.trade_routes.includes(a)) natB.economy.trade_routes.push(a);
+  // ECO_009: обновить визуализацию торговых маршрутов
+  if (typeof window !== 'undefined' && window.showTradeRoutes) {
+    window.clearTradeRouteLines?.();
+    window.renderTradeRouteLines?.();
+  }
 }
 
 function _onNonAgg(treaty, a, b, cond) {
