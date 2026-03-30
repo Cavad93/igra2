@@ -342,3 +342,34 @@ NEXT_TASK: TASK_DONE
 ### Файл: ai/anomaly_handler.js — 253 строки
 
 NEXT_TASK: TASK_DONE
+
+---
+
+## Session 17 — 2026-03-30 — TASK_DONE: финальная проверка и отчёт
+
+### Сделано:
+- Запущена финальная проверка: `node --input-type=module` — ALL CHECKS PASSED
+- initNation OK: 400 переменных (economy×80, military×80, diplomacy×80, politics×80, goals×80)
+- tick OK: Рим → sell_goods / mobilize / recruit_infantry
+- anomaly OK: total=0.231, isAnomaly=false
+- getDebugVector OK: categories=[tick, activeModifiers, modifierNames, state]
+
+### Итоговые размеры файлов:
+- engine/super_ou.js — 2227 строк
+- ai/anomaly_handler.js — 355 строк
+- engine/turn.js — 1756 строк (интеграция SuperOU)
+
+### Архитектура Super-OU:
+- 400 OU-переменных × 5 категорий (economy, military, diplomacy, politics, goals)
+- 300 ситуационных модификаторов (30 групп × 10): экономика, военное, дипломатия,
+  политика, сезоны (4), память (3), события (3)
+- Матрица личности: Float32Array(1000) × 20 черт × 18 архетипов
+- 11 действий с dot-product scoring + softmax
+- calculateAnomalyScore: 7 категорий (outliers, rapid_change, conflicts,
+  boundaries, consistency, goal_alignment, modifier_saturation)
+- anomaly_handler.js: Groq llama-3.3-70b-versatile + локальная auto-коррекция
+- Интеграция в turn.js: SuperOU.initNation() + SuperOU.tick() → applyFallbackDecision
+
+### Статус: ЗАВЕРШЕНО
+
+NEXT_TASK: COMPLETE
