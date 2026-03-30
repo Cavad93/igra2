@@ -642,6 +642,8 @@ export function updateState(nation) {
       variable.current = _ouStep(variable, dt);
     }
   }
+  // ST_014: conquest fatigue — после обновления переменных
+  _updateConquestFatigue(nation, ou);
   ou.tick++;
 }
 
@@ -2242,6 +2244,39 @@ function _checkResentmentRevenge(nation, ou, currentTurn) {
   // Log event
   if (typeof window !== 'undefined' && window.addEventLog) {
     window.addEventLog(`[⚔] ${nation.name ?? nation.id} ищет реванш`);
+  }
+}
+
+// ─── ST_014: CONQUEST FATIGUE ────────────────────────────────────────────────
+
+/**
+ * _updateConquestFatigue — вычисляет усталость от завоеваний на основе
+ * соотношения регионов к базовым. Вызывается из updateState().
+ */
+function _updateConquestFatigue(nation, ou) {
+  const regions     = nation.regions     ?? nation.territories ?? 1;
+  const baseRegions = nation.base_regions ?? nation.start_territories ?? regions;
+  if (baseRegions <= 0) return;
+
+  const fatigue = Math.min(1.0, (regions / baseRegions - 1) * 0.08);
+  if (fatigue <= 0) return;
+
+  if (fatigue > 0.7) {
+    // Push CONSOLIDATION goal, remove EXPAND
+    if (!ou.goals_stack) ou.goals_stack = [];
+    ou.goals_stack = ou.goals_stack.filter(g => g.name !== 'EXPAND');
+    if (!ou.goals_stack.find(g => g.name === 'CONSOLIDATION')) {
+      ou.goals_stack.push({ name: 'CONSOLIDATION', priority: 0.8 });
+    }
+    // Ослабить стремление к расширению и стабильность
+    _mod(ou, 'cf_expansion', 'goals',    'expansion_drive', -(fatigue * 0.5), 5);
+    _mod(ou, 'cf_stability', 'politics', 'state_stability',  -(fatigue * 0.3), 5);
+  }
+
+  if (fatigue > 0.5) {
+    if (typeof window !== 'undefined' && window.addEventLog) {
+      window.addEventLog(`[📉] ${nation.name ?? nation.id}: усталость от завоеваний (${(fatigue * 100).toFixed(0)}%)`);
+    }
   }
 }
 
