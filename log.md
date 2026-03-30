@@ -642,3 +642,21 @@ NEXT_TASK: ST_009
 ### Строк добавлено: ~84 (super_ou.js +73, diplomacy_tab.js +11)
 ### Статус: OK
 NEXT_TASK: ST_010
+
+---
+
+## Session 28 — 2026-03-30 — ST_010: полный moodBlock из getContextForSonnet()
+
+### Задача: ST_010
+### Сделано:
+- Расширен _buildLeaderSystemPrompt() в ai/diplomacy_ai.js:
+  Было: 6 строк базового moodBlock (кризисы, страх, армия, доверие, цели, стратегия)
+  Стало: полный контекст — fear_of_player, military_confidence, war_weary,
+          desperation, trade_satisfaction, resentment, player_relation детали
+          (betrayals, loyalty), top_outliers (аномальные переменные), стратегия
+- Вызов SuperOU.onDiplomacyEvent() в diplomacy_tab.js — уже реализован в ST_009
+- Проверка: node import — OK (diplomacy_ai.js, super_ou.js)
+
+### Строк добавлено: ~22 (diplomacy_ai.js +22)
+### Статус: OK
+NEXT_TASK: ST_011
