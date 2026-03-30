@@ -1222,3 +1222,26 @@ NEXT_TASK: MIL_002
 ### Файлы: engine/combat.js (+14 строк), ai/utility_ai.js (+23 строки)
 
 NEXT_TASK: MIL_003
+
+---
+
+## MIL_003 — Морская блокада (2026-03-30)
+
+### Сделано:
+- Добавлена `checkNavalBlockade(regionId, nationId)` в combat.js:
+  - Проверяет coastal_city регион на наличие вражеских флотов
+  - Блокада активна если вражеских кораблей суммарно > 5 ✓
+  - Возвращает `{isBlockaded, blockadePower}` ✓
+- В `_processSupply()` в armies.js добавлен штраф блокады:
+  - Если coastal_city и блокада активна → delta -= 6 ✓
+  - Event log для игрока при активной блокаде ✓
+- В utility_ai.js добавлена `_scoreNavalBlockade(army, enemies, capitals)`:
+  - Флот ИИ ищет прибрежные столицы врагов
+  - score = 45 + capitalBonus (столица +25, иначе +5) ✓
+  - Возвращает candidate {action:'move', target_id, reasoning:'naval_blockade:...'} ✓
+- В utilityAIDecide() вызов _scoreNavalBlockade для naval армий ✓
+- Тесты: 18/18 ✅ (tests/mil_003_blockade_test.cjs)
+
+### Файлы: engine/combat.js (+32 строки), engine/armies.js (+16 строк), ai/utility_ai.js (+52 строки)
+
+NEXT_TASK: MIL_004
