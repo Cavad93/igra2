@@ -438,6 +438,57 @@ const _WORLD_IMPORT_GOODS = [
   'wine', 'olive_oil', 'pottery',              // ценные
 ];
 
+// ──────────────────────────────────────────────────────────────
+// ПРОВЕРКА ДЕФИЦИТА ТОВАРОВ (ECO_003)
+// ──────────────────────────────────────────────────────────────
+
+const GOOD_IMPORTANCE = {
+  wheat: 1.0, barley: 0.9, salt: 0.7, iron: 0.6,
+  timber: 0.5, cloth: 0.5, olive_oil: 0.4, wine: 0.3,
+};
+
+function _estimateNeedForGood(nation, good) {
+  const pop = nation.population?.total || 1000;
+  // Простая оценка: пшеница/ячмень — пропорционально населению
+  if (good === 'wheat' || good === 'barley') return pop * 0.01;
+  return pop * 0.005;
+}
+
+function checkSupplyDeficits(nation) {
+  const deficits = [];
+  const stockpile = nation.economy?.stockpile || {};
+
+  for (const [good, importance] of Object.entries(GOOD_IMPORTANCE)) {
+    const qty  = stockpile[good] ?? 0;
+    const need = _estimateNeedForGood(nation, good);
+    if (qty < need * 0.25) {
+      deficits.push({ good, severity: importance, shortage: need - qty });
+    }
+  }
+
+  if (!deficits.length) { nation._supply_deficits = []; return; }
+
+  // SuperOU: сигнал о дефиците
+  const totalSeverity = deficits.reduce((s,d) => s + d.severity, 0);
+  if (totalSeverity > 1.0 && window.SuperOU) {
+    try {
+      window.SuperOU.onDiplomacyEvent(nation.id, 'SUPPLY_DEFICIT', {
+        variable: 'trade_focus', delta: +0.15, duration: 8,
+      });
+    } catch(e) { /* SuperOU необязателен */ }
+  }
+
+  // Логировать критические (10% шанс)
+  const critical = deficits.filter(d => d.severity >= 0.7);
+  for (const d of critical) {
+    if (Math.random() < 0.1) {
+      addEventLog(`[📦] ${nation.name}: нехватка ${d.good} (−${Math.round(d.shortage)} ед)`, 'warning');
+    }
+  }
+
+  nation._supply_deficits = deficits;
+}
+
 function processTrade(nationId) {
   const nation = GAME_STATE.nations[nationId];
   let tradeProfit = 0;
@@ -1028,6 +1079,11 @@ function runEconomyTick() {
     if (typeof updatePopSatisfied === 'function') {
       try { updatePopSatisfied(nationId, consumed, actual); } catch (e) { console.warn('[pops_sat]', e); }
     }
+  }
+
+  // 2d. Проверка дефицитов по всем товарам
+  for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
+    checkSupplyDeficits(nation);
   }
 
   // ════════════════════════════════════════════════════════════
