@@ -9,6 +9,29 @@
 let _ecoTab     = 'A';
 let _ecoSelProf = null;
 
+// ─── ECO_007: Спарклайны цен ─────────────────────────────────────────────
+
+const KEY_GOODS = ['wheat','salt','iron','timber','cloth','olive_oil','wine','horses','marble','papyrus'];
+
+function renderPriceSparkline(priceHistory, width=60, height=20) {
+  if (!Array.isArray(priceHistory) || priceHistory.length < 2) return '';
+  const min   = Math.min(...priceHistory);
+  const max   = Math.max(...priceHistory);
+  const range = max - min || 1;
+  const pts   = priceHistory.map((p,i) => {
+    const x = (i / (priceHistory.length-1)) * width;
+    const y = height - ((p - min) / range) * (height - 2) - 1;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const last  = priceHistory[priceHistory.length-1];
+  const first = priceHistory[0];
+  const trend = last > first * 1.01 ? '↑' : last < first * 0.99 ? '↓' : '→';
+  const color = trend === '↑' ? '#F44336' : trend === '↓' ? '#4CAF50' : '#9E9E9E';
+  return `<svg width="${width}" height="${height}" style="vertical-align:middle;display:inline-block">
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5"/>
+  </svg><span style="color:${color};font-size:9px;margin-left:2px">${trend}</span>`;
+}
+
 // ─── Хелперы: синхронизация с казной ──────────────────────────────────────
 
 // Актуальный доход: из _income_breakdown (живой расчёт движка) или income_per_turn
@@ -505,7 +528,7 @@ function _eRenderM_World() {
         </div>
         <div style="text-align:right">
           <div style="font-size:13px;font-family:'Cinzel',serif;color:${_C.gold}">${item.price.toFixed(1)}</div>
-          <div style="font-size:8px;color:${_C.ivoryFade}">gold</div>
+          <div style="font-size:8px;color:${_C.ivoryFade}">${renderPriceSparkline(item.history)}</div>
         </div>
         <div style="text-align:right;font-size:10.5px;color:${pcol};font-weight:600">${item.pctBase > 0 ? '+' : ''}${item.pctBase.toFixed(1)}%</div>
         <div style="text-align:right">
@@ -514,7 +537,11 @@ function _eRenderM_World() {
         </div>
         <div style="text-align:right;font-size:10px;color:${_C.ivory}">${_efmt(item.demand)}</div>
         <div style="text-align:right;font-size:10px;color:${_C.green}">${_efmt(item.supply)}</div>
-        <div style="text-align:center">${badge}</div>
+        <div style="text-align:center">${badge}${
+          (window.GAME_STATE?.market?.[item.id]?.shortage_streak > 2)
+            ? `<div style="font-size:8px;color:#F44336;margin-top:2px">ДЕФИЦИТ×${window.GAME_STATE.market[item.id].shortage_streak}</div>`
+            : ''
+        }</div>
       </div>`;
     }).join('');
 
