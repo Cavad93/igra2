@@ -1730,8 +1730,7 @@ function renderTradeRouteLines() {
       color, weight: 2, opacity: 0.7, dashArray: '6,4',
     });
     line.bindTooltip(
-      `🤝 ${partner.name}<br>💰 ~${Math.round(income)} золота/ход<br>` +
-      `📦 ${(partner.economy?.trade_routes?.length||0)} маршрутов`,
+      _buildRouteTooltip(playerNation, partner, GAME_STATE.market || {}),
       { sticky: true }
     );
     line.addTo(leafletMap);
@@ -1767,6 +1766,34 @@ function _getRegionGroupCenter(regionIds) {
 function _estimateRouteIncome(myNation, partner) {
   const treasury = myNation.economy?.treasury || 0;
   return Math.min(treasury * 0.02, 200);
+}
+
+function _buildRouteTooltip(myNation, partner, market) {
+  // Получить отношения через DiplomacyEngine или legacy
+  let relations = 0;
+  if (typeof getRelationScore === 'function') {
+    relations = getRelationScore(myNation.id, partner.id) || 0;
+  } else {
+    relations = myNation.relations?.[partner.id]?.score ?? myNation.relations?.[partner.id] ?? 0;
+  }
+  const tariffRate = relations > 50 ? 0.05 : relations > 0 ? 0.15 : 0.30;
+
+  // Топ-3 товара с избытком
+  const surpluses = Object.entries(myNation.economy?.stockpile || {})
+    .filter(([,q]) => q > 100)
+    .sort(([,a],[,b]) => b - a)
+    .slice(0, 3);
+
+  const goodsList = surpluses.map(([good, qty]) => {
+    const price  = market[good]?.price || 0;
+    const profit = Math.round(qty * 0.05 * price * (1 - tariffRate));
+    return `${good}: +${profit} золота`;
+  }).join('<br>') || 'нет данных';
+
+  return `<b>🤝 ${partner.name}</b><br>
+    Отношения: ${relations > 0 ? '+' : ''}${Math.round(relations)}<br>
+    Тариф: ${Math.round(tariffRate*100)}%<br>
+    Экспорт:<br>${goodsList}`;
 }
 
 function _hasWorldMarketAccess(nation) {
