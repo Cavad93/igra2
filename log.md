@@ -33,3 +33,20 @@ NEXT_TASK: TASK_003
 - Проверка: node --input-type=module import — OK, ECONOMY_SCHEMA.length=80
 
 ### Файл: super_ou.js — 219 строк
+
+NEXT_TASK: TASK_003
+
+---
+
+## Session 3 — 2026-03-30 — TASK_003: военные переменные STATE_VECTOR
+
+### Сделано:
+- Добавлен MILITARY_SCHEMA — 80 военных переменных (category:'military')
+  формат: { name, mu, sigma, theta, min, max, category, current }
+- Добавлена функция _initMilitaryVector(nation)
+- Переменные охватывают: размер армии, флота, авиации; боеспособность,
+  мораль, технику, логистику, разведку, спецоперации, оборону и др.
+
+### Файл: super_ou.js — ~330 строк
+
+NEXT_TASK: TASK_004
