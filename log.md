@@ -555,3 +555,41 @@ NEXT_TASK: ST_007
 ### Строк добавлено: ~67
 ### Статус: OK
 NEXT_TASK: DONE
+
+---
+
+## Session 25 — 2026-03-30 — DONE: финальная проверка
+
+### Задача: DONE
+### Сделано:
+- Запущена финальная проверка всех трёх модулей:
+  `import super_ou.js; import anomaly_handler.js; import strategic_llm.js` — OK
+- initNation OK: 400 переменных (economy×80, military×80, diplomacy×80, politics×80, goals×80)
+- tick OK: Рим → sell_goods / mobilize / recruit_infantry
+- anomaly OK: total=0.163, isAnomaly=false
+- getContextForSonnet OK: 10 полей (nationId, name, personality, priority, tick,
+  top_outliers, active_modifiers, priority_actions, forbidden_actions, strategic_context)
+- shouldPlan OK: false при tick=0 (ожидаемо)
+- executePlan OK: null без активного плана (ожидаемо)
+
+### Итоговая архитектура Super-OU:
+- engine/super_ou.js — 2260+ строк
+  - 400 OU-переменных × 5 категорий
+  - 300 ситуационных модификаторов (30 групп)
+  - Матрица личности Float32Array(1000) × 20 черт × 18 архетипов
+  - 11 действий с dot-product + softmax scoring
+  - calculateAnomalyScore: 7 категорий
+  - tick(): полный pipeline (snapshot→modifiers→updateState→decideActions→anomaly)
+  - getContextForSonnet(): компактный контекст для LLM
+- ai/anomaly_handler.js — 355+ строк
+  - Groq llama-3.3-70b-versatile + локальная auto-коррекция
+  - throttle 5 тиков, промпт < 400 токенов
+- ai/strategic_llm.js — 700+ строк
+  - 5 шаблонов стратегий по personality
+  - shouldPlan: Tier1 + 20 ходов + treasury > 0 + нет аномалии
+  - createPlan: Groq → validatePlan → fallback
+  - executePlan: фазы + abort/early_trigger + ou_overrides
+  - _broadcastCoalitionPlan: рассылка плана союзникам
+
+### Статус: ЗАВЕРШЕНО
+NEXT_TASK: —
