@@ -104,6 +104,8 @@ function utilityAIDecide(army, order) {
   const capitals    = _getCapitalRegions(enemies);
   // Союзные армии в радиусе: где стоят, куда идут, что осаждают
   const allyInfo    = _scanAllyArmies(nearby, army.nation);
+  // Клещи/фланг: определить синхронные возможности
+  const pincerInfo  = _detectPincerOpportunity(army, nearby, enemies);
 
   // ── 1. КРИТИЧЕСКОЕ СОСТОЯНИЕ: принудительное отступление ────────────
   if (readiness < mods.retreat_threshold) {
@@ -200,8 +202,16 @@ function utilityAIDecide(army, order) {
 
     let sc = _scoreAttack(army, region, nearby, mods, readiness, enemyArmies, compMods, capitals);
 
-    // Координация: союзник тоже движется к этой цели — вместе сильнее
-    if (allyInfo.allyMoveTargets.has(rid)) {
+    const eStr   = enemyArmies[rid] ?? 0;
+    const isOpen = region.fortress === 0 && region.garrison < 300 && eStr === 0;
+    let moveReasoning = isOpen ? _phrase('attack_open') : _phrase('attack_fortified');
+
+    // Клещи: синхронный удар 2+ армий по одной цели (сильнее обычной координации)
+    if (pincerInfo.isPincer && rid === pincerInfo.pincerTarget) {
+      sc *= 1.35;
+      moveReasoning = `pincer_with:[${pincerInfo.allies.join(',')}]`;
+    } else if (allyInfo.allyMoveTargets.has(rid)) {
+      // Координация: союзник тоже движется к этой цели — вместе сильнее
       sc *= 1.25;
     }
     // Союзник уже стоит рядом с целью — атаковать с двух сторон
@@ -212,14 +222,35 @@ function utilityAIDecide(army, order) {
     if (allyNearTarget) sc *= 1.15;
 
     if (sc > 5) {
-      const eStr   = enemyArmies[rid] ?? 0;
-      const isOpen = region.fortress === 0 && region.garrison < 300 && eStr === 0;
       candidates.push({
         action:    'move',
         target_id: rid,
         score:     sc,
-        reasoning: isOpen ? _phrase('attack_open') : _phrase('attack_fortified'),
+        reasoning: moveReasoning,
       });
+    }
+  }
+
+  // Фланговая поддержка: если сильнее любой цели ×1.5 → помочь союзнику в осаде
+  if (!activeSiege && allyInfo.allySiegeTargets.size > 0) {
+    const strongerThanNearEnemy = Object.entries(nearby).some(([rid, region]) => {
+      if (!enemies.includes(region.nation)) return false;
+      const def = Math.max(region.garrison ?? 50, 50) + (enemyArmies[rid] ?? 0);
+      return myStr > def * 1.5;
+    });
+    if (strongerThanNearEnemy) {
+      for (const siegeTarget of allyInfo.allySiegeTargets) {
+        const sDist = _bfsDistanceInNearby(army.position, siegeTarget, nearby);
+        if (sDist <= 2 && nearby[siegeTarget]) {
+          candidates.push({
+            action:    'move',
+            target_id: siegeTarget,
+            score:     52 + readiness * 20,
+            reasoning: 'flank_support',
+          });
+          break;
+        }
+      }
     }
   }
 
@@ -786,4 +817,44 @@ function _findDistantEnemy(army, order, enemies) {
 
   // BFS не дошёл — отдаём саму цель (orders engine разберётся)
   return goalId;
+}
+
+/**
+ * Обнаруживает возможность клещей: союзная армия в радиусе 2 нацелена
+ * на ту же вражескую цель → скоординированный удар с двух сторон.
+ * @returns {{ isPincer, pincerTarget, allies }}
+ */
+function _detectPincerOpportunity(army, nearby, enemies) {
+  // targetId → [armyId, ...]
+  const targetToAllies = {};
+
+  for (const a of (GAME_STATE.armies ?? [])) {
+    if (a.state === 'disbanded') continue;
+    if (a.nation !== army.nation) continue;
+    if (a.id === army.id) continue;
+
+    // Союзник должен быть в радиусе 2 регионов
+    const dist = _bfsDistanceInNearby(army.position, a.position, nearby);
+    if (dist > 2) continue;
+
+    // Определяем цель союзника (марш или осада)
+    let allyTarget = a.march_target ?? null;
+    if (!allyTarget && a.siege_id) {
+      const siege = (GAME_STATE.sieges ?? []).find(s => s.id === a.siege_id);
+      allyTarget = siege?.region_id ?? null;
+    }
+    if (!allyTarget) continue;
+
+    if (!targetToAllies[allyTarget]) targetToAllies[allyTarget] = [];
+    targetToAllies[allyTarget].push(a.id ?? a.name ?? 'unknown');
+  }
+
+  // Найти вражескую цель в радиусе, на которую нацелен союзник → клещи
+  for (const [targetId, alliedIds] of Object.entries(targetToAllies)) {
+    if (!nearby[targetId]) continue;
+    if (!enemies.includes(nearby[targetId].nation)) continue;
+    return { isPincer: true, pincerTarget: targetId, allies: alliedIds };
+  }
+
+  return { isPincer: false, pincerTarget: null, allies: [] };
 }

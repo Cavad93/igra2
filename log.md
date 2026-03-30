@@ -1181,3 +1181,21 @@ NEXT_TASK: —
 
 ### Итог: 22 + 29 + 29 + 25 = 105/105 тестов ✅
 NEXT_TASK: —
+
+---
+
+## MIL_001 — Координация нескольких армий (клещи/фланг) (2026-03-30)
+
+### Сделано:
+- Добавлена функция `_detectPincerOpportunity(army, nearby, enemies)`:
+  - Сканирует союзные армии в радиусе 2 регионов
+  - Определяет цель союзника (march_target или siege region_id)
+  - Возвращает `{isPincer, pincerTarget, allies}` ✓
+- В `utilityAIDecide()`: вызов `_detectPincerOpportunity`, при isPincer → score атаки ×1.35 ✓
+- Reasoning обновлён: `pincer_with:[armyIds]` при клещах ✓
+- Фланговая поддержка: если армия сильнее цели ×1.5 и союзник в осаде → `flank_support` кандидат ✓
+- Тесты: no-pincer, pincer-detection, utilityAIDecide с pincer reasoning — все прошли ✓
+
+### Файл: ai/utility_ai.js (+72 строки)
+
+NEXT_TASK: MIL_002
