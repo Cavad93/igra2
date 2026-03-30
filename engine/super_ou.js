@@ -932,6 +932,268 @@ function _modGroup10_Morale(ou) {
  * @param {object} nation
  * @param {object} ouState  (= nation._ou)
  */
+// ─── GROUP 11 — DIPLOMACY: REPUTATION & RELATIONS ────────────────────────────
+
+function _modGroup11_DiplomacyReputation(ou) {
+  const gr  = _getVal(ou, 'diplomacy', 'global_reputation');
+  const tc  = _getVal(ou, 'diplomacy', 'treaty_compliance');
+  const di  = _getVal(ou, 'diplomacy', 'diplomatic_incidents');
+  const hg  = _getVal(ou, 'diplomacy', 'historical_grievances');
+  const it  = _getVal(ou, 'diplomacy', 'international_trust');
+  const bdr = _getVal(ou, 'diplomacy', 'border_dispute_level');
+  const rec = _getVal(ou, 'diplomacy', 'reconciliation_index');
+  const fp  = _getVal(ou, 'diplomacy', 'foreign_policy_stability');
+  const wr  = _getVal(ou, 'diplomacy', 'war_reparations_status');
+  const dir = _getVal(ou, 'diplomacy', 'diplomatic_isolation_risk');
+
+  if (gr > 0.75)              _mod(ou, 'prestige_peak',         'diplomacy', 'international_trust',     +0.12, 5);
+  if (gr < 0.2)               _mod(ou, 'reputation_collapse',   'diplomacy', 'alliance_count',          -0.15, 6);
+  if (tc < 0.3)               _mod(ou, 'treaty_breach',         'diplomacy', 'international_trust',     -0.18, 7);
+  if (di > 0.4)               _mod(ou, 'envoy_scandal',         'diplomacy', 'global_reputation',       -0.10, 4);
+  if (hg > 0.6)               _mod(ou, 'old_grievances',        'diplomacy', 'reconciliation_index',    -0.10, 5);
+  if (it > 0.75)              _mod(ou, 'trusted_partner',       'diplomacy', 'treaty_count',            +0.10, 4);
+  if (bdr > 0.5)              _mod(ou, 'border_tension',        'diplomacy', 'neutral_relations',       -0.12, 5);
+  if (rec > 0.7)              _mod(ou, 'reconciliation_boom',   'diplomacy', 'global_reputation',       +0.10, 4);
+  if (fp < 0.25)              _mod(ou, 'policy_chaos',          'diplomacy', 'ambassador_quality',      -0.10, 5);
+  if (wr > 0.5 && it < 0.4)  _mod(ou, 'reparations_resentment','diplomacy', 'international_trust',     -0.08, 6);
+}
+
+// ─── GROUP 12 — DIPLOMACY: ALLIANCES & TREATIES ──────────────────────────────
+
+function _modGroup12_DiplomacyAlliances(ou) {
+  const ac  = _getVal(ou, 'diplomacy', 'alliance_count');
+  const ar  = _getVal(ou, 'diplomacy', 'alliance_reliability');
+  const trc = _getVal(ou, 'diplomacy', 'treaty_count');
+  const st  = _getVal(ou, 'diplomacy', 'sacred_truce_status');
+  const mi  = _getVal(ou, 'military',  'military_alliances');
+  const ec  = _getVal(ou, 'diplomacy', 'enemy_count');
+  const ba  = _getVal(ou, 'diplomacy', 'bilateral_agreements');
+  const gpa = _getVal(ou, 'diplomacy', 'great_power_alignment');
+  const ia  = _getVal(ou, 'diplomacy', 'ideological_alignment');
+  const ml  = _getVal(ou, 'diplomacy', 'multilateral_engagement');
+
+  if (ac > 0.6)               _mod(ou, 'alliance_network',      'diplomacy', 'alliance_reliability',   +0.10, 4);
+  if (ar < 0.3)               _mod(ou, 'ally_unreliable',       'diplomacy', 'alliance_count',          -0.12, 5);
+  if (trc > 0.6)              _mod(ou, 'treaty_web',            'diplomacy', 'international_trust',     +0.08, 4);
+  if (st > 0.7)               _mod(ou, 'olympian_truce',        'diplomacy', 'diplomatic_incidents',    -0.15, 4);
+  if (mi > 0.6)               _mod(ou, 'military_pact_active',  'military',  'reserve_forces',          +0.10, 5);
+  if (ec > 0.5)               _mod(ou, 'many_enemies',          'diplomacy', 'neutral_relations',       -0.15, 5);
+  if (ba > 0.65)              _mod(ou, 'bilateral_web',         'diplomacy', 'trade_partner_count',     +0.08, 4);
+  if (gpa > 0.7)              _mod(ou, 'hegemon_backing',       'diplomacy', 'military_deterrence',     +0.12, 5);
+  if (ia > 0.7 && ac > 0.5)  _mod(ou, 'ideological_bloc',      'diplomacy', 'alliance_reliability',   +0.10, 4);
+  if (ml > 0.7)               _mod(ou, 'multilateral_prestige', 'diplomacy', 'global_reputation',       +0.08, 3);
+}
+
+// ─── GROUP 13 — DIPLOMACY: TRADE & ECONOMIC DIPLOMACY ────────────────────────
+
+function _modGroup13_DiplomacyTrade(ou) {
+  const tpc = _getVal(ou, 'diplomacy', 'trade_partner_count');
+  const mgi = _getVal(ou, 'diplomacy', 'merchant_guild_influence');
+  const tbi = _getVal(ou, 'diplomacy', 'trade_bloc_integration');
+  const sr  = _getVal(ou, 'diplomacy', 'sanctions_received');
+  const si  = _getVal(ou, 'diplomacy', 'sanctions_imposed');
+  const eco = _getVal(ou, 'diplomacy', 'economic_coercion');
+  const fai = _getVal(ou, 'diplomacy', 'foreign_aid_given');
+  const far = _getVal(ou, 'diplomacy', 'foreign_aid_received');
+  const dde = _getVal(ou, 'diplomacy', 'debt_diplomacy_exposure');
+  const fll = _getVal(ou, 'diplomacy', 'foreign_land_leases');
+
+  if (tpc > 0.7)              _mod(ou, 'trade_empire',          'economy',   'export_volume',           +0.12, 4);
+  if (mgi > 0.65)             _mod(ou, 'guild_trade_push',      'economy',   'trade_balance',           +0.10, 4);
+  if (tbi > 0.6)              _mod(ou, 'bloc_advantage',        'economy',   'foreign_investment',      +0.08, 5);
+  if (sr > 0.4)               _mod(ou, 'sanctioned_nation',     'economy',   'trade_openness',          -0.15, 6);
+  if (si > 0.4)               _mod(ou, 'coercive_sanctions',    'diplomacy', 'enemy_count',             +0.08, 5);
+  if (eco > 0.5)              _mod(ou, 'economic_pressure',     'diplomacy', 'neutral_relations',       -0.10, 4);
+  if (fai > 0.15)             _mod(ou, 'patron_state',          'diplomacy', 'global_reputation',       +0.10, 5);
+  if (far > 0.2)              _mod(ou, 'aid_dependency',        'diplomacy', 'foreign_policy_stability',-0.08, 5);
+  if (dde > 0.4)              _mod(ou, 'debt_trap_risk',        'diplomacy', 'diplomatic_isolation_risk',+0.10,5);
+  if (fll > 0.25)             _mod(ou, 'foreign_base_revenue',  'economy',   'gold_reserves',           +0.06, 4);
+}
+
+// ─── GROUP 14 — DIPLOMACY: CRISIS & ESPIONAGE ────────────────────────────────
+
+function _modGroup14_DiplomacyCrisis(ou) {
+  const esp = _getVal(ou, 'diplomacy', 'espionage_capability');
+  const ce  = _getVal(ou, 'diplomacy', 'counter_espionage');
+  const coa = _getVal(ou, 'diplomacy', 'covert_operations_abroad');
+  const di2 = _getVal(ou, 'diplomacy', 'diplomatic_isolation_risk');
+  const tc2 = _getVal(ou, 'diplomacy', 'territorial_claims');
+  const mc  = _getVal(ou, 'diplomacy', 'maritime_claims');
+  const nc  = _getVal(ou, 'diplomacy', 'negotiation_success_rate');
+  const hv  = _getVal(ou, 'diplomacy', 'herald_effectiveness');
+  const ma  = _getVal(ou, 'diplomacy', 'mediation_activity');
+  const icl = _getVal(ou, 'diplomacy', 'international_law_respect');
+
+  if (esp > 0.7)              _mod(ou, 'spy_advantage',         'military',  'intelligence_quality',    +0.12, 4);
+  if (ce > 0.7)               _mod(ou, 'counterspy_shield',     'diplomacy', 'espionage_capability',    -0.08, 4);
+  if (coa > 0.5)              _mod(ou, 'covert_destabilisation','diplomacy', 'diplomatic_incidents',    +0.12, 5);
+  if (di2 > 0.6)              _mod(ou, 'near_isolation',        'diplomacy', 'trade_partner_count',     -0.15, 6);
+  if (tc2 > 0.5)              _mod(ou, 'land_claim_tension',    'diplomacy', 'border_dispute_level',    +0.12, 5);
+  if (mc > 0.5)               _mod(ou, 'sea_claim_dispute',     'diplomacy', 'maritime_diplomacy',      -0.10, 5);
+  if (nc > 0.75)              _mod(ou, 'master_negotiator',     'diplomacy', 'treaty_count',            +0.12, 4);
+  if (hv > 0.7)               _mod(ou, 'herald_triumph',        'diplomacy', 'international_trust',     +0.10, 3);
+  if (ma > 0.6)               _mod(ou, 'mediator_role',         'diplomacy', 'global_reputation',       +0.08, 4);
+  if (icl < 0.2)              _mod(ou, 'lawbreaker_rep',        'diplomacy', 'international_trust',     -0.15, 6);
+}
+
+// ─── GROUP 15 — DIPLOMACY: SOFT POWER & CULTURE ──────────────────────────────
+
+function _modGroup15_DiplomacySoftPower(ou) {
+  const sp  = _getVal(ou, 'diplomacy', 'soft_power_index');
+  const ci  = _getVal(ou, 'diplomacy', 'cultural_influence');
+  const rd  = _getVal(ou, 'diplomacy', 'religious_diplomacy');
+  const oc  = _getVal(ou, 'diplomacy', 'oracle_cooperation');
+  const ae  = _getVal(ou, 'diplomacy', 'academic_exchange');
+  const cer = _getVal(ou, 'diplomacy', 'cultural_exchange_rate');
+  const dia = _getVal(ou, 'diplomacy', 'diaspora_influence');
+  const fsc = _getVal(ou, 'diplomacy', 'foreign_student_inflow');
+  const fpa = _getVal(ou, 'diplomacy', 'foreign_press_coverage');
+  const eco2= _getVal(ou, 'economy',   'technology_index');
+
+  if (sp > 0.7)               _mod(ou, 'cultural_hegemony',     'diplomacy', 'cultural_influence',      +0.10, 5);
+  if (ci > 0.65)              _mod(ou, 'cultural_spread',       'diplomacy', 'soft_power_index',        +0.08, 4);
+  if (rd > 0.6)               _mod(ou, 'temple_diplomacy',      'diplomacy', 'alliance_count',          +0.08, 5);
+  if (oc > 0.6)               _mod(ou, 'oracle_prestige',       'diplomacy', 'global_reputation',       +0.10, 4);
+  if (ae > 0.6)               _mod(ou, 'scholar_exchange',      'economy',   'innovation_rate',         +0.06, 5);
+  if (cer > 0.65)             _mod(ou, 'culture_boom',          'diplomacy', 'soft_power_index',        +0.06, 4);
+  if (dia > 0.5)              _mod(ou, 'diaspora_network',      'economy',   'remittances',             +0.08, 5);
+  if (fsc > 0.5)              _mod(ou, 'student_influx',        'economy',   'skill_level_index',       +0.06, 5);
+  if (fpa > 0.7)              _mod(ou, 'positive_press',        'diplomacy', 'global_reputation',       +0.10, 3);
+  if (eco2 > 0.65 && sp > 0.5) _mod(ou,'tech_soft_power',      'diplomacy', 'soft_power_index',        +0.08, 4);
+}
+
+// ─── GROUP 16 — POLITICS: STABILITY & REGIME ─────────────────────────────────
+
+function _modGroup16_PoliticsStability(ou) {
+  const rs  = _getVal(ou, 'politics', 'regime_stability');
+  const gl  = _getVal(ou, 'politics', 'government_legitimacy');
+  const ps  = _getVal(ou, 'politics', 'popular_support');
+  const os  = _getVal(ou, 'politics', 'opposition_strength');
+  const cs  = _getVal(ou, 'politics', 'cabinet_stability');
+  const cf  = _getVal(ou, 'politics', 'coalition_fragility');
+  const sc  = _getVal(ou, 'politics', 'state_capacity');
+  const pe  = _getVal(ou, 'politics', 'policy_effectiveness');
+  const co  = _getVal(ou, 'politics', 'constitutional_order');
+  const cr  = _getVal(ou, 'military', 'coup_risk');
+
+  if (rs > 0.8)               _mod(ou, 'stable_regime',         'politics',  'popular_support',         +0.10, 4);
+  if (rs < 0.2)               _mod(ou, 'regime_crisis',         'politics',  'government_legitimacy',   -0.18, 6);
+  if (gl < 0.25)              _mod(ou, 'legitimacy_void',        'politics',  'popular_support',         -0.15, 6);
+  if (ps > 0.75)              _mod(ou, 'mandate_strong',        'politics',  'policy_effectiveness',    +0.12, 4);
+  if (os > 0.65)              _mod(ou, 'opposition_surge',      'politics',  'cabinet_stability',       -0.12, 5);
+  if (cs < 0.25)              _mod(ou, 'cabinet_collapse',      'politics',  'policy_effectiveness',    -0.15, 5);
+  if (cf > 0.6)               _mod(ou, 'coalition_crumbling',   'politics',  'regime_stability',        -0.10, 5);
+  if (sc > 0.75)              _mod(ou, 'strong_state',          'politics',  'bureaucratic_efficiency', +0.10, 4);
+  if (pe > 0.75)              _mod(ou, 'good_governance',       'politics',  'popular_support',         +0.08, 4);
+  if (cr > 0.5 && gl < 0.4)  _mod(ou, 'coup_imminent',         'politics',  'regime_stability',        -0.20, 5);
+}
+
+// ─── GROUP 17 — POLITICS: LEGITIMACY & IDEOLOGY ──────────────────────────────
+
+function _modGroup17_PoliticsLegitimacy(ou) {
+  const ri  = _getVal(ou, 'politics', 'religious_influence');
+  const ni  = _getVal(ou, 'politics', 'nationalist_sentiment');
+  const pi  = _getVal(ou, 'politics', 'populism_index');
+  const dm  = _getVal(ou, 'politics', 'democracy_score');
+  const au  = _getVal(ou, 'politics', 'autocracy_score');
+  const pr  = _getVal(ou, 'politics', 'press_freedom');
+  const phf = _getVal(ou, 'politics', 'philosopher_influence');
+  const rh  = _getVal(ou, 'politics', 'rhetoric_effectiveness');
+  const plr = _getVal(ou, 'politics', 'plebeian_rights');
+  const sec = _getVal(ou, 'politics', 'secularism_index');
+
+  if (ri > 0.7)               _mod(ou, 'religious_mandate',     'politics',  'government_legitimacy',   +0.12, 5);
+  if (ni > 0.7)               _mod(ou, 'nationalist_wave',      'politics',  'popular_support',         +0.10, 4);
+  if (pi > 0.65)              _mod(ou, 'populist_surge',        'politics',  'popular_support',         +0.12, 4);
+  if (pi > 0.65 && dm < 0.4) _mod(ou, 'populist_autocracy',    'politics',  'civil_liberties',         -0.12, 5);
+  if (dm > 0.75)              _mod(ou, 'democratic_legitimacy', 'politics',  'political_trust',         +0.10, 4);
+  if (au > 0.7)               _mod(ou, 'autocratic_control',    'politics',  'opposition_strength',     -0.15, 5);
+  if (pr < 0.2)               _mod(ou, 'press_muzzled',         'politics',  'political_trust',         -0.10, 5);
+  if (phf > 0.6)              _mod(ou, 'philosopher_kings',     'politics',  'policy_effectiveness',    +0.08, 5);
+  if (rh > 0.7)               _mod(ou, 'great_orator',          'politics',  'popular_support',         +0.10, 3);
+  if (plr > 0.7 && sec > 0.5)_mod(ou, 'civic_republic',        'politics',  'government_legitimacy',   +0.08, 4);
+}
+
+// ─── GROUP 18 — POLITICS: CORRUPTION & INSTITUTIONS ──────────────────────────
+
+function _modGroup18_PoliticsCorruption(ou) {
+  const cx  = _getVal(ou, 'politics', 'corruption_index');
+  const be  = _getVal(ou, 'politics', 'bureaucratic_efficiency');
+  const rl  = _getVal(ou, 'politics', 'rule_of_law');
+  const ti  = _getVal(ou, 'politics', 'transparency_index');
+  const ji  = _getVal(ou, 'politics', 'judicial_independence');
+  const sp  = _getVal(ou, 'politics', 'secret_police_presence');
+  const ol  = _getVal(ou, 'politics', 'oligarchy_index');
+  const bl  = _getVal(ou, 'politics', 'business_lobby_power');
+  const ml  = _getVal(ou, 'politics', 'military_lobby_power');
+  const eco3= _getVal(ou, 'economy',  'corruption_index');
+
+  if (cx > 0.6)               _mod(ou, 'rampant_corruption',    'economy',   'tax_revenue',             -0.08, 5);
+  if (cx > 0.7 && rl < 0.3)  _mod(ou, 'kleptocracy',           'economy',   'gdp_growth',              -0.05, 6);
+  if (be > 0.75)              _mod(ou, 'efficient_admin',       'politics',  'policy_effectiveness',    +0.12, 4);
+  if (rl > 0.75)              _mod(ou, 'rule_of_law_strong',    'politics',  'institutional_trust',     +0.10, 4);
+  if (ti < 0.2)               _mod(ou, 'opacity_crisis',        'politics',  'political_trust',         -0.12, 5);
+  if (ji < 0.2)               _mod(ou, 'captured_courts',       'politics',  'institutional_trust',     -0.15, 6);
+  if (sp > 0.6)               _mod(ou, 'surveillance_state',    'politics',  'civil_liberties',         -0.15, 5);
+  if (ol > 0.6)               _mod(ou, 'oligarch_dominance',    'politics',  'popular_support',         -0.10, 5);
+  if (bl > 0.65)              _mod(ou, 'business_capture',      'economy',   'regulatory_burden',       -0.08, 4);
+  if (ml > 0.6 && eco3 > 0.5)_mod(ou, 'mil_industrial_complex','economy',   'military_spending',       +0.08, 5);
+}
+
+// ─── GROUP 19 — POLITICS: CRISIS & CONFLICT ──────────────────────────────────
+
+function _modGroup19_PoliticsCrisis(ou) {
+  const pf  = _getVal(ou, 'politics', 'protest_frequency');
+  const pin = _getVal(ou, 'politics', 'protest_intensity');
+  const pv  = _getVal(ou, 'politics', 'political_violence');
+  const ins = _getVal(ou, 'politics', 'insurgency_level');
+  const sep = _getVal(ou, 'politics', 'separatism_risk');
+  const et  = _getVal(ou, 'politics', 'ethnic_tension');
+  const cc  = _getVal(ou, 'politics', 'class_conflict');
+  const rub = _getVal(ou, 'politics', 'rumor_spreading');
+  const pol = _getVal(ou, 'politics', 'political_polarization');
+  const ur  = _getVal(ou, 'politics', 'urban_rural_divide');
+
+  if (pf > 0.5 && pin > 0.4) _mod(ou, 'mass_uprising',         'politics',  'regime_stability',        -0.18, 6);
+  if (pv > 0.4)               _mod(ou, 'political_terror',      'politics',  'popular_support',         -0.15, 5);
+  if (ins > 0.4)              _mod(ou, 'insurgency_active',     'military',  'internal_security',       -0.15, 6);
+  if (sep > 0.5)              _mod(ou, 'secessionism',          'politics',  'state_capacity',          -0.12, 6);
+  if (et > 0.55)              _mod(ou, 'ethnic_strife',         'politics',  'social_cohesion',         -0.15, 5);
+  if (cc > 0.55)              _mod(ou, 'class_war',             'politics',  'government_legitimacy',   -0.10, 5);
+  if (rub > 0.6)              _mod(ou, 'disinformation',        'politics',  'institutional_trust',     -0.10, 4);
+  if (pol > 0.65)             _mod(ou, 'deep_polarization',     'politics',  'policy_effectiveness',    -0.12, 5);
+  if (ur > 0.6)               _mod(ou, 'rural_discontent',      'politics',  'popular_support',         -0.08, 4);
+  if (pf > 0.6 && pv > 0.3)  _mod(ou, 'revolution_brink',      'politics',  'government_legitimacy',   -0.20, 6);
+}
+
+// ─── GROUP 20 — POLITICS: GOVERNANCE & SOCIAL POLICY ─────────────────────────
+
+function _modGroup20_PoliticsGovernance(ou) {
+  const ws  = _getVal(ou, 'politics', 'welfare_state');
+  const ps2 = _getVal(ou, 'politics', 'public_services');
+  const ha  = _getVal(ou, 'politics', 'healthcare_access');
+  const ea  = _getVal(ou, 'politics', 'education_access');
+  const coh = _getVal(ou, 'politics', 'social_cohesion');
+  const ce2 = _getVal(ou, 'politics', 'civic_engagement');
+  const aus = _getVal(ou, 'politics', 'austerity_policy');
+  const stm = _getVal(ou, 'politics', 'stimulus_policy');
+  const fpt = _getVal(ou, 'politics', 'free_trade_policy');
+  const pro = _getVal(ou, 'politics', 'protectionism');
+
+  if (ws > 0.7)               _mod(ou, 'generous_dole',         'politics',  'popular_support',         +0.10, 4);
+  if (ps2 > 0.75)             _mod(ou, 'great_public_works',    'politics',  'popular_support',         +0.12, 4);
+  if (ha > 0.75)              _mod(ou, 'healthy_population',    'economy',   'labor_participation',     +0.06, 5);
+  if (ea > 0.75)              _mod(ou, 'literate_citizenry',    'economy',   'skill_level_index',       +0.08, 5);
+  if (coh > 0.75)             _mod(ou, 'unified_society',       'politics',  'government_legitimacy',   +0.10, 4);
+  if (ce2 > 0.7)              _mod(ou, 'civic_participation',   'politics',  'political_trust',         +0.10, 4);
+  if (aus > 0.6)              _mod(ou, 'austerity_cuts',        'politics',  'popular_support',         -0.12, 5);
+  if (stm > 0.6)              _mod(ou, 'state_stimulus',        'economy',   'gdp_growth',              +0.04, 4);
+  if (fpt > 0.7)              _mod(ou, 'free_trade_boom',       'economy',   'trade_openness',          +0.10, 4);
+  if (pro > 0.65)             _mod(ou, 'protectionist_walls',   'economy',   'trade_tariff',            +0.12, 5);
+}
+
+// ─── PUBLIC: applyModifiers ───────────────────────────────────────────────────
+
 export function applyModifiers(nation, ouState) {
   // Decay existing modifiers first
   _decayModifiers(ouState);
@@ -949,6 +1211,20 @@ export function applyModifiers(nation, ouState) {
   _modGroup8_Naval(ouState);
   _modGroup9_Defence(ouState);
   _modGroup10_Morale(ouState);
+
+  // ── Diplomacy groups (11-15) ──────────────────────────────────────────────
+  _modGroup11_DiplomacyReputation(ouState);
+  _modGroup12_DiplomacyAlliances(ouState);
+  _modGroup13_DiplomacyTrade(ouState);
+  _modGroup14_DiplomacyCrisis(ouState);
+  _modGroup15_DiplomacySoftPower(ouState);
+
+  // ── Politics groups (16-20) ───────────────────────────────────────────────
+  _modGroup16_PoliticsStability(ouState);
+  _modGroup17_PoliticsLegitimacy(ouState);
+  _modGroup18_PoliticsCorruption(ouState);
+  _modGroup19_PoliticsCrisis(ouState);
+  _modGroup20_PoliticsGovernance(ouState);
 }
 
 /**
