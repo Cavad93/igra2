@@ -1820,6 +1820,50 @@ function _buildStateFeatures(ouState) {
   return features;
 }
 
+// ─── ST_012: Economic dependency suppresses war actions ───────────────────────
+/**
+ * Reduce war-related action probabilities when economic_dependency is high.
+ * If dep > 0.6: war actions scaled down, trade/alliance actions boosted.
+ * @param {object} ou
+ * @param {object} nation
+ * @param {Array}  results  mutable array of {action, probability, score}
+ */
+const WAR_ACTIONS   = new Set(['mobilize', 'recruit_infantry', 'recruit_cavalry']);
+const PEACE_ACTIONS = new Set(['seek_alliance', 'open_trade_route', 'sell_goods', 'buy_food']);
+
+function _applyEconomicDependencyConstraint(ou, nation, results) {
+  // Use trade_openness as proxy for economic dependency (schema var exists)
+  // Also account for dynamic modifiers tagged economic_dependency
+  let dep = _getVal(ou, 'economy', 'trade_openness') ?? 0;
+  // Boost dep from active economic_dependency modifiers
+  if (ou.activeModifiers) {
+    for (const m of ou.activeModifiers) {
+      if (m.varName === 'economic_dependency') dep = Math.min(1, dep + Math.abs(m.deltaMu) * 0.5);
+    }
+  }
+  if (dep <= 0.6) return;
+
+  const suppress = Math.min(1, (dep - 0.6) * 2.5); // 0..1 as dep goes 0.6→1.0
+  let warWasCritical = false;
+
+  for (const r of results) {
+    if (WAR_ACTIONS.has(r.action)) {
+      const before = r.probability;
+      r.probability *= Math.max(0, 1 - suppress);
+      r.score       *= Math.max(0, 1 - suppress);
+      if (before > 0.4 && r.probability < 0.15) warWasCritical = true;
+    } else if (PEACE_ACTIONS.has(r.action)) {
+      r.probability = Math.min(1, r.probability * (r.action === 'seek_alliance' ? 1.3 : 1.5));
+      r.score       = Math.min(10, r.score * 1.3);
+    }
+  }
+
+  if (warWasCritical && typeof window !== 'undefined' && window.addEventLog) {
+    const name = nation?.name ?? nation?.id ?? 'Nation';
+    window.addEventLog(`[🤝] ${name}: торговля удерживает от войны`);
+  }
+}
+
 /**
  * Choose actions based on current OU state and personality matrix.
  * Uses dot product of personality weights × state features to score each action,
@@ -1873,6 +1917,10 @@ export function decideActions(nation, ouState) {
     probability: probs[i],
     score: rawScores[i],
   }));
+
+  // Apply economic dependency constraint before finalising
+  _applyEconomicDependencyConstraint(ou, nation, results);
+
   results.sort((a, b) => b.probability - a.probability);
 
   // Return top-N actions
