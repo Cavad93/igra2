@@ -1469,9 +1469,49 @@ function _modGroup30_EventsEpochal(ou) {
   if (ar < 0.05 && gl < 0.1)      _mod(ou, 'barbarian_flood',       'military',  'border_security',      -0.25, 7);
 }
 
+// ─── SEASONAL BEHAVIORAL MODIFIER ─────────────────────────────────────────────
+/**
+ * Season-based behavioral modifier — affects high-level behavioral variables:
+ * military_confidence (military_readiness + troop_morale),
+ * aggression (power_projection_land), trade_satisfaction (trade_balance),
+ * expansion_desire (expansion_drive), mobilization (mobilization_speed).
+ * season = ou.tick % 4 → 0=spring, 1=summer, 2=autumn, 3=winter
+ */
+function _applySeasonalModifier(nation, ou) {
+  const season = (ou.tick || 0) % 4;
+
+  if (season === 0 || season === 1) {
+    // Spring/Summer: military confidence and aggression surge
+    _mod(ou, 'seas_mil_conf',  'military', 'military_readiness',    +0.15, 3);
+    _mod(ou, 'seas_mil_mora',  'military', 'troop_morale',          +0.10, 3);
+    _mod(ou, 'seas_aggression','military', 'power_projection_land', +0.20, 3);
+  }
+
+  if (season === 0) {
+    // Spring only: spring_campaign — additional offensive military boost
+    _mod(ou, 'spring_campaign_conf', 'military', 'military_readiness', +0.12, 3);
+    _mod(ou, 'spring_campaign_mora', 'military', 'troop_morale',       +0.08, 3);
+  }
+
+  if (season === 2) {
+    // Autumn: harvest trade satisfaction boost
+    _mod(ou, 'seas_trade_sat',  'economy', 'trade_balance',   +0.10, 3);
+    _mod(ou, 'seas_trade_open', 'economy', 'trade_openness',  +0.05, 3);
+  }
+
+  if (season === 3) {
+    // Winter: expansion desire collapses, mobilization slows
+    _mod(ou, 'seas_no_expand', 'goals',    'expansion_drive',    -0.25, 3);
+    _mod(ou, 'seas_no_mob',    'military', 'mobilization_speed', -0.20, 3);
+  }
+}
+
 // ─── PUBLIC: applyModifiers ───────────────────────────────────────────────────
 
 export function applyModifiers(nation, ouState) {
+  // First: seasonal behavioral modifiers (confidence, aggression, expansion, mobilization)
+  _applySeasonalModifier(nation, ouState);
+
   // Decay existing modifiers first
   _decayModifiers(ouState);
 
