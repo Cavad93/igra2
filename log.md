@@ -50,3 +50,20 @@ NEXT_TASK: TASK_003
 ### Файл: super_ou.js — ~330 строк
 
 NEXT_TASK: TASK_004
+
+---
+
+## Session 4 — 2026-03-30 — TASK_004: дипломатические переменные STATE_VECTOR
+
+### Сделано:
+- Добавлен DIPLOMACY_SCHEMA — 80 дипломатических переменных (category:'diplomacy')
+  формат: { name, mu, sigma, theta, min, max, category, current }
+- Переменные охватывают: репутацию, альянсы, договоры, шпионаж, санкции,
+  мягкую силу, торговые блоки, культурный обмен, международные организации и др.
+- Добавлена функция _initDiplomacyVector(nation)
+- Проверка: node — OK, DIPLOMACY_SCHEMA.length=80, vector=80
+
+### Файл: super_ou.js — 427 строк
+
+NEXT_TASK: TASK_005
+
