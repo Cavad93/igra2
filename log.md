@@ -712,3 +712,19 @@ NEXT_TASK: ST_013
 ### Строк добавлено: ~40 (super_ou.js +40)
 ### Статус: OK
 NEXT_TASK: ST_014
+
+## Session 25 — 2026-03-30 — ST_014: усталость от завоеваний
+
+### Задача: ST_014
+### Сделано:
+- Добавлена _updateConquestFatigue(nation, ou) ~35 строк в engine/super_ou.js
+- Вычисляет fatigue = min(1.0, (regions/base_regions - 1) * 0.08)
+- fatigue > 0.7: CONSOLIDATION в goals_stack, убрать EXPAND
+- expansion_drive -= fatigue*0.5/5t, state_stability -= fatigue*0.3/5t
+- fatigue > 0.5: addEventLog("[📉] усталость от завоеваний")
+- Вызывается в updateState() после _ouStep цикла
+- Тест: fatigue=1.0 → CONSOLIDATION goal + cf_expansion/cf_stability modifiers подтверждены
+
+### Строк добавлено: ~35 (super_ou.js +35)
+### Статус: OK
+NEXT_TASK: ST_015
