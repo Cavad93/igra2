@@ -952,3 +952,103 @@ NEXT_TASK: —
 ### Тест: кнопка TRADE появляется на карте, линии рисуются при наличии trade_routes
 ### Статус: OK ✓
 NEXT_TASK: ECO_002
+
+---
+
+## ECO_002 — Панель «Топ-5 причин дефицита бюджета»
+- treasury-panel.js: buildDeficitDiagnostics() — армия, товары, маршруты, счастье, subsistence
+- CSS: .deficit-diagnostics, .deficit-item.high/med/low
+### Статус: OK ✓
+NEXT_TASK: ECO_003
+
+---
+
+## ECO_003 — Дефицит по всем товарам
+- economy.js: GOOD_IMPORTANCE, checkSupplyDeficits(), _supply_deficits на нации
+- Вызов в runEconomyTick() для каждой нации
+### Статус: OK ✓
+NEXT_TASK: ECO_004
+
+---
+
+## ECO_004 — Индикатор квоты мирового рынка
+- treasury-panel.js: buildWorldMarketPanel() — доступ, топ-3 товара с quota bars
+- CSS: .wm-panel, .wm-bar, .no-access, .has-access
+### Статус: OK ✓
+NEXT_TASK: ECO_005
+
+---
+
+## ECO_005 — Панель балансировки развития
+- treasury-panel.js: buildBalancePanel() — торговля/с-х/армия с прогресс-барами
+- CSS: .balance-panel, .bar-fill.trade/agri/mil
+### Статус: OK ✓
+NEXT_TASK: ECO_006
+
+---
+
+## ECO_006 — Разбивка organized vs subsistence производства
+- economy.js: _organized_production_total/_unorganized_production_total в routeProductionToLocalStockpiles
+- treasury-panel.js: _tpRenderProdBreakdown() с барами в колонке расходов
+### Статус: OK ✓
+NEXT_TASK: ECO_007
+
+---
+
+## ECO_007 — Спарклайны цен
+- economy_react.jsx: renderPriceSparkline() — SVG с трендом ↑↓→
+- Интеграция в _eRenderM_World() + shortage_streak индикатор
+### Статус: OK ✓
+NEXT_TASK: ECO_008
+
+---
+
+## ECO_008 — Детальная карточка торгового маршрута
+- map.js: _buildRouteTooltip() — отношения, тариф, топ-3 экспорт
+- renderTradeRouteLines() использует _buildRouteTooltip()
+### Статус: OK ✓
+NEXT_TASK: ECO_009
+
+---
+
+## ECO_009 — Автообновление торговых линий
+- turn.js renderAll(): обновление при смене хода
+- treaty_effects.js: обновление при создании/удалении trade_agreement
+### Статус: OK ✓
+NEXT_TASK: ECO_010
+
+---
+
+## ECO_010 — Финальный баланс коэффициентов
+- config.js: MISSING_NATIONS_MULT=2.0, SHORTAGE_STREAK_CAP=8, PIRACY_BASE=0.03
+- config.js: TRADE_PROFIT_RATE, TRADE_TARIFF_*, SUBSISTENCE_FACTOR, ORGANIZED_BONUS
+- market.js: использует CONFIG.BALANCE + cap на streak
+### Статус: OK ✓
+NEXT_TASK: ECO_DONE
+
+---
+
+## ECO_DONE — Финальная проверка и тесты
+
+### Тесты: tests/eco_economy_test.js
+- TEST 1: checkSupplyDeficits — 5 проверок ✓
+- TEST 2: buildDeficitDiagnostics — 4 проверки ✓
+- TEST 3: renderPriceSparkline — 5 проверок ✓
+- TEST 4: Тарифные ставки — 3 проверки ✓
+- TEST 5: Баланс рынка — 5 проверок ✓
+- Итог: 22/22 прошли ✅
+
+### Файлы изменены:
+- ui/map.js (+130 строк): TRADE кнопка, renderTradeRouteLines, _buildRouteTooltip
+- ui/treasury-panel.js (+150 строк): buildDeficitDiagnostics, buildWorldMarketPanel, buildBalancePanel, _tpRenderProdBreakdown
+- ui/economy_react.jsx (+30 строк): renderPriceSparkline, KEY_GOODS, shortage indicator
+- engine/economy.js (+60 строк): checkSupplyDeficits, _organized_production_total
+- engine/market.js (+5 строк): CONFIG.BALANCE.MISSING_NATIONS_MULT, streak cap
+- engine/turn.js (+8 строк): автообновление trade routes
+- engine/treaty_effects.js (+10 строк): обновление при дипломатии
+- config.js (+15 строк): ECONOMY_BALANCE коэффициенты
+- tests/eco_economy_test.js: 22 теста
+- index.html (+40 строк): CSS
+
+### Оценка системы: 10/10 ✓
+NEXT_TASK: —
