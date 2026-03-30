@@ -592,4 +592,29 @@ NEXT_TASK: DONE
   - _broadcastCoalitionPlan: рассылка плана союзникам
 
 ### Статус: ЗАВЕРШЕНО
-NEXT_TASK: —
+NEXT_TASK: ST_009
+
+---
+
+## Session 26 — 2026-03-30 — ST_008: расширить getContextForSonnet + moodBlock
+
+### Задача: ST_008
+### Сделано:
+- getContextForSonnet() расширена: теперь возвращает полный контекст:
+  - mood: { fear_of_player, military_confidence, trade_satisfaction,
+            resentment, desperation, war_weary } — вычисляется из OU-переменных
+  - active_crises: топ-3 модификатора с |delta| > 0.5
+  - current_goals: из goals_stack или топ goals OU-переменных
+  - player_relation: { trust, loyalty, resentment, betrayals } из nation._player_relation
+  - military_posture: 'strong'|'neutral'|'weak' по military_confidence
+  - strategic_context: { strategy_type, target, reasoning, phase } из _strategic_plan
+  - diplomatic_memory: getHandoffContext(nationId, 'sonnet')
+- _buildLeaderSystemPrompt() в diplomacy_ai.js:
+  - Добавлен вызов SuperOU.getContextForSonnet(aiNation)
+  - Добавлен moodBlock "=== ТВОЁ СОСТОЯНИЕ ===" в системный промпт:
+    Кризисы, Страх, Армия, Доверие, Цели, Стратегия
+- Проверка: node — OK, mood и posture считаются, current_goals=[3 цели]
+
+### Строк добавлено: ~76 (super_ou.js +66, diplomacy_ai.js +10)
+### Статус: OK
+NEXT_TASK: ST_009
