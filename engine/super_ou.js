@@ -1054,11 +1054,58 @@ const MODIFIERS_BATCH8 = [
   },
 ];
 
+// ─── BATCH 9: MIL_031–MIL_040 ────────────────────────────────────────────────
+// Артиллерия, воздух (метафора), десант, ВПК, альянсы, союзники
+
+const MODIFIERS_BATCH9 = [
+  { id:'MIL_031', label:'Превосходство катапульт и баллист — мощная артиллерия',
+    cond:(_n,ou)=>{ const art=_findVar(ou,'military','artillery_count'); return art&&art.current>1.0; },
+    adj:[{c:'military',n:'siege_engineering',d:+0.07},{c:'military',n:'force_multiplier',d:+0.06},{c:'military',n:'ammunition_stock',d:-0.05},{c:'economy',n:'raw_materials_stock',d:-0.04}]
+  },
+  { id:'MIL_032', label:'Нет осадных машин — стены неприступны',
+    cond:(_n,ou)=>{ const art=_findVar(ou,'military','artillery_count'); return art&&art.current<0.05; },
+    adj:[{c:'military',n:'siege_engineering',d:-0.07},{c:'military',n:'active_conflicts',d:-0.04},{c:'military',n:'force_multiplier',d:-0.04}]
+  },
+  { id:'MIL_033', label:'Господство в воздухе — разведывательные орлы (метафора превосходства)',
+    cond:(_n,ou)=>{ const afs=_findVar(ou,'military','air_force_size'); return afs&&afs.current>0.70; },
+    adj:[{c:'military',n:'intelligence_quality',d:+0.06},{c:'military',n:'force_multiplier',d:+0.07},{c:'military',n:'command_coordination',d:+0.05},{c:'military',n:'border_control',d:+0.04}]
+  },
+  { id:'MIL_034', label:'Десантная операция — удар с моря в тыл врага',
+    cond:(_n,ou)=>{ const ao=_findVar(ou,'military','amphibious_ops'),ns=_findVar(ou,'military','navy_size'); return ao&&ns&&ao.current>0.70&&ns.current>0.50; },
+    adj:[{c:'military',n:'active_conflicts',d:+0.05},{c:'military',n:'power_projection_land',d:+0.07},{c:'military',n:'force_multiplier',d:+0.06},{c:'military',n:'logistics_capacity',d:-0.04}]
+  },
+  { id:'MIL_035', label:'Армия захватывает власть — военное государство',
+    cond:(_n,ou)=>{ const mpp=_findVar(ou,'military','military_political_power'),cr=_findVar(ou,'military','coup_risk'); return mpp&&cr&&mpp.current>0.70&&cr.current>0.30; },
+    adj:[{c:'military',n:'coup_risk',d:+0.07},{c:'military',n:'military_loyalty',d:-0.05},{c:'economy',n:'consumer_confidence',d:-0.07},{c:'economy',n:'foreign_investment',d:-0.06}]
+  },
+  { id:'MIL_036', label:'Усталость от войны — народ требует мира',
+    cond:(_n,ou)=>{ const we=_findVar(ou,'military','war_exhaustion'),cr=_findVar(ou,'military','casualty_rate'); return we&&cr&&we.current>0.50&&cr.current>0.10; },
+    adj:[{c:'military',n:'troop_morale',d:-0.07},{c:'military',n:'conscription_rate',d:-0.04},{c:'economy',n:'consumer_confidence',d:-0.05},{c:'economy',n:'tax_revenue',d:-0.04}]
+  },
+  { id:'MIL_037', label:'Битва закаляет — боевой опыт растёт',
+    cond:(_n,ou)=>{ const vr=_findVar(ou,'military','veteran_ratio'),cr=_findVar(ou,'military','casualty_rate'); return vr&&cr&&vr.current>0.50&&cr.current>0.05; },
+    adj:[{c:'military',n:'doctrine_quality',d:+0.05},{c:'military',n:'military_training',d:+0.04},{c:'military',n:'force_multiplier',d:+0.05},{c:'military',n:'officer_quality',d:+0.03}]
+  },
+  { id:'MIL_038', label:'Армия хорошо накормлена — воины сыты и сильны',
+    cond:(_n,ou)=>{ const fsm=_findVar(ou,'military','food_supply_military'); return fsm&&fsm.current>1.50; },
+    adj:[{c:'military',n:'troop_morale',d:+0.07},{c:'military',n:'military_readiness',d:+0.05},{c:'military',n:'desertion_rate',d:-0.05},{c:'military',n:'casualty_rate',d:-0.03}]
+  },
+  { id:'MIL_039', label:'Голод в армии — солдаты едят кожаные сандалии',
+    cond:(_n,ou)=>{ const fsm=_findVar(ou,'military','food_supply_military'); return fsm&&fsm.current<0.20; },
+    adj:[{c:'military',n:'troop_morale',d:-0.10},{c:'military',n:'military_readiness',d:-0.08},{c:'military',n:'desertion_rate',d:+0.09},{c:'military',n:'casualty_rate',d:+0.05}]
+  },
+  { id:'MIL_040', label:'Вражеская агентура проникла — шпионаж за рубежом',
+    cond:(_n,ou)=>{ const bc=_findVar(ou,'military','border_control'),snc=_findVar(ou,'military','spy_network_capacity'); return bc&&snc&&bc.current<0.20&&snc.current>0.50; },
+    adj:[{c:'military',n:'intelligence_quality',d:+0.06},{c:'military',n:'counterintelligence',d:-0.05},{c:'military',n:'special_forces',d:+0.05},{c:'military',n:'internal_security',d:-0.04}]
+  },
+];
+
   const allMods = [
     ...MODIFIERS_BATCH1, ...MODIFIERS_BATCH2,
     ...MODIFIERS_BATCH3, ...MODIFIERS_BATCH4,
     ...MODIFIERS_BATCH5, ...MODIFIERS_BATCH6,
     ...MODIFIERS_BATCH7, ...MODIFIERS_BATCH8,
+    ...MODIFIERS_BATCH9,
   ];
   for (const mod of allMods) {
     if (mod.cond(nation, ou)) _applyAdj(ou, mod.adj, ouState, mod.id);
