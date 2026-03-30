@@ -505,6 +505,38 @@ function resolveNavalArmyBattle(atkFleet, defFleet, regionId) {
   return { attackerWins: atkWins, atkShipLoss, defShipLoss };
 }
 
+// ── Морская блокада ───────────────────────────────────────────────────
+
+/**
+ * MIL_003: Проверяет наличие морской блокады региона.
+ * Блокада активна если вражеских кораблей суммарно > 5 в регионе.
+ * @param {string} regionId - регион для проверки
+ * @param {string} nationId - нация, чью блокаду проверяем (её враги блокируют)
+ * @returns {{ isBlockaded: boolean, blockadePower: number }}
+ */
+function checkNavalBlockade(regionId, nationId) {
+  const region = _getRegionData(regionId);
+  if (!region || region.terrain !== 'coastal_city') {
+    return { isBlockaded: false, blockadePower: 0 };
+  }
+
+  const atWarWith = GAME_STATE.nations?.[nationId]?.military?.at_war_with ?? [];
+  if (atWarWith.length === 0) return { isBlockaded: false, blockadePower: 0 };
+
+  let totalEnemyShips = 0;
+  for (const fleet of (GAME_STATE.armies ?? [])) {
+    if (fleet.state === 'disbanded') continue;
+    if (fleet.type !== 'naval') continue;
+    if (fleet.position !== regionId) continue;
+    if (!atWarWith.includes(fleet.nation)) continue;
+    const s = fleet.ships ?? {};
+    totalEnemyShips += (s.triremes ?? 0) + (s.quinqueremes ?? 0) + (s.light_ships ?? 0);
+  }
+
+  const isBlockaded = totalEnemyShips > 5;
+  return { isBlockaded, blockadePower: totalEnemyShips };
+}
+
 // ── Утилиты ───────────────────────────────────────────────────────────
 
 function _landTotal(u) {

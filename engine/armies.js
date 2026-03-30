@@ -510,6 +510,22 @@ function _processSupply(army) {
   if (delta < 0 && (cmd?.commander_skills ?? []).includes('supply_master'))
     delta = delta * 0.60;
 
+  // ── MIL_003: Штраф морской блокады ───────────────────────────────────
+  if (region.terrain === 'coastal_city') {
+    const blockade = typeof checkNavalBlockade === 'function'
+      ? checkNavalBlockade(army.position, army.nation)
+      : { isBlockaded: false, blockadePower: 0 };
+    if (blockade.isBlockaded) {
+      delta -= 6;
+      if (army.nation === GAME_STATE.player_nation && GAME_STATE.turn % 3 === 0) {
+        if (typeof addEventLog === 'function') {
+          const rName = region.name ?? army.position;
+          addEventLog(`⚓ Флот противника блокирует ${rName}! Снабжение армии сокращено.`, 'warning');
+        }
+      }
+    }
+  }
+
   // ── Штраф за перегрузку региона ─────────────────────────────────────
   const capacity    = _getRegionSupplyCapacity(region);
   const totalTroops = _getTotalTroopsInRegion(army.position); // всегда считаем

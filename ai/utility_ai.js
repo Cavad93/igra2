@@ -257,6 +257,14 @@ function utilityAIDecide(army, order) {
     }
   }
 
+  // MIL_003: Морская блокада — флот ИИ блокирует прибрежную столицу врага
+  if (army.type === 'naval') {
+    const navalBlockadeScore = _scoreNavalBlockade(army, enemies, capitals);
+    if (navalBlockadeScore > 0) {
+      candidates.push(navalBlockadeScore);
+    }
+  }
+
   // Если врагов нет в радиусе — идти к цели из приказа
   const hasEnemyMoves = candidates.some(c => c.action === 'move');
   if (!hasEnemyMoves && !activeSiege) {
@@ -291,6 +299,60 @@ function utilityAIDecide(army, order) {
 // ══════════════════════════════════════════════════════════════════════
 // ФУНКЦИИ ОЦЕНКИ (одна на каждый тип действия)
 // ══════════════════════════════════════════════════════════════════════
+
+/**
+ * MIL_003: Score для морской блокады.
+ * Флот ищет прибрежные столицы врагов в радиусе и идёт их блокировать.
+ * @returns {object|null} candidate объект или null
+ */
+function _scoreNavalBlockade(army, enemies, capitals) {
+  // Ищем прибрежные столицы врагов в GAME_STATE
+  let bestTarget = null;
+  let bestScore  = 0;
+
+  for (const enemyId of enemies) {
+    const nation   = GAME_STATE.nations?.[enemyId];
+    if (!nation) continue;
+    const capitalId = nation.capital;
+    if (!capitalId) continue;
+
+    const region = GAME_STATE.regions?.[capitalId]
+      ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[capitalId] : null);
+    if (!region || region.terrain !== 'coastal_city') continue;
+
+    // Базовый score + бонус за столицу
+    const capitalBonus = capitals?.has(capitalId) ? 25 : 5;
+    const score = 45 + capitalBonus;
+
+    if (score > bestScore) {
+      bestScore  = score;
+      bestTarget = capitalId;
+    }
+  }
+
+  if (!bestTarget) return null;
+
+  // Добавить event о блокаде
+  if (typeof addEventLog === 'function') {
+    const nation   = GAME_STATE.nations?.[army.nation];
+    const region   = GAME_STATE.regions?.[bestTarget]
+      ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[bestTarget] : null);
+    const natName  = nation?.name ?? army.nation;
+    const regName  = region?.name ?? bestTarget;
+    if (army.position !== bestTarget) {
+      addEventLog(`⚓ Флот ${natName} выдвигается для блокады ${regName}.`, 'military');
+    } else {
+      addEventLog(`⚓ Флот ${natName} блокировал ${regName}.`, 'military');
+    }
+  }
+
+  return {
+    action:    'move',
+    target_id: bestTarget,
+    score:     bestScore,
+    reasoning: `naval_blockade:${bestTarget}`,
+  };
+}
 
 /**
  * Score для движения к вражескому региону.
