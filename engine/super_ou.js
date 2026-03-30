@@ -647,13 +647,94 @@ export function updateState(nation) {
   ou.tick++;
 }
 
+// ─── MODIFIER HELPERS ────────────────────────────────────────────────────────
+
+function _findVar(ou, category, name) {
+  const arr = ou[category];
+  if (!arr) return null;
+  for (let i = 0; i < arr.length; i++) if (arr[i].name === name) return arr[i];
+  return null;
+}
+
+/** Temporarily shift mu by delta (stored as _muBase + delta). */
+function _applyAdj(ou, adj, ouState, modId) {
+  for (const { c, n, d } of adj) {
+    const v = _findVar(ou, c, n);
+    if (!v) continue;
+    if (v._muBase === undefined) v._muBase = v.mu;
+    v.mu = clamp(v._muBase + d, v.min, v.max);
+    ouState.activeModifiers.push({ id: modId, category: c, name: n, delta: d });
+  }
+}
+
+/** Reset all mu values back to _muBase before re-evaluating modifiers. */
+function _resetMuBases(ou) {
+  for (const cat of ['economy','military','diplomacy','politics','goals']) {
+    for (const v of ou[cat]) {
+      if (v._muBase !== undefined) { v.mu = v._muBase; delete v._muBase; }
+    }
+  }
+}
+
+// ─── SITUATIONAL MODIFIERS — BATCH 1: ECO_001–ECO_010 ───────────────────────
+// Античный период 300 до н.э — 476 н.э.: экономические триггеры (зерно, торговля, золото)
+
+const MODIFIERS_BATCH1 = [
+  { id:'ECO_001', label:'Голод — нехватка зерна',
+    cond:(_n,ou)=>{ const p=_findVar(ou,'economy','food_production'),c=_findVar(ou,'economy','food_consumption'); return p&&c&&p.current<c.current*0.7; },
+    adj:[{c:'economy',n:'food_production',d:+0.06},{c:'economy',n:'population_growth',d:-0.025},{c:'economy',n:'tax_revenue',d:-0.04},{c:'military',n:'troop_morale',d:-0.10},{c:'military',n:'food_supply_military',d:-0.12}]
+  },
+  { id:'ECO_002', label:'Урожайный год — зерновой избыток',
+    cond:(_n,ou)=>{ const p=_findVar(ou,'economy','food_production'),c=_findVar(ou,'economy','food_consumption'); return p&&c&&p.current>c.current*1.4; },
+    adj:[{c:'economy',n:'food_production',d:-0.04},{c:'economy',n:'population_growth',d:+0.015},{c:'economy',n:'tax_revenue',d:+0.03},{c:'military',n:'troop_morale',d:+0.05}]
+  },
+  { id:'ECO_003', label:'Торговое процветание — положительный баланс',
+    cond:(_n,ou)=>{ const tb=_findVar(ou,'economy','trade_balance'); return tb&&tb.current>0.2; },
+    adj:[{c:'economy',n:'gold_reserves',d:+0.04},{c:'economy',n:'gdp_growth',d:+0.02},{c:'economy',n:'consumer_confidence',d:+0.06},{c:'economy',n:'port_activity',d:+0.08}]
+  },
+  { id:'ECO_004', label:'Торговый кризис — дефицит баланса',
+    cond:(_n,ou)=>{ const tb=_findVar(ou,'economy','trade_balance'); return tb&&tb.current<-0.2; },
+    adj:[{c:'economy',n:'gold_reserves',d:-0.03},{c:'economy',n:'currency_strength',d:-0.1},{c:'economy',n:'consumer_confidence',d:-0.07},{c:'economy',n:'tax_revenue',d:-0.03}]
+  },
+  { id:'ECO_005', label:'Истощение казны — золото на исходе',
+    cond:(_n,ou)=>{ const gr=_findVar(ou,'economy','gold_reserves'); return gr&&gr.current<0.05; },
+    adj:[{c:'economy',n:'military_spending',d:-0.04},{c:'economy',n:'infrastructure_index',d:-0.03},{c:'economy',n:'tax_revenue',d:+0.05},{c:'military',n:'troop_morale',d:-0.06},{c:'military',n:'equipment_quality',d:-0.04}]
+  },
+  { id:'ECO_006', label:'Полная казна — золотой запас',
+    cond:(_n,ou)=>{ const gr=_findVar(ou,'economy','gold_reserves'); return gr&&gr.current>0.75; },
+    adj:[{c:'economy',n:'military_spending',d:+0.02},{c:'economy',n:'construction_activity',d:+0.06},{c:'economy',n:'consumer_confidence',d:+0.05},{c:'military',n:'equipment_quality',d:+0.03}]
+  },
+  { id:'ECO_007', label:'Долговой кризис — непосильный долг',
+    cond:(_n,ou)=>{ const dr=_findVar(ou,'economy','debt_ratio'); return dr&&dr.current>2.0; },
+    adj:[{c:'economy',n:'interest_rate',d:+0.04},{c:'economy',n:'gdp_growth',d:-0.03},{c:'economy',n:'currency_strength',d:-0.08},{c:'economy',n:'consumer_confidence',d:-0.08}]
+  },
+  { id:'ECO_008', label:'Экономический подъём — высокий рост ВВП',
+    cond:(_n,ou)=>{ const g=_findVar(ou,'economy','gdp_growth'); return g&&g.current>0.10; },
+    adj:[{c:'economy',n:'tax_revenue',d:+0.04},{c:'economy',n:'consumer_confidence',d:+0.07},{c:'economy',n:'construction_activity',d:+0.05},{c:'military',n:'military_readiness',d:+0.04}]
+  },
+  { id:'ECO_009', label:'Экономический спад — рецессия',
+    cond:(_n,ou)=>{ const g=_findVar(ou,'economy','gdp_growth'); return g&&g.current<-0.05; },
+    adj:[{c:'economy',n:'unemployment_rate',d:+0.05},{c:'economy',n:'tax_revenue',d:-0.04},{c:'economy',n:'consumer_confidence',d:-0.08},{c:'military',n:'troop_morale',d:-0.05}]
+  },
+  { id:'ECO_010', label:'Высокая инфляция — обесценивание монеты',
+    cond:(_n,ou)=>{ const ir=_findVar(ou,'economy','inflation_rate'); return ir&&ir.current>0.20; },
+    adj:[{c:'economy',n:'currency_strength',d:-0.12},{c:'economy',n:'savings_rate',d:-0.04},{c:'economy',n:'consumer_confidence',d:-0.06},{c:'economy',n:'wage_growth',d:+0.04}]
+  },
+];
+
 /**
  * Apply situational modifiers to OU mu values.
  * @param {object} nation
  * @param {object} ouState
  */
 export function applyModifiers(nation, ouState) {
-  // TODO
+  const ou = nation._ou;
+  ouState.activeModifiers = [];
+  _resetMuBases(ou);
+
+  for (const mod of MODIFIERS_BATCH1) {
+    if (mod.cond(nation, ou)) _applyAdj(ou, mod.adj, ouState, mod.id);
+  }
 }
 
 /**
