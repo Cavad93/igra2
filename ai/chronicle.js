@@ -134,7 +134,82 @@ export const ChronicleSystem = {
     };
   },
 
-  buildPrompt(snapshot) {},
+  buildPrompt(snapshot) {
+    const s = snapshot;
+    const ERA_NAMES = {
+      hellenistic:    'Эллинистический период',
+      punic_wars:     'Эпоха Пунических войн',
+      roman_expansion:'Римская экспансия',
+      late_republic:  'Поздняя республика',
+      imperial:       'Имперский период',
+      late_empire:    'Поздняя империя',
+    };
+    const eraName = ERA_NAMES[s.era] ?? s.era;
+    const yearStr = s.year < 0 ? `${Math.abs(s.year)} г. до н.э.` : `${s.year} г. н.э.`;
+
+    const system = `Ты — хронист античного мира. Наблюдаешь за событиями Средиземноморья \
+и описываешь их как историк той эпохи — в стиле Фукидида или Полибия. \
+Пиши от третьего лица. Язык — торжественный, но понятный. \
+Игровой год: ${yearStr} (${eraName}). \
+Отвечай ТОЛЬКО валидным JSON без текста вне JSON.`;
+
+    const wars = s.active_wars.length
+      ? s.active_wars.map(w => `${w.attacker} против ${w.defender} (${w.duration_turns} ходов)`).join('\n')
+      : 'нет';
+    const crises = s.crisis_nations.length
+      ? s.crisis_nations.map(c => `${c.name}: ${c.crisis_type}`).join('\n')
+      : 'нет';
+    const conquests = s.recent_conquests.length
+      ? s.recent_conquests.map(c => `${c.winner} захватил у ${c.loser}: ${c.region}`).join('\n')
+      : 'нет';
+    const coalition = s.largest_coalition.members.length
+      ? `${s.largest_coalition.members.join('+')} против ${s.largest_coalition.target}`
+      : 'нет';
+
+    const user = `СОСТОЯНИЕ МИРА (ход ${s.turn}):
+
+Сильнейшая держава: ${s.strongest_nation.name} (${s.strongest_nation.regions} регионов, армия ${s.strongest_nation.army})
+Игрок (${s.player.name}): ${s.player.regions} регионов, казна ${s.player.treasury}
+Доля мира: ${(s.player_share_regions * 100).toFixed(1)}%
+
+Активные войны (${s.active_wars.length}):
+${wars}
+
+Кризисы:
+${crises}
+
+Недавние завоевания:
+${conquests}
+
+Голод: ${s.famines_active.join(', ') || 'нет'}
+Банкротства: ${s.bankruptcies_recent.join(', ') || 'нет'}
+Крупнейшая коалиция: ${coalition}
+
+Сгенерируй 3-5 хроникальных событий. Каждое событие:
+- основано на реальных данных выше
+- написано как запись хрониста той эпохи
+- может иметь игровой эффект или быть чисто нарративным
+
+JSON формат:
+{
+  "chronicle_title": "Хроники ${eraName}, год ${yearStr}",
+  "events": [
+    {
+      "id": "evt_001",
+      "title": "Краткий заголовок",
+      "text": "2-3 предложения в стиле хрониста",
+      "type": "political",
+      "affected_nations": ["nation_id1"],
+      "effect": null
+    }
+  ]
+}
+
+Типы: political, military, economic, natural, cultural
+Для effect используй: { "variable": "имя_переменной", "delta": число, "duration": ходов, "radius_hops": 0-6 }`;
+
+    return { system, user };
+  },
   parseEvents(raw, gameState) {},
   applyEffects(events, gameState) {},
   async generate(gameState) {},
