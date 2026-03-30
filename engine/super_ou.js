@@ -1811,7 +1811,8 @@ function _buildPersonalityMatrix(nation) {
   const weights = baseWeights.slice();
 
   // Apply priority amplifiers
-  const priorityKey = (nation.ai_priority || '').toLowerCase().replace(/\s+/g, '_');
+  const _rawPriority = Array.isArray(nation.ai_priority) ? nation.ai_priority[0] : nation.ai_priority;
+  const priorityKey = (_rawPriority || '').toLowerCase().replace(/\s+/g, '_');
   const amp = PRIORITY_AMPLIFIERS[priorityKey];
   if (amp) {
     for (const [traitName, factor] of Object.entries(amp)) {
