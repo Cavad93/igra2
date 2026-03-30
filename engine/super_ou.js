@@ -2670,6 +2670,23 @@ export function onDiplomacyEvent(nationId, eventType, data = {}) {
   const ou = nation._ou;
   if (!ou) return;
 
+  // CHRONICLE_EVENT: произвольный delta к произвольной переменной из data
+  if (eventType === 'CHRONICLE_EVENT') {
+    const { variable, delta, duration = 20 } = data ?? {};
+    if (variable && typeof delta === 'number') {
+      // Ищем переменную во всех категориях
+      const cats = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
+      for (const cat of cats) {
+        const arr = ou[cat];
+        if (Array.isArray(arr) && arr.some(v => v.name === variable)) {
+          _mod(ou, `CHRONICLE_${variable}_${ou.tick ?? 0}`, cat, variable, delta, duration);
+          break;
+        }
+      }
+    }
+    return;
+  }
+
   const deltas = EVENT_DELTA_MAP[eventType];
   if (!deltas) return;
 

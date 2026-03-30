@@ -210,8 +210,71 @@ JSON формат:
 
     return { system, user };
   },
-  parseEvents(raw, gameState) {},
-  applyEffects(events, gameState) {},
+  parseEvents(raw /*, gameState unused for now */) {
+    if (!raw) return null;
+    try {
+      // Извлечь JSON — убираем markdown-обёртку
+      let s = raw;
+      const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (fence) s = fence[1];
+      const start = s.indexOf('{');
+      const end   = s.lastIndexOf('}');
+      if (start === -1 || end <= start) return null;
+      let jsonStr = s.slice(start, end + 1);
+      // Убрать хвостовые запятые
+      jsonStr = jsonStr.replace(/,\s*([\]}])/g, '$1');
+      const parsed = JSON.parse(jsonStr);
+      // Валидация
+      if (!Array.isArray(parsed.events)) return null;
+      parsed.events = parsed.events.filter(e => e?.id && e?.title && e?.text);
+      if (!parsed.events.length) return null;
+      return parsed;
+    } catch (e) {
+      console.warn('[Chronicle] parseEvents ошибка:', e.message);
+      return null;
+    }
+  },
+
+  applyEffects(events, gameState) {
+    if (!events?.length) return;
+    const nations  = gameState?.nations ?? {};
+    const natList  = Object.values(nations);
+
+    // Ищем функцию onDiplomacyEvent в super_ou (браузер) или game state
+    const _applyOU = (typeof window !== 'undefined' && window.SuperOU?.onDiplomacyEvent)
+      ? window.SuperOU.onDiplomacyEvent.bind(window.SuperOU)
+      : null;
+    if (!_applyOU) {
+      console.warn('[Chronicle] SuperOU.onDiplomacyEvent недоступен');
+      return;
+    }
+
+    for (const evt of events) {
+      if (!evt.effect) continue;
+      const { variable, delta, duration = 20, radius_hops = 0 } = evt.effect;
+      if (!variable || typeof delta !== 'number') continue;
+
+      // Базовые нации
+      const targets = new Set(
+        (evt.affected_nations ?? [])
+          .map(id => nations[id])
+          .filter(Boolean)
+      );
+
+      // Расширить по радиусу (берём случайных соседей из all nations)
+      if (radius_hops > 0 && targets.size < natList.length) {
+        const extra = natList
+          .filter(n => !targets.has(n))
+          .slice(0, radius_hops);
+        extra.forEach(n => targets.add(n));
+      }
+
+      for (const nation of targets) {
+        _applyOU(nation, 'CHRONICLE_EVENT', { variable, delta, duration, gameState });
+        console.log(`[Chronicle] Применён эффект ${variable}${delta>0?'+':''}${delta} → ${nation.name ?? nation.id} (${duration} ходов)`);
+      }
+    }
+  },
   async generate(gameState) {},
 };
 
