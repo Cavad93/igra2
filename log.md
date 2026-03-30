@@ -221,3 +221,30 @@ NEXT_TASK: TASK_011
 ### Файл: super_ou.js — 1733 строки
 
 NEXT_TASK: TASK_012
+
+---
+
+## Session 12 — 2026-03-30 — TASK_012: decideActions
+
+### Сделано:
+- Добавлен ACTION_LIST — 11 действий: build_farm, build_barracks, build_market,
+  recruit_infantry, recruit_cavalry, seek_alliance, mobilize, demobilize,
+  buy_food, sell_goods, pass
+- Добавлен ACTION_TRAIT_AFFINITY — для каждого действия список черт личности
+  с весами (2-4 черты на действие)
+- Реализована _buildStateFeatures(ouState) → Array(20):
+  извлекает из OU-переменных (economy, military, diplomacy, politics, goals)
+  сигнал для каждой из 20 черт личности
+- Реализована _softmax(scores, temperature) с температурным масштабированием
+- Реализована decideActions(nation, ouState):
+  - строит/кэширует personality matrix через _buildPersonalityMatrix
+  - вычисляет raw score через dot product: pmWeight × traitWeight × stateVal
+  - добавляет бонус от активных модификаторов через ACTION_MOD_TAGS
+  - применяет softmax (temperature из nation.ai_temperature или config)
+  - возвращает топ-3 действия с probability и score
+- Добавлен ACTION_MOD_TAGS — словарь тегов модификаторов для каждого действия
+- Проверка: node — OK, Rome → sell_goods/mobilize/recruit_infantry
+
+### Файл: super_ou.js — 1919 строк
+
+NEXT_TASK: TASK_013
