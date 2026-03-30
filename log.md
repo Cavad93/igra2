@@ -417,3 +417,28 @@ NEXT_TASK: ST_002
 ### Строк добавлено: ~118
 ### Статус: OK
 NEXT_TASK: ST_003
+
+---
+
+## Session 20 — 2026-03-30 — ST_003: createPlan (Groq + валидация + fallback)
+
+### Задача: ST_003
+### Сделано:
+- Реализована async функция createPlan(nation, ou, gameState):
+  1. _buildStrategicPrompt() — формирует { system, user } промпт
+  2. _callGroqStrategic() — fetch к Groq API (llama-3.3-70b-versatile, 400 токенов)
+  3. JSON.parse + _validatePlan() — нормализация и проверка ответа
+  4. При ошибке Groq → _buildFallbackPlan()
+  5. nation._strategic_plan = plan — сохранение результата
+  6. events_log.push(logEntry) — логирование
+- Добавлена _callGroqStrategic(system, user) — аналог _callGroqAnomaly:
+  AbortController timeout, response_format: json_object, error handling
+- Добавлена _validatePlan(parsed, nation, ou):
+  Проверяет наличие strategy/goal/phases, нормализует до 5 фаз,
+  клипует duration [1,40], ограничивает строки, возвращает чистый план
+- Экспортирована _validatePlan (добавлена в export)
+- Проверка: node — OK, ALL ST_003 CHECKS PASSED (5 тестов)
+
+### Строк добавлено: ~116
+### Статус: OK
+NEXT_TASK: ST_004
