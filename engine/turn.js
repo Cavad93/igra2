@@ -603,6 +603,8 @@ function _ouStep(x, mu) {
 
 function _tickOU(nationId, nation) {
   const mu = _ouNaturalMu(nation);
+  // Если Super-OU уже инициализировал _ou с массивами — не перезаписывать скалярами
+  if (nation._ou && Array.isArray(nation._ou.economy)) return nation._ou;
   if (!nation._ou) {
     nation._ou = {
       aggression:    mu.aggression    + (Math.random() - 0.5) * 0.2,
