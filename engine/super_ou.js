@@ -2117,6 +2117,46 @@ export function snapshotState(ouState) {
 
 // ─── MAIN TICK FUNCTION ───────────────────────────────────────────────────────
 
+// ─── RESENTMENT REVENGE CHECK ─────────────────────────────────────────────────
+
+/**
+ * Память обид: если накопленная обида > 0.85 и армия сильная —
+ * нация добавляет цель REVENGE и усиливает агрессию.
+ * @param {object} nation
+ * @param {object} ou
+ * @param {number} currentTurn
+ */
+function _checkResentmentRevenge(nation, ou, currentTurn) {
+  const pr = nation._player_relation;
+  if (!pr) return;
+
+  const resentmentScore = pr.resentment ?? 0;
+  const armySz  = _getVal(ou, 'military', 'army_size')   ?? 0.3;
+  const morale  = _getVal(ou, 'military', 'troop_morale') ?? 0.65;
+  const militaryConfidence = (armySz + morale) / 2;
+
+  if (resentmentScore <= 0.85 || militaryConfidence <= 0.5) return;
+  if (ou._revenge_cooldown && currentTurn < ou._revenge_cooldown) return;
+
+  // Push REVENGE goal onto goals_stack
+  if (!ou.goals_stack) ou.goals_stack = [];
+  ou.goals_stack = ou.goals_stack.filter(g => g.name !== 'REVENGE');
+  ou.goals_stack.unshift({ name: 'REVENGE', priority: 0.9 });
+
+  // Apply OU modifiers: aggression+0.40/40t, expansion+0.35/40t, diplomatic_openness-0.30/30t
+  _mod(ou, 'revenge_aggression',   'military',  'army_size',           +0.40, 40);
+  _mod(ou, 'revenge_expansion',    'goals',     'expansion_drive',     +0.35, 40);
+  _mod(ou, 'revenge_dip_close',    'diplomacy', 'diplomatic_openness', -0.30, 30);
+
+  // Set revenge cooldown
+  ou._revenge_cooldown = currentTurn + 50;
+
+  // Log event
+  if (typeof window !== 'undefined' && window.addEventLog) {
+    window.addEventLog(`[⚔] ${nation.name ?? nation.id} ищет реванш`);
+  }
+}
+
 /**
  * Main entry point — called once per game turn for a specific nation.
  *
@@ -2145,6 +2185,9 @@ export function tick(gameState, nationId) {
 
   // 3. Apply situational modifiers — shift mu values temporarily
   applyModifiers(nation, ouState);
+
+  // 3b. Check resentment-driven revenge impulse
+  _checkResentmentRevenge(nation, ouState, ouState.tick);
 
   // 4. Advance all 400 OU variables by one time step
   updateState(nation);
