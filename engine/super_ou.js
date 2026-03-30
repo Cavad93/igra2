@@ -2149,7 +2149,15 @@ export function tick(gameState, nationId) {
   // 4. Advance all 400 OU variables by one time step
   updateState(nation);
 
-  // 5. Decide top-N actions based on personality + state
+  // 5a. Execute strategic plan phase (StrategicLLM) — adjusts ou overrides
+  let strategicCtx = null;
+  if (typeof window !== 'undefined' && window.StrategicLLM?.executePlan) {
+    try {
+      strategicCtx = window.StrategicLLM.executePlan(nation, ouState, ouState.tick);
+    } catch (e) { /* fallback: no strategic overrides */ }
+  }
+
+  // 5b. Decide top-N actions based on personality + state
   const actions = decideActions(nation, ouState);
 
   // 6. Calculate anomaly score across 7 categories
@@ -2171,6 +2179,7 @@ export function tick(gameState, nationId) {
     nationId,
     actions,            // [{action, probability, score}, ...]
     anomaly,            // {total, isAnomaly, categories, ...}
+    strategic_context: strategicCtx ?? null,
   };
 
   // 9. Attach debug vector if debugMode is on
@@ -2210,6 +2219,45 @@ export function getDebugVector(nation) {
   };
 }
 
+// ─── GET CONTEXT FOR SONNET ───────────────────────────────────────────────────
+
+/**
+ * Build a compact context object for Sonnet LLM calls.
+ * Includes top-10 OU variable outliers, active modifiers, and strategic plan.
+ * @param {object} nation
+ * @returns {object}
+ */
+export function getContextForSonnet(nation) {
+  const ou = nation._ou;
+  if (!ou) return { error: 'not_initialised' };
+
+  const cats = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
+  const outliers = [];
+  for (const cat of cats) {
+    for (const v of (ou[cat] || [])) {
+      const z = v.sigma > 0 ? Math.abs(v.current - v.mu) / v.sigma : 0;
+      if (z > 2.0) outliers.push({ cat, name: v.name, current: +v.current.toFixed(3), mu: +v.mu.toFixed(3), z: +z.toFixed(2) });
+    }
+  }
+  outliers.sort((a, b) => b.z - a.z);
+
+  return {
+    nationId:          nation.id ?? null,
+    name:              nation.name ?? null,
+    personality:       nation.ai_personality ?? null,
+    priority:          nation.ai_priority ?? null,
+    tick:              ou.tick,
+    top_outliers:      outliers.slice(0, 10),
+    active_modifiers:  (ou.activeModifiers || []).map(m => m.name),
+    priority_actions:  ou.priority_actions ?? [],
+    forbidden_actions: ou.forbidden_actions ?? [],
+    strategic_context: nation._strategic_plan
+      ? { strategy: nation._strategic_plan.strategy, goal: nation._strategic_plan.goal,
+          phase: nation._strategic_plan.currentPhase ?? 0 }
+      : null,
+  };
+}
+
 // ─── GLOBAL BROWSER EXPORT ────────────────────────────────────────────────────
 // Expose SuperOU as window.SuperOU so non-module scripts (turn.js) can call it.
 if (typeof window !== 'undefined') {
@@ -2221,6 +2269,7 @@ if (typeof window !== 'undefined') {
     decideActions,
     calculateAnomalyScore,
     getDebugVector,
+    getContextForSonnet,
     SUPER_OU_CONFIG,
   };
 }

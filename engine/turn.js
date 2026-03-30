@@ -511,6 +511,23 @@ async function processAINations() {
     applyFallbackDecision(nId);
   }
 
+  // ── StrategicLLM: планирование для tier1 наций ─────────────────────
+  if (typeof window !== 'undefined' && window.StrategicLLM?.shouldPlan) {
+    for (const nId of tier1) {
+      const nation = GAME_STATE.nations[nId];
+      if (!nation || nation.is_eliminated) continue;
+      try {
+        if (window.StrategicLLM.shouldPlan(nation, currentTurn)) {
+          // Запускаем асинхронно, не блокируем ход
+          const ou = nation._ou;
+          window.StrategicLLM.createPlan(nation, ou, GAME_STATE).catch(e =>
+            console.warn(`[strategic_llm] createPlan ${nId}:`, e)
+          );
+        }
+      } catch (e) { console.warn('[strategic_llm] shouldPlan:', e); }
+    }
+  }
+
   console.log(`[ai_nations] ход ${currentTurn}: warAI(Haiku):${fromWarAI} cache(phi4):${fromCache} fallback(OU):${fromFallback} tier3:${tier3.length}`);
 
   // ── Анти-сноуболл ─────────────────────────────────────────────────
