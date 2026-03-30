@@ -2311,6 +2311,74 @@ export function getContextForSonnet(nation) {
   };
 }
 
+// ─── ST_009: EVENT_DELTA_MAP + onDiplomacyEvent ────────────────────────────────
+// Format: [category, varName, deltaMu, durationTurns] — 9999 = permanent
+const _PERM = 9999;
+export const EVENT_DELTA_MAP = {
+  ALLIANCE_SIGNED:   [['diplomacy','alliance_reliability',+0.55,80],['diplomacy','international_trust',+0.45,80],
+                      ['military','war_exhaustion',-0.30,60],['goals','expansion_drive',-0.20,80]],
+  ALLIANCE_BROKEN:   [['diplomacy','alliance_reliability',-0.60,_PERM],['diplomacy','international_trust',-0.50,_PERM],
+                      ['diplomacy','diplomatic_isolation_risk',+0.40,100],['_betrayal_push',null,null,null]],
+  TRADE_AGREEMENT:   [['diplomacy','trade_partner_count',+0.25,60],['economy','trade_openness',+0.15,60],
+                      ['diplomacy','trade_bloc_integration',+0.20,_PERM],['goals','expansion_drive',-0.15,40]],
+  TRADE_CANCELLED:   [['diplomacy','trade_partner_count',-0.30,30],['diplomacy','trade_bloc_integration',-0.25,_PERM],
+                      ['diplomacy','diplomatic_isolation_risk',+0.20,40]],
+  PROMISE_BROKEN:    [['diplomacy','international_trust',-0.70,_PERM],['diplomacy','diplomatic_isolation_risk',+0.50,120],
+                      ['diplomacy','alliance_reliability',-0.40,_PERM],['_betrayal_push','high',null,null]],
+  TRIBUTE_AGREED:    [['military','war_exhaustion',+0.40,60],['diplomacy','diplomatic_incidents',+0.60,_PERM],
+                      ['military','military_loyalty',-0.25,40],['goals','expansion_drive',-0.30,50]],
+  HUMILIATING_PEACE: [['military','war_exhaustion',+0.45,80],['military','army_morale',+0.50,60],
+                      ['military','military_loyalty',-0.40,50],['diplomacy','diplomatic_incidents',+0.70,_PERM],
+                      ['_betrayal_push','humiliation',null,null]],
+  HONORABLE_PEACE:   [['military','war_exhaustion',-0.15,40],['diplomacy','international_trust',+0.15,30],
+                      ['military','army_morale',-0.20,20]],
+  INSULT_RECEIVED:   [['diplomacy','diplomatic_incidents',+0.35,60],['diplomacy','visa_openness',-0.30,30]],
+  GIFT_RECEIVED:     [['diplomacy','international_trust',+0.20,30],['diplomacy','visa_openness',+0.15,20]],
+  MARRIAGE_ALLIANCE: [['diplomacy','alliance_reliability',+0.65,120],['diplomacy','international_trust',+0.55,120],
+                      ['diplomacy','diplomatic_isolation_risk',-0.30,120]],
+};
+
+/** Apply diplomacy event deltas to nation's OU state.
+ *  nationId: nation ID string or nation object
+ *  data: { severity?, gameState? } — extra context */
+export function onDiplomacyEvent(nationId, eventType, data = {}) {
+  const gs = data?.gameState ?? (typeof GAME_STATE !== 'undefined' ? GAME_STATE : null);
+  const ouKey = nationId?.id ?? nationId;
+  const nation = nationId?.name ? nationId : (gs?.nations?.[ouKey] ?? null);
+  if (!nation) return;
+  const ou = nation._ou;
+  if (!ou) return;
+
+  const deltas = EVENT_DELTA_MAP[eventType];
+  if (!deltas) return;
+
+  for (const [cat, varName, delta, dur] of deltas) {
+    if (cat === '_betrayal_push') {
+      // Record betrayal in memory for slow-recovery (ST_020)
+      if (!ou._betrayal_memory) ou._betrayal_memory = [];
+      const severity = varName ?? data?.severity ?? 'normal'; // varName reused as severity here
+      ou._betrayal_memory.push({ severity, turn: ou.tick ?? 0 });
+      // Immediate trust/coalition penalties
+      _mod(ou, `BETRAYAL_${ou.tick}`, 'diplomacy', 'alliance_reliability', -0.25, 60);
+      _mod(ou, `BETRAY_TRUST_${ou.tick}`, 'diplomacy', 'international_trust', -0.20, 80);
+      continue;
+    }
+    const duration = dur === _PERM ? 9999 : (dur ?? 10);
+    const modName  = `EVT_${eventType}_${varName}`;
+    _mod(ou, modName, cat, varName, delta, duration);
+  }
+
+  // Update player relation memory
+  if (!nation) return;
+  if (!nation._player_relation) nation._player_relation = { trust: 0.5, loyalty: 0.5, resentment: 0, betrayals: 0 };
+  const pr = nation._player_relation;
+  if (eventType === 'ALLIANCE_BROKEN' || eventType === 'PROMISE_BROKEN') { pr.betrayals = (pr.betrayals||0)+1; pr.trust -= 0.25; }
+  if (eventType === 'ALLIANCE_SIGNED' || eventType === 'TRADE_AGREEMENT')  { pr.trust = Math.min(1, (pr.trust||0.5)+0.15); }
+  if (eventType === 'HUMILIATING_PEACE' || eventType === 'TRIBUTE_AGREED') { pr.resentment = Math.min(1, (pr.resentment||0)+0.30); }
+  pr.trust      = Math.max(0, Math.min(1, pr.trust ?? 0.5));
+  pr.resentment = Math.max(0, Math.min(1, pr.resentment ?? 0));
+}
+
 // ─── GLOBAL BROWSER EXPORT ────────────────────────────────────────────────────
 // Expose SuperOU as window.SuperOU so non-module scripts (turn.js) can call it.
 if (typeof window !== 'undefined') {
@@ -2323,6 +2391,8 @@ if (typeof window !== 'undefined') {
     calculateAnomalyScore,
     getDebugVector,
     getContextForSonnet,
+    onDiplomacyEvent,
+    EVENT_DELTA_MAP,
     SUPER_OU_CONFIG,
   };
 }

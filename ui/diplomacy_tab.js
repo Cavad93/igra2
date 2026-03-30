@@ -951,6 +951,20 @@ function hideDipChatModal() {
         addMemoryEvent(playerId, 'diplomacy', `Переговоры с ${aiName} прерваны без договора`, [aiId], 'player');
       }
     }
+
+    // ── ST_009: Уведомить SuperOU о дипломатическом событии ──
+    if (typeof SuperOU !== 'undefined' && typeof SuperOU.onDiplomacyEvent === 'function') {
+      const treatyType = st?.agreedTreaty?.type ?? null;
+      const ouEventMap = {
+        alliance: 'ALLIANCE_SIGNED', trade: 'TRADE_AGREEMENT',
+        non_aggression: 'HONORABLE_PEACE', peace: 'HONORABLE_PEACE',
+        tribute: 'TRIBUTE_AGREED', marriage: 'MARRIAGE_ALLIANCE',
+      };
+      if (treatyType && st?.phase === 'signed') {
+        const ouEvt = ouEventMap[treatyType] ?? null;
+        if (ouEvt) SuperOU.onDiplomacyEvent(aiId, ouEvt, { gameState: GAME_STATE });
+      }
+    }
   }
   document.getElementById('dp-chat-modal')?.classList.add('hidden');
   _dpChatModalNation = null;
