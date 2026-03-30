@@ -2210,3 +2210,18 @@ export function getDebugVector(nation) {
   };
 }
 
+// ─── GLOBAL BROWSER EXPORT ────────────────────────────────────────────────────
+// Expose SuperOU as window.SuperOU so non-module scripts (turn.js) can call it.
+if (typeof window !== 'undefined') {
+  window.SuperOU = {
+    tick,
+    initNation,
+    updateState,
+    applyModifiers,
+    decideActions,
+    calculateAnomalyScore,
+    getDebugVector,
+    SUPER_OU_CONFIG,
+  };
+}
+

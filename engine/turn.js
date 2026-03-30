@@ -36,6 +36,10 @@ function _ensureNationDefaults(nation) {
   if (nation.government.stability == null)  nation.government.stability  = 50;
   if (!nation.regions)                    nation.regions    = [];
   if (!nation.relations)                  nation.relations  = {};
+  // SuperOU — инициализировать вектор состояния при первом вызове
+  if (!nation._ou && typeof window !== 'undefined' && window.SuperOU) {
+    try { window.SuperOU.initNation(nation); } catch (e) { console.warn('[super_ou] initNation:', e); }
+  }
 }
 
 async function processTurn() {
@@ -666,10 +670,35 @@ function _findBuildTarget(nationId, nation) {
   return null;
 }
 
+// ── Маппинг SuperOU actions → turn.js scores ─────────────────────────────────
+const _SUPER_OU_ACTION_MAP = {
+  build_farm:        'build',
+  build_barracks:    'recruit',
+  build_market:      'build',
+  recruit_infantry:  'recruit',
+  recruit_cavalry:   'recruit',
+  seek_alliance:     'form_alliance',
+  mobilize:          'raise_army',
+  demobilize:        'seek_peace',
+  buy_food:          'trade',
+  sell_goods:        'trade',
+  pass:              'wait',
+};
+
 // ── Fallback с OU-вероятностями — полный набор действий ────────────────
 function applyFallbackDecision(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
+
+  // ── SuperOU tick (полный 400-переменный вектор состояния) ──────────────
+  let _superOuResult = null;
+  if (typeof window !== 'undefined' && window.SuperOU) {
+    try {
+      _superOuResult = window.SuperOU.tick(GAME_STATE, nationId);
+    } catch (e) {
+      console.warn('[super_ou] tick:', e);
+    }
+  }
 
   const treasury = nation.economy?.treasury ?? 0;
   const military = nation.military          ?? {};
@@ -784,6 +813,16 @@ function applyFallbackDecision(nationId) {
     wait:
       -ou.aggression * 0.5 + 0.3,
   };
+
+  // ── SuperOU boost: усиливаем скоры на основе 400-переменного вектора ──
+  if (_superOuResult?.actions?.length > 0) {
+    for (const { action: ouAction, probability } of _superOuResult.actions) {
+      const mapped = _SUPER_OU_ACTION_MAP[ouAction];
+      if (mapped && scores[mapped] !== undefined) {
+        scores[mapped] += probability * 4.0;
+      }
+    }
+  }
 
   const action = _weightedPick(_softmax(scores));
 
