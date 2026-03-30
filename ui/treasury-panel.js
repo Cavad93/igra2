@@ -294,7 +294,15 @@ function _tpRenderIncome() {
     <div class="tp-row-total">
       <span class="tp-item-label">Итого доходов</span>
       <span class="tp-item-value tp-val-pos">${totalPreview.toLocaleString()} ₴</span>
-    </div>`;
+    </div>
+    ${(() => {
+      const diagnostics = buildDeficitDiagnostics(nation);
+      if (!diagnostics.length) return '';
+      return `<div class="deficit-diagnostics">
+        <div class="deficit-title">⚠ Проблемы</div>
+        ${diagnostics.map(d => `<div class="deficit-item ${d.severity}">${d.icon} ${d.text}</div>`).join('')}
+      </div>`;
+    })()}`;
 }
 
 // ── Цвет уровня расходов ─────────────────────────────────────
@@ -576,6 +584,50 @@ function _tpRenderChart() {
       <span class="tp-chart-zero-lbl">— 0 —</span>
       <span>Ход ${maxTurn}</span>
     </div>`;
+}
+
+// ── Диагностика дефицита бюджета ─────────────────────────────
+function buildDeficitDiagnostics(nation) {
+  const eco    = nation.economy;
+  const exp    = eco._expense_breakdown || {};
+  const mil    = nation.military || {};
+  const B      = window.CONFIG?.BALANCE || {};
+  const issues = [];
+
+  // 1. Военные расходы
+  const armyCost = (exp.army_infantry||0) + (exp.army_cavalry||0) + (exp.army_mercenaries||0)
+    || ((mil.infantry||0)*(B.INFANTRY_UPKEEP||2) + (mil.cavalry||0)*(B.CAVALRY_UPKEEP||5));
+  const income   = eco._income_breakdown?.total || eco.income_per_turn || 1;
+  if (armyCost > income * 0.5)
+    issues.push({ icon:'⚔️', text:`Армия поглощает ${Math.round(armyCost/income*100)}% дохода`, severity:'high' });
+
+  // 2. Дефицит товаров
+  const stockpile = eco.stockpile || {};
+  for (const [good, qty] of Object.entries(stockpile)) {
+    if (qty < 0) issues.push({ icon:'📦', text:`Дефицит ${good}: ${Math.round(qty)} ед`, severity:'med' });
+  }
+
+  // 3. Нет торговых маршрутов
+  if ((eco.trade_routes||[]).length === 0)
+    issues.push({ icon:'🚢', text:'Нет торговых маршрутов — упущенный доход', severity:'med' });
+
+  // 4. Враждебность с торговыми партнёрами
+  for (const partnerId of (eco.trade_routes||[])) {
+    const rel = GAME_STATE.nations[partnerId]?.relations?.[nation.id] ?? 0;
+    if (rel < -20) issues.push({ icon:'😠', text:`Враждебность с ${GAME_STATE.nations[partnerId]?.name} повышает тарифы`, severity:'low' });
+  }
+
+  // 5. Низкое счастье → низкие налоги
+  if ((nation.population?.happiness||50) < 35)
+    issues.push({ icon:'😤', text:`Недовольство ${nation.population.happiness}% снижает налоговую базу`, severity:'high' });
+
+  // 6. Доминирует неорганизованное производство
+  const orgProd   = nation._organized_production_total   || 0;
+  const unorgProd = nation._unorganized_production_total || 0;
+  if (unorgProd > orgProd * 1.5 && unorgProd > 0)
+    issues.push({ icon:'🌾', text:`${Math.round(unorgProd/(orgProd+unorgProd)*100)}% производства — неэффективное (subsistence)`, severity:'low' });
+
+  return issues.slice(0, 5);
 }
 
 // ── Текст советника ───────────────────────────────────────────
