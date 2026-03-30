@@ -350,6 +350,55 @@ function _validatePlan(parsed, nation, ou) {
   return plan;
 }
 
+// ─── ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ВЫПОЛНЕНИЯ ПЛАНА ────────────────────────────────
+
+/**
+ * Проверяет строковое условие триггера по метрикам нации.
+ * @param {string} condition  — напр. 'treasury<0', 'army_size>0.85', 'none'
+ * @param {Object} ou
+ * @returns {boolean}
+ */
+function _evalTrigger(condition, ou) {
+  if (!condition || condition === 'none') return false;
+  // Распознаём паттерн "var op number"
+  const m = condition.match(/^([\w.]+)\s*([<>]=?)\s*([\d.-]+)$/);
+  if (!m) return false;
+  const [, varPath, op, numStr] = m;
+  const num = parseFloat(numStr);
+  // Ищем переменную в OU-категориях
+  const parts  = varPath.split('.');
+  const varName = parts.length > 1 ? parts[1] : parts[0];
+  const cat     = parts.length > 1 ? parts[0] : null;
+  let val = null;
+  const cats = cat ? [cat] : ['economy','military','diplomacy','politics','goals'];
+  for (const c of cats) {
+    const found = ou?.[c]?.find(v => v.name === varName);
+    if (found) { val = found.current; break; }
+  }
+  if (val === null) return false;
+  if (op === '<')  return val <  num;
+  if (op === '<=') return val <= num;
+  if (op === '>')  return val >  num;
+  if (op === '>=') return val >= num;
+  return false;
+}
+
+/**
+ * Применяет ou_overrides фазы: сдвигает mu переменных OU-вектора.
+ * @param {Object} ou
+ * @param {Object} overrides — {"category.varName": deltaMu}
+ */
+function _applyOuOverrides(ou, overrides) {
+  if (!overrides || !ou) return;
+  for (const [key, delta] of Object.entries(overrides)) {
+    const parts = key.split('.');
+    if (parts.length < 2) continue;
+    const [cat, varName] = parts;
+    const v = ou[cat]?.find(v => v.name === varName);
+    if (v) v.mu = Math.max(v.min ?? -Infinity, Math.min(v.max ?? Infinity, v.mu + delta));
+  }
+}
+
 /**
  * Применяет текущую фазу стратегического плана к OU-состоянию.
  * @param {Object} nation
@@ -358,9 +407,49 @@ function _validatePlan(parsed, nation, ou) {
  * @returns {Object|null} activePhase или null
  */
 function executePlan(nation, ou, currentTurn) {
-  // TODO ST_005: реализовать выполнение фаз
-  void nation; void ou; void currentTurn;
-  return null;
+  const plan = nation._strategic_plan;
+  if (!plan || !Array.isArray(plan.phases) || plan.phases.length === 0) return null;
+
+  // Инициализация отслеживания фазы
+  if (plan.phaseStartTurn == null) plan.phaseStartTurn = currentTurn;
+  if (plan.currentPhase   == null) plan.currentPhase   = 0;
+
+  const phaseIdx = plan.currentPhase;
+  if (phaseIdx >= plan.phases.length) return null;
+
+  const phase    = plan.phases[phaseIdx];
+  const tc       = phase.trigger_conditions ?? {};
+  const elapsed  = currentTurn - plan.phaseStartTurn;
+
+  // Проверка abort-триггера
+  if (_evalTrigger(tc.abort, ou)) {
+    plan.currentPhase = plan.phases.length; // завершить план досрочно
+    ou.priority_actions   = [];
+    ou.forbidden_actions  = [];
+    return null;
+  }
+
+  // Переход к следующей фазе: по длительности или early_trigger
+  const earlyTrigger = _evalTrigger(tc.early_trigger, ou);
+  if (elapsed >= phase.duration || earlyTrigger) {
+    plan.currentPhase++;
+    plan.phaseStartTurn = currentTurn;
+    if (plan.currentPhase >= plan.phases.length) {
+      ou.priority_actions  = [];
+      ou.forbidden_actions = [];
+      return null;
+    }
+    return executePlan(nation, ou, currentTurn); // рекурсия на новую фазу
+  }
+
+  // Применяем ou_overrides (сдвиг mu)
+  _applyOuOverrides(ou, phase.ou_overrides);
+
+  // Передаём priority/forbidden_actions в ou для decideActions
+  ou.priority_actions  = phase.priority_actions  ?? [];
+  ou.forbidden_actions = phase.forbidden_actions ?? [];
+
+  return phase;
 }
 
 /**
