@@ -845,3 +845,35 @@ NEXT_TASK: ST_020
 ### Строк добавлено: ~55
 ### Статус: OK
 NEXT_TASK: DONE_ALL
+
+---
+
+## Session FINAL — 2026-03-30 — DONE_ALL: Финальная проверка
+
+### Задача: DONE_ALL
+### Сделано:
+- Финальная проверка всех трёх модулей:
+  - node -e "import('./engine/super_ou.js')" → OK (26 exports)
+  - node -e "import('./ai/anomaly_handler.js')" → OK (4 exports)
+  - node -e "import('./ai/strategic_llm.js')" → OK (8 exports)
+- Комплексный интеграционный тест:
+  - initNation(nation) → _ou: {economy, military, diplomacy, politics, goals, tick, activeModifiers}
+  - tick(gameState, id) → OK
+  - calculateAnomalyScore(nation) → {total, isAnomaly, categories[7]}
+  - getContextForSonnet(nation) → {mood: 6 keys, active_crises, current_goals, player_relation, military_posture, strategic_context}
+  - onDiplomacyEvent / EVENT_DELTA_MAP (11 событий) → OK
+  - onRulerDied → _ou._force_anomaly = true → OK
+  - applyHegemonModifier → OK
+  - _buildFallbackPlan(nation, ou) → strategy: 'economic_strangulation' → OK
+  - STRATEGY_TEMPLATES: 5 шаблонов (military_buildup, consolidation, economic_strangulation, opportunism, survival)
+- Интеграция в turn.js, diplomacy_ai.js, diplomacy_tab.js — проверена
+
+### Итог файлов:
+- engine/super_ou.js    — 2842 строк
+- ai/anomaly_handler.js —  355 строк
+- ai/strategic_llm.js   —  585 строк
+- Итого:                  3782 строк кода
+
+### Покрытые задачи: OU_001 – OU_015, EX_001 – EX_004, ST_001 – ST_020
+### Статус: OK ✓
+NEXT_TASK: —
