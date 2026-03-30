@@ -962,10 +962,57 @@ const MODIFIERS_BATCH6 = [
   },
 ];
 
+// ─── BATCH 7: MIL_011–MIL_020 ────────────────────────────────────────────────
+// Пограничный контроль, переворот, лояльность, офицеры, боеприпасы
+
+const MODIFIERS_BATCH7 = [
+  { id:'MIL_011', label:'Открытые границы — варвары проникают внутрь',
+    cond:(_n,ou)=>{ const fl=_findVar(ou,'military','fortification_level'),bc=_findVar(ou,'military','border_control'); return fl&&bc&&fl.current<0.10&&bc.current<0.20; },
+    adj:[{c:'military',n:'internal_security',d:-0.07},{c:'military',n:'guerrilla_capacity',d:+0.05},{c:'economy',n:'agricultural_output',d:-0.04},{c:'military',n:'intelligence_quality',d:-0.04}]
+  },
+  { id:'MIL_012', label:'Угроза военного переворота — заговор офицеров',
+    cond:(_n,ou)=>{ const cr=_findVar(ou,'military','coup_risk'); return cr&&cr.current>0.50; },
+    adj:[{c:'military',n:'military_loyalty',d:-0.07},{c:'military',n:'command_coordination',d:-0.07},{c:'military',n:'internal_security',d:-0.06},{c:'military',n:'military_political_power',d:+0.07}]
+  },
+  { id:'MIL_013', label:'Абсолютная лояльность армии — преданность командирам',
+    cond:(_n,ou)=>{ const ml=_findVar(ou,'military','military_loyalty'); return ml&&ml.current>0.90; },
+    adj:[{c:'military',n:'coup_risk',d:-0.07},{c:'military',n:'troop_morale',d:+0.06},{c:'military',n:'command_coordination',d:+0.05},{c:'military',n:'internal_security',d:+0.05}]
+  },
+  { id:'MIL_014', label:'Предательство армии — войска переходят на сторону врага',
+    cond:(_n,ou)=>{ const ml=_findVar(ou,'military','military_loyalty'); return ml&&ml.current<0.30; },
+    adj:[{c:'military',n:'coup_risk',d:+0.09},{c:'military',n:'army_size',d:-0.05},{c:'military',n:'military_readiness',d:-0.07},{c:'military',n:'desertion_rate',d:+0.07}]
+  },
+  { id:'MIL_015', label:'Слабый командный состав — некомпетентные центурионы',
+    cond:(_n,ou)=>{ const oq=_findVar(ou,'military','officer_quality'); return oq&&oq.current<0.20; },
+    adj:[{c:'military',n:'doctrine_quality',d:-0.06},{c:'military',n:'command_coordination',d:-0.08},{c:'military',n:'military_training',d:-0.05},{c:'military',n:'force_multiplier',d:-0.07}]
+  },
+  { id:'MIL_016', label:'Выдающиеся полководцы — армия под умелым командованием',
+    cond:(_n,ou)=>{ const oq=_findVar(ou,'military','officer_quality'); return oq&&oq.current>0.80; },
+    adj:[{c:'military',n:'doctrine_quality',d:+0.06},{c:'military',n:'command_coordination',d:+0.08},{c:'military',n:'force_multiplier',d:+0.09},{c:'military',n:'troop_morale',d:+0.05}]
+  },
+  { id:'MIL_017', label:'Нехватка снарядов и оружия',
+    cond:(_n,ou)=>{ const as=_findVar(ou,'military','ammunition_stock'); return as&&as.current<0.10; },
+    adj:[{c:'military',n:'military_readiness',d:-0.09},{c:'military',n:'force_multiplier',d:-0.08},{c:'military',n:'active_conflicts',d:-0.05},{c:'military',n:'arms_stockpile',d:-0.06}]
+  },
+  { id:'MIL_018', label:'Полные арсеналы — запасы оружия в избытке',
+    cond:(_n,ou)=>{ const as=_findVar(ou,'military','ammunition_stock'); return as&&as.current>1.50; },
+    adj:[{c:'military',n:'military_readiness',d:+0.06},{c:'military',n:'force_multiplier',d:+0.05},{c:'military',n:'weapon_exports',d:+0.04},{c:'military',n:'military_industry',d:+0.03}]
+  },
+  { id:'MIL_019', label:'Стратегические резервы готовы — скрытые силы',
+    cond:(_n,ou)=>{ const sr=_findVar(ou,'military','strategic_reserves'); return sr&&sr.current>0.70; },
+    adj:[{c:'military',n:'mobilization_speed',d:+0.06},{c:'military',n:'force_multiplier',d:+0.05},{c:'military',n:'strategic_depth',d:+0.04},{c:'military',n:'war_exhaustion',d:-0.04}]
+  },
+  { id:'MIL_020', label:'Резервы истощены — нечем прикрыть фланги',
+    cond:(_n,ou)=>{ const sr=_findVar(ou,'military','strategic_reserves'); return sr&&sr.current<0.10; },
+    adj:[{c:'military',n:'mobilization_speed',d:-0.05},{c:'military',n:'strategic_depth',d:-0.06},{c:'military',n:'military_readiness',d:-0.05},{c:'military',n:'war_exhaustion',d:+0.05}]
+  },
+];
+
   const allMods = [
     ...MODIFIERS_BATCH1, ...MODIFIERS_BATCH2,
     ...MODIFIERS_BATCH3, ...MODIFIERS_BATCH4,
     ...MODIFIERS_BATCH5, ...MODIFIERS_BATCH6,
+    ...MODIFIERS_BATCH7,
   ];
   for (const mod of allMods) {
     if (mod.cond(nation, ou)) _applyAdj(ou, mod.adj, ouState, mod.id);
