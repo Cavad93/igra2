@@ -75,17 +75,39 @@ function _buildLeaderSystemPrompt(aiNationId, playerNationId) {
     ? getHandoffContext(aiNationId, 'sonnet')
     : '';
 
-  // SuperOU контекст настроения и состояния нации
+  // SuperOU контекст настроения и состояния нации (ST_010: полный контекст)
   const ouCtx = (typeof SuperOU !== 'undefined' && aiNation)
     ? SuperOU.getContextForSonnet(aiNation) : null;
-  const moodBlock = ouCtx && !ouCtx.error ? `
+  let moodBlock = '';
+  if (ouCtx && !ouCtx.error) {
+    const m = ouCtx.mood;
+    const pr = ouCtx.player_relation;
+    const fearLbl    = m.fear_of_player      > 0.6 ? 'ВЫСОКИЙ'   : m.fear_of_player > 0.3 ? 'умеренный' : 'низкий';
+    const trustLbl   = pr.betrayals > 0             ? 'нет (предательство)' : pr.trust > 0.5 ? 'высокое'   : 'нейтральное';
+    const despLbl    = m.desperation         > 0.6 ? 'КРИТИЧЕСКАЯ' : m.desperation > 0.3 ? 'высокая'    : 'низкая';
+    const warWLbl    = m.war_weary           > 0.5 ? 'сильная'    : m.war_weary  > 0.2 ? 'умеренная'  : 'нет';
+    const tradeLbl   = m.trade_satisfaction  > 0.6 ? 'высокая'    : m.trade_satisfaction > 0.3 ? 'средняя' : 'низкая';
+    const crisesStr  = ouCtx.active_crises.map(c => `${c.name}(${c.severity})`).join(', ') || 'нет';
+    const outlierStr = (ouCtx.top_outliers || []).slice(0, 3)
+      .map(o => `${o.name}=${o.current}(z=${o.z})`).join(', ') || 'нет';
+    const sc = ouCtx.strategic_context;
+    const stratStr   = sc
+      ? `${sc.strategy_type}${sc.target ? ' → ' + sc.target : ''}${sc.reasoning ? ': ' + sc.reasoning.slice(0, 80) : ''}`
+      : 'нет активной стратегии';
+    moodBlock = `
 === ТВОЁ СОСТОЯНИЕ ===
-Кризисы: ${ouCtx.active_crises.map(c => c.name).join(', ') || 'нет'}
-Страх перед игроком: ${ouCtx.mood.fear_of_player > 0.6 ? 'ВЫСОКИЙ' : ouCtx.mood.fear_of_player > 0.3 ? 'умеренный' : 'низкий'}
-Армия: ${ouCtx.military_posture}
-Доверие: ${ouCtx.player_relation.betrayals > 0 ? 'нет (предательство)' : ouCtx.player_relation.trust > 0.5 ? 'высокое' : 'нейтральное'}
+Кризисы: ${crisesStr}
+Страх перед игроком: ${fearLbl} (${m.fear_of_player})
+Армия: ${ouCtx.military_posture} (уверенность ${m.military_confidence})
+Усталость от войн: ${warWLbl} (${m.war_weary})
+Отчаяние: ${despLbl} (${m.desperation})
+Торговля: ${tradeLbl} (${m.trade_satisfaction})
+Обиды: ${m.resentment > 0.4 ? 'накоплены' : 'нет'} (${m.resentment})
+Доверие к игроку: ${trustLbl} | Предательств: ${pr.betrayals} | Лояльность: ${pr.loyalty.toFixed ? pr.loyalty.toFixed(2) : pr.loyalty}
 Цели: ${ouCtx.current_goals.join(', ') || 'не определены'}
-Стратегия: ${ouCtx.strategic_context?.reasoning ?? ouCtx.strategic_context?.strategy_type ?? 'нет активной стратегии'}` : '';
+Стратегия: ${stratStr}
+Аномальные переменные: ${outlierStr}`;
+  }
 
   return `Ты — ${aiRuler}, правитель государства ${aiName}.
 Форма правления: ${aiGovType}.
