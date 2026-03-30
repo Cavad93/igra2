@@ -105,3 +105,22 @@ NEXT_TASK: TASK_006
 
 NEXT_TASK: TASK_007
 
+---
+
+## Session 7 — 2026-03-30 — TASK_007: OU процесс + updateState
+
+### Сделано:
+- Добавлена функция gaussian() — Box-Muller transform для N(0,1) выборки
+- Добавлена вспомогательная функция clamp(x, min, max)
+- Реализована функция _ouStep(variable, dt=1):
+  dX = theta*(mu - current)*dt + sigma*sqrt(dt)*gaussian()
+  возвращает clamp(current + dX, min, max)
+- Реализована функция updateState(nation):
+  применяет _ouStep ко всем 400 переменным (5 категорий × 80 vars)
+  инкрементирует nation._ou.tick
+- Проверка: node — OK, tick=1, vars=400, значения меняются корректно
+
+### Файл: super_ou.js — ~685 строк
+
+NEXT_TASK: TASK_008
+

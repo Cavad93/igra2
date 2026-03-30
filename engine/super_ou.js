@@ -567,6 +567,40 @@ export function _initGoalsVector(nation) {
   }));
 }
 
+// ─── OU PROCESS CORE ─────────────────────────────────────────────────────────
+
+/**
+ * Box-Muller transform — returns standard normal N(0,1) sample.
+ * @returns {number}
+ */
+function gaussian() {
+  let u, v;
+  do { u = Math.random(); } while (u === 0);
+  do { v = Math.random(); } while (v === 0);
+  return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
+
+/**
+ * Clamp value between min and max.
+ */
+function clamp(x, min, max) {
+  return Math.min(Math.max(x, min), max);
+}
+
+/**
+ * Advance one OU variable by dt using the Ornstein-Uhlenbeck process:
+ *   dX = theta*(mu - X)*dt + sigma*sqrt(dt)*N(0,1)
+ * @param {object} variable — { current, mu, sigma, theta, min, max }
+ * @param {number} dt
+ * @returns {number} new value (clamped)
+ */
+function _ouStep(variable, dt = 1) {
+  const { current, mu, sigma, theta, min, max } = variable;
+  const drift = theta * (mu - current) * dt;
+  const diffusion = sigma * Math.sqrt(dt) * gaussian();
+  return clamp(current + drift + diffusion, min, max);
+}
+
 // ─── PUBLIC API ───────────────────────────────────────────────────────────────
 
 /**
@@ -598,10 +632,19 @@ export function tick(gameState, nationId) {
 
 /**
  * Advance all OU variables by one step.
+ * Iterates over all 5 categories in nation._ou and applies _ouStep to each.
  * @param {object} nation
  */
 export function updateState(nation) {
-  // TODO
+  const ou = nation._ou;
+  const dt = SUPER_OU_CONFIG.dt;
+  const categories = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
+  for (const cat of categories) {
+    for (const variable of ou[cat]) {
+      variable.current = _ouStep(variable, dt);
+    }
+  }
+  ou.tick++;
 }
 
 /**
