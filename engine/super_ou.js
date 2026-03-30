@@ -819,12 +819,62 @@ const MODIFIERS_BATCH3 = [
   },
 ];
 
+// ─── BATCH 4: ECO_031–ECO_040 ────────────────────────────────────────────────
+// Налоги, паника, скот, товарные цены, ресурсный дефицит
+
+const MODIFIERS_BATCH4 = [
+  { id:'ECO_031', label:'Низкие налоги — казна пустеет',
+    cond:(_n,ou)=>{ const tr=_findVar(ou,'economy','tax_revenue'); return tr&&tr.current<0.10; },
+    adj:[{c:'economy',n:'gold_reserves',d:-0.03},{c:'economy',n:'military_spending',d:-0.03},{c:'economy',n:'infrastructure_index',d:-0.02},{c:'economy',n:'education_spending',d:-0.02}]
+  },
+  { id:'ECO_032', label:'Налоговый бунт — высокое бремя и недовольство',
+    cond:(_n,ou)=>{ const tr=_findVar(ou,'economy','tax_revenue'),cc=_findVar(ou,'economy','consumer_confidence'); return tr&&cc&&tr.current>0.50&&cc.current<0.30; },
+    adj:[{c:'economy',n:'tax_revenue',d:-0.06},{c:'economy',n:'gdp_growth',d:-0.02},{c:'military',n:'internal_security',d:-0.05},{c:'military',n:'paramilitary',d:+0.04}]
+  },
+  { id:'ECO_033', label:'Паника потребителей — крах доверия',
+    cond:(_n,ou)=>{ const cc=_findVar(ou,'economy','consumer_confidence'); return cc&&cc.current<0.20; },
+    adj:[{c:'economy',n:'retail_sales',d:-0.08},{c:'economy',n:'gdp_growth',d:-0.04},{c:'economy',n:'savings_rate',d:+0.05},{c:'economy',n:'business_confidence',d:-0.06}]
+  },
+  { id:'ECO_034', label:'Деловой оптимизм — расцвет торговли',
+    cond:(_n,ou)=>{ const bc=_findVar(ou,'economy','business_confidence'); return bc&&bc.current>0.80; },
+    adj:[{c:'economy',n:'domestic_investment',d:+0.05},{c:'economy',n:'manufacturing_output',d:+0.04},{c:'economy',n:'gdp_growth',d:+0.03},{c:'economy',n:'construction_activity',d:+0.04}]
+  },
+  { id:'ECO_035', label:'Ценовой скачок товаров — дефицит на рынках',
+    cond:(_n,ou)=>{ const cp=_findVar(ou,'economy','commodity_prices'); return cp&&cp.current>3.0; },
+    adj:[{c:'economy',n:'inflation_rate',d:+0.05},{c:'economy',n:'consumer_confidence',d:-0.05},{c:'economy',n:'import_volume',d:+0.04},{c:'military',n:'equipment_quantity',d:-0.04}]
+  },
+  { id:'ECO_036', label:'Крах товарных цен — перепроизводство',
+    cond:(_n,ou)=>{ const cp=_findVar(ou,'economy','commodity_prices'); return cp&&cp.current<0.30; },
+    adj:[{c:'economy',n:'mining_output',d:-0.04},{c:'economy',n:'agricultural_output',d:-0.03},{c:'economy',n:'export_volume',d:-0.04},{c:'economy',n:'gdp_growth',d:-0.02}]
+  },
+  { id:'ECO_037', label:'Нехватка рабочих — убыль населения или войны',
+    cond:(_n,ou)=>{ const lp=_findVar(ou,'economy','labor_participation'); return lp&&lp.current<0.30; },
+    adj:[{c:'economy',n:'agricultural_output',d:-0.05},{c:'economy',n:'manufacturing_output',d:-0.05},{c:'economy',n:'wage_growth',d:+0.05},{c:'economy',n:'slave_labor_dependency',d:+0.05}]
+  },
+  { id:'ECO_038', label:'Высококвалифицированная рабочая сила',
+    cond:(_n,ou)=>{ const sl=_findVar(ou,'economy','skill_level_index'); return sl&&sl.current>0.80; },
+    adj:[{c:'economy',n:'productivity_growth',d:+0.04},{c:'economy',n:'manufacturing_output',d:+0.05},{c:'economy',n:'innovation_rate',d:+0.04},{c:'military',n:'officer_quality',d:+0.03}]
+  },
+  { id:'ECO_039', label:'Падёж скота — потеря тяглового скота',
+    cond:(_n,ou)=>{ const lc=_findVar(ou,'economy','livestock_count'); return lc&&lc.current<0.10; },
+    adj:[{c:'economy',n:'agricultural_output',d:-0.06},{c:'economy',n:'food_production',d:-0.05},{c:'economy',n:'land_productivity',d:-0.04},{c:'military',n:'logistics_capacity',d:-0.04}]
+  },
+  { id:'ECO_040', label:'Великая засуха — вода и земля иссякли',
+    cond:(_n,ou)=>{ const wa=_findVar(ou,'economy','water_availability'),lp=_findVar(ou,'economy','land_productivity'); return wa&&lp&&wa.current<0.10&&lp.current<0.20; },
+    adj:[{c:'economy',n:'food_production',d:-0.09},{c:'economy',n:'population_growth',d:-0.04},{c:'economy',n:'agricultural_output',d:-0.08},{c:'military',n:'food_supply_military',d:-0.10}]
+  },
+];
+
 export function applyModifiers(nation, ouState) {
   const ou = nation._ou;
   ouState.activeModifiers = [];
   _resetMuBases(ou);
 
-  for (const mod of [...MODIFIERS_BATCH1, ...MODIFIERS_BATCH2, ...MODIFIERS_BATCH3]) {
+  const allMods = [
+    ...MODIFIERS_BATCH1, ...MODIFIERS_BATCH2,
+    ...MODIFIERS_BATCH3, ...MODIFIERS_BATCH4,
+  ];
+  for (const mod of allMods) {
     if (mod.cond(nation, ou)) _applyAdj(ou, mod.adj, ouState, mod.id);
   }
 }
