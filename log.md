@@ -1228,20 +1228,20 @@ NEXT_TASK: MIL_003
 ## MIL_003 — Морская блокада (2026-03-30)
 
 ### Сделано:
-- Добавлена `checkNavalBlockade(regionId, nationId)` в combat.js:
-  - Проверяет coastal_city регион на наличие вражеских флотов
-  - Блокада активна если вражеских кораблей суммарно > 5 ✓
-  - Возвращает `{isBlockaded, blockadePower}` ✓
-- В `_processSupply()` в armies.js добавлен штраф блокады:
-  - Если coastal_city и блокада активна → delta -= 6 ✓
-  - Event log для игрока при активной блокаде ✓
-- В utility_ai.js добавлена `_scoreNavalBlockade(army, enemies, capitals)`:
-  - Флот ИИ ищет прибрежные столицы врагов
-  - score = 45 + capitalBonus (столица +25, иначе +5) ✓
-  - Возвращает candidate {action:'move', target_id, reasoning:'naval_blockade:...'} ✓
-- В utilityAIDecide() вызов _scoreNavalBlockade для naval армий ✓
-- Тесты: 18/18 ✅ (tests/mil_003_blockade_test.cjs)
+- Добавлена функция `checkNavalBlockade(regionId, nationId)` в engine/combat.js:
+  - Проверяет прибрежные типы: coastal_city, strait, river_valley ✓
+  - Считает вражеские корабли во всех соседних морских регионах ✓
+  - Возвращает `{isBlockaded, blockadePower}` — блокада активна при > 5 кораблей ✓
+  - Корректно игнорирует дружественные флоты и нейтральных ✓
+- В armies.js `_processSupply()` добавлен штраф блокады:
+  - При активной блокаде: delta -= 6 (перекрыт морской подвоз) ✓
+  - Лог "Флот [нация] блокирует [регион]" раз в 5 ходов ✓
+- В utility_ai.js добавлена `_scoreNavalBlockade(fleet, enemies, nearby)`:
+  - Тип 'naval' && totalShips >= 3 → ищет вражеские прибрежные столицы ✓
+  - score = 45 + capitalBonus(30) + population_bonus + reasoning ✓
+  - Интегрировано в utilityAIDecide(): для флотов добавляется кандидат 'naval_blockade' ✓
+- Тесты: 18/18 ✅ (tests/mil_003_blockade_test.cjs, vm-isolated)
 
-### Файлы: engine/combat.js (+32 строки), engine/armies.js (+16 строк), ai/utility_ai.js (+52 строки)
+### Файлы: engine/combat.js (+47 строк), engine/armies.js (+17 строк), ai/utility_ai.js (+43 строки)
 
 NEXT_TASK: MIL_004
