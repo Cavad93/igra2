@@ -57,9 +57,120 @@ function _emptyPlan() {
  * @returns {boolean}
  */
 function shouldPlan(nation, currentTurn) {
-  // TODO ST_002: реализовать логику проверки
-  void nation; void currentTurn;
-  return false;
+  // Tier-1 check
+  const tier = nation.tier ?? nation.ai_tier ?? 99;
+  if (tier > STRATEGIC_CONFIG.tier1Threshold) return false;
+
+  // Treasury must be positive
+  const ou = nation._ou;
+  const treasury = ou
+    ? (ou.economy?.find(v => v.name === 'treasury')?.current ?? 0)
+    : (nation.economy?.treasury ?? 0);
+  if (treasury <= STRATEGIC_CONFIG.minTreasury) return false;
+
+  // No active anomaly
+  const lastAnomaly = ou?.lastAnomaly;
+  if (lastAnomaly?.isAnomaly) return false;
+
+  // Must have waited planInterval turns since last plan
+  const lastPlanTurn = nation._strategic_plan?.createdAt ?? -Infinity;
+  if ((currentTurn - lastPlanTurn) < STRATEGIC_CONFIG.planInterval) return false;
+
+  return true;
+}
+
+/**
+ * Строит компактный промпт для Groq (< 500 токенов).
+ * @param {Object} nation
+ * @param {Object} ou   — nation._ou
+ * @param {Object} gameState
+ * @returns {{ system: string, user: string }}
+ */
+function _buildStrategicPrompt(nation, ou, gameState) {
+  // ── Исторический год ──────────────────────────────────────────────────────
+  const tick    = ou?.tick ?? 0;
+  const rawYear = (gameState?.year) ?? (-300 + Math.round(tick * 0.5));
+  const year    = rawYear < 0
+    ? `${Math.abs(rawYear)} BC`
+    : `${rawYear} AD`;
+
+  // ── Вспомогательные функции ───────────────────────────────────────────────
+  const gv = (cat, name) =>
+    (ou?.[cat]?.find(v => v.name === name)?.current ?? 0).toFixed(2);
+
+  // ── Ключевые метрики ──────────────────────────────────────────────────────
+  const econ = [
+    `treasury=${gv('economy','treasury')}`,
+    `food=${gv('economy','food_supply')}`,
+    `trade=${gv('economy','trade_balance')}`,
+    `pop_growth=${gv('economy','population_growth')}`,
+  ].join(', ');
+
+  const mil = [
+    `army=${gv('military','army_size')}`,
+    `morale=${gv('military','morale')}`,
+    `readiness=${gv('military','readiness')}`,
+  ].join(', ');
+
+  const dip = [
+    `reputation=${gv('diplomacy','reputation')}`,
+    `alliances=${gv('diplomacy','alliance_count')}`,
+  ].join(', ');
+
+  const pol = [
+    `stability=${gv('politics','stability')}`,
+    `legitimacy=${gv('politics','legitimacy')}`,
+    `happiness=${gv('politics','happiness')}`,
+  ].join(', ');
+
+  // ── Активные модификаторы (топ-5) ─────────────────────────────────────────
+  const mods = (ou?.activeModifiers ?? [])
+    .slice(0, 5)
+    .map(m => m.name)
+    .join(', ') || 'none';
+
+  // ── Текущие цели (топ-3 по current) ──────────────────────────────────────
+  const topGoals = [...(ou?.goals ?? [])]
+    .sort((a, b) => b.current - a.current)
+    .slice(0, 3)
+    .map(g => g.name)
+    .join(', ') || 'survive';
+
+  // ── Промпт ────────────────────────────────────────────────────────────────
+  const system = `You are a strategic advisor for an ancient nation in ${year}. \
+Respond ONLY with valid JSON matching the schema.`;
+
+  const user = `Nation: ${nation.name ?? nation.id}
+Personality: ${nation.ai_personality ?? 'balanced'} | Priority: ${nation.ai_priority ?? 'survival'}
+Year: ${year} | Tier: ${nation.tier ?? '?'}
+
+State:
+  Economy: ${econ}
+  Military: ${mil}
+  Diplomacy: ${dip}
+  Politics: ${pol}
+
+Active modifiers: ${mods}
+Top goals: ${topGoals}
+
+Create a ${STRATEGIC_CONFIG.planHorizon}-turn strategic plan.
+Respond with JSON:
+{
+  "strategy": "<name>",
+  "goal": "<one sentence>",
+  "phases": [
+    {
+      "name": "<phase name>",
+      "duration": <turns: number>,
+      "priority_actions": ["<action>"],
+      "forbidden_actions": ["<action>"],
+      "ou_overrides": {"<category>.<varName>": <deltaMu: number>},
+      "trigger_conditions": {"abort": "<condition>", "early_trigger": "<condition>"}
+    }
+  ]
+}`;
+
+  return { system, user };
 }
 
 /**
@@ -119,9 +230,11 @@ function _buildFallbackPlan(nation, ou) {
 // ─── ЭКСПОРТ ──────────────────────────────────────────────────────────────────
 
 export { shouldPlan, createPlan, executePlan, _broadcastCoalitionPlan,
-         _buildFallbackPlan, STRATEGIC_CONFIG, STRATEGY_TEMPLATES };
+         _buildFallbackPlan, _buildStrategicPrompt,
+         STRATEGIC_CONFIG, STRATEGY_TEMPLATES };
 
 if (typeof window !== 'undefined') {
   window.StrategicLLM = { shouldPlan, createPlan, executePlan,
-                           _buildFallbackPlan, STRATEGIC_CONFIG };
+                           _buildFallbackPlan, _buildStrategicPrompt,
+                           STRATEGIC_CONFIG };
 }
