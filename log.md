@@ -270,4 +270,26 @@ NEXT_TASK: TASK_013
 
 ### Файл: super_ou.js — 2146 строк
 
-NEXT_TASK: TASK_014
+NEXT_TASK: TASK_015
+
+---
+
+## Session 14 — 2026-03-30 — TASK_014: главная функция tick()
+
+### Сделано:
+- Реализована экспортируемая функция tick(gameState, nationId):
+  1. Поиск нации в gameState.nations (по ключу или .find)
+  2. Авто-инициализация nation._ou через initNation() при первом вызове
+  3. snapshotState() — снимок предыдущих значений для delta-детекции
+  4. applyModifiers() — применение ситуационных модификаторов
+  5. updateState() — шаг OU-процесса для всех 400 переменных
+  6. decideActions() — топ-3 действия с вероятностями
+  7. calculateAnomalyScore() — композитная оценка аномалий (7 категорий)
+  8. Запись в ouState.history (лимит historyLength=50 тиков)
+  9. Возврат { nationId, actions, anomaly, debug? }
+- Удалён stub-дубликат tick() (строка ~629)
+- Проверка: node — OK, Rome → mobilize/recruit_infantry/build_barracks
+
+### Файл: super_ou.js — ~2200 строк
+
+NEXT_TASK: TASK_015

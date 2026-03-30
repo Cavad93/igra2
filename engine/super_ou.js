@@ -626,9 +626,7 @@ export function initNation(nation) {
  * @param {string|number} nationId
  * @returns {object} decisions
  */
-export function tick(gameState, nationId) {
-  // TODO
-}
+// tick — implemented below near line 2129
 
 /**
  * Advance all OU variables by one step.
@@ -2116,6 +2114,74 @@ export function snapshotState(ouState) {
     ouState._prev[cat] = (ouState[cat] || []).map(v => v.current);
   }
 }
+
+// ─── MAIN TICK FUNCTION ───────────────────────────────────────────────────────
+
+/**
+ * Main entry point — called once per game turn for a specific nation.
+ *
+ * @param {object} gameState  — full game state (gameState.nations map)
+ * @param {string} nationId   — id of the nation to process
+ * @returns {object}          — { nationId, actions, anomaly, debug? }
+ */
+export function tick(gameState, nationId) {
+  const nation = gameState.nations
+    ? gameState.nations[nationId] || gameState.nations.find?.(n => n.id === nationId)
+    : null;
+
+  if (!nation) {
+    return { nationId, error: 'nation_not_found', actions: [], anomaly: null };
+  }
+
+  // 1. Initialise OU state if this nation has never been processed
+  if (!nation._ou) {
+    initNation(nation);
+  }
+
+  const ouState = nation._ou;
+
+  // 2. Snapshot previous state (for delta / rapid-change detection)
+  snapshotState(ouState);
+
+  // 3. Apply situational modifiers — shift mu values temporarily
+  applyModifiers(nation, ouState);
+
+  // 4. Advance all 400 OU variables by one time step
+  updateState(nation);
+
+  // 5. Decide top-N actions based on personality + state
+  const actions = decideActions(nation, ouState);
+
+  // 6. Calculate anomaly score across 7 categories
+  const anomaly = calculateAnomalyScore(nation, ouState);
+
+  // 7. Record decision to history for memory modifiers
+  if (!ouState.history) ouState.history = [];
+  ouState.history.push({
+    tick: ouState.tick,
+    topAction: actions[0]?.action ?? 'pass',
+    anomalyTotal: anomaly.total,
+  });
+  if (ouState.history.length > SUPER_OU_CONFIG.historyLength) {
+    ouState.history.shift();
+  }
+
+  // 8. Build result object
+  const result = {
+    nationId,
+    actions,            // [{action, probability, score}, ...]
+    anomaly,            // {total, isAnomaly, categories, ...}
+  };
+
+  // 9. Attach debug vector if debugMode is on
+  if (SUPER_OU_CONFIG.debugMode) {
+    result.debug = getDebugVector(nation);
+  }
+
+  return result;
+}
+
+// ─── DEBUG VECTOR ─────────────────────────────────────────────────────────────
 
 /**
  * Return debug vector snapshot for logging/testing.
