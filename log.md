@@ -1245,3 +1245,20 @@ NEXT_TASK: MIL_003
 ### Файлы: engine/combat.js (+47 строк), engine/armies.js (+17 строк), ai/utility_ai.js (+43 строки)
 
 NEXT_TASK: MIL_004
+
+---
+
+## MIL_004 — Маршрут с учётом снабжения (2026-03-30)
+
+### Сделано:
+- Добавлен параметр `checkSupply=false` в `findArmyPath()` (engine/armies.js) ✓
+- При `checkSupply=true` используется Dijkstra: регионы с capacity < 2000 (горы) стоят 1.8× ✓
+- ИИ предпочитает обходные равнинные маршруты вместо горных при планировании ✓
+- В `utility_ai.js`: если `army.supply < 40` и путь через горы/холмы → score -= 25 ✓
+- `supply_warning:rough_terrain` добавляется в reasoning при штрафе ✓
+- `supply_warning` добавляется в reasoning если supply < 35 ✓
+- Тесты: 16/16 ✅ (tests/mil_004_supply_path_test.cjs)
+
+### Файлы: engine/armies.js (+37 строк), ai/utility_ai.js (+19 строк)
+
+NEXT_TASK: MIL_005
