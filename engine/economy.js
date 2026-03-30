@@ -283,6 +283,12 @@ function routeProductionToLocalStockpiles(nationId, allProduced) {
     if (unorg > 0.01) unorgTotal[good] = unorg;
   }
 
+  // Сохранить суммы для UI (ECO_006)
+  const organizedTotal   = Object.values(bldTotal).reduce((s,v) => s+v, 0);
+  const unorganizedTotal = Object.values(unorgTotal).reduce((s,v) => s+v, 0);
+  nation._organized_production_total   = organizedTotal;
+  nation._unorganized_production_total = unorganizedTotal;
+
   // Суммарное население всех регионов нации (для пропорций)
   let totalRegionPop = 0;
   for (const rid of nation.regions) {

@@ -516,7 +516,30 @@ function _tpRenderExpenses() {
     <div class="tp-row-total">
       <span class="tp-item-label">Итого расходов</span>
       <span class="tp-item-value tp-val-neg">${totalAll.toLocaleString()} ₴</span>
-    </div>`;
+    </div>
+    ${_tpRenderProdBreakdown(nation)}`;
+}
+
+// ── Разбивка производства organized vs subsistence (ECO_006) ─
+function _tpRenderProdBreakdown(nation) {
+  const orgProd   = nation._organized_production_total   || 0;
+  const unorgProd = nation._unorganized_production_total || 0;
+  const total     = orgProd + unorgProd;
+  if (total < 0.01) return '';
+
+  const orgPct   = Math.round(orgProd   / total * 100);
+  const unorgPct = 100 - orgPct;
+
+  return `<div class="prod-breakdown">
+    <div class="prod-breakdown-title">🏭 Структура производства</div>
+    <div class="prod-row">Организованное (здания): ${orgPct}%
+      <div class="prod-bar"><div style="width:${orgPct}%;background:#4CAF50"></div></div>
+    </div>
+    <div class="prod-row">Subsistence (крестьяне): ${unorgPct}% <i>−35% эффективность</i>
+      <div class="prod-bar"><div style="width:${unorgPct}%;background:#795548"></div></div>
+    </div>
+    ${unorgPct > 60 ? '<div class="prod-hint">💡 Стройте фермы и виллы для перевода крестьян в организованное производство</div>' : ''}
+  </div>`;
 }
 
 // ── График динамики баланса ───────────────────────────────────
