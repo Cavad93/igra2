@@ -1957,6 +1957,7 @@ function _buildStateFeatures(ouState) {
 
   // Helper: find variable value by name in a category array
   const val = (arr, name) => {
+    if (!Array.isArray(arr)) return 0.5;
     const v = arr.find(x => x.name === name);
     return v ? v.current : 0.5;
   };
