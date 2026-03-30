@@ -935,3 +935,20 @@ NEXT_TASK: —
 ### Покрытые задачи: CH_001 – CH_006
 ### Статус: OK ✓
 NEXT_TASK: —
+
+---
+
+## ECO_001 — Кнопка визуализации торговых маршрутов
+
+### Изменения:
+- ui/map.js: добавлены глобальные флаги `showTradeRoutes`, `tradeRouteLines`
+- ui/map.js: добавлена кнопка `tradeToggleControl` (TRADE) в topright
+- ui/map.js: функции `renderTradeRouteLines()`, `clearTradeRouteLines()`
+- ui/map.js: вспомогательные `_getRegionGroupCenter()`, `_estimateRouteIncome()`, `_hasWorldMarketAccess()`
+- ui/map.js: автообновление линий при `renderMap()` если флаг активен
+- ui/map.js: экспорт в `window.renderTradeRouteLines` / `window.clearTradeRouteLines`
+- index.html: CSS для `.trade-routes-toggle-btn` и `.active` состояния
+
+### Тест: кнопка TRADE появляется на карте, линии рисуются при наличии trade_routes
+### Статус: OK ✓
+NEXT_TASK: ECO_002

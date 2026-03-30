@@ -9,6 +9,8 @@ let awmcProvinceLayer = null;   // слой границ провинций из
 let canvasRenderer = null;      // Canvas-рендерер для производительности с 2800+ полигонами
 let regionIdMarkers = [];       // маркеры с ID регионов (для отладки)
 let showRegionIds = false;      // флаг показа ID регионов
+let showTradeRoutes = false;    // флаг показа торговых маршрутов
+let tradeRouteLines = [];       // линии торговых маршрутов
 let nationBorderLayer = null;   // слой толстых границ между нациями
 let nationLabelMarkers = [];    // (устарело) оставлено для совместимости
 let nationLabelData   = [];     // { nationId, name, lat, lng, regions, totalGeoArea }
@@ -212,6 +214,25 @@ function initLeafletMap() {
     },
   });
   new idToggleControl().addTo(leafletMap);
+
+  // Кнопка показа торговых маршрутов
+  const tradeToggleControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd() {
+      const btn = L.DomUtil.create('button',
+        'leaflet-bar leaflet-control trade-routes-toggle-btn');
+      btn.title = 'Показать/скрыть торговые маршруты';
+      btn.textContent = 'TRADE';
+      L.DomEvent.on(btn, 'click', L.DomEvent.stopPropagation);
+      L.DomEvent.on(btn, 'click', () => {
+        showTradeRoutes = !showTradeRoutes;
+        btn.classList.toggle('active', showTradeRoutes);
+        showTradeRoutes ? renderTradeRouteLines() : clearTradeRouteLines();
+      });
+      return btn;
+    },
+  });
+  new tradeToggleControl().addTo(leafletMap);
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -1686,6 +1707,79 @@ function clearRegionIdLabels() {
 }
 
 // ──────────────────────────────────────────────────────────────
+// ТОРГОВЫЕ МАРШРУТЫ — ВИЗУАЛИЗАЦИЯ НА КАРТЕ
+// ──────────────────────────────────────────────────────────────
+
+function renderTradeRouteLines() {
+  clearTradeRouteLines();
+  if (!window.GAME_STATE?.nations) return;
+  const playerNationId = GAME_STATE.player_nation;
+  const playerNation   = GAME_STATE.nations[playerNationId];
+  if (!playerNation) return;
+  const playerCenter = _getRegionGroupCenter(playerNation.regions || []);
+  if (!playerCenter) return;
+
+  for (const partnerId of (playerNation.economy?.trade_routes || [])) {
+    const partner = GAME_STATE.nations[partnerId];
+    if (!partner) continue;
+    const partnerCenter = _getRegionGroupCenter(partner.regions || []);
+    if (!partnerCenter) continue;
+    const income = _estimateRouteIncome(playerNation, partner);
+    const color  = income > 50 ? '#4CAF50' : income > 10 ? '#FFC107' : '#F44336';
+    const line = L.polyline([playerCenter, partnerCenter], {
+      color, weight: 2, opacity: 0.7, dashArray: '6,4',
+    });
+    line.bindTooltip(
+      `🤝 ${partner.name}<br>💰 ~${Math.round(income)} золота/ход<br>` +
+      `📦 ${(partner.economy?.trade_routes?.length||0)} маршрутов`,
+      { sticky: true }
+    );
+    line.addTo(leafletMap);
+    tradeRouteLines.push(line);
+  }
+
+  if (_hasWorldMarketAccess(playerNation)) {
+    const wmLine = L.polyline([playerCenter, [36, 15]], {
+      color: '#2196F3', weight: 2, opacity: 0.5, dashArray: '3,8',
+    });
+    wmLine.bindTooltip('🌍 Мировой рынок');
+    wmLine.addTo(leafletMap);
+    tradeRouteLines.push(wmLine);
+  }
+}
+
+function clearTradeRouteLines() {
+  for (const l of tradeRouteLines) {
+    if (leafletMap && leafletMap.hasLayer(l)) leafletMap.removeLayer(l);
+  }
+  tradeRouteLines = [];
+}
+
+function _getRegionGroupCenter(regionIds) {
+  const centers = regionIds.map(id => MAP_REGIONS[id]?.center).filter(Boolean);
+  if (!centers.length) return null;
+  return [
+    centers.reduce((s,c) => s+c[0], 0) / centers.length,
+    centers.reduce((s,c) => s+c[1], 0) / centers.length,
+  ];
+}
+
+function _estimateRouteIncome(myNation, partner) {
+  const treasury = myNation.economy?.treasury || 0;
+  return Math.min(treasury * 0.02, 200);
+}
+
+function _hasWorldMarketAccess(nation) {
+  const hasCoast = (nation.regions||[]).some(rId =>
+    MAP_REGIONS[rId]?.terrain === 'coastal_city'
+  );
+  return hasCoast && (nation.economy?.trade_routes||[]).length > 0;
+}
+
+window.renderTradeRouteLines = renderTradeRouteLines;
+window.clearTradeRouteLines  = clearTradeRouteLines;
+
+// ──────────────────────────────────────────────────────────────
 // ЛЁГКОЕ ОБНОВЛЕНИЕ СТИЛЕЙ (без пересоздания слоёв)
 // ──────────────────────────────────────────────────────────────
 
@@ -1752,6 +1846,7 @@ function renderMap() {
   } else {
     // Последующие вызовы — только обновляем стили
     refreshRegionStyles();
+    if (showTradeRoutes) { clearTradeRouteLines(); renderTradeRouteLines(); }
   }
 
   // Легенда наций (DOM вне Leaflet)
