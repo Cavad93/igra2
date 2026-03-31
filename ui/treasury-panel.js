@@ -395,7 +395,8 @@ function _tpExpSliderRow(category, icon, name, effectsFn) {
 
 // Колонка расходов с интерактивными слайдерами
 function _tpRenderExpenses() {
-  const exp  = GAME_STATE.nations[GAME_STATE.player_nation].economy._expense_breakdown || {};
+  const nation = GAME_STATE.nations[GAME_STATE.player_nation];
+  const exp  = nation.economy._expense_breakdown || {};
   const lvls = _tpExpLevels ?? {};
 
   // Вычисляем эффективные расходы из preview-уровней и базовых значений
