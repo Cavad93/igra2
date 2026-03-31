@@ -465,10 +465,21 @@ async function processAINations() {
 
   const warSet = new Set(warWithPlayer);
 
-  // Запускаем Haiku параллельно для всех воюющих наций
+  // Военные решения: сначала кэш из фонового AI Worker, затем прямой вызов Groq
   const warResults = new Map();
-  if (warWithPlayer.length > 0 && typeof getAIWarDecision === 'function' && CONFIG.GROQ_API_KEY) {
-    const warPromises = warWithPlayer.map(async nId => {
+  for (const nId of warWithPlayer) {
+    const cached = _aiPending.get(nId);
+    if (cached?.source === 'war_bg' && (currentTurn - cached.turn) <= 1 && validateNationDecision(cached.decision)) {
+      // Решение предзагружено воркером — берём из кэша, ход не ждёт HTTP
+      warResults.set(nId, cached.decision);
+      _aiPending.delete(nId);
+      console.log(`[war_ai] кэш воркера: ${GAME_STATE.nations[nId]?.name ?? nId} → ${cached.decision.action}`);
+    }
+  }
+  // Для наций без кэша — прямой вызов Groq (как раньше)
+  const uncachedWar = warWithPlayer.filter(nId => !warResults.has(nId));
+  if (uncachedWar.length > 0 && typeof getAIWarDecision === 'function' && CONFIG.GROQ_API_KEY) {
+    const warPromises = uncachedWar.map(async nId => {
       const decision = await getAIWarDecision(nId).catch(err => {
         console.warn(`[war_ai] Groq недоступен для ${nId} (${err.message}) — fallback`);
         return null;
@@ -476,9 +487,9 @@ async function processAINations() {
       if (decision) warResults.set(nId, decision);
     });
     await Promise.all(warPromises);
-    if (warResults.size > 0) {
-      addEventLog(`⚔ Военный AI (Haiku) обработал ${warResults.size} нации`, 'ai');
-    }
+  }
+  if (warResults.size > 0) {
+    addEventLog(`⚔ Военный AI обработал ${warResults.size} нации`, 'ai');
   }
 
   let fromCache = 0, fromFallback = 0, fromWarAI = 0;
@@ -1211,6 +1222,63 @@ function applyFallbackDecision(nationId) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
+// AI HTTP WORKER — Groq-запросы в отдельном потоке
+// ══════════════════════════════════════════════════════════════════════
+
+let _aiHttpWorker  = null;
+let _aiReqCounter  = 0;
+const _aiPendingReqs = new Map(); // reqId → { resolve, reject }
+
+function _getAIHttpWorker() {
+  if (_aiHttpWorker) return _aiHttpWorker;
+  try {
+    _aiHttpWorker = new Worker('ai/ai_worker.js');
+    _aiHttpWorker.onmessage = ({ data }) => {
+      const cb = _aiPendingReqs.get(data.id);
+      if (!cb) return;
+      _aiPendingReqs.delete(data.id);
+      if (data.ok) cb.resolve(data.raw);
+      else         cb.reject(new Error(data.error));
+    };
+    _aiHttpWorker.onerror = (e) => {
+      // Отклоняем все ожидающие запросы при сбое воркера
+      for (const [id, cb] of _aiPendingReqs) {
+        cb.reject(new Error(`AI Worker: ${e.message}`));
+        _aiPendingReqs.delete(id);
+      }
+    };
+    return _aiHttpWorker;
+  } catch (e) {
+    console.warn('[ai_worker] Web Worker недоступен:', e.message);
+    return null;
+  }
+}
+
+/**
+ * Отправляет Groq-запрос через AI Worker.
+ * Возвращает Promise<string> (raw LLM ответ) или null если воркер недоступен.
+ */
+function _callGroqViaWorker(system, user, maxTokens) {
+  if (!CONFIG?.GROQ_API_KEY) return null;
+  const worker = _getAIHttpWorker();
+  if (!worker) return null;
+
+  const id = ++_aiReqCounter;
+  return new Promise((resolve, reject) => {
+    _aiPendingReqs.set(id, { resolve, reject });
+    worker.postMessage({
+      id,
+      url:       CONFIG.GROQ_API_URL,
+      apiKey:    CONFIG.GROQ_API_KEY,
+      model:     CONFIG.MODEL_WAR_AI,
+      maxTokens,
+      system,
+      user,
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════
 // ФОНОВЫЙ AI-ЦИКЛ
 // phi4-mini обрабатывает нации непрерывно в фоне.
 // Решения сохраняются в _aiPending и применяются при следующем нажатии
@@ -1265,12 +1333,43 @@ async function _aiBgProcess() {
   const currentTurn = GAME_STATE.turn ?? 0;
 
   // Нация считается «свежей» если кэш не старше 2 ходов
-  // Нации воюющие с игроком пропускаем — их обрабатывает Haiku во время хода
   const playerNationIdBg = GAME_STATE.player_nation;
+
+  // ── Предзагрузка военных решений через AI Worker (фон, не блокирует) ─
+  // Для наций воюющих с игроком запрашиваем Groq заранее, чтобы ход
+  // не ждал HTTP-ответа. Решение хранится в _aiPending с source:'war_bg'.
+  if (CONFIG?.GROQ_API_KEY) {
+    for (const nId of rotationList) {
+      if (!playerNationIdBg) break;
+      const atWar = (GAME_STATE.nations[nId]?.military?.at_war_with ?? []).includes(playerNationIdBg);
+      if (!atWar) continue;
+      const cached = _aiPending.get(nId);
+      const isFresh = cached && cached.source === 'war_bg' && (currentTurn - cached.turn) <= 1;
+      if (isFresh) continue;
+      // Строим промпт (синхронно, быстро) и отправляем запрос в воркер
+      const prompts = typeof _buildWarPrompts === 'function' ? _buildWarPrompts(nId) : null;
+      if (!prompts) continue;
+      const workerPromise = _callGroqViaWorker(prompts.system, prompts.user, 400);
+      if (!workerPromise) break; // воркер недоступен — не пытаемся для остальных
+      workerPromise
+        .then(raw => {
+          if (!raw) return;
+          const decision = typeof _parseWarDecision === 'function'
+            ? _parseWarDecision(raw, nId)
+            : null;
+          if (decision) {
+            _aiPending.set(nId, { decision, turn: currentTurn, source: 'war_bg', processedAt: Date.now() });
+            console.log(`[ai_bg] ⚔ war pre-cache: ${GAME_STATE.nations[nId]?.name ?? nId} → ${decision.action}`);
+          }
+        })
+        .catch(e => console.warn(`[ai_bg] war pre-cache ошибка для ${nId}:`, e.message));
+    }
+  }
+
   const needsUpdate = nId => {
     if (playerNationIdBg &&
         (GAME_STATE.nations[nId]?.military?.at_war_with ?? []).includes(playerNationIdBg)) {
-      return false; // Haiku обрабатывает во время хода
+      return false; // война — предзагружается отдельно выше
     }
     const c = _aiPending.get(nId);
     return !c || (currentTurn - c.turn) > 2;

@@ -1363,7 +1363,12 @@ Choose the best action for this turn. Follow Strategic Phase advice. Update your
 //   • степень истощения войны
 // ══════════════════════════════════════════════════════════════════════
 
-async function getAIWarDecision(nationId) {
+/**
+ * Строит промпт для военного AI без I/O.
+ * Вызывается и во время хода, и из фонового цикла (для предзагрузки).
+ * @returns {{ system: string, user: string }} или null
+ */
+function _buildWarPrompts(nationId) {
   const n = GAME_STATE.nations?.[nationId];
   if (!n) return null;
 
@@ -1381,7 +1386,6 @@ async function getAIWarDecision(nationId) {
   const bal      = Math.round((eco.income_per_turn ?? 0) - (eco.expense_per_turn ?? 0));
   const currentTurn = GAME_STATE.turn ?? 0;
 
-  // ── Силы игрока ───────────────────────────────────────────────────
   const pMil = pn.military ?? {};
   const pStr = (pMil.infantry ?? 0) + (pMil.cavalry ?? 0) * 3 + (pMil.mercenaries ?? 0);
   const strRatio = pStr > 0 ? (str / pStr).toFixed(2) : '∞';
@@ -1389,7 +1393,6 @@ async function getAIWarDecision(nationId) {
   const warDuration = currentTurn - warSince;
   const exhaustion = warDuration >= 10 ? 'HIGH' : warDuration >= 5 ? 'MEDIUM' : 'LOW';
 
-  // ── Армии обеих сторон с валидными позициями ───────────────────────
   const myArmies = (GAME_STATE.armies ?? [])
     .filter(a => a.nation === nationId && a.state !== 'disbanded')
     .map(a => {
@@ -1408,8 +1411,6 @@ async function getAIWarDecision(nationId) {
     .map(a => `  id:${a.id} @ ${a.position}(${a.state}) — ${a.units?.infantry ?? 0}inf+${a.units?.cavalry ?? 0}cav`)
     .join('\n') || '  (no player armies)';
 
-  // ── Атакуемые регионы (принадлежат игроку, смежные с нами) ────────
-  const myRegionSet = new Set(n.regions ?? []);
   const attackTargets = [];
   for (const rid of (n.regions ?? []).slice(0, 6)) {
     for (const cid of (GAME_STATE.regions?.[rid]?.connections ?? []).slice(0, 5)) {
@@ -1422,7 +1423,6 @@ async function getAIWarDecision(nationId) {
     if (attackTargets.length >= 4) break;
   }
 
-  // ── Союзники которых можно призвать ──────────────────────────────
   const potentialAllies = Object.entries(n.relations ?? {})
     .filter(([oid, r]) => {
       if (r.at_war) return false;
@@ -1437,7 +1437,6 @@ async function getAIWarDecision(nationId) {
     .slice(0, 3)
     .join('\n') || '  none';
 
-  // ── История сражений (последние 5 военных событий) ────────────────
   const playerName = pn.name ?? playerNationId;
   const battleHistory = (GAME_STATE.events_log ?? [])
     .filter(e => e.type === 'military' && (currentTurn - (e.turn ?? 0)) <= 8)
@@ -1445,7 +1444,6 @@ async function getAIWarDecision(nationId) {
     .map(e => `  Turn ${e.turn}: ${e.message}`)
     .join('\n') || '  (no battles yet)';
 
-  // ── Стройки (только самые важные для войны) ───────────────────────
   const warBuilds = (n.regions ?? []).slice(0, 3).map(rid => {
     const region = GAME_STATE.regions?.[rid];
     if (!region || (region.construction_queue ?? []).length >= 2) return null;
@@ -1460,19 +1458,16 @@ async function getAIWarDecision(nationId) {
     return `  region:${rid}: ${warBlds.join(', ')}`;
   }).filter(Boolean).join('\n') || '  none';
 
-  // ── Последние решения нации ───────────────────────────────────────
   const recentDecisions = (n.memory?.events ?? [])
     .filter(e => e.type === 'decision')
     .slice(-4)
     .map(e => `  Turn ${e.turn ?? '?'}: ${e.text}`)
     .join('\n') || '  (none)';
 
-  // ── Текущая цель ──────────────────────────────────────────────────
   const currentGoal = n._ai_goal
     ? `"${n._ai_goal.text}" (set turn ${n._ai_goal.turn}, progress: ${n._ai_goal.progress ?? 'ongoing'})`
     : 'none';
 
-  // ── Оценка ситуации (предвычислено JS) ────────────────────────────
   let situation, recommended, avoid;
   if (str > pStr * 1.4) {
     situation = `YOU ARE STRONGER (ratio ${strRatio}). Press the attack — this is your chance to win decisively.`;
@@ -1550,21 +1545,30 @@ ${recentDecisions}
 
 Choose ONE decisive action this turn. Update your war goal.`;
 
-  const raw = await _callGroq(system, user, 400);
+  return { system, user };
+}
 
+/**
+ * Парсит сырой JSON-ответ Groq в объект решения.
+ * Побочный эффект: обновляет n._ai_goal.
+ */
+function _parseWarDecision(raw, nationId) {
+  const n = GAME_STATE.nations?.[nationId];
+  const currentTurn = GAME_STATE.turn ?? 0;
   try {
     const parsed = extractJSON(raw);
     const item   = Array.isArray(parsed) ? parsed[0] : parsed;
     if (!item?.action) return null;
 
-    // Сохраняем военную цель
-    if (item.goal && typeof item.goal === 'string' && item.goal.length > 3) {
-      n._ai_goal = { text: item.goal, turn: currentTurn, progress: null };
-    } else if (n._ai_goal) {
-      n._ai_goal.progress = `Turn ${currentTurn}: ${item.action}`;
+    if (n) {
+      if (item.goal && typeof item.goal === 'string' && item.goal.length > 3) {
+        n._ai_goal = { text: item.goal, turn: currentTurn, progress: null };
+      } else if (n._ai_goal) {
+        n._ai_goal.progress = `Turn ${currentTurn}: ${item.action}`;
+      }
     }
 
-    console.log(`[war_ai] ${n.name}(Haiku): ${item.action}${item.target ? '→' + item.target : ''} | "${item.reasoning ?? ''}"`);
+    console.log(`[war_ai] ${n?.name ?? nationId}: ${item.action}${item.target ? '→' + item.target : ''} | "${item.reasoning ?? ''}"`);
 
     return {
       action:          item.action,
@@ -1582,6 +1586,13 @@ Choose ONE decisive action this turn. Update your war goal.`;
     console.warn(`[war_ai] Ошибка парсинга для ${nationId}:`, e.message);
     return null;
   }
+}
+
+async function getAIWarDecision(nationId) {
+  const prompts = _buildWarPrompts(nationId);
+  if (!prompts) return null;
+  const raw = await _callGroq(prompts.system, prompts.user, 400);
+  return _parseWarDecision(raw, nationId);
 }
 
 // ── #10: определить стратегическую фазу ───────────────────────
