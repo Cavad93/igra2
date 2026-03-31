@@ -103,6 +103,15 @@ async function processTurn() {
     }
     _endStep('Экономика...');
 
+    // 1.05. Выплаты по займам (после пополнения казны доходами)
+    if (typeof processLoanPayments === 'function') {
+      try {
+        for (const nId of Object.keys(GAME_STATE.nations ?? {})) {
+          processLoanPayments(nId);
+        }
+      } catch (e) { console.warn('[loans]', e); }
+    }
+
     // 1.1. Запись истории экономики (для вкладки «Экономический обзор»)
     if (typeof recordEconomyHistory === 'function') {
       try { recordEconomyHistory(); } catch (e) { console.warn('[econ_history]', e); }
