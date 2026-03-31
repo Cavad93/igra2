@@ -1225,12 +1225,14 @@ function applyFallbackDecision(nationId) {
 // AI HTTP WORKER — Groq-запросы в отдельном потоке
 // ══════════════════════════════════════════════════════════════════════
 
-let _aiHttpWorker  = null;
+let _aiHttpWorker       = null;
+let _aiHttpWorkerFailed = false;  // не повторять попытку после первого сбоя
 let _aiReqCounter  = 0;
 const _aiPendingReqs = new Map(); // reqId → { resolve, reject }
 
 function _getAIHttpWorker() {
   if (_aiHttpWorker) return _aiHttpWorker;
+  if (_aiHttpWorkerFailed) return null;
   try {
     _aiHttpWorker = new Worker('ai/ai_worker.js');
     _aiHttpWorker.onmessage = ({ data }) => {
@@ -1249,7 +1251,8 @@ function _getAIHttpWorker() {
     };
     return _aiHttpWorker;
   } catch (e) {
-    console.warn('[ai_worker] Web Worker недоступен:', e.message);
+    _aiHttpWorkerFailed = true;
+    console.warn('[ai_worker] Web Worker недоступен (Workers работают только через HTTP-сервер, не file://):', e.message);
     return null;
   }
 }
@@ -1664,11 +1667,13 @@ function _recordTurnSummary() {
 
 // SaveWorker — сохранение в фоне, не блокирует главный поток.
 // JSON.stringify + transfer ArrayBuffer быстрее, чем IndexedDB structured clone на главном потоке.
-let _saveWorker   = null;   // Worker instance
-let _saveInFlight = false;  // идёт ли сохранение прямо сейчас
+let _saveWorker        = null;   // Worker instance
+let _saveWorkerFailed  = false;  // не повторять попытку после первого сбоя
+let _saveInFlight      = false;  // идёт ли сохранение прямо сейчас
 
 function _getSaveWorker() {
   if (_saveWorker) return _saveWorker;
+  if (_saveWorkerFailed) return null;
   try {
     _saveWorker = new Worker('engine/save_worker.js');
     _saveWorker.onmessage = ({ data }) => {
@@ -1686,7 +1691,8 @@ function _getSaveWorker() {
     };
     return _saveWorker;
   } catch (e) {
-    console.warn('[save] Web Worker недоступен, используем обычное сохранение:', e.message);
+    _saveWorkerFailed = true;
+    console.warn('[save] Web Worker недоступен, используем обычное сохранение (нужен HTTP-сервер):', e.message);
     return null;
   }
 }
