@@ -2351,7 +2351,7 @@ function snapshotState(ouState) {
   const cats = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
   ouState._prev = {};
   for (const cat of cats) {
-    ouState._prev[cat] = (ouState[cat] || []).map(v => v.current);
+    ouState._prev[cat] = Array.isArray(ouState[cat]) ? ouState[cat].map(v => v.current) : [];
   }
 }
 
@@ -2447,8 +2447,9 @@ function tick(gameState, nationId) {
   }
 
   // 1. Initialise OU state if this nation has never been processed
-  // Check for proper Super-OU structure (arrays), not legacy scalar _ou from turn.js
-  if (!nation._ou || !Array.isArray(nation._ou.economy)) {
+  // Check ALL categories — a partial/legacy _ou (e.g. loaded from old save) must also be re-init'd
+  const _OU_CATS = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
+  if (!nation._ou || _OU_CATS.some(c => !Array.isArray(nation._ou[c]))) {
     initNation(nation);
   }
 
