@@ -429,6 +429,7 @@ function processArmyMovement() {
       const nextRegion    = army.path.shift();
       army.position       = nextRegion;
       army.fatigue        = Math.min(100, army.fatigue + ARMY_MOVE.FATIGUE_MARCH);
+      army.ambush_set     = false; // MIL_007: засада снимается при движении
 
       // Глобальный лимит битв за ход
       const hadBattle = battlesThisTurn >= MAX_BATTLES_PER_TURN;

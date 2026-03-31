@@ -332,6 +332,16 @@ function utilityAIDecide(army, order) {
     }
   }
 
+  // MIL_007: Уникальные действия черт командира
+  for (const tc of _traitUniqueActions(army, char, currentTerrain, allyInfo, nearby, activeSiege, enemyArmies, myStr, enemies, readiness, mods)) {
+    if (tc.action === 'ambush') {
+      army.ambush_set = true;
+      candidates.push({ action: 'ambush', target_id: null, score: tc.score, reasoning: tc.reasoning });
+    } else {
+      candidates.push(tc);
+    }
+  }
+
   // Если врагов нет в радиусе — идти к цели из приказа
   const hasEnemyMoves = candidates.some(c => c.action === 'move');
   if (!hasEnemyMoves && !activeSiege) {
@@ -1096,4 +1106,62 @@ function _scoreNavalBlockade(fleet, enemies, nearby) {
   }
 
   return { target: bestTarget, score: bestScore, reasoning: bestReason };
+}
+
+/**
+ * MIL_007: Уникальные тактические действия черт командира.
+ * @returns {Array} дополнительные кандидаты для выбора действий
+ */
+function _traitUniqueActions(army, char, terrain, allyInfo, nearby, activeSiege, enemyArmies, myStr, enemies, readiness, mods) {
+  const skills = char?.commander_skills ?? [];
+  const result = [];
+
+  // 'cunning': засада в лесу или на холмах если враг рядом
+  if (skills.includes('cunning') && !activeSiege &&
+      (terrain === 'forest' || terrain === 'hills')) {
+    const totalEnemyStr = Object.values(enemyArmies).reduce((s, v) => s + v, 0);
+    if (totalEnemyStr > 0) {
+      result.push({
+        action: 'ambush', target_id: null,
+        score:  55 + totalEnemyStr * 0.3,
+        reasoning: `ambush_set_in:${terrain}`,
+      });
+    }
+  }
+
+  // 'siege_master': приоритет крепостей с голодающим гарнизоном в радиусе 3
+  if (skills.includes('siege_master') && !activeSiege) {
+    for (const [rid, region] of Object.entries(nearby)) {
+      if (!enemies.includes(region.nation)) continue;
+      if ((region.fortress ?? 0) === 0) continue;
+      const garrisonSupply = GAME_STATE.regions?.[rid]?.garrison_supply ?? 100;
+      if (garrisonSupply < 30) {
+        const dist = _bfsDistanceInNearby(army.position, rid, nearby);
+        result.push({ action: 'move', target_id: rid,
+          score: 40 + mods.siege_mult * 20 - dist * 5,
+          reasoning: 'siege_master_priority' });
+        break;
+      }
+    }
+  }
+
+  // 'lightning_commander': преследование с бонусом движения (+1 регион)
+  if (skills.includes('lightning_commander') && army.pursuit_order) {
+    army.movement_bonus = (army.movement_bonus ?? 0) + 1;
+  }
+
+  // 'strategist': координированная атака если 2+ союзников в радиусе
+  if (skills.includes('strategist') && Object.keys(allyInfo.allyStrByRegion).length >= 2) {
+    for (const [rid, region] of Object.entries(nearby)) {
+      if (!enemies.includes(region.nation)) continue;
+      if (_bfsDistanceInNearby(army.position, rid, nearby) <= 2) {
+        result.push({ action: 'move', target_id: rid,
+          score: 30 + (enemyArmies[rid] ? 20 : 10),
+          reasoning: 'coordinate_attack:strategist' });
+        break;
+      }
+    }
+  }
+
+  return result;
 }

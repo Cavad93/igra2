@@ -282,7 +282,8 @@ function calcArmyCombatStrength(army, terrain, isDefender) {
            + (u.mercenaries ?? 0) * 1.5
            + (u.artillery   ?? 0) * 0.5; // в поле слабее
 
-  if (isDefender) base *= 1.20;      // бонус защитника
+  // MIL_007: засада (ambush_set) увеличивает бонус защитника ×1.40
+  if (isDefender) base *= (army.ambush_set ? 1.40 : 1.20); // бонус защитника
   base *= terrAtk;                   // местность
 
   // Мораль: 0→×0.25 … 100→×1.50

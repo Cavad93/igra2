@@ -364,6 +364,13 @@ function _applyCommanderDecision(army, decision) {
     case 'siege':
       // Осада продолжается автоматически через processSiegeTicks() — ничего делать не надо
       break;
+
+    case 'ambush':
+      // MIL_007: засада — армия остаётся на месте, ambush_set уже выставлен в utilityAIDecide
+      army.state = 'stationed';
+      if (typeof addEventLog === 'function')
+        addEventLog(`🪤 ${cmdName}: «${decision.reasoning}» — засада готова!`, 'military');
+      break;
   }
 }
 
