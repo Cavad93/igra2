@@ -1304,3 +1304,23 @@ NEXT_TASK: MIL_006
 ### Файлы: engine/combat.js (+4 строки), ai/utility_ai.js (+54 строки)
 
 NEXT_TASK: MIL_007
+
+## MIL_007 — Уникальные действия черт командира (2026-03-31)
+
+### Сделано:
+- В `utility_ai.js` добавлена функция `_traitUniqueActions(army, char, terrain, ...)`:
+  - `cunning` skill: terrain forest/hills + враг рядом → action 'ambush', score=55+enemyStr×0.3 ✓
+  - `siege_master` skill: поиск крепости с garrison_supply<30 в радиусе → siege_master_priority ✓
+  - `lightning_commander` skill: при pursuit_order → movement_bonus += 1 ✓
+  - `strategist` skill: 2+ союзников в радиусе → coordinate_attack:strategist ✓
+- В `utilityAIDecide()`: вызов `_traitUniqueActions`, army.ambush_set=true при засаде ✓
+- В `engine/orders.js`: case 'ambush' — армия остаётся на месте, event в лог ✓
+- В `engine/combat.js`: `calcArmyCombatStrength` — ambush_set → ×1.40 вместо ×1.20 ✓
+- В `engine/armies.js`: `army.ambush_set = false` при движении (засада снимается) ✓
+- Reasoning: `ambush_set_in:[terrain]` / `siege_master_priority` / `coordinate_attack:strategist` ✓
+- Тесты: 16/16 ✅ (tests/mil_007_commander_traits_test.cjs)
+- Регрессии: MIL_002 16/16, MIL_003 18/18, MIL_004 16/16, MIL_005 23/23, MIL_006 18/18 ✅
+
+### Файлы: ai/utility_ai.js (+77 строк), engine/orders.js (+7 строк), engine/combat.js (+1 строка), engine/armies.js (+1 строка)
+
+NEXT_TASK: MIL_008
