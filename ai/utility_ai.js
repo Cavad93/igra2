@@ -205,6 +205,25 @@ function utilityAIDecide(army, order) {
     }
   }
 
+  // MIL_006: Преследование разгромленного и эксплуатация прорыва
+  const { pursuitScore, breakthroughTarget } = _scorePursuit(army, enemies, nearby, readiness);
+  if (pursuitScore > 0 && army.pursuit_order && nearby[army.pursuit_order]) {
+    candidates.push({
+      action:    'move',
+      target_id: army.pursuit_order,
+      score:     pursuitScore,
+      reasoning: 'pursuit_of_routed',
+    });
+  }
+  if (breakthroughTarget && breakthroughTarget !== army.pursuit_order) {
+    candidates.push({
+      action:    'move',
+      target_id: breakthroughTarget,
+      score:     65,
+      reasoning: 'exploiting_breakthrough',
+    });
+  }
+
   // Если союзник осаждает крепость рядом — идти на помощь (высокий приоритет)
   for (const siegeTarget of allyInfo.allySiegeTargets) {
     if (nearby[siegeTarget] && enemies.includes(nearby[siegeTarget].nation)) {
@@ -940,6 +959,55 @@ function _detectReliefArmy(siegeRegionId, enemies) {
     }
   }
   return { incoming, turnsAway, strength };
+}
+
+/**
+ * MIL_006: Score для преследования разгромленного врага или эксплуатации прорыва.
+ * @returns {{ pursuitScore, breakthroughTarget }}
+ */
+function _scorePursuit(army, enemies, nearby, readiness) {
+  if (!army.pursuit_order) return { pursuitScore: 0, breakthroughTarget: null };
+
+  let score = 70 + readiness * 20;
+
+  // Путь к столице противника — дополнительный бонус
+  for (const enemyId of enemies) {
+    const cap = GAME_STATE.nations?.[enemyId]?.capital;
+    if (cap && _bfsDistanceInNearby(army.pursuit_order, cap, nearby) <= 2) {
+      score += 25;
+      break;
+    }
+  }
+
+  // Усталые не преследуют
+  if ((army.fatigue ?? 0) > 65) score *= 0.50;
+
+  // Эксплуатация прорыва: враг открыт (нет вражеских армий в 2 регионах)
+  const enemiesNear2 = Object.keys(
+    Object.fromEntries(
+      Object.entries(
+        (() => { const r = {}; for (const a of (GAME_STATE.armies ?? [])) {
+          if (a.state === 'disbanded') continue;
+          if (!enemies.includes(a.nation)) continue;
+          const d = _bfsDistanceInNearby(army.position, a.position, nearby);
+          if (d <= 2) r[a.position] = 1;
+        } return r; })()
+      )
+    )
+  ).length;
+
+  let breakthroughTarget = null;
+  if (enemiesNear2 < 1) {
+    let btDist = 99;
+    for (const [rid, r] of Object.entries(nearby)) {
+      if (!enemies.includes(r.nation)) continue;
+      if ((r.fortress ?? 0) > 0) continue;
+      const d = _bfsDistanceInNearby(army.position, rid, nearby);
+      if (d < btDist) { btDist = d; breakthroughTarget = rid; }
+    }
+  }
+
+  return { pursuitScore: score, breakthroughTarget };
 }
 
 /**

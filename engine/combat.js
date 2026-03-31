@@ -154,6 +154,11 @@ function resolveArmyBattle(atkArmy, defArmy, regionId) {
     _setRetreatPath(loser);
   }
 
+  // MIL_006: Установить приказ преследования победителю
+  if (margin > 1.5 && winner.morale > 55) {
+    winner.pursuit_order = loser.path?.[0] ?? null;
+  }
+
   // ── Захват региона ─────────────────────────────────────────────
   let capturedRegionId = null;
   const fortress       = region?.fortress_level ?? 0;
