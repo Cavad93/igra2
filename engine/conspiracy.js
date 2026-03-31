@@ -476,14 +476,24 @@ class ConspiracyEngine {
 
   _getPersonalGuardStrength(nationId) {
     const nation = GAME_STATE.nations[nationId];
-    const institutions = nation.government?.institutions ?? [];
-    const guard = institutions.find(i =>
+    const gov = nation?.government;
+
+    // GOV_008: используем реальный объект personal_guard если есть
+    if (gov?.personal_guard && gov.personal_guard.size > 0) {
+      const guard = gov.personal_guard;
+      // Эффективная сила: размер × лояльность (0-1)
+      return Math.round(guard.size * (guard.loyalty / 100));
+    }
+
+    // Fallback: проверяем институт гвардии
+    const institutions = gov?.institutions ?? [];
+    const guardInst = institutions.find(i =>
       (i.name ?? '').toLowerCase().includes('гвар') ||
       (i.id   ?? '').toLowerCase().includes('guard')
     );
-    // Если есть институт личной гвардии — берём из него силу
-    if (guard) return 60 + Math.floor(Math.random() * 20);
-    // Иначе — зависит от численности армии
+    if (guardInst) return 60 + Math.floor(Math.random() * 20);
+
+    // Последний fallback — от численности армии
     return Math.min(80, Math.round((nation.military?.infantry ?? 0) / 100));
   }
 

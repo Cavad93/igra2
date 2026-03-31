@@ -45,16 +45,21 @@ function processGovernmentTick(nationId) {
 
   // 3. Заговоры (тирания)
   if (gov.conspiracies) {
-    // Затраты тайной полиции
-    if (gov.conspiracies.secret_police?.enabled) {
-      nation.economy.treasury = Math.max(0,
-        nation.economy.treasury - gov.conspiracies.secret_police.cost_per_turn
-      );
-    }
+    // Затраты тайной полиции (перенесено в processSecretPoliceTick — здесь убрано во избежание двойного списания)
     const chance = calculateConspiracyChance(nation);
     if (Math.random() < chance) {
       triggerConspiracy(nationId);
     }
+  }
+
+  // 3.1 GOV_008: Личная гвардия тирана
+  if (gov.type === 'tyranny') {
+    processPersonalGuardTick(nation, nationId, isPlayer);
+  }
+
+  // 3.2 GOV_008: Тайная полиция — раз в 5 ходов генерирует донос
+  if (gov.conspiracies?.secret_police?.enabled && (GAME_STATE.turn ?? 0) % 5 === 0) {
+    processSecretPoliceTick(nation, nationId, isPlayer);
   }
 
   // 4. Накопленное недовольство при олигархии (закрытое гражданство)
@@ -615,6 +620,12 @@ function calculateConspiracyChance(nation) {
   // Низкая лояльность армии — повышает
   if (nation.military.loyalty < 40)    chance += 0.10;
   if (nation.military.loyalty < 20)    chance += 0.15;
+
+  // GOV_008: Личная гвардия снижает риск — defense += personal_guard.size × 0.4
+  if (gov.personal_guard && gov.personal_guard.size > 0) {
+    const guardDefense = gov.personal_guard.size * 0.4 * (gov.personal_guard.loyalty / 100);
+    chance *= Math.max(0.1, 1 - guardDefense / 150);
+  }
 
   // Тайная полиция — снижает
   if (gov.conspiracies?.secret_police?.enabled) {
@@ -1990,5 +2001,233 @@ function applyGovernmentSetup(nationId, config) {
       `🏛 Правительство основано: ${typeName}. Выбрано институтов: ${config.institutions.length}.`,
       'positive'
     );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// GOV_008: ЛИЧНАЯ ГВАРДИЯ ТИРАНА
+// ──────────────────────────────────────────────────────────────────────
+
+/**
+ * Тик личной гвардии — вызывается каждый ход для тираний.
+ * Логика:
+ *  - Снимает cost_per_turn с казны; при нехватке gold → unpaid_turns++
+ *  - guard.loyalty дрейфует вниз (−0.5–1.5 за ход) → требует постоянной платы
+ *  - guard.size > 60 → подавление беспорядков (−10 happiness, но снижает revolt_pressure)
+ *  - guard.size > 80 && unpaid_turns > 3 → 5% шанс coup d'état от самой гвардии
+ */
+function processPersonalGuardTick(nation, nationId, isPlayer) {
+  const gov   = nation.government;
+  const guard = gov.personal_guard;
+  if (!guard || guard.size <= 0) return;
+
+  // 1. Списание содержания
+  const cost = guard.cost_per_turn ?? Math.round(guard.size * 2);
+  guard.cost_per_turn = cost;
+
+  if ((nation.economy?.treasury ?? 0) >= cost) {
+    nation.economy.treasury -= cost;
+    guard.unpaid_turns = 0;
+    // Лояльность немного растёт при стабильной оплате
+    guard.loyalty = Math.min(100, guard.loyalty + 0.3);
+  } else {
+    guard.unpaid_turns = (guard.unpaid_turns ?? 0) + 1;
+    // Без зарплаты лояльность быстро падает
+    guard.loyalty = Math.max(0, guard.loyalty - 5);
+    if (isPlayer && guard.unpaid_turns === 1) {
+      addEventLog(
+        `⚔️ Казна не может оплатить гвардию (нужно ${cost} монет). Лояльность гвардии падает.`,
+        'warning'
+      );
+    }
+  }
+
+  // 2. Естественный дрейф лояльности
+  const loyDecay = 0.5 + Math.random() * 1.0;
+  guard.loyalty = Math.max(0, guard.loyalty - loyDecay);
+
+  // 3. Гвардия > 60: подавление уличных беспорядков — счастье −10, revolt_pressure снижается
+  if (guard.size > 60) {
+    if (nation.population) {
+      nation.population.happiness = Math.max(0, (nation.population.happiness ?? 50) - 10);
+    }
+    // Гвардия разгоняет протесты
+    if (nation._revolt_pressure > 0) {
+      nation._revolt_pressure = Math.max(0, nation._revolt_pressure - 15);
+    }
+  }
+
+  // 4. Гвардия > 80 && неоплаченных ходов > 3 → риск coup от гвардии (5%)
+  if (guard.size > 80 && (guard.unpaid_turns ?? 0) > 3 && Math.random() < 0.05) {
+    _triggerGuardCoup(nation, nationId, isPlayer);
+  }
+}
+
+/**
+ * Переворот самой гвардии против тирана.
+ */
+function _triggerGuardCoup(nation, nationId, isPlayer) {
+  const gov = nation.government;
+  gov.stability  = Math.max(0, (gov.stability  ?? 50) - 45);
+  gov.legitimacy = Math.max(0, (gov.legitimacy ?? 50) - 35);
+  if (nation.military) nation.military.loyalty = Math.max(0, (nation.military.loyalty ?? 50) - 30);
+
+  // Гвардия распускается после переворота
+  const guardSize = gov.personal_guard?.size ?? 0;
+  gov.personal_guard = null;
+
+  if (!gov.transition_history) gov.transition_history = [];
+  gov.transition_history.push({
+    turn:  GAME_STATE.turn ?? 0,
+    from:  'tyranny',
+    to:    'tyranny',
+    cause: 'Coup d\'état от личной гвардии из-за невыплаты жалованья',
+  });
+
+  if (isPlayer) {
+    addEventLog(
+      `💀 ПЕРЕВОРОТ ГВАРДИИ! Личная гвардия (${guardSize} чел.), не получавшая жалованья, ` +
+      `восстала против тирана. Стабильность −45, легитимность −35. Гвардия распущена.`,
+      'danger'
+    );
+  }
+}
+
+/**
+ * Нанять личную гвардию.
+ * @param {string} nationId
+ * @param {number} size — размер (10–100)
+ * @returns {{ ok: boolean, reason?: string }}
+ */
+function hirePersonalGuard(nationId, size) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return { ok: false, reason: 'no_nation' };
+  const gov = nation.government;
+  if (gov.type !== 'tyranny') return { ok: false, reason: 'not_tyranny' };
+
+  const sz = Math.max(10, Math.min(100, size ?? 50));
+  const cost = sz * 20; // единовременный найм
+
+  if ((nation.economy?.treasury ?? 0) < cost) {
+    return { ok: false, reason: 'no_gold', needed: cost };
+  }
+
+  nation.economy.treasury -= cost;
+  gov.personal_guard = {
+    size:          sz,
+    loyalty:       70,
+    cost_per_turn: Math.round(sz * 2),
+    unpaid_turns:  0,
+  };
+
+  if (nationId === GAME_STATE.player_nation) {
+    addEventLog(
+      `⚔️ Набрана личная гвардия: ${sz} человек. Стоимость найма: −${cost} монет. ` +
+      `Содержание: ${gov.personal_guard.cost_per_turn} монет/ход.`,
+      'character'
+    );
+    if (typeof renderGovernmentOverlay === 'function') renderGovernmentOverlay();
+  }
+  return { ok: true, size: sz, cost };
+}
+
+/**
+ * Распустить личную гвардию.
+ * @param {string} nationId
+ * @returns {{ ok: boolean }}
+ */
+function disbandPersonalGuard(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation?.government) return { ok: false };
+  const gov = nation.government;
+  if (!gov.personal_guard) return { ok: false, reason: 'no_guard' };
+
+  const sz = gov.personal_guard.size;
+  gov.personal_guard = null;
+
+  if (nationId === GAME_STATE.player_nation) {
+    addEventLog(`⚔️ Личная гвардия (${sz} чел.) распущена. Защита от заговоров снижена.`, 'warning');
+    if (typeof renderGovernmentOverlay === 'function') renderGovernmentOverlay();
+  }
+  return { ok: true };
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// GOV_008: ТАЙНАЯ ПОЛИЦИЯ — доносы раз в 5 ходов
+// ──────────────────────────────────────────────────────────────────────
+
+/**
+ * Тик тайной полиции: раз в 5 ходов — донос.
+ * 15% шанс ложного доноса: казнь невиновного → −15 легитимности + blood_feud клана.
+ */
+function processSecretPoliceTick(nation, nationId, isPlayer) {
+  const gov = nation.government;
+  const sp  = gov.conspiracies?.secret_police;
+  if (!sp?.enabled) return;
+
+  // Списываем содержание
+  const cost = sp.cost_per_turn ?? 200;
+  nation.economy.treasury = Math.max(0, (nation.economy?.treasury ?? 0) - cost);
+
+  const isFalse = Math.random() < 0.15; // 15% ложный донос
+
+  if (isFalse) {
+    // Ложный донос — казним случайного невиновного персонажа
+    const innocents = (nation.characters ?? []).filter(c =>
+      c.alive &&
+      !(c.dialogue?.lts_tags ?? []).includes('[Player_Conspirator]') &&
+      !(c.dialogue?.lts_tags ?? []).includes('[Conspirator]')
+    );
+
+    if (innocents.length > 0) {
+      const victim = innocents[Math.floor(Math.random() * innocents.length)];
+      victim.alive       = false;
+      victim.death_cause = 'executed';
+      victim.death_turn  = GAME_STATE.turn ?? 0;
+
+      // Штраф: −15 легитимности
+      gov.legitimacy = Math.max(0, (gov.legitimacy ?? 50) - 15);
+
+      // Blood feud клана — через conspiracy engine если доступен
+      const clanId = victim.clan_id ?? victim.faction_id ?? null;
+      if (clanId && typeof CONSPIRACY_ENGINE !== 'undefined') {
+        try { CONSPIRACY_ENGINE._apply_blood_feud(nationId, clanId, [victim.name]); } catch (_) {}
+      }
+
+      if (isPlayer) {
+        addEventLog(
+          `🕵️ ЛОЖНЫЙ ДОНОС тайной полиции! ${victim.name} казнён как «заговорщик», ` +
+          `но был невиновен. Легитимность −15. Клан ${clanId ?? victim.name} поклялся отомстить.`,
+          'danger'
+        );
+      }
+    } else if (isPlayer) {
+      // Нет персонажей — просто штраф легитимности
+      gov.legitimacy = Math.max(0, (gov.legitimacy ?? 50) - 8);
+      addEventLog(
+        '🕵️ Ложный донос тайной полиции! Казнён невиновный горожанин. Легитимность −8.',
+        'danger'
+      );
+    }
+
+  } else {
+    // Реальный донос — информация о заговоре или положительный эффект
+    const realDonosMessages = [
+      'Тайная полиция сообщает о тайных встречах недовольных аристократов. Угроза нейтрализована.',
+      'Агенты донесли об иностранном шпионе в городе. Шпион схвачен, связи разорваны.',
+      'Перехвачена переписка с призывом к восстанию. Зачинщики под наблюдением.',
+      'Агент внедрился в подозрительный кружок. Угроза оказалась незначительной.',
+      'Донос о складировании оружия. Обыск выявил нарушителей.',
+    ];
+    const msg = realDonosMessages[Math.floor(Math.random() * realDonosMessages.length)];
+
+    // Небольшой бонус страху (тайная полиция держит народ в страхе)
+    if (gov.power_resource?.type === 'fear') {
+      gov.power_resource.current = Math.min(100, gov.power_resource.current + 3);
+    }
+
+    if (isPlayer) {
+      addEventLog(`🕵️ Тайная полиция: ${msg}`, 'info');
+    }
   }
 }

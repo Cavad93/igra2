@@ -977,6 +977,21 @@ function renderConspiracyBlock(conspiracies, nation) {
     `;
   }).join('');
 
+  // GOV_008: показываем статус гвардии в блоке заговоров
+  const gov   = nation.government;
+  const guard = gov.personal_guard;
+  const guardDefenseHtml = guard && guard.size > 0
+    ? (() => {
+        const defense = Math.round(guard.size * 0.4 * (guard.loyalty / 100));
+        const dColor  = defense > 20 ? '#4CAF50' : defense > 10 ? '#FF9800' : '#f44336';
+        return `<div class="gov-conspiracy-row" style="margin-top:4px">
+          <span class="gov-metric-label">⚔️ Защита гвардии:</span>
+          <div class="bar-container"><div class="bar-fill" style="width:${Math.min(100,defense)}%;background:${dColor}"></div></div>
+          <span style="color:${dColor}"><strong>−${defense} к риску</strong></span>
+        </div>`;
+      })()
+    : '';
+
   return `
     <div class="gov-section">
       <div class="gov-section-title">🗡️ Заговоры</div>
@@ -985,6 +1000,7 @@ function renderConspiracyBlock(conspiracies, nation) {
         <div class="bar-container"><div class="bar-fill" style="width:${Math.min(100,chance*2)}%;background:${riskColor}"></div></div>
         <span style="color:${riskColor}"><strong>${chance}%</strong></span>
       </div>
+      ${guardDefenseHtml}
       ${sp
         ? `<div class="gov-sp-row ${sp.enabled ? 'active' : 'inactive'}">
             🕵️ Тайная полиция: ${sp.enabled
@@ -1024,6 +1040,31 @@ function disableSecretPolice() {
   if (!sp) return;
   sp.enabled = false;
   addEventLog('🕵️ Тайная полиция расформирована.', 'info');
+  renderGovernmentOverlay();
+}
+
+// ── GOV_008: ГВАРДИЯ — кнопки UI ──────────────────────────────────────
+
+function uiHireGuard(size) {
+  const nationId = GAME_STATE.player_nation;
+  const result = hirePersonalGuard(nationId, size);
+  if (!result.ok) {
+    const needed = result.needed ?? '?';
+    const msgs = {
+      no_gold:    `Недостаточно золота. Нужно: ${needed} монет.`,
+      not_tyranny: 'Только тиран может содержать личную гвардию.',
+    };
+    window.UI?.notify(msgs[result.reason] ?? 'Ошибка найма гвардии');
+  }
+  renderGovernmentOverlay();
+}
+
+function uiDisbandGuard() {
+  const nationId = GAME_STATE.player_nation;
+  const result = disbandPersonalGuard(nationId);
+  if (!result.ok) {
+    window.UI?.notify(result.reason === 'no_guard' ? 'Гвардии нет.' : 'Не удалось распустить гвардию.');
+  }
   renderGovernmentOverlay();
 }
 
@@ -1626,6 +1667,8 @@ function buildThroneRoomContent(gov, nation) {
   const guardHtml = guard
     ? (() => {
         const gColor = guard.loyalty > 65 ? '#4CAF50' : guard.loyalty > 35 ? '#FF9800' : '#f44336';
+        const unpaid = guard.unpaid_turns ?? 0;
+        const coupRisk = guard.size > 80 && unpaid > 3;
         return `
           <div class="hall-citadel-guard">
             <div class="hall-citadel-section-title">⚔️ Личная гвардия</div>
@@ -1638,14 +1681,27 @@ function buildThroneRoomContent(gov, nation) {
               <div class="bar-container wide">
                 <div class="bar-fill" style="width:${guard.loyalty}%;background:${gColor}"></div>
               </div>
-              <span class="hall-citadel-val" style="color:${gColor}">${guard.loyalty}</span>
+              <span class="hall-citadel-val" style="color:${gColor}">${Math.round(guard.loyalty)}</span>
             </div>
+            ${unpaid > 0 ? `<div class="hall-citadel-warning">💸 Жалованье не выплачено: ${unpaid} ход(а)</div>` : ''}
             ${guard.loyalty < 30 ? '<div class="hall-citadel-warning">⚠️ Гвардия ненадёжна — риск переворота</div>' : ''}
+            ${coupRisk ? '<div class="hall-citadel-warning" style="color:#ff4444">🗡️ ОПАСНО: гвардия может взбунтоваться!</div>' : ''}
+            ${guard.size > 60 ? '<div class="hall-citadel-info" style="color:#aaa;font-size:11px">🛡 Беспорядки подавляются автоматически (счастье −10)</div>' : ''}
+            <div style="margin-top:6px">
+              <button class="hall-btn" onclick="uiDisbandGuard()" style="background:#5a1010;border-color:#aa3333;font-size:11px;padding:3px 10px">
+                Распустить гвардию
+              </button>
+            </div>
           </div>`;
       })()
     : `<div class="hall-citadel-guard hall-citadel-empty">
         <div class="hall-citadel-section-title">⚔️ Личная гвардия</div>
-        <div class="hall-citadel-guard-empty">Гвардия не набрана</div>
+        <div class="hall-citadel-guard-empty" style="color:#888;margin-bottom:6px">Гвардия не набрана</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+          <button class="hall-btn" onclick="uiHireGuard(25)" style="font-size:11px;padding:3px 10px">Нанять 25 чел. (500 зол.)</button>
+          <button class="hall-btn" onclick="uiHireGuard(50)" style="font-size:11px;padding:3px 10px">Нанять 50 чел. (1000 зол.)</button>
+          <button class="hall-btn" onclick="uiHireGuard(100)" style="font-size:11px;padding:3px 10px">Нанять 100 чел. (2000 зол.)</button>
+        </div>
        </div>`;
 
   // --- Показатель 3: Список казнённых ---
