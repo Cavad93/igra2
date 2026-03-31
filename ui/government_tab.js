@@ -84,7 +84,8 @@ function renderGovernmentTab(nation) {
   if (gov.elections?.enabled) {
     sections.push(renderElectionBlock(gov.elections));
   }
-  if (gov.succession?.tracked) {
+  // GOV_007: для монархий показываем блок "Престолонаследие" всегда при наличии succession
+  if (gov.succession?.tracked || (['monarchy','tyranny','tribal'].includes(gov.type) && gov.succession)) {
     sections.push(renderSuccessionBlock(gov.succession, nation));
   }
   if (gov.conspiracies) {
@@ -798,23 +799,149 @@ function electionBribeCandidate(nationId, candidateId, cost) {
 // 7. ПРЕЕМСТВЕННОСТЬ
 // ──────────────────────────────────────────────────────────────────────
 
+// ── GOV_007: Расширенный блок «Престолонаследие» ────────────────────
 function renderSuccessionBlock(succession, nation) {
-  const heir = succession.heir
+  const nationId  = GAME_STATE.player_nation;
+  const gov       = nation.government;
+  const isMonarch = ['monarchy', 'tyranny', 'tribal'].includes(gov?.type);
+
+  // Найти назначенного наследника среди персонажей
+  const heirChar = succession.heir
     ? (nation.characters ?? []).find(c => c.id === succession.heir)
     : null;
 
+  // Кандидаты-претенденты (GOV_007)
+  const candidates = succession.candidates ?? [];
+
+  // Блок текущего наследника
+  let heirHtml = '';
+  if (heirChar) {
+    heirHtml = `<div class="gov-heir">
+      ${heirChar.portrait ?? '👤'}
+      <strong>${heirChar.name}</strong> · ${heirChar.age ?? '?'} лет
+      ${heirChar.health !== undefined ? `· ❤️ ${heirChar.health}/100` : ''}
+      <span class="gov-tag positive">Наследник</span>
+    </div>`;
+  } else if (succession.regent_active) {
+    heirHtml = `<div class="gov-heir-none warning">
+      ⚖️ Регентство активно — нет законного наследника!
+      <br><span class="dim">Назначьте наследника из претендентов.</span>
+    </div>`;
+  } else {
+    heirHtml = `<div class="gov-heir-none">
+      ⚠️ Наследник не назначен${succession.crisis_if_no_heir ? ' — смерть правителя вызовет кризис!' : ''}
+    </div>`;
+  }
+
+  // Блок претендентов
+  let candidatesHtml = '';
+  if (candidates.length) {
+    const rows = candidates.map(c => {
+      const claimColor = c.claim_strength > 65 ? '#f44336' : c.claim_strength > 40 ? '#FF9800' : '#4CAF50';
+      const loyColor   = c.loyalty > 60 ? '#4CAF50' : c.loyalty > 30 ? '#FF9800' : '#f44336';
+      const isHeir     = succession.heir === c.id;
+      const legitCost  = (gov?.legitimacy ?? 0) < 20;
+      const goldCost   = (nation.economy?.treasury ?? 0) < 50;
+
+      let actionBtns = '';
+      if (isMonarch) {
+        actionBtns = `
+          <div class="gov-succ-actions">
+            ${!isHeir
+              ? `<button class="gov-succ-btn${legitCost ? ' disabled' : ''}"
+                  onclick="doAppointHeir('${c.id}')"
+                  title="${legitCost ? 'Нужно ≥20 легитимности' : 'Назначить наследником (−20 легитимности)'}">
+                  👑 Наследник (−20 лег.)
+                </button>`
+              : `<span class="gov-tag positive">✓ Наследник</span>`
+            }
+            ${!c.married
+              ? `<button class="gov-succ-btn${goldCost ? ' disabled' : ''}"
+                  onclick="doArrangeMarriage('${c.id}')"
+                  title="${goldCost ? 'Нужно ≥50 золота' : 'Укрепить претензию браком (−50 золота)'}">
+                  💍 Женить (−50 зол.)
+                </button>`
+              : `<span class="gov-tag">💍 Женат</span>`
+            }
+          </div>
+        `;
+      }
+
+      return `
+        <div class="gov-succ-candidate${isHeir ? ' heir-candidate' : ''}">
+          <div class="gov-succ-candidate-header">
+            <span class="gov-succ-name">👤 ${c.name}</span>
+            <span class="gov-succ-age dim">${c.age ?? '?'} лет</span>
+          </div>
+          <div class="gov-succ-metrics">
+            <span class="gov-succ-metric-label">Претензия:</span>
+            <div class="bar-container">
+              <div class="bar-fill" style="width:${c.claim_strength}%;background:${claimColor}"></div>
+            </div>
+            <span style="color:${claimColor};font-weight:bold">${c.claim_strength}</span>
+          </div>
+          <div class="gov-succ-metrics">
+            <span class="gov-succ-metric-label">Лояльность:</span>
+            <div class="bar-container">
+              <div class="bar-fill" style="width:${c.loyalty}%;background:${loyColor}"></div>
+            </div>
+            <span style="color:${loyColor}">${c.loyalty}</span>
+          </div>
+          ${c.support_factions?.length
+            ? `<div class="gov-succ-factions dim">Поддержка: ${c.support_factions.join(', ')}</div>`
+            : ''}
+          ${actionBtns}
+        </div>
+      `;
+    }).join('');
+
+    // Предупреждение при 2+ сильных претендентах
+    const strongCount = candidates.filter(c => c.claim_strength > 50).length;
+    const warWarning  = strongCount >= 2
+      ? `<div class="gov-succ-war-warning">⚔️ ${strongCount} претендента с сильными правами — смерть правителя вызовет войну за трон!</div>`
+      : '';
+
+    candidatesHtml = `
+      <div class="gov-succ-candidates">
+        <div class="gov-succ-subtitle">Претенденты на трон:</div>
+        ${warWarning}
+        ${rows}
+      </div>
+    `;
+  }
+
+  // Типы претензий
+  const claimTypesHtml = succession.claim_types?.length
+    ? `<div class="gov-claim-types">Права наследования: ${succession.claim_types.map(c => `<span class="gov-tag">${c}</span>`).join('')}</div>`
+    : '';
+
   return `
     <div class="gov-section">
-      <div class="gov-section-title">👶 Преемственность</div>
-      ${heir
-        ? `<div class="gov-heir">${heir.portrait ?? '👤'} <strong>${heir.name}</strong> · ${heir.age} лет · ❤️ ${heir.health}/100</div>`
-        : `<div class="gov-heir-none">⚠️ Наследник не назначен${succession.crisis_if_no_heir ? ' — смерть правителя вызовет кризис!' : ''}</div>`
-      }
-      ${succession.claim_types?.length
-        ? `<div class="gov-claim-types">Права: ${succession.claim_types.map(c => `<span class="gov-tag">${c}</span>`).join('')}</div>`
-        : ''}
+      <div class="gov-section-title">👑 Престолонаследие</div>
+      ${heirHtml}
+      ${candidatesHtml}
+      ${claimTypesHtml}
     </div>
   `;
+}
+
+// Обёртки вызовов из onclick — работают с player nation
+function doAppointHeir(candidateId) {
+  const result = appointSuccessionHeir(GAME_STATE.player_nation, candidateId);
+  if (!result.ok) {
+    const msgs = { no_legitimacy: 'Недостаточно легитимности (нужно 20)', no_candidate: 'Претендент не найден', no_succession: 'Нет системы наследования' };
+    window.UI?.notify(msgs[result.reason] ?? 'Ошибка назначения');
+  }
+  renderGovernmentOverlay();
+}
+
+function doArrangeMarriage(candidateId) {
+  const result = arrangeMarriageForClaimant(GAME_STATE.player_nation, candidateId);
+  if (!result.ok) {
+    const msgs = { no_gold: 'Недостаточно золота (нужно 50)', no_candidate: 'Претендент не найден' };
+    window.UI?.notify(msgs[result.reason] ?? 'Ошибка');
+  }
+  renderGovernmentOverlay();
 }
 
 // ──────────────────────────────────────────────────────────────────────

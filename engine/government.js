@@ -91,6 +91,11 @@ function processGovernmentTick(nationId) {
     processTheocracyTick(nation, nationId, isPlayer);
   }
 
+  // GOV_007: Инициализируем кандидатов-претендентов для монархий (один раз)
+  if (['monarchy', 'tyranny', 'tribal'].includes(gov.type) && gov.succession?.tracked) {
+    initSuccessionCandidates(nationId);
+  }
+
   // 6.6. Демократия — народная популярность и гражданские свободы
   if (gov.type === 'democracy') {
     processDemocracyTick(nation, nationId, isPlayer);
@@ -256,51 +261,248 @@ function triggerSuccessionCrisis(nationId) {
 
   if (!gov.succession?.tracked) return;
 
-  // Есть ли наследник?
-  const heir = (nation.characters ?? []).find(c =>
-    c.alive && (c.wants ?? []).some(w => String(w).includes('наследник') || String(w).includes('heir'))
-  );
+  // GOV_007: Сначала проверяем массив кандидатов-претендентов
+  const succCandidates = gov.succession.candidates ?? [];
+  const strongCandidates = succCandidates.filter(c => (c.claim_strength ?? 0) > 50);
 
-  if (heir) {
-    // Плавная передача власти
+  if (strongCandidates.length >= 2) {
+    // Война за престол
+    gov.stability  = Math.max(0, (gov.stability  ?? 50) - 40);
+    gov.legitimacy = Math.max(0, (gov.legitimacy ?? 50) - 30);
+    if (nation.military) nation.military.loyalty = Math.max(0, (nation.military.loyalty ?? 50) - 20);
+    // Армия выбирает сторону случайным образом
+    const winner = strongCandidates[Math.floor(Math.random() * strongCandidates.length)];
+    const losers = strongCandidates.filter(c => c !== winner);
     gov.ruler = gov.ruler ?? {};
-    gov.ruler.name = heir.name;
-    gov.ruler.character_id = heir.id;
-    gov.legitimacy = Math.max(20, (gov.legitimacy ?? 50) - 10);
+    gov.ruler.name = winner.name;
+    if (winner.id) gov.ruler.character_id = winner.id;
+    // Убираем победившего из претендентов, остальные сильные уходят в оппозицию
+    gov.succession.candidates = succCandidates.filter(c => c !== winner);
+    gov.succession.heir = null;
     if (isPlayer) {
-      addEventLog(`👑 ${heir.name} занял трон. Переход власти прошёл без потрясений.`, 'character');
+      const loserNames = losers.map(c => c.name).join(' и ');
+      addEventLog(
+        `⚔️ ВОЙНА ЗА ПРЕСТОЛ! ${strongCandidates.map(c => c.name).join(' и ')} \
+претендовали на корону. После кровопролитной борьбы ${winner.name} занял трон. \
+${loserNames ? loserNames + ' уходят в оппозицию. ' : ''}\
+Стабильность −40, легитимность −30.`,
+        'danger'
+      );
     }
     return;
   }
 
-  // Нет наследника → кризис
+  if (strongCandidates.length === 1) {
+    // Единственный сильный претендент — автоматическое наследование
+    const claimant = strongCandidates[0];
+    gov.stability  = Math.max(0, (gov.stability  ?? 50) - 15);
+    gov.legitimacy = Math.max(0, (gov.legitimacy ?? 50) - 10);
+    gov.ruler = gov.ruler ?? {};
+    gov.ruler.name = claimant.name;
+    if (claimant.id) gov.ruler.character_id = claimant.id;
+    gov.succession.candidates = succCandidates.filter(c => c !== claimant);
+    gov.succession.heir = null;
+    if (isPlayer) {
+      addEventLog(
+        `👑 ${claimant.name} унаследовал трон — единственный законный претендент. \
+Переход власти прошёл без крупных столкновений. Стабильность −15.`,
+        'character'
+      );
+    }
+    return;
+  }
+
+  // Проверяем старый стиль — назначенный наследник через wants
+  const oldHeir = (nation.characters ?? []).find(c =>
+    c.alive && (c.wants ?? []).some(w => String(w).includes('наследник') || String(w).includes('heir'))
+  );
+
+  if (oldHeir) {
+    gov.ruler = gov.ruler ?? {};
+    gov.ruler.name = oldHeir.name;
+    gov.ruler.character_id = oldHeir.id;
+    gov.legitimacy = Math.max(20, (gov.legitimacy ?? 50) - 10);
+    if (isPlayer) {
+      addEventLog(`👑 ${oldHeir.name} занял трон. Переход власти прошёл без потрясений.`, 'character');
+    }
+    return;
+  }
+
+  // Нет претендентов → кризис регентства
   gov.stability  = Math.max(0, (gov.stability  ?? 50) - 25);
   gov.legitimacy = Math.max(0, (gov.legitimacy ?? 50) - 20);
-  nation.military.loyalty = Math.max(0, (nation.military.loyalty ?? 50) - 15);
+  if (nation.military) nation.military.loyalty = Math.max(0, (nation.military.loyalty ?? 50) - 15);
 
-  if (isPlayer) {
-    addEventLog(
-      '💀 КРИЗИС НАСЛЕДОВАНИЯ: правитель мёртв, наследника нет! '
-      + 'Стабильность −25, легитимность −20, лояльность армии −15. '
-      + 'Фракции тянутся к власти.',
-      'danger'
-    );
-  }
+  // Пробуем назначить регента из советников
+  const advisors = (nation.characters ?? []).filter(c => c.alive)
+    .sort((a, b) => (b.traits?.loyalty ?? 0) - (a.traits?.loyalty ?? 0));
 
-  // Назначаем нового правителя из персонажей с высоким честолюбием
-  const candidates = (nation.characters ?? [])
-    .filter(c => c.alive)
-    .sort((a, b) => (b.traits?.ambition ?? 0) - (a.traits?.ambition ?? 0));
-
-  if (candidates.length) {
-    const usurper = candidates[0];
+  if (advisors.length) {
+    const regent = advisors[0];
     gov.ruler = gov.ruler ?? {};
-    gov.ruler.name         = usurper.name;
-    gov.ruler.character_id = usurper.id;
+    gov.ruler.name = `Регент ${regent.name}`;
+    gov.ruler.character_id = regent.id;
+    gov.succession.regent_active = true;
     if (isPlayer) {
-      addEventLog(`⚔️ ${usurper.name} захватил власть силой. Государство нестабильно.`, 'danger');
+      addEventLog(
+        `⚖️ КРИЗИС РЕГЕНТСТВА: правитель мёртв, наследника нет! \
+${regent.name} назначен временным регентом. \
+Стабильность −25, легитимность −20. Немедленно назначьте наследника!`,
+        'danger'
+      );
+    }
+  } else {
+    if (isPlayer) {
+      addEventLog(
+        '💀 КРИЗИС НАСЛЕДОВАНИЯ: правитель мёртв, наследника нет! '
+        + 'Стабильность −25, легитимность −20, лояльность армии −15. '
+        + 'Фракции тянутся к власти.',
+        'danger'
+      );
+    }
+    // Узурпатор из самых честолюбивых
+    const usurpers = (nation.characters ?? []).filter(c => c.alive)
+      .sort((a, b) => (b.traits?.ambition ?? 0) - (a.traits?.ambition ?? 0));
+    if (usurpers.length) {
+      const usurper = usurpers[0];
+      gov.ruler = gov.ruler ?? {};
+      gov.ruler.name         = usurper.name;
+      gov.ruler.character_id = usurper.id;
+      if (isPlayer) {
+        addEventLog(`⚔️ ${usurper.name} захватил власть силой. Государство нестабильно.`, 'danger');
+      }
     }
   }
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// GOV_007: ПРЕТЕНДЕНТЫ НА ТРОН
+// ──────────────────────────────────────────────────────────────────────
+
+// Имена для автогенерации претендентов по культуре нации
+const SUCCESSION_NAMES_BY_CULTURE = {
+  greek:   ['Антиох', 'Птолемей', 'Деметрий', 'Пердикка', 'Лисандр', 'Никомед', 'Аттал'],
+  roman:   ['Марк', 'Луций', 'Гней', 'Публий', 'Тит', 'Гай', 'Квинт'],
+  persian: ['Артабаз', 'Мазей', 'Фрада', 'Оронт', 'Митридат', 'Арсам'],
+  celtic:  ['Верцинготорикс', 'Думнорикс', 'Амбиорикс', 'Коммий', 'Кассивелаун'],
+  default: ['Арион', 'Корвус', 'Мелас', 'Таурос', 'Дракон', 'Силас', 'Аркас'],
+};
+
+/**
+ * Инициализирует массив кандидатов-претендентов для монархии.
+ * Вызывается один раз, если candidates ещё не задан.
+ */
+function initSuccessionCandidates(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return;
+  const gov = nation.government;
+  if (!gov?.succession) return;
+  if (gov.succession.candidates) return; // уже инициализировано
+
+  const chars  = (nation.characters ?? []).filter(c => c.alive && c.id !== gov.ruler?.character_id);
+  const culture = nation.culture ?? 'default';
+  const namePool = SUCCESSION_NAMES_BY_CULTURE[culture] ?? SUCCESSION_NAMES_BY_CULTURE.default;
+
+  // 1-3 претендента
+  const count = Math.min(3, Math.max(1, Math.floor(Math.random() * 3) + 1));
+  const candidates = [];
+
+  for (let i = 0; i < count; i++) {
+    if (chars[i]) {
+      candidates.push({
+        id:               chars[i].id,
+        name:             chars[i].name,
+        claim_strength:   40 + Math.floor(Math.random() * 35),
+        support_factions: [],
+        age:              chars[i].age ?? (18 + Math.floor(Math.random() * 35)),
+        loyalty:          chars[i].traits?.loyalty ?? (35 + Math.floor(Math.random() * 40)),
+      });
+    } else {
+      const name = namePool[Math.floor(Math.random() * namePool.length)];
+      candidates.push({
+        id:               `cand_${nationId}_${i}_${GAME_STATE.turn ?? 0}`,
+        name:             name,
+        claim_strength:   25 + Math.floor(Math.random() * 50),
+        support_factions: [],
+        age:              18 + Math.floor(Math.random() * 40),
+        loyalty:          25 + Math.floor(Math.random() * 50),
+      });
+    }
+  }
+
+  gov.succession.candidates = candidates;
+}
+
+/**
+ * Назначает претендента официальным наследником.
+ * Стоимость: 20 легитимности.
+ * @param {string} nationId
+ * @param {string} candidateId
+ * @returns {{ ok: boolean, reason?: string }}
+ */
+function appointSuccessionHeir(nationId, candidateId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return { ok: false, reason: 'no_nation' };
+  const gov = nation.government;
+  if (!gov?.succession?.tracked) return { ok: false, reason: 'no_succession' };
+
+  const COST = 20;
+  if ((gov.legitimacy ?? 0) < COST) return { ok: false, reason: 'no_legitimacy' };
+
+  const candidates = gov.succession.candidates ?? [];
+  const candidate  = candidates.find(c => c.id === candidateId);
+  if (!candidate) return { ok: false, reason: 'no_candidate' };
+
+  gov.legitimacy = Math.max(0, (gov.legitimacy ?? 50) - COST);
+  gov.succession.heir = candidateId;
+  candidate.claim_strength = Math.min(100, (candidate.claim_strength ?? 50) + 20);
+  // Снимаем флаг регентства если был
+  gov.succession.regent_active = false;
+
+  if (nationId === GAME_STATE.player_nation) {
+    addEventLog(
+      `👑 ${candidate.name} торжественно провозглашён наследником. \
+Претензия +20. Легитимность −${COST}.`,
+      'character'
+    );
+    if (typeof renderGovernmentOverlay === 'function') renderGovernmentOverlay();
+  }
+  return { ok: true };
+}
+
+/**
+ * Организует брак претендента, укрепляя его права.
+ * Стоимость: 50 золота.
+ * @param {string} nationId
+ * @param {string} candidateId
+ * @returns {{ ok: boolean, reason?: string }}
+ */
+function arrangeMarriageForClaimant(nationId, candidateId) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return { ok: false, reason: 'no_nation' };
+  const gov = nation.government;
+
+  const candidates = gov.succession?.candidates ?? [];
+  const candidate  = candidates.find(c => c.id === candidateId);
+  if (!candidate) return { ok: false, reason: 'no_candidate' };
+
+  const GOLD_COST = 50;
+  if ((nation.economy?.treasury ?? 0) < GOLD_COST) return { ok: false, reason: 'no_gold' };
+
+  nation.economy.treasury -= GOLD_COST;
+  candidate.claim_strength = Math.min(100, (candidate.claim_strength ?? 50) + 15);
+  candidate.loyalty        = Math.min(100, (candidate.loyalty ?? 50) + 10);
+  candidate.married        = true;
+
+  if (nationId === GAME_STATE.player_nation) {
+    addEventLog(
+      `💍 Брак ${candidate.name} заключён. Претензия на трон +15, лояльность +10. \
+Стоимость: −${GOLD_COST} золота.`,
+      'character'
+    );
+    if (typeof renderGovernmentOverlay === 'function') renderGovernmentOverlay();
+  }
+  return { ok: true };
 }
 
 // ──────────────────────────────────────────────────────────────────────
