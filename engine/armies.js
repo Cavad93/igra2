@@ -36,9 +36,9 @@ const ARMY_MOVE = {
   SHIP_SPEEDS: { triremes: 2.5, quinqueremes: 1.5, light_ships: 3.0 },
 
   // Усталость
-  FATIGUE_MARCH:        12,   // за каждый пройденный регион
-  FATIGUE_REST_FRIENDLY: -15, // за ход отдыха на дружественной территории
-  FATIGUE_REST_ENEMY:    -5,  // за ход отдыха на вражеской
+  FATIGUE_MARCH:        14,   // за каждый пройденный регион (MIL_009)
+  FATIGUE_REST_FRIENDLY: -10, // за ход отдыха на дружественной территории (MIL_009)
+  FATIGUE_REST_ENEMY:    -3,  // за ход отдыха на вражеской (MIL_009)
 
   // Снабжение (в ход) — базовые дельты до учёта ёмкости региона
   SUPPLY_HOME:      12,   // дома: ускоренное пополнение
@@ -46,7 +46,8 @@ const ARMY_MOVE = {
   SUPPLY_NEUTRAL:   -5,
   SUPPLY_ENEMY:    -10,
 
-  ATTRITION_RATE: 0.02, // 2%/ход при supply < 30
+  ATTRITION_RATE:             0.025, // 2.5%/ход при критическом supply (MIL_009)
+  SUPPLY_ATTRITION_THRESHOLD: 50,   // порог начала атриции (MIL_009)
 
   // ── Ёмкость провианта по типу местности (макс. солдат без штрафа) ──
   // Превышение → расход провианта пропорционально перегрузке
@@ -602,12 +603,39 @@ function _processSupply(army) {
     if (logPen > 0) army.supply = Math.max(0, army.supply - logPen);
   }
 
-  if (army.supply < 30) {
-    const rate = ARMY_MOVE.ATTRITION_RATE * (1 - army.supply / 30);
+  // ── MIL_009: Атриция от истощения ────────────────────────────────────
+  const THRESH = ARMY_MOVE.SUPPLY_ATTRITION_THRESHOLD;
+  if (army.supply < THRESH) {
+    const rate             = ARMY_MOVE.ATTRITION_RATE * (1 - army.supply / THRESH);
+    const mercFactor       = 0.5; // наёмники теряют вдвое меньше — профессионалы (MIL_009)
+    const infBefore        = army.units.infantry;
+    const cavBefore        = army.units.cavalry;
+    const mercBefore       = army.units.mercenaries;
+
     army.units.infantry    = Math.max(0, Math.round(army.units.infantry    * (1 - rate * 0.6)));
     army.units.cavalry     = Math.max(0, Math.round(army.units.cavalry     * (1 - rate * 0.3)));
-    army.units.mercenaries = Math.max(0, Math.round(army.units.mercenaries * (1 - rate * 0.6)));
+    army.units.mercenaries = Math.max(0, Math.round(army.units.mercenaries * (1 - rate * 0.6 * mercFactor)));
 
+    const totalLosses = (infBefore  - army.units.infantry)
+                      + (cavBefore  - army.units.cavalry)
+                      + (mercBefore - army.units.mercenaries);
+
+    // Штраф морали при голодании (MIL_009)
+    if (army.supply < 30 && totalLosses > 0) {
+      army.morale = Math.max(0, (army.morale ?? 50) - 2);
+    }
+
+    // Лог если потери значительные (MIL_009)
+    if (totalLosses > 0 && rate > 0.015) {
+      if (typeof addEventLog === 'function') {
+        addEventLog(
+          `${army.name} несёт потери от истощения (${totalLosses} бойцов)`,
+          'military'
+        );
+      }
+    }
+
+    // Старое предупреждение для игрока при критическом запасе
     if (army.nation === GAME_STATE.player_nation && army.supply < 10 && GAME_STATE.turn % 3 === 0) {
       if (typeof addEventLog === 'function')
         addEventLog(`⚠️ ${army.name}: критическая нехватка снабжения! Потери от истощения.`, 'warning');
