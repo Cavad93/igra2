@@ -39,8 +39,9 @@ function setupMap() {
   GS.regions['forest_enemy']= { terrain:'forest',  mapType:'Land', name:'Enemy Forest',connections:['forest_pos'],                              nation:'carthage',fortress_level:2, garrison:300, population:2000, garrison_supply:25 };
   GS.regions['home_region'] = { terrain:'plains',  mapType:'Land', name:'Home',        connections:['forest_pos','hills_pos','plains_pos'],      nation:'rome',    fortress_level:0, garrison:0,   population:10000};
 
-  GS.nations['rome']     = { name:'Rome',     capital:'home_region', military:{ at_war_with:['carthage'] }, regions:['forest_pos','hills_pos','plains_pos','home_region'] };
-  GS.nations['carthage'] = { name:'Carthage', capital:'enemy_open',  military:{ at_war_with:['rome'] },     regions:['enemy_open','forest_enemy'] };
+  // MIL_010: use non-adjacent capitals so capital_emergency/capitalBonus don't interfere
+  GS.nations['rome']     = { name:'Rome',     capital:'distant_rome_cap', military:{ at_war_with:['carthage'] }, regions:['forest_pos','hills_pos','plains_pos','home_region'] };
+  GS.nations['carthage'] = { name:'Carthage', capital:'distant_cart_cap', military:{ at_war_with:['rome'] },     regions:['enemy_open','forest_enemy'] };
 }
 setupMap();
 

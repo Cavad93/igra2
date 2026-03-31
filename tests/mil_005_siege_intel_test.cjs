@@ -40,8 +40,9 @@ function setupMapA() {
   GS.regions['r_near']       = { terrain:'plains',    mapType:'Land', name:'Near',      connections:['army_pos','siege_region'], nation:'rome',   fortress_level:0, garrison:0,    population:0     };
   GS.regions['siege_region'] = { terrain:'mountains', mapType:'Land', name:'Fort Ct',   connections:['r_near'], nation:'carthage',  fortress_level:3, garrison:2000, population:1000  };
   GS.regions['home_region']  = { terrain:'plains',    mapType:'Land', name:'Roman Home',connections:['army_pos'], nation:'rome',   fortress_level:1, garrison:500,  population:20000 };
-  GS.nations['rome']     = { name:'Rome',     capital:'home_region', military:{ at_war_with:['carthage'] } };
-  GS.nations['carthage'] = { name:'Carthage', capital:'distant_cap', military:{ at_war_with:['rome']     } };
+  // MIL_010: use non-adjacent capitals so capital_emergency doesn't override siege tests
+  GS.nations['rome']     = { name:'Rome',     capital:'distant_rome_cap', military:{ at_war_with:['carthage'] } };
+  GS.nations['carthage'] = { name:'Carthage', capital:'distant_cap',      military:{ at_war_with:['rome']     } };
 }
 
 // ──────────────────────────────────────────────────────────────────────

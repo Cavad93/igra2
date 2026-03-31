@@ -156,6 +156,12 @@ function utilityAIDecide(army, order) {
     }
   }
 
+  // ── 2в. MIL_010: Экстренная защита родной столицы ────────────────────
+  {
+    const capitalOverride = _emergencyCapitalDefense(army, enemies);
+    if (capitalOverride) return capitalOverride;
+  }
+
   // ── 3. Набираем кандидатов и считаем score для каждого ───────────────
   const candidates = [];
 
@@ -427,7 +433,8 @@ function _scoreAttack(army, targetRegion, nearby, mods, readiness, enemyArmies, 
   const popBonus = Math.min(targetRegion.population / 15000, 1.0) * UAI_W.population_bonus;
 
   // Бонус за столицу: политически и стратегически важнейшая цель
-  const capitalBonus = capitals?.has(targetRegion.id) ? 22 : 0;
+  // MIL_010: повышен с 22 до 55 — столица есть критическая цель
+  const capitalBonus = capitals?.has(targetRegion.id) ? 55 : 0;
 
   let score = valueScore + weakScore + armyThreatPenalty + fortPenalty + distPenalty + readScore + popBonus + capitalBonus;
 
@@ -1205,4 +1212,69 @@ function _traitUniqueActions(army, char, terrain, allyInfo, nearby, activeSiege,
   }
 
   return result;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// MIL_010 — Экстренная защита столицы
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Проверяет, угрожает ли вражеская армия родной столице нации.
+ * Если вражеская армия находится в ≤2 регионах от столицы — возвращает
+ * override-решение с score=999 (защита столицы приоритетнее всего).
+ *
+ * @param {object} army
+ * @param {string[]} enemies — список вражеских наций
+ * @returns {{ action, target_id, score, reasoning } | null}
+ */
+function _emergencyCapitalDefense(army, enemies) {
+  const nation    = GAME_STATE.nations?.[army.nation];
+  const capitalId = nation?.capital;
+  if (!capitalId) return null;
+
+  // Все армии врагов в игре
+  const allArmies = GAME_STATE.armies ?? [];
+  for (const ea of allArmies) {
+    if (ea.state === 'disbanded') continue;
+    if (!enemies.includes(ea.nation)) continue;
+
+    // Расстояние от вражеской армии до столицы через BFS
+    const dist = _bfsDistanceGlobal(ea.position, capitalId);
+    if (dist !== null && dist <= 2) {
+      // Враг угрожает столице — экстренная защита
+      const moveTarget = army.position !== capitalId ? capitalId : null;
+      return {
+        action:    moveTarget ? 'move' : 'hold',
+        target_id: moveTarget,
+        score:     999,
+        reasoning: `capital_emergency:enemy_${dist}_away`,
+      };
+    }
+  }
+  return null;
+}
+
+/**
+ * BFS расстояние между двумя регионами по глобальной карте (GAME_STATE.regions).
+ * Максимум 6 шагов.
+ * @returns {number|null} расстояние или null если не достижимо за 6 шагов
+ */
+function _bfsDistanceGlobal(fromId, toId) {
+  if (fromId === toId) return 0;
+  const regions = GAME_STATE.regions ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS : {});
+  const visited = new Set([fromId]);
+  let frontier  = [fromId];
+  for (let depth = 1; depth <= 6; depth++) {
+    const next = [];
+    for (const rid of frontier) {
+      const conns = regions[rid]?.connections ?? [];
+      for (const cid of conns) {
+        if (cid === toId) return depth;
+        if (!visited.has(cid)) { visited.add(cid); next.push(cid); }
+      }
+    }
+    if (next.length === 0) break;
+    frontier = next;
+  }
+  return null;
 }

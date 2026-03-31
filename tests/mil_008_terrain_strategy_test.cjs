@@ -189,8 +189,10 @@ console.log('\n=== T06: hold on hills with incoming enemy — defender bonus ===
   console.log(`    result: action=${res.action} reasoning="${res.reasoning}"`);
   ok('T06: no crash', res !== null && res.action !== undefined);
   if (res.action === 'hold') {
-    ok('T06 hold: terrain_advantage:defender_hills in reasoning',
-       res.reasoning.includes('terrain_advantage:defender_hills'));
+    // MIL_010: capital_emergency takes precedence over terrain_advantage when enemy is adjacent to capital
+    ok('T06 hold: terrain_advantage or capital_emergency in reasoning',
+       res.reasoning.includes('terrain_advantage:defender_hills') ||
+       res.reasoning.includes('capital_emergency'));
   } else {
     ok('T06: non-hold action — no crash', true);
   }
@@ -219,8 +221,10 @@ console.log('\n=== T07: hold on mountains with incoming enemy ===');
   console.log(`    result: action=${res.action} reasoning="${res.reasoning}"`);
   ok('T07: no crash', res !== null);
   if (res.action === 'hold') {
-    ok('T07 hold: terrain_advantage:defender_hills in reasoning',
-       res.reasoning.includes('terrain_advantage:defender_hills'));
+    // MIL_010: capital_emergency takes precedence over terrain_advantage when enemy is adjacent to capital
+    ok('T07 hold: terrain_advantage or capital_emergency in reasoning',
+       res.reasoning.includes('terrain_advantage:defender_hills') ||
+       res.reasoning.includes('capital_emergency'));
   } else {
     ok('T07: non-hold action — accepted', true);
   }
