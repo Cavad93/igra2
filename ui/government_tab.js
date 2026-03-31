@@ -1825,6 +1825,45 @@ function buildPeoplesAssemblyContent(gov, nation) {
   const happy = pop.happiness ?? 50;
   const prof  = pop.by_profession ?? {};
 
+  // ─── Блок популярности (уникально для демократии) ───────────────────
+  const popularity   = gov.popularity ?? Math.round(happy * 0.8 + 20);
+  const popColor     = popularity >= 60 ? '#4CAF50' : popularity >= 30 ? '#FF9800' : '#f44336';
+  const popStatus    = popularity >= 60 ? 'Народ доволен' : popularity >= 30 ? 'Недовольство растёт' : 'УГРОЗА ОСТРАКИЗМА!';
+  const warThreshold = gov._war_vote_threshold ?? 60;
+
+  const ostracismWarning = gov._ostracism_warning
+    ? `<div class="hall-democracy-ostracism-warn">
+        ⚠️ Угроза остракизма «${gov._ostracism_warning.leader}»!
+        Осталось: ${Math.max(0, 5 - ((GAME_STATE.turn ?? 0) - (gov._ostracism_warning.started_turn ?? 0)))} ход(а)
+       </div>`
+    : '';
+
+  const ostracismHistory = (gov.ostracism_history ?? []).slice(-3).map(o =>
+    `<div class="hall-democracy-exile">🗳️ ${o.leader} изгнан на ходу ${o.turn}</div>`
+  ).join('');
+
+  const popularityBlock = `
+    <div class="hall-democracy-metrics">
+      <div class="hall-democracy-metric">
+        <span class="hall-democracy-metric-label">🗳️ Народная популярность</span>
+        <div class="bar-container wide">
+          <div class="bar-fill" style="width:${popularity}%;background:${popColor}"></div>
+        </div>
+        <span style="color:${popColor}">${popularity}% — ${popStatus}</span>
+      </div>
+      <div class="hall-democracy-metric" style="margin-top:6px">
+        <span class="hall-democracy-metric-label">⚔️ Порог военного голосования</span>
+        <span style="color:#FF9800;font-size:0.95em">${warThreshold}% (труднее объявить войну)</span>
+      </div>
+      <div class="hall-democracy-metric" style="margin-top:4px">
+        <span class="hall-democracy-metric-label">📈 Гражданские свободы</span>
+        <span style="color:#4CAF50;font-size:0.9em">+5 торговля · +0.05% рост населения</span>
+      </div>
+      ${ostracismWarning}
+      ${ostracismHistory}
+    </div>
+  `;
+
   const groups = [
     { id:'farmers',   icon:'🌾', name:'Земледельцы', size:prof.farmers??0,   want:'land_reform',     fear:'drought'       },
     { id:'craftsmen', icon:'⚒️', name:'Ремесленники',size:prof.craftsmen??0, want:'fair_wages',      fear:'import_goods'  },
@@ -1833,9 +1872,7 @@ function buildPeoplesAssemblyContent(gov, nation) {
     { id:'clergy',    icon:'🏛️', name:'Жрецы',       size:prof.clergy??0,    want:'temple_funds',    fear:'sacrilege'     },
   ].filter(g => g.size > 0);
 
-  if (!groups.length) return renderEmptyHall('Нет данных о населении.');
-
-  const rows = groups.map(g => {
+  const rows = !groups.length ? '' : groups.map(g => {
     const sat = happy + Math.round((Math.random() * 10 - 5));
     const satColor = sat > 65 ? '#4CAF50' : sat > 40 ? '#FF9800' : '#f44336';
     const fmtSize = g.size > 999999 ? (g.size/1000000).toFixed(1)+'М' : g.size > 999 ? Math.round(g.size/1000)+'К' : g.size;
@@ -1856,9 +1893,14 @@ function buildPeoplesAssemblyContent(gov, nation) {
       </div>`;
   }).join('');
 
+  const groupsHtml = rows
+    ? `<div class="hall-democracy-groups">${rows}</div>`
+    : `<div class="hall-empty">Нет данных о профессиях населения.</div>`;
+
   return `
+    ${popularityBlock}
     <div class="hall-inner-circle">🗳️ Голосуют блоки граждан</div>
-    <div class="hall-democracy-groups">${rows}</div>
+    ${groupsHtml}
   `;
 }
 

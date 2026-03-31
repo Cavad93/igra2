@@ -91,6 +91,11 @@ function processGovernmentTick(nationId) {
     processTheocracyTick(nation, nationId, isPlayer);
   }
 
+  // 6.6. Демократия — народная популярность и гражданские свободы
+  if (gov.type === 'democracy') {
+    processDemocracyTick(nation, nationId, isPlayer);
+  }
+
   // 7. Переход между формами правления
   if (gov.active_transition?.status === 'in_progress') {
     processTransition(nationId);
@@ -866,6 +871,122 @@ async function _triggerOracleRoll(nation, nationId, isPlayer) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
+// ДЕМОКРАТИЯ: народная популярность, остракизм, гражданские свободы
+// ──────────────────────────────────────────────────────────────────────
+
+function processDemocracyTick(nation, nationId, isPlayer) {
+  const gov = nation.government;
+  const pop = nation.population;
+
+  // 1. Инициализируем popularity если нет (0-100)
+  if (gov.popularity === undefined || gov.popularity === null) {
+    gov.popularity = Math.min(100, Math.max(0, Math.round((pop?.happiness ?? 50) * 0.8 + 20)));
+  }
+
+  // 2. Popularity дрейфует к среднему счастья и легитимности с шумом
+  const happiness  = pop?.happiness  ?? 50;
+  const legitimacy = gov.legitimacy  ?? 50;
+  const target     = Math.round(happiness * 0.6 + legitimacy * 0.4);
+  const delta      = (target - gov.popularity) * 0.12 + (Math.random() - 0.5) * 4;
+  gov.popularity   = Math.min(100, Math.max(0, Math.round(gov.popularity + delta)));
+
+  // 3. Гражданские свободы: бонус роста населения (+0.0005) и торговли (+5)
+  if (pop && typeof pop.growth_rate === 'number') {
+    pop.growth_rate = Math.min(0.008, pop.growth_rate + 0.0005);
+  }
+  gov._trade_bonus = (gov._trade_bonus ?? 0) === 0 ? 5 : gov._trade_bonus; // один раз
+
+  // 4. Порог военного голосования — 60%
+  gov._war_vote_threshold = 60;
+
+  // 5. Угроза остракизма при popularity < 30
+  if (gov.popularity < 30) {
+    if (!gov._ostracism_warning) {
+      gov._ostracism_warning = {
+        started_turn: GAME_STATE.turn ?? 0,
+        leader:       gov.ruler?.name ?? 'Правитель',
+      };
+      if (isPlayer) {
+        addEventLog(
+          `⚠️ Народная популярность упала ниже 30%! Граждане требуют остракизма ` +
+          `«${gov._ostracism_warning.leader}». Ещё 5 ходов — и лидер будет изгнан.`,
+          'warning'
+        );
+      }
+    } else {
+      const warnTurns = (GAME_STATE.turn ?? 0) - (gov._ostracism_warning.started_turn ?? 0);
+      if (isPlayer && warnTurns > 0 && warnTurns % 2 === 0) {
+        addEventLog(
+          `🗳️ Остракизм: до изгнания «${gov._ostracism_warning.leader}» осталось ` +
+          `${Math.max(0, 5 - warnTurns)} ход(а). Популярность: ${gov.popularity}%.`,
+          'warning'
+        );
+      }
+      if (warnTurns >= 5) {
+        _triggerOstracism(nation, nationId, isPlayer);
+        gov._ostracism_warning = null;
+      }
+    }
+  } else {
+    gov._ostracism_warning = null;
+  }
+
+  // 6. Победы в войне поднимают популярность
+  const atWarNow = nation.military?.at_war_with ?? [];
+  if ((gov._prev_at_war ?? []).length > atWarNow.length) {
+    gov.popularity = Math.min(100, gov.popularity + 10);
+    if (isPlayer) addEventLog('🗳️ Военная победа укрепляет народную поддержку (+10 популярности).', 'positive');
+  }
+  gov._prev_at_war = [...atWarNow];
+}
+
+/**
+ * Остракизм: лидер изгоняется на 10 ходов народным собранием.
+ */
+function _triggerOstracism(nation, nationId, isPlayer) {
+  const gov    = nation.government;
+  const leader = gov._ostracism_warning?.leader ?? gov.ruler?.name ?? 'Правитель';
+
+  gov.legitimacy = Math.max(0, (gov.legitimacy ?? 50) - 20);
+  gov.stability  = Math.max(0, (gov.stability  ?? 50) - 15);
+  gov.popularity = Math.min(100, (gov.popularity ?? 30) + 25); // народ доволен
+
+  if (!gov.ostracism_history) gov.ostracism_history = [];
+  gov.ostracism_history.push({
+    turn:         GAME_STATE.turn ?? 0,
+    leader,
+    returns_turn: (GAME_STATE.turn ?? 0) + 10,
+  });
+
+  // Сменить правителя на следующего кандидата
+  const candidates = (nation.characters ?? []).filter(
+    c => c.alive && c.id !== gov.ruler?.character_id
+  ).sort((a, b) => (b.traits?.ambition ?? 0) - (a.traits?.ambition ?? 0));
+
+  if (candidates.length) {
+    gov.ruler = gov.ruler ?? {};
+    gov.ruler.name         = candidates[0].name;
+    gov.ruler.character_id = candidates[0].id;
+  }
+
+  if (!gov.transition_history) gov.transition_history = [];
+  gov.transition_history.push({
+    turn:  GAME_STATE.turn ?? 0,
+    from:  'democracy',
+    to:    'democracy',
+    cause: `Остракизм: ${leader} изгнан народным собранием`,
+  });
+
+  if (isPlayer) {
+    addEventLog(
+      `🗳️ ОСТРАКИЗМ! «${leader}» изгнан народным собранием на 10 ходов. ` +
+      `Легитимность −20, стабильность −15. Народная поддержка восстановлена.`,
+      'danger'
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────
 // КАСТОМНЫЕ МЕХАНИКИ
 // ──────────────────────────────────────────────────────────────────────
 
@@ -955,7 +1076,16 @@ function calculateInstitutionVote(institution, nation) {
   }
 
   const total = votesFor + votesAgainst + votesAbstain;
-  const quorum = (institution.quorum ?? 51) / 100;
+  let quorum = (institution.quorum ?? 51) / 100;
+
+  // Демократия: военные решения требуют 60% порога (гражданская свобода)
+  if (nation.government?.type === 'democracy') {
+    const milPowers = ['declare_war', 'war_funding', 'military_glory', 'command_armies', 'command_army'];
+    const isMilitary = (institution.powers ?? []).some(p => milPowers.includes(p))
+                    || institution.type === 'military';
+    if (isMilitary) quorum = Math.max(quorum, 0.60);
+  }
+
   const passed = total > 0 && (votesFor / total) >= quorum;
 
   return { for: votesFor, against: votesAgainst, abstain: votesAbstain, passed };
