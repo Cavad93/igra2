@@ -247,6 +247,11 @@ function processAllTreatyTicks() {
 
     // DIP_004: проверка восстания вассала
     if (treaty.type === 'vassalage') _checkVassalRebellion(treaty, turn);
+
+    // DIP_005: истечение брачного союза по dynasty grace period
+    if (treaty.type === 'marriage_alliance') {
+      if (typeof _checkDynastyExpiry === 'function') _checkDynastyExpiry(treaty, turn);
+    }
   }
 
   // 4. Применяем накопленные бонусы нации в экономику

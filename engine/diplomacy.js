@@ -1239,6 +1239,136 @@ function getArmistice(nationA, nationB) {
 }
 
 // ──────────────────────────────────────────────────────────────
+// DIP_005: Наследование договоров по династии
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Вызывается при смерти правителя нации nationId.
+ * Проверяет все активные брачные союзы нации:
+ *   - Если у наследника нет dynasty_link с партнёром → договор истекает
+ *     через 5 ходов (grace period) и уведомляет обе стороны.
+ *
+ * @param {string} nationId — нация, чей правитель умер
+ */
+function onRulerDeath(nationId) {
+  if (!GAME_STATE.diplomacy) return;
+
+  const nation = GAME_STATE.nations?.[nationId];
+  if (!nation) return;
+
+  const currentTurn  = GAME_STATE.turn ?? 1;
+  const GRACE_PERIOD = 5; // ходов до истечения брачных союзов без наследника
+
+  // Ищем все активные брачные союзы нации
+  const marriageTreaties = (GAME_STATE.diplomacy.treaties ?? []).filter(t =>
+    t.status === 'active' &&
+    t.type === 'marriage_alliance' &&
+    t.parties.includes(nationId)
+  );
+
+  if (!marriageTreaties.length) return;
+
+  // Наследник — новый правитель после смены
+  const newRuler = nation.government?.ruler;
+
+  for (const treaty of marriageTreaties) {
+    const partnerId = treaty.parties.find(p => p !== nationId);
+    if (!partnerId) continue;
+
+    const partnerNation = GAME_STATE.nations?.[partnerId];
+    const rel = getRelation(nationId, partnerId);
+
+    // Проверяем, есть ли у наследника dynasty_link с партнёром.
+    // dynasty_link — флаг отношений. Если флага нет (отношения переустановятся
+    // в processAllTreatyTicks на основе активных договоров) — считаем, что
+    // наследник не имеет личной связи и союз теряет основу.
+    // Практически: у нас нет данных о том, с каким правителем был заключён брак,
+    // поэтому проверяем наличие другого активного marriage_alliance той же пары
+    // (вдруг был двойной союз) — если нет, то союз должен истечь.
+    const hasAlternativeBond = (GAME_STATE.diplomacy.treaties ?? []).some(t =>
+      t !== treaty &&
+      t.status === 'active' &&
+      t.type === 'marriage_alliance' &&
+      t.parties.includes(nationId) &&
+      t.parties.includes(partnerId)
+    );
+
+    if (hasAlternativeBond) {
+      // Другой брачный союз той же пары существует — связь сохраняется
+      continue;
+    }
+
+    // Нет альтернативной династической связи — назначаем grace period
+    // Если treaty уже имеет _dynasty_expires_turn — пропускаем (уже обработан)
+    if (treaty._dynasty_expires_turn) continue;
+
+    const expiryTurn = currentTurn + GRACE_PERIOD;
+    treaty._dynasty_expires_turn = expiryTurn;
+
+    const nationName  = nation.name ?? nationId;
+    const partnerName = partnerNation?.name ?? partnerId;
+    const playerNation = GAME_STATE.player_nation;
+
+    const msg = `👑 Правитель ${nationName} скончался. Брачный союз с ${partnerName} потеряет силу через ${GRACE_PERIOD} ходов, если новый правитель не подтвердит союз.`;
+
+    if (typeof addEventLog === 'function') {
+      addEventLog(msg, 'diplomacy');
+    }
+
+    // Уведомить игрока, если он участник
+    if (nationId === playerNation || partnerId === playerNation) {
+      if (typeof window !== 'undefined' && window.UI?.notify) {
+        window.UI.notify(msg);
+      } else {
+        console.log('[DIP_005]', msg);
+      }
+    }
+
+    addDiplomacyEvent(nationId, partnerId, -5, 'ruler_death_dynasty');
+  }
+}
+
+/**
+ * Проверяет истечение брачных союзов по grace period (dynasty_expires_turn).
+ * Вызывается из processAllTreatyTicks() каждый ход.
+ * @param {object} treaty
+ * @param {number} turn
+ */
+function _checkDynastyExpiry(treaty, turn) {
+  if (!treaty._dynasty_expires_turn) return;
+  if (turn < treaty._dynasty_expires_turn) return;
+  if (treaty.status !== 'active') return;
+
+  treaty.status = 'expired';
+
+  const [a, b]  = treaty.parties;
+  const natA    = GAME_STATE.nations?.[a];
+  const natB    = GAME_STATE.nations?.[b];
+  const nameA   = natA?.name ?? a;
+  const nameB   = natB?.name ?? b;
+  const msg     = `💍 Брачный союз между ${nameA} и ${nameB} расторгнут — наследник не сохранил династическую связь.`;
+
+  if (typeof removeTreatyEffects === 'function') {
+    try { removeTreatyEffects(treaty); } catch (_) {}
+  }
+
+  addDiplomacyEvent(a, b, -10, 'dynasty_bond_dissolved');
+
+  if (typeof addEventLog === 'function') {
+    addEventLog(msg, 'diplomacy');
+  }
+
+  const playerNation = GAME_STATE.player_nation;
+  if (playerNation && (a === playerNation || b === playerNation)) {
+    if (typeof window !== 'undefined' && window.UI?.notify) {
+      window.UI.notify(msg);
+    } else {
+      console.log('[DIP_005]', msg);
+    }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
 // ПУБЛИЧНОЕ API
 // ──────────────────────────────────────────────────────────────
 
@@ -1269,5 +1399,7 @@ const DiplomacyEngine = {
   addEvent:          addDiplomacyEvent,
   processGlobalTick: processDiplomacyGlobalTick,
   applyEmbargo:      (...args) => typeof applyEmbargo === 'function' ? applyEmbargo(...args) : undefined,
+  // DIP_005: Наследование договоров по династии
+  onRulerDeath,
   TREATY_TYPES,
 };

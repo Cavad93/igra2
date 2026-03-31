@@ -383,6 +383,10 @@ function checkCharacterDeaths() {
           if (typeof window !== 'undefined' && window.SuperOU?.onRulerDied) {
             try { window.SuperOU.onRulerDied(nationId, GAME_STATE); } catch (e) { console.warn('[super_ou] onRulerDied:', e); }
           }
+          // DIP_005: обновляем брачные союзы после смены правителя
+          if (typeof DiplomacyEngine !== 'undefined' && DiplomacyEngine.onRulerDeath) {
+            try { DiplomacyEngine.onRulerDeath(nationId); } catch (e) { console.warn('[DIP_005] onRulerDeath:', e); }
+          }
         }
       }
     }
