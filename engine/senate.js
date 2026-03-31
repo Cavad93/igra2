@@ -1347,6 +1347,10 @@ function getSenateManager(nationId) {
 function initSenateForNation(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation?.senate_config) return null;
+  // Ранний выход: сенат только для республиканских типов правления
+  const SENATE_GOVS = ['republic', 'oligarchy', 'democracy'];
+  const govType = nation.government?.type;
+  if (govType && !SENATE_GOVS.includes(govType)) return null;
   if (SENATE_MANAGERS[nationId]) return SENATE_MANAGERS[nationId];
 
   const mgr = new SenateManager(nationId, nation.senate_config.factions);

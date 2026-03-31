@@ -61,9 +61,15 @@ function renderGovernmentTab(nation) {
     sections.push(gov.institutions.map(inst => renderInstitutionBlock(inst, nation)).join(''));
   }
 
-  // 5.5. Сенат (Lazy Materialization) — если инициализирован
-  const senateBlock = renderSenateLazyBlock(GAME_STATE.player_nation);
-  if (senateBlock) sections.push(senateBlock);
+  // 5.5. Сенат (Lazy Materialization) — только для республиканских типов правления
+  const SENATE_GOVS = ['republic', 'oligarchy', 'democracy'];
+  const hasSenate = SENATE_GOVS.includes(gov.type);
+  if (hasSenate) {
+    const senateBlock = renderSenateLazyBlock(GAME_STATE.player_nation);
+    if (senateBlock) sections.push(senateBlock);
+  } else if (gov.type === 'tyranny') {
+    sections.push(renderTyrannyCouncilBlock(nation));
+  }
 
   // 5.6. Конституционный строй (если есть state_architecture)
   const arch = nation.senate_config?.state_architecture;
@@ -1878,6 +1884,75 @@ function renderSenateLazyBlock(nationId) {
       </div>
 
     </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// СОВЕТ ПРИБЛИЖЁННЫХ ТИРАНА — вместо Сената для 'tyranny'
+// ══════════════════════════════════════════════════════════════════════
+
+function renderTyrannyCouncilBlock(nation) {
+  const gov = nation.government;
+  // Инициализируем council если отсутствует
+  if (!gov.tyranny_council) {
+    gov.tyranny_council = _generateTyrannyCouncil();
+  }
+  const council = gov.tyranny_council;
+  const members = council.members ?? [];
+
+  const memberCards = members.map(m => {
+    const loyColor = m.loyalty > 60 ? '#4CAF50' : m.loyalty > 30 ? '#FF9800' : '#f44336';
+    const betrayalRisk = Math.max(0, Math.round(100 - m.loyalty - (gov.fear_meter ?? 50) * 0.5));
+    const betrayalColor = betrayalRisk > 40 ? '#f44336' : betrayalRisk > 20 ? '#FF9800' : '#4CAF50';
+    const roleIcon = { 'general': '⚔️', 'treasurer': '💰', 'spymaster': '🕵️', 'herald': '📯', 'advisor': '🧠' }[m.role] ?? '👤';
+    return `
+      <div class="gov-council-card" style="border-left:3px solid ${loyColor};padding:8px;margin:4px 0;background:rgba(30,10,10,0.4);border-radius:4px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-weight:bold;">${roleIcon} ${m.name}</span>
+          <span style="font-size:11px;color:#aaa">${m.title}</span>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:4px;font-size:12px;">
+          <span>Лояльность: <span style="color:${loyColor}">${m.loyalty}%</span></span>
+          <span>Риск предательства: <span style="color:${betrayalColor}">${betrayalRisk}%</span></span>
+        </div>
+        ${m.grudge ? `<div style="color:#ff6666;font-size:11px;margin-top:2px;">⚠️ ${m.grudge}</div>` : ''}
+      </div>`;
+  }).join('');
+
+  const totalBetrayal = members.length > 0
+    ? Math.round(members.reduce((s, m) => s + Math.max(0, 100 - m.loyalty - (gov.fear_meter ?? 50) * 0.5), 0) / members.length)
+    : 0;
+  const conspiracyWarning = totalBetrayal > 35
+    ? `<div style="color:#ff6666;margin-top:6px;font-size:12px;">⚠️ Среди приближённых зреет заговор!</div>` : '';
+
+  return `
+    <div class="gov-section-title">🗡 Совет приближённых</div>
+    <div class="senate-block" style="border-color:rgba(180,50,50,0.4);">
+      <div class="senate-mood-bar" style="color:#cc8888;">
+        👁 ${council.mood ?? 'Приближённые боятся и покоряются воле тирана.'}
+      </div>
+      ${memberCards || '<div style="color:#888;font-size:12px;">Нет приближённых.</div>'}
+      ${conspiracyWarning}
+    </div>`;
+}
+
+function _generateTyrannyCouncil() {
+  const names = [
+    { name: 'Каллимах', title: 'Главный советник', role: 'advisor' },
+    { name: 'Демон', title: 'Начальник стражи', role: 'general' },
+    { name: 'Фрасибул', title: 'Казначей', role: 'treasurer' },
+    { name: 'Никодем', title: 'Начальник тайной службы', role: 'spymaster' },
+    { name: 'Архелай', title: 'Глашатай двора', role: 'herald' },
+  ];
+  const count = 3 + Math.floor(Math.random() * 3); // 3-5 членов
+  const selected = names.slice(0, count);
+  return {
+    mood: 'Приближённые боятся и покоряются воле тирана.',
+    members: selected.map(n => ({
+      ...n,
+      loyalty: 40 + Math.floor(Math.random() * 45), // 40-85
+      grudge: null,
+    })),
+  };
 }
 
 // Клик по призраку — запускает материализацию
