@@ -77,6 +77,20 @@ function _escHtml(str) {
     .replace(/\n/g, '<br>');
 }
 
+/** DIP_010: Рассчитать ожидаемое начисление ОВ за следующий ход */
+function _dpCalcIpIncome(nationId) {
+  const treaties = GAME_STATE.diplomacy?.treaties ?? [];
+  const embassyPartners = new Set();
+  let tradeCount = 0;
+  for (const t of treaties) {
+    if (t.status !== 'active' || !t.parties.includes(nationId)) continue;
+    const partner = t.parties.find(p => p !== nationId);
+    if (partner) embassyPartners.add(partner);
+    if (t.type === 'trade_agreement') tradeCount++;
+  }
+  return (2 + embassyPartners.size * 1 + tradeCount * 0.5).toFixed(1);
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // ОТКРЫТЬ / ЗАКРЫТЬ
 // ──────────────────────────────────────────────────────────────────────────────
@@ -148,6 +162,23 @@ function _dpRender() {
             <div class="dp-header-sub">${playerFlag} ${playerName} · ${playerRuler}</div>
           </div>
         </div>
+        ${(() => {
+          // DIP_010: счётчик Очков Влияния
+          const ip = (typeof DiplomacyEngine !== 'undefined' && DiplomacyEngine.getInfluencePoints)
+            ? DiplomacyEngine.getInfluencePoints(playerNationId) : 0;
+          const ipFloor = Math.floor(ip);
+          const ipColor = ip >= 25 ? '#4caf50' : ip >= 15 ? '#ffa726' : ip >= 5 ? '#90a4ae' : '#ef5350';
+          return `<div class="dp-influence-counter" style="
+              display:flex;align-items:center;gap:6px;
+              background:rgba(255,255,255,0.05);
+              border:1px solid ${ipColor}44;
+              border-radius:8px;padding:6px 12px;
+              font-size:0.85em;color:${ipColor};font-weight:600;
+            " title="Очки Влияния: +2/ход базово, +1 за посольство, +0.5 за торговый договор">
+            ⭐ <span>${ipFloor} ОВ</span>
+            <span style="font-weight:400;font-size:0.8em;color:var(--text-dim)">+${_dpCalcIpIncome(playerNationId)}/ход</span>
+          </div>`;
+        })()}
         <nav class="dp-nav">
           <button class="dp-nav-btn${_dpTab === 'negotiations' ? ' dp-nav-btn--active' : ''}"
             onclick="dpSwitchTab('negotiations')">
@@ -424,6 +455,7 @@ function _dpRenderNegotiation(playerNationId, foreign) {
       ${selectedTag}
     </div>
     ${_dpCoalitionSection(playerNationId, aiId, rel.score)}
+    ${_dpBribeSection(playerNationId, aiId)}
     ` : ''}
 
     <!-- ДИАЛОГ -->
@@ -444,6 +476,18 @@ function _dpRenderNegotiation(playerNationId, foreign) {
         onkeydown="if(event.ctrlKey&&event.key==='Enter')dtSendMessage('${aiId}')"></textarea>
       <div class="dp-compose-bar">
         <span class="dp-compose-hint">Ctrl+Enter — отправить</span>
+        ${(() => {
+          // DIP_010: показать стоимость отправки посла
+          const ip = (typeof DiplomacyEngine !== 'undefined' && DiplomacyEngine.getInfluencePoints)
+            ? DiplomacyEngine.getInfluencePoints(playerNationId) : 0;
+          const cost = (typeof DiplomacyEngine !== 'undefined' && DiplomacyEngine.INFLUENCE_COSTS)
+            ? DiplomacyEngine.INFLUENCE_COSTS.send_ambassador : 5;
+          const canSend = ip >= cost;
+          const hint = dialogue.length === 0
+            ? `<span style="font-size:0.75em;color:${canSend ? '#90a4ae' : '#ef5350'}"
+                title="Первое обращение стоит ${cost} ОВ">⭐ −${cost} ОВ</span>` : '';
+          return hint;
+        })()}
         <button class="dp-compose-send" id="dp-send-${aiId}"
           onclick="dtSendMessage('${aiId}')"
           ${st.isLoading ? 'disabled' : ''}>
@@ -863,6 +907,59 @@ function _dpCoalitionSection(playerNationId, aiId, relScore) {
 }
 
 /**
+ * DIP_010: Секция «Подкупить» — кнопка подкупа со стоимостью в ОВ.
+ */
+function _dpBribeSection(playerNationId, aiId) {
+  if (typeof DiplomacyEngine === 'undefined') return '';
+  const ip      = DiplomacyEngine.getInfluencePoints?.(playerNationId) ?? 0;
+  const cost    = DiplomacyEngine.INFLUENCE_COSTS?.bribe ?? 20;
+  const canBribe = ip >= cost;
+  const atWar   = DiplomacyEngine.isAtWar?.(playerNationId, aiId);
+  if (atWar) return ''; // нельзя подкупать во время войны
+
+  const aiNation     = GAME_STATE.nations?.[aiId];
+  const aiName       = _escHtml(aiNation?.name ?? aiId);
+  const treasury     = GAME_STATE.nations?.[playerNationId]?.economy?.treasury ?? 0;
+  const goldOptions  = [100, 300, 500].filter(g => g <= treasury + 1);
+  if (goldOptions.length === 0) return '';
+
+  const btnStyle = canBribe
+    ? 'background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.4);color:#ffd54f'
+    : 'background:rgba(100,100,100,.1);border:1px solid rgba(100,100,100,.3);color:#757575;cursor:not-allowed';
+
+  const optBtns = goldOptions.map(g =>
+    `<button style="${btnStyle};border-radius:5px;padding:4px 10px;font-size:0.8em;cursor:${canBribe ? 'pointer' : 'not-allowed'}"
+      onclick="${canBribe ? `dpBribeNation('${aiId}',${g})` : ''}"
+      ${canBribe ? '' : 'disabled'}
+      title="${canBribe ? `Потратить ${g} монет и ${cost} ОВ` : `Недостаточно ОВ (нужно ${cost})`}">
+      💰 ${g} монет
+    </button>`
+  ).join('');
+
+  return `<div style="margin-top:8px;padding:8px 12px;background:rgba(255,215,0,.04);border:1px solid rgba(255,215,0,.2);border-radius:6px">
+    <div class="dp-sec-label" style="margin-bottom:6px">
+      💰 Подкупить двор ${aiName}
+      <span style="font-size:0.75em;font-weight:400;color:${canBribe ? '#ffd54f' : '#ef5350'}"> (⭐ −${cost} ОВ)</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">${optBtns}</div>
+  </div>`;
+}
+
+/**
+ * Обработчик кнопки подкупа.
+ */
+function dpBribeNation(aiId, goldAmount) {
+  const playerNationId = GAME_STATE.player_nation;
+  if (typeof DiplomacyEngine === 'undefined') return;
+  const result = DiplomacyEngine.bribeNation(playerNationId, aiId, goldAmount);
+  if (!result.ok) {
+    if (typeof addEventLog === 'function') addEventLog(`⚠ Подкуп не удался: ${result.reason}`, 'warning');
+    if (typeof window !== 'undefined' && window.UI?.notify) window.UI.notify(`Подкуп не удался: ${result.reason}`);
+  }
+  _dpRender();
+}
+
+/**
  * Игрок выбирает общего врага для коалиции:
  * сохраняет в pending, выбирает тип joint_campaign, открывает AI-чат.
  */
@@ -1015,6 +1112,19 @@ function dtBreakTreaty(treatyId) {
 
 function _dtFinalizeTreaty(playerNationId, aiNationId, treaty, dialogueLog) {
   if (typeof DiplomacyEngine === 'undefined') return null;
+
+  // DIP_010: предложить союз стоит 15 ОВ
+  const allianceTypes = ['defensive_alliance', 'military_alliance'];
+  if (allianceTypes.includes(treaty.treaty_type) && DiplomacyEngine.spendInfluencePoints) {
+    const ipCost   = DiplomacyEngine.INFLUENCE_COSTS?.propose_alliance ?? 15;
+    const ipResult = DiplomacyEngine.spendInfluencePoints(playerNationId, ipCost, 'Предложить союз');
+    if (!ipResult.ok) {
+      if (typeof addEventLog === 'function') addEventLog(`⭐ ${ipResult.reason}`, 'warning');
+      if (typeof window !== 'undefined' && window.UI?.notify) window.UI.notify(ipResult.reason);
+      return null;
+    }
+  }
+
   const dur = treaty.conditions?.duration
     ?? TREATY_TYPES?.[treaty.treaty_type]?.default_duration ?? 10;
   const created = DiplomacyEngine.createTreaty(
@@ -1070,6 +1180,22 @@ function showDipChatModal(aiNationId, firstMessage) {
     st.draftText = '';
     st.finDialogue = [];
   }
+
+  // DIP_010: первый контакт с нацией стоит 5 ОВ (посол)
+  const playerNationId = GAME_STATE.player_nation;
+  if (firstMessage && typeof DiplomacyEngine !== 'undefined' && DiplomacyEngine.spendInfluencePoints) {
+    const existingDialogue = DiplomacyEngine.getDialogue?.(playerNationId, aiNationId) ?? [];
+    if (existingDialogue.length === 0) {
+      const ipCost = DiplomacyEngine.INFLUENCE_COSTS?.send_ambassador ?? 5;
+      const ipResult = DiplomacyEngine.spendInfluencePoints(playerNationId, ipCost, 'Отправить посла');
+      if (!ipResult.ok) {
+        if (typeof addEventLog === 'function') addEventLog(`⭐ ${ipResult.reason}`, 'warning');
+        if (typeof window !== 'undefined' && window.UI?.notify) window.UI.notify(ipResult.reason);
+        return; // блокируем открытие чата
+      }
+    }
+  }
+
   modal.classList.remove('hidden');
   _renderChatModal();
   if (firstMessage && firstMessage.trim()) {

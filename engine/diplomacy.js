@@ -1060,6 +1060,8 @@ function processDiplomacyGlobalTick() {
   _processDiplomaticIncidents(nids);
   _processReligionSpread();
   _processHistoricalGrievances();
+  // DIP_010: начислять ОВ каждый ход
+  _earnInfluencePointsTick();
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -1583,34 +1585,42 @@ function proposeCoalition(playerNationId, targetNationId, enemyNationId) {
     return { ok: false, reason: 'Нация не найдена.' };
   }
 
+  // DIP_010: проверить и списать ОВ за предложение коалиции
+  const ipCheck = spendInfluencePoints(playerNationId, INFLUENCE_COSTS.propose_coalition, 'Коалиция');
+  if (!ipCheck.ok) return ipCheck;
+
+  // Внутренний хелпер: вернуть ОВ при ошибке
+  const _refundAndFail = (reason) => {
+    _ensureInfluencePoints(playerNation);
+    playerNation.influence_points += INFLUENCE_COSTS.propose_coalition;
+    return { ok: false, reason };
+  };
+
   // Проверка 1: отношения инициатора с партнёром
   const relPlayerTarget = getRelationScore(playerNationId, targetNationId);
   if (relPlayerTarget <= 20) {
-    return {
-      ok:     false,
-      reason: `Недостаточно хорошие отношения с ${targetNation.name ?? targetNationId} `
-            + `для коалиции (нужно > 20, сейчас ${relPlayerTarget}).`,
-    };
+    return _refundAndFail(
+      `Недостаточно хорошие отношения с ${targetNation.name ?? targetNationId} `
+      + `для коалиции (нужно > 20, сейчас ${relPlayerTarget}).`
+    );
   }
 
   // Проверка 2: партнёр должен быть враждебен к общему врагу
   const relTargetEnemy = getRelationScore(targetNationId, enemyNationId);
   if (relTargetEnemy >= -20) {
-    return {
-      ok:     false,
-      reason: `${targetNation.name ?? targetNationId} недостаточно враждебна к `
-            + `${enemyNation.name ?? enemyNationId} (нужно < -20, сейчас ${relTargetEnemy}).`,
-    };
+    return _refundAndFail(
+      `${targetNation.name ?? targetNationId} недостаточно враждебна к `
+      + `${enemyNation.name ?? enemyNationId} (нужно < -20, сейчас ${relTargetEnemy}).`
+    );
   }
 
   // Проверка 3: инициатор тоже должен быть враждебен
   const relPlayerEnemy = getRelationScore(playerNationId, enemyNationId);
   if (relPlayerEnemy >= -20) {
-    return {
-      ok:     false,
-      reason: `Вы недостаточно враждебны к ${enemyNation.name ?? enemyNationId} `
-            + `для организации коалиции (нужно < -20, сейчас ${relPlayerEnemy}).`,
-    };
+    return _refundAndFail(
+      `Вы недостаточно враждебны к ${enemyNation.name ?? enemyNationId} `
+      + `для организации коалиции (нужно < -20, сейчас ${relPlayerEnemy}).`
+    );
   }
 
   // Проверка 4: нет уже активной коалиции против этого врага между теми же нациями
@@ -1622,7 +1632,7 @@ function proposeCoalition(playerNationId, targetNationId, enemyNationId) {
     t.conditions?.coalition_enemy === enemyNationId
   );
   if (existing) {
-    return { ok: false, reason: 'Коалиция против этой нации уже активна.' };
+    return _refundAndFail('Коалиция против этой нации уже активна.');
   }
 
   const enemyName  = enemyNation.name  ?? enemyNationId;
@@ -1653,6 +1663,142 @@ function proposeCoalition(playerNationId, targetNationId, enemyNationId) {
   addDiplomacyEvent(playerNationId, targetNationId, +10, 'coalition_formed');
 
   return { ok: true, treaty };
+}
+
+// ──────────────────────────────────────────────────────────────
+// DIP_010: ОЧКИ ДИПЛОМАТИЧЕСКОГО ВЛИЯНИЯ (ОВ / Influence Points)
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Стоимость дипломатических действий в Очках Влияния.
+ */
+const INFLUENCE_COSTS = {
+  send_ambassador: 5,   // Отправить посла / начать переговоры
+  propose_alliance: 15, // Предложить союз (defensive/military alliance)
+  bribe:            20, // Подкуп иностранного правителя
+  propose_coalition: 25, // Предложить коалицию
+};
+
+/**
+ * Гарантирует поле influence_points у нации.
+ */
+function _ensureInfluencePoints(nation) {
+  if (nation && nation.influence_points == null) {
+    nation.influence_points = 0;
+  }
+}
+
+/**
+ * Возвращает текущие ОВ игровой нации.
+ */
+function getInfluencePoints(nationId) {
+  const nation = GAME_STATE.nations?.[nationId];
+  if (!nation) return 0;
+  _ensureInfluencePoints(nation);
+  return nation.influence_points;
+}
+
+/**
+ * Начисляет ОВ за один ход для ВСЕХ наций:
+ *   +2 базово
+ *   +1 за каждую нацию, с которой есть хотя бы один активный договор (посольство)
+ *   +0.5 за каждый активный договор trade_agreement
+ */
+function _earnInfluencePointsTick() {
+  const nations = GAME_STATE.nations || {};
+  const treaties = GAME_STATE.diplomacy?.treaties ?? [];
+
+  for (const [nationId, nation] of Object.entries(nations)) {
+    if (!nation || nation.is_eliminated) continue;
+    _ensureInfluencePoints(nation);
+
+    let earned = 2; // базовое начисление
+
+    // +1 ОВ за каждого дипломатического партнёра (нация с активным договором = посольство)
+    const embassyPartners = new Set();
+    for (const t of treaties) {
+      if (t.status !== 'active') continue;
+      if (!t.parties.includes(nationId)) continue;
+      const partner = t.parties.find(p => p !== nationId);
+      if (partner) embassyPartners.add(partner);
+    }
+    earned += embassyPartners.size * 1;
+
+    // +0.5 ОВ за каждый активный торговый договор
+    const tradeCount = treaties.filter(t =>
+      t.status === 'active' &&
+      t.type === 'trade_agreement' &&
+      t.parties.includes(nationId)
+    ).length;
+    earned += tradeCount * 0.5;
+
+    nation.influence_points = Math.min(100, nation.influence_points + earned);
+  }
+}
+
+/**
+ * Проверяет и списывает ОВ у нации перед дипломатическим действием.
+ * @returns { ok: boolean, reason?: string }
+ */
+function spendInfluencePoints(nationId, amount, actionName) {
+  const nation = GAME_STATE.nations?.[nationId];
+  if (!nation) return { ok: false, reason: 'Нация не найдена.' };
+  _ensureInfluencePoints(nation);
+
+  if (nation.influence_points < amount) {
+    return {
+      ok: false,
+      reason: `Недостаточно Очков Влияния для «${actionName}» (нужно ${amount}, есть ${Math.floor(nation.influence_points)}).`,
+    };
+  }
+  nation.influence_points -= amount;
+  return { ok: true };
+}
+
+/**
+ * Дипломатический подкуп: тратит 20 ОВ + золото, улучшает отношения.
+ * @param {string} playerNationId
+ * @param {string} targetNationId
+ * @param {number} goldAmount — сумма подкупа (влияет на эффективность)
+ * @returns { ok: boolean, delta?: number, reason?: string }
+ */
+function bribeNation(playerNationId, targetNationId, goldAmount) {
+  if (!GAME_STATE.diplomacy) initDiplomacy();
+
+  const playerNation = GAME_STATE.nations?.[playerNationId];
+  const targetNation = GAME_STATE.nations?.[targetNationId];
+  if (!playerNation || !targetNation) return { ok: false, reason: 'Нация не найдена.' };
+
+  // Проверить и списать ОВ
+  const ipCheck = spendInfluencePoints(playerNationId, INFLUENCE_COSTS.bribe, 'Подкуп');
+  if (!ipCheck.ok) return ipCheck;
+
+  // Проверить золото
+  const gold = goldAmount ?? 200;
+  if ((playerNation.economy?.treasury ?? 0) < gold) {
+    // Вернуть потраченные ОВ
+    _ensureInfluencePoints(playerNation);
+    playerNation.influence_points += INFLUENCE_COSTS.bribe;
+    return { ok: false, reason: `Недостаточно золота (нужно ${gold}).` };
+  }
+
+  playerNation.economy.treasury -= gold;
+
+  // Эффект: +5..+25 к отношениям в зависимости от суммы (логарифмически)
+  const delta = Math.round(5 + Math.min(20, Math.log2(gold / 100 + 1) * 10));
+  const rel = getRelation(playerNationId, targetNationId);
+  rel.score = Math.min(100, rel.score + delta);
+  addDiplomacyEvent(playerNationId, targetNationId, delta, 'bribe');
+
+  const playerName = playerNation.name ?? playerNationId;
+  const targetName = targetNation.name ?? targetNationId;
+  const msg = `💰 ${playerName} подкупил двор ${targetName} на ${gold} монет (+${delta} к отношениям).`;
+  if (typeof addEventLog === 'function') addEventLog(msg, 'diplomacy');
+  if (playerNationId === GAME_STATE.player_nation) {
+    if (typeof window !== 'undefined' && window.UI?.notify) window.UI.notify(msg);
+  }
+
+  return { ok: true, delta };
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -1711,4 +1857,9 @@ const DiplomacyEngine = {
   },
   processHistoricalGrievances: _processHistoricalGrievances,
   TREATY_TYPES,
+  // DIP_010: Очки дипломатического влияния
+  getInfluencePoints,
+  spendInfluencePoints,
+  bribeNation,
+  INFLUENCE_COSTS,
 };
