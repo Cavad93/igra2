@@ -1384,3 +1384,73 @@ NEXT_TASK: MIL_010
          tests/mil_010_capital_warscore_test.cjs
 
 NEXT_TASK: DONE — все MIL_001–MIL_010 выполнены
+
+---
+
+## MIL_TESTS — Комплексное тестирование военной системы (2026-03-31)
+
+### Проблема (исправлена до тестирования):
+- ai/utility_ai.js: _emergencyCapitalDefense() срабатывал только на 1 шаге (dist<=1),
+  тест ожидал 2 шага. Также reasoning было 'defend_capital' вместо 'capital_emergency'.
+  Когда армия стоит в столице, защита не срабатывала вообще.
+
+### Исправления:
+- _emergencyCapitalDefense(): dist <= 2 (вместо <= 1) ✓
+- reasoning: 'capital_emergency enemy_N_away' (вместо 'defend_capital') ✓
+- Когда армия уже в столице и враг угрожает → action='hold', reasoning='capital_emergency' ✓
+- tests/mil_010_capital_warscore_test.cjs: T03 обновлён под новый формат reasoning ✓
+- mil_010_capital_priority_test.cjs: 19/19 тестов (было 12/19) ✓
+- mil_010_capital_warscore_test.cjs: 22/22 тестов ✓
+
+### 5 новых тестовых файлов (90 тестов):
+
+#### 1. tests/mil_chain_integration_test.cjs (9 тестов)
+  - Цепочка MIL_001 + MIL_002 + MIL_008: Клещи + Формация + Местность
+  - flanking formation при cavalry + plains ✓
+  - defensive при низком readiness ✓
+  - terrain_advantage на холмах ✓
+
+#### 2. tests/mil_combat_engine_test.cjs (17 тестов)
+  - resolveArmyBattle возвращает корректную структуру ✓
+  - 10:1 армия побеждает в 20/20 боях ✓
+  - Formations (aggressive/defensive) корректно меняют силу ✓
+  - Terrain: plains > hills > mountains (атака) ✓
+  - Мораль 90 >> мораль 20 по силе ✓
+  - Pursuit order выставляется после победы ✓
+  - checkNavalBlockade: без флота → no blockade; с флотом > 5 → blockade ✓
+
+#### 3. tests/mil_supply_attrition_chain_test.cjs (15 тестов)
+  - findArmyPath выбирает равнины, не горы ✓
+  - Константы MIL_009 верны (threshold=50, rate=0.025, fatigue=14/-10/-3) ✓
+  - Атриция при supply<50 снижает юниты ✓
+  - Штраф морали при supply<30 + атриции ✓
+  - Наёмники теряют в 2 раза меньше ✓
+  - Морская блокада снижает снабжение ✓
+
+#### 4. tests/mil_crash_edge_cases_test.cjs (28 тестов)
+  - Армия с 0 юнитов — нет краша ✓
+  - Несуществующий регион — terrain defaults to plains ✓
+  - Мораль=0 — конечная сила, не NaN ✓
+  - utilityAIDecide с минимальным состоянием ✓
+  - Армия с неизвестной нацией ✓
+  - Усталость=100 — сила >= 0 ✓
+  - Армия 1M солдат — нет переполнения ✓
+  - checkNavalBlockade(null) — нет краша ✓
+  - findArmyPath(A→A) — нет краша ✓
+  - _processSupply при supply=0 ✓
+
+#### 5. tests/mil_siege_warscore_full_chain_test.cjs (21 тест)
+  - Армия-спасатель в 2 ходах — siege candidate ✓
+  - Голодающий гарнизон + storm_possible ✓
+  - Pursuit order: AI двигается к цели ✓
+  - Cunning commander в лесу ✓
+  - Siege_master → атакует крепость ✓
+  - War score: захват обычного региона +12 ✓
+  - War score: захват столицы +62 (delta +50) ✓
+  - Активная осада → capital_emergency не срабатывает ✓
+
+### Итог:
+- Всего тестов mil: 264 (174 прежних + 90 новых)
+- Все проходят: 15 файлов × 0 failed ✅
+
+NEXT_TASK: DONE
