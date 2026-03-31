@@ -307,6 +307,17 @@ function _dpRenderNegotiation(playerNationId, foreign) {
       })()
     : '';
 
+  // DIP_006: casus belli indicator (шпион пойман при подготовке к войне)
+  const casusBelliList = (typeof DiplomacyEngine !== 'undefined' && DiplomacyEngine.getCasusBelli)
+    ? DiplomacyEngine.getCasusBelli(playerNationId, aiId)
+    : [];
+  const casusBelliHtml = casusBelliList.length
+    ? `<div class="dp-casus-belli-banner" style="background:#1a237e22;border:1px solid #3949ab88;border-radius:6px;padding:6px 10px;margin:6px 0;font-size:0.85em;color:#90caf9"
+         title="Есть повод для войны: ${casusBelliList.map(cb => cb.label).join('; ')}">
+        ⚔️ <b>Casus belli:</b> ${casusBelliList.map(cb => cb.label).join(' · ')}
+      </div>`
+    : '';
+
   const tagsHtml = activeTreaties.length
     ? `<div class="dp-active-tags">
         ${activeTreaties.map(t => {
@@ -374,6 +385,7 @@ function _dpRenderNegotiation(playerNationId, foreign) {
         <div class="dp-nh-ruler">${aiRuler}${aiGov ? ` · ${aiGov}` : ''}</div>
         ${tagsHtml}
         ${embargoWarning}
+        ${casusBelliHtml}
       </div>
       <div class="dp-nh-rel">
         <div class="dp-nh-relbar">

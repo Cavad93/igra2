@@ -1401,5 +1401,16 @@ const DiplomacyEngine = {
   applyEmbargo:      (...args) => typeof applyEmbargo === 'function' ? applyEmbargo(...args) : undefined,
   // DIP_005: Наследование договоров по династии
   onRulerDeath,
+  // DIP_006: Шпионаж → дипломатические отношения
+  getCasusBelli(holderNationId, againstNationId) {
+    if (!GAME_STATE.diplomacy) return [];
+    const rel = getRelation(holderNationId, againstNationId);
+    const now = GAME_STATE.turn ?? 1;
+    return (rel.casus_belli ?? []).filter(
+      cb => cb.holder === holderNationId &&
+            cb.against === againstNationId &&
+            (!cb.expires || cb.expires > now)
+    );
+  },
   TREATY_TYPES,
 };

@@ -78,6 +78,9 @@ async function processTurn() {
       try { DiplomacyEngine.processGlobalTick(); } catch (e) { console.warn('[diplomacy_tick]', e); }
     }
 
+    // 0.87. DIP_006: Шпионаж → дипломатические отношения (поимка шпионов, casus belli)
+    try { _processEspionageTick(); } catch (e) { console.warn('[espionage_tick]', e); }
+
     // 0.9. Строительство зданий — продвигаем очередь, завершаем готовые
     if (typeof processBuildingConstruction === 'function') {
       try { processBuildingConstruction(); } catch (e) { console.warn('[buildings]', e); }
@@ -558,6 +561,145 @@ async function processAINations() {
   }
   if (typeof checkCoalitionReflex === 'function') {
     try { checkCoalitionReflex(); } catch (e) { console.warn('[coalition_reflex]', e); }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// DIP_006: ШПИОНАЖ → ДИПЛОМАТИЧЕСКИЕ ОТНОШЕНИЯ
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Каждый ход AI-нации с активной шпионской сетью могут проводить
+ * разведывательные миссии против враждебных соседей.
+ * Если шпион пойман — ухудшение отношений и возможный casus belli.
+ */
+function _processEspionageTick() {
+  if (!GAME_STATE.diplomacy) return;
+  const nations      = GAME_STATE.nations || {};
+  const playerNation = GAME_STATE.player_nation;
+  const nids         = Object.keys(nations);
+
+  /** Прочитать переменную из SuperOU-вектора нации */
+  function _ouV(nation, category, varName) {
+    const arr = nation._ou?.[category];
+    if (!Array.isArray(arr)) return 0;
+    const v = arr.find(x => x.name === varName);
+    return v ? (v.current ?? 0) : 0;
+  }
+
+  for (const attackerId of nids) {
+    const attacker = nations[attackerId];
+    if (!attacker || attacker.is_eliminated) continue;
+
+    // Шанс запустить миссию за ход: зависит от espionage_capability + spy_network_capacity
+    const espCap        = _ouV(attacker, 'diplomacy', 'espionage_capability');
+    const spyNet        = _ouV(attacker, 'military',  'spy_network_capacity');
+    const missionChance = 0.04 + espCap * 0.10 + spyNet * 0.06; // 4–20%
+    if (Math.random() >= missionChance) continue;
+
+    // Выбрать цель среди враждебных наций (score < -10 или активная война)
+    for (const targetId of nids) {
+      if (targetId === attackerId) continue;
+      const target = nations[targetId];
+      if (!target || target.is_eliminated) continue;
+
+      const rel = (typeof getRelation === 'function') ? getRelation(attackerId, targetId) : null;
+      if (!rel) continue;
+      if (rel.score >= -10 && !rel.war) continue; // пара недостаточно враждебна
+      if (Math.random() > 0.35) continue;          // рандомный выбор цели за ход
+
+      // Шанс поймать: counter_espionage + intelligence_quality цели
+      const counterEsp = _ouV(target, 'diplomacy', 'counter_espionage');
+      const intelQual  = _ouV(target, 'military',  'intelligence_quality');
+      const catchProb  = counterEsp * 0.5 + intelQual * 0.25;
+
+      if (Math.random() >= catchProb) continue; // шпион не пойман — миссия тихо провалена
+
+      // ── Шпион пойман ──────────────────────────────────────────────────────
+      const attackerName = attacker.name ?? attackerId;
+      const targetName   = target.name   ?? targetId;
+      const turn         = GAME_STATE.turn ?? 1;
+
+      // -20 к отношениям
+      if (typeof addDiplomacyEvent === 'function') {
+        addDiplomacyEvent(attackerId, targetId, -20, 'spy_caught');
+      }
+      rel.score = Math.max(-100, rel.score - 20);
+
+      // Обновить SuperOU
+      if (typeof window !== 'undefined' && window.SuperOU?.onDiplomacyEvent) {
+        window.SuperOU.onDiplomacyEvent(targetId,   'INSULT_RECEIVED');
+        window.SuperOU.onDiplomacyEvent(attackerId, 'INSULT_RECEIVED');
+      }
+
+      // Уведомить стороны (только если игрок вовлечён)
+      if (attackerId === playerNation) {
+        const msg = `🕵️ Наш шпион в ${targetName} пойман! Отношения: -20.`;
+        if (typeof addEventLog === 'function') addEventLog(msg, 'diplomacy');
+        if (typeof window !== 'undefined' && window.UI?.notify) window.UI.notify(msg);
+      } else if (targetId === playerNation) {
+        const msg = `🕵️ Шпион ${attackerName} пойман в наших землях! Отношения с ${attackerName}: -20.`;
+        if (typeof addEventLog === 'function') addEventLog(msg, 'diplomacy');
+        if (typeof window !== 'undefined' && window.UI?.notify) window.UI.notify(msg);
+      } else {
+        console.log(`[DIP_006] Шпион ${attackerName} пойман в ${targetName}.`);
+      }
+
+      // ── Casus belli: пойман при подготовке к войне ────────────────────────
+      // Признак подготовки: ou.aggression > 0.6 и НЕ в активной войне с этой нацией
+      const ouAggression = attacker._ou?.aggression ?? 0;
+      if (!rel.war && ouAggression > 0.6) {
+        // Записать casus belli в relation — владелец: цель, против: агрессора
+        if (!rel.casus_belli) rel.casus_belli = [];
+        const alreadyHas = rel.casus_belli.some(
+          cb => cb.holder === targetId && cb.reason === 'spy_caught'
+        );
+        if (!alreadyHas) {
+          rel.casus_belli.push({
+            holder:  targetId,
+            against: attackerId,
+            reason:  'spy_caught',
+            label:   `Пойман шпион ${attackerName} при подготовке к войне`,
+            turn,
+            expires: turn + 24, // действует 2 года
+          });
+        }
+
+        // Дополнительный дипломатический удар
+        if (typeof addDiplomacyEvent === 'function') {
+          addDiplomacyEvent(attackerId, targetId, -15, 'spy_war_prep_caught');
+        }
+        rel.score = Math.max(-100, rel.score - 15);
+
+        const cbMsg = (targetId === playerNation)
+          ? `⚔️ Casus belli! ${attackerName} готовил войну — шпион пойман. Теперь у вас есть повод для войны.`
+          : (attackerId === playerNation)
+            ? `⚔️ Наш шпион раскрыт: ${targetName} получает casus belli против нас!`
+            : null;
+        if (cbMsg) {
+          if (typeof addEventLog === 'function') addEventLog(cbMsg, 'danger');
+          if (typeof window !== 'undefined' && window.UI?.notify) window.UI.notify(cbMsg);
+        } else {
+          console.log(`[DIP_006] Casus belli: ${targetName} против ${attackerName}.`);
+        }
+      }
+
+      break; // только одна поимка за ход на атакующую нацию
+    }
+  }
+
+  // Очистить просроченные casus belli
+  _cleanExpiredCasusBelli();
+}
+
+/** Удалить просроченные записи casus belli из всех отношений */
+function _cleanExpiredCasusBelli() {
+  if (!GAME_STATE.diplomacy?.relations) return;
+  const now = GAME_STATE.turn ?? 1;
+  for (const rel of Object.values(GAME_STATE.diplomacy.relations)) {
+    if (rel.casus_belli?.length) {
+      rel.casus_belli = rel.casus_belli.filter(cb => !cb.expires || cb.expires > now);
+    }
   }
 }
 
