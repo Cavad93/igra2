@@ -13,6 +13,9 @@ let _dpTab            = 'negotiations'; // 'negotiations' | 'treaties'
 // Состояние текущего открытого чат-модала
 let _dpChatModalNation = null;    // aiNationId открытого модала
 
+// DIP_008: ожидающая коалиция — aiId → enemyNationId
+let _dpCoalitionPending = {};
+
 // Выбранные регионы для передачи в условиях мира
 let _dpPeaceRegions    = new Set();   // Set of regionId
 let _dpPeaceVassalize  = false;
@@ -410,7 +413,9 @@ function _dpRenderNegotiation(playerNationId, foreign) {
       <div class="dp-sec-label">Предложить договор</div>
       <div class="dp-treaty-grid">${treatyBtns}</div>
       ${selectedTag}
-    </div>` : ''}
+    </div>
+    ${_dpCoalitionSection(playerNationId, aiId, rel.score)}
+    ` : ''}
 
     <!-- ДИАЛОГ -->
     <div class="dp-dialogue-section">
@@ -780,6 +785,101 @@ function dpProposePeace(aiId) {
 
 function _typingDots() {
   return `<span class="dp-btn-dots"><span></span><span></span><span></span></span> Ждём ответа`;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// DIP_008: КОАЛИЦИЯ ПО ИНИЦИАТИВЕ ИГРОКА
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Найти общих врагов для отображения в UI (не более 5).
+ * Читает score напрямую из relations чтобы не создавать пары лениво.
+ */
+function _dpFindCommonEnemies(playerNationId, targetNationId) {
+  if (typeof DiplomacyEngine === 'undefined') return [];
+  const nations    = GAME_STATE.nations    ?? {};
+  const diplomacy  = GAME_STATE.diplomacy;
+  const common     = [];
+
+  for (const [nId, n] of Object.entries(nations)) {
+    if (nId === playerNationId || nId === targetNationId) continue;
+    if (n.is_eliminated || n.is_defeated) continue;
+
+    const keyP = [playerNationId, nId].sort().join('_');
+    const keyT = [targetNationId, nId].sort().join('_');
+    const relP = diplomacy?.relations?.[keyP]?.score ?? 0;
+    const relT = diplomacy?.relations?.[keyT]?.score ?? 0;
+    if (relP < -20 && relT < -20) common.push(nId);
+    if (common.length >= 5) break;
+  }
+  return common;
+}
+
+/**
+ * Рендер секции «Предложить коалицию» — появляется когда:
+ *   - Отношения с нацией > 20
+ *   - Есть хотя бы один общий враг
+ */
+function _dpCoalitionSection(playerNationId, aiId, relScore) {
+  if (relScore <= 20) return '';
+  const commonEnemies = _dpFindCommonEnemies(playerNationId, aiId);
+  if (commonEnemies.length === 0) return '';
+
+  const enemyBtns = commonEnemies.map(eId => {
+    const en = GAME_STATE.nations?.[eId];
+    if (!en) return '';
+    const keyP  = [playerNationId, eId].sort().join('_');
+    const eScore = GAME_STATE.diplomacy?.relations?.[keyP]?.score ?? 0;
+    const eLbl  = eScore >= -50 ? '🔴' : '⚔';
+    return `<button class="dp-coalition-enemy-btn"
+      title="Предложить совместный поход против ${_escHtml(en.name ?? eId)}"
+      onclick="dpSelectCoalitionEnemy('${aiId}','${eId}')">
+      ${en.flag_emoji ?? '🏛'} ${_escHtml(en.name ?? eId)} ${eLbl}
+    </button>`;
+  }).join('');
+
+  return `<div class="dp-coalition-section" style="
+      margin-top:10px;
+      padding:10px 12px;
+      background:rgba(255,193,7,.05);
+      border:1px solid rgba(255,193,7,.25);
+      border-radius:6px;
+    ">
+    <div class="dp-sec-label" style="margin-bottom:6px">⚡ Предложить коалицию</div>
+    <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px">
+      Выберите общего врага для совместного похода (отношения > 20 с обоими партнёрами):
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">${enemyBtns}</div>
+  </div>`;
+}
+
+/**
+ * Игрок выбирает общего врага для коалиции:
+ * сохраняет в pending, выбирает тип joint_campaign, открывает AI-чат.
+ */
+function dpSelectCoalitionEnemy(aiId, enemyId) {
+  if (typeof DiplomacyEngine === 'undefined') return;
+
+  const playerNationId = GAME_STATE.player_nation;
+  const targetNation   = GAME_STATE.nations?.[aiId];
+  const enemyNation    = GAME_STATE.nations?.[enemyId];
+  const enemyName      = enemyNation?.name  ?? enemyId;
+  const targetRuler    = targetNation?.government?.ruler?.name
+    ?? targetNation?.government?.ruler ?? 'правитель';
+
+  // Сохраняем ожидающий enemyId
+  _dpCoalitionPending[aiId] = enemyId;
+
+  // Выбираем тип договора joint_campaign
+  _getDtState(aiId).selectedTreaty = 'joint_campaign';
+
+  // Формируем предложение коалиции
+  const msg = `Предлагаю вам совместный поход против ${enemyName}. `
+    + `Это государство угрожает нам обоим, и объединённых сил будет достаточно для победы. `
+    + `Предлагаю заключить соглашение о совместной кампании (joint_campaign) и нанести `
+    + `скоординированный удар по ${enemyName}. Что скажете, ${targetRuler}?`;
+
+  showDipChatModal(aiId, msg);
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -1406,6 +1506,12 @@ async function _dpChatSendActual(aiNationId, text) {
     } else if (treaty?.agreed === true && treaty.treaty_type) {
       // AI согласился — сохраняем и переходим к финализации
       st.agreedTreaty = { type: treaty.treaty_type, conditions: treaty.conditions ?? {} };
+      // DIP_008: если это коалиция, инжектируем метаданные coalition_enemy
+      if (treaty.treaty_type === 'joint_campaign' && _dpCoalitionPending[aiNationId]) {
+        st.agreedTreaty.conditions.coalition_enemy     = _dpCoalitionPending[aiNationId];
+        st.agreedTreaty.conditions.coalition_countdown = 5;
+        delete _dpCoalitionPending[aiNationId];
+      }
       // Не сохраняем как финальный договор пока — это делается при подписании
       st.selectedTreaty = null;
     } else if (treaty?.agreed === false) {
@@ -1580,11 +1686,33 @@ async function dpSignTreaty(aiNationId) {
     const dialogue = typeof DiplomacyEngine !== 'undefined'
       ? DiplomacyEngine.getDialogue(playerNationId, aiNationId) : [];
 
-    const treaty = _dtFinalizeTreaty(playerNationId, aiNationId, {
-      agreed:      true,
-      treaty_type: treatyObj.type,
-      conditions:  treatyObj.conditions,
-    }, dialogue);
+    let treaty;
+    // DIP_008: для коалиции используем proposeCoalition() вместо прямого createTreaty
+    if (treatyObj.type === 'joint_campaign' && treatyObj.conditions.coalition_enemy) {
+      const coalResult = typeof DiplomacyEngine !== 'undefined'
+        ? DiplomacyEngine.proposeCoalition(playerNationId, aiNationId, treatyObj.conditions.coalition_enemy)
+        : { ok: false, reason: 'DiplomacyEngine недоступен' };
+      if (!coalResult.ok) {
+        st.finDialogue.push({ role: 'system', text: `🚫 ${coalResult.reason}` });
+        st.isFinLoading = false;
+        _renderChatModal();
+        return;
+      }
+      treaty = coalResult.treaty;
+      const enemyName = GAME_STATE.nations?.[treatyObj.conditions.coalition_enemy]?.name
+        ?? treatyObj.conditions.coalition_enemy;
+      if (typeof addEventLog === 'function') {
+        const pName = GAME_STATE.nations[playerNationId]?.name ?? 'Вы';
+        const aName = GAME_STATE.nations[aiNationId]?.name    ?? aiNationId;
+        addEventLog(`⚡ Коалиционный договор подписан: ${pName} и ${aName} против ${enemyName}.`, 'diplomacy');
+      }
+    } else {
+      treaty = _dtFinalizeTreaty(playerNationId, aiNationId, {
+        agreed:      true,
+        treaty_type: treatyObj.type,
+        conditions:  treatyObj.conditions,
+      }, dialogue);
+    }
 
     // Применяем эффекты немедленно
     if (treaty && typeof applyTreatyEffects === 'function') {

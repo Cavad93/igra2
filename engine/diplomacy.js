@@ -1455,6 +1455,126 @@ function _checkDynastyExpiry(treaty, turn) {
 }
 
 // ──────────────────────────────────────────────────────────────
+// DIP_008: Коалиция по инициативе игрока
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Найти общих врагов двух наций (нации, к которым обе относятся с score < -20).
+ * @param {string} nationA
+ * @param {string} nationB
+ * @returns {string[]} массив nationId общих врагов
+ */
+function findCommonEnemies(nationA, nationB) {
+  const nations = GAME_STATE.nations ?? {};
+  const common  = [];
+  for (const [nId, n] of Object.entries(nations)) {
+    if (nId === nationA || nId === nationB) continue;
+    if (n.is_eliminated || n.is_defeated) continue;
+    const relA = getRelationScore(nationA, nId);
+    const relB = getRelationScore(nationB, nId);
+    if (relA < -20 && relB < -20) common.push(nId);
+  }
+  return common;
+}
+
+/**
+ * DIP_008: Сформировать коалицию двух наций против общего врага.
+ * Проверяет условия и создаёт договор joint_campaign с метаданными коалиции.
+ *
+ * Условия:
+ *   - Отношения playerNation ↔ targetNation > 20
+ *   - Отношения targetNation ↔ enemyNation  < -20
+ *   - Отношения playerNation ↔ enemyNation  < -20
+ *
+ * @param {string} playerNationId — инициатор (обычно игрок)
+ * @param {string} targetNationId — партнёр по коалиции
+ * @param {string} enemyNationId  — общий враг
+ * @returns {{ ok: boolean, reason?: string, treaty?: object }}
+ */
+function proposeCoalition(playerNationId, targetNationId, enemyNationId) {
+  if (!GAME_STATE.diplomacy) initDiplomacy();
+
+  const playerNation = GAME_STATE.nations?.[playerNationId];
+  const targetNation = GAME_STATE.nations?.[targetNationId];
+  const enemyNation  = GAME_STATE.nations?.[enemyNationId];
+
+  if (!playerNation || !targetNation || !enemyNation) {
+    return { ok: false, reason: 'Нация не найдена.' };
+  }
+
+  // Проверка 1: отношения инициатора с партнёром
+  const relPlayerTarget = getRelationScore(playerNationId, targetNationId);
+  if (relPlayerTarget <= 20) {
+    return {
+      ok:     false,
+      reason: `Недостаточно хорошие отношения с ${targetNation.name ?? targetNationId} `
+            + `для коалиции (нужно > 20, сейчас ${relPlayerTarget}).`,
+    };
+  }
+
+  // Проверка 2: партнёр должен быть враждебен к общему врагу
+  const relTargetEnemy = getRelationScore(targetNationId, enemyNationId);
+  if (relTargetEnemy >= -20) {
+    return {
+      ok:     false,
+      reason: `${targetNation.name ?? targetNationId} недостаточно враждебна к `
+            + `${enemyNation.name ?? enemyNationId} (нужно < -20, сейчас ${relTargetEnemy}).`,
+    };
+  }
+
+  // Проверка 3: инициатор тоже должен быть враждебен
+  const relPlayerEnemy = getRelationScore(playerNationId, enemyNationId);
+  if (relPlayerEnemy >= -20) {
+    return {
+      ok:     false,
+      reason: `Вы недостаточно враждебны к ${enemyNation.name ?? enemyNationId} `
+            + `для организации коалиции (нужно < -20, сейчас ${relPlayerEnemy}).`,
+    };
+  }
+
+  // Проверка 4: нет уже активной коалиции против этого врага между теми же нациями
+  const existing = (GAME_STATE.diplomacy.treaties ?? []).find(t =>
+    t.status === 'active' &&
+    t.type   === 'joint_campaign' &&
+    t.parties.includes(playerNationId) &&
+    t.parties.includes(targetNationId) &&
+    t.conditions?.coalition_enemy === enemyNationId
+  );
+  if (existing) {
+    return { ok: false, reason: 'Коалиция против этой нации уже активна.' };
+  }
+
+  const enemyName  = enemyNation.name  ?? enemyNationId;
+  const playerName = playerNation.name ?? playerNationId;
+  const targetName = targetNation.name ?? targetNationId;
+
+  const treaty = createTreaty(playerNationId, targetNationId, 'joint_campaign', {
+    coalition_enemy:     enemyNationId,
+    coalition_countdown: 5,
+    duration:            2,
+    notes: `Коалиция против ${enemyName}. Совместное наступление через 5 ходов.`,
+  });
+
+  const msg = `⚡ Коалиция сформирована! ${playerName} и ${targetName} объединяются против `
+            + `${enemyName}. Совместная атака через 5 ходов.`;
+
+  if (typeof addEventLog === 'function') addEventLog(msg, 'diplomacy');
+
+  const playerNat = GAME_STATE.player_nation;
+  if (playerNationId === playerNat || targetNationId === playerNat) {
+    if (typeof window !== 'undefined' && window.UI?.notify) {
+      window.UI.notify(msg);
+    } else {
+      console.log('[DIP_008]', msg);
+    }
+  }
+
+  addDiplomacyEvent(playerNationId, targetNationId, +10, 'coalition_formed');
+
+  return { ok: true, treaty };
+}
+
+// ──────────────────────────────────────────────────────────────
 // ПУБЛИЧНОЕ API
 // ──────────────────────────────────────────────────────────────
 
@@ -1500,5 +1620,8 @@ const DiplomacyEngine = {
   },
   // DIP_007: Религиозное влияние — ручной запуск (processGlobalTick уже включает)
   processReligionSpread: _processReligionSpread,
+  // DIP_008: Коалиция по инициативе игрока
+  findCommonEnemies,
+  proposeCoalition,
   TREATY_TYPES,
 };
