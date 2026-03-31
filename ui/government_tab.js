@@ -712,6 +712,55 @@ function renderElectionBlock(elections) {
                 : elections.next_election <= 5 ? 'warning' : 'info';
   const urgencyColor = urgency === 'danger' ? '#f44336' : urgency === 'warning' ? '#FF9800' : '#4CAF50';
 
+  // GOV_006: блок подкупа кандидата (показывать за 3 хода до выборов)
+  let bribeBlock = '';
+  if (elections.next_election <= 3) {
+    const nation = GAME_STATE.nations[GAME_STATE.player_nation];
+    const mgr    = typeof getSenateManager === 'function' ? getSenateManager(GAME_STATE.player_nation) : null;
+    const candidates = mgr
+      ? mgr.getMaterialized().filter(s => s.ambition_level >= 3).slice(0, 3)
+      : [];
+    if (candidates.length) {
+      const treasury = nation?.economy?.treasury ?? 0;
+      const existingBribes = elections.pre_election_bribes ?? [];
+      const candidateRows = candidates.map(c => {
+        const cost    = typeof calcBribeCost === 'function' ? calcBribeCost(c) : 100;
+        const alreadyBribed = existingBribes.find(b => b.candidate_id === c.id);
+        const canAfford = treasury >= cost;
+        const label = alreadyBribed
+          ? `${c.name} (уже подкуплен +${alreadyBribed.bonus})`
+          : c.name;
+        return `<button class="gov-btn gov-btn-sm${canAfford ? '' : ' disabled'}"
+          onclick="electionBribeCandidate('${GAME_STATE.player_nation}','${c.id}',${cost})"
+          ${canAfford ? '' : 'disabled'}
+          title="Влияние: ${c.influence ?? 40}">
+          💰 ${label} (${cost} зол.)
+        </button>`;
+      }).join('');
+      bribeBlock = `
+        <div class="gov-subsection" style="margin-top:8px">
+          <div class="gov-subsection-title" style="color:#FF9800">⚡ Подкуп кандидата:</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${candidateRows}</div>
+          <div style="font-size:11px;color:#aaa;margin-top:3px">Казна: ${Math.round(treasury)} золота</div>
+        </div>`;
+    }
+  }
+
+  // GOV_006: итог последних выборов
+  let lastResultBlock = '';
+  if (elections.last_result) {
+    const lr = elections.last_result;
+    const scandalsText = lr.scandals?.length ? ` | Скандал: ${lr.scandals.join(', ')}` : '';
+    const bribedText   = lr.bribed ? ' | Применён подкуп' : '';
+    const narrativeText = lr.narrative ? `<div class="gov-election-narrative" style="font-style:italic;color:#ccc;margin-top:4px;font-size:12px">📜 ${_escHtml(lr.narrative)}</div>` : '';
+    lastResultBlock = `
+      <div class="gov-subsection" style="margin-top:8px;padding:6px;background:rgba(255,255,255,0.05);border-radius:4px">
+        <div style="font-size:12px;color:#aaa">Последние выборы (ход ${lr.turn}):</div>
+        <div style="font-size:13px">🏆 ${_escHtml(lr.winner)}${lr.losers?.length ? ` · проигравшие: ${lr.losers.map(_escHtml).join(', ')}` : ''}${scandalsText}${bribedText}</div>
+        ${narrativeText}
+      </div>`;
+  }
+
   return `
     <div class="gov-section">
       <div class="gov-section-title">🗳️ Выборы</div>
@@ -728,8 +777,21 @@ function renderElectionBlock(elections) {
       ${elections.offices?.length
         ? `<div class="gov-election-offices">Должности: ${elections.offices.map(o => `<span class="gov-tag">${o}</span>`).join('')}</div>`
         : ''}
+      ${bribeBlock}
+      ${lastResultBlock}
     </div>
   `;
+}
+
+// GOV_006: обёртка для UI-кнопки подкупа кандидата
+function electionBribeCandidate(nationId, candidateId, cost) {
+  if (typeof bribeElectionCandidate !== 'function') return;
+  const result = bribeElectionCandidate(nationId, candidateId, cost);
+  if (!result.ok) {
+    if (result.reason === 'no_gold') addEventLog('💸 Недостаточно золота для подкупа кандидата.', 'warning');
+    return;
+  }
+  if (typeof renderAll === 'function') renderAll();
 }
 
 // ──────────────────────────────────────────────────────────────────────

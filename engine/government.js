@@ -464,7 +464,59 @@ function triggerConspiracy(nationId) {
 // ВЫБОРЫ
 // ──────────────────────────────────────────────────────────────────────
 
-function triggerElection(nationId) {
+// GOV_006: Скандалы на выборах
+const ELECTION_SCANDALS = {
+  bribery: {
+    label: 'взяточничество',
+    base_penalty: -25,
+    faction_mod: { rich: +10 },
+  },
+  military_cowardice: {
+    label: 'воинская трусость',
+    base_penalty: -35,
+    faction_mod: { military: -20 },
+  },
+  foreign_ties: {
+    label: 'связи с иноземцами',
+    base_penalty: -30,
+    faction_mod: { peace: +15 },
+  },
+};
+
+// GOV_006: Подкуп кандидата до выборов (вызывается из UI)
+function bribeElectionCandidate(nationId, candidateId, goldAmount) {
+  const nation = GAME_STATE.nations[nationId];
+  const gov    = nation.government;
+  if (!gov?.elections?.enabled) return { ok: false, reason: 'no_elections' };
+
+  const treasury = nation.economy?.treasury ?? 0;
+  if (treasury < goldAmount) return { ok: false, reason: 'no_gold' };
+
+  nation.economy.treasury -= goldAmount;
+
+  if (!gov.elections.pre_election_bribes) gov.elections.pre_election_bribes = [];
+  const existing = gov.elections.pre_election_bribes.find(b => b.candidate_id === candidateId);
+  if (existing) {
+    existing.bonus += 20;
+    existing.total_spent += goldAmount;
+  } else {
+    gov.elections.pre_election_bribes.push({
+      candidate_id: candidateId,
+      bonus: 20,
+      total_spent: goldAmount,
+    });
+  }
+
+  addEventLog(`💰 Подкуп кандидата на выборах: потрачено ${goldAmount} золота. Кандидат получает +20 к поддержке.`, 'law');
+  return { ok: true };
+}
+
+// GOV_006: Стоимость подкупа (50-150 в зависимости от влияния)
+function calcBribeCost(candidate) {
+  return Math.round(50 + (candidate.influence ?? 40) * 2.5);
+}
+
+async function triggerElection(nationId) {
   const nation  = GAME_STATE.nations[nationId];
   const gov     = nation.government;
   const mgr     = getSenateManager(nationId);
@@ -482,19 +534,34 @@ function triggerElection(nationId) {
     : [];
 
   if (!candidates.length) {
-    // Нет кандидатов — действующий правитель остаётся
-    if (isPlayer) addEventLog('⚖️ Выборы: других кандидатов не нашлось. Агафокл продолжает править.', 'info');
+    if (isPlayer) addEventLog('⚖️ Выборы: других кандидатов не нашлось. Действующий консул продолжает править.', 'info');
     gov.elections.next_election = gov.elections.frequency_turns;
     return;
   }
 
-  // ── Голосование сенаторов по каждому кандидату ──────────────────
-  // Кандидат с наибольшей поддержкой побеждает.
-  let winner = null;
-  let winnerScore = -Infinity;
+  // ── GOV_006: Скандалы (15% шанс за выборы) ──────────────────────
+  const scandals = {}; // candidate_id → scandal info
+  if (Math.random() < 0.15) {
+    const scandalTarget = candidates[Math.floor(Math.random() * candidates.length)];
+    const scandalTypes  = Object.keys(ELECTION_SCANDALS);
+    const scandalType   = scandalTypes[Math.floor(Math.random() * scandalTypes.length)];
+    scandals[scandalTarget.id] = { type: scandalType, ...ELECTION_SCANDALS[scandalType] };
+    scandalTarget.scandal_this_election = scandalType;
+    if (isPlayer) {
+      addEventLog(
+        `😱 СКАНДАЛ на выборах! ${scandalTarget.name} обвинён в "${ELECTION_SCANDALS[scandalType].label}". ` +
+        `Это повлияет на голосование.`,
+        'danger'
+      );
+    }
+  }
 
+  // ── GOV_006: Применяем заранее оплаченные подкупы ───────────────
+  const bribes = gov.elections.pre_election_bribes ?? [];
+
+  // ── Голосование сенаторов по каждому кандидату ──────────────────
+  const scores = {};
   for (const candidate of candidates) {
-    // Базовая поддержка: лояльность фракционных коллег + личный авторитет
     let support = 0;
     if (mgr) {
       for (const senator of mgr.senators) {
@@ -504,51 +571,132 @@ function triggerElection(nationId) {
         support += base + sameF + sameClan + (Math.random() - 0.5) * 20;
       }
     }
-    if (support > winnerScore) { winnerScore = support; winner = candidate; }
+
+    // GOV_006: Случайность выборов ±30
+    support += (Math.random() - 0.5) * 30;
+
+    // GOV_006: Штраф от скандала
+    const scandal = scandals[candidate.id];
+    if (scandal) {
+      support += scandal.base_penalty;
+      // Модификатор по фракции (упрощённо: военная фракция = faction_id содержит 'mil')
+      if (scandal.faction_mod) {
+        const faction = (candidate.faction_id ?? '').toLowerCase();
+        if (scandal.faction_mod.rich    && faction.includes('rich'))    support += scandal.faction_mod.rich;
+        if (scandal.faction_mod.military && faction.includes('mil'))     support += scandal.faction_mod.military;
+        if (scandal.faction_mod.peace   && !gov._last_war_turn)          support += scandal.faction_mod.peace;
+      }
+    }
+
+    // GOV_006: Бонус от подкупа
+    const bribe = bribes.find(b => b.candidate_id === candidate.id);
+    if (bribe) support += bribe.bonus;
+
+    scores[candidate.id] = support;
   }
 
-  if (!winner) return;
+  // Сортируем по итоговому скору
+  candidates.sort((a, b) => scores[b.id] - scores[a.id]);
+  const winner = candidates[0];
+  const losers = candidates.slice(1);
 
   // ── Применяем результат ──────────────────────────────────────────
-  const prevConsul    = gov.elections?.last_consul ?? gov.ruler?.name ?? 'прежний консул';
-  const isNewConsul   = winner.name !== prevConsul;
+  const prevConsul  = gov.elections?.last_consul ?? gov.ruler?.name ?? 'прежний консул';
+  const isNewConsul = winner.name !== prevConsul;
 
   if (isNewConsul) {
     gov.ruler = gov.ruler ?? {};
     gov.ruler.name         = winner.name;
     gov.ruler.character_id = winner.character_id ?? null;
-
     gov.elections.last_consul = winner.name;
 
     // Легитимность растёт при честных выборах
-    gov.legitimacy = Math.min(100, (gov.legitimacy ?? 50) + 8);
+    const bribeUsed = bribes.length > 0;
+    gov.legitimacy = Math.min(100, (gov.legitimacy ?? 50) + (bribeUsed ? 3 : 8));
 
-    // Проигравшие кандидаты — -5 лояльности (обида)
+    // Проигравшие — -5 лояльности (обида)
     if (mgr) {
-      for (const loser of candidates) {
-        if (loser.id !== winner.id) loser.loyalty_score = Math.max(0, loser.loyalty_score - 5);
+      for (const loser of losers) {
+        loser.loyalty_score = Math.max(0, loser.loyalty_score - 5);
       }
-      // Победитель становится лидером своей фракции
       mgr._electFactionLeader(winner.faction_id, 'election');
       mgr._recalculateSenateState();
     }
-
-    if (isPlayer) {
-      const candidateNames = candidates.map(c => c.name).join(', ');
-      addEventLog(
-        `⚖️ ВЫБОРЫ КОНСУЛА: кандидаты — ${candidateNames}. Сенат проголосовал. ` +
-        `Победитель: ${winner.name} (${mgr?._factionName(winner.faction_id) ?? ''}). Легитимность +8.`,
-        'law'
-      );
-    }
   } else {
-    if (isPlayer) {
-      addEventLog(`⚖️ Выборы: ${winner.name} переизбран консулом. Сенат доволен преемственностью.`, 'law');
-    }
     gov.legitimacy = Math.min(100, (gov.legitimacy ?? 50) + 3);
   }
 
+  // GOV_006: Сохраняем итог выборов
+  gov.elections.last_result = {
+    turn:     GAME_STATE.turn ?? 0,
+    winner:   winner.name,
+    losers:   losers.map(l => l.name),
+    scandals: Object.values(scandals).map(s => s.label),
+    bribed:   bribes.length > 0,
+    narrative: null,
+  };
+
+  // Сброс подкупов на следующие выборы
+  gov.elections.pre_election_bribes = [];
+  // Сброс скандалов с кандидатов
+  for (const c of candidates) delete c.scandal_this_election;
+
+  if (isPlayer) {
+    const candidateNames = candidates.map(c => c.name).join(', ');
+    const loserNames     = losers.map(l => l.name).join(', ');
+    addEventLog(
+      `⚖️ ВЫБОРЫ КОНСУЛА: кандидаты — ${candidateNames}. Победитель: ${winner.name}. ` +
+      `Проигравшие: ${loserNames || 'нет'}. Легитимность ${isNewConsul ? '+8' : '+3'}.`,
+      'law'
+    );
+  }
+
   gov.elections.next_election = gov.elections.frequency_turns;
+
+  // GOV_006: Нарратив от Claude Haiku (асинхронно)
+  _generateElectionNarrative(nationId, winner, losers, scandals).catch(() => {});
+}
+
+// GOV_006: Генерация нарратива выборов через Claude Haiku
+async function _generateElectionNarrative(nationId, winner, losers, scandals) {
+  const nation = GAME_STATE.nations[nationId];
+  const gov    = nation?.government;
+  if (!gov?.elections?.last_result) return;
+
+  const scandalTexts = Object.values(scandals).map(s => s.label).join(', ');
+  const loserNames   = losers.map(l => l.name).join(', ');
+
+  const systemPrompt =
+    'Ты — летописец в исторической стратегической игре об античности. ' +
+    'Напиши ОДНО предложение (не более 120 символов) об итогах выборов консула. ' +
+    'Стиль: лаконичная историческая хроника. Без кавычек и пояснений. Язык: русский.';
+
+  const scandalNote = scandalTexts ? `. Соперника обвинили в "${scandalTexts}"` : '';
+  const userPrompt  =
+    `Победитель: ${winner.name}. Проигравшие: ${loserNames || 'нет'}${scandalNote}. Нация: ${nation.name ?? nationId}.`;
+
+  let narrative;
+  try {
+    if (typeof callClaude === 'function') {
+      const raw = await callClaude(systemPrompt, userPrompt, 80, CONFIG?.MODEL_HAIKU ?? 'claude-haiku-4-5-20251001');
+      narrative = (raw || '').trim().slice(0, 150);
+    }
+  } catch (_) { /* fallback */ }
+
+  if (!narrative) {
+    const scandalFallback = scandalTexts
+      ? `${winner.name} победил после того, как его соперника обвинили в "${scandalTexts}".`
+      : `${winner.name} одержал победу на выборах и занял должность консула.`;
+    narrative = scandalFallback;
+  }
+
+  if (gov.elections.last_result) {
+    gov.elections.last_result.narrative = narrative;
+  }
+
+  if (nationId === GAME_STATE.player_nation) {
+    addEventLog(`📜 Летопись: ${narrative}`, 'info');
+  }
 }
 
 // ──────────────────────────────────────────────────────────────────────
