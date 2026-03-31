@@ -847,6 +847,90 @@ function _processDiplomaticIncidents(nids) {
   }
 }
 
+// ── DIP_007: Динамическое распространение религии через дипломатию ──────────
+/**
+ * Для каждого активного договора cultural_exchange или marriage_alliance:
+ * 1% шанс за ход сдвинуть minor_religion слабого партнёра на 10% в сторону
+ * религии сильного партнёра. Отслеживается в nation.religion_influence{}.
+ * При influence > 0.5: religious_conversion — +8 к единоверцам, -8 с противниками.
+ */
+function _processReligionSpread() {
+  if (!GAME_STATE.diplomacy) return;
+  const nations = GAME_STATE.nations || {};
+  const SPREAD_CHANCE            = 0.01;   // 1% шанс за ход
+  const SPREAD_AMOUNT            = 0.10;   // +10% влияния за событие
+  const CONVERSION_THRESHOLD     = 0.50;   // порог конверсии
+
+  for (const treaty of GAME_STATE.diplomacy.treaties) {
+    if (treaty.status !== 'active') continue;
+    if (treaty.type !== 'cultural_exchange' && treaty.type !== 'marriage_alliance') continue;
+
+    const [a, b] = treaty.parties;
+    const natA = nations[a];
+    const natB = nations[b];
+    if (!natA || !natB) continue;
+    if (!natA.religion || !natB.religion) continue;
+    // Если религии одинаковы — распространение не нужно
+    if (natA.religion === natB.religion) continue;
+
+    // 1% шанс за ход
+    if (Math.random() >= SPREAD_CHANCE) continue;
+
+    // «Сильный» партнёр — тот у кого больше населения
+    const popA = natA.population?.total ?? 100_000;
+    const popB = natB.population?.total ?? 100_000;
+    const [strongId, weakId] = popA >= popB ? [a, b] : [b, a];
+    const strongNat = nations[strongId];
+    const weakNat   = nations[weakId];
+    if (!strongNat?.religion || !weakNat) continue;
+
+    const targetReligion = strongNat.religion;
+
+    // Инициализируем объект влияния
+    if (!weakNat.religion_influence) weakNat.religion_influence = {};
+    const currentInfluence = weakNat.religion_influence[targetReligion] ?? 0;
+    const newInfluence      = Math.min(1.0, currentInfluence + SPREAD_AMOUNT);
+    weakNat.religion_influence[targetReligion] = newInfluence;
+
+    if (typeof addEventLog === 'function') {
+      addEventLog(
+        `⛪ Религиозное влияние: ${targetReligion} распространяется в ` +
+        `${weakNat.name ?? weakId} (${Math.round(newInfluence * 100)}%) ` +
+        `через договор с ${strongNat.name ?? strongId}.`,
+        'diplomacy'
+      );
+    }
+
+    // При influence > 0.5 — конверсия
+    if (newInfluence > CONVERSION_THRESHOLD && weakNat.religion !== targetReligion) {
+      weakNat.religion = targetReligion;
+      delete weakNat.religion_influence[targetReligion]; // сброс после конверсии
+
+      const msg = `⛪ ${weakNat.name ?? weakId} принял религию «${targetReligion}» под влиянием ${strongNat.name ?? strongId}!`;
+      if (typeof addEventLog === 'function') addEventLog(msg, 'diplomacy');
+      const playerNation = GAME_STATE.player_nation;
+      if (weakId === playerNation || strongId === playerNation) {
+        if (typeof window !== 'undefined' && window.UI?.notify) {
+          window.UI.notify(msg);
+        } else {
+          console.log('[DIP_007]', msg);
+        }
+      }
+
+      // +8 к отношениям с единоверцами, -8 с противниками
+      for (const [otherId, otherNat] of Object.entries(nations)) {
+        if (otherId === weakId || !otherNat || otherNat.is_eliminated) continue;
+        if (!otherNat.religion) continue;
+        if (otherNat.religion === targetReligion) {
+          addDiplomacyEvent(weakId, otherId, +8, 'religious_conversion');
+        } else {
+          addDiplomacyEvent(weakId, otherId, -8, 'religious_conversion');
+        }
+      }
+    }
+  }
+}
+
 // ── Глобальный тик конвергенции (вызывать 1 раз за ход) ──────
 /**
  * α-конвергенция: медленно тянет score каждой пары к базовому значению.
@@ -879,6 +963,7 @@ function processDiplomacyGlobalTick() {
       rel.score  = Math.max(-100, Math.min(100, rel.score));
     }
     _processDiplomaticIncidents(nids);
+    _processReligionSpread();
     return;
   }
 
@@ -893,6 +978,7 @@ function processDiplomacyGlobalTick() {
     }
   }
   _processDiplomaticIncidents(nids);
+  _processReligionSpread();
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -1412,5 +1498,7 @@ const DiplomacyEngine = {
             (!cb.expires || cb.expires > now)
     );
   },
+  // DIP_007: Религиозное влияние — ручной запуск (processGlobalTick уже включает)
+  processReligionSpread: _processReligionSpread,
   TREATY_TYPES,
 };
