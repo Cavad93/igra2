@@ -869,5 +869,155 @@ function _tpRender() {
 
       ${buildBalancePanel(nation)}
 
+      ${_tpRenderLoans()}
+
     </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// РАЗДЕЛ ЗАЙМОВ
+// ═══════════════════════════════════════════════════════════════
+
+function _tpRenderLoans() {
+  const nId    = GAME_STATE.player_nation;
+  if (typeof getLoanStatus !== 'function') return '';
+
+  const status = getLoanStatus(nId);
+  const loadPct = Math.round(status.debtLoad * 100);
+  const barColor = loadPct < 40 ? '#4caf50' : loadPct < 70 ? '#ff9800' : '#f44336';
+  const loadCls  = loadPct < 40 ? '' : loadPct < 70 ? 'warn' : 'danger';
+
+  const loanRows = status.loans.length === 0
+    ? '<div style="font-size:10px;color:var(--text-dim);font-style:italic;margin-bottom:6px">Нет активных займов</div>'
+    : `<div class="tp-active-loans">${status.loans.map(l => {
+        const remaining = Math.round(l.remaining).toLocaleString();
+        const pct       = Math.round((1 - l.remaining / l.principal) * 100);
+        const rateStr   = (l.interest_rate * 100).toFixed(1);
+        return `<div class="tp-loan-row">
+          <span class="tp-loan-row-id">Заём #${l.taken_turn}</span>
+          <span>Осталось: ${remaining} ₴</span>
+          <span>${l.monthly_payment} ₴/мес</span>
+          <span style="color:#aaa">${rateStr}% год.</span>
+          <span style="color:var(--positive)">${pct}% погашено</span>
+        </div>`;
+      }).join('')}</div>`;
+
+  const bankruptBtn = status.loans.length > 0
+    ? `<button class="tp-loan-btn danger" onclick="_tpConfirmBankruptcy()"
+         title="Списать все долги, но получить тяжёлые штрафы">
+         💸 Объявить банкротство
+       </button>`
+    : '';
+
+  const capacityStr = Math.floor(status.capacity).toLocaleString();
+  const rateStr     = (status.rate * 100).toFixed(1);
+  const canBorrow   = status.canBorrow && status.capacity >= 500;
+
+  return `
+    <div class="tp-loans-section">
+      <div class="tp-loans-title">
+        🏦 ЗАЙМЫ У ГРАЖДАН
+        ${status.totalDebt > 0
+          ? `<span style="font-size:10px;color:var(--text-dim);text-transform:none;letter-spacing:0">
+               Долг: <b style="color:#ff9800">${Math.round(status.totalDebt).toLocaleString()} ₴</b>
+             </span>`
+          : ''}
+      </div>
+
+      <div class="tp-loans-summary">
+        <div class="tp-loan-stat ${loadCls}">
+          Платежи: <span>${Math.round(status.monthlyPayment).toLocaleString()} ₴/мес</span>
+        </div>
+        <div class="tp-loan-stat ${loadCls}">
+          Нагрузка: <span>${loadPct}% дохода</span>
+        </div>
+        <div class="tp-loan-stat">
+          Доступно: <span style="color:${canBorrow ? '#a5d6a7' : '#888'}">${canBorrow ? capacityStr + ' ₴' : 'лимит исчерпан'}</span>
+        </div>
+        <div class="tp-loan-stat">
+          Ставка: <span>${rateStr}% годовых</span>
+        </div>
+      </div>
+
+      <div class="tp-loan-bar-wrap">
+        <div class="tp-loan-bar" style="width:${Math.min(100, loadPct)}%;background:${barColor}"></div>
+      </div>
+
+      ${loanRows}
+
+      <div class="tp-loan-form">
+        <input  id="tp-loan-amount" class="tp-loan-input" type="number"
+                min="500" step="500"
+                placeholder="Сумма"
+                value="${Math.min(5000, Math.floor(status.capacity / 500) * 500) || 500}"
+                oninput="_tpUpdateLoanPreview()" />
+        <select id="tp-loan-term" class="tp-loan-select" onchange="_tpUpdateLoanPreview()">
+          <option value="12">12 мес. (1 год)</option>
+          <option value="24" selected>24 мес. (2 года)</option>
+          <option value="36">36 мес. (3 года)</option>
+          <option value="60">60 мес. (5 лет)</option>
+        </select>
+        <button class="tp-loan-btn" onclick="_tpTakeLoan()"
+                ${canBorrow ? '' : 'disabled'}>
+          + Взять заём
+        </button>
+        ${bankruptBtn}
+      </div>
+      <div id="tp-loan-preview" class="tp-loan-preview"></div>
+    </div>`;
+}
+
+function _tpUpdateLoanPreview() {
+  const el = document.getElementById('tp-loan-preview');
+  if (!el || typeof calcMonthlyPayment !== 'function') return;
+
+  const amount = parseInt(document.getElementById('tp-loan-amount')?.value ?? 0);
+  const term   = parseInt(document.getElementById('tp-loan-term')?.value ?? 24);
+  const nId    = GAME_STATE.player_nation;
+
+  if (!amount || amount < 500) { el.textContent = ''; return; }
+
+  const rate    = calcInterestRate(nId);
+  const payment = calcMonthlyPayment(amount, rate, term);
+  const status  = getLoanStatus(nId);
+  const nation  = GAME_STATE.nations?.[nId];
+  const income  = nation?.economy?.income_per_turn ?? 0;
+  const loadAfter = income > 0 ? Math.round((status.monthlyPayment + payment) / income * 100) : '?';
+
+  el.innerHTML = `Платёж: <b>${payment} ₴/мес</b> · После займа нагрузка: <b>${loadAfter}%</b> дохода`;
+}
+
+function _tpTakeLoan() {
+  const amount = parseInt(document.getElementById('tp-loan-amount')?.value ?? 0);
+  const term   = parseInt(document.getElementById('tp-loan-term')?.value ?? 24);
+  const nId    = GAME_STATE.player_nation;
+
+  if (typeof takeLoan !== 'function') return;
+  const result = takeLoan(nId, amount, term);
+
+  if (result.ok) {
+    _tpRender();
+  } else {
+    const prev = document.getElementById('tp-loan-preview');
+    if (prev) {
+      prev.innerHTML = `<span style="color:#f44336">&#9888; ${result.reason}</span>`;
+    }
+  }
+}
+
+function _tpConfirmBankruptcy() {
+  const nId    = GAME_STATE.player_nation;
+  const status = getLoanStatus(nId);
+  if (!status.totalDebt) return;
+
+  const confirmed = confirm(
+    'Объявить банкротство?\n\n' +
+    'Долг ' + Math.round(status.totalDebt).toLocaleString() + ' будет списан, но:\n' +
+    '  Стабильность -20\n  Счастье -15\n  Отношения со всеми соседями -25\n\n' +
+    'Это нельзя отменить.'
+  );
+  if (!confirmed) return;
+
+  declareBankruptcy(nId);
+  _tpRender();
 }

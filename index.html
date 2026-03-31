@@ -4328,6 +4328,74 @@
       font-size: 9px; color: var(--text-dim);
       margin-top: 2px; padding: 0 2px;
     }
+
+    /* ── Раздел займов ── */
+    .tp-loans-section {
+      flex-shrink: 0;
+      padding: 10px 14px 12px;
+      border-top: 1px solid rgba(107,79,26,0.35);
+      background: rgba(0,0,0,0.3);
+    }
+    .tp-loans-title {
+      font-size: 11px; color: var(--text-gold);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .tp-loans-summary {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .tp-loan-stat {
+      font-size: 11px; color: var(--text-light);
+    }
+    .tp-loan-stat span { font-weight: bold; }
+    .tp-loan-stat.warn span { color: #ff9800; }
+    .tp-loan-stat.danger span { color: #f44336; }
+    .tp-loan-bar-wrap {
+      height: 6px; background: rgba(255,255,255,0.08);
+      border-radius: 3px; margin-bottom: 10px; overflow: hidden;
+    }
+    .tp-loan-bar {
+      height: 100%; border-radius: 3px; transition: width 0.3s;
+    }
+    .tp-active-loans {
+      display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px;
+    }
+    .tp-loan-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 10px; color: var(--text-dim);
+      padding: 4px 8px;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(107,79,26,0.2);
+    }
+    .tp-loan-row-id  { flex: 1; color: var(--text-gold); }
+    .tp-loan-form {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .tp-loan-input {
+      background: rgba(0,0,0,0.5); border: 1px solid var(--border-gold);
+      color: var(--text-light); font-size: 11px;
+      padding: 4px 8px; width: 100px;
+    }
+    .tp-loan-select {
+      background: rgba(0,0,0,0.5); border: 1px solid var(--border-gold);
+      color: var(--text-light); font-size: 11px; padding: 4px 6px;
+    }
+    .tp-loan-btn {
+      background: rgba(26,74,26,0.7); border: 1px solid #4caf50;
+      color: #a5d6a7; font-size: 11px; padding: 5px 12px;
+      cursor: pointer; white-space: nowrap;
+    }
+    .tp-loan-btn:hover:not(:disabled) { background: rgba(46,94,46,0.9); }
+    .tp-loan-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .tp-loan-btn.danger {
+      background: rgba(80,20,20,0.7); border-color: #f44336; color: #ef9a9a;
+    }
+    .tp-loan-btn.danger:hover { background: rgba(100,30,30,0.9); }
+    .tp-loan-preview {
+      font-size: 10px; color: var(--text-dim); width: 100%; margin-top: 2px;
+    }
     .tp-chart-zero-lbl { color: rgba(255,255,255,0.2); }
     .tp-chart-empty {
       font-size: 10px; color: var(--text-dim);
