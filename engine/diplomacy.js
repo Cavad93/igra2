@@ -126,6 +126,14 @@ const TREATY_TYPES = {
     default_duration: 5,    // лет
     ai_weight: 1.0,
   },
+  embargo: {
+    label:       'Торговое эмбарго',
+    icon:        '🚫',
+    description: 'Блокирует торговлю с целью. -20% дохода казны цели каждый ход. +5 к отношениям с врагами цели за каждый ход.',
+    effects: { trade_block: true },
+    default_duration: 5,    // лет
+    ai_weight: 0.4,
+  },
   custom: {
     label:       'Свободная форма',
     icon:        '✍',
@@ -1146,5 +1154,6 @@ const DiplomacyEngine = {
   calcBaseRelation,
   addEvent:          addDiplomacyEvent,
   processGlobalTick: processDiplomacyGlobalTick,
+  applyEmbargo:      (...args) => typeof applyEmbargo === 'function' ? applyEmbargo(...args) : undefined,
   TREATY_TYPES,
 };

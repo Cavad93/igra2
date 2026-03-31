@@ -42,6 +42,7 @@ function applyTreatyEffects(treaty) {
     case 'territorial_exchange': _onTerritorialExchange(treaty, a, b, cond);  break;
     case 'joint_campaign':      _onJointCampaign(treaty, a, b, cond);         break;
     case 'cultural_exchange':   _onCultural(treaty, a, b, natA, natB, cond);  break;
+    case 'embargo':             _onEmbargo(treaty, a, b, natA, natB, cond);   break;
     case 'custom':              _onCustom(treaty, a, b, natA, natB, cond);    break;
     default: break;
   }
@@ -132,6 +133,10 @@ function removeTreatyEffects(treaty) {
       if (natB) delete natB._vassal_of;
       break;
     }
+    case 'embargo':
+      rel.flags.embargo = false;
+      _log(`✅ Торговое эмбарго между ${a} и ${b} снято.`);
+      break;
     default: break;
   }
 
@@ -175,6 +180,7 @@ function processAllTreatyTicks() {
     rel.flags.protectorate    = false;
     rel.flags.dynasty_link    = false;
     rel.flags.is_armistice    = false;
+    rel.flags.embargo         = false;
   }
 
   // 3. Применяем флаги и финансовые эффекты каждого активного договора
@@ -200,6 +206,9 @@ function processAllTreatyTicks() {
     _setRelFlags(treaty, rel, a, b);
     _applyNationBonuses(treaty, a, b);
     _processFinancialTick(treaty, a, b, cond, turn);
+
+    // DIP_001: штрафы эмбарго каждый ход
+    if (treaty.type === 'embargo') applyEmbargo(treaty, turn);
   }
 
   // 4. Применяем накопленные бонусы нации в экономику
@@ -419,6 +428,84 @@ function _onCultural(treaty, a, b, natA, natB, cond) {
   if (natB.stability !== undefined) natB.stability = Math.min(100, (natB.stability ?? 50) + 2);
 }
 
+// ─────────────────────────────────────────────────────────────
+// DIP_001: ЭМБАРГО — подписание
+// ─────────────────────────────────────────────────────────────
+
+function _onEmbargo(treaty, a, b, natA, natB, cond) {
+  const rel = _rel(a, b);
+  rel.flags.embargo      = true;
+  rel.flags.trade_open   = false;
+  rel.flags.market_access = false;
+
+  // Сохраняем роли: embargo_target — тот, против кого направлено эмбарго
+  // Если явно не указан — считаем b целью (инициатор = a)
+  const targetId  = cond.embargo_target ?? b;
+  const imposerId = treaty.parties.find(p => p !== targetId);
+  treaty.conditions.embargo_target  = targetId;
+  treaty.conditions.embargo_imposer = imposerId;
+
+  const targetNat  = GAME_STATE.nations?.[targetId];
+  const imposerNat = GAME_STATE.nations?.[imposerId];
+
+  // Блокируем торговые пути между сторонами
+  if (targetNat?.economy?.trade_routes) {
+    targetNat.economy.trade_routes = targetNat.economy.trade_routes.filter(id => id !== imposerId);
+  }
+  if (imposerNat?.economy?.trade_routes) {
+    imposerNat.economy.trade_routes = imposerNat.economy.trade_routes.filter(id => id !== targetId);
+  }
+
+  // Обновляем SuperOU переменные санкций
+  if (typeof window !== 'undefined') {
+    const durationTurns = (treaty.conditions.duration ?? 5) * 12;
+    window.SuperOU?.onDiplomacyEvent?.(targetId,  'CHRONICLE_EVENT', { variable: 'sanctions_received', delta:  0.15, duration: durationTurns });
+    window.SuperOU?.onDiplomacyEvent?.(imposerId, 'CHRONICLE_EVENT', { variable: 'sanctions_imposed',  delta:  0.15, duration: durationTurns });
+  }
+
+  _log(`🚫 Торговое эмбарго введено против ${targetNat?.name ?? targetId} от ${imposerNat?.name ?? imposerId}.`);
+}
+
+// ─────────────────────────────────────────────────────────────
+// DIP_001: ЭМБАРГО — перturновый штраф (вызывается из processAllTreatyTicks)
+// ─────────────────────────────────────────────────────────────
+
+function applyEmbargo(treaty, turn) {
+  if (!treaty || treaty.status !== 'active' || treaty.type !== 'embargo') return;
+
+  const [a, b]    = treaty.parties;
+  const targetId  = treaty.conditions?.embargo_target ?? b;
+  const imposerId = treaty.parties.find(p => p !== targetId);
+  const targetNat  = GAME_STATE.nations?.[targetId];
+  const imposerNat = GAME_STATE.nations?.[imposerId];
+  if (!targetNat || !imposerNat) return;
+
+  // -20% дохода казны цели за ход
+  if (targetNat.economy) {
+    const income  = targetNat.economy.income
+      ?? Math.max(0, (targetNat.economy.treasury ?? 0) * 0.05);
+    const penalty = income * 0.20;
+    if (penalty > 0) {
+      targetNat.economy.treasury = Math.max(0, (targetNat.economy.treasury ?? 0) - penalty);
+      if ((turn ?? 0) % 12 === 0) {
+        _log(`🚫 Эмбарго: ${targetNat.name ?? targetId} теряет ${Math.round(penalty)} монет (-20% дохода).`);
+      }
+    }
+  }
+
+  // +5 к отношениям с врагами цели за каждый ход
+  const nations = GAME_STATE.nations ?? {};
+  for (const [otherId, otherNat] of Object.entries(nations)) {
+    if (otherId === targetId || otherId === imposerId) continue;
+    if (otherNat.is_eliminated) continue;
+    // Проверяем, является ли эта нация врагом цели (отношения < -20)
+    const relToTarget = _rel(otherId, targetId);
+    if ((relToTarget.score ?? 0) < -20) {
+      _adjustRelScore(imposerId, otherId, 5, 'embargo_solidarity');
+    }
+  }
+}
+
 function _onCustom(treaty, a, b, natA, natB, cond) {
   // Применяем уже интерпретированные эффекты (если AI интерпретатор их заполнил)
   const ef = cond._interpreted_effects ?? {};
@@ -472,6 +559,11 @@ function _setRelFlags(treaty, rel, a, b) {
     case 'joint_campaign':
       rel.flags.joint_attack   = true;
       rel.flags.military_access = true;
+      break;
+    case 'embargo':
+      rel.flags.embargo         = true;
+      rel.flags.trade_open      = false;  // эмбарго блокирует торговлю
+      rel.flags.market_access   = false;
       break;
     default: break;
   }

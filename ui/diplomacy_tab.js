@@ -288,6 +288,25 @@ function _dpRenderNegotiation(playerNationId, foreign) {
   }).join('');
 
   // ── Активные договоры (теги) ──
+  // DIP_001: определяем активное эмбарго
+  const activeEmbargo = activeTreaties.find(t => t.type === 'embargo');
+  const embargoWarning = activeEmbargo
+    ? (() => {
+        const targetId  = activeEmbargo.conditions?.embargo_target ?? activeEmbargo.parties[1];
+        const imposerId = activeEmbargo.parties.find(p => p !== targetId);
+        const isTarget  = targetId === playerNationId;
+        const turnsLeft = activeEmbargo.turn_expires
+          ? Math.max(0, activeEmbargo.turn_expires - (GAME_STATE.turn ?? 1))
+          : '∞';
+        const embargoDir = isTarget
+          ? `<b>Вы под эмбарго</b> от ${GAME_STATE.nations?.[imposerId]?.name ?? imposerId}`
+          : `<b>Вы ввели эмбарго</b> против ${GAME_STATE.nations?.[targetId]?.name ?? targetId}`;
+        return `<div class="dp-embargo-banner" style="background:#b71c1c22;border:1px solid #b71c1c66;border-radius:6px;padding:6px 10px;margin:6px 0;font-size:0.85em;color:#ef9a9a">
+          🚫 ${embargoDir}. Торговля заблокирована. Осталось ходов: ${turnsLeft}.
+        </div>`;
+      })()
+    : '';
+
   const tagsHtml = activeTreaties.length
     ? `<div class="dp-active-tags">
         ${activeTreaties.map(t => {
@@ -354,6 +373,7 @@ function _dpRenderNegotiation(playerNationId, foreign) {
         <div class="dp-nh-name">${aiNation.name}</div>
         <div class="dp-nh-ruler">${aiRuler}${aiGov ? ` · ${aiGov}` : ''}</div>
         ${tagsHtml}
+        ${embargoWarning}
       </div>
       <div class="dp-nh-rel">
         <div class="dp-nh-relbar">
