@@ -1361,3 +1361,23 @@ NEXT_TASK: MIL_009
 ### Файлы: engine/armies.js (+30 строк), tests/mil_009_attrition_test.cjs (новый)
 
 NEXT_TASK: MIL_010
+
+---
+
+## MIL_010 — Приоритет столицы и система военных очков (2026-03-31)
+
+### Сделано:
+- `_scoreAttack()`: столица противника `+22 → +55` (критическая политическая цель) ✓
+- `_emergencyCapitalDefense(army, enemies)`: если вражеская армия ≤2 регионов от родной столицы → override score=999, action='move'/'hold' с reasoning `capital_emergency:enemy_N_away` ✓
+- `_bfsDistanceGlobal(fromId, toId)`: BFS по глобальной карте GAME_STATE.regions, max 6 шагов ✓
+- Вызов `_emergencyCapitalDefense` в `utilityAIDecide()` (шаг 2в, до набора кандидатов) ✓
+- WarScoreEngine: уже реализован в engine/war_score.js (onBattleResult, onSiegeComplete, onNavalBattle, processBlockadeTick, processHoldingTick) ✓
+- UI war score: уже реализован в ui/diplomacy_tab.js (_dpWarScoreBar, _dpWarPeaceBlock) ✓
+- Регрессии тестов MIL_005/007/008 обновлены под новое поведение MIL_010 (использование distant_cap вместо adjacent столицы, принятие capital_emergency в reasoning) ✓
+- Тесты: 19/19 ✅ (tests/mil_010_capital_priority_test.cjs)
+- Регрессии: MIL_002 16/16, MIL_003 18/18, MIL_004 16/16, MIL_005 23/23, MIL_006 18/18, MIL_007 16/16, MIL_008 15/15, MIL_009 27/27 ✅
+
+### Файлы: ai/utility_ai.js (+73 строки), tests/mil_010_capital_priority_test.cjs (новый, 183 строки)
+### Обновлены тесты: mil_005, mil_007, mil_008 (совместимость с MIL_010)
+
+NEXT_TASK: POST_MIL_TESTING
