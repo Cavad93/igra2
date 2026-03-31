@@ -1222,6 +1222,23 @@ function renderRelations(relations) {
       : score >= -15 ? '#9e9e9e' : score >= -50 ? '#ff9800' : '#f44336';
     const barPct = Math.round((score + 100) / 2);
     const scoreStr = (score > 0 ? '+' : '') + score;
+    // MIL_010: War score mini-bar for nations at war
+    let warScoreHtml = '';
+    if (atWar && typeof WarScoreEngine !== 'undefined') {
+      const ws = WarScoreEngine.getWarScore(playerNationId, nId);
+      const wsTotal = Math.max(1, ws.player + ws.opponent);
+      const wsPct   = Math.round((ws.player / wsTotal) * 100);
+      const wsLead  = ws.player > ws.opponent ? 'color:#4caf50' : ws.player < ws.opponent ? 'color:#f44336' : 'color:#9e9e9e';
+      warScoreHtml = `<div class="diplo-war-score-bar" title="Военные очки: ${ws.player} vs ${ws.opponent}" style="margin-top:3px">
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px">
+          <span style="${wsLead};font-weight:700">⚔${ws.player}</span>
+          <div style="flex:1;height:5px;background:#333;border-radius:3px;overflow:hidden">
+            <div style="width:${wsPct}%;height:100%;background:#e53935;border-radius:3px"></div>
+          </div>
+          <span style="color:#9e9e9e">⚔${ws.opponent}</span>
+        </div>
+      </div>`;
+    }
     const warBadge = atWar ? '<span class="diplo-war-dot">⚔</span>' : '';
 
     return `<div class="diplo-rel-row" onclick="showDiplomacyOverlay('${nId}')" title="Открыть переговоры">
@@ -1230,6 +1247,7 @@ function renderRelations(relations) {
         <div class="diplo-rel-info">
           <span class="diplo-rel-name">${nation.name}</span>
           ${treatyIcons ? `<span class="diplo-rel-icons">${treatyIcons}</span>` : ''}
+          ${warScoreHtml}
         </div>
       </div>
       <div class="diplo-rel-right">

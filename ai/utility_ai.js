@@ -156,10 +156,17 @@ function utilityAIDecide(army, order) {
     }
   }
 
-  // ── 2в. MIL_010: Экстренная защита родной столицы ────────────────────
-  {
-    const capitalOverride = _emergencyCapitalDefense(army, enemies);
-    if (capitalOverride) return capitalOverride;
+  // ── 2в. MIL_010: Экстренная защита столицы (override score=999) ──────
+  // Не срабатывает если армия уже ведёт осаду (не бросать осаду ради далёкой угрозы)
+  const capDefense = !activeSiege ? _emergencyCapitalDefense(army, nearby, enemies)
+                                  : { threatened: false, targetId: null };
+  if (capDefense.threatened) {
+    return {
+      action:    'move',
+      target_id: capDefense.targetId,
+      score:     999,
+      reasoning: 'defend_capital',
+    };
   }
 
   // ── 3. Набираем кандидатов и считаем score для каждого ───────────────
@@ -863,6 +870,34 @@ function _scanAllyArmies(nearby, nationId) {
 }
 
 /**
+ * MIL_010: Проверяет угрозу родной столице армии.
+ * Если вражеская армия находится в 2 регионах от столицы → вернуть override.
+ * @returns {{ threatened: bool, targetId: string|null }}
+ */
+function _emergencyCapitalDefense(army, nearby, enemies) {
+  const ownNation  = GAME_STATE.nations?.[army.nation];
+  const capitalId  = ownNation?.capital;
+  if (!capitalId) return { threatened: false, targetId: null };
+
+  // Если армия уже стоит в столице — нормальная логика справится сама
+  if (army.position === capitalId) return { threatened: false, targetId: null };
+
+  // Строим карту вокруг столицы радиусом 2 для определения угрозы
+  const wideMap = _buildNearbyMap(capitalId, 2);
+
+  for (const a of (GAME_STATE.armies ?? [])) {
+    if (a.state === 'disbanded') continue;
+    if (!enemies.includes(a.nation)) continue;
+    const dist = _bfsDistanceInNearby(capitalId, a.position, wideMap);
+    // Только если враг вплотную (1 шаг) — реальная угроза следующего хода
+    if (dist <= 1) {
+      return { threatened: true, targetId: capitalId };
+    }
+  }
+  return { threatened: false, targetId: null };
+}
+
+/**
  * Возвращает Set идентификаторов столичных регионов для списка наций.
  * Проверяет nation.capital (строка regionId) и region.is_capital (флаг).
  */
@@ -1186,7 +1221,7 @@ function _traitUniqueActions(army, char, terrain, allyInfo, nearby, activeSiege,
       if (garrisonSupply < 30) {
         const dist = _bfsDistanceInNearby(army.position, rid, nearby);
         result.push({ action: 'move', target_id: rid,
-          score: 40 + mods.siege_mult * 20 - dist * 5,
+          score: 70 + mods.siege_mult * 20 - dist * 5,
           reasoning: 'siege_master_priority' });
         break;
       }
@@ -1218,41 +1253,7 @@ function _traitUniqueActions(army, char, terrain, allyInfo, nearby, activeSiege,
 // MIL_010 — Экстренная защита столицы
 // ══════════════════════════════════════════════════════════════════════
 
-/**
- * Проверяет, угрожает ли вражеская армия родной столице нации.
- * Если вражеская армия находится в ≤2 регионах от столицы — возвращает
- * override-решение с score=999 (защита столицы приоритетнее всего).
- *
- * @param {object} army
- * @param {string[]} enemies — список вражеских наций
- * @returns {{ action, target_id, score, reasoning } | null}
- */
-function _emergencyCapitalDefense(army, enemies) {
-  const nation    = GAME_STATE.nations?.[army.nation];
-  const capitalId = nation?.capital;
-  if (!capitalId) return null;
-
-  // Все армии врагов в игре
-  const allArmies = GAME_STATE.armies ?? [];
-  for (const ea of allArmies) {
-    if (ea.state === 'disbanded') continue;
-    if (!enemies.includes(ea.nation)) continue;
-
-    // Расстояние от вражеской армии до столицы через BFS
-    const dist = _bfsDistanceGlobal(ea.position, capitalId);
-    if (dist !== null && dist <= 2) {
-      // Враг угрожает столице — экстренная защита
-      const moveTarget = army.position !== capitalId ? capitalId : null;
-      return {
-        action:    moveTarget ? 'move' : 'hold',
-        target_id: moveTarget,
-        score:     999,
-        reasoning: `capital_emergency:enemy_${dist}_away`,
-      };
-    }
-  }
-  return null;
-}
+// (old _emergencyCapitalDefense removed — superseded by MIL_010 implementation at line ~880)
 
 /**
  * BFS расстояние между двумя регионами по глобальной карте (GAME_STATE.regions).

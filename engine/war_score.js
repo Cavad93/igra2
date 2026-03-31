@@ -31,6 +31,7 @@ const WAR_SCORE_CFG = {
   CAPTURE_BASE:       5,
   CAPTURE_PER_10K:    1,   // очко за каждые 10 000 жителей
   CAPTURE_MAX:        22,
+  CAPITAL_CAPTURE:    50,  // MIL_010: бонус за захват столицы
 
   // Морские сражения
   NAVAL_BASE:         6,
@@ -209,6 +210,7 @@ function onBattleResult(winnerNationId, loserNationId, enemyCasualties, captured
   let   amount = Math.min(cfg.BATTLE_MAX,
     cfg.BATTLE_BASE + Math.floor((enemyCasualties ?? 0) / cfg.BATTLE_PER_ENEMY)
   );
+  let reasonSuffix = '';
   if (capturedRegionId) {
     const region = GAME_STATE.regions?.[capturedRegionId];
     const pop    = region?.population?.total ?? region?.population ?? 0;
@@ -216,9 +218,18 @@ function onBattleResult(winnerNationId, loserNationId, enemyCasualties, captured
       cfg.CAPTURE_BASE + Math.floor(pop / 10_000) * cfg.CAPTURE_PER_10K
     );
     amount += capBonus;
+    reasonSuffix = ', регион захвачен';
+    // MIL_010: бонус за захват столицы (+50)
+    const isCapital = region?.is_capital ||
+      Object.values(GAME_STATE.nations ?? {}).some(n => n.capital === capturedRegionId);
+    if (isCapital) {
+      amount += cfg.CAPITAL_CAPTURE;
+      reasonSuffix = ', СТОЛИЦА ЗАХВАЧЕНА';
+    }
   }
-  addWarScore(winnerNationId, loserNationId, amount, capturedRegionId ? 'battle+capture' : 'battle',
-    `Потери врага: ${enemyCasualties ?? 0}${capturedRegionId ? ', регион захвачен' : ''}`);
+  addWarScore(winnerNationId, loserNationId, amount,
+    capturedRegionId ? 'battle+capture' : 'battle',
+    `Потери врага: ${enemyCasualties ?? 0}${reasonSuffix}`);
 }
 
 /** Вызывается из siege.js при взятии крепости. */
