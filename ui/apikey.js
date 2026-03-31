@@ -203,6 +203,8 @@ async function submitAPIKey() {
     const modal = document.getElementById('api-key-modal');
     if (modal && modal._cb) { modal._cb(); modal._cb = null; }
 
+    _updateInlineKeyStatus();
+
     const saved = [
       anthropicKey ? 'Anthropic' : null,
       groqKey      ? 'Groq'      : null,
