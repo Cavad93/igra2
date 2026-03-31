@@ -2211,9 +2211,8 @@ function buildElderCouncilContent(gov, nation) {
   const actors = getActorsNoIds(gov, nation);
 
   // --- Показатель 1: Prestige-метр ---
-  const prestige  = gov.power_resource?.current ?? 50;
+  const prestige  = gov.power_resource?.current ?? gov.legitimacy ?? 50;
   const presColor = prestige > 60 ? '#4CAF50' : prestige > 30 ? '#FF9800' : '#f44336';
-  const atPeace   = gov.turns_at_peace ?? (GAME_STATE.turn - (gov._last_war_turn ?? 0));
 
   const prestigeHtml = `
     <div class="hall-tribal-metrics">
@@ -2232,16 +2231,15 @@ function buildElderCouncilContent(gov, nation) {
     </div>
   `;
 
-  // --- Показатель 2: Годы без войны (цветовой индикатор: зел 0-4, жёлт 5-9, красн 10+) ---
-  const peaceColor = atPeace <= 4 ? '#4CAF50' : atPeace <= 9 ? '#FF9800' : '#f44336';
-  const peaceLabel = atPeace <= 4 ? '(норма)'
-    : atPeace <= 9 ? '(воины ропщут)'
-    : '(ОПАСНО — вождь слабеет!)';
-  const peaceHtml = `
+  // --- Показатель 2: Годы без войны (GOV_010 — из gov.tribal.turns_at_peace) ---
+  const tap        = gov.tribal?.turns_at_peace ?? Math.max(0, (GAME_STATE.turn ?? 0) - (gov._last_war_turn ?? 0));
+  const peaceColor = tap <= 4 ? '#4CAF50' : tap <= 9 ? '#FF9800' : '#f44336';
+  const peaceLabel = tap <= 4 ? '(норма)' : tap <= 9 ? '(воины ропщут)' : '(ОПАСНО — вождь слабеет!)';
+  const peaceHtml  = `
     <div class="hall-tribal-peace" style="margin:6px 0;padding:6px 10px;background:rgba(0,0,0,.2);border-radius:6px">
-      <span class="hall-tribal-metric-label">⚔️ Годы без войны:</span>
+      <span class="hall-tribal-metric-label">⚔️ Ходов без войны:</span>
       <span class="hall-tribal-peace-val" style="color:${peaceColor};font-weight:bold;margin-left:8px">
-        ${atPeace} ${peaceLabel}
+        ${tap} ${peaceLabel}
       </span>
     </div>
   `;
@@ -2254,32 +2252,29 @@ function buildElderCouncilContent(gov, nation) {
       </button>`
     : '';
 
-  // --- GOV_010: Блок вызова на поединок если _rival_challenge_active ---
-  let challengeHtml = '';
-  if (gov._rival_challenge_active && gov._rival_chief_name) {
-    challengeHtml = `
-      <div class="hall-tribal-challenge" style="margin-top:10px;padding:10px;background:rgba(244,67,54,.15);
+  // --- Показатель 4: Вызов от соперника-вождя (GOV_010) ---
+  const challenge = gov.tribal?.rival_challenge;
+  const challengeHtml = challenge
+    ? `<div class="hall-tribal-challenge" style="margin-top:10px;padding:10px;background:rgba(244,67,54,.15);
            border:2px solid #f44336;border-radius:8px;text-align:center">
-        <div style="color:#f44336;font-weight:bold;font-size:1.05em">
-          ⚔️ ВЫЗОВ НА ПОЕДИНОК!
-        </div>
+        <div style="color:#f44336;font-weight:bold;font-size:1.05em">⚔️ ВЫЗОВ НА ПОЕДИНОК!</div>
         <div style="margin:6px 0;color:#fff">
-          <b>${gov._rival_chief_name}</b> бросает вызов вождю перед всем племенем!
+          <b>Вождь ${challenge.rival_name}</b> бросает вызов перед всем племенем!
         </div>
         <div style="color:var(--text-dim);font-size:.9em;margin-bottom:8px">
-          Откажитесь — и племя перейдёт к сопернику. Победа вернёт престиж +30.
+          Победа вернёт престиж +25. Откажетесь — уступите часть власти.
+          Истекает через ${Math.max(0, (challenge.expires_turn ?? 0) - (GAME_STATE.turn ?? 0))} хода.
         </div>
-        <button onclick="handleTribalChallengeAccept()"
+        <button onclick="acceptTribalDuel('${challenge.rival_name}')"
           style="background:#c62828;color:#fff;padding:6px 14px;border:none;border-radius:5px;cursor:pointer;margin-right:8px">
           ⚔️ Принять поединок
         </button>
-        <button onclick="handleTribalChallengeYield()"
+        <button onclick="yieldTribalPower()"
           style="background:#555;color:#ccc;padding:6px 14px;border:none;border-radius:5px;cursor:pointer">
           🏳️ Уступить власть
         </button>
-      </div>
-    `;
-  }
+      </div>`
+    : '';
 
   const headerHtml = `
     <div class="hall-campfire">🔥 🪨 🔥</div>
@@ -2303,7 +2298,7 @@ function declareTribeRaid() {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const gov    = nation?.government;
   if (!gov) return;
-  // Флаг для движка — обработается в processTribalTick (GOV_010)
+  // Флаг для движка — обрабатывается в processTribalTick (GOV_010)
   gov._raid_declared = true;
   if (typeof addEventLog === 'function') addEventLog('⚔️ Вождь объявил набег! Воины радостно хватаются за оружие.', 'military');
   if (typeof renderGovernmentOverlay === 'function') renderGovernmentOverlay();
@@ -2322,6 +2317,67 @@ function handleTribalChallengeYield() {
   const nationId = GAME_STATE.player_nation;
   if (typeof yieldTribalPower === 'function') {
     yieldTribalPower(nationId);
+  }
+  if (typeof renderGovernmentOverlay === 'function') renderGovernmentOverlay();
+}
+
+// GOV_010: Принять поединок от соперника-вождя
+function acceptTribalDuel(rivalName) {
+  const nation = GAME_STATE.nations[GAME_STATE.player_nation];
+  const gov    = nation?.government;
+  if (!gov || !gov.tribal?.rival_challenge) return;
+
+  const prestige = gov.power_resource?.current ?? gov.legitimacy ?? 50;
+  // Вероятность победы зависит от престижа (10–70%)
+  const winChance = Math.min(70, Math.max(10, 10 + prestige * 0.6));
+  const win       = Math.random() * 100 < winChance;
+
+  gov.tribal.rival_challenge = null;
+  gov.tribal.turns_at_peace  = 0;
+
+  if (win) {
+    // Победа: +25 престижа, +10 стабильности
+    if (gov.power_resource) {
+      gov.power_resource.current = Math.min(gov.power_resource.max ?? 100, gov.power_resource.current + 25);
+      gov.legitimacy = Math.round(gov.power_resource.current);
+    }
+    gov.stability = Math.min(100, (gov.stability ?? 50) + 10);
+    if (typeof addEventLog === 'function') {
+      addEventLog(`⚔️ Вождь победил в поединке! ${rivalName} признал вашу силу. Престиж +25, Стабильность +10.`, 'positive');
+    }
+  } else {
+    // Поражение: −20 престижа, −20 стабильности, −15 легитимности
+    if (gov.power_resource) {
+      gov.power_resource.current = Math.max(0, gov.power_resource.current - 20);
+      gov.legitimacy = Math.round(gov.power_resource.current);
+    }
+    gov.stability  = Math.max(0, (gov.stability ?? 50) - 20);
+    if (typeof addEventLog === 'function') {
+      addEventLog(`😔 Поединок проигран! ${rivalName} нанёс серьёзный удар по авторитету вождя. Престиж −20, Стабильность −20.`, 'danger');
+    }
+  }
+  if (typeof renderGovernmentOverlay === 'function') renderGovernmentOverlay();
+}
+
+// GOV_010: Уступить власть без поединка
+function yieldTribalPower() {
+  const nation = GAME_STATE.nations[GAME_STATE.player_nation];
+  const gov    = nation?.government;
+  if (!gov || !gov.tribal?.rival_challenge) return;
+
+  const rivalName = gov.tribal.rival_challenge.rival_name ?? 'Соперник';
+  gov.tribal.rival_challenge = null;
+  gov.tribal.turns_at_peace  = 0;
+
+  gov.stability  = Math.max(0, (gov.stability ?? 50) - 30);
+  gov.legitimacy = Math.max(0, (gov.legitimacy ?? 50) - 25);
+  if (gov.power_resource) {
+    gov.power_resource.current = Math.max(0, gov.power_resource.current - 25);
+    gov.legitimacy = Math.round(gov.power_resource.current);
+  }
+
+  if (typeof addEventLog === 'function') {
+    addEventLog(`🏳️ Вождь уступил ${rivalName} без боя. Стабильность −30, Легитимность −25.`, 'danger');
   }
   if (typeof renderGovernmentOverlay === 'function') renderGovernmentOverlay();
 }
