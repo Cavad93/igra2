@@ -109,6 +109,11 @@ function utilityAIDecide(army, order) {
   // MIL_002: Установить формацию армии перед боем
   const currentTerrain = nearby[army.position]?.terrain ?? 'plains';
   army.formation = _chooseFormation(army, currentTerrain, readiness, activeSiege);
+  // MIL_008: Есть ли враг в соседнем регионе (для бонуса обороны на холмах/горах)
+  const hasIncomingEnemy = Object.keys(enemyArmies).some(rid => {
+    const reg = nearby[rid];
+    return reg && (reg.connections ?? []).includes(army.position);
+  });
 
   // ── 1. КРИТИЧЕСКОЕ СОСТОЯНИЕ: принудительное отступление ────────────
   if (readiness < mods.retreat_threshold) {
@@ -155,11 +160,15 @@ function utilityAIDecide(army, order) {
   const candidates = [];
 
   // Держать позицию
+  const _holdScore008 = _scoreHold(army, readiness, mods, currentTerrain, hasIncomingEnemy);
+  const _holdReason008 = hasIncomingEnemy && (currentTerrain === 'hills' || currentTerrain === 'mountains')
+    ? _phrase('hold') + ' terrain_advantage:defender_hills'
+    : _phrase('hold');
   candidates.push({
     action:    'hold',
     target_id: null,
-    score:     _scoreHold(army, readiness, mods),
-    reasoning: _phrase('hold'),
+    score:     _holdScore008,
+    reasoning: _holdReason008,
   });
 
   // Штурм текущей осады
@@ -245,11 +254,14 @@ function utilityAIDecide(army, order) {
     if (rid === army.position) continue;
     if (!enemies.includes(region.nation)) continue;
 
-    let sc = _scoreAttack(army, region, nearby, mods, readiness, enemyArmies, compMods, capitals);
+    const _atk008 = _scoreAttack(army, region, nearby, mods, readiness, enemyArmies, compMods, capitals);
+    let sc = _atk008.score;
+    const _terrainTag008 = _atk008.terrainTag;
 
     const eStr   = enemyArmies[rid] ?? 0;
     const isOpen = region.fortress === 0 && region.garrison < 300 && eStr === 0;
     let moveReasoning = isOpen ? _phrase('attack_open') : _phrase('attack_fortified');
+    if (_terrainTag008) moveReasoning += ' ' + _terrainTag008;
 
     // Клещи: синхронный удар 2+ армий по одной цели (сильнее обычной координации)
     if (pincerInfo.isPincer && rid === pincerInfo.pincerTarget) {
@@ -451,7 +463,31 @@ function _scoreAttack(army, targetRegion, nearby, mods, readiness, enemyArmies, 
     }
   }
 
-  return Math.max(0, score);
+  // MIL_008: Terrain-aware attack adjustments
+  const _total008 = (army.units?.infantry ?? 0) + (army.units?.cavalry ?? 0) +
+                    (army.units?.artillery ?? 0) + (army.units?.other ?? 0) || 1;
+  const _cavRatio008 = (army.units?.cavalry ?? 0) / _total008;
+  const _tgt008 = targetRegion.terrain;
+  let terrainTag = null;
+  if (_cavRatio008 > 0.4 && (_tgt008 === 'mountains' || _tgt008 === 'hills')) {
+    score -= 30;
+    terrainTag = 'terrain_penalty:mountains';
+  } else if (_cavRatio008 > 0.4 && (_tgt008 === 'plains' || _tgt008 === 'river_valley')) {
+    score += 12;
+    terrainTag = 'terrain_advantage:cavalry_plains';
+  }
+  if (_tgt008 === 'coastal_city' || _tgt008 === 'strait') {
+    const _hasFleet = (GAME_STATE.armies ?? []).some(a =>
+      a.type === 'naval' && a.nation === army.nation &&
+      (a.position === targetRegion.id || (targetRegion.connections ?? []).includes(a.position))
+    );
+    if (!_hasFleet) {
+      score -= 15;
+      terrainTag = (terrainTag ? terrainTag + ' ' : '') + 'terrain_penalty:coastal_no_fleet';
+    }
+  }
+
+  return { score: Math.max(0, score), terrainTag };
 }
 
 /**
@@ -518,7 +554,7 @@ function _scoreSiege(army, siege, mods, readiness, compMods) {
  * Score для удержания позиции.
  * Чем хуже состояние армии — тем выгоднее держать и восстанавливаться.
  */
-function _scoreHold(army, readiness, mods) {
+function _scoreHold(army, readiness, mods, terrain = null, hasIncomingEnemy = false) {
   let score = 12;
 
   // Усталость → отдыхать
@@ -529,6 +565,11 @@ function _scoreHold(army, readiness, mods) {
 
   // Низкое снабжение → ждать подвоза
   if (army.supply < 50) score += (50 - army.supply) * 0.35;
+
+  // MIL_008: Преимущество защиты на холмах/горах при приближении врага
+  if (hasIncomingEnemy && (terrain === 'hills' || terrain === 'mountains')) {
+    score += 25;
+  }
 
   // Осторожный командир охотнее держит позицию
   score *= mods.hold_mult;
