@@ -1023,11 +1023,12 @@ function processDiplomacyGlobalTick() {
 
   // На больших картах конвергируем только СУЩЕСТВУЮЩИЕ пары (не O(N²) обход)
   if (nids.length > _INIT_NATION_LIMIT) {
+    // nidSet создаётся ОДИН РАЗ вне цикла — иначе O(R × N) Set-аллокаций при тысячах записей
+    const nidSet = new Set(nids);
     for (const [key, rel] of Object.entries(GAME_STATE.diplomacy.relations)) {
       if (!rel || rel.war) continue;
       // _relKey(a,b) = [a,b].sort().join('_')
       // Nation IDs may contain underscores, so we find the split point where both sides are known nation IDs
-      const nidSet = new Set(nids);
       let a = null, b = null;
       for (let si = 1; si < key.length; si++) {
         if (key[si] === '_') {

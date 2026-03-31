@@ -603,9 +603,11 @@ function _processEspionageTick() {
       const target = nations[targetId];
       if (!target || target.is_eliminated) continue;
 
-      const rel = (typeof getRelation === 'function') ? getRelation(attackerId, targetId) : null;
-      if (!rel) continue;
-      if (rel.score >= -10 && !rel.war) continue; // пара недостаточно враждебна
+      // Прямая проверка: не вызываем getRelation(), чтобы не создавать записи
+      // для нейтральных пар — это предотвращает рост diplomacy.relations до O(N²).
+      const _espKey = [attackerId, targetId].sort().join('_');
+      const rel = GAME_STATE.diplomacy?.relations?.[_espKey];
+      if (!rel || (rel.score >= -10 && !rel.war)) continue; // пара недостаточно враждебна
       if (Math.random() > 0.35) continue;          // рандомный выбор цели за ход
 
       // Шанс поймать: counter_espionage + intelligence_quality цели
