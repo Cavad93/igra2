@@ -916,6 +916,187 @@ async function _generateElectionNarrative(nationId, winner, losers, scandals) {
 // ПЕРЕХОД МЕЖДУ ФОРМАМИ
 // ──────────────────────────────────────────────────────────────────────
 
+/**
+ * GOV_009: Высокоуровневый триггер перехода правления с типизированными эффектами.
+ * cause: 'coup' | 'revolution' | 'reform' | 'conquest'
+ */
+function triggerGovernmentTransition(nationId, fromType, toType, cause) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation?.government) return;
+  const gov    = nation.government;
+  const isPlayer = nationId === GAME_STATE.player_nation;
+
+  // Карта немедленных эффектов по типу причины
+  const CAUSE_EFFECTS = {
+    coup: {
+      stability:  -50,
+      legitimacy: -40,
+      army_split: true,   // армия делится на стороны
+      label: 'Военный переворот',
+      icon: '⚔️',
+      penalties: { stability: -5, army_loyalty: -4, legitimacy: -3 },
+    },
+    revolution: {
+      stability:  -60,
+      treasury_pct: -0.30, // −30% казны
+      label: 'Народное восстание',
+      icon: '🔥',
+      penalties: { stability: -6, army_loyalty: -3, legitimacy: -4 },
+    },
+    reform: {
+      stability:  -15,
+      legitimacy_bonus_after: 10, // +10 через 3 хода
+      label: 'Мирная реформа',
+      icon: '📜',
+      penalties: { stability: -2, army_loyalty: -1, legitimacy: -1 },
+    },
+    conquest: {
+      stability:  -30,
+      resistance: true,   // resistance_movement = true
+      label: 'Навязанная форма правления',
+      icon: '🛡️',
+      penalties: { stability: -4, army_loyalty: -3, legitimacy: -2 },
+    },
+  };
+
+  const eff = CAUSE_EFFECTS[cause] ?? CAUSE_EFFECTS.reform;
+
+  // 1. Немедленные штрафы
+  if (eff.stability)  gov.stability  = Math.max(0, (gov.stability  ?? 50) + eff.stability);
+  if (eff.legitimacy) gov.legitimacy = Math.max(0, (gov.legitimacy ?? 50) + eff.legitimacy);
+
+  if (eff.treasury_pct && nation.economy) {
+    nation.economy.treasury = Math.round(
+      (nation.economy.treasury ?? 0) * (1 + eff.treasury_pct)
+    );
+  }
+
+  if (eff.army_split && nation.military) {
+    // Армия делится — лояльность резко падает
+    const loyBefore = nation.military.loyalty ?? 50;
+    nation.military.loyalty = Math.max(0, loyBefore - 30);
+    if (isPlayer) {
+      addEventLog(
+        `⚔️ Переворот: часть армии переходит на сторону мятежников! Лояльность −30.`,
+        'danger'
+      );
+    }
+  }
+
+  if (eff.resistance) {
+    gov.resistance_movement = true;
+    if (isPlayer) {
+      addEventLog(
+        `🛡️ Завоёванные земли не приняли новый строй. Движение сопротивления активно.`,
+        'warning'
+      );
+    }
+  }
+
+  // 2. Флаг переходного периода (экономика и армия работают неполностью)
+  gov.in_transition = true;
+
+  // 3. Сохранить причину перехода для последующей генерации нарратива
+  gov._pending_transition_cause_type = cause;
+  gov._pending_transition_legitimacy_bonus = eff.legitimacy_bonus_after ?? 0;
+  gov._pending_transition_legitimacy_turn  = eff.legitimacy_bonus_after
+    ? (GAME_STATE.turn ?? 0) + 3
+    : null;
+
+  // 4. Запустить механику постепенного перехода с причина-специфичными штрафами
+  const causeLabel = `${eff.icon} ${eff.label}`;
+  startGovernmentTransition(nationId, toType, causeLabel);
+
+  // Перезаписать штрафы в active_transition (более сильные для переворота/революции)
+  if (gov.active_transition) {
+    gov.active_transition.transition_penalties = eff.penalties;
+    gov.active_transition.cause_type = cause;
+  }
+
+  // 5. Уведомление игрока
+  if (isPlayer) {
+    const fromName = getGovernmentNameFull(fromType);
+    const toName   = getGovernmentNameFull(toType);
+    addEventLog(
+      `${eff.icon} ${eff.label.toUpperCase()}! ${fromName} → ${toName}. ` +
+      `Доходы −20%, боеспособность армии −25% до завершения перехода.`,
+      'danger'
+    );
+  }
+
+  // 6. Асинхронная генерация нарратива через Claude Haiku
+  _generateTransitionNarrative(nationId, fromType, toType, cause, eff.label);
+}
+
+/**
+ * Асинхронно генерирует нарратив перехода и сохраняет в transition_history.
+ */
+async function _generateTransitionNarrative(nationId, fromType, toType, causeType, causeLabel) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation?.government) return;
+
+  const fromName = getGovernmentNameFull(fromType);
+  const toName   = getGovernmentNameFull(toType);
+
+  const CAUSE_CONTEXT = {
+    coup:      'военный переворот, армия захватила власть',
+    revolution:'народное восстание, улицы охвачены беспорядками',
+    reform:    'мирная реформа через законодательный процесс',
+    conquest:  'завоеватель навязал новую форму правления',
+  };
+
+  const systemPrompt =
+    'Ты — летописец исторической стратегической игры об античности. ' +
+    'Напиши 2-3 предложения (не более 250 символов) о смене формы правления. ' +
+    'Стиль: краткая историческая хроника. Без кавычек и пояснений. Язык: русский.';
+
+  const userPrompt =
+    `Нация: ${nation.name ?? nationId}. ` +
+    `Переход: ${fromName} → ${toName}. ` +
+    `Причина: ${CAUSE_CONTEXT[causeType] ?? causeLabel}.`;
+
+  let narrative = '';
+  try {
+    if (typeof callClaude === 'function') {
+      const raw = await callClaude(systemPrompt, userPrompt, 120, CONFIG?.MODEL_HAIKU ?? 'claude-haiku-4-5-20251001');
+      narrative = (raw || '').trim().slice(0, 280);
+    }
+  } catch (_) { /* fallback */ }
+
+  if (!narrative) {
+    const fallbacks = {
+      coup:      `${nation.name ?? 'Государство'} потрясено переворотом. Прежняя власть пала под натиском военных. Новая форма правления устанавливается силой.`,
+      revolution:`Народный гнев сверг прежний строй. На улицах кровь и хаос. ${toName} рождается из огня восстания.`,
+      reform:    `Мудрые реформаторы провели страну через мирный переход. ${toName} утверждён законодательным путём.`,
+      conquest:  `Завоеватель диктует новые законы. ${toName} навязан побеждённым. Но в сердцах многих горит пламя сопротивления.`,
+    };
+    narrative = fallbacks[causeType] ?? `${fromName} уступил место ${toName}.`;
+  }
+
+  // Сохранить нарратив — добавить в transition_history последнюю запись
+  const gov = nation.government;
+  if (!gov.transition_history) gov.transition_history = [];
+  // Ищем самую свежую запись без нарратива
+  const lastEntry = [...gov.transition_history].reverse().find(e => !e.narrative);
+  if (lastEntry) {
+    lastEntry.narrative = narrative;
+  } else {
+    // Или добавляем новую запись с нарративом
+    gov.transition_history.push({
+      turn:      GAME_STATE.turn ?? 0,
+      from:      fromType,
+      to:        toType,
+      cause:     causeLabel,
+      cause_type: causeType,
+      narrative,
+    });
+  }
+
+  if (nationId === GAME_STATE.player_nation) {
+    addEventLog(`📜 Летопись перехода: ${narrative}`, 'info');
+  }
+}
+
 function startGovernmentTransition(nationId, toType, cause) {
   const nation = GAME_STATE.nations[nationId];
   const gov = nation.government;
@@ -933,6 +1114,9 @@ function startGovernmentTransition(nationId, toType, cause) {
     possible_events: ['military_coup', 'civil_war', 'peaceful_transition', 'compromise_government'],
   };
 
+  // GOV_009: Флаг переходного периода
+  gov.in_transition = true;
+
   if (nationId === GAME_STATE.player_nation) {
     addEventLog(
       `🔄 Начат переход: ${getGovernmentNameFull(gov.type)} → ${getGovernmentNameFull(toType)}. Ожидайте нестабильности.`,
@@ -948,6 +1132,9 @@ function processTransition(nationId) {
   const trans  = gov.active_transition;
   if (!trans || trans.status !== 'in_progress') return;
 
+  // GOV_009: Поддерживаем флаг переходного периода
+  gov.in_transition = true;
+
   trans.turns_elapsed = (trans.turns_elapsed ?? 0) + 1;
 
   // Штрафы переходного периода (каждый ход)
@@ -956,14 +1143,28 @@ function processTransition(nationId) {
   if (pen.army_loyalty) nation.military.loyalty = Math.max(0, nation.military.loyalty + pen.army_loyalty);
   if (pen.legitimacy)   gov.legitimacy   = Math.max(0, gov.legitimacy + pen.legitimacy);
 
+  // GOV_009: Бонус легитимности для мирной реформы через 3 хода
+  const legBonusTurn = gov._pending_transition_legitimacy_turn;
+  if (legBonusTurn && (GAME_STATE.turn ?? 0) >= legBonusTurn && gov._pending_transition_legitimacy_bonus > 0) {
+    const bonus = gov._pending_transition_legitimacy_bonus;
+    gov.legitimacy = Math.min(100, (gov.legitimacy ?? 50) + bonus);
+    gov._pending_transition_legitimacy_bonus = 0;
+    gov._pending_transition_legitimacy_turn  = null;
+    if (nationId === GAME_STATE.player_nation) {
+      addEventLog(`📜 Реформа набирает поддержку: легитимность +${bonus}.`, 'positive');
+    }
+  }
+
   // Случайное событие во время перехода (20% шанс)
   if (Math.random() < 0.20 && nationId === GAME_STATE.player_nation) {
-    const evts = [
-      'Аристократы требуют замедлить реформы.',
-      'Армия сохраняет нейтралитет — пока.',
-      'Соседние державы с интересом наблюдают за нестабильностью.',
-      'Народ на улицах поддерживает перемены.',
-    ];
+    const causeType = trans.cause_type ?? 'reform';
+    const evtsMap = {
+      coup:      ['Офицеры требуют повышения жалованья.', 'Старые сенаторы уходят в изгнание.', 'Перехвачен гонец с призывом к контрперевороту.', 'Армия присягнула новому режиму.'],
+      revolution:['Толпа требует суда над прежними правителями.', 'Мародёры хозяйничают на рынках.', 'Умеренные призывают к переговорам.', 'Иностранные послы покидают столицу.'],
+      reform:    ['Аристократы требуют замедлить реформы.', 'Армия сохраняет нейтралитет — пока.', 'Соседние державы с интересом наблюдают за нестабильностью.', 'Народ на улицах поддерживает перемены.'],
+      conquest:  ['Местная знать присягает завоевателю.', 'Подпольные ячейки сопротивления собираются.', 'Новый наместник прибыл в столицу.', 'Жрецы сохраняют молчание.'],
+    };
+    const evts = evtsMap[causeType] ?? evtsMap.reform;
     addEventLog(`🔄 Переход (ход ${trans.turns_elapsed}): ${evts[Math.floor(Math.random()*evts.length)]}`, 'info');
   }
 
@@ -996,17 +1197,29 @@ function completeTransition(nationId) {
   trans.status = 'completed';
   gov.active_transition = null;
 
+  // GOV_009: Снимаем флаг переходного периода — экономика и армия восстанавливаются
+  gov.in_transition = false;
+  gov._pending_transition_cause_type       = null;
+  gov._pending_transition_legitimacy_bonus = 0;
+  gov._pending_transition_legitimacy_turn  = null;
+
+  // Снимаем resistance_movement только для ненасильственных переходов
+  if (trans.cause_type !== 'conquest') {
+    gov.resistance_movement = false;
+  }
+
   if (!gov.transition_history) gov.transition_history = [];
   gov.transition_history.push({
-    turn: GAME_STATE.turn,
-    from: oldType,
-    to: newType,
-    cause: trans.cause,
+    turn:       GAME_STATE.turn,
+    from:       oldType,
+    to:         newType,
+    cause:      trans.cause,
+    cause_type: trans.cause_type ?? 'reform',
   });
 
   if (nationId === GAME_STATE.player_nation) {
     addEventLog(
-      `✅ Переход завершён. Новая форма: ${getGovernmentNameFull(newType)}. Легитимность стабилизируется.`,
+      `✅ Переход завершён. Новая форма: ${getGovernmentNameFull(newType)}. Доходы и боеспособность армии восстановлены.`,
       'positive'
     );
     renderGovernmentOverlay();

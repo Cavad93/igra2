@@ -352,8 +352,11 @@ function calcArmyCombatStrength(army, terrain, isDefender) {
     if (cr >= 0.20 && cr <= 0.50) compMult = COMBAT.COMPOSITION_BONUS;
   }
 
+  // GOV_009: Переходный период снижает боеспособность на 25%
+  const transitionMod = GAME_STATE?.nations?.[army.nation]?.government?.in_transition ? 0.75 : 1.0;
+
   return Math.max(1,
-    base * moraleMult * discMult * fatMult * fmtMult * cmdMult * compMult
+    base * moraleMult * discMult * fatMult * fmtMult * cmdMult * compMult * transitionMod
   );
 }
 

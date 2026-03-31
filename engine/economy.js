@@ -669,7 +669,10 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   const effTradeProfit = Math.round(tradeProfit * navyLvl);
   const effPortDuties  = Math.round(portDuties  * buildingsLvl);
   const tariffIncome   = Math.round((economy._tariff_income_tick ?? 0) * (buildingsLvl ?? 1));
-  const totalIncome = taxIncomeTotal + effPortDuties + effTradeProfit + tariffIncome;
+
+  // GOV_009: Переходный период снижает доходы на 20%
+  const transitionMod = nation.government?.in_transition ? 0.80 : 1.0;
+  const totalIncome = Math.round((taxIncomeTotal + effPortDuties + effTradeProfit + tariffIncome) * transitionMod);
 
   // ── РАСХОДЫ: АРМИЯ ─────────────────────────────────────────
   const expArmyInfantry    = (military.infantry    || 0) * CONFIG.BALANCE.INFANTRY_UPKEEP;

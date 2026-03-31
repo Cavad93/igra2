@@ -496,14 +496,49 @@ function renderGovHeader(gov) {
 function renderTransitionBanner(trans) {
   const from = getGovernmentNameFull(trans.from);
   const to   = getGovernmentNameFull(trans.to);
+
+  // GOV_009: Прогресс-бар (0-100%) — переход завершается ~на 5-18 ходу
+  const elapsed  = trans.turns_elapsed ?? 0;
+  const maxTurns = 10; // ожидаемая длительность для отображения
+  const progress = Math.min(100, Math.round((elapsed / maxTurns) * 100));
+
+  // Цвет полосы по типу перехода
+  const CAUSE_COLORS = {
+    coup:      '#f44336',
+    revolution:'#ff5722',
+    reform:    '#4CAF50',
+    conquest:  '#9c27b0',
+  };
+  const barColor = CAUSE_COLORS[trans.cause_type] ?? '#FF9800';
+
+  // Иконка по типу
+  const CAUSE_ICONS = { coup: '⚔️', revolution: '🔥', reform: '📜', conquest: '🛡️' };
+  const icon = CAUSE_ICONS[trans.cause_type] ?? '🔄';
+
+  // Последний нарратив (если уже сгенерирован)
+  const gov = GAME_STATE.nations[GAME_STATE.player_nation]?.government;
+  const lastHistEntry = gov?.transition_history
+    ? [...gov.transition_history].reverse().find(e => e.narrative)
+    : null;
+  const narrativeBlock = lastHistEntry?.narrative
+    ? `<div class="transition-narrative">📜 ${lastHistEntry.narrative}</div>`
+    : '';
+
   return `
     <div class="gov-transition-banner">
-      <div class="transition-title">🔄 Переходный период</div>
+      <div class="transition-title">${icon} Переходный период власти</div>
       <div class="transition-route">${from} → ${to}</div>
-      <div class="transition-meta">
-        Ход ${trans.turns_elapsed ?? 0} из ~10 · Причина: ${trans.cause}
+      <div class="transition-cause">${trans.cause}</div>
+      <div class="transition-progress-wrap">
+        <div class="transition-progress-label">Прогресс перехода: ${progress}% (ход ${elapsed})</div>
+        <div class="bar-container" style="height:10px;margin:4px 0">
+          <div class="bar-fill" style="width:${progress}%;background:${barColor};height:10px"></div>
+        </div>
       </div>
-      <div class="transition-warning">⚠️ Активны штрафы к стабильности и лояльности армии</div>
+      <div class="transition-penalties">
+        ⚠️ Доходы −20% · Боеспособность армии −25% · Штрафы к стабильности и лояльности
+      </div>
+      ${narrativeBlock}
     </div>
   `;
 }
