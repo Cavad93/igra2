@@ -646,6 +646,27 @@ function renderPowerResourceBlock(pr, gov) {
 
   const warningText = getResourceWarning(pr.type, val, gov);
 
+  // GOV_010: для tribal/prestige — показываем счётчик «Годы без войны»
+  let peaceCounterHtml = '';
+  if (pr.type === 'prestige' && gov.type === 'tribal') {
+    const atPeace = gov.turns_at_peace ?? 0;
+    const peaceColor = atPeace <= 4 ? '#4CAF50' : atPeace <= 9 ? '#FF9800' : '#f44336';
+    const peaceLabel = atPeace <= 4 ? 'норма' : atPeace <= 9 ? 'воины ропщут' : 'ОПАСНО';
+    peaceCounterHtml = `
+      <div class="gov-tribal-peace-counter" style="margin-top:6px;font-size:.9em">
+        ⚔️ Годы без войны:
+        <span style="color:${peaceColor};font-weight:bold">${atPeace}</span>
+        <span style="color:${peaceColor}"> (${peaceLabel})</span>
+        ${atPeace <= 4
+          ? '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4CAF50;margin-left:5px;vertical-align:middle"></span>'
+          : atPeace <= 9
+            ? '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#FF9800;margin-left:5px;vertical-align:middle"></span>'
+            : '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f44336;margin-left:5px;vertical-align:middle;animation:blink 1s infinite"></span>'
+        }
+      </div>
+    `;
+  }
+
   return `
     <div class="gov-section">
       <div class="gov-section-title">${icon} Ресурс власти: ${name}</div>
@@ -658,6 +679,7 @@ function renderPowerResourceBlock(pr, gov) {
       <div class="gov-power-decay">
         Распад: −${pr.decay_per_turn ?? 0.5}/ход
       </div>
+      ${peaceCounterHtml}
       ${restoredList ? `<div class="gov-power-restore">Восстанавливают: ${restoredList}</div>` : ''}
       ${warningText ? `<div class="gov-power-warning">${warningText}</div>` : ''}
     </div>
@@ -2189,47 +2211,81 @@ function buildElderCouncilContent(gov, nation) {
   const actors = getActorsNoIds(gov, nation);
 
   // --- Показатель 1: Prestige-метр ---
-  const prestige = gov.power_resource?.current ?? 50;
-  const presColor = prestige > 60 ? '#FF9800' : prestige > 30 ? '#FF9800' : '#f44336';
-  const lastWar   = gov._last_war_turn ?? 0;
-  const peaceYears = Math.max(0, GAME_STATE.turn - lastWar - 10);
-  const atPeace   = GAME_STATE.turn - lastWar;
+  const prestige  = gov.power_resource?.current ?? 50;
+  const presColor = prestige > 60 ? '#4CAF50' : prestige > 30 ? '#FF9800' : '#f44336';
+  const atPeace   = gov.turns_at_peace ?? (GAME_STATE.turn - (gov._last_war_turn ?? 0));
 
   const prestigeHtml = `
     <div class="hall-tribal-metrics">
       <div class="hall-tribal-metric">
         <span class="hall-tribal-metric-label">🏆 Престиж вождя</span>
         <div class="bar-container wide">
-          <div class="bar-fill" style="width:${prestige}%;background:${presColor}"></div>
+          <div class="bar-fill" style="width:${Math.min(100, prestige)}%;background:${presColor}"></div>
         </div>
         <span style="color:${presColor}">${Math.round(prestige)}/100</span>
       </div>
-      ${prestige < 30 ? '<div class="hall-tribal-warning">⚠️ Вождь теряет уважение племени!</div>' : ''}
+      ${prestige < 20
+        ? '<div class="hall-tribal-warning" style="color:#f44336;font-weight:bold">⚠️ КРИТИЧЕСКИЙ уровень! Власть вождя под угрозой!</div>'
+        : prestige < 40
+          ? '<div class="hall-tribal-warning">⚠️ Вождь теряет уважение племени!</div>'
+          : ''}
     </div>
   `;
 
-  // --- Показатель 2: Годы без войны ---
+  // --- Показатель 2: Годы без войны (цветовой индикатор: зел 0-4, жёлт 5-9, красн 10+) ---
   const peaceColor = atPeace <= 4 ? '#4CAF50' : atPeace <= 9 ? '#FF9800' : '#f44336';
+  const peaceLabel = atPeace <= 4 ? '(норма)'
+    : atPeace <= 9 ? '(воины ропщут)'
+    : '(ОПАСНО — вождь слабеет!)';
   const peaceHtml = `
-    <div class="hall-tribal-peace">
-      <span class="hall-tribal-metric-label">⚔️ Ходов без войны:</span>
-      <span class="hall-tribal-peace-val" style="color:${peaceColor}">
-        ${atPeace} ${atPeace <= 4 ? '(норма)' : atPeace <= 9 ? '(воины ропщут)' : '(опасно!)'}
+    <div class="hall-tribal-peace" style="margin:6px 0;padding:6px 10px;background:rgba(0,0,0,.2);border-radius:6px">
+      <span class="hall-tribal-metric-label">⚔️ Годы без войны:</span>
+      <span class="hall-tribal-peace-val" style="color:${peaceColor};font-weight:bold;margin-left:8px">
+        ${atPeace} ${peaceLabel}
       </span>
     </div>
   `;
 
-  // --- Показатель 3: Кнопка «Объявить набег» если prestij < 30 ---
+  // --- Показатель 3: Кнопка «Объявить набег» при престиже < 50 ---
   const raidBtn = prestige < 50
-    ? `<button class="hall-tribal-raid-btn" onclick="declareTribeRaid()" title="Набег восстановит престиж вождя">
-        ⚔️ Объявить набег ${prestige < 20 ? '(СРОЧНО!)' : ''}
+    ? `<button class="hall-tribal-raid-btn" onclick="declareTribeRaid()"
+         title="Набег восстановит престиж вождя (+15)" style="margin-top:6px">
+        ⚔️ Объявить набег ${prestige < 20 ? '(СРОЧНО!)' : '(восстановить престиж)'}
       </button>`
     : '';
+
+  // --- GOV_010: Блок вызова на поединок если _rival_challenge_active ---
+  let challengeHtml = '';
+  if (gov._rival_challenge_active && gov._rival_chief_name) {
+    challengeHtml = `
+      <div class="hall-tribal-challenge" style="margin-top:10px;padding:10px;background:rgba(244,67,54,.15);
+           border:2px solid #f44336;border-radius:8px;text-align:center">
+        <div style="color:#f44336;font-weight:bold;font-size:1.05em">
+          ⚔️ ВЫЗОВ НА ПОЕДИНОК!
+        </div>
+        <div style="margin:6px 0;color:#fff">
+          <b>${gov._rival_chief_name}</b> бросает вызов вождю перед всем племенем!
+        </div>
+        <div style="color:var(--text-dim);font-size:.9em;margin-bottom:8px">
+          Откажитесь — и племя перейдёт к сопернику. Победа вернёт престиж +30.
+        </div>
+        <button onclick="handleTribalChallengeAccept()"
+          style="background:#c62828;color:#fff;padding:6px 14px;border:none;border-radius:5px;cursor:pointer;margin-right:8px">
+          ⚔️ Принять поединок
+        </button>
+        <button onclick="handleTribalChallengeYield()"
+          style="background:#555;color:#ccc;padding:6px 14px;border:none;border-radius:5px;cursor:pointer">
+          🏳️ Уступить власть
+        </button>
+      </div>
+    `;
+  }
 
   const headerHtml = `
     <div class="hall-campfire">🔥 🪨 🔥</div>
     ${prestigeHtml}
     ${peaceHtml}
+    ${challengeHtml}
     ${raidBtn}
   `;
 
@@ -2247,10 +2303,26 @@ function declareTribeRaid() {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const gov    = nation?.government;
   if (!gov) return;
-  // Флаг для движка — объявить малую войну для восстановления престижа
+  // Флаг для движка — обработается в processTribalTick (GOV_010)
   gov._raid_declared = true;
-  if (window.UI?.notify) window.UI.notify('⚔️ Вождь объявил набег. Воины воодушевлены!');
-  else if (typeof addEventLog === 'function') addEventLog('⚔️ Вождь объявил набег. Воины воодушевлены!', 'military');
+  if (typeof addEventLog === 'function') addEventLog('⚔️ Вождь объявил набег! Воины радостно хватаются за оружие.', 'military');
+  if (typeof renderGovernmentOverlay === 'function') renderGovernmentOverlay();
+}
+
+// GOV_010: Обработчики вызова на поединок из UI
+function handleTribalChallengeAccept() {
+  const nationId = GAME_STATE.player_nation;
+  if (typeof acceptTribalChallenge === 'function') {
+    acceptTribalChallenge(nationId);
+  }
+  if (typeof renderGovernmentOverlay === 'function') renderGovernmentOverlay();
+}
+
+function handleTribalChallengeYield() {
+  const nationId = GAME_STATE.player_nation;
+  if (typeof yieldTribalPower === 'function') {
+    yieldTribalPower(nationId);
+  }
   if (typeof renderGovernmentOverlay === 'function') renderGovernmentOverlay();
 }
 
