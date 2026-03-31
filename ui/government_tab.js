@@ -937,13 +937,13 @@ function getFactionColor(name, idx) {
 }
 
 const HALL_META = {
-  tyranny:    { icon: '⚔️',  name: 'Тронный зал',         btnLabel: '⚔️ Войти в тронный зал',        css: 'hall-tyranny'   },
-  monarchy:   { icon: '👑',  name: 'Королевский двор',    btnLabel: '👑 Войти в королевский двор',   css: 'hall-monarchy'  },
+  tyranny:    { icon: '🗡️',  name: 'Цитадель власти',     btnLabel: '🗡️ Войти в цитадель власти',   css: 'hall-tyranny'   },
+  monarchy:   { icon: '👑',  name: 'Тронный зал',         btnLabel: '👑 Войти в тронный зал',        css: 'hall-monarchy'  },
   republic:   { icon: '🏛',  name: 'Зал Сената',          btnLabel: '🏛 Войти в зал Сената',         css: 'hall-republic'  },
-  oligarchy:  { icon: '💰',  name: 'Торговый совет',      btnLabel: '💰 Войти в торговый совет',     css: 'hall-oligarchy' },
+  oligarchy:  { icon: '💰',  name: 'Совет богатых',       btnLabel: '💰 Войти в совет богатых',      css: 'hall-oligarchy' },
   democracy:  { icon: '🗳️', name: 'Народное собрание',   btnLabel: '🗳️ Открыть народное собрание', css: 'hall-democracy' },
   tribal:     { icon: '🏕',  name: 'Совет старейшин',     btnLabel: '🏕 Сесть у костра старейшин',  css: 'hall-tribal'    },
-  theocracy:  { icon: '🕊️', name: 'Жреческий синод',     btnLabel: '🕊️ Войти в жреческий синод',  css: 'hall-theocracy' },
+  theocracy:  { icon: '🔱',  name: 'Святилище',           btnLabel: '🔱 Войти в святилище',         css: 'hall-theocracy' },
   custom:     { icon: '⚙️',  name: 'Кастомный зал',       btnLabel: '⚙️ Настроить зал власти',      css: 'hall-custom'    },
 };
 
@@ -1059,49 +1059,167 @@ function renderEmptyHall(msg) {
   return `<div class="gov-text" style="padding:10px 0;color:var(--text-dim)">${msg}</div>`;
 }
 
-// ── ТРОННЫЙ ЗАЛ (тирания) ────────────────────────────────────────────
+// ── ЦИТАДЕЛЬ ВЛАСТИ (тирания) ────────────────────────────────────────
 function buildThroneRoomContent(gov, nation) {
   const ruler = gov.ruler;
   const power = gov.power_resource?.current ?? 50;
+  const fearColor = power > 65 ? '#f44336' : power > 35 ? '#FF9800' : '#4CAF50';
   const actors = getActorsNoIds(gov, nation);
 
-  const rulerHtml = `
-    <div class="hall-throne-top">
-      <span class="hall-throne-portrait">${ruler.name?.includes('Агаф') ? '👑' : '🗡️'}</span>
-      <div>
-        <div class="hall-throne-name">${ruler.name ?? 'Тиран'}</div>
-        <div class="hall-throne-title">Единовластный правитель</div>
-        <div class="hall-throne-power">
-          <span class="hall-throne-label">⚡ Страх</span>
-          <div class="hall-throne-power-bar">
-            <div class="hall-throne-power-fill" style="width:${power}%"></div>
-          </div>
-          <span class="hall-throne-label">${Math.round(power)}/100</span>
+  // --- Показатель 1: Fear-метр ---
+  const fearHtml = `
+    <div class="hall-citadel-metrics">
+      <div class="hall-citadel-metric">
+        <span class="hall-citadel-label">⚡ Страх</span>
+        <div class="bar-container wide">
+          <div class="bar-fill" style="width:${power}%;background:${fearColor}"></div>
         </div>
+        <span class="hall-citadel-val" style="color:${fearColor}">${Math.round(power)}/100</span>
+      </div>
+      ${power < 30 ? '<div class="hall-citadel-warning">⚠️ Страх ослаб — заговорщики осмелели</div>' : ''}
+      ${power > 80 ? '<div class="hall-citadel-info">💪 Страх на пике — никто не смеет возражать</div>' : ''}
+    </div>
+  `;
+
+  // --- Показатель 2: Личная гвардия ---
+  const guard = gov.personal_guard;
+  const guardHtml = guard
+    ? (() => {
+        const gColor = guard.loyalty > 65 ? '#4CAF50' : guard.loyalty > 35 ? '#FF9800' : '#f44336';
+        return `
+          <div class="hall-citadel-guard">
+            <div class="hall-citadel-section-title">⚔️ Личная гвардия</div>
+            <div class="hall-citadel-guard-row">
+              <span>Численность: <strong>${guard.size}/100</strong></span>
+              <span>Содержание: <strong>${guard.cost_per_turn ?? 0} монет/ход</strong></span>
+            </div>
+            <div class="hall-citadel-metric">
+              <span class="hall-citadel-label">Лояльность</span>
+              <div class="bar-container wide">
+                <div class="bar-fill" style="width:${guard.loyalty}%;background:${gColor}"></div>
+              </div>
+              <span class="hall-citadel-val" style="color:${gColor}">${guard.loyalty}</span>
+            </div>
+            ${guard.loyalty < 30 ? '<div class="hall-citadel-warning">⚠️ Гвардия ненадёжна — риск переворота</div>' : ''}
+          </div>`;
+      })()
+    : `<div class="hall-citadel-guard hall-citadel-empty">
+        <div class="hall-citadel-section-title">⚔️ Личная гвардия</div>
+        <div class="hall-citadel-guard-empty">Гвардия не набрана</div>
+       </div>`;
+
+  // --- Показатель 3: Список казнённых ---
+  const executed = (nation.characters ?? []).filter(c => !c.alive && c.death_cause === 'executed');
+  const executedHtml = executed.length
+    ? `<div class="hall-citadel-executed">
+        <div class="hall-citadel-section-title">💀 Последние казни</div>
+        ${executed.slice(-3).reverse().map(c =>
+          `<div class="hall-citadel-executed-row">
+            <span class="hall-citadel-executed-name">${c.portrait ?? '💀'} ${c.name}</span>
+            <span class="hall-citadel-executed-role dim">${c.role ?? ''}</span>
+          </div>`
+        ).join('')}
+      </div>`
+    : `<div class="hall-citadel-executed hall-citadel-empty">
+        <div class="hall-citadel-section-title">💀 Казни</div>
+        <div class="dim">Казней не было</div>
+      </div>`;
+
+  const rulerHtml = `
+    <div class="hall-citadel-top">
+      <span class="hall-citadel-portrait">🗡️</span>
+      <div>
+        <div class="hall-citadel-name">${ruler?.name ?? 'Тиран'}</div>
+        <div class="hall-citadel-title">Единовластный правитель</div>
       </div>
     </div>
   `;
 
-  if (!actors.length) return rulerHtml + renderEmptyHall('Приближённых нет. Используйте ✨ Созвать советников.');
+  const metricsBlock = `<div class="hall-citadel-metrics-grid">${fearHtml}${guardHtml}${executedHtml}</div>`;
+
+  if (!actors.length) return rulerHtml + metricsBlock + renderEmptyHall('Приближённых нет. Используйте ✨ Созвать советников.');
 
   const cards = actors.map(a => renderActorCard(a, 'tyranny')).join('');
   return `
     ${rulerHtml}
+    ${metricsBlock}
     <div class="hall-inner-circle">⚔️ Ближний круг — приближённые тирана</div>
     <div class="senate-senators-grid">${cards}</div>
   `;
 }
 
-// ── КОРОЛЕВСКИЙ ДВОР (монархия) ───────────────────────────────────────
+// ── ТРОННЫЙ ЗАЛ (монархия) ───────────────────────────────────────────
 function buildRoyalCourtContent(gov, nation) {
   const actors = getActorsNoIds(gov, nation);
-  if (!actors.length) return renderEmptyHall('Придворные не назначены. Используйте ✨ Созвать советников.');
+  const ruler  = gov.ruler;
+
+  // --- Герб и трон ---
+  const emblem  = nation.flag_emoji ?? nation.emblem ?? '🛡️';
+  const dynName = gov.dynasty_name ?? gov.custom_name ?? '';
+  const legVal  = gov.legitimacy ?? 50;
+  const legColor = legVal > 65 ? '#4CAF50' : legVal > 35 ? '#FF9800' : '#f44336';
+  const stabVal  = gov.stability ?? 50;
+  const stabColor = stabVal > 65 ? '#4CAF50' : stabVal > 35 ? '#FF9800' : '#f44336';
+
+  // Наследник
+  const heir = gov.succession?.heir
+    ? (nation.characters ?? []).find(c => c.id === gov.succession.heir)
+    : null;
+  const heirHtml = heir
+    ? `<div class="hall-throne-heir">👶 Наследник: <strong>${heir.name}</strong> · ${heir.age} лет</div>`
+    : `<div class="hall-throne-heir" style="color:#f44336">⚠️ Наследник не назначен</div>`;
+
+  const headerHtml = `
+    <div class="hall-throne-header">
+      <div class="hall-throne-emblem">${emblem}</div>
+      <div class="hall-throne-info">
+        <div class="hall-throne-ruler-name">${ruler?.name ?? 'Король'}</div>
+        ${dynName ? `<div class="hall-throne-dynasty">Династия ${dynName}</div>` : ''}
+        ${heirHtml}
+      </div>
+    </div>
+  `;
+
+  // --- 3 ключевых показателя: легитимность, стабильность, армия ---
+  const armyLoyalty = nation.military?.army_loyalty ?? nation.military?.loyalty ?? null;
+  const armyHtml = armyLoyalty !== null
+    ? `<div class="hall-throne-metric">
+        <span class="hall-throne-metric-label">⚔️ Верность армии</span>
+        <div class="bar-container wide">
+          <div class="bar-fill" style="width:${armyLoyalty}%;background:${armyLoyalty > 60 ? '#4CAF50' : '#FF9800'}"></div>
+        </div>
+        <span>${armyLoyalty}/100</span>
+      </div>`
+    : '';
+
+  const metricsHtml = `
+    <div class="hall-throne-metrics">
+      <div class="hall-throne-metric">
+        <span class="hall-throne-metric-label">📜 Легитимность</span>
+        <div class="bar-container wide">
+          <div class="bar-fill" style="width:${legVal}%;background:${legColor}"></div>
+        </div>
+        <span style="color:${legColor}">${legVal.toFixed(0)}/100</span>
+      </div>
+      <div class="hall-throne-metric">
+        <span class="hall-throne-metric-label">⚖️ Стабильность</span>
+        <div class="bar-container wide">
+          <div class="bar-fill" style="width:${stabVal}%;background:${stabColor}"></div>
+        </div>
+        <span style="color:${stabColor}">${stabVal.toFixed(0)}/100</span>
+      </div>
+      ${armyHtml}
+    </div>
+  `;
+
+  if (!actors.length) return headerHtml + metricsHtml + renderEmptyHall('Придворные не назначены. Используйте ✨ Созвать советников.');
 
   // Сортируем по court_rank (1 — ближайший к трону)
   const sorted = [...actors].sort((a,b) => (a.court_rank ?? 99) - (b.court_rank ?? 99));
-
   const cards = sorted.map(a => renderActorCard(a, 'monarchy')).join('');
   return `
+    ${headerHtml}
+    ${metricsHtml}
     <div class="hall-inner-circle">👑 Иерархия двора — от ближайшего к трону</div>
     <div class="senate-senators-grid">${cards}</div>
   `;
@@ -1267,12 +1385,44 @@ function _buildParliamentSVG(groups, total) {
   return `<svg viewBox="0 0 ${W} ${H}" class="parliament-svg">${base}${circles.join('')}</svg>`;
 }
 
-// ── ТОРГОВЫЙ СОВЕТ (олигархия) ────────────────────────────────────────
+// ── СОВЕТ БОГАТЫХ (олигархия) ─────────────────────────────────────────
 function buildTradeCouncilContent(gov, nation) {
   const actors = getActorsNoIds(gov, nation);
   if (!actors.length) return renderEmptyHall('Члены совета не назначены. Используйте ✨ Созвать советников.');
 
   const totalGold = actors.reduce((s,a) => s + (a.resources?.gold ?? 0), 1);
+
+  // --- Показатель 1: Wealth rankings (топ-3 богатейших) ---
+  const sortedByWealth = [...actors].sort((a,b) => (b.resources?.gold ?? 0) - (a.resources?.gold ?? 0));
+  const rankMedals = ['🥇','🥈','🥉'];
+  const wealthRankingHtml = `
+    <div class="hall-oligarchy-rankings">
+      <div class="hall-oligarchy-title">💰 Богатейшие члены совета</div>
+      ${sortedByWealth.slice(0,3).map((a,i) => {
+        const gold = a.resources?.gold ?? 0;
+        const pct  = Math.round(gold / totalGold * 100);
+        return `
+          <div class="hall-oligarchy-rank-row">
+            <span class="hall-oligarchy-medal">${rankMedals[i] ?? '·'}</span>
+            <span class="hall-oligarchy-name">${a.name}</span>
+            <div class="bar-container" style="flex:1">
+              <div class="bar-fill" style="width:${pct}%;background:#FFD700"></div>
+            </div>
+            <span class="hall-oligarchy-gold">${gold.toLocaleString()} зол. (${pct}%)</span>
+          </div>`;
+      }).join('')}
+    </div>
+  `;
+
+  // --- Показатель 2: Общее богатство и казна ---
+  const totalWealth = actors.reduce((s,a) => s + (a.resources?.gold ?? 0), 0);
+  const treasury    = nation.economy?.treasury ?? 0;
+  const wealthStatsHtml = `
+    <div class="hall-oligarchy-stats">
+      <span>💼 Совокупное состояние: <strong>${totalWealth.toLocaleString()} зол.</strong></span>
+      <span>🏦 Казна государства: <strong>${treasury.toLocaleString()} зол.</strong></span>
+    </div>
+  `;
 
   // Полоска влияния по богатству
   const segs = actors.map((a, i) => {
@@ -1310,6 +1460,8 @@ function buildTradeCouncilContent(gov, nation) {
   }
 
   return `
+    ${wealthRankingHtml}
+    ${wealthStatsHtml}
     <div class="hall-influence-ring">${segs}</div>
     <div class="hall-inner-circle">💰 Доля влияния пропорциональна состоянию</div>
     ${cardsHtml}
@@ -1362,20 +1514,122 @@ function buildPeoplesAssemblyContent(gov, nation) {
 // ── СОВЕТ СТАРЕЙШИН (племя) ───────────────────────────────────────────
 function buildElderCouncilContent(gov, nation) {
   const actors = getActorsNoIds(gov, nation);
-  if (!actors.length) return renderEmptyHall('Старейшины не назначены. Используйте ✨ Созвать советников.');
+
+  // --- Показатель 1: Prestige-метр ---
+  const prestige = gov.power_resource?.current ?? 50;
+  const presColor = prestige > 60 ? '#FF9800' : prestige > 30 ? '#FF9800' : '#f44336';
+  const lastWar   = gov._last_war_turn ?? 0;
+  const peaceYears = Math.max(0, GAME_STATE.turn - lastWar - 10);
+  const atPeace   = GAME_STATE.turn - lastWar;
+
+  const prestigeHtml = `
+    <div class="hall-tribal-metrics">
+      <div class="hall-tribal-metric">
+        <span class="hall-tribal-metric-label">🏆 Престиж вождя</span>
+        <div class="bar-container wide">
+          <div class="bar-fill" style="width:${prestige}%;background:${presColor}"></div>
+        </div>
+        <span style="color:${presColor}">${Math.round(prestige)}/100</span>
+      </div>
+      ${prestige < 30 ? '<div class="hall-tribal-warning">⚠️ Вождь теряет уважение племени!</div>' : ''}
+    </div>
+  `;
+
+  // --- Показатель 2: Годы без войны ---
+  const peaceColor = atPeace <= 4 ? '#4CAF50' : atPeace <= 9 ? '#FF9800' : '#f44336';
+  const peaceHtml = `
+    <div class="hall-tribal-peace">
+      <span class="hall-tribal-metric-label">⚔️ Ходов без войны:</span>
+      <span class="hall-tribal-peace-val" style="color:${peaceColor}">
+        ${atPeace} ${atPeace <= 4 ? '(норма)' : atPeace <= 9 ? '(воины ропщут)' : '(опасно!)'}
+      </span>
+    </div>
+  `;
+
+  // --- Показатель 3: Кнопка «Объявить набег» если prestij < 30 ---
+  const raidBtn = prestige < 50
+    ? `<button class="hall-tribal-raid-btn" onclick="declareTribeRaid()" title="Набег восстановит престиж вождя">
+        ⚔️ Объявить набег ${prestige < 20 ? '(СРОЧНО!)' : ''}
+      </button>`
+    : '';
+
+  const headerHtml = `
+    <div class="hall-campfire">🔥 🪨 🔥</div>
+    ${prestigeHtml}
+    ${peaceHtml}
+    ${raidBtn}
+  `;
+
+  if (!actors.length) return headerHtml + renderEmptyHall('Старейшины не назначены. Используйте ✨ Созвать советников.');
 
   const cards = actors.map(a => renderActorCard(a, 'tribal')).join('');
   return `
-    <div class="hall-campfire">🔥 🪨 🔥</div>
+    ${headerHtml}
     <div class="hall-tribal-circle">${cards}</div>
     <div class="hall-inner-circle">🏕 Решения принимаются у священного костра</div>
   `;
 }
 
-// ── ЖРЕЧЕСКИЙ СИНОД (теократия) ───────────────────────────────────────
+function declareTribeRaid() {
+  const nation = GAME_STATE.nations[GAME_STATE.player_nation];
+  const gov    = nation?.government;
+  if (!gov) return;
+  // Флаг для движка — объявить малую войну для восстановления престижа
+  gov._raid_declared = true;
+  if (window.UI?.notify) window.UI.notify('⚔️ Вождь объявил набег. Воины воодушевлены!');
+  else if (typeof addEventLog === 'function') addEventLog('⚔️ Вождь объявил набег. Воины воодушевлены!', 'military');
+  if (typeof renderGovernmentOverlay === 'function') renderGovernmentOverlay();
+}
+
+// ── СВЯТИЛИЩЕ (теократия) ──────────────────────────────────────────────
 function buildPriestlySynodContent(gov, nation) {
   const actors = getActorsNoIds(gov, nation);
-  if (!actors.length) return renderEmptyHall('Жрецы не назначены. Используйте ✨ Созвать советников.');
+
+  // --- Показатель 1: Divine mandate метр ---
+  const divMandate = gov.power_resource?.current ?? gov.divine_mandate ?? 50;
+  const mandateColor = divMandate > 60 ? '#FFD700' : divMandate > 30 ? '#FF9800' : '#f44336';
+  const mandateHtml = `
+    <div class="hall-shrine-metrics">
+      <div class="hall-shrine-metric">
+        <span class="hall-shrine-metric-label">✨ Воля богов</span>
+        <div class="bar-container wide">
+          <div class="bar-fill" style="width:${divMandate}%;background:${mandateColor}"></div>
+        </div>
+        <span style="color:${mandateColor}">${Math.round(divMandate)}/100</span>
+      </div>
+      ${divMandate < 20 ? '<div class="hall-shrine-warning">🔴 Кризис жречества — боги отвернулись!</div>' : ''}
+      ${divMandate > 80 ? '<div class="hall-shrine-blessing">🌟 Боги благосклонны. Народ верует.</div>' : ''}
+    </div>
+  `;
+
+  // --- Показатель 2: Оракул (последнее пророчество) ---
+  const lastProphecy = gov.last_oracle_prophecy;
+  const oracleHtml = `
+    <div class="hall-shrine-oracle">
+      <div class="hall-shrine-oracle-title">🔮 Оракул</div>
+      ${lastProphecy
+        ? `<div class="hall-shrine-prophecy">"${lastProphecy}"</div>`
+        : `<div class="hall-shrine-prophecy dim">Оракул молчит. Ждите знамения.</div>`
+      }
+    </div>
+  `;
+
+  // --- Показатель 3: Эффект на голосования ---
+  const oracleBonus = gov.oracle_voting_bonus ?? 0;
+  const oracleBonusHtml = oracleBonus !== 0
+    ? `<div class="hall-shrine-oracle-effect ${oracleBonus > 0 ? 'positive' : 'negative'}">
+        ${oracleBonus > 0 ? '📈' : '📉'} Пророчество влияет на голоса: ${oracleBonus > 0 ? '+' : ''}${oracleBonus}
+      </div>`
+    : '';
+
+  const altarHtml = `
+    <div class="hall-synod-altar">🔱 ☽ 🔱</div>
+    ${mandateHtml}
+    ${oracleHtml}
+    ${oracleBonusHtml}
+  `;
+
+  if (!actors.length) return altarHtml + renderEmptyHall('Жрецы не назначены. Используйте ✨ Созвать советников.');
 
   const sorted = [...actors].sort((a,b) => (a.court_rank??99)-(b.court_rank??99));
   const cards  = sorted.map(a => {
@@ -1396,7 +1650,7 @@ function buildPriestlySynodContent(gov, nation) {
   }).join('');
 
   return `
-    <div class="hall-synod-altar">🕊️ ✝ 🕊️</div>
+    ${altarHtml}
     <div class="senate-senators-grid">${cards}</div>
     <div class="hall-inner-circle">🙏 Все решения освящаются именем богов</div>
   `;
