@@ -1733,7 +1733,6 @@ async function saveGame() {
     }
   } else {
     // Fallback: воркер занят или недоступен — сохраняем обычным путём
-    if (_saveInFlight) console.warn('[save] Воркер занят, ход не ждёт сохранения');
     try { await GameStorage.save(payload); } catch (e) {
       console.warn('[save] Ошибка сохранения:', e);
       addEventLog('⚠ Автосохранение не удалось: ' + e.message, 'warning');
