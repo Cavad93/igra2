@@ -1563,6 +1563,35 @@ function _recordTurnSummary() {
 // СОХРАНЕНИЕ / ЗАГРУЗКА
 // ──────────────────────────────────────────────────────────────
 
+// SaveWorker — сохранение в фоне, не блокирует главный поток.
+// JSON.stringify + transfer ArrayBuffer быстрее, чем IndexedDB structured clone на главном потоке.
+let _saveWorker   = null;   // Worker instance
+let _saveInFlight = false;  // идёт ли сохранение прямо сейчас
+
+function _getSaveWorker() {
+  if (_saveWorker) return _saveWorker;
+  try {
+    _saveWorker = new Worker('engine/save_worker.js');
+    _saveWorker.onmessage = ({ data }) => {
+      _saveInFlight = false;
+      if (!data.ok) {
+        console.warn('[save] Воркер: ошибка сохранения:', data.error);
+        if (typeof addEventLog === 'function') {
+          addEventLog('⚠ Автосохранение не удалось: ' + data.error, 'warning');
+        }
+      }
+    };
+    _saveWorker.onerror = (e) => {
+      _saveInFlight = false;
+      console.warn('[save] Ошибка воркера:', e.message);
+    };
+    return _saveWorker;
+  } catch (e) {
+    console.warn('[save] Web Worker недоступен, используем обычное сохранение:', e.message);
+    return null;
+  }
+}
+
 function _buildSavePayload() {
   // Сериализуем SENATE_MANAGERS
   const senateData = {};
@@ -1580,12 +1609,30 @@ function _buildSavePayload() {
 }
 
 async function saveGame() {
-  try {
-    const payload = _buildSavePayload();
-    await GameStorage.save(payload);
-  } catch (e) {
-    console.warn('[save] Ошибка сохранения:', e);
-    addEventLog('⚠ Автосохранение не удалось: ' + e.message, 'warning');
+  const payload = _buildSavePayload();
+  const worker  = _getSaveWorker();
+
+  if (worker && !_saveInFlight) {
+    // Сериализуем вручную → передаём как Transferable ArrayBuffer.
+    // Тяжёлый db.put() выполняется в воркере и не блокирует UI.
+    // Возвращаемся сразу после postMessage — не ждём подтверждения.
+    try {
+      const buffer = new TextEncoder().encode(JSON.stringify(payload)).buffer;
+      _saveInFlight = true;
+      worker.postMessage(buffer, [buffer]);  // transfer без копирования
+    } catch (e) {
+      _saveInFlight = false;
+      console.warn('[save] Ошибка передачи данных воркеру:', e);
+      // Fallback на обычное сохранение
+      try { await GameStorage.save(payload); } catch (_) {}
+    }
+  } else {
+    // Fallback: воркер занят или недоступен — сохраняем обычным путём
+    if (_saveInFlight) console.warn('[save] Воркер занят, ход не ждёт сохранения');
+    try { await GameStorage.save(payload); } catch (e) {
+      console.warn('[save] Ошибка сохранения:', e);
+      addEventLog('⚠ Автосохранение не удалось: ' + e.message, 'warning');
+    }
   }
 }
 
