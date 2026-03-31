@@ -1263,3 +1263,24 @@ NEXT_TASK: MIL_004
 ### Файлы: engine/armies.js (+37 строк), ai/utility_ai.js (+19 строк)
 
 NEXT_TASK: MIL_005
+
+---
+
+## MIL_005 — Интеллект осады: армия-спасатель + время штурма (2026-03-31)
+
+### Сделано:
+- Добавлена функция `_detectReliefArmy(siegeRegionId, enemies)` в utility_ai.js:
+  - BFS от осаждённого региона до глубины 3 ✓
+  - Находит вражеские армии и возвращает `{incoming, turnsAway, strength}` ✓
+  - Disbandированные армии игнорируются ✓
+- В siege-блоке `utilityAIDecide()` применён результат:
+  - `reliefArmy.incoming && turnsAway <= 2` → stormScore ×1.60 ✓
+  - Reasoning: `relief_incoming_in:[N]_turns` ✓
+  - `garrison_supply < 20` → siegeScore ×1.30 + `starving_garrison` ✓
+  - `reliefArmy.strength > myStr × 1.4` → добавлен кандидат retreat (+30) ✓
+- Тесты: 23/23 ✅ (tests/mil_005_siege_intel_test.cjs)
+- Регрессии: MIL_002 16/16, MIL_003 18/18, MIL_004 16/16 ✅
+
+### Файлы: ai/utility_ai.js (+54 строки)
+
+NEXT_TASK: MIL_006
