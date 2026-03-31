@@ -144,8 +144,43 @@ function removeTreatyEffects(treaty) {
   if (treaty.status === 'broken') {
     _adjustRelScore(a, b, -20, 'treaty_broken');
     _log(`💔 Договор «${treaty.label ?? treaty.type}» разорван.`);
+    // DIP_003: записать предательство в репутацию нарушителя
+    _applyBetrayalReputation(treaty.breaker);
   } else {
     _log(`⏰ Договор «${treaty.label ?? treaty.type}» истёк.`);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// DIP_003: Система чести и предательства — вспомогательные функции
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Фиксирует нарушение договора в дипломатической репутации нации.
+ * Вызывается из removeTreatyEffects() при treaty.status === 'broken'.
+ * @param {string|undefined} nationId — нация-нарушитель
+ */
+function _applyBetrayalReputation(nationId) {
+  if (!nationId) return;
+  const nat = GAME_STATE.nations?.[nationId];
+  if (!nat) return;
+  if (!nat.diplo_reputation) {
+    nat.diplo_reputation = { betrayals: 0, honor_score: 100 };
+  }
+  nat.diplo_reputation.betrayals++;
+  nat.diplo_reputation.honor_score = Math.max(0, nat.diplo_reputation.honor_score - 15);
+  _log(`⚖️ Репутация ${nat.name ?? nationId} ухудшена: предательств=${nat.diplo_reputation.betrayals}, честь=${nat.diplo_reputation.honor_score}`);
+
+  const playerNation = GAME_STATE.player_nation;
+  if (playerNation && (nationId === playerNation || nat.diplo_reputation.betrayals >= 2)) {
+    const msg = nationId === playerNation
+      ? `⚖️ Ваша честь пострадала! Очки чести: ${nat.diplo_reputation.honor_score}/100.`
+      : `⚖️ ${nat.name ?? nationId} нарушил договор — репутация вероломного! (предательств: ${nat.diplo_reputation.betrayals})`;
+    if (typeof window !== 'undefined' && window.UI?.notify) {
+      window.UI.notify(msg);
+    } else {
+      console.log('[DIP_003]', msg);
+    }
   }
 }
 

@@ -508,6 +508,15 @@ function evalAIReceptiveness(aiNationId, playerNationId, treatyType) {
     else              base *= 0.2;   // иначе никогда
   }
 
+  // DIP_003: honor_score игрока в контексте лидера-AI
+  // Вероломный переговорщик вызывает меньше доверия → AI менее охотно принимает договоры
+  const plRep = (plNation ?? GAME_STATE.nations?.[playerNationId])?.diplo_reputation;
+  if (plRep && plRep.honor_score < 100) {
+    // Линейный штраф: honor 100 → ×1.0, honor 0 → ×0.5
+    const honorMod = 0.5 + (plRep.honor_score / 100) * 0.5;
+    base *= honorMod;
+  }
+
   return Math.min(1.0, Math.max(0, base));
 }
 
@@ -737,7 +746,10 @@ function calcBaseRelation(nationA, nationB) {
   const triangle = _calcTriangularBalance(nationA, nationB);
   const memory   = _calcMemoryDecay(nationA, nationB);
 
-  const raw = affinity + threat + econ + triangle + memory;
+  // DIP_003: штраф за репутацию вероломного (betrayals у нации B)
+  const betrayalPenalty = (natB.diplo_reputation?.betrayals ?? 0) * 5;
+
+  const raw = (affinity - betrayalPenalty) + threat + econ + triangle + memory;
   return Math.max(-100, Math.min(100, raw));
 }
 
@@ -915,6 +927,8 @@ function declareWar(attackerNationId, targetNationId) {
     addDiplomacyEvent(attackerNationId, targetNationId, -50, 'armistice_broken');
     // Штраф к отношениям со всеми соседями-очевидцами
     _applyArmisticeBreakCoalitionPenalty(attackerNationId, targetNationId);
+    // DIP_003: записать предательство в репутацию агрессора (без вызова removeTreatyEffects)
+    _recordBetrayalDirect(attackerNationId);
   }
 
   // Создаём запись войны в WarScoreEngine
@@ -1068,6 +1082,33 @@ function _applyArmisticeBreakCoalitionPenalty(aggressorId, victimId) {
     const penalty = _areNeighbors(aggressorId, otherId) ? 15 : 5;
     relOther.score = Math.max(-100, relOther.score - penalty);
     addDiplomacyEvent(aggressorId, otherId, -penalty, 'armistice_broken_observer');
+  }
+}
+
+// ── DIP_003: Прямая запись предательства (без вызова removeTreatyEffects) ──────
+/**
+ * Используется в declareWar() для нарушений перемирия, которые не проходят
+ * через removeTreatyEffects(). treaty_effects.js::_applyBetrayalReputation()
+ * обрабатывает остальные случаи через breakTreaty().
+ */
+function _recordBetrayalDirect(nationId) {
+  if (!nationId) return;
+  const nat = GAME_STATE.nations?.[nationId];
+  if (!nat) return;
+  if (!nat.diplo_reputation) {
+    nat.diplo_reputation = { betrayals: 0, honor_score: 100 };
+  }
+  nat.diplo_reputation.betrayals++;
+  nat.diplo_reputation.honor_score = Math.max(0, nat.diplo_reputation.honor_score - 15);
+
+  const playerNation = GAME_STATE.player_nation;
+  if (nationId === playerNation) {
+    const msg = `⚖️ Нарушив перемирие, вы потеряли честь! Очки чести: ${nat.diplo_reputation.honor_score}/100.`;
+    if (typeof window !== 'undefined' && window.UI?.notify) {
+      window.UI.notify(msg);
+    } else {
+      console.log('[DIP_003]', msg);
+    }
   }
 }
 
