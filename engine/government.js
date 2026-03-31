@@ -1242,3 +1242,123 @@ async function processSenateTickForAllNations() {
     }
   }
 }
+
+// ──────────────────────────────────────────────────────────────────────
+// GOV_003: КОНСТРУКТОР ПРАВИТЕЛЬСТВА — движковая часть
+// ──────────────────────────────────────────────────────────────────────
+
+const GOV_INSTITUTION_TEMPLATES = {
+  // Республика
+  senate:           { id:'senate',           name:'Сенат',                type:'legislative', decision_method:'majority_vote',      quorum:51 },
+  consulate:        { id:'consulate',         name:'Консулат',             type:'executive',   decision_method:'single_person'                },
+  praetorship:      { id:'praetorship',       name:'Преторий',             type:'judicial',    decision_method:'majority_vote'                },
+  censorship:       { id:'censorship',        name:'Цензура',              type:'executive',   decision_method:'single_person'                },
+  tribune:          { id:'tribune',           name:'Трибунат',             type:'legislative', decision_method:'majority_vote'                },
+  // Олигархия
+  council_elders:   { id:'council_elders',    name:'Совет старейшин',      type:'legislative', decision_method:'weighted_by_wealth'           },
+  merchant_guild:   { id:'merchant_guild',    name:'Купеческая гильдия',   type:'advisory',    decision_method:'weighted_by_wealth'           },
+  trade_court:      { id:'trade_court',       name:'Торговый суд',         type:'judicial',    decision_method:'weighted_by_wealth'           },
+  noble_assembly:   { id:'noble_assembly',    name:'Дворянское собрание',  type:'legislative', decision_method:'majority_vote'                },
+  // Демократия
+  assembly:         { id:'assembly',          name:'Народное собрание',    type:'legislative', decision_method:'majority_vote',      quorum:60 },
+  strategos:        { id:'strategos',         name:'Стратег',              type:'military',    decision_method:'single_person'                },
+  jury_courts:      { id:'jury_courts',       name:'Суды присяжных',       type:'judicial',    decision_method:'majority_vote'                },
+  ephors:           { id:'ephors',            name:'Эфоры',                type:'executive',   decision_method:'majority_vote'                },
+  // Монархия
+  royal_council:    { id:'royal_council',     name:'Королевский совет',    type:'advisory',    decision_method:'single_person'                },
+  chancellery:      { id:'chancellery',       name:'Канцелярия',           type:'executive',   decision_method:'single_person'                },
+  military_command: { id:'military_command',  name:'Военное командование', type:'military',    decision_method:'single_person'                },
+  court_justice:    { id:'court_justice',     name:'Суд правосудия',       type:'judicial',    decision_method:'single_person'                },
+  // Тирания
+  personal_guard:   { id:'personal_guard',    name:'Личная гвардия',       type:'military',    decision_method:'single_person'                },
+  secret_police:    { id:'secret_police',     name:'Тайная полиция',       type:'executive',   decision_method:'single_person'                },
+  privy_council:    { id:'privy_council',     name:'Тайный совет',         type:'advisory',    decision_method:'single_person'                },
+  tax_collectors:   { id:'tax_collectors',    name:'Сборщики налогов',     type:'executive',   decision_method:'single_person'                },
+  // Племя
+  war_band:         { id:'war_band',          name:'Военная дружина',      type:'military',    decision_method:'single_person'                },
+  shamanic_council: { id:'shamanic_council',  name:'Совет шаманов',        type:'religious',   decision_method:'random_oracle'                },
+  hunting_council:  { id:'hunting_council',   name:'Охотничий совет',      type:'advisory',    decision_method:'majority_vote'                },
+  // Теократия
+  high_priest:      { id:'high_priest',       name:'Верховный жрец',       type:'religious',   decision_method:'single_person'                },
+  oracle_chamber:   { id:'oracle_chamber',    name:'Палата оракула',       type:'advisory',    decision_method:'random_oracle'                },
+  temple_guard:     { id:'temple_guard',      name:'Храмовая стража',      type:'military',    decision_method:'single_person'                },
+  prophets_guild:   { id:'prophets_guild',    name:'Гильдия пророков',     type:'religious',   decision_method:'majority_vote'                },
+};
+
+const GOV_SETUP_EFFECTS = {
+  republic:   { legitimacy_delta: +15, stability_delta: +10 },
+  oligarchy:  { legitimacy_delta:  -5, stability_delta:  +5 },
+  democracy:  { legitimacy_delta: +10, stability_delta:  +5 },
+  monarchy:   { legitimacy_delta: +10, stability_delta: +15 },
+  tyranny:    { legitimacy_delta: -20, stability_delta: -10 },
+  tribal:     { legitimacy_delta:   0, stability_delta:  -5 },
+  theocracy:  { legitimacy_delta: +20, stability_delta: +10 },
+};
+
+const GOV_DEFAULT_POWER_RESOURCES = {
+  republic:   { type:'legitimacy',     max:100, decay_per_turn:0.5 },
+  oligarchy:  { type:'legitimacy',     max:100, decay_per_turn:0.3 },
+  democracy:  { type:'legitimacy',     max:100, decay_per_turn:0.4 },
+  monarchy:   { type:'legitimacy',     max:100, decay_per_turn:0.3 },
+  tyranny:    { type:'fear',           max:100, decay_per_turn:2   },
+  tribal:     { type:'prestige',       max:100, decay_per_turn:1   },
+  theocracy:  { type:'divine_mandate', max:100, decay_per_turn:0.5 },
+};
+
+/**
+ * Применяет выбор конструктора правительства к нации.
+ * @param {string} nationId
+ * @param {{ type: string, institutions: string[] }} config
+ */
+function applyGovernmentSetup(nationId, config) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation?.government) return;
+  const gov = nation.government;
+
+  const oldType = gov.type;
+  const effects  = GOV_SETUP_EFFECTS[config.type] ?? { legitimacy_delta: 0, stability_delta: 0 };
+
+  // 1. Применяем тип правления
+  gov.type = config.type;
+
+  // 2. Применяем выбранные институты (заменяем список)
+  gov.institutions = (config.institutions ?? []).map(instId => {
+    const tmpl = GOV_INSTITUTION_TEMPLATES[instId];
+    if (!tmpl) return null;
+    // Сохраняем существующие данные фракций/участников если институт уже был
+    const existing = (gov.institutions ?? []).find(i => i.id === instId);
+    return Object.assign({}, tmpl, existing ? { factions: existing.factions, character_ids: existing.character_ids } : {});
+  }).filter(Boolean);
+
+  // 3. Применяем изменения легитимности и стабильности
+  gov.legitimacy = Math.min(100, Math.max(0, (gov.legitimacy ?? 50) + effects.legitimacy_delta));
+  gov.stability  = Math.min(100, Math.max(0, (gov.stability  ?? 50) + effects.stability_delta));
+
+  // 4. Обновляем ресурс власти под новый тип (если тип изменился)
+  if (config.type !== oldType) {
+    const pd = GOV_DEFAULT_POWER_RESOURCES[config.type];
+    if (pd) {
+      gov.power_resource = Object.assign({}, pd, { current: gov.legitimacy });
+    }
+    if (!gov.transition_history) gov.transition_history = [];
+    gov.transition_history.push({
+      turn:  GAME_STATE.turn ?? 0,
+      from:  oldType,
+      to:    config.type,
+      cause: 'Основание правительства через конструктор',
+    });
+  }
+
+  // 5. Снимаем флаг — конструктор завершён
+  gov.needs_setup = false;
+
+  if (nationId === GAME_STATE.player_nation) {
+    const typeName = typeof getGovernmentNameFull === 'function'
+      ? getGovernmentNameFull(config.type)
+      : config.type;
+    addEventLog(
+      `🏛 Правительство основано: ${typeName}. Выбрано институтов: ${config.institutions.length}.`,
+      'positive'
+    );
+  }
+}

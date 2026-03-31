@@ -32,6 +32,11 @@ function renderGovernmentTab(nation) {
   const gov = nation.government;
   if (!gov) return '<div class="gov-empty">Нет данных о правительстве.</div>';
 
+  // GOV_003: Конструктор правительства — перехватываем рендер если нужна настройка
+  if (gov.needs_setup) {
+    return renderGovernmentConstructor(nation);
+  }
+
   const sections = [];
 
   // 1. Заголовок с типом правления и ключевыми метриками
@@ -106,6 +111,352 @@ function renderGovernmentTab(nation) {
   sections.push(renderReformInput());
 
   return sections.filter(Boolean).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// GOV_003: КОНСТРУКТОР ПРАВИТЕЛЬСТВА — мастер из 3 шагов
+// Показывается когда government.needs_setup === true
+// ══════════════════════════════════════════════════════════════════════
+
+const GOV_TYPE_DESCRIPTIONS = {
+  republic:   { icon:'⚖️', name:'Республика',       bonus:'Стабильность +10, Легитимность +15',   penalty:'Решения требуют голосования сената',       desc:'Власть делегирована избранным представителям народа.' },
+  oligarchy:  { icon:'💰', name:'Олигархия',        bonus:'Торговля +15, богатство растёт быстрее', penalty:'Легитимность −5, народное недовольство',    desc:'Богатейшие семьи управляют государством в своих интересах.' },
+  democracy:  { icon:'🗳️', name:'Демократия',      bonus:'Счастье +15, Торговля +5',              penalty:'Военные решения: порог голосования 60%',   desc:'Граждане голосуют напрямую по всем вопросам.' },
+  monarchy:   { icon:'👑', name:'Монархия',          bonus:'Армия +15, Стабильность +5',            penalty:'Зависимость от качества монарха',           desc:'Наследственная власть одного правителя над государством.' },
+  tyranny:    { icon:'⚔️', name:'Тирания',          bonus:'Армия +20, решения мгновенны',          penalty:'Легитимность ≤40, Счастье −10',             desc:'Абсолютная власть через силу, страх и личную гвардию.' },
+  tribal:     { icon:'🏕️', name:'Племенной вождь', bonus:'Армия +10, Рост населения +5',          penalty:'Стабильность падает без войн (−3/ход)',     desc:'Власть основана на воинской доблести и уважении старейшин.' },
+  theocracy:  { icon:'🕊️', name:'Теократия',       bonus:'Легитимность +20, Счастье +10',         penalty:'Торговля −10, оракул влияет на решения',   desc:'Власть от имени богов через жрецов и священные законы.' },
+};
+
+const GOV_SETUP_INSTITUTIONS_BY_TYPE = {
+  republic:   ['senate','consulate','praetorship','censorship','tribune'],
+  oligarchy:  ['council_elders','merchant_guild','trade_court','noble_assembly'],
+  democracy:  ['assembly','strategos','jury_courts','ephors'],
+  monarchy:   ['royal_council','chancellery','military_command','court_justice'],
+  tyranny:    ['personal_guard','secret_police','privy_council','tax_collectors'],
+  tribal:     ['council_elders','war_band','shamanic_council','hunting_council'],
+  theocracy:  ['high_priest','oracle_chamber','temple_guard','prophets_guild'],
+};
+
+const GOV_INSTITUTION_NAMES = {
+  senate:           'Сенат',
+  consulate:        'Консулат',
+  praetorship:      'Преторий',
+  censorship:       'Цензура',
+  tribune:          'Трибунат',
+  council_elders:   'Совет старейшин',
+  merchant_guild:   'Купеческая гильдия',
+  trade_court:      'Торговый суд',
+  noble_assembly:   'Дворянское собрание',
+  assembly:         'Народное собрание',
+  strategos:        'Стратег',
+  jury_courts:      'Суды присяжных',
+  ephors:           'Эфоры',
+  royal_council:    'Королевский совет',
+  chancellery:      'Канцелярия',
+  military_command: 'Военное командование',
+  court_justice:    'Суд правосудия',
+  personal_guard:   'Личная гвардия',
+  secret_police:    'Тайная полиция',
+  privy_council:    'Тайный совет',
+  tax_collectors:   'Сборщики налогов',
+  war_band:         'Военная дружина',
+  shamanic_council: 'Совет шаманов',
+  hunting_council:  'Охотничий совет',
+  high_priest:      'Верховный жрец',
+  oracle_chamber:   'Палата оракула',
+  temple_guard:     'Храмовая стража',
+  prophets_guild:   'Гильдия пророков',
+};
+
+const GOV_INSTITUTION_DESC = {
+  senate:           'Законодательный орган · Голосование большинством',
+  consulate:        'Исполнительная власть · Два избираемых консула',
+  praetorship:      'Судебная власть · Администрация провинций',
+  censorship:       'Надзор за нравами · Контроль переписи',
+  tribune:          'Защита плебеев · Право вето на законы',
+  council_elders:   'Совет богатейших семей · Взвешенное голосование',
+  merchant_guild:   'Торговые интересы · +10% к доходам от торговли',
+  trade_court:      'Коммерческий суд · Разрешение торговых споров',
+  noble_assembly:   'Собрание аристократов · Контроль над землёй',
+  assembly:         'Все граждане голосуют · Прямая демократия',
+  strategos:        'Военный лидер · Избирается народом',
+  jury_courts:      'Народные суды · Случайные присяжные',
+  ephors:           'Надзор за властью · Ежегодно переизбираются',
+  royal_council:    'Советники монарха · Обеспечивает стабильность',
+  chancellery:      'Управление документами · Административная эффективность',
+  military_command: 'Единое командование армией',
+  court_justice:    'Королевский суд · Апелляции и высшая юстиция',
+  personal_guard:   'Преданная охрана тирана · Защита от заговоров',
+  secret_police:    'Слежка за населением · +40% к обнаружению заговоров',
+  privy_council:    'Ближние советники · Loyality-based власть',
+  tax_collectors:   'Принудительный сбор · +20% к налоговым доходам',
+  war_band:         'Элитные воины вождя · Prestige в бою',
+  shamanic_council: 'Духовные лидеры · Оракул и предсказания',
+  hunting_council:  'Старейшины охоты · Знания местности',
+  high_priest:      'Глава церкви · Divine Mandate +5/ход',
+  oracle_chamber:   'Пророчества богов · Влияет на голосования советников',
+  temple_guard:     'Святая стража · Защита святилища и правителя',
+  prophets_guild:   'Прорицатели · Событийные пророчества',
+};
+
+function renderGovernmentConstructor(nation) {
+  if (!window._govSetupState) {
+    window._govSetupState = { step: 1, type: null, institutions: [] };
+  }
+  const state = window._govSetupState;
+
+  const stepLabels = [
+    { n: 1, label: '1. Тип правления' },
+    { n: 2, label: '2. Институты' },
+    { n: 3, label: '3. Подтверждение' },
+  ];
+
+  const stepsHtml = stepLabels.map(s => `
+    <span style="
+      padding:4px 12px;
+      border-radius:12px;
+      font-size:12px;
+      background:${state.step >= s.n ? '#1565C0' : '#333'};
+      color:${state.step >= s.n ? '#fff' : '#888'};
+      margin:0 3px;
+    ">${s.label}</span>
+  `).join('<span style="color:#555;margin:0 2px">›</span>');
+
+  let content = '';
+  if (state.step === 1) content = renderGovSetupStep1(nation);
+  else if (state.step === 2) content = renderGovSetupStep2(state.type, state.institutions);
+  else content = renderGovSetupStep3(state.type, state.institutions, nation);
+
+  return `
+    <div style="
+      background:linear-gradient(135deg,#0a0a1a 0%,#111128 100%);
+      border:2px solid #1565C0;
+      border-radius:12px;
+      padding:20px;
+      margin:8px 0;
+    ">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;border-bottom:1px solid #1565C0;padding-bottom:12px">
+        <span style="font-size:20px">🏗️</span>
+        <span style="font-size:16px;font-weight:bold;color:#90CAF9">Основание правительства</span>
+      </div>
+      <div style="display:flex;justify-content:center;gap:4px;margin-bottom:16px;flex-wrap:wrap">
+        ${stepsHtml}
+      </div>
+      ${content}
+    </div>
+  `;
+}
+
+function renderGovSetupStep1(nation) {
+  const currentType = nation.government?.type ?? '';
+  const cards = Object.entries(GOV_TYPE_DESCRIPTIONS).map(([type, info]) => {
+    const isCurrent = type === currentType;
+    return `
+      <div
+        onclick="govSetupStep2('${type}')"
+        style="
+          background:${isCurrent ? '#1a2a4a' : '#15151f'};
+          border:2px solid ${isCurrent ? '#1565C0' : '#333'};
+          border-radius:8px;
+          padding:12px 14px;
+          cursor:pointer;
+          transition:border-color 0.15s;
+          min-width:180px;
+          flex:1;
+        "
+        onmouseover="this.style.borderColor='#42A5F5'"
+        onmouseout="this.style.borderColor='${isCurrent ? '#1565C0' : '#333'}'"
+      >
+        <div style="font-size:22px;margin-bottom:6px">${info.icon}</div>
+        <div style="font-size:14px;font-weight:bold;color:#E3F2FD;margin-bottom:6px">${info.name}</div>
+        <div style="font-size:11px;color:#888;margin-bottom:8px;line-height:1.4">${info.desc}</div>
+        <div style="font-size:11px;color:#4CAF50;margin-bottom:3px">+ ${info.bonus}</div>
+        <div style="font-size:11px;color:#ef9a9a">− ${info.penalty}</div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div style="font-size:13px;color:#90CAF9;margin-bottom:12px">Выберите тип правления:</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      ${cards}
+    </div>
+  `;
+}
+
+function renderGovSetupStep2(type, selected) {
+  const info = GOV_TYPE_DESCRIPTIONS[type] ?? { icon:'⚙️', name: type };
+  const available = GOV_SETUP_INSTITUTIONS_BY_TYPE[type] ?? [];
+  const selSet = new Set(selected);
+  const count = selSet.size;
+  const canNext = count >= 2 && count <= 3;
+
+  const items = available.map(instId => {
+    const isSel = selSet.has(instId);
+    return `
+      <div
+        onclick="govSetupToggleInst('${instId}')"
+        style="
+          background:${isSel ? '#1a2a4a' : '#15151f'};
+          border:2px solid ${isSel ? '#42A5F5' : '#333'};
+          border-radius:8px;
+          padding:10px 14px;
+          cursor:pointer;
+          display:flex;
+          align-items:flex-start;
+          gap:10px;
+          margin-bottom:8px;
+        "
+      >
+        <span style="font-size:16px;margin-top:2px">${isSel ? '☑' : '☐'}</span>
+        <div>
+          <div style="font-size:13px;font-weight:bold;color:#E3F2FD">${GOV_INSTITUTION_NAMES[instId] ?? instId}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">${GOV_INSTITUTION_DESC[instId] ?? ''}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:18px">${info.icon}</span>
+      <span style="font-size:14px;font-weight:bold;color:#90CAF9">${info.name}</span>
+      <span style="font-size:12px;color:#555">— выберите 2–3 института</span>
+    </div>
+    ${items}
+    <div style="font-size:12px;color:${canNext ? '#4CAF50' : '#FF9800'};margin-bottom:12px">
+      ${canNext ? `✓ Выбрано: ${count}` : `Выберите ${count < 2 ? 'ещё ' + (2 - count) : 'не более 3'} института`}
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="govSetupBack()" style="
+        background:#222;border:1px solid #555;color:#ccc;
+        padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px
+      ">← Назад</button>
+      <button onclick="govSetupStep3()" ${canNext ? '' : 'disabled'} style="
+        background:${canNext ? '#1565C0' : '#333'};
+        border:none;color:${canNext ? '#fff' : '#666'};
+        padding:8px 20px;border-radius:6px;
+        cursor:${canNext ? 'pointer' : 'not-allowed'};font-size:13px
+      ">Далее →</button>
+    </div>
+  `;
+}
+
+function renderGovSetupStep3(type, institutions, nation) {
+  const info = GOV_TYPE_DESCRIPTIONS[type] ?? { icon:'⚙️', name: type };
+  const gov = nation.government ?? {};
+  const currentLeg = Math.round(gov.legitimacy ?? 50);
+  const currentStab = Math.round(gov.stability ?? 50);
+
+  // Расчёт изменений от смены типа
+  const GOV_SETUP_EFFECTS_UI = {
+    republic:   { leg: +15, stab: +10 },
+    oligarchy:  { leg:  -5, stab:  +5 },
+    democracy:  { leg: +10, stab:  +5 },
+    monarchy:   { leg: +10, stab: +15 },
+    tyranny:    { leg: -20, stab: -10 },
+    tribal:     { leg:   0, stab:  -5 },
+    theocracy:  { leg: +20, stab: +10 },
+  };
+  const eff = GOV_SETUP_EFFECTS_UI[type] ?? { leg: 0, stab: 0 };
+  const newLeg  = Math.min(100, Math.max(0, currentLeg  + eff.leg));
+  const newStab = Math.min(100, Math.max(0, currentStab + eff.stab));
+
+  const fmtDelta = v => v > 0 ? `<span style="color:#4CAF50">+${v}</span>` : v < 0 ? `<span style="color:#ef9a9a">${v}</span>` : `<span style="color:#888">0</span>`;
+
+  const instList = institutions.map(id =>
+    `<li style="color:#90CAF9;font-size:13px;margin:3px 0">${GOV_INSTITUTION_NAMES[id] ?? id}</li>`
+  ).join('');
+
+  const isTypeChange = gov.type && gov.type !== type;
+
+  return `
+    <div style="font-size:13px;color:#888;margin-bottom:14px">Проверьте параметры перед подтверждением:</div>
+
+    <div style="background:#15151f;border:1px solid #333;border-radius:8px;padding:14px;margin-bottom:12px">
+      <div style="font-size:15px;font-weight:bold;color:#E3F2FD;margin-bottom:10px">
+        ${info.icon} ${info.name}
+      </div>
+      <div style="font-size:12px;color:#888;margin-bottom:8px">Институты власти:</div>
+      <ul style="margin:0;padding-left:20px">${instList}</ul>
+    </div>
+
+    <div style="background:#15151f;border:1px solid #333;border-radius:8px;padding:14px;margin-bottom:16px">
+      <div style="font-size:12px;color:#888;margin-bottom:8px">Изменения параметров:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="font-size:12px;color:#ccc">Легитимность</div>
+          <div style="font-size:13px">${currentLeg}% → <strong>${newLeg}%</strong> ${fmtDelta(eff.leg)}</div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:#ccc">Стабильность</div>
+          <div style="font-size:13px">${currentStab}% → <strong>${newStab}%</strong> ${fmtDelta(eff.stab)}</div>
+        </div>
+      </div>
+      ${isTypeChange ? `<div style="font-size:11px;color:#FF9800;margin-top:8px">⚠️ Смена типа правления записана в историю переходов</div>` : ''}
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button onclick="govSetupBack()" style="
+        background:#222;border:1px solid #555;color:#ccc;
+        padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px
+      ">← Назад</button>
+      <button onclick="govSetupConfirm()" style="
+        background:#2E7D32;border:none;color:#fff;
+        padding:8px 24px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:bold
+      ">✅ Основать правительство</button>
+    </div>
+  `;
+}
+
+// ── Wizard-навигация ──────────────────────────────────────────────────
+
+function govSetupStep2(type) {
+  window._govSetupState = { step: 2, type, institutions: [] };
+  renderGovernmentOverlay();
+}
+
+function govSetupToggleInst(instId) {
+  const state = window._govSetupState;
+  if (!state) return;
+  const idx = state.institutions.indexOf(instId);
+  if (idx >= 0) {
+    state.institutions.splice(idx, 1);
+  } else if (state.institutions.length < 3) {
+    state.institutions.push(instId);
+  }
+  renderGovernmentOverlay();
+}
+
+function govSetupStep3() {
+  const state = window._govSetupState;
+  if (!state || state.institutions.length < 2) return;
+  state.step = 3;
+  renderGovernmentOverlay();
+}
+
+function govSetupBack() {
+  const state = window._govSetupState;
+  if (!state) return;
+  if (state.step > 1) {
+    state.step--;
+    if (state.step === 1) {
+      state.type = null;
+      state.institutions = [];
+    }
+    renderGovernmentOverlay();
+  }
+}
+
+function govSetupConfirm() {
+  const state = window._govSetupState;
+  if (!state) return;
+  const nationId = GAME_STATE.player_nation;
+  applyGovernmentSetup(nationId, { type: state.type, institutions: state.institutions });
+  window._govSetupState = null;
+  renderGovernmentOverlay();
+  if (typeof renderLeftPanel === 'function') renderLeftPanel();
 }
 
 // ──────────────────────────────────────────────────────────────────────
