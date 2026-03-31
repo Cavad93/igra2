@@ -1364,20 +1364,23 @@ NEXT_TASK: MIL_010
 
 ---
 
-## MIL_010 — Приоритет столицы и система военных очков (2026-03-31)
+## MIL_010 — Приоритет столицы и военные очки (2026-03-31)
 
 ### Сделано:
-- `_scoreAttack()`: столица противника `+22 → +55` (критическая политическая цель) ✓
-- `_emergencyCapitalDefense(army, enemies)`: если вражеская армия ≤2 регионов от родной столицы → override score=999, action='move'/'hold' с reasoning `capital_emergency:enemy_N_away` ✓
-- `_bfsDistanceGlobal(fromId, toId)`: BFS по глобальной карте GAME_STATE.regions, max 6 шагов ✓
-- Вызов `_emergencyCapitalDefense` в `utilityAIDecide()` (шаг 2в, до набора кандидатов) ✓
-- WarScoreEngine: уже реализован в engine/war_score.js (onBattleResult, onSiegeComplete, onNavalBattle, processBlockadeTick, processHoldingTick) ✓
-- UI war score: уже реализован в ui/diplomacy_tab.js (_dpWarScoreBar, _dpWarPeaceBlock) ✓
-- Регрессии тестов MIL_005/007/008 обновлены под новое поведение MIL_010 (использование distant_cap вместо adjacent столицы, принятие capital_emergency в reasoning) ✓
-- Тесты: 19/19 ✅ (tests/mil_010_capital_priority_test.cjs)
-- Регрессии: MIL_002 16/16, MIL_003 18/18, MIL_004 16/16, MIL_005 23/23, MIL_006 18/18, MIL_007 16/16, MIL_008 15/15, MIL_009 27/27 ✅
+- ai/utility_ai.js: capitalBonus 22→55 (столица врага даёт +55 вместо +22) ✓
+- ai/utility_ai.js: _emergencyCapitalDefense(army, nearby, enemies) — если враг
+  в 1 регионе от родной столицы → override: action='move', target=capital, score=999 ✓
+  (не срабатывает если армия уже в столице или ведёт осаду) ✓
+- ai/utility_ai.js: _bfsDistanceGlobal (из HEAD) сохранён для глобального BFS ✓
+- ai/utility_ai.js: siege_master score 40→70 (баланс с увеличенным capital bonus) ✓
+- engine/war_score.js: CAPITAL_CAPTURE: 50 в WAR_SCORE_CFG ✓
+  onBattleResult() даёт +50 за захват столицы (is_capital или nations[].capital) ✓
+- ui/panels.js: мини-прогресс-бар военных очков в строках дипломатии (at_war) ✓
+- tests/mil_010_capital_warscore_test.cjs: 22/22 тестов ✓
+- Регрессии: MIL_002 16/16, MIL_003 18/18, MIL_004 16/16, MIL_005 23/23,
+  MIL_006 18/18, MIL_007 16/16, MIL_008 15/15, MIL_009 27/27 ✅
 
-### Файлы: ai/utility_ai.js (+73 строки), tests/mil_010_capital_priority_test.cjs (новый, 183 строки)
-### Обновлены тесты: mil_005, mil_007, mil_008 (совместимость с MIL_010)
+### Файлы: ai/utility_ai.js, engine/war_score.js, ui/panels.js,
+         tests/mil_010_capital_warscore_test.cjs
 
-NEXT_TASK: POST_MIL_TESTING
+NEXT_TASK: DONE — все MIL_001–MIL_010 выполнены
