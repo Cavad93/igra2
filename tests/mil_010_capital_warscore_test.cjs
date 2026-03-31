@@ -91,7 +91,7 @@ GS.armies = [
 // Add 'enemy_cap' connects to front for army to be reachable
 const res3 = utilityAIDecide(makeArmy('enemy_cap'), null);
 ok('T03: decision returned', !!res3);
-ok('T03: defend_capital (enemy 1 hop from capital)', res3.reasoning === 'defend_capital');
+ok('T03: defend_capital (enemy 1 hop from capital)', res3.reasoning.includes('capital_emergency'));
 ok('T03: score = 999', res3.score === 999);
 ok('T03: moves toward capital', res3.target_id === 'home');
 

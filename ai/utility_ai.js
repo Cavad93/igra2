@@ -161,11 +161,12 @@ function utilityAIDecide(army, order) {
   const capDefense = !activeSiege ? _emergencyCapitalDefense(army, nearby, enemies)
                                   : { threatened: false, targetId: null };
   if (capDefense.threatened) {
+    const isAtCapital = army.position === capDefense.targetId;
     return {
-      action:    'move',
-      target_id: capDefense.targetId,
+      action:    isAtCapital ? 'hold' : 'move',
+      target_id: isAtCapital ? null : capDefense.targetId,
       score:     999,
-      reasoning: 'defend_capital',
+      reasoning: `capital_emergency ${capDefense.distTag || ''}`.trim(),
     };
   }
 
@@ -879,19 +880,17 @@ function _emergencyCapitalDefense(army, nearby, enemies) {
   const capitalId  = ownNation?.capital;
   if (!capitalId) return { threatened: false, targetId: null };
 
-  // Если армия уже стоит в столице — нормальная логика справится сама
-  if (army.position === capitalId) return { threatened: false, targetId: null };
-
-  // Строим карту вокруг столицы радиусом 2 для определения угрозы
+  // Строим карту вокруг столицы радиусом 2 для определения угрозы (включая дистанцию 2)
   const wideMap = _buildNearbyMap(capitalId, 2);
 
   for (const a of (GAME_STATE.armies ?? [])) {
     if (a.state === 'disbanded') continue;
     if (!enemies.includes(a.nation)) continue;
     const dist = _bfsDistanceInNearby(capitalId, a.position, wideMap);
-    // Только если враг вплотную (1 шаг) — реальная угроза следующего хода
-    if (dist <= 1) {
-      return { threatened: true, targetId: capitalId };
+    // Угроза если враг в 2 ходах от столицы (включая 0 — враг уже в столице)
+    if (dist <= 2) {
+      const distTag = dist === 0 ? 'enemy_0_away' : `enemy_${dist}_away`;
+      return { threatened: true, targetId: capitalId, distTag };
     }
   }
   return { threatened: false, targetId: null };
