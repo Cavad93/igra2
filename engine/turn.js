@@ -888,6 +888,8 @@ const _SUPER_OU_ACTION_MAP = {
   buy_food:          'trade',
   sell_goods:        'trade',
   pass:              'wait',
+  request_loan:      'take_loan',
+  debt_reduction:    'wait',
 };
 
 // ── Fallback с OU-вероятностями — полный набор действий ────────────────
@@ -1016,6 +1018,20 @@ function applyFallbackDecision(nationId) {
     move_army:
       ou.aggression * 2.0 + ou.expansion * 1.5
       + (hasArmy && atWar ? 3.0 : -4.0),
+
+    take_loan: (() => {
+      if (typeof getLoanCapacity !== 'function') return -10;
+      const capacity   = getLoanCapacity(nationId);
+      const debtLoad   = typeof getLoanDebtLoad === 'function' ? getLoanDebtLoad(nationId) : 0;
+      if (capacity < 500)   return -10; // нет смысла
+      if (debtLoad > 0.55)  return -8;  // уже сильно в долгах
+      // Привлекательность: нужны деньги прямо сейчас
+      return ou.economy_focus * 1.0
+        + (treasury < 500  ? 4.0 : treasury < 1500 ? 2.0 : -1.0)
+        + (atWar           ? 2.5 : 0)
+        + (ou.caution      * -2.0)  // осторожные нации избегают долгов
+        + (debtLoad > 0.30 ? -2.0 : 0);
+    })(),
 
     wait:
       -ou.aggression * 0.5 + 0.3,
@@ -1231,6 +1247,32 @@ function applyFallbackDecision(nationId) {
         _rec('move_army', `→ ${enemyRegion} (${enemyNation?.name ?? enemy}) [agg:${ou.aggression.toFixed(2)}]`);
       } else {
         _rec('wait', 'путь к врагу недоступен');
+      }
+      break;
+    }
+
+    case 'take_loan': {
+      if (typeof takeLoan !== 'function' || typeof getLoanCapacity !== 'function') {
+        _rec('wait', 'займы недоступны'); break;
+      }
+      const capacity = getLoanCapacity(nationId);
+      if (capacity < 500) { _rec('wait', 'лимит займа исчерпан'); break; }
+
+      // Определяем нужную сумму: покрыть 6 месяцев расходов или нехватку казны для войны
+      const monthlyExpense = nation.economy?.expense_per_turn ?? 0;
+      const wantedAmount   = atWar
+        ? Math.max(1000, Math.min(capacity, monthlyExpense * 6))
+        : Math.max(500,  Math.min(capacity, monthlyExpense * 3));
+      const amount = Math.floor(wantedAmount / 500) * 500; // округляем до 500
+
+      // Срок: при войне — короткий (12 мес), в мирное время — стандартный (24 мес)
+      const term = atWar ? 12 : 24;
+
+      const result = takeLoan(nationId, amount, term);
+      if (result.ok) {
+        _rec('take_loan', `+${amount} займ (${term} мес, ${(result.loan.interest_rate * 100).toFixed(1)}%)`);
+      } else {
+        _rec('wait', `займ отклонён: ${result.reason}`);
       }
       break;
     }
