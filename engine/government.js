@@ -86,6 +86,11 @@ function processGovernmentTick(nationId) {
     }
   }
 
+  // 6.5. Теократия — divine_mandate и оракул
+  if (gov.type === 'theocracy') {
+    processTheocracyTick(nation, nationId, isPlayer);
+  }
+
   // 7. Переход между формами правления
   if (gov.active_transition?.status === 'in_progress') {
     processTransition(nationId);
@@ -727,6 +732,140 @@ function applyGovernmentDelta(nationId, delta) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
+// ТЕОКРАТИЯ: тик
+// ──────────────────────────────────────────────────────────────────────
+
+function processTheocracyTick(nation, nationId, isPlayer) {
+  const gov = nation.government;
+  const pr  = gov.power_resource; // type: 'divine_mandate'
+
+  // Инициализируем хранилище событий если нет
+  if (!gov._theocracy_events) gov._theocracy_events = {};
+
+  // 1. Изменения divine_mandate по накопленным флагам событий
+  let mandateDelta = 0;
+  const ev = gov._theocracy_events;
+
+  if (ev.victory)      { mandateDelta += 5 * ev.victory;      ev.victory      = 0; }
+  if (ev.temple_built) { mandateDelta += 3 * ev.temple_built; ev.temple_built = 0; }
+  if (ev.festival)     { mandateDelta += 2 * ev.festival;     ev.festival     = 0; }
+  if (ev.defeat)       { mandateDelta -= 8 * ev.defeat;       ev.defeat       = 0; }
+  if (ev.corruption)   { mandateDelta -= 4 * ev.corruption;   ev.corruption   = 0; }
+  if (ev.disaster)     { mandateDelta -= 6 * ev.disaster;     ev.disaster     = 0; }
+
+  if (mandateDelta !== 0 && pr) {
+    pr.current = Math.min(pr.max ?? 100, Math.max(0, pr.current + mandateDelta));
+    gov.legitimacy = Math.round(pr.current);
+    if (isPlayer) {
+      const sign = mandateDelta > 0 ? '+' : '';
+      addEventLog(
+        `✨ Божественный мандат: ${sign}${mandateDelta} (теперь ${Math.round(pr.current)})`,
+        mandateDelta > 0 ? 'positive' : 'warning'
+      );
+    }
+  }
+
+  // 2. Кризис жречества при divine_mandate < 20
+  const mandate = pr?.current ?? gov.legitimacy ?? 50;
+  if (mandate < 20) {
+    gov.stability = Math.max(0, (gov.stability ?? 50) - 15);
+    if (isPlayer && (GAME_STATE.turn ?? 0) % 3 === 0) {
+      addEventLog(
+        '⚠️ КРИЗИС ЖРЕЧЕСТВА! Боги отвернулись. Стабильность −15. Жрецы требуют умилостивительных жертв.',
+        'danger'
+      );
+    }
+    // Переворот жрецов при критически низком мандате
+    if (mandate < 10 && Math.random() < 0.12) {
+      gov.legitimacy = Math.max(0, (gov.legitimacy ?? 50) - 20);
+      gov.stability  = Math.max(0, (gov.stability  ?? 50) - 20);
+      if (!gov.transition_history) gov.transition_history = [];
+      gov.transition_history.push({
+        turn:  GAME_STATE.turn ?? 0,
+        from:  'theocracy',
+        to:    'theocracy',
+        cause: 'Переворот жрецов из-за утраты divine_mandate',
+      });
+      if (isPlayer) {
+        addEventLog(
+          '🔥 ПЕРЕВОРОТ ЖРЕЦОВ! Верховный жрец низложен. Новый жрец обещает «очищение». Легитимность −20, стабильность −20.',
+          'danger'
+        );
+      }
+    }
+  }
+
+  // 3. Оракул — 10% шанс за ход (async, fire-and-forget)
+  if (Math.random() < 0.10) {
+    _triggerOracleRoll(nation, nationId, isPlayer);
+  }
+
+  // 4. Истечение оракульного баффа
+  if (gov._oracle_buff && (GAME_STATE.turn ?? 0) >= gov._oracle_buff.expires_turn) {
+    gov._oracle_buff = null;
+  }
+}
+
+/**
+ * Генерирует пророчество оракула. Async, fire-and-forget.
+ * Результат сохраняется в gov._oracle_buff и отображается игроку.
+ */
+async function _triggerOracleRoll(nation, nationId, isPlayer) {
+  const gov = nation.government;
+
+  const systemPrompt =
+    'Ты — древний оракул в исторической стратегической игре. ' +
+    'Дай одно короткое пророчество (не более 100 символов) для правителя теократии. ' +
+    'Пророчество должно быть загадочным и туманным, намекать на войну, мир, удачу или беду. ' +
+    'Пиши только само пророчество, без кавычек и пояснений. Язык: русский.';
+  const yearAbs = Math.abs((GAME_STATE.date?.year) ?? 300);
+  const userPrompt =
+    `Нация: ${nation.name ?? nationId}. ${yearAbs} год до н.э. ` +
+    `Текущий divine_mandate: ${Math.round(gov.power_resource?.current ?? gov.legitimacy ?? 50)}.`;
+
+  let prophecy;
+  try {
+    if (typeof callClaude === 'function') {
+      const raw = await callClaude(systemPrompt, userPrompt, 80, CONFIG?.MODEL_HAIKU ?? 'claude-haiku-4-5-20251001');
+      prophecy = (raw || '').trim().slice(0, 150);
+    }
+  } catch (_) { /* fallback ниже */ }
+
+  if (!prophecy) {
+    const fallbacks = [
+      'Звёзды предвещают победу тем, кто смел и чтит богов.',
+      'Кровь прольётся, но плоды достанутся мудрым.',
+      'Боги молчат — твои слова решат судьбу.',
+      'Восток принесёт беду, запад — спасение.',
+      'Жрецы узрели огонь не войны, но великих перемен.',
+      'Тот, кто ждёт — погибнет. Тот, кто действует — обретёт.',
+      'Соль и кровь: два дара, два проклятия.',
+    ];
+    prophecy = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+  }
+
+  // Бафф голосования: +/-20 на 3 хода
+  const buff = Math.random() < 0.5 ? 20 : -20;
+  gov._oracle_buff = {
+    value:        buff,
+    prophecy,
+    expires_turn: (GAME_STATE.turn ?? 0) + 3,
+  };
+
+  if (!gov._prophecy_history) gov._prophecy_history = [];
+  gov._prophecy_history.push({ turn: GAME_STATE.turn ?? 0, prophecy, buff });
+  if (gov._prophecy_history.length > 10) gov._prophecy_history.shift();
+
+  if (isPlayer) {
+    const tone = buff > 0 ? '(благоприятное)' : '(зловещее)';
+    addEventLog(
+      `🔮 ОРАКУЛ ${tone}: «${prophecy}» — влияние на голосование: ${buff > 0 ? '+' : ''}${buff} на 3 хода.`,
+      buff > 0 ? 'positive' : 'warning'
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────
 // КАСТОМНЫЕ МЕХАНИКИ
 // ──────────────────────────────────────────────────────────────────────
 
@@ -801,6 +940,17 @@ function calculateInstitutionVote(institution, nation) {
         else if (r < 0.9)       votesAgainst++;
         else                    votesAbstain++;
       }
+    }
+  }
+
+  // Оракульный бафф для теократии: +/-20 псевдо-голосов
+  const gov = nation.government;
+  if (gov?.type === 'theocracy' && gov._oracle_buff) {
+    const oracleBuff = gov._oracle_buff.value;
+    if (oracleBuff > 0) {
+      votesFor += oracleBuff;
+    } else {
+      votesAgainst += Math.abs(oracleBuff);
     }
   }
 
