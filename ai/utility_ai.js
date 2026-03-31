@@ -164,22 +164,45 @@ function utilityAIDecide(army, order) {
 
   // Штурм текущей осады
   if (activeSiege) {
+    // MIL_005: обнаружить армию-спасателя и голодающий гарнизон
+    const reliefArmy     = _detectReliefArmy(activeSiege.region_id, enemies);
+    const garrisonStarve = (activeSiege.garrison_supply ?? 100) < 20;
+
     if (activeSiege.storm_possible ||
         activeSiege.progress >= mods.storm_threshold) {
-      candidates.push({
-        action:    'storm',
-        target_id: null,
-        score:     _scoreStorm(army, activeSiege, mods, readiness, compMods),
-        reasoning: _phrase('storm'),
-      });
+      let stormScore  = _scoreStorm(army, activeSiege, mods, readiness, compMods);
+      let stormReason = _phrase('storm');
+      // Армия-спасатель через ≤2 хода → штурмовать немедленно!
+      if (reliefArmy.incoming && reliefArmy.turnsAway <= 2) {
+        stormScore  *= 1.60;
+        stormReason  = `relief_incoming_in:${reliefArmy.turnsAway}_turns`;
+      }
+      candidates.push({ action: 'storm', target_id: null, score: stormScore, reasoning: stormReason });
     }
+
     // Продолжить осаду (не штурм)
-    candidates.push({
-      action:    'siege',
-      target_id: null,
-      score:     _scoreSiege(army, activeSiege, mods, readiness, compMods),
-      reasoning: `Продолжать осаду ${activeSiege.region_name} (${Math.round(activeSiege.progress)}%).`,
-    });
+    let siegeScore  = _scoreSiege(army, activeSiege, mods, readiness, compMods);
+    let siegeReason = `Продолжать осаду ${activeSiege.region_name} (${Math.round(activeSiege.progress)}%).`;
+    if (garrisonStarve) {
+      siegeScore  *= 1.30;
+      siegeReason += ' starving_garrison';
+    }
+    if (reliefArmy.incoming) {
+      siegeReason += ` relief_incoming_in:${reliefArmy.turnsAway}_turns`;
+    }
+    candidates.push({ action: 'siege', target_id: null, score: siegeScore, reasoning: siegeReason });
+
+    // Если армия-спасатель сильнее нас в 1.4× — добавить вариант отступления
+    if (reliefArmy.incoming && reliefArmy.strength > myStr * 1.4) {
+      const retreatId = _findBestRetreat(army, nearby);
+      if (retreatId) {
+        candidates.push({
+          action: 'retreat', target_id: retreatId,
+          score:  _scoreHold(army, readiness, mods) + 30,
+          reasoning: `relief_incoming_in:${reliefArmy.turnsAway}_turns — враг сильнее нас.`,
+        });
+      }
+    }
   }
 
   // Если союзник осаждает крепость рядом — идти на помощь (высокий приоритет)
@@ -876,6 +899,47 @@ function _findDistantEnemy(army, order, enemies) {
 
   // BFS не дошёл — отдаём саму цель (orders engine разберётся)
   return goalId;
+}
+
+/**
+ * MIL_005: Обнаруживает армию-спасателя, движущуюся к осаждённому региону.
+ * Ищет вражеские армии в радиусе 3 регионов от осады.
+ * @param {string} siegeRegionId — регион, где ведётся осада
+ * @param {string[]} enemies     — нации-враги осаждающего
+ * @returns {{ incoming: boolean, turnsAway: number, strength: number }}
+ */
+function _detectReliefArmy(siegeRegionId, enemies) {
+  let incoming  = false;
+  let turnsAway = 99;
+  let strength  = 0;
+
+  const visited = new Set([siegeRegionId]);
+  const queue   = [[siegeRegionId, 0]];
+
+  while (queue.length > 0) {
+    const [cur, d] = queue.shift();
+    if (d > 3) continue;
+
+    for (const a of (GAME_STATE.armies ?? [])) {
+      if (a.state === 'disbanded') continue;
+      if (!enemies.includes(a.nation)) continue;
+      if (a.position !== cur) continue;
+      const str = _armyStrength(a, GAME_STATE.regions?.[cur]?.terrain ?? 'plains');
+      if (str > 0) {
+        if (!incoming || d < turnsAway) turnsAway = d;
+        incoming  = true;
+        strength += str;
+      }
+    }
+
+    if (d < 3) {
+      const r = GAME_STATE.regions?.[cur] ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[cur] : null);
+      for (const next of (r?.connections ?? [])) {
+        if (!visited.has(next)) { visited.add(next); queue.push([next, d + 1]); }
+      }
+    }
+  }
+  return { incoming, turnsAway, strength };
 }
 
 /**
