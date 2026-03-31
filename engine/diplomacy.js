@@ -1172,16 +1172,20 @@ function _warMobilizationResponse(nationId, nation) {
   const treasury = nation.economy?.treasury ?? 0;
   const pop      = nation.population?.total ?? 0;
 
-  // Размер экстренного набора: до 3% населения, не дороже 30% казны
+  // Размер экстренного набора: до 3% населения, не дороже 30% казны.
+  // Минимум 1% населения — оборонное ополчение не зависит от казны.
   const maxByPop  = Math.floor(pop * 0.03);
   const maxByGold = treasury > 0
     ? Math.floor(treasury * 0.30 / Math.max(1, CONFIG?.BALANCE?.INFANTRY_UPKEEP ?? 2))
     : 0;
-  const recruits  = Math.max(0, Math.min(maxByPop, maxByGold, 1500));
+  const defensiveLevy = Math.floor(pop * 0.01); // ополчение — всегда доступно
+  const recruits  = Math.max(defensiveLevy, Math.min(maxByPop, Math.max(maxByGold, defensiveLevy), 1500));
 
   if (recruits > 0) {
     military.infantry = (military.infantry ?? 0) + recruits;
-    const cost = recruits * (CONFIG?.BALANCE?.INFANTRY_UPKEEP ?? 2) * 3;
+    // Платим только за то, что финансируется казной (ополчение бесплатно)
+    const paidRecruits = Math.min(recruits, maxByGold);
+    const cost = paidRecruits * (CONFIG?.BALANCE?.INFANTRY_UPKEEP ?? 2) * 3;
     nation.economy.treasury = Math.max(0, treasury - cost);
 
     if (typeof addEventLog === 'function') {

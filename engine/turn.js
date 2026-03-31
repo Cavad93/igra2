@@ -946,11 +946,13 @@ function applyFallbackDecision(nationId) {
       ou.aggression * 2.0
       + (armyRatio < 0.01 ? 2.5 : armyRatio < 0.03 ? 0.5 : -1.0)
       + (atWar ? 1.5 : 0)
-      + (treasury < 800 ? -5 : treasury > 4000 ? 0.5 : 0),
+      // При войне штраф за пустую казну не блокирует рекрут — ополчение всегда возможно
+      + (treasury < 800 ? (atWar ? -1 : -5) : treasury > 4000 ? 0.5 : 0),
 
     raise_army:
       ou.aggression * 1.5 + ou.expansion * 1.0
-      + (!hasArmy && military.infantry > 200 ? 3.0 : -4.0)
+      // При войне порог ниже (50 вместо 200)
+      + (!hasArmy && military.infantry > (atWar ? 50 : 200) ? 3.0 : -4.0)
       + (atWar ? 2.0 : 0),
 
     recruit_mercs:
@@ -1025,21 +1027,29 @@ function applyFallbackDecision(nationId) {
   switch (action) {
 
     case 'recruit': {
-      if (treasury < 800) { _rec('wait', 'казна мала'); break; }
-      const n = Math.min(
+      // При войне — экстренная мобилизация даже без казны (ополчение ~0.5% населения)
+      const minTreasury = atWar ? 0 : 800;
+      if (treasury < minTreasury) { _rec('wait', 'казна мала'); break; }
+      const emergencyLevy = atWar && treasury < 800
+        ? Math.floor(Math.max(1, pop.total ?? 1) * 0.005)
+        : 0;
+      const n = Math.max(emergencyLevy, Math.min(
         Math.floor(treasury / 10),
         Math.floor(Math.max(1, pop.total ?? 1) * 0.005)
-      );
+      ));
       if (n > 0) {
         military.infantry = (military.infantry ?? 0) + n;
-        nation.economy.treasury -= n * (CONFIG.BALANCE?.INFANTRY_UPKEEP ?? 1) * 5;
+        const cost = Math.min(n, Math.floor(treasury / 10)) * (CONFIG.BALANCE?.INFANTRY_UPKEEP ?? 1) * 5;
+        nation.economy.treasury = Math.max(0, treasury - cost);
         _rec('recruit', `+${n} пехоты [agg:${ou.aggression.toFixed(2)}]`);
       }
       break;
     }
 
     case 'raise_army': {
-      if (!hasArmy && (military.infantry ?? 0) > 200 && typeof createArmy === 'function') {
+      // При войне порог ниже — нация должна выдвинуть хоть что-то в поле
+      const raiseThreshold = atWar ? 50 : 200;
+      if (!hasArmy && (military.infantry ?? 0) > raiseThreshold && typeof createArmy === 'function') {
         const homeRegion = nation.regions?.[0];
         if (homeRegion) {
           const troops = Math.floor(military.infantry * 0.6);
