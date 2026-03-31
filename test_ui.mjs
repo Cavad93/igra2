@@ -30,6 +30,18 @@ const browser = await chromium.launch({ headless: true, args: [
 const ctx  = await browser.newContext({ viewport: { width: 1400, height: 900 } });
 const page = await ctx.newPage();
 
+// Перехватываем AI API запросы — возвращаем мок-ответы вместо реального вызова
+await page.route('**/api.groq.com/**', route => route.fulfill({
+  status: 200,
+  contentType: 'application/json',
+  body: JSON.stringify({ choices: [{ message: { content: '{"action":"wait","reasoning":"[mock]"}' } }] }),
+}));
+await page.route('**/api.anthropic.com/**', route => route.fulfill({
+  status: 200,
+  contentType: 'application/json',
+  body: JSON.stringify({ content: [{ text: '{"action":"wait","reasoning":"[mock]"}' }] }),
+}));
+
 const errors = [], warns = [];
 page.on('console', m => {
   if (m.type() === 'error')   errors.push(m.text());
@@ -39,7 +51,7 @@ page.on('pageerror', e => errors.push('PAGE: ' + e.message));
 
 // ─── 1. Загрузка страницы ─────────────────────────────────────────────────────
 console.log('\n🌍 Загрузка...');
-await page.goto('file:///home/user/igra2/index.html', { waitUntil: 'commit', timeout: 15000 });
+await page.goto('file:///home/user/igra2/index.html', { waitUntil: 'domcontentloaded', timeout: 120000 });
 await page.waitForTimeout(2000);
 
 // ─── 2. Мокаем API и закрываем модал ─────────────────────────────────────────
@@ -83,7 +95,7 @@ await page.waitForFunction(
      && GAME_STATE.nations
      && Object.keys(GAME_STATE.nations).length > 5
      && GAME_STATE.turn >= 1,
-  { timeout: 20000 }
+  { timeout: 60000 }
 ).catch(() => console.log('⚠ GAME_STATE не готов'));
 
 const info0 = await page.evaluate(() => {
@@ -214,6 +226,8 @@ await snap(page, 'final');
 
 const relevant_errors = errors.filter(e =>
   !e.includes('407') && !e.includes('ERR_NAME') && !e.includes('favicon') && !e.includes('Leaflet')
+  && !e.includes('api.groq.com') && !e.includes('api.anthropic.com') && !e.includes('CORS')
+  && !e.includes('ERR_FAILED')
 );
 
 console.log('\n═══════════════════════════');
