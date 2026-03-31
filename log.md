@@ -1284,3 +1284,23 @@ NEXT_TASK: MIL_005
 ### Файлы: ai/utility_ai.js (+54 строки)
 
 NEXT_TASK: MIL_006
+
+---
+
+## MIL_006 — Преследование и эксплуатация прорыва (2026-03-31)
+
+### Сделано:
+- В `combat.js` после `_setRetreatPath(loser)`: если margin>1.5 && winner.morale>55 → `winner.pursuit_order = loser.path?.[0]` ✓
+- В `utility_ai.js` добавлена функция `_scorePursuit(army, enemies, nearby, readiness)`:
+  - Base score = 70 + readiness × 20 ✓
+  - +25 если pursuit_order ведёт к столице противника (расстояние ≤2) ✓
+  - ×0.50 если fatigue > 65 (усталые не преследуют) ✓
+- Эксплуатация прорыва: если pursuit_order установлен AND нет вражеских армий в 2 регионах → breakthroughTarget = ближайший незащищённый вражеский регион ✓
+- Reasoning: `pursuit_of_routed` / `exploiting_breakthrough` ✓
+- Кандидаты добавлены в `utilityAIDecide()` ✓
+- Тесты: 18/18 ✅ (tests/mil_006_pursuit_test.cjs)
+- Регрессии: MIL_002 16/16, MIL_003 18/18, MIL_004 16/16, MIL_005 23/23 ✅
+
+### Файлы: engine/combat.js (+4 строки), ai/utility_ai.js (+54 строки)
+
+NEXT_TASK: MIL_007
