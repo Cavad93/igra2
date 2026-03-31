@@ -1324,3 +1324,19 @@ NEXT_TASK: MIL_007
 ### Файлы: ai/utility_ai.js (+77 строк), engine/orders.js (+7 строк), engine/combat.js (+1 строка), engine/armies.js (+1 строка)
 
 NEXT_TASK: MIL_008
+
+## MIL_008 — Стратегия под тип местности (2026-03-31)
+
+### Сделано:
+- `_scoreAttack()`: кавалерия (cavRatio>0.4) атакует горы/холмы → score -30, reasoning tag `terrain_penalty:mountains` ✓
+- `_scoreAttack()`: кавалерия (cavRatio>0.4) атакует равнину → score +12, tag `terrain_advantage:cavalry_plains` ✓
+- `_scoreAttack()`: прибрежный город без союзного флота → score -15, tag `terrain_penalty:coastal_no_fleet` ✓
+- `_scoreHold()`: новые параметры terrain + hasIncomingEnemy; горы/холмы + враг рядом → score +25, tag `terrain_advantage:defender_hills` ✓
+- `_scoreAttack()` возвращает `{score, terrainTag}` вместо числа; caller обновлён ✓
+- `hasIncomingEnemy` вычисляется в `utilityAIDecide()` и передаётся в `_scoreHold()` ✓
+- Тесты: 15/15 ✅ (tests/mil_008_terrain_strategy_test.cjs)
+- Регрессии: MIL_002 16/16, MIL_003 18/18, MIL_004 16/16, MIL_005 23/23, MIL_006 18/18, MIL_007 16/16 ✅
+
+### Файлы: ai/utility_ai.js (+53 строки), tests/mil_008_terrain_strategy_test.cjs (новый, 185 строк)
+
+NEXT_TASK: MIL_009
