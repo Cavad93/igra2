@@ -731,6 +731,20 @@ function _calcMemoryDecay(nationA, nationB) {
  * по совокупности пяти научных компонент.
  * @returns {number} — от -100 до +100
  */
+// ── DIP_009: Вспомогательная функция получения исторических обид нации ────────
+/**
+ * Читает historical_grievances (0..1) из SuperOU nation._ou.diplomacy.
+ * Возвращает 0, если данные недоступны.
+ * @param {object} nation
+ * @returns {number} 0..1
+ */
+function _getNationGrievance(nation) {
+  const arr = nation?._ou?.diplomacy;
+  if (!Array.isArray(arr)) return 0;
+  const v = arr.find(x => x.name === 'historical_grievances');
+  return v ? (v.current ?? 0) : 0;
+}
+
 function calcBaseRelation(nationA, nationB) {
   const natA = GAME_STATE.nations?.[nationA];
   const natB = GAME_STATE.nations?.[nationB];
@@ -749,7 +763,14 @@ function calcBaseRelation(nationA, nationB) {
   // DIP_003: штраф за репутацию вероломного (betrayals у нации B)
   const betrayalPenalty = (natB.diplo_reputation?.betrayals ?? 0) * 5;
 
-  const raw = (affinity - betrayalPenalty) + threat + econ + triangle + memory;
+  // DIP_009: Исторические обиды снижают базовые отношения
+  // Обиды нации A уменьшают её восприятие всех (компонент памяти)
+  // Обиды нации B симметрично влияют на отношения с A
+  const grievanceA       = _getNationGrievance(natA);
+  const grievanceB       = _getNationGrievance(natB);
+  const grievancePenalty = Math.round((grievanceA + grievanceB) * 0.5 * 8);
+
+  const raw = (affinity - betrayalPenalty) + threat + econ + triangle + (memory - grievancePenalty);
   return Math.max(-100, Math.min(100, raw));
 }
 
@@ -931,6 +952,64 @@ function _processReligionSpread() {
   }
 }
 
+// ── DIP_009: Исторические обиды как события ──────────────────────────────────
+/**
+ * Нации с historical_grievances > 0.6 имеют 5% шанс за ход инициировать
+ * дипломатическое требование репараций от ИИ.
+ * Добавляет событие 'demand_reparations' и уведомляет игрока.
+ */
+function _processHistoricalGrievances() {
+  if (!GAME_STATE.diplomacy) return;
+  const nations      = GAME_STATE.nations || {};
+  const playerNation = GAME_STATE.player_nation;
+  const GRIEVANCE_THRESHOLD = 0.6;
+  const REPARATION_CHANCE   = 0.05;
+
+  for (const [nationId, nation] of Object.entries(nations)) {
+    if (!nation || nation.is_eliminated) continue;
+    // Игрок не инициирует сам от себя — только ИИ-нации
+    if (nationId === playerNation) continue;
+
+    const grievance = _getNationGrievance(nation);
+    if (grievance <= GRIEVANCE_THRESHOLD) continue;
+    if (Math.random() >= REPARATION_CHANCE) continue;
+
+    // Найти нацию с наихудшими отношениями (потенциальный «должник»)
+    let worstScore  = Infinity;
+    let targetId    = null;
+    for (const [otherId, other] of Object.entries(nations)) {
+      if (otherId === nationId || !other || other.is_eliminated) continue;
+      const rel = GAME_STATE.diplomacy.relations[_relKey(nationId, otherId)];
+      if (!rel) continue;
+      if (rel.score < worstScore) {
+        worstScore = rel.score;
+        targetId   = otherId;
+      }
+    }
+    if (!targetId) continue;
+
+    // Применить штраф к отношениям за требование репараций
+    const rel = getRelation(nationId, targetId);
+    const delta = -8;
+    rel.score = Math.max(-100, rel.score + delta);
+    addDiplomacyEvent(nationId, targetId, delta, 'demand_reparations');
+
+    const nationName = nation.name ?? nationId;
+    const targetName = GAME_STATE.nations[targetId]?.name ?? targetId;
+    const msg = `📜 ${nationName} требует репараций от ${targetName} (обиды: ${Math.round(grievance * 100)}%).`;
+    if (typeof addEventLog === 'function') addEventLog(msg, 'diplomacy');
+
+    // Уведомить игрока, если он участвует
+    if (nationId === playerNation || targetId === playerNation) {
+      if (typeof window !== 'undefined' && window.UI?.notify) {
+        window.UI.notify(msg);
+      } else {
+        console.log('[DIP_009]', msg);
+      }
+    }
+  }
+}
+
 // ── Глобальный тик конвергенции (вызывать 1 раз за ход) ──────
 /**
  * α-конвергенция: медленно тянет score каждой пары к базовому значению.
@@ -964,6 +1043,7 @@ function processDiplomacyGlobalTick() {
     }
     _processDiplomaticIncidents(nids);
     _processReligionSpread();
+    _processHistoricalGrievances();
     return;
   }
 
@@ -979,6 +1059,7 @@ function processDiplomacyGlobalTick() {
   }
   _processDiplomaticIncidents(nids);
   _processReligionSpread();
+  _processHistoricalGrievances();
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -1623,5 +1704,11 @@ const DiplomacyEngine = {
   // DIP_008: Коалиция по инициативе игрока
   findCommonEnemies,
   proposeCoalition,
+  // DIP_009: Исторические обиды
+  getGrievance(nationId) {
+    const nation = GAME_STATE.nations?.[nationId];
+    return _getNationGrievance(nation);
+  },
+  processHistoricalGrievances: _processHistoricalGrievances,
   TREATY_TYPES,
 };

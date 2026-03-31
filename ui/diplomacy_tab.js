@@ -400,6 +400,15 @@ function _dpRenderNegotiation(playerNationId, foreign) {
         <div class="dp-nh-stats">
           <span title="Население">👥 ${aiPop > 0 ? aiPop.toLocaleString() : '?'}</span>
           <span title="Казна">💰 ${aiTreasury > 0 ? aiTreasury.toLocaleString() : '?'}</span>
+          ${(() => {
+            // DIP_009: Уровень исторических обид
+            const gv = (typeof DiplomacyEngine !== 'undefined' && DiplomacyEngine.getGrievance)
+              ? DiplomacyEngine.getGrievance(aiId) : 0;
+            if (gv <= 0) return '';
+            const gPct = Math.round(gv * 100);
+            const gColor = gv > 0.6 ? '#ef5350' : gv > 0.3 ? '#ffa726' : '#90a4ae';
+            return `<span title="Исторические обиды: ${gPct}% (влияют на базовые отношения −${Math.round(gv * 8)} очков)" style="color:${gColor}">😠 ${gPct}%</span>`;
+          })()}
         </div>
       </div>
     </div>
