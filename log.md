@@ -1454,3 +1454,23 @@ NEXT_TASK: DONE — все MIL_001–MIL_010 выполнены
 - Все проходят: 15 файлов × 0 failed ✅
 
 NEXT_TASK: DONE
+
+## SESSION 2 — Тесты: исправление флакинга + 5 новых тестов (2026-03-31)
+
+### Исправлено
+- T5a/T5e в mil_siege_warscore_full_chain_test.cjs: проверки reasoning были
+  нестабильны ~60% запусков из-за кириллической заглавной "О" в "Осада" и
+  отсутствия фразы "Блокировать" → переписаны с toLowerCase() и полным покрытием
+
+### Добавлено: tests/mil_advanced_session2_test.cjs (13 assertion)
+- T_ADV1: flanking formation → cavalry strength > standard ✓
+- T_ADV2: fatigue=100 → ratio ≈ 0.60 от базы ✓
+- T_ADV3: 2 союзника рядом (pincer) → решение без краша ✓
+- T_ADV4: supply<40 + путь через горы → supply_warning в reasoning ✓
+- T_ADV5: lightning_commander + pursuit_order → movement_bonus=1 ✓
+
+### Итог
+- Всего тестов: 277 (264 + 13 новых)
+- Все проходят детерминированно: 16 файлов × 0 failed ✅
+
+NEXT_TASK: DONE
