@@ -244,6 +244,9 @@ function processAllTreatyTicks() {
 
     // DIP_001: штрафы эмбарго каждый ход
     if (treaty.type === 'embargo') applyEmbargo(treaty, turn);
+
+    // DIP_004: проверка восстания вассала
+    if (treaty.type === 'vassalage') _checkVassalRebellion(treaty, turn);
   }
 
   // 4. Применяем накопленные бонусы нации в экономику
@@ -538,6 +541,98 @@ function applyEmbargo(treaty, turn) {
     if ((relToTarget.score ?? 0) < -20) {
       _adjustRelScore(imposerId, otherId, 5, 'embargo_solidarity');
     }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// DIP_004: ВОССТАНИЕ ВАССАЛА — проверка каждый ход
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Проверяет вероятность восстания вассала и, если сработало,
+ * разрывает договор вассалитета и объявляет войну.
+ * chance = max(0, (tribute_rate - 0.15) * 2 + (1 - vassal.stability) * 0.3)
+ * @param {object} treaty — активный договор vassalage
+ * @param {number} turn   — текущий ход
+ */
+function _checkVassalRebellion(treaty, turn) {
+  if (!treaty || treaty.status !== 'active') return;
+
+  const [a, b] = treaty.parties;
+  const vasNatId = _findVassal(a, b);
+  if (!vasNatId) return;
+  const suzNatId = treaty.parties.find(p => p !== vasNatId);
+
+  const vasNat = GAME_STATE.nations?.[vasNatId];
+  const suzNat = GAME_STATE.nations?.[suzNatId];
+  if (!vasNat || !suzNat) return;
+  if (vasNat.is_eliminated || suzNat.is_eliminated) return;
+
+  const cond       = treaty.conditions ?? {};
+  const tributeRate = cond.tribute_pct ?? 0.10;
+  const stability   = vasNat.stability != null ? vasNat.stability / 100 : 0.5; // нормируем 0..1
+
+  const chance = Math.max(0, (tributeRate - 0.15) * 2 + (1 - stability) * 0.3);
+  if (chance <= 0) return;
+
+  // Бросок кубика каждый ход
+  if (Math.random() >= chance) return;
+
+  // ── Восстание! ────────────────────────────────────────────
+  _log(`⚔️ Восстание! ${vasNat.name ?? vasNatId} поднимает мятеж против ${suzNat.name ?? suzNatId}!`);
+
+  // Разрываем договор вассалитета (вассал — нарушитель)
+  treaty.status      = 'broken';
+  treaty.breaker     = vasNatId;
+  treaty.turn_broken = turn;
+  try { removeTreatyEffects(treaty); } catch (_) {}
+
+  // -20 к отношениям
+  _adjustRelScore(vasNatId, suzNatId, -20, 'vassal_rebellion');
+
+  // Объявляем войну через DiplomacyEngine.declareWar (если доступен)
+  const engine = (typeof window !== 'undefined' && window.DiplomacyEngine) ? window.DiplomacyEngine : null;
+  if (engine && typeof engine.declareWar === 'function') {
+    try { engine.declareWar(vasNatId, suzNatId); } catch (_) {}
+  } else {
+    // Прямая установка состояния войны
+    const rel = _rel(vasNatId, suzNatId);
+    rel.war   = true;
+    rel.score = Math.min(-60, (rel.score ?? 0) - 30);
+    if (vasNat.military) {
+      vasNat.military.at_war_with = vasNat.military.at_war_with ?? [];
+      if (!vasNat.military.at_war_with.includes(suzNatId)) vasNat.military.at_war_with.push(suzNatId);
+    }
+    if (suzNat.military) {
+      suzNat.military.at_war_with = suzNat.military.at_war_with ?? [];
+      if (!suzNat.military.at_war_with.includes(vasNatId)) suzNat.military.at_war_with.push(vasNatId);
+    }
+    if (vasNat.relations?.[suzNatId]) vasNat.relations[suzNatId].at_war = true;
+    if (suzNat.relations?.[vasNatId]) suzNat.relations[vasNatId].at_war = true;
+  }
+
+  // Уведомляем игрока
+  const playerNation = GAME_STATE.player_nation;
+  const isPlayerInvolved = (vasNatId === playerNation || suzNatId === playerNation);
+  const msg = isPlayerInvolved
+    ? (vasNatId === playerNation
+        ? `⚔️ Вы подняли восстание против ${suzNat.name ?? suzNatId}! Война объявлена.`
+        : `⚔️ Ваш вассал ${vasNat.name ?? vasNatId} поднял мятеж и объявил войну!`)
+    : `⚔️ ${vasNat.name ?? vasNatId} восстал против своего сюзерена ${suzNat.name ?? suzNatId}.`;
+
+  if (typeof window !== 'undefined' && window.UI?.notify) {
+    window.UI.notify(msg);
+  } else {
+    console.log('[DIP_004]', msg);
+  }
+
+  // Добавляем событие в дипломатическую память
+  if (typeof addDiplomacyEvent === 'function') {
+    addDiplomacyEvent(vasNatId, suzNatId, -30, 'vassal_rebellion');
+  }
+  if (typeof addMemoryEvent === 'function') {
+    addMemoryEvent(vasNatId, 'war', `Восстание против сюзерена ${suzNat.name ?? suzNatId}.`, [suzNatId]);
+    addMemoryEvent(suzNatId, 'war', `Вассал ${vasNat.name ?? vasNatId} поднял мятеж.`, [vasNatId]);
   }
 }
 
