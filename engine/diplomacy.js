@@ -764,6 +764,77 @@ function addDiplomacyEvent(nationA, nationB, delta, eventType) {
   rel.events = rel.events.filter(ev => (now - ev.turn) <= 50);
 }
 
+// ── DIP_002: Дипломатические инциденты ──────────────────────────────────────
+/**
+ * Для каждой пары враждебных соседей (score < -20, общие регионы) —
+ * 2% шанс за ход генерировать инцидент: пограничная стычка, поимка шпиона,
+ * оскорбление при дворе. Вызывает addDiplomacyEvent() и уведомляет игрока.
+ */
+function _processDiplomaticIncidents(nids) {
+  const INCIDENT_CHANCE = 0.02;
+  const INCIDENT_TYPES  = [
+    { label: 'Пограничная стычка',   delta: -10 },
+    { label: 'Поимка шпиона',         delta: -15 },
+    { label: 'Оскорбление при дворе', delta: -5  },
+  ];
+  const nations      = GAME_STATE.nations || {};
+  const playerNation = GAME_STATE.player_nation;
+  const nidSet       = new Set(nids);
+
+  function _tryIncident(a, b, rel) {
+    if (!rel || rel.war || rel.score >= -20) return;
+    const natA = nations[a];
+    const natB = nations[b];
+    if (!natA || !natB) return;
+    // Соседство через общие регионы
+    const regA = new Set(natA.regions || []);
+    if (!(natB.regions || []).some(r => regA.has(r))) return;
+    // 2% шанс инцидента
+    if (Math.random() >= INCIDENT_CHANCE) return;
+
+    const inc = INCIDENT_TYPES[Math.floor(Math.random() * INCIDENT_TYPES.length)];
+    addDiplomacyEvent(a, b, inc.delta, 'incident');
+    rel.score = Math.max(-100, rel.score + inc.delta);
+
+    // Обновить SuperOU: INSULT_RECEIVED повышает diplomatic_incidents у обеих наций
+    if (typeof window !== 'undefined' && window.SuperOU?.onDiplomacyEvent) {
+      window.SuperOU.onDiplomacyEvent(a, 'INSULT_RECEIVED');
+      window.SuperOU.onDiplomacyEvent(b, 'INSULT_RECEIVED');
+    }
+
+    // Уведомление игрока
+    if (a === playerNation || b === playerNation) {
+      const nameA = natA.name ?? a;
+      const nameB = natB.name ?? b;
+      const msg   = `⚠️ Дипломатический инцидент: «${inc.label}» между ${nameA} и ${nameB}. Отношения: ${inc.delta}`;
+      if (typeof addEventLog === 'function') addEventLog(msg, 'diplomacy');
+      if (typeof window !== 'undefined' && window.UI?.notify) window.UI.notify(msg);
+    }
+  }
+
+  if (nids.length > _INIT_NATION_LIMIT) {
+    // Большие карты: итерируем только существующие пары
+    for (const [key, rel] of Object.entries(GAME_STATE.diplomacy.relations)) {
+      if (!rel) continue;
+      let a = null, b = null;
+      for (let si = 1; si < key.length; si++) {
+        if (key[si] === '_') {
+          const left = key.slice(0, si), right = key.slice(si + 1);
+          if (nidSet.has(left) && nidSet.has(right)) { a = left; b = right; break; }
+        }
+      }
+      if (a && b) _tryIncident(a, b, rel);
+    }
+  } else {
+    // Малые карты: все пары
+    for (let i = 0; i < nids.length; i++) {
+      for (let j = i + 1; j < nids.length; j++) {
+        _tryIncident(nids[i], nids[j], getRelation(nids[i], nids[j]));
+      }
+    }
+  }
+}
+
 // ── Глобальный тик конвергенции (вызывать 1 раз за ход) ──────
 /**
  * α-конвергенция: медленно тянет score каждой пары к базовому значению.
@@ -795,6 +866,7 @@ function processDiplomacyGlobalTick() {
       rel.score  = Math.round(rel.score + ALPHA * (base - rel.score));
       rel.score  = Math.max(-100, Math.min(100, rel.score));
     }
+    _processDiplomaticIncidents(nids);
     return;
   }
 
@@ -808,6 +880,7 @@ function processDiplomacyGlobalTick() {
       rel.score  = Math.max(-100, Math.min(100, rel.score));
     }
   }
+  _processDiplomaticIncidents(nids);
 }
 
 // ──────────────────────────────────────────────────────────────
