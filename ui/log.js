@@ -18,6 +18,7 @@ const LOG_STYLES = {
   law:       { icon: '📜', cls: 'log-law'      },
   culture:   { icon: '🎭', cls: 'log-culture'  },
   religion:  { icon: '⛪', cls: 'log-religion' },
+  achievement: { icon: '🏆', cls: 'log-achievement' },
 };
 
 // Добавить запись в лог

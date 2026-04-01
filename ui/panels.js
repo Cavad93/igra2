@@ -33,6 +33,7 @@ function renderLeftPanel() {
     <div class="panel-section ruler-section">
       <div class="ruler-name">⚔️ ${rulerName}</div>
       <div class="ruler-sub">${govTypeName} · ${nation.name}</div>
+      <div class="grandeur-display" style="color:var(--gold,#c8a84b);font-size:12px;margin:4px 0 2px;">✦ Величие: <span id="grandeur-value">${typeof calcGrandeur === 'function' ? calcGrandeur(nationId) : 0}</span></div>
       <div class="legitimacy-bar">
         <span class="stat-label">Легитимность</span>
         <div class="bar-container">

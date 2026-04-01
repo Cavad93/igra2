@@ -106,6 +106,14 @@ async function processTurn() {
     }
     _endStep('Экономика...');
 
+    // 1.02. Достижения — проверяем после экономики
+    if (typeof checkAchievements === 'function') {
+      try {
+        checkAchievements(GAME_STATE.player_nation);
+        if (typeof updateGrandeurDisplay === 'function') updateGrandeurDisplay();
+      } catch (e) { console.warn('[achievements]', e); }
+    }
+
     // 1.05. Выплаты по займам (после пополнения казны доходами)
     if (typeof processLoanPayments === 'function') {
       try {
