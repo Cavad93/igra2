@@ -466,11 +466,13 @@ function showTestamentModal() {
 }
 
 function hideTestamentModal() {
+  if (typeof document === 'undefined') return;
   const modal = document.getElementById('testament-modal');
   if (modal) modal.style.display = 'none';
 }
 
 function _renderTestamentContent() {
+  if (typeof document === 'undefined') return;
   const content = document.getElementById('testament-modal-content');
   if (!content) return;
 

@@ -585,6 +585,7 @@ function calcGrandeur(nationId) {
  * Обновить отображение индекса величия в левой панели.
  */
 function updateGrandeurDisplay() {
+  if (typeof document === 'undefined') return;
   const nationId = GAME_STATE?.player_nation;
   if (!nationId) return;
 
@@ -671,6 +672,7 @@ function _saveManifest(text) {
  * Обновить отображение манифеста в левой панели.
  */
 function _renderManifestInPanel() {
+  if (typeof document === 'undefined') return;
   const el = document.getElementById('manifest-display');
   if (!el) return;
   const text = GAME_STATE.player_manifest?.text ?? '';
@@ -873,6 +875,7 @@ function _tickDynamicGoals(nationId) {
  * Отрисовать блок «Цели» в левой панели.
  */
 function _renderDynamicGoalsInPanel(nationId, goals) {
+  if (typeof document === 'undefined') return;
   const el = document.getElementById('dynamic-goals-block');
   if (!el) return;
   if (!goals || goals.length === 0) { el.innerHTML = ''; return; }
