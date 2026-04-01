@@ -432,9 +432,12 @@ function _getEffectiveTariffRate(nationId, partnerId) {
   if (!rel) return 0.20;
   if (rel.war) return 0.99;
   // Если договор задал явную ставку
-  if (rel.flags?.tariff_rate !== undefined) return rel.flags.tariff_rate;
+  if (rel.flags?.tariff_rate !== undefined) {
+    const rate = rel.flags.tariff_rate;
+    return Number.isFinite(rate) ? Math.max(0, Math.min(0.99, rate)) : 0.20;
+  }
   // Авторасчёт: tariff = 0.20 − (score/100) × 0.15, границы [0.05, 0.35]
-  const score = rel.score ?? 0;
+  const score = Number.isFinite(rel.score) ? rel.score : 0;
   return Math.max(0.05, Math.min(0.35, 0.20 - (score / 100) * 0.15));
 }
 
@@ -529,6 +532,9 @@ function processTrade(nationId) {
                         * (1 - CONFIG.BALANCE.PIRACY_BASE);
       const tariffAmount = grossProfit * tariffRate;
       const netProfit = grossProfit - tariffAmount;
+
+      // Пропустить строку если получился NaN (защита от NaN в цене или тарифе)
+      if (!Number.isFinite(netProfit)) continue;
 
       // tariffIncome — пошлины которые nation ПОЛУЧАЕТ как портовая держава
       // (половина от пошлин со всей торговли через её порты)
@@ -666,7 +672,7 @@ function updateTreasury(nationId, produced, consumed, tradeProfit) {
   }
 
   // Флот влияет на торговую прибыль; здания — на портовые пошлины
-  const effTradeProfit = Math.round(tradeProfit * navyLvl);
+  const effTradeProfit = Math.round((Number.isFinite(tradeProfit) ? tradeProfit : 0) * navyLvl);
   const effPortDuties  = Math.round(portDuties  * buildingsLvl);
   const tariffIncome   = Math.round((economy._tariff_income_tick ?? 0) * (buildingsLvl ?? 1));
 
