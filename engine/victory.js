@@ -11,6 +11,18 @@
 // ══════════════════════════════════════════════════════════════════════
 
 // ──────────────────────────────────────────────────────────────────────
+// FALLBACK — _addChronicleEntry (если achievements.js не загружен)
+// ──────────────────────────────────────────────────────────────────────
+if (typeof _addChronicleEntry !== 'function') {
+  _addChronicleEntry = function(entry) {
+    if (!GAME_STATE) return;
+    if (!GAME_STATE.chronicle_log) GAME_STATE.chronicle_log = [];
+    GAME_STATE.chronicle_log.push({ turn: GAME_STATE.turn ?? 0, ...entry });
+    if (GAME_STATE.chronicle_log.length > 50) GAME_STATE.chronicle_log.shift();
+  };
+}
+
+// ──────────────────────────────────────────────────────────────────────
 // СЕССИЯ 7 — ИТОГ ПРАВЛЕНИЯ
 // ──────────────────────────────────────────────────────────────────────
 
@@ -32,11 +44,13 @@ function checkVictoryConditions() {
     try { processCrisisVeha(playerNation); } catch (e) { console.warn('[crisis]', e); }
   }
 
-  // ── Проверка итогов кризиса (через 15 ходов после начала) ──
+  // ── Тик активного кризиса (постепенные эффекты) ──
+  try { _tickActiveCrisis(playerNation); } catch (e) {}
+
+  // ── Проверка итогов кризиса (через N ходов после начала) ──
   const crisis = GAME_STATE.active_crisis;
   if (crisis && !crisis.resolved) {
-    const elapsed = turn - crisis.start_turn;
-    const checkAt = crisis.check_at ?? (crisis.start_turn + 15);
+    const checkAt = crisis.check_at ?? (crisis.start_turn + (CRISIS_DEFS[crisis.type]?.check_turns ?? 15));
     if (turn >= checkAt) {
       _resolveCrisis(playerNation, crisis);
     }
@@ -77,6 +91,12 @@ function generateRulerLegacy(nationId, reason) {
   const rulerStartTurn = n._ruler_start_turn ?? 0;
   const currentTurn    = GAME_STATE.turn ?? 0;
 
+  // Запомнить начало следующего правления
+  n._ruler_start_turn = currentTurn;
+
+  // Проверить завещание (Сессия 10) — до построения data, чтобы включить в неё
+  const testamentResult = _evaluateTestament(nationId);
+
   const data = {
     ruler_name:   gov.ruler?.name ?? 'Правитель',
     turns_ruled:  Math.max(1, currentTurn - rulerStartTurn),
@@ -88,13 +108,8 @@ function generateRulerLegacy(nationId, reason) {
     treasury:     Math.round(n.economy?.treasury ?? 0),
     population:   n.population?.total ?? 0,
     reason,
+    testament:    testamentResult,
   };
-
-  // Запомнить начало следующего правления
-  n._ruler_start_turn = currentTurn;
-
-  // Проверить завещание (Сессия 10)
-  const testamentResult = _evaluateTestament(nationId);
 
   const legacyText = _buildLegacyText(data);
 
@@ -326,6 +341,7 @@ const CRISIS_DEFS = {
  * @param {string} nationId
  */
 function processCrisisVeha(nationId) {
+  nationId = nationId ?? GAME_STATE?.player_nation;
   if (GAME_STATE.active_crisis && !GAME_STATE.active_crisis.resolved) return; // уже идёт кризис
 
   const n  = GAME_STATE.nations?.[nationId];
@@ -369,7 +385,10 @@ function processCrisisVeha(nationId) {
  */
 function _tickActiveCrisis(nationId) {
   const crisis = GAME_STATE.active_crisis;
-  if (!crisis || crisis.resolved || crisis.nation_id !== nationId) return;
+  if (!crisis || crisis.resolved) return;
+  // Treat undefined nation_id as matching player_nation
+  const crisisNation = crisis.nation_id ?? GAME_STATE?.player_nation;
+  if (crisisNation !== nationId) return;
   const def = CRISIS_DEFS[crisis.type];
   if (!def?.tick) return;
   const n = GAME_STATE.nations?.[nationId];
@@ -444,7 +463,20 @@ const TESTAMENT_GOAL_DEFS = [
     check: n => (n.military?.at_war_with?.length ?? 0) === 0,
   },
   {
+    id:   'end_wars',
+    text: '🕊 Закончить все войны',
+    check: n => (n.military?.at_war_with?.length ?? 0) === 0,
+  },
+  {
     id:   'no_debt',
+    text: '📜 Погасить все займы',
+    check: (n, gs, nid) => {
+      const loans = (gs.loans ?? []).filter(l => l.nation_id === nid && l.status === 'active');
+      return loans.length === 0;
+    },
+  },
+  {
+    id:   'no_loans',
     text: '📜 Погасить все займы',
     check: (n, gs, nid) => {
       const loans = (gs.loans ?? []).filter(l => l.nation_id === nid && l.status === 'active');
@@ -558,7 +590,7 @@ function _evaluateTestament(nationId) {
     }
   }
 
-  return { done, total, goals: results, all_ok };
+  return { done, fulfilled: done, total, goals: results, all_ok };
 }
 
 /**
