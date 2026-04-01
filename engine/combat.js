@@ -405,9 +405,9 @@ function _syncArmyToNation(army) {
   }, { infantry: 0, cavalry: 0, mercenaries: 0 });
 
   // Только уменьшаем (не увеличиваем из армий — резерв отдельно)
-  nat.infantry    = Math.max(nat.infantry    ?? 0, total.infantry);
-  nat.cavalry     = Math.max(nat.cavalry     ?? 0, total.cavalry);
-  nat.mercenaries = Math.max(nat.mercenaries ?? 0, total.mercenaries);
+  nat.infantry    = Math.min(nat.infantry    ?? 0, total.infantry);
+  nat.cavalry     = Math.min(nat.cavalry     ?? 0, total.cavalry);
+  nat.mercenaries = Math.min(nat.mercenaries ?? 0, total.mercenaries);
   nat.morale      = Math.round(
     (getNationArmies(army.nation).reduce((s, a) => s + a.morale, 0) /
      Math.max(1, getNationArmies(army.nation).length))
