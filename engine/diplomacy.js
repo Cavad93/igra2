@@ -695,8 +695,10 @@ function _calcTriangularBalance(nationA, nationB) {
     // Читаем score напрямую без lazy-создания пар (избегаем рекурсии на больших картах)
     const keyAC = _relKey(nationA, c);
     const keyBC = _relKey(nationB, c);
-    const scoreAC = GAME_STATE.diplomacy.relations[keyAC]?.score ?? 0;
-    const scoreBC = GAME_STATE.diplomacy.relations[keyBC]?.score ?? 0;
+    const _rawAC = GAME_STATE.diplomacy.relations[keyAC]?.score;
+    const _rawBC = GAME_STATE.diplomacy.relations[keyBC]?.score;
+    const scoreAC = Number.isFinite(_rawAC) ? _rawAC : 0;
+    const scoreBC = Number.isFinite(_rawBC) ? _rawBC : 0;
 
     if (Math.abs(scoreAC) < 20 || Math.abs(scoreBC) < 20) continue;
     balance += Math.tanh((scoreAC * scoreBC) / 4000);
@@ -1039,8 +1041,9 @@ function processDiplomacyGlobalTick() {
       }
       if (!a || !b) continue;
       const base = calcBaseRelation(a, b);
+      if (!Number.isFinite(base)) continue;
       rel.score  = Math.round(rel.score + ALPHA * (base - rel.score));
-      rel.score  = Math.max(-100, Math.min(100, rel.score));
+      rel.score  = Number.isFinite(rel.score) ? Math.max(-100, Math.min(100, rel.score)) : 0;
     }
     _processDiplomaticIncidents(nids);
     _processReligionSpread();
@@ -1054,8 +1057,9 @@ function processDiplomacyGlobalTick() {
       const rel = getRelation(a, b);
       if (rel.war) continue;
       const base = calcBaseRelation(a, b);
+      if (!Number.isFinite(base)) continue;
       rel.score  = Math.round(rel.score + ALPHA * (base - rel.score));
-      rel.score  = Math.max(-100, Math.min(100, rel.score));
+      rel.score  = Number.isFinite(rel.score) ? Math.max(-100, Math.min(100, rel.score)) : 0;
     }
   }
   _processDiplomaticIncidents(nids);
