@@ -178,3 +178,45 @@
 
 **Следующий в очереди:** Данные и карта
 
+
+---
+
+## Итерация 6
+
+### Модуль: Данные и карта
+**Статус:** Найдено и исправлено 3 ошибки
+
+**Проверенные файлы:**
+- `data/regions_data.js` — игровые данные регионов (population, nation, terrain, buildings)
+- `data/map.js` — MAP_REGIONS: 4149 регионов, координаты, connections
+- `data/nations.js` — INITIAL_GAME_STATE: nation entities, regions lists
+- `Regon.xlsx` — эталонный справочник (444 записи: region ID, имя, страна)
+
+**Обнаруженные и исправленные баги:**
+
+**БАГ 1: `data/regions_data.js`, строка 428 — `nation:'hadhramaut'` (опечатка)**
+Регион `r470` ссылался на nation ID `'hadhramaut'`, которого нет в nations.js. Правильный ID — `'hadramaut'` (Хадрамаут, южноаравийское царство). Во время игры движок не мог найти `GAME_STATE.nations['hadhramaut']`, регион оставался «осиротевшим».
+**Исправление:** `nation:'hadhramaut'` → `nation:'hadramaut'`.
+
+**БАГ 2: `data/regions_data.js`, строка 430 — `nation:'minaeans'` (неверный ID)**
+Регион `r472` (Nascus, Аравия) ссылался на `'minaeans'` — этот ID не существует в nations.js. Государство Минеев (Maʿīn) хранится под ключом `'main'` (Kingdom of Ma'in).
+**Исправление:** `nation:'minaeans'` → `nation:'main'`.
+
+**БАГ 3: `data/regions_data.js`, строка 974 — `nation:'wey'` (опечатка)**
+Регион `r1061` (Китай) ссылался на `'wey'` вместо `'wei'` (Царство Вэй). ID `'wey'` отсутствует в nations.js.
+**Исправление:** `nation:'wey'` → `nation:'wei'`.
+
+**Взаимодействия:**
+- **Данные → Экономика:** Каждый регион содержит `production`, `deposits`, `building_slots` — движок экономики (`economy.js`) читает их через `GAME_STATE.regions[id]`. Три исправленных региона теперь корректно связаны с экономическими данными своих наций (`hadramaut`, `main`, `wei`).
+- **Данные → Военная система:** `garrison` регионов используется `battle.js` при осаде. Все 3734 региона имеют поле `garrison`. Проверено.
+- **Данные → Дипломатия (diplomacy_range.js):** BFS-обход карты использует `MAP_REGIONS[id].connections`. Все 4149 connections валидны — ни одна связь не ведёт к несуществующему региону. Проверено.
+- **Данные → MAP_REGIONS:** Все 3734 региона из regions_data.js присутствуют в MAP_REGIONS. Обратное не требуется (MAP_REGIONS содержит также незаселённые/океанские регионы).
+- **Данные → Regon.xlsx:** 444 эталонных записи в Regon.xlsx полностью соответствуют именам в MAP_REGIONS — расхождений не обнаружено. Regon.xlsx подтверждён как источник истины.
+
+**Тесты:**
+- Unit:        `tests/audit/map_unit_test.cjs` (15 тестов — все прошли)
+- Integration: `tests/audit/map_integration_test.cjs` (14 тестов — все прошли)
+
+**Полный прогон:** eco×34, mil×55, dip×60, gov×53, ai×40 — 0 регрессий.
+
+**Следующий в очереди:** Условия победы
