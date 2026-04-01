@@ -2058,6 +2058,12 @@ async function initGame() {
     }
   }
 
+  // Гарантируем базовые поля для всех наций (включая stub-нации без economy/population)
+  // до _initEconomyPreview, чтобы income_per_turn/expense_per_turn были числами с хода 1.
+  for (const nation of Object.values(GAME_STATE.nations)) {
+    _ensureNationDefaults(nation);
+  }
+
   // Инициализируем pops для всех наций (wealth, satisfied) до первого рендера
   if (typeof ensureNationPops === 'function') {
     for (const nationId of Object.keys(GAME_STATE.nations)) {
