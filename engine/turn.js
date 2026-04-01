@@ -1807,13 +1807,13 @@ function _buildSavePayload() {
   // Обрезаем лог событий до 50 записей
   if (base.events_log?.length > 50) base.events_log = base.events_log.slice(0, 50);
 
-  // Исключаем _ou и _personalityMatrix у stub-наций (0 регионов, 0 населения).
-  // Они не нужны для сохра��ения — пересчитываются в initNation при необходимости.
-  // Создаём мелкие заглушки без мутации живого GAME_STATE. Экономия ~30MB.
+  // Исключаем _ou и _personalityMatrix у ВСЕХ наций.
+  // _ou (45 КБ/нацию) полностью пересчитывается в initNation/_ensureNationDefaults при загрузке.
+  // Экономия ~40 МБ на сохранение → JSON.stringify: ~50 мс вместо ~400 мс.
   if (base.nations) {
     const nationsClean = Object.create(null);
     for (const [nId, n] of Object.entries(base.nations)) {
-      if (!n.regions?.length && !n.population?.total && (n._ou || n._personalityMatrix)) {
+      if (n._ou || n._personalityMatrix) {
         const { _ou, _personalityMatrix, ...stripped } = n; // eslint-disable-line no-unused-vars
         nationsClean[nId] = stripped;
       } else {
