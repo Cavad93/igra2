@@ -247,6 +247,7 @@ function showLegacyModal(text, data, testament) {
 const CRISIS_DEFS = {
   PLAGUE: {
     type:     'PLAGUE',
+    priority: 3,
     cond:     n => (n.population?.total ?? 0) > 100000,
     message:  '🦠 Великая чума охватила земли! Выживет ли народ?',
     apply(n, gs) {
@@ -265,6 +266,7 @@ const CRISIS_DEFS = {
   },
   INVASION: {
     type:     'INVASION',
+    priority: 2,
     cond:     (n, gs) => Object.keys(gs.nations ?? {}).length > 1,
     message:  '⚔️ Нашествие! Враги идут на столицу!',
     apply(n, gs, nationId) {
@@ -291,6 +293,7 @@ const CRISIS_DEFS = {
   },
   FAMINE: {
     type:    'FAMINE',
+    priority: 1,
     cond:    () => true,
     message: '🌾 Великий голод! Запасы зерна иссякли.',
     apply(n, gs) {
@@ -310,6 +313,7 @@ const CRISIS_DEFS = {
   },
   DEBT_CRISIS: {
     type:    'DEBT_CRISIS',
+    priority: 2,
     cond:    (n, gs, nationId) => (gs.loans ?? []).some(l => l.nation_id === nationId && l.status === 'active'),
     message: '📜 Долговой кризис! Кредиторы требуют немедленной выплаты.',
     apply(n, gs, nationId) {
@@ -361,8 +365,10 @@ function processCrisisVeha(nationId) {
   });
   if (!eligible.length) return;
 
-  // Случайный из подходящих
-  const def = eligible[Math.floor(Math.random() * eligible.length)];
+  // Выбрать по наивысшему приоритету; при равных — случайный из равных
+  const maxPrio = Math.max(...eligible.map(d => d.priority ?? 0));
+  const top     = eligible.filter(d => (d.priority ?? 0) === maxPrio);
+  const def     = top[Math.floor(Math.random() * top.length)];
 
   // Сохранить baseline для DEBT_CRISIS
   n._pre_crisis_bankruptcies = n._bankruptcies ?? 0;
