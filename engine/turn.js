@@ -1801,25 +1801,31 @@ async function saveGame() {
   const worker  = _getSaveWorker();
 
   if (worker && !_saveInFlight) {
-    // Сериализуем вручную → передаём как Transferable ArrayBuffer.
-    // Тяжёлый db.put() выполняется в воркере и не блокирует UI.
-    // Возвращаемся сразу после postMessage — не ждём подтверждения.
-    try {
-      const buffer = new TextEncoder().encode(JSON.stringify(payload)).buffer;
-      _saveInFlight = true;
-      worker.postMessage(buffer, [buffer]);  // transfer без копирования
-    } catch (e) {
-      _saveInFlight = false;
-      console.warn('[save] Ошибка передачи данных воркеру:', e);
-      // Fallback на обычное сохранение
-      try { await GameStorage.save(payload); } catch (_) {}
-    }
+    // Сериализуем и передаём воркеру в следующем тике — JSON.stringify тяжёлый
+    // и не должен блокировать основной поток во время хода.
+    _saveInFlight = true;
+    setTimeout(() => {
+      try {
+        const buffer = new TextEncoder().encode(JSON.stringify(payload)).buffer;
+        worker.postMessage(buffer, [buffer]);  // transfer без копирования
+      } catch (e) {
+        _saveInFlight = false;
+        console.warn('[save] Ошибка передачи данных воркеру:', e);
+        // Fallback через следующий тик
+        GameStorage.save(payload).catch(console.warn);
+      }
+    }, 0);
   } else {
-    // Fallback: воркер занят или недоступен — сохраняем обычным путём
-    try { await GameStorage.save(payload); } catch (e) {
-      console.warn('[save] Ошибка сохранения:', e);
-      addEventLog('⚠ Автосохранение не удалось: ' + e.message, 'warning');
-    }
+    // Fallback: воркер занят или недоступен.
+    // Откладываем через setTimeout(0), чтобы structured clone IndexedDB не блокировал ход.
+    setTimeout(() => {
+      GameStorage.save(payload).catch(e => {
+        console.warn('[save] Ошибка сохранения:', e);
+        if (typeof addEventLog === 'function') {
+          addEventLog('⚠ Автосохранение не удалось: ' + e.message, 'warning');
+        }
+      });
+    }, 0);
   }
 }
 
@@ -2173,6 +2179,10 @@ async function initGame() {
   // Запускаем фоновый AI-цикл — phi4-mini обрабатывает нации непрерывно,
   // решения кэшируются в _aiPending и применяются мгновенно при нажатии хода.
   startAIBackgroundLoop();
+
+  // Прогреваем Save Worker заранее — если файловый протокол или CSP блокирует Worker,
+  // это выясняется сейчас, а не при первом ходу, что убирает ~1.5с задержку хода 1.
+  _getSaveWorker();
 }
 
 // Рендерим всё разом — каждая функция изолирована, чтобы ошибка в одной не ломала остальные

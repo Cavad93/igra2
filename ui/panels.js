@@ -1347,7 +1347,7 @@ function proposePeace(targetNationId) {
   renderAll();
 }
 
-function declareWar(targetNationId) {
+function _uiDeclareWarWithCheck(targetNationId) {
   const player = GAME_STATE.nations[GAME_STATE.player_nation];
   const target = GAME_STATE.nations[targetNationId];
   if (!player || !target) return;
