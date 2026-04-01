@@ -213,9 +213,21 @@
 - **Данные → MAP_REGIONS:** Все 3734 региона из regions_data.js присутствуют в MAP_REGIONS. Обратное не требуется (MAP_REGIONS содержит также незаселённые/океанские регионы).
 - **Данные → Regon.xlsx:** 444 эталонных записи в Regon.xlsx полностью соответствуют именам в MAP_REGIONS — расхождений не обнаружено. Regon.xlsx подтверждён как источник истины.
 
+**БАГ 4: `data/regions_data.js` — r763 (Rhegium) имел тег `'sicily'` вместо `'bruttium'`**
+Rhegium — портовый город на носке Апеннинского полуострова (провинция Bruttium), не на Сицилии. Из-за неверного тега `initProvinces()` включал Rhegium в провинцию Sicily, завышая её ресурсный пул и площадь контроля. Исправление: `tags:['sicily']` → `tags:['bruttium']`.
+
+**БАГ 5: `data/regions_data.js` — 389 регионов без поля `tags` (провинциальная система парализована)**
+`initProvinces()` в `engine/provinces.js` строит провинции исключительно через `region.tags[0]`. Из 3734 регионов только 26 (Сицилия) имели тег. Для всех остальных (`GAME_STATE.provinces` оставался пустым) функции `calculateProvinceControl`, `buildProvinceMarket`, `getProvinceMarketAccess` были фактически no-op — провинциальные рынки и контроль не работали нигде, кроме Сицилии.
+По данным Regon.xlsx (абсолютная истина) добавлены теги для 389 регионов в 38 провинциях: aemilia, apulia, campania, caria, corsica, crete, cyclades, east_thrace, etruria, latinum, liguria, lucania, macedonia, picenum, rhaetica, rhodope, samnium, sardinia, thessaly, transpadana, umbria, venetia и др.
+
+**Взаимодействия (дополнение):**
+- **Данные → Провинции → Экономика:** `buildProvinceMarket()` теперь агрегирует `local_stockpile` регионов для 38 провинций. `getProvinceMarketAccess()` корректно возвращает tier ('full'/'partial'/'trade_only'/'none') по `effective_control`. `buildings.js` использует `price_modifier` для расчёта транспортных расходов закупок.
+- **Данные → Провинции → Военная:** `calculateProvinceControl()` пересчитывает долю площади при захвате регионов. `checkProvinceControlEvents()` генерирует события при падении/росте контроля.
+- **Данные → Regon.xlsx (Province):** 415 регионов из Regon.xlsx содержат имя формата "Город (Провинция)" — провинция извлечена и проставлена как тег. Расхождений с Regon нет.
+
 **Тесты:**
-- Unit:        `tests/audit/map_unit_test.cjs` (15 тестов — все прошли)
-- Integration: `tests/audit/map_integration_test.cjs` (14 тестов — все прошли)
+- Unit:        `tests/audit/map_unit_test.cjs` (51 тест — все прошли)
+- Integration: `tests/audit/map_integration_test.cjs` (24 теста — все прошли)
 
 **Полный прогон:** eco×34, mil×55, dip×60, gov×53, ai×40 — 0 регрессий.
 
