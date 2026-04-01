@@ -721,6 +721,7 @@ function _tickManifest(nationId) {
  * @returns {Array<{id, text, progress: ()=>number, completed: ()=>boolean}>}
  */
 function generateDynamicGoals(nationId) {
+  if (!GAME_STATE) return [];
   const gs = GAME_STATE;
   const n  = gs.nations?.[nationId];
   if (!n) return [];
