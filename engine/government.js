@@ -1439,143 +1439,6 @@ async function _triggerOracleRoll(nation, nationId, isPlayer) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// GOV_010: ПЛЕМЯ — давление войной на вождя
-// ──────────────────────────────────────────────────────────────────────
-
-function processTribalTick(nation, nationId, isPlayer) {
-  const gov = nation.government;
-  if (!gov) return;
-
-  // Инициализируем tribal-объект если нет
-  if (!gov.tribal) gov.tribal = {};
-  const tribal = gov.tribal;
-
-  // 1. Счётчик ходов без войны
-  const atWar = (nation.military?.at_war_with?.length ?? 0) > 0;
-  if (atWar) {
-    tribal.turns_at_peace = 0;
-    gov._last_war_turn = GAME_STATE.turn ?? 0;
-  } else {
-    tribal.turns_at_peace = (tribal.turns_at_peace ?? 0) + 1;
-  }
-
-  const tap = tribal.turns_at_peace ?? 0;
-
-  // 2. Падение престижа без войны (было: только если lastWar > 10 ходов)
-  if (gov.power_resource?.type === 'prestige' && tap > 0) {
-    gov.power_resource.current = Math.max(0, gov.power_resource.current - 3);
-    // Синхронизируем legitimacy
-    gov.legitimacy = Math.round(gov.power_resource.current);
-  }
-
-  const prestige = gov.power_resource?.current ?? gov.legitimacy ?? 50;
-
-  // 3. При turns_at_peace > 8 — старейшины начинают сомневаться
-  if (tap > 8) {
-    // Каждые 4 хода — уменьшаем лояльность случайного советника
-    if (tap % 4 === 0) {
-      const actors = gov.actors ?? [];
-      if (actors.length > 0) {
-        const idx = Math.floor(Math.random() * actors.length);
-        const advisor = actors[idx];
-        if (advisor) {
-          if (advisor.loyalty === undefined) advisor.loyalty = 50;
-          advisor.loyalty = Math.max(0, advisor.loyalty - 5);
-          if (isPlayer) {
-            addEventLog(
-              `🏕️ «${advisor.name ?? 'Советник'}» сомневается в силе вождя — ` +
-              `годы без войны подрывают авторитет. Лояльность: ${advisor.loyalty}.`,
-              'warning'
-            );
-          }
-        }
-      } else if (isPlayer) {
-        addEventLog(
-          `🏕️ Совет старейшин ропщет: вождь ${tap} ходов без войны — слабак!`,
-          'warning'
-        );
-      }
-    }
-    // Событие «Недовольство совета» каждые 4 хода мира > 8
-    if (tap % 4 === 1 && isPlayer) {
-      addEventLog(
-        `⚠️ Недовольство совета: уже ${tap} ходов без набегов. ` +
-        `Старейшины призывают доказать силу.`,
-        'warning'
-      );
-    }
-  }
-
-  // 4. При prestige < 20 — угроза свержения, показываем предупреждение
-  if (prestige < 20 && isPlayer && (GAME_STATE.turn ?? 0) % 3 === 0) {
-    addEventLog(
-      `🔴 Престиж вождя упал до ${Math.round(prestige)}! ` +
-      `Племя готово выбрать нового лидера. Объявите набег немедленно!`,
-      'danger'
-    );
-  }
-
-  // 5. При prestige < 10 — автоматический вызов от соперника-вождя
-  if (prestige < 10 && !tribal.rival_challenge) {
-    const rivalNames = ['Бренн','Верцингеторикс','Думнориг','Каск','Орикс','Таравис'];
-    const rivalName  = rivalNames[Math.floor(Math.random() * rivalNames.length)];
-    tribal.rival_challenge = {
-      rival_name: rivalName,
-      issued_turn: GAME_STATE.turn ?? 0,
-      expires_turn: (GAME_STATE.turn ?? 0) + 5,
-    };
-    if (isPlayer) {
-      addEventLog(
-        `⚔️ Вождь ${rivalName} бросает вызов! Престиж упал до нуля. ` +
-        `Примите поединок или уступите власть. (${tribal.rival_challenge.expires_turn - (GAME_STATE.turn ?? 0)} хода)`,
-        'danger'
-      );
-    }
-  }
-
-  // 6. Срок вызова истёк — уступаем власть автоматически
-  if (tribal.rival_challenge) {
-    const ch = tribal.rival_challenge;
-    if ((GAME_STATE.turn ?? 0) >= ch.expires_turn) {
-      // Вождь уступает власть без поединка
-      gov.stability  = Math.max(0, (gov.stability ?? 50) - 30);
-      gov.legitimacy = Math.max(0, (gov.legitimacy ?? 50) - 25);
-      if (gov.power_resource) gov.power_resource.current = Math.max(0, gov.power_resource.current - 25);
-      tribal.rival_challenge = null;
-      tribal.turns_at_peace  = 0; // обнуляем — смена власти считается «потрясением»
-      if (isPlayer) {
-        addEventLog(
-          `😔 Вождь ${ch.rival_name} захватил часть влияния. ` +
-          `Вы уступили без поединка. Стабильность −30, Легитимность −25.`,
-          'danger'
-        );
-      }
-    }
-  }
-
-  // 7. Обработка raid_declared — набег восстанавливает престиж
-  if (gov._raid_declared) {
-    gov._raid_declared = false;
-    tribal.turns_at_peace = 0;
-    if (gov.power_resource?.type === 'prestige') {
-      gov.power_resource.current = Math.min(
-        gov.power_resource.max ?? 100,
-        gov.power_resource.current + 15
-      );
-      gov.legitimacy = Math.round(gov.power_resource.current);
-    }
-    // Сбрасываем вызов если он был
-    if (tribal.rival_challenge) {
-      if (isPlayer) addEventLog(`⚔️ Набег объявлен! Вызов от ${tribal.rival_challenge.rival_name} снят.`, 'military');
-      tribal.rival_challenge = null;
-    }
-    if (isPlayer) {
-      addEventLog(`⚔️ Набег объявлен. Воины воодушевлены. Престиж +15.`, 'military');
-    }
-  }
-}
-
-// ──────────────────────────────────────────────────────────────────────
 // ДЕМОКРАТИЯ: народная популярность, остракизм, гражданские свободы
 // ──────────────────────────────────────────────────────────────────────
 
@@ -2665,6 +2528,7 @@ function processTribalTick(nation, nationId, isPlayer) {
     const rivalIdx = Math.floor(Math.random() * RIVAL_CHIEF_NAMES.length);
     gov._rival_chief_name = RIVAL_CHIEF_NAMES[rivalIdx];
     gov._show_challenge_event = true;
+    gov._rival_challenge_issued_turn = GAME_STATE.turn ?? 0;
 
     if (isPlayer) {
       addEventLog(
@@ -2672,6 +2536,30 @@ function processTribalTick(nation, nationId, isPlayer) {
         `Примите поединок или уступите власть — решение нужно немедленно.`,
         'danger'
       );
+    }
+  }
+
+  // Авто-истечение вызова: если вождь не ответил за 5 ходов — автоматическая уступка
+  if (gov._rival_challenge_active) {
+    const issuedTurn = gov._rival_challenge_issued_turn ?? (GAME_STATE.turn ?? 0);
+    const turnsIgnored = (GAME_STATE.turn ?? 0) - issuedTurn;
+    if (turnsIgnored >= 5) {
+      const rivalName = gov._rival_chief_name ?? 'соперник';
+      gov._rival_challenge_active = false;
+      delete gov._rival_chief_name;
+      delete gov._show_challenge_event;
+      delete gov._rival_challenge_issued_turn;
+      gov.stability  = Math.max(0, (gov.stability  ?? 50) - 30);
+      gov.legitimacy = Math.max(0, (gov.legitimacy ?? 50) - 25);
+      if (gov.power_resource) gov.power_resource.current = Math.max(0, gov.power_resource.current - 25);
+      gov.turns_at_peace = 0;
+      if (isPlayer) {
+        addEventLog(
+          `😔 ${rivalName} захватил часть влияния — вождь не ответил на вызов. ` +
+          `Стабильность −30, Легитимность −25.`,
+          'danger'
+        );
+      }
     }
   }
 }
