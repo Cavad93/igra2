@@ -60,6 +60,10 @@ function renderLeftPanel() {
       <button class="gov-open-btn" style="margin-top:4px" onclick="showChronicleModal()">
         📖 Открыть летопись ▸
       </button>
+      ${(gov.ruler?.age ?? 0) >= 60 ? `
+      <button class="gov-open-btn" style="margin-top:4px;border-color:var(--gold,#c8a84b)" onclick="showTestamentModal()">
+        📜 Завещание ▸
+      </button>` : ''}
     </div>
     <!-- Динамические цели -->
     <div id="dynamic-goals-block"></div>

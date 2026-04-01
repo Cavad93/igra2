@@ -1463,6 +1463,43 @@
     .chronicle-text { font-size: 13px; color: var(--text-light); line-height: 1.5; }
     .chronicle-achiev { font-size: 11px; color: var(--gold, #c8a84b); margin-top: 4px; }
 
+    /* ── Итог правления (Legacy Modal) ── */
+    .legacy-modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.85);
+      z-index: 1300; display: flex; align-items: center; justify-content: center;
+    }
+    .legacy-modal {
+      background: var(--bg-panel); border: 2px solid var(--border-gold);
+      border-radius: 8px; padding: 28px; max-width: 540px; width: 96vw;
+      box-shadow: 0 12px 60px rgba(0,0,0,.9);
+    }
+    .legacy-header { text-align: center; margin-bottom: 16px; }
+    .legacy-title { font-size: 18px; color: var(--accent); font-weight: bold; letter-spacing: 1px; }
+    .legacy-ruler-name { font-size: 22px; color: var(--text-gold,#c8a84b); font-weight: bold; text-align: center; margin: 8px 0 2px; }
+    .legacy-period { text-align: center; color: var(--text-dim); font-size: 13px; margin-bottom: 8px; }
+    .legacy-grandeur { text-align: center; font-size: 15px; color: var(--gold,#c8a84b); margin-bottom: 12px; }
+    .legacy-section-title { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin: 10px 0 4px; }
+    .legacy-achiev-list { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+    .legacy-achiev-tag { background: rgba(200,168,75,.15); border: 1px solid rgba(200,168,75,.3); border-radius: 3px; padding: 2px 6px; font-size: 11px; color: var(--gold,#c8a84b); }
+    .legacy-testament { background: rgba(0,0,0,.2); border-radius: 4px; padding: 10px 12px; margin: 10px 0; font-size: 13px; }
+    .legacy-narrative { font-style: italic; color: var(--text-light); font-size: 13px; line-height: 1.6; margin: 12px 0 16px; border-top: 1px solid rgba(255,255,255,.08); padding-top: 12px; }
+    .legacy-continue-btn {
+      width: 100%; padding: 10px; background: rgba(139,69,19,.25);
+      border: 1px solid var(--border-gold); color: var(--text-gold,#c8a84b);
+      border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold;
+    }
+    .legacy-continue-btn:hover { background: rgba(139,69,19,.45); }
+
+    /* ── Завещание ── */
+    .testament-title { font-size: 16px; color: var(--accent); font-weight: bold; margin-bottom: 4px; }
+    .testament-subtitle { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; }
+    .testament-goal { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 13px; color: var(--text-light); }
+    .testament-chosen { color: var(--gold,#c8a84b); }
+    .testament-add-btn, .testament-remove-btn {
+      margin-left: auto; background: rgba(139,69,19,.2); border: 1px solid var(--border-gold);
+      color: var(--text-light); border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 11px;
+    }
+
     /* ══════════════════════════════════════════════════
        ПАНЕЛЬ ПРИКАЗОВ (главный экран)
     ══════════════════════════════════════════════════ */
@@ -7484,6 +7521,18 @@
       <div id="gov-content" class="gov-panel-body">
         <!-- заполняется renderGovernmentOverlay() -->
       </div>
+    </div>
+  </div>
+
+  <!-- Модал завещания -->
+  <div id="testament-modal" onclick="if(event.target===this)hideTestamentModal()"
+       style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1100;align-items:center;justify-content:center">
+    <div class="gov-panel" style="max-width:520px">
+      <div class="gov-panel-header">
+        <span class="gov-panel-title">📜 Завещание</span>
+        <button class="gov-close-btn" onclick="hideTestamentModal()">✕</button>
+      </div>
+      <div id="testament-modal-content" class="gov-panel-body" style="padding:16px"></div>
     </div>
   </div>
 

@@ -111,6 +111,25 @@ function renderGovernmentTab(nation) {
   // 10. Поле реформы правительства
   sections.push(renderReformInput());
 
+  // 11. Историческое сравнение (раз в 10 ходов)
+  if (typeof getHistoricalRating === 'function' &&
+      GAME_STATE.turn % 10 === 0 || !GAME_STATE._last_hist_rating) {
+    GAME_STATE._last_hist_rating = typeof getHistoricalRating === 'function'
+      ? getHistoricalRating(GAME_STATE.player_nation)
+      : [];
+  }
+  if (GAME_STATE._last_hist_rating?.length) {
+    sections.push(`
+      <div class="gov-section">
+        <div class="gov-section-title">📜 Историческое сравнение</div>
+        <div style="padding:8px 0">
+          ${GAME_STATE._last_hist_rating.map(line =>
+            `<div style="font-style:italic;color:var(--text-dim);font-size:12px;margin:3px 0">${line}</div>`
+          ).join('')}
+        </div>
+      </div>`);
+  }
+
   return sections.filter(Boolean).join('');
 }
 
