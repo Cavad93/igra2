@@ -1438,6 +1438,7 @@ async function _triggerOracleRoll(nation, nationId, isPlayer) {
   }
 }
 
+
 // ──────────────────────────────────────────────────────────────────────
 // ДЕМОКРАТИЯ: народная популярность, остракизм, гражданские свободы
 // ──────────────────────────────────────────────────────────────────────
@@ -2528,7 +2529,6 @@ function processTribalTick(nation, nationId, isPlayer) {
     const rivalIdx = Math.floor(Math.random() * RIVAL_CHIEF_NAMES.length);
     gov._rival_chief_name = RIVAL_CHIEF_NAMES[rivalIdx];
     gov._show_challenge_event = true;
-    gov._rival_challenge_issued_turn = GAME_STATE.turn ?? 0;
 
     if (isPlayer) {
       addEventLog(
@@ -2536,30 +2536,6 @@ function processTribalTick(nation, nationId, isPlayer) {
         `Примите поединок или уступите власть — решение нужно немедленно.`,
         'danger'
       );
-    }
-  }
-
-  // Авто-истечение вызова: если вождь не ответил за 5 ходов — автоматическая уступка
-  if (gov._rival_challenge_active) {
-    const issuedTurn = gov._rival_challenge_issued_turn ?? (GAME_STATE.turn ?? 0);
-    const turnsIgnored = (GAME_STATE.turn ?? 0) - issuedTurn;
-    if (turnsIgnored >= 5) {
-      const rivalName = gov._rival_chief_name ?? 'соперник';
-      gov._rival_challenge_active = false;
-      delete gov._rival_chief_name;
-      delete gov._show_challenge_event;
-      delete gov._rival_challenge_issued_turn;
-      gov.stability  = Math.max(0, (gov.stability  ?? 50) - 30);
-      gov.legitimacy = Math.max(0, (gov.legitimacy ?? 50) - 25);
-      if (gov.power_resource) gov.power_resource.current = Math.max(0, gov.power_resource.current - 25);
-      gov.turns_at_peace = 0;
-      if (isPlayer) {
-        addEventLog(
-          `😔 ${rivalName} захватил часть влияния — вождь не ответил на вызов. ` +
-          `Стабильность −30, Легитимность −25.`,
-          'danger'
-        );
-      }
     }
   }
 }
