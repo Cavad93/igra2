@@ -296,8 +296,12 @@ async function processTurn() {
       }
     }
 
-    // 5.6. Условия победы / поражения
+    // 5.6. Условия победы / итог правления / кризисные вехи
     try { checkVictoryConditions(); } catch (e) { console.warn('[victory]', e); }
+    // 5.61. Тик активного кризиса
+    if (typeof _tickActiveCrisis === 'function') {
+      try { _tickActiveCrisis(GAME_STATE.player_nation); } catch (e) { console.warn('[crisis-tick]', e); }
+    }
 
     // 6. Обновляем дату
     advanceDate();

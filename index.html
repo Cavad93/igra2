@@ -1463,42 +1463,66 @@
     .chronicle-text { font-size: 13px; color: var(--text-light); line-height: 1.5; }
     .chronicle-achiev { font-size: 11px; color: var(--gold, #c8a84b); margin-top: 4px; }
 
-    /* ── Итог правления (Legacy Modal) ── */
+    /* ── Итог правления (Сессия 7) ── */
     .legacy-modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,.85);
       z-index: 1300; display: flex; align-items: center; justify-content: center;
     }
     .legacy-modal {
-      background: var(--bg-panel); border: 2px solid var(--border-gold);
+      background: var(--bg-panel); border: 2px solid var(--gold, #c8a84b);
       border-radius: 8px; padding: 28px; max-width: 540px; width: 96vw;
       box-shadow: 0 12px 60px rgba(0,0,0,.9);
     }
-    .legacy-header { text-align: center; margin-bottom: 16px; }
-    .legacy-title { font-size: 18px; color: var(--accent); font-weight: bold; letter-spacing: 1px; }
-    .legacy-ruler-name { font-size: 22px; color: var(--text-gold,#c8a84b); font-weight: bold; text-align: center; margin: 8px 0 2px; }
-    .legacy-period { text-align: center; color: var(--text-dim); font-size: 13px; margin-bottom: 8px; }
-    .legacy-grandeur { text-align: center; font-size: 15px; color: var(--gold,#c8a84b); margin-bottom: 12px; }
-    .legacy-section-title { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin: 10px 0 4px; }
-    .legacy-achiev-list { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
-    .legacy-achiev-tag { background: rgba(200,168,75,.15); border: 1px solid rgba(200,168,75,.3); border-radius: 3px; padding: 2px 6px; font-size: 11px; color: var(--gold,#c8a84b); }
-    .legacy-testament { background: rgba(0,0,0,.2); border-radius: 4px; padding: 10px 12px; margin: 10px 0; font-size: 13px; }
-    .legacy-narrative { font-style: italic; color: var(--text-light); font-size: 13px; line-height: 1.6; margin: 12px 0 16px; border-top: 1px solid rgba(255,255,255,.08); padding-top: 12px; }
+    .legacy-header { margin-bottom: 12px; }
+    .legacy-title { font-size: 18px; color: var(--gold, #c8a84b); font-weight: bold; }
+    .legacy-reason { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+    .legacy-ruler-name { font-size: 22px; font-weight: bold; color: var(--text-light); margin: 8px 0 2px; }
+    .legacy-period { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; }
+    .legacy-grandeur { font-size: 14px; color: var(--gold, #c8a84b); margin-bottom: 12px; }
+    .legacy-achievements { margin-bottom: 12px; }
+    .legacy-label { font-size: 11px; color: var(--text-dim); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .05em; }
+    .legacy-achiev-list { display: flex; flex-wrap: wrap; gap: 4px; }
+    .legacy-achiev-tag {
+      background: rgba(200,168,75,.15); border: 1px solid rgba(200,168,75,.3);
+      color: var(--gold, #c8a84b); border-radius: 3px; padding: 2px 6px; font-size: 11px;
+    }
+    .legacy-text {
+      font-size: 14px; color: var(--text-light); line-height: 1.7;
+      border-top: 1px solid rgba(255,255,255,.1); padding-top: 12px; margin-bottom: 12px;
+    }
+    .legacy-testament { margin-bottom: 12px; border-top: 1px solid rgba(255,255,255,.1); padding-top: 10px; }
+    .legacy-testament-row { font-size: 13px; color: var(--text-light); margin: 3px 0; }
+    .legacy-footer { text-align: right; }
     .legacy-continue-btn {
-      width: 100%; padding: 10px; background: rgba(139,69,19,.25);
-      border: 1px solid var(--border-gold); color: var(--text-gold,#c8a84b);
-      border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold;
+      background: var(--gold, #c8a84b); color: #1a1008; border: none; border-radius: 4px;
+      padding: 10px 24px; font-size: 14px; font-weight: bold; cursor: pointer;
     }
-    .legacy-continue-btn:hover { background: rgba(139,69,19,.45); }
+    .legacy-continue-btn:hover { opacity: .85; }
 
-    /* ── Завещание ── */
-    .testament-title { font-size: 16px; color: var(--accent); font-weight: bold; margin-bottom: 4px; }
-    .testament-subtitle { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; }
-    .testament-goal { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 13px; color: var(--text-light); }
-    .testament-chosen { color: var(--gold,#c8a84b); }
-    .testament-add-btn, .testament-remove-btn {
-      margin-left: auto; background: rgba(139,69,19,.2); border: 1px solid var(--border-gold);
-      color: var(--text-light); border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 11px;
+    /* ── Завещание (Сессия 10) ── */
+    .testament-block { padding: 8px 0; }
+    .testament-empty { font-size: 12px; color: var(--text-dim); font-style: italic; }
+    .testament-row-mini { font-size: 12px; color: var(--text-light); margin: 3px 0; }
+    .testament-panel { padding: 4px; }
+    .testament-info { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.5; }
+    .testament-goals-list { display: flex; flex-direction: column; gap: 6px; }
+    .testament-goal-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px; background: rgba(255,255,255,.03);
+      border-radius: 4px; border: 1px solid rgba(255,255,255,.07);
     }
+    .testament-goal-row.testament-done { border-color: rgba(76,175,80,.3); background: rgba(76,175,80,.07); }
+    .testament-goal-text { flex: 1; font-size: 13px; color: var(--text-light); }
+    .testament-goal-status { font-size: 14px; }
+    .testament-add-btn, .testament-remove-btn {
+      background: rgba(139,69,19,.2); border: 1px solid var(--border-gold);
+      color: var(--text-light); border-radius: 3px; padding: 3px 8px;
+      cursor: pointer; font-size: 12px; flex-shrink: 0;
+    }
+    .testament-add-btn:hover { background: rgba(139,69,19,.4); }
+    .testament-add-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .testament-remove-btn { color: #ef9a9a; border-color: rgba(239,154,154,.3); }
+    .testament-remove-btn:hover { background: rgba(239,154,154,.15); }
 
     /* ══════════════════════════════════════════════════
        ПАНЕЛЬ ПРИКАЗОВ (главный экран)
@@ -7524,18 +7548,6 @@
     </div>
   </div>
 
-  <!-- Модал завещания -->
-  <div id="testament-modal" onclick="if(event.target===this)hideTestamentModal()"
-       style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1100;align-items:center;justify-content:center">
-    <div class="gov-panel" style="max-width:520px">
-      <div class="gov-panel-header">
-        <span class="gov-panel-title">📜 Завещание</span>
-        <button class="gov-close-btn" onclick="hideTestamentModal()">✕</button>
-      </div>
-      <div id="testament-modal-content" class="gov-panel-body" style="padding:16px"></div>
-    </div>
-  </div>
-
   <!-- Модал клятв -->
   <div id="vows-modal" onclick="if(event.target===this)hideVowsModal()"
        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1100;align-items:center;justify-content:center">
@@ -7557,6 +7569,18 @@
         <button class="gov-close-btn" onclick="hideChronicleModal()">✕</button>
       </div>
       <div id="chronicle-modal-content" class="gov-panel-body" style="padding:16px;overflow-y:auto;max-height:60vh"></div>
+    </div>
+  </div>
+
+  <!-- Модал завещания (Сессия 10) -->
+  <div id="testament-modal" onclick="if(event.target===this)hideTestamentModal()"
+       style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1100;align-items:center;justify-content:center">
+    <div class="gov-panel" style="max-width:540px">
+      <div class="gov-panel-header">
+        <span class="gov-panel-title">📜 Завещание наследнику</span>
+        <button class="gov-close-btn" onclick="hideTestamentModal()">✕</button>
+      </div>
+      <div id="testament-modal-content" class="gov-panel-body" style="padding:16px"></div>
     </div>
   </div>
 

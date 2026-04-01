@@ -1,169 +1,197 @@
 // ══════════════════════════════════════════════════════════════════════
-// VICTORY / LEGACY SYSTEM — итоги правления и кризисные вехи
+// VICTORY.JS — Итог правления, кризисные вехи, завещание
 //
-// Нет классической победы. Нет экрана «Ты победил».
-// Только итоги правления и кризисные вехи.
+// НЕТ классической победы. Нет принудительного конца игры.
+// Только смена власти → итог правления, кризисные вехи раз в 600 ходов,
+// и система завещания при возрасте правителя >= 60.
 //
-// Публичные функции:
-//   checkVictoryConditions()          — вызывать из turn.js каждый ход
-//   generateRulerLegacy(nationId, reason)
-//   showLegacyModal(text, data)
-//   processCrisisVeha()               — кризисные вехи раз в 600 ходов
+// Сессия 7:  checkVictoryConditions, generateRulerLegacy, showLegacyModal
+// Сессия 8:  processCrisisVeha
+// Сессия 10: testament system
 // ══════════════════════════════════════════════════════════════════════
 
-// ══════════════════════════════════════════════════════════════════════
-// СЕССИЯ 7 — ИТОГ ПРАВЛЕНИЯ ПРИ СМЕНЕ ВЛАСТИ
-// ══════════════════════════════════════════════════════════════════════
+// ──────────────────────────────────────────────────────────────────────
+// СЕССИЯ 7 — ИТОГ ПРАВЛЕНИЯ
+// ──────────────────────────────────────────────────────────────────────
 
+/**
+ * Главный тик условий. Вызывается из turn.js после каждого хода.
+ */
 function checkVictoryConditions() {
+  if (!GAME_STATE) return;
   const playerNation = GAME_STATE.player_nation;
   if (!playerNation) return;
-  const n = GAME_STATE.nations?.[playerNation];
+  const n   = GAME_STATE.nations?.[playerNation];
   if (!n) return;
-
-  const govType = n.government?.type ?? 'monarchy';
+  const gov     = n.government ?? {};
+  const govType = gov.type ?? 'monarchy';
   const turn    = GAME_STATE.turn ?? 0;
 
-  // ── Монархия / тирания / вождество → при смерти правителя ──
+  // ── Кризисные вехи (Сессия 8) ──
+  if (turn > 0 && turn % 600 === 0) {
+    try { processCrisisVeha(playerNation); } catch (e) { console.warn('[crisis]', e); }
+  }
+
+  // ── Проверка итогов кризиса (через 15 ходов после начала) ──
+  const crisis = GAME_STATE.active_crisis;
+  if (crisis && !crisis.resolved) {
+    const elapsed = turn - crisis.start_turn;
+    const checkAt = crisis.check_at ?? (crisis.start_turn + 15);
+    if (turn >= checkAt) {
+      _resolveCrisis(playerNation, crisis);
+    }
+  }
+
+  // ── Монархия / тирания / племя → при смерти правителя ──
   if (['monarchy', 'tyranny', 'chiefdom', 'tribal'].includes(govType)) {
-    if (n.government?.ruler_changed) {
-      n.government.ruler_changed = false;
+    if (gov.ruler_changed === true) {
+      gov.ruler_changed = false;
       generateRulerLegacy(playerNation, 'ruler_death');
     }
   }
 
-  // ── Республика → каждые 12 ходов (смена консула) ──
+  // ── Республика → каждые 12 ходов ──
   if (govType === 'republic' && turn > 1 && turn % 12 === 0) {
     generateRulerLegacy(playerNation, 'consul_change');
   }
 
-  // ── Олигархия → каждые 24 хода (смена совета) ──
+  // ── Олигархия → каждые 24 хода ──
   if (govType === 'oligarchy' && turn > 1 && turn % 24 === 0) {
     generateRulerLegacy(playerNation, 'council_change');
   }
 
-  // ── Кризисные вехи ──
-  if (turn > 0 && turn % 600 === 0) {
-    processCrisisVeha();
-  }
-
-  // ── Проверка завершения активного кризиса ──
-  _checkCrisisResolution(playerNation);
-
-  // ── Завещание: показать кнопку при возрасте правителя >= 60 ──
-  _checkTestamentTrigger(playerNation);
+  // ── Завещание: уведомить при возрасте >= 60 (Сессия 10) ──
+  _checkTestamentAge(playerNation);
 }
 
-// ──────────────────────────────────────────────────────────────────────
-
+/**
+ * Сгенерировать итог правления и показать модал.
+ * @param {string} nationId
+ * @param {string} reason  'ruler_death' | 'consul_change' | 'council_change'
+ */
 function generateRulerLegacy(nationId, reason) {
   const n = GAME_STATE.nations?.[nationId];
   if (!n) return;
-
   const gov = n.government ?? {};
-  const eco = n.economy   ?? {};
-  const pop = n.population ?? {};
 
-  const rulerName   = gov.ruler?.name ?? 'Правитель';
-  const turnsRuled  = (GAME_STATE.turn ?? 0) - (n._ruler_start_turn ?? 0);
-  const grandeur    = (typeof calcGrandeur === 'function') ? calcGrandeur(nationId) : 0;
-  const achievList  = (typeof getAchievements === 'function') ? getAchievements(nationId) : [];
-  // Достижения, полученные в ЭТОТ период правления
-  const reignStartTurn = n._ruler_start_turn ?? 0;
-  const reignAchievs = achievList.filter(a => (a.turn ?? 0) >= reignStartTurn);
+  const rulerStartTurn = n._ruler_start_turn ?? 0;
+  const currentTurn    = GAME_STATE.turn ?? 0;
 
   const data = {
-    ruler_name:    rulerName,
-    turns_ruled:   turnsRuled,
-    grandeur,
-    achievements:  reignAchievs.map(a => a.name),
-    wars:          n._wars_total ?? 0,
-    treasury:      Math.round(eco.treasury ?? 0),
-    population:    pop.total ?? 0,
+    ruler_name:   gov.ruler?.name ?? 'Правитель',
+    turns_ruled:  Math.max(1, currentTurn - rulerStartTurn),
+    grandeur:     typeof calcGrandeur === 'function' ? calcGrandeur(nationId) : 0,
+    achievements: typeof getAchievements === 'function'
+      ? getAchievements(nationId).map(a => a.name)
+      : [],
+    wars:         n._wars_total ?? 0,
+    treasury:     Math.round(n.economy?.treasury ?? 0),
+    population:   n.population?.total ?? 0,
     reason,
-    nation_name:   n.name ?? nationId,
   };
 
   // Запомнить начало следующего правления
-  n._ruler_start_turn = GAME_STATE.turn ?? 0;
+  n._ruler_start_turn = currentTurn;
 
-  // Проверить завещание
-  const testamentResult = _checkTestamentOnDeath(nationId, data);
-  if (testamentResult) data.testament = testamentResult;
+  // Проверить завещание (Сессия 10)
+  const testamentResult = _evaluateTestament(nationId);
 
   const legacyText = _buildLegacyText(data);
-  showLegacyModal(legacyText, data);
 
-  // Хроника
-  if (typeof addEventLog === 'function') {
-    addEventLog(`📜 Правление ${rulerName} завершилось. Величие: ${grandeur}. Ходов: ${turnsRuled}.`, 'info');
+  // Добавить в хронику
+  if (typeof _addChronicleEntry === 'function') {
+    _addChronicleEntry({
+      type:   'legacy',
+      text:   legacyText,
+      reason,
+      ruler:  data.ruler_name,
+      grandeur: data.grandeur,
+    });
   }
+
+  // Добавить в событийный лог
+  if (typeof addEventLog === 'function') {
+    addEventLog(`👑 Итог правления ${data.ruler_name}: ${legacyText}`, 'info');
+  }
+
+  showLegacyModal(legacyText, data, testamentResult);
 }
 
-// ──────────────────────────────────────────────────────────────────────
-
+/**
+ * Синхронный шаблонный генератор нарратива.
+ * @param {object} data
+ * @returns {string}
+ */
 function _buildLegacyText(data) {
-  const { ruler_name, turns_ruled, grandeur, achievements, wars, treasury, reason, nation_name } = data;
-
-  const months = turns_ruled;
-  const years  = Math.floor(months / 12);
-  const period = years > 0 ? `${years} лет (${months} месяцев)` : `${months} месяцев`;
+  const { ruler_name, turns_ruled, grandeur, achievements, wars, treasury, reason } = data;
 
   let text = '';
 
-  if (reason === 'ruler_death') {
-    text += `${ruler_name} правил ${nation_name} на протяжении ${period}. `;
-    text += wars > 5
-      ? 'Его правление прошло в постоянных войнах, армии не знали покоя. '
-      : wars > 0
-        ? 'Несколько войн пришлось пережить народу. '
-        : 'Он избегал конфликтов, предпочитая мир. ';
-    text += `Индекс величия достиг ${grandeur}. `;
-    text += achievements.length > 5
-      ? 'Народ будет помнить его ещё долго.'
-      : achievements.length > 0
-        ? 'История сохранит несколько его свершений.'
-        : 'История оценит его скромно.';
-
-  } else if (reason === 'consul_change') {
-    text += `Консулат ${ruler_name} (${period}): `;
-    text += treasury > 10000 ? 'казна процветала. ' : 'казна испытывала трудности. ';
+  if (reason === 'consul_change') {
+    // Консульский итог
+    const quality = treasury > 10000 ? 'процветала' : 'испытывала трудности';
+    text = `Консулат ${ruler_name} (${turns_ruled} мес.): казна ${quality}. `;
     if (achievements.includes('Миротворец')) text += 'Мирный период укрепил торговлю. ';
-    if (achievements.includes('Первая кровь') || achievements.includes('Машина войны')) {
-      text += 'Военные победы прославили консула. ';
-    }
-    text += `Величие державы: ${grandeur}.`;
-
+    if (wars > 2) text += `Три кампании истощили государство. `;
+    text += grandeur >= 500 ? 'Сенат оценил работу высоко.' : 'Сенат оценил работу как удовлетворительную.';
   } else if (reason === 'council_change') {
-    text += `Совет под руководством ${ruler_name} управлял державой ${period}. `;
-    text += treasury > 20000 ? 'Торговля процветала. ' : 'Экономика требовала внимания. ';
-    text += `Величие: ${grandeur}.`;
-
+    // Олигархический итог
+    const influence = grandeur >= 400 ? 'сохранил влияние' : 'утратил часть власти';
+    text = `Совет под руководством ${ruler_name} ${influence}. `;
+    text += treasury > 20000 ? 'Торговля процветала.' : 'Казна требовала внимания.';
   } else {
-    text += `${ruler_name} завершил период правления (${period}). Величие: ${grandeur}.`;
+    // Монарший итог (ruler_death)
+    text = `${ruler_name} правил ${turns_ruled} месяцев. `;
+    if (wars > 5) {
+      text += 'Его правление прошло в постоянных войнах. ';
+    } else if (wars === 0) {
+      text += 'Он хранил мир на протяжении всего правления. ';
+    } else {
+      text += 'Он избегал излишних конфликтов. ';
+    }
+    text += `Индекс величия достиг ${grandeur}. `;
+    if (achievements.length > 5) {
+      text += 'Народ будет помнить его ещё долго.';
+    } else if (achievements.length > 2) {
+      text += 'История сохранит о нём достойные записи.';
+    } else {
+      text += 'История оценит его скромно.';
+    }
   }
 
-  return text;
+  return text.trim();
 }
 
-// ──────────────────────────────────────────────────────────────────────
-
-function showLegacyModal(text, data) {
+/**
+ * Показать модальное окно «Итог правления» (не останавливает игру).
+ * @param {string} text    нарративный текст
+ * @param {object} data    данные правителя
+ * @param {object|null} testament  результат проверки завещания
+ */
+function showLegacyModal(text, data, testament) {
   if (typeof document === 'undefined') return;
 
   const existing = document.getElementById('legacy-modal');
   if (existing) existing.remove();
 
-  const achievHtml = data.achievements?.length
-    ? `<div class="legacy-achiev-list">${data.achievements.map(a => `<span class="legacy-achiev-tag">🏆 ${a}</span>`).join('')}</div>`
-    : '<div style="color:var(--text-dim);font-size:12px">Нет достижений за это правление</div>';
+  const reasonLabel = {
+    ruler_death:    'Смерть правителя',
+    consul_change:  'Смена консула',
+    council_change: 'Смена совета',
+  }[data.reason] ?? 'Смена власти';
 
-  const testamentHtml = data.testament
-    ? `<div class="legacy-testament">
-         <div class="legacy-section-title">📜 Завещание</div>
-         <div>Выполнено: ${data.testament.fulfilled} / ${data.testament.total}</div>
-         ${data.testament.goals.map(g => `<div>${g.done ? '✅' : '❌'} ${g.text}</div>`).join('')}
+  const achievHtml = data.achievements.length
+    ? `<div class="legacy-achievements">
+        <div class="legacy-label">Свершения:</div>
+        <div class="legacy-achiev-list">${data.achievements.slice(-8).map(a => `<span class="legacy-achiev-tag">${a}</span>`).join('')}</div>
        </div>`
+    : '';
+
+  const testamentHtml = testament
+    ? `<div class="legacy-testament">
+        <div class="legacy-label">Завещание выполнено: ${testament.done} / ${testament.total}</div>
+        ${testament.goals.map(g => `<div class="legacy-testament-row">${g.ok ? '✅' : '❌'} ${g.text}</div>`).join('')}
+      </div>`
     : '';
 
   const modal = document.createElement('div');
@@ -172,380 +200,488 @@ function showLegacyModal(text, data) {
   modal.innerHTML = `
     <div class="legacy-modal">
       <div class="legacy-header">
-        <span class="legacy-title">📜 Итог правления</span>
+        <span class="legacy-title">👑 Итог правления</span>
+        <div class="legacy-reason">${reasonLabel}</div>
       </div>
       <div class="legacy-ruler-name">${data.ruler_name}</div>
-      <div class="legacy-period">${data.nation_name} · ${data.turns_ruled} месяцев</div>
-      <div class="legacy-grandeur">✦ Величие: <strong>${data.grandeur}</strong></div>
-      <div class="legacy-section-title">Достижения за правление</div>
+      <div class="legacy-period">Правил ${data.turns_ruled} месяцев</div>
+      <div class="legacy-grandeur">✦ Индекс величия: <strong>${data.grandeur}</strong></div>
       ${achievHtml}
+      <div class="legacy-text">${text}</div>
       ${testamentHtml}
-      <div class="legacy-narrative">${text}</div>
-      <button class="legacy-continue-btn" onclick="document.getElementById('legacy-modal').remove()">
-        ▸ Продолжить
-      </button>
+      <div class="legacy-footer">
+        <button class="legacy-continue-btn" onclick="document.getElementById('legacy-modal').remove()">
+          Продолжить ▸
+        </button>
+      </div>
     </div>`;
-
   document.body.appendChild(modal);
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// СЕССИЯ 8 — КРИЗИСНЫЕ ВЕХИ (раз в 600 ходов)
-// ══════════════════════════════════════════════════════════════════════
+// ──────────────────────────────────────────────────────────────────────
+// СЕССИЯ 8 — КРИЗИСНЫЕ ВЕХИ
+// ──────────────────────────────────────────────────────────────────────
 
-const CRISIS_TYPES = {
+const CRISIS_DEFS = {
   PLAGUE: {
-    label: 'Великая чума',
-    icon: '🦠',
-    msg: '🦠 Великая чума охватила земли! Выживет ли народ?',
-    trigger: (n) => (n.population?.total ?? 0) > 100000,
-    apply: (n, gs) => {
-      n._crisis_plague_ticks = 5;
-      if (typeof addEventLog === 'function') {
-        addEventLog('🦠 Великая чума охватила земли! Выживет ли народ?', 'danger');
+    type:     'PLAGUE',
+    cond:     n => (n.population?.total ?? 0) > 100000,
+    message:  '🦠 Великая чума охватила земли! Выживет ли народ?',
+    apply(n, gs) {
+      n._crisis_plague_turns = 0;
+    },
+    tick(n, gs) {
+      // Постепенное уменьшение населения за 5 ходов
+      if ((n._crisis_plague_turns ?? 0) < 5) {
+        if (n.population) n.population.total = Math.floor(n.population.total * 0.94);
+        n._crisis_plague_turns = (n._crisis_plague_turns ?? 0) + 1;
       }
     },
-    goalCheck: (n) => (n.population?.total ?? 0) > 300000,
-    goalText: 'Сохранить население > 300 000 в течение 10 ходов',
-    duration: 10,
+    check_turns: 10,
+    goal_text:   'Сохранить население > 300 000 человек',
+    success:     n => (n.population?.total ?? 0) > 300000,
   },
   INVASION: {
-    label: 'Нашествие',
-    icon: '⚔️',
-    msg: '⚔️ Нашествие! Враги идут на столицу!',
-    trigger: (n, gs) => {
-      const nid = gs.player_nation;
-      return Object.keys(gs.nations ?? {}).some(
-        id => id !== nid && (gs.nations[id].regions?.length ?? 0) > 0
-      );
-    },
-    apply: (n, gs) => {
-      const nid = gs.player_nation;
-      // Найти самую сильную соседнюю нацию
-      const neighbor = Object.entries(gs.nations ?? {})
-        .filter(([id]) => id !== nid)
+    type:     'INVASION',
+    cond:     (n, gs) => Object.keys(gs.nations ?? {}).length > 1,
+    message:  '⚔️ Нашествие! Враги идут на столицу!',
+    apply(n, gs, nationId) {
+      // Найти сильнейшего соседа и объявить войну
+      const others = Object.entries(gs.nations ?? {})
+        .filter(([id]) => id !== nationId)
         .sort(([,a],[,b]) =>
-          ((b.military?.infantry ?? 0) + (b.military?.cavalry ?? 0)) -
-          ((a.military?.infantry ?? 0) + (a.military?.cavalry ?? 0))
-        )[0];
-      if (neighbor && typeof declareWar === 'function') {
-        try { declareWar(neighbor[0], nid); } catch (e) {}
-      }
-      if (typeof addEventLog === 'function') {
-        addEventLog('⚔️ Нашествие! Враги идут на столицу!', 'danger');
+          ((b.military?.infantry ?? 0) + (b.military?.cavalry ?? 0) * 3) -
+          ((a.military?.infantry ?? 0) + (a.military?.cavalry ?? 0) * 3)
+        );
+      if (others.length && typeof declareWar === 'function') {
+        const [invaderId] = others[0];
+        gs._crisis_invader = invaderId;
+        try { declareWar(invaderId, nationId); } catch (e) {}
       }
     },
-    goalCheck: (n, gs) => {
+    check_turns: 15,
+    goal_text:   'Не потерять столицу за 15 ходов',
+    success(n, gs, nationId) {
       const capital = n.capital_region ?? n.regions?.[0];
-      return !capital || (n.regions ?? []).includes(capital);
+      if (!capital) return true;
+      return (n.regions ?? []).includes(capital);
     },
-    goalText: 'Удержать столицу в течение 15 ходов',
-    duration: 15,
   },
   FAMINE: {
-    label: 'Великий голод',
-    icon: '🌾',
-    msg: '🌾 Великий голод! Запасы зерна иссякли.',
-    trigger: () => true,
-    apply: (n, gs) => {
-      if (n.economy?.stockpile) {
-        n._crisis_famine_wheat_saved = n.economy.stockpile.wheat ?? 0;
-        n.economy.stockpile.wheat = 0;
-        n._crisis_famine_ticks = 3;
-      }
-      if (typeof addEventLog === 'function') {
-        addEventLog('🌾 Великий голод! Запасы зерна иссякли.', 'danger');
+    type:    'FAMINE',
+    cond:    () => true,
+    message: '🌾 Великий голод! Запасы зерна иссякли.',
+    apply(n, gs) {
+      if (n.economy?.stockpile) n.economy.stockpile.wheat = 0;
+      n._famine_turns_left = 3;
+    },
+    tick(n, gs) {
+      if ((n._famine_turns_left ?? 0) > 0) {
+        if (n.economy?.stockpile) n.economy.stockpile.wheat = 0;
+        n._famine_turns_left--;
+        if (n.population) n.population.happiness = Math.max(0, (n.population.happiness ?? 50) - 5);
       }
     },
-    goalCheck: (n) => (n.population?.happiness ?? 50) >= 20,
-    goalText: 'Не допустить счастья < 20 в течение 10 ходов',
-    duration: 10,
+    check_turns: 10,
+    goal_text:   'Не допустить счастья < 20 за 10 ходов',
+    success:     n => (n.population?.happiness ?? 50) >= 20,
   },
   DEBT_CRISIS: {
-    label: 'Долговой кризис',
-    icon: '📜',
-    msg: '📜 Долговой кризис! Кредиторы требуют немедленной выплаты.',
-    trigger: (n, gs) => (gs.loans ?? []).some(l => l.nation_id === gs.player_nation && l.status === 'active'),
-    apply: (n, gs) => {
-      const activeLoans = (gs.loans ?? []).filter(
-        l => l.nation_id === gs.player_nation && l.status === 'active'
-      );
-      for (const loan of activeLoans) {
-        loan.monthly_payment = (loan.monthly_payment ?? 0) * 2;
-        loan._crisis_doubled = true;
-        loan._crisis_turns_left = 6;
+    type:    'DEBT_CRISIS',
+    cond:    (n, gs, nationId) => (gs.loans ?? []).some(l => l.nation_id === nationId && l.status === 'active'),
+    message: '📜 Долговой кризис! Кредиторы требуют немедленной выплаты.',
+    apply(n, gs, nationId) {
+      // Удвоить monthly_payment всех займов на 6 ходов
+      for (const loan of (gs.loans ?? [])) {
+        if (loan.nation_id === nationId && loan.status === 'active') {
+          loan._original_payment = loan.monthly_payment;
+          loan.monthly_payment   = (loan.monthly_payment ?? 0) * 2;
+        }
       }
-      if (typeof addEventLog === 'function') {
-        addEventLog('📜 Долговой кризис! Кредиторы требуют немедленной выплаты.', 'danger');
+      n._debt_crisis_turns_left = 6;
+    },
+    tick(n, gs, nationId) {
+      if ((n._debt_crisis_turns_left ?? 0) > 0) {
+        n._debt_crisis_turns_left--;
+        if (n._debt_crisis_turns_left === 0) {
+          // Восстановить платежи
+          for (const loan of (gs.loans ?? [])) {
+            if (loan.nation_id === nationId && loan._original_payment !== undefined) {
+              loan.monthly_payment = loan._original_payment;
+              delete loan._original_payment;
+            }
+          }
+        }
       }
     },
-    goalCheck: (n) => (n._bankruptcies ?? 0) === 0,
-    goalText: 'Не объявить банкротство в течение 12 ходов',
-    duration: 12,
+    check_turns: 12,
+    goal_text:   'Не объявлять банкротство за 12 ходов',
+    success:     n => (n._bankruptcies ?? 0) === (n._pre_crisis_bankruptcies ?? 0),
   },
 };
 
-function processCrisisVeha() {
-  const nid = GAME_STATE.player_nation;
-  const n   = GAME_STATE.nations?.[nid];
+/**
+ * Выбрать и запустить кризисную веху.
+ * Вызывается из checkVictoryConditions при turn % 600 === 0.
+ * @param {string} nationId
+ */
+function processCrisisVeha(nationId) {
+  if (GAME_STATE.active_crisis && !GAME_STATE.active_crisis.resolved) return; // уже идёт кризис
+
+  const n  = GAME_STATE.nations?.[nationId];
   if (!n) return;
+  const gs = GAME_STATE;
 
-  // Не запускать если уже есть активный кризис
-  if (GAME_STATE.active_crisis && !GAME_STATE.active_crisis.resolved) return;
+  // Выбрать подходящий кризис
+  const eligible = Object.values(CRISIS_DEFS).filter(def => {
+    try { return def.cond(n, gs, nationId); } catch { return false; }
+  });
+  if (!eligible.length) return;
 
-  // Выбрать случайный кризис из подходящих
-  const eligible = Object.entries(CRISIS_TYPES).filter(
-    ([, def]) => def.trigger(n, GAME_STATE)
-  );
-  if (eligible.length === 0) return;
+  // Случайный из подходящих
+  const def = eligible[Math.floor(Math.random() * eligible.length)];
 
-  const [type, def] = eligible[Math.floor(Math.random() * eligible.length)];
+  // Сохранить baseline для DEBT_CRISIS
+  n._pre_crisis_bankruptcies = n._bankruptcies ?? 0;
+
+  // Применить эффект
+  try { def.apply(n, gs, nationId); } catch (e) { console.warn('[crisis apply]', e); }
 
   GAME_STATE.active_crisis = {
-    type,
-    start_turn: GAME_STATE.turn ?? 0,
-    resolved: false,
-    success: null,
+    type:       def.type,
+    start_turn: gs.turn ?? 0,
+    check_at:   (gs.turn ?? 0) + def.check_turns,
+    resolved:   false,
+    success:    false,
+    goal_text:  def.goal_text,
+    nation_id:  nationId,
   };
 
-  def.apply(n, GAME_STATE);
+  if (typeof addEventLog === 'function') {
+    addEventLog(def.message, 'danger');
+  }
 }
 
-function _checkCrisisResolution(nationId) {
+/**
+ * Тик активного кризиса (постепенные эффекты).
+ * Вызывается из checkVictoryConditions каждый ход.
+ * @param {string} nationId
+ */
+function _tickActiveCrisis(nationId) {
   const crisis = GAME_STATE.active_crisis;
-  if (!crisis || crisis.resolved) return;
-
+  if (!crisis || crisis.resolved || crisis.nation_id !== nationId) return;
+  const def = CRISIS_DEFS[crisis.type];
+  if (!def?.tick) return;
   const n = GAME_STATE.nations?.[nationId];
   if (!n) return;
+  try { def.tick(n, GAME_STATE, nationId); } catch (e) {}
+}
 
-  const def = CRISIS_TYPES[crisis.type];
-  if (!def) return;
+/**
+ * Проверить итог кризиса.
+ * @param {string} nationId
+ * @param {object} crisis
+ */
+function _resolveCrisis(nationId, crisis) {
+  const def = CRISIS_DEFS[crisis.type];
+  const n   = GAME_STATE.nations?.[nationId];
+  if (!n || !def) { crisis.resolved = true; return; }
 
-  const turn = GAME_STATE.turn ?? 0;
-  const elapsed = turn - crisis.start_turn;
+  let success = false;
+  try { success = def.success(n, GAME_STATE, nationId); } catch (e) {}
 
-  // Продолжаем применять эффекты чумы
-  if (crisis.type === 'PLAGUE' && (n._crisis_plague_ticks ?? 0) > 0) {
-    n.population.total = Math.floor((n.population.total ?? 0) * 0.94);
-    n._crisis_plague_ticks--;
-  }
-
-  // Продолжаем голод
-  if (crisis.type === 'FAMINE' && (n._crisis_famine_ticks ?? 0) > 0) {
-    if (n.economy?.stockpile) n.economy.stockpile.wheat = 0;
-    n._crisis_famine_ticks--;
-    // Восстанавливаем зерно когда голод кончился
-    if (n._crisis_famine_ticks === 0 && n.economy?.stockpile) {
-      n.economy.stockpile.wheat = n._crisis_famine_wheat_saved ?? 1000;
-    }
-  }
-
-  // Сбрасываем doubled payments долгового кризиса
-  if (crisis.type === 'DEBT_CRISIS') {
-    for (const loan of (GAME_STATE.loans ?? [])) {
-      if (loan._crisis_doubled && (loan._crisis_turns_left ?? 0) > 0) {
-        loan._crisis_turns_left--;
-        if (loan._crisis_turns_left === 0) {
-          loan.monthly_payment = Math.floor(loan.monthly_payment / 2);
-          loan._crisis_doubled = false;
-        }
-      }
-    }
-  }
-
-  if (elapsed < def.duration) return;
-
-  // Проверить итог
-  const success = def.goalCheck(n, GAME_STATE);
   crisis.resolved = true;
   crisis.success  = success;
 
   if (success) {
     n._crisis_survived = (n._crisis_survived ?? 0) + 1;
     if (typeof addEventLog === 'function') {
-      addEventLog(`✅ Кризис «${def.label}» преодолён! Народ выстоял.`, 'good');
+      addEventLog('✅ Кризис преодолён! Держава выстояла.', 'success');
     }
     if (typeof addMemoryEvent === 'function') {
-      addMemoryEvent(nationId, 'crisis', `Преодолён кризис: ${def.label}`);
+      addMemoryEvent(nationId, 'politics', `Кризис ${crisis.type} преодолён.`);
     }
   } else {
     if (typeof addEventLog === 'function') {
-      addEventLog(`⚠ Кризис «${def.label}» нанёс урон державе.`, 'warning');
+      addEventLog('⚠ Кризис нанёс урон. Летопись запишет эту страницу.', 'warning');
     }
     if (typeof addMemoryEvent === 'function') {
-      addMemoryEvent(nationId, 'crisis', `Не справились с кризисом: ${def.label}`);
+      addMemoryEvent(nationId, 'politics', `Кризис ${crisis.type} не преодолён.`);
     }
   }
 
-  // Записать в chronicle_log
-  if (GAME_STATE.chronicle_log != null) {
-    GAME_STATE.chronicle_log.push({
-      turn: GAME_STATE.turn ?? 0,
-      text: `Кризис «${def.label}»: ${success ? 'преодолён' : 'нанёс урон'}.`,
+  // Запись в хронику
+  if (typeof _addChronicleEntry === 'function') {
+    _addChronicleEntry({
+      type: 'crisis',
+      crisis_type: crisis.type,
+      success,
+      text: success
+        ? `⚔️ Кризис «${crisis.type}» преодолён с честью.`
+        : `💀 Кризис «${crisis.type}» нанёс серьёзный урон державе.`,
     });
-    if (GAME_STATE.chronicle_log.length > 50) GAME_STATE.chronicle_log.shift();
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// СЕССИЯ 10 — ЗАВЕЩАНИЕ НАСЛЕДНИКУ
-// ══════════════════════════════════════════════════════════════════════
+// ──────────────────────────────────────────────────────────────────────
+// СЕССИЯ 10 — ЗАВЕЩАНИЕ
+// ──────────────────────────────────────────────────────────────────────
 
-const TESTAMENT_GOALS_DEFS = [
+const TESTAMENT_GOAL_DEFS = [
   {
-    id: 'treasury_20k',
-    icon: '💰',
-    text: 'Оставить казну > 20 000',
-    check: (n, gs) => (n.economy?.treasury ?? 0) > 20000,
+    id:   'treasury_20k',
+    text: '💰 Оставить казну > 20 000',
+    check: n => (n.economy?.treasury ?? 0) > 20000,
   },
   {
-    id: 'army_5k',
-    icon: '⚔️',
-    text: 'Оставить армию > 5 000 солдат',
-    check: (n, gs) => ((n.military?.infantry ?? 0) + (n.military?.cavalry ?? 0)) > 5000,
+    id:   'army_5k',
+    text: '⚔️ Оставить армию > 5 000 солдат',
+    check: n => ((n.military?.infantry ?? 0) + (n.military?.cavalry ?? 0)) > 5000,
   },
   {
-    id: 'no_loans',
-    icon: '📜',
-    text: 'Погасить все займы',
-    check: (n, gs) => (gs.loans ?? []).filter(l => l.nation_id === gs.player_nation && l.status === 'active').length === 0,
+    id:   'peace',
+    text: '🕊 Закончить все войны',
+    check: n => (n.military?.at_war_with?.length ?? 0) === 0,
   },
   {
-    id: 'end_wars',
-    icon: '🕊',
-    text: 'Закончить все войны',
-    check: (n, gs) => (n.military?.at_war_with?.length ?? 0) === 0,
-  },
-  {
-    id: 'expand_regions',
-    icon: '🌍',
-    text: 'Расширить владения до 15 регионов',
-    check: (n, gs) => (n.regions?.length ?? 0) >= 15,
-  },
-  {
-    id: 'get_alliance',
-    icon: '🤝',
-    text: 'Заключить союз с соседом',
-    check: (n, gs) => {
-      const nid = gs.player_nation;
-      return (gs.diplomacy?.treaties ?? []).some(
-        t => t.status === 'active' &&
-             (t.type === 'alliance' || t.type === 'defensive_alliance') &&
-             t.parties.includes(nid)
-      );
+    id:   'no_debt',
+    text: '📜 Погасить все займы',
+    check: (n, gs, nid) => {
+      const loans = (gs.loans ?? []).filter(l => l.nation_id === nid && l.status === 'active');
+      return loans.length === 0;
     },
+  },
+  {
+    id:   'alliance',
+    text: '🤝 Заключить союз с соседом',
+    check: (n, gs, nid) => (gs.diplomacy?.treaties ?? []).some(
+      t => t.status === 'active' &&
+           ['alliance', 'defensive_alliance', 'military_alliance'].includes(t.type) &&
+           t.parties.includes(nid)
+    ),
+  },
+  {
+    id:   'expand_10',
+    text: '🌍 Расширить владения до 10 регионов',
+    check: n => (n.regions?.length ?? 0) >= 10,
   },
 ];
 
-function _checkTestamentTrigger(nationId) {
+/**
+ * Проверить возраст правителя и уведомить об открытии завещания.
+ * @param {string} nationId
+ */
+function _checkTestamentAge(nationId) {
   const n = GAME_STATE.nations?.[nationId];
   if (!n) return;
   const age = n.government?.ruler?.age ?? 0;
-  if (age >= 60 && !n._testament_notified) {
-    n._testament_notified = true;
-    if (typeof addEventLog === 'function') {
-      addEventLog('👴 Правитель достиг 60 лет. Откройте «Завещание» в управлении государством.', 'info');
-    }
-    _renderTestamentButton();
+  if (age < 60) return;
+  if (n._testament_notified) return;
+
+  n._testament_notified = true;
+
+  if (typeof addEventLog === 'function') {
+    addEventLog('⏳ Правитель достиг 60 лет. Откройте «Завещание» в управлении государством.', 'info');
   }
 }
 
-function _renderTestamentButton() {
-  if (typeof document === 'undefined') return;
-  const govPanel = document.getElementById('gov-content');
-  if (!govPanel) return;
-  // Кнопка добавляется в panels.js при рендере
+/**
+ * Получить все доступные цели завещания.
+ * @returns {Array}
+ */
+function getTestamentGoalDefs() {
+  return TESTAMENT_GOAL_DEFS;
 }
 
+/**
+ * Взять цель в завещание.
+ * @param {string} goalId
+ */
+function addTestamentGoal(goalId) {
+  if (!GAME_STATE.testament) {
+    GAME_STATE.testament = { goals: [], created_turn: GAME_STATE.turn ?? 0 };
+  }
+  const def = TESTAMENT_GOAL_DEFS.find(g => g.id === goalId);
+  if (!def) return;
+  if (GAME_STATE.testament.goals.find(g => g.id === goalId)) return; // уже добавлена
+  if (GAME_STATE.testament.goals.length >= 3) {
+    if (typeof addEventLog === 'function') {
+      addEventLog('⚠ Нельзя добавить более 3 целей в завещание.', 'warning');
+    }
+    return;
+  }
+  GAME_STATE.testament.goals.push({ id: goalId, text: def.text });
+  if (typeof addEventLog === 'function') {
+    addEventLog(`📜 Завещание: добавлена цель «${def.text}»`, 'info');
+  }
+}
+
+/**
+ * Убрать цель из завещания.
+ * @param {string} goalId
+ */
+function removeTestamentGoal(goalId) {
+  if (!GAME_STATE.testament) return;
+  GAME_STATE.testament.goals = GAME_STATE.testament.goals.filter(g => g.id !== goalId);
+}
+
+/**
+ * Проверить выполнение завещания при смерти правителя.
+ * Вызывается из generateRulerLegacy.
+ * @param {string} nationId
+ * @returns {{ done, total, goals, all_ok }} | null
+ */
+function _evaluateTestament(nationId) {
+  const testament = GAME_STATE.testament;
+  if (!testament || !testament.goals?.length) return null;
+
+  const n  = GAME_STATE.nations?.[nationId];
+  const gs = GAME_STATE;
+
+  const results = testament.goals.map(g => {
+    const def = TESTAMENT_GOAL_DEFS.find(d => d.id === g.id);
+    let ok = false;
+    if (def) {
+      try { ok = def.check(n, gs, nationId); } catch (e) {}
+    }
+    return { text: g.text, ok };
+  });
+
+  const done   = results.filter(r => r.ok).length;
+  const total  = results.length;
+  const all_ok = done === total;
+
+  if (all_ok) {
+    if (n) n._testament_completed = true;
+    if (typeof addMemoryEvent === 'function') {
+      addMemoryEvent(nationId, 'politics', 'Завещание выполнено полностью.');
+    }
+  }
+
+  return { done, total, goals: results, all_ok };
+}
+
+/**
+ * Показать модальное окно «Завещание».
+ */
 function showTestamentModal() {
   if (typeof document === 'undefined') return;
   const modal = document.getElementById('testament-modal');
   if (!modal) return;
   modal.style.display = 'flex';
-  _renderTestamentContent();
+  _renderTestamentModalContent();
 }
 
 function hideTestamentModal() {
-  if (typeof document === 'undefined') return;
   const modal = document.getElementById('testament-modal');
   if (modal) modal.style.display = 'none';
 }
 
-function _renderTestamentContent() {
-  if (typeof document === 'undefined') return;
+function _renderTestamentModalContent() {
   const content = document.getElementById('testament-modal-content');
   if (!content) return;
 
-  const nid = GAME_STATE.player_nation;
-  const n   = GAME_STATE.nations?.[nid];
-  if (!n) return;
+  const nationId = GAME_STATE?.player_nation;
+  const n        = GAME_STATE?.nations?.[nationId];
+  const gs       = GAME_STATE;
+  const testament = gs?.testament ?? { goals: [] };
+  const takenIds  = testament.goals.map(g => g.id);
 
-  const gs = GAME_STATE;
-  const chosen = GAME_STATE.testament?.goals ?? [];
+  const goalsHtml = TESTAMENT_GOAL_DEFS.map(def => {
+    const taken = takenIds.includes(def.id);
+    let status = '⏳';
+    let statusClass = '';
+    if (taken) {
+      let ok = false;
+      try { ok = def.check(n, gs, nationId); } catch (e) {}
+      status = ok ? '✅' : '⏳';
+      statusClass = ok ? 'testament-done' : '';
+    }
+
+    return `<div class="testament-goal-row ${statusClass}">
+      <span class="testament-goal-text">${def.text}</span>
+      ${taken
+        ? `<span class="testament-goal-status">${status}</span>
+           <button class="testament-remove-btn" onclick="removeTestamentGoal('${def.id}');_renderTestamentModalContent()">✕</button>`
+        : `<button class="testament-add-btn" onclick="addTestamentGoal('${def.id}');_renderTestamentModalContent()"
+            ${takenIds.length >= 3 ? 'disabled' : ''}>+ Добавить</button>`
+      }
+    </div>`;
+  }).join('');
 
   content.innerHTML = `
-    <div class="testament-title">📜 Завещание наследнику</div>
-    <div class="testament-subtitle">Выберите до 3 целей, которые хотите достичь до конца правления</div>
-    <div class="testament-goals-list">
-      ${TESTAMENT_GOALS_DEFS.map(def => {
-        const isChosen = chosen.some(g => g.id === def.id);
-        const isDone   = def.check(n, gs);
-        const statusIcon = isDone ? '✅' : isChosen ? '⏳' : '';
-        return `<div class="testament-goal ${isChosen ? 'testament-chosen' : ''}">
-          ${statusIcon} ${def.icon} ${def.text}
-          ${!isChosen && chosen.length < 3
-            ? `<button class="testament-add-btn" onclick="addTestamentGoal('${def.id}')">+ Принять</button>`
-            : isChosen
-              ? `<button class="testament-remove-btn" onclick="removeTestamentGoal('${def.id}')">Отказаться</button>`
-              : ''}
-        </div>`;
-      }).join('')}
+    <div class="testament-panel">
+      <div class="testament-info">
+        Выберите до 3 целей, которые хотите оставить наследнику.<br>
+        Итог будет оценён при смене правителя.
+      </div>
+      <div class="testament-goals-list">
+        ${goalsHtml}
+      </div>
+      <div class="testament-count" style="margin-top:8px;color:var(--text-dim);font-size:12px">
+        Выбрано: ${takenIds.length} / 3
+      </div>
     </div>`;
 }
 
-function addTestamentGoal(id) {
-  if (!GAME_STATE.testament) {
-    GAME_STATE.testament = { goals: [], created_turn: GAME_STATE.turn ?? 0 };
-  }
-  if (GAME_STATE.testament.goals.length >= 3) return;
-  const def = TESTAMENT_GOALS_DEFS.find(d => d.id === id);
-  if (!def || GAME_STATE.testament.goals.some(g => g.id === id)) return;
-  GAME_STATE.testament.goals.push({ id: def.id, text: def.text, icon: def.icon });
-  _renderTestamentContent();
-}
+/**
+ * Рендер блока завещания для панели управления государством.
+ * Показывается только при возрасте правителя >= 60.
+ * @param {object} nation
+ * @returns {string} HTML или ''
+ */
+function renderTestamentBlock(nation) {
+  const age = nation?.government?.ruler?.age ?? 0;
+  if (age < 60) return '';
 
-function removeTestamentGoal(id) {
-  if (!GAME_STATE.testament) return;
-  GAME_STATE.testament.goals = GAME_STATE.testament.goals.filter(g => g.id !== id);
-  _renderTestamentContent();
-}
+  const testament = GAME_STATE?.testament ?? { goals: [] };
+  const takenIds  = testament.goals.map(g => g.id);
+  const nationId  = GAME_STATE?.player_nation;
+  const gs        = GAME_STATE;
 
-function _checkTestamentOnDeath(nationId, legacyData) {
-  if (!GAME_STATE.testament?.goals?.length) return null;
-  const n  = GAME_STATE.nations?.[nationId];
-  const gs = GAME_STATE;
-  if (!n) return null;
-
-  const results = GAME_STATE.testament.goals.map(g => {
-    const def = TESTAMENT_GOALS_DEFS.find(d => d.id === g.id);
-    const done = def ? def.check(n, gs) : false;
-    return { text: g.text, icon: g.icon, done };
-  });
-
-  const fulfilled = results.filter(r => r.done).length;
-  const total     = results.length;
-
-  if (fulfilled === total && total > 0) {
-    n._testament_completed = true;
-    if (typeof addEventLog === 'function') {
-      addEventLog('📜 Завещание выполнено полностью! Достижение «Верен слову» разблокировано!', 'achievement');
+  const goalRows = testament.goals.map(g => {
+    const def = TESTAMENT_GOAL_DEFS.find(d => d.id === g.id);
+    let ok = false;
+    if (def) {
+      try { ok = def.check(nation, gs, nationId); } catch (e) {}
     }
-  }
+    return `<div class="testament-row-mini">${ok ? '✅' : '⏳'} ${g.text}</div>`;
+  }).join('');
 
-  if (typeof addMemoryEvent === 'function') {
-    addMemoryEvent(nationId, 'politics',
-      `Завещание: выполнено ${fulfilled}/${total} целей`);
-  }
+  return `
+    <div class="gov-section-title">📜 Завещание наследнику</div>
+    <div class="gov-block testament-block">
+      ${takenIds.length === 0
+        ? '<div class="testament-empty">Завещание не составлено.</div>'
+        : goalRows
+      }
+      <button class="gov-action-btn" style="margin-top:8px" onclick="showTestamentModal()">
+        📜 Составить завещание
+      </button>
+    </div>`;
+}
 
-  return { fulfilled, total, goals: results };
+/**
+ * Рендер блока исторического рейтинга для панели управления государством.
+ * @param {object} nation
+ * @returns {string} HTML
+ */
+function renderHistoricalRatingBlock(nation) {
+  const nationId = GAME_STATE?.player_nation;
+  if (!nationId || typeof getHistoricalRating !== 'function') return '';
+
+  const turn = GAME_STATE?.turn ?? 0;
+  // Кэшировать раз в 10 ходов
+  if (!nation._hist_rating_cache || (turn % 10 === 0)) {
+    nation._hist_rating_cache = getHistoricalRating(nationId);
+    nation._hist_rating_turn  = turn;
+  }
+  const lines = nation._hist_rating_cache ?? [];
+  if (!lines.length) return '';
+
+  return `
+    <div class="gov-section-title">⚖️ Историческое сравнение</div>
+    <div class="gov-block">
+      ${lines.map(l => `<div style="font-style:italic;font-size:12px;color:var(--text-dim);margin:2px 0">${l}</div>`).join('')}
+    </div>`;
 }
