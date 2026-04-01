@@ -601,6 +601,7 @@ function _processEspionageTick() {
   const nations      = GAME_STATE.nations || {};
   const playerNation = GAME_STATE.player_nation;
   const nids         = Object.keys(nations);
+  const relMap       = GAME_STATE.diplomacy.relations || {};
 
   /** Прочитать переменную из SuperOU-вектора нации */
   function _ouV(nation, category, varName) {
@@ -610,9 +611,29 @@ function _processEspionageTick() {
     return v ? (v.current ?? 0) : 0;
   }
 
+  // Pre-index hostile pairs to avoid O(N²) inner loop.
+  // Iterate over K known relations (K≪N²) and find the two nation IDs per key.
+  const hostileMap = {}; // nationId → [hostile targetIds]
+  for (const [key, rel] of Object.entries(relMap)) {
+    if (!rel || (rel.score >= -10 && !rel.war)) continue;
+    // Recover nation IDs from the sorted-join key by trying each '_' split point.
+    for (let i = 1; i < key.length; i++) {
+      if (key[i] !== '_') continue;
+      const a = key.slice(0, i);
+      const b = key.slice(i + 1);
+      if (nations[a] && nations[b]) {
+        (hostileMap[a] = hostileMap[a] || []).push(b);
+        (hostileMap[b] = hostileMap[b] || []).push(a);
+        break;
+      }
+    }
+  }
+
   for (const attackerId of nids) {
     const attacker = nations[attackerId];
     if (!attacker || attacker.is_eliminated) continue;
+    // Skip attackers with no hostile targets — avoids _ouV cost for the majority
+    if (!hostileMap[attackerId]) continue;
 
     // Шанс запустить миссию за ход: зависит от espionage_capability + spy_network_capacity
     const espCap        = _ouV(attacker, 'diplomacy', 'espionage_capability');
@@ -620,8 +641,8 @@ function _processEspionageTick() {
     const missionChance = 0.04 + espCap * 0.10 + spyNet * 0.06; // 4–20%
     if (Math.random() >= missionChance) continue;
 
-    // Выбрать цель среди враждебных наций (score < -10 или активная война)
-    for (const targetId of nids) {
+    // Выбрать цель только среди известных враждебных наций (O(H) вместо O(N)).
+    for (const targetId of hostileMap[attackerId]) {
       if (targetId === attackerId) continue;
       const target = nations[targetId];
       if (!target || target.is_eliminated) continue;
@@ -629,7 +650,7 @@ function _processEspionageTick() {
       // Прямая проверка: не вызываем getRelation(), чтобы не создавать записи
       // для нейтральных пар — это предотвращает рост diplomacy.relations до O(N²).
       const _espKey = [attackerId, targetId].sort().join('_');
-      const rel = GAME_STATE.diplomacy?.relations?.[_espKey];
+      const rel = relMap[_espKey];
       if (!rel || (rel.score >= -10 && !rel.war)) continue; // пара недостаточно враждебна
       if (Math.random() > 0.35) continue;          // рандомный выбор цели за ход
 
