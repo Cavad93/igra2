@@ -1410,6 +1410,59 @@
     .log-diplomacy   .log-text { color: #80cbc4; }
     .log-achievement .log-text { color: #ffd54f; font-weight: bold; }
 
+    /* ── Манифест ── */
+    .manifest-modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.82);
+      z-index: 1200; display: flex; align-items: center; justify-content: center;
+    }
+    .manifest-modal {
+      background: var(--bg-panel); border: 1px solid var(--border-gold);
+      border-radius: 6px; padding: 24px; max-width: 480px; width: 96vw;
+      box-shadow: 0 8px 40px rgba(0,0,0,.8);
+    }
+    .manifest-header { margin-bottom: 16px; }
+    .manifest-title { font-size: 16px; color: var(--accent); font-weight: bold; }
+    .manifest-subtitle { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+    .manifest-option {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(139,69,19,.15); border: 1px solid var(--border-gold);
+      color: var(--text-light); border-radius: 4px; padding: 8px 12px;
+      width: 100%; cursor: pointer; margin-bottom: 6px; text-align: left; font-size: 13px;
+    }
+    .manifest-option:hover { background: rgba(139,69,19,.3); }
+    .manifest-option-icon { font-size: 18px; flex-shrink: 0; }
+    .manifest-custom { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+    .manifest-custom-input {
+      flex: 1; background: rgba(0,0,0,.3); border: 1px solid var(--border-gold);
+      color: var(--text-light); border-radius: 4px; padding: 6px 10px; font-size: 13px;
+    }
+    .manifest-custom-btn { flex-shrink: 0; padding: 6px 12px; }
+
+    /* ── Динамические цели ── */
+    .dg-goal { padding: 4px 0; }
+    .dg-goal-text { font-size: 11px; color: var(--text-light); margin-bottom: 3px; }
+    .dg-done .dg-goal-text { color: var(--positive); }
+    .dg-bar-wrap { height: 4px; background: rgba(255,255,255,.1); border-radius: 2px; overflow: hidden; }
+    .dg-bar-fill { height: 100%; background: var(--gold, #c8a84b); border-radius: 2px; transition: width .4s; }
+    .dg-pct { font-size: 10px; color: var(--text-dim); text-align: right; }
+
+    /* ── Клятвы ── */
+    .vow-row { padding: 6px 0; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,.06); }
+    .vow-taken { color: var(--text-light); }
+    .vow-broken { color: #ef9a9a; }
+    .vow-take-btn {
+      background: rgba(139,69,19,.2); border: 1px solid var(--border-gold);
+      color: var(--text-light); border-radius: 4px; padding: 4px 10px;
+      cursor: pointer; font-size: 12px; width: 100%; text-align: left;
+    }
+    .vow-take-btn:hover { background: rgba(139,69,19,.4); }
+
+    /* ── Летопись ── */
+    .chronicle-entry { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .chronicle-turn { font-size: 10px; color: var(--text-dim); margin-bottom: 4px; }
+    .chronicle-text { font-size: 13px; color: var(--text-light); line-height: 1.5; }
+    .chronicle-achiev { font-size: 11px; color: var(--gold, #c8a84b); margin-top: 4px; }
+
     /* ══════════════════════════════════════════════════
        ПАНЕЛЬ ПРИКАЗОВ (главный экран)
     ══════════════════════════════════════════════════ */
@@ -7431,6 +7484,30 @@
       <div id="gov-content" class="gov-panel-body">
         <!-- заполняется renderGovernmentOverlay() -->
       </div>
+    </div>
+  </div>
+
+  <!-- Модал клятв -->
+  <div id="vows-modal" onclick="if(event.target===this)hideVowsModal()"
+       style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1100;align-items:center;justify-content:center">
+    <div class="gov-panel" style="max-width:520px">
+      <div class="gov-panel-header">
+        <span class="gov-panel-title">⚔️ Клятвы правителя</span>
+        <button class="gov-close-btn" onclick="hideVowsModal()">✕</button>
+      </div>
+      <div id="vows-modal-content" class="gov-panel-body" style="padding:16px"></div>
+    </div>
+  </div>
+
+  <!-- Модал летописи -->
+  <div id="chronicle-modal" onclick="if(event.target===this)hideChronicleModal()"
+       style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1100;align-items:center;justify-content:center">
+    <div class="gov-panel" style="max-width:640px">
+      <div class="gov-panel-header">
+        <span class="gov-panel-title">📖 Летопись правления</span>
+        <button class="gov-close-btn" onclick="hideChronicleModal()">✕</button>
+      </div>
+      <div id="chronicle-modal-content" class="gov-panel-body" style="padding:16px;overflow-y:auto;max-height:60vh"></div>
     </div>
   </div>
 

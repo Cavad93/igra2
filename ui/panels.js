@@ -34,6 +34,7 @@ function renderLeftPanel() {
       <div class="ruler-name">⚔️ ${rulerName}</div>
       <div class="ruler-sub">${govTypeName} · ${nation.name}</div>
       <div class="grandeur-display" style="color:var(--gold,#c8a84b);font-size:12px;margin:4px 0 2px;">✦ Величие: <span id="grandeur-value">${typeof calcGrandeur === 'function' ? calcGrandeur(nationId) : 0}</span></div>
+      <div id="manifest-display" style="font-style:italic;font-size:11px;color:var(--text-dim);margin:2px 0 4px;display:${GAME_STATE.player_manifest?.text ? '' : 'none'}">${GAME_STATE.player_manifest?.text ? `«${GAME_STATE.player_manifest.text}»` : ''}</div>
       <div class="legitimacy-bar">
         <span class="stat-label">Легитимность</span>
         <div class="bar-container">
@@ -53,7 +54,15 @@ function renderLeftPanel() {
       <button class="gov-open-btn" style="margin-top:4px" onclick="showTreasuryOverlay()">
         💰 Казна и налоги ▸
       </button>
+      <button class="gov-open-btn" style="margin-top:4px" onclick="showVowsModal()">
+        ⚔️ Клятвы ▸
+      </button>
+      <button class="gov-open-btn" style="margin-top:4px" onclick="showChronicleModal()">
+        📖 Открыть летопись ▸
+      </button>
     </div>
+    <!-- Динамические цели -->
+    <div id="dynamic-goals-block"></div>
 
     <!-- КАЗНА -->
     <div class="panel-section">

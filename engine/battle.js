@@ -636,6 +636,22 @@ function processAttackAction(attackerNationId, defenderNationId, opts = {}) {
 
   addEventLog(msg, isPlayerInvolved ? 'danger' : 'info');
 
+  // Трекинг побед / отражённых вторжений (для достижений)
+  const winnerNation = GAME_STATE.nations?.[result.winner];
+  if (winnerNation) {
+    winnerNation._battles_won = (winnerNation._battles_won ?? 0) + 1;
+  }
+  // Отражённое вторжение: игрок — защитник и выиграл
+  if (defenderNationId === GAME_STATE.player_nation && result.winner === defenderNationId) {
+    const pn = GAME_STATE.nations?.[GAME_STATE.player_nation];
+    if (pn) pn._invasions_repelled = (pn._invasions_repelled ?? 0) + 1;
+  }
+  // Регионы gained this reign
+  if (result.capturedRegionId && result.winner !== defenderNationId) {
+    const winNat = GAME_STATE.nations?.[result.winner];
+    if (winNat) winNat._regions_gained_this_reign = (winNat._regions_gained_this_reign ?? 0) + 1;
+  }
+
   if (defenderNationId === GAME_STATE.player_nation && result.capturedRegionId) {
     const rName = MAP_REGIONS?.[result.capturedRegionId]?.name ?? result.capturedRegionId;
     addEventLog(`Потерян регион ${rName}! Укрепите оборону.`, 'danger');

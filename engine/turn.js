@@ -63,6 +63,9 @@ async function processTurn() {
     // Инициализируем поля у всех наций перед обработкой
     for (const nation of Object.values(GAME_STATE.nations ?? {})) {
       _ensureNationDefaults(nation);
+      // Сброс per-turn флагов для системы клятв
+      nation._wars_declared_this_turn  = 0;
+      nation._loans_taken_this_turn    = 0;
     }
 
     const date = GAME_STATE.date;

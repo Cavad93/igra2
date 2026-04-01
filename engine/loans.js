@@ -176,6 +176,10 @@ function takeLoan(nationId, amount, term = LOAN_DEFAULT_TERM) {
   GAME_STATE.loans.push(loan);
   nation.economy.treasury = (nation.economy.treasury ?? 0) + amount;
 
+  // Трекинг для достижений
+  nation._total_loans_taken    = (nation._total_loans_taken ?? 0) + amount;
+  nation._loans_taken_this_turn = (nation._loans_taken_this_turn ?? 0) + 1;
+
   if (typeof addEventLog === 'function') {
     const rateStr = (annualRate * 100).toFixed(1);
     addEventLog(

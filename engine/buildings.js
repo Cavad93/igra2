@@ -508,6 +508,15 @@ function _completeConstruction(entry, region, regionId) {
       addEventLog(`🏗 ${bDef.icon || ''} ${bDef.name} завершено в ${rName}!`, 'good');
     }
   }
+
+  // Трекинг для достижений
+  const ownerNationId = region.owner ?? region.nation_id;
+  if (ownerNationId) {
+    const ownerNation = GAME_STATE.nations?.[ownerNationId];
+    if (ownerNation) {
+      ownerNation._buildings_built = (ownerNation._buildings_built ?? 0) + 1;
+    }
+  }
 }
 
 // ──────────────────────────────────────────────────────────────

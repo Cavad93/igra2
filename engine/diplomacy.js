@@ -1160,6 +1160,18 @@ function declareWar(attackerNationId, targetNationId) {
     addEventLog(`⚔️ ${aN} объявляет войну ${bN}!${warn}`, 'danger');
   }
 
+  // Трекинг статистики войн (для системы достижений и клятв)
+  if (natA) {
+    natA._wars_declared           = (natA._wars_declared ?? 0) + 1;
+    natA._wars_declared_this_turn = (natA._wars_declared_this_turn ?? 0) + 1;
+    natA._wars_total              = (natA._wars_total ?? 0) + 1;
+    natA._last_war_turn           = GAME_STATE.turn ?? 0;
+  }
+  if (natB) {
+    natB._wars_total    = (natB._wars_total ?? 0) + 1;
+    natB._last_war_turn = GAME_STATE.turn ?? 0;
+  }
+
   // Немедленная мобилизация AI-нации(-й) в ответ на объявление войны.
   // Не ждём следующего хода — атакованная страна начинает набирать армию сейчас.
   const playerNation = GAME_STATE.player_nation;
