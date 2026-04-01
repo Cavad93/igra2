@@ -774,8 +774,17 @@ function _ouStep(x, mu) {
 
 function _tickOU(nationId, nation) {
   const mu = _ouNaturalMu(nation);
-  // Если Super-OU уже инициализировал _ou с массивами — не перезаписывать скалярами
-  if (nation._ou && Array.isArray(nation._ou.economy)) return nation._ou;
+  // Если Super-OU уже инициализировал _ou с массивами — не изменять их скалярами.
+  // Возвращаем отдельный скалярный снимок для fallback-скоринга.
+  if (nation._ou && Array.isArray(nation._ou.economy)) {
+    return {
+      aggression:    Math.max(-1, Math.min(1, mu.aggression    + (Math.random() - 0.5) * _OU_SIGMA)),
+      expansion:     Math.max(-1, Math.min(1, mu.expansion     + (Math.random() - 0.5) * _OU_SIGMA)),
+      diplomacy:     Math.max(-1, Math.min(1, mu.diplomacy     + (Math.random() - 0.5) * _OU_SIGMA)),
+      economy_focus: Math.max(-1, Math.min(1, mu.economy_focus + (Math.random() - 0.5) * _OU_SIGMA)),
+      caution:       Math.max(-1, Math.min(1, mu.caution       + (Math.random() - 0.5) * _OU_SIGMA)),
+    };
+  }
   if (!nation._ou) {
     nation._ou = {
       aggression:    mu.aggression    + (Math.random() - 0.5) * 0.2,
