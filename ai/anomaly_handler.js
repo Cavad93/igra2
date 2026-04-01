@@ -108,7 +108,9 @@ function _throttleCheck(nationId, currentTick) {
  */
 function _buildAnomalyPrompt(nation, ouState, anomalyResult) {
   const nationName = nation.name || nation.id || 'Неизвестная держава';
-  const cats = anomalyResult.categories || {};
+  const catsArr = Array.isArray(anomalyResult.categories) ? anomalyResult.categories : [];
+  const cats = {};
+  for (const c of catsArr) cats[c.label] = c.count;
   const tick = ouState.tick || 0;
 
   // Исторический год (игра начинается с 300 до н.э., 12 тиков = год)

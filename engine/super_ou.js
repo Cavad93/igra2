@@ -2482,7 +2482,7 @@ function tick(gameState, nationId) {
   // If _force_anomaly is set (e.g., ruler died), override score to critical level
   const anomaly = calculateAnomalyScore(nation, ouState);
   if (ouState._force_anomaly) {
-    anomaly.total = Math.max(anomaly.total, 95);
+    anomaly.total = Math.max(anomaly.total, 0.95);
     anomaly.isAnomaly = true;
     anomaly._forced_reason = ouState._anomaly_reason ?? 'forced';
     ouState._force_anomaly  = false;
