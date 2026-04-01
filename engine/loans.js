@@ -204,13 +204,21 @@ function processLoanPayments(nationId) {
   if (active.length === 0) return;
 
   for (const loan of active) {
-    // Реальный платёж: principal component + interest component
-    const payment = Math.min(loan.monthly_payment, loan.remaining);
-    loan.remaining   = Math.max(0, loan.remaining - payment);
-    loan.turns_paid += 1;
+    // Правильная аннуитетная амортизация:
+    //   1. Начисляем проценты на остаток основного долга
+    //   2. Из платежа вычитаем проценты → получаем часть, идущую на погашение долга
+    //   3. Уменьшаем remaining только на основную часть
+    // Без этого remaining убывает быстрее срока и нация фактически платит 0% годовых.
+    const r             = loan.interest_rate / 12;  // месячная ставка
+    const interest      = loan.remaining * r;
+    const payment       = Math.min(loan.monthly_payment, loan.remaining + interest);
+    const principalPaid = Math.max(0, payment - interest);
+    loan.remaining      = Math.max(0, loan.remaining - principalPaid);
+    loan.turns_paid    += 1;
     nation.economy.treasury = (nation.economy.treasury ?? 0) - payment;
 
-    if (loan.remaining === 0) {
+    if (loan.remaining < 0.01) {
+      loan.remaining = 0;
       if (typeof addEventLog === 'function') {
         addEventLog(`✅ Заём погашен! (взят на ходу ${loan.taken_turn})`, 'economy');
       }
