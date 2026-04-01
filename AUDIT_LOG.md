@@ -138,3 +138,43 @@
 **Полный прогон:** все предыдущие тесты (eco×34, mil×55, dip×60) — 0 регрессий.
 
 **Следующий в очереди:** Гибридный ИИ
+
+---
+
+## Итерация 5
+
+### Модуль: Гибридный ИИ
+**Статус:** Найдено и исправлено 2 ошибки
+
+**Проверенные файлы:**
+- `engine/super_ou.js` — OU-движок нации, tick(), decideActions, calculateAnomalyScore
+- `ai/strategic_llm.js` — стратегическое планирование (LLM + fallback)
+- `ai/anomaly_handler.js` — обработчик аномалий через Groq
+- `ai/utility_ai.js` — тактический ИИ командующих (без ошибок)
+
+**Обнаруженные и исправленные баги:**
+
+**БАГ 1: `engine/super_ou.js` — tick(), строка 2485: `Math.max(anomaly.total, 95)`**
+`calculateAnomalyScore` нормализует `total` в диапазон [0,1]. Однако при взведённом флаге `_force_anomaly` (например, при гибели правителя) значение форсировалось в `95` вместо `0.95`. В результате поле `anomaly.total` выходило за [0,1], а промпт Groq содержал `9500.0%` вместо `95.0%`.
+**Исправление:** `Math.max(anomaly.total, 95)` → `Math.max(anomaly.total, 0.95)`.
+
+**БАГ 2: `ai/anomaly_handler.js` — `_buildAnomalyPrompt`, строка 111**
+`calculateAnomalyScore` возвращает `categories` как **массив** объектов `[{score, count, label: 'outliers'}, ...]`. Но `_buildAnomalyPrompt` читал его как **словарь**: `cats.outliers`, `cats.rapid_change` и т.д. Все свойства давали `undefined > 0 = false` — секция категорий промпта Groq всегда выводила `"(нет подробностей)"`.
+**Исправление:** добавлено преобразование массива в словарь через `c.label` перед передачей в `_formatCategories`.
+
+**Взаимодействия:**
+- **Гибридный ИИ → Экономика:** `decideActions` корректно считывает `food_production`/`food_consumption` из OU и повышает вероятность `buy_food` при дефиците. Проверено.
+- **Гибридный ИИ → Военная система:** `decideActions` читает `army_size`/`troop_morale` — score `mobilize` растёт при сильной армии. Проверено.
+- **Гибридный ИИ → Дипломатия:** низкий `alliance_strength` поднимает score `seek_alliance`. Проверено.
+- **StrategicLLM → OU:** `executePlan` применяет `ou_overrides`, сдвигая `mu` переменных OU в активной фазе плана. `forbidden_actions` фазы пробрасываются в `ou.forbidden_actions`. Проверено.
+- **Гибридный ИИ → Правительство:** `_updateConquestFatigue` при `fatigue > 0.7` толкает цель `CONSOLIDATION` в `goals_stack`. Проверено.
+- **Память обид → OU theta:** `_applyBetrayalMemorySlowdown` снижает `theta` дипломатических переменных при накоплении обид. Проверено.
+
+**Тесты:**
+- Unit:        `tests/audit/ai_unit_test.cjs` (28 тестов — все прошли)
+- Integration: `tests/audit/ai_integration_test.cjs` (12 тестов — все прошли)
+
+**Полный прогон:** eco×34, mil×55, dip×60, gov×53 — 0 регрессий.
+
+**Следующий в очереди:** Данные и карта
+
