@@ -36,9 +36,12 @@ function _ensureNationDefaults(nation) {
   if (nation.government.stability == null)  nation.government.stability  = 50;
   if (!nation.regions)                    nation.regions    = [];
   if (!nation.relations)                  nation.relations  = {};
-  // SuperOU — инициализировать вектор состояния при первом вызове
+  // SuperOU — инициализировать вектор состояния при первом вызове.
+  // Пропускаем stub-нации (0 регионов, 0 населения) — им не нужен OU.
   if (!nation._ou && typeof window !== 'undefined' && window.SuperOU) {
-    try { window.SuperOU.initNation(nation); } catch (e) { console.warn('[super_ou] initNation:', e); }
+    if (nation.regions?.length || nation.population?.total) {
+      try { window.SuperOU.initNation(nation); } catch (e) { console.warn('[super_ou] initNation:', e); }
+    }
   }
 }
 
@@ -896,6 +899,9 @@ const _SUPER_OU_ACTION_MAP = {
 function applyFallbackDecision(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
+  // Stub nations (no regions, no population) have no meaningful AI to run.
+  // Skip to avoid 50KB _ou init and 660ms total SuperOU processing for ~634 stubs.
+  if (!nation.regions?.length && !nation.population?.total) return;
 
   // ── SuperOU tick (полный 400-переменный вектор состояния) ──────────────
   let _superOuResult = null;
@@ -1770,6 +1776,22 @@ function _buildSavePayload() {
 
   // Обрезаем лог событий до 50 записей
   if (base.events_log?.length > 50) base.events_log = base.events_log.slice(0, 50);
+
+  // Исключаем _ou и _personalityMatrix у stub-наций (0 регионов, 0 населения).
+  // Они не нужны для сохра��ения — пересчитываются в initNation при необходимости.
+  // Создаём мелкие заглушки без мутации живого GAME_STATE. Экономия ~30MB.
+  if (base.nations) {
+    const nationsClean = Object.create(null);
+    for (const [nId, n] of Object.entries(base.nations)) {
+      if (!n.regions?.length && !n.population?.total && (n._ou || n._personalityMatrix)) {
+        const { _ou, _personalityMatrix, ...stripped } = n; // eslint-disable-line no-unused-vars
+        nationsClean[nId] = stripped;
+      } else {
+        nationsClean[nId] = n;
+      }
+    }
+    base.nations = nationsClean;
+  }
 
   return { ...base, _senate: senateData };
 }
