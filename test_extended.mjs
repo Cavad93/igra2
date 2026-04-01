@@ -308,16 +308,16 @@ if (warTest.warCreated) {
 
   const armyCheck = await page.evaluate((target) => {
     const nation = GAME_STATE.nations[target];
-    const armies = GAME_STATE.armies?.filter(a => a.nation_id === target) || [];
-    const hasArmy = armies.length > 0 || (nation?.military?.army_size > 0);
+    const armies = GAME_STATE.armies?.filter(a => a.nation === target) || [];
+    const hasArmy = armies.length > 0 || ((nation?.military?.infantry ?? 0) > 0);
     return {
       armyCount: armies.length,
-      armySize: nation?.military?.army_size,
+      infantry: nation?.military?.infantry,
       hasArmy,
     };
   }, warTest.target);
 
-  console.log(`  Армии врага: ${armyCheck.armyCount} юнитов, размер армии: ${armyCheck.armySize}`);
+  console.log(`  Армии врага: ${armyCheck.armyCount} юнитов, пехота: ${armyCheck.infantry}`);
   console.log(`  У врага есть армия: ${armyCheck.hasArmy ? '✅' : '❌'}`);
   results.warTest.armyCheck = armyCheck;
 }
@@ -333,7 +333,7 @@ const ouTest = await page.evaluate(() => {
     const ou = nation?._ou;
     if (!ou) return { error: '_ou not found on player nation' };
 
-    const categories = ['economy', 'military', 'diplomacy', 'internal', 'technology'];
+    const categories = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
     const results = {};
     for (const cat of categories) {
       const val = ou[cat];
