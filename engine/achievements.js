@@ -561,12 +561,13 @@ function calcGrandeur(nationId) {
   const eco = n.economy   ?? {};
   const gov = n.government ?? {};
 
-  const territory  = Math.min(200, (n.regions?.length ?? 0) * 10);
-  const wealth     = Math.min(150, (eco.treasury ?? 0) / 1000);
-  const army       = Math.min(100, ((mil.infantry ?? 0) + (mil.cavalry ?? 0) * 3) / 100);
-  const happiness  = Math.min(100, n.population?.happiness ?? 0);
-  const trade      = Math.min(150, (eco.income_per_turn ?? 0) / 300);
-  const stability  = Math.min(100, gov.stability ?? 0);
+  const _safe = v => (typeof v === 'number' && isFinite(v) ? v : 0);
+  const territory  = Math.min(200, _safe(n.regions?.length ?? 0) * 10);
+  const wealth     = Math.min(150, _safe(eco.treasury ?? 0) / 1000);
+  const army       = Math.min(100, (_safe(mil.infantry ?? 0) + _safe(mil.cavalry ?? 0) * 3) / 100);
+  const happiness  = Math.min(100, _safe(n.population?.happiness ?? 0));
+  const trade      = Math.min(150, _safe(eco.income_per_turn ?? 0) / 300);
+  const stability  = Math.min(100, _safe(gov.stability ?? 0));
 
   const atWar = (mil.at_war_with?.length ?? 0) > 0;
   const allianceCount = atWar ? 0 : (GAME_STATE.diplomacy?.treaties ?? []).filter(
@@ -578,7 +579,8 @@ function calcGrandeur(nationId) {
 
   const legacy = Math.min(100, getAchievementCount(nationId) * 10);
 
-  return Math.round(territory + wealth + army + happiness + trade + stability + diplomacy + legacy);
+  const total = territory + wealth + army + happiness + trade + stability + diplomacy + legacy;
+  return Math.max(0, Math.min(1000, Math.round(isFinite(total) ? total : 0)));
 }
 
 /**

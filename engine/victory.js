@@ -138,7 +138,14 @@ function generateRulerLegacy(nationId, reason) {
  * @returns {string}
  */
 function _buildLegacyText(data) {
-  const { ruler_name, turns_ruled, grandeur, achievements, wars, treasury, reason } = data;
+  if (!data) return '';
+  const ruler_name  = data.ruler_name  ?? 'Правитель';
+  const turns_ruled = data.turns_ruled ?? 0;
+  const grandeur    = data.grandeur    ?? 0;
+  const achievements = Array.isArray(data.achievements) ? data.achievements : [];
+  const wars        = data.wars        ?? 0;
+  const treasury    = data.treasury    ?? 0;
+  const reason      = data.reason      ?? 'ruler_death';
 
   let text = '';
 
