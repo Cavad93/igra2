@@ -383,6 +383,12 @@ function processDiplomacyTick(nationId) {
   if (!GAME_STATE.diplomacy) return;
   const turn = GAME_STATE.turn || 1;
 
+  // Сбрасываем накопленные за предыдущий ход временные бонусы
+  // (они пересчитываются свежо в цикле ниже)
+  const _nation = GAME_STATE.nations[nationId];
+  if (_nation?.economy)    _nation.economy._trade_treaty_bonus      = 0;
+  if (_nation?.population) _nation.population._diplomacy_legitimacy = 0;
+
   for (const treaty of GAME_STATE.diplomacy.treaties) {
     if (treaty.status !== 'active') continue;
     if (!treaty.parties.includes(nationId)) continue;
@@ -421,8 +427,6 @@ function processDiplomacyTick(nationId) {
     }
   }
 
-  // Чистим временные бонусы перед следующим ходом
-  // (пересчитываются свежо каждый ход выше)
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -621,10 +625,14 @@ function _calcThreatBalance(natA, natB) {
   // Логарифмическое соотношение мощи (0 = равные; +2 = B в 4× сильнее A)
   const powerRatio = Math.log2(powerB / powerA);
 
-  // Географическая близость (общие регионы = граница)
-  const regA = new Set(natA.regions || []);
+  // Географическая близость: нации граничат, если любой регион A смежен с регионом B
+  // (connections хранятся в MAP_REGIONS; если не определён — считаем несмежными)
   const regB = new Set(natB.regions || []);
-  const hasBorder = [...regA].some(r => regB.has(r));
+  const _mapRef = typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS : null;
+  const hasBorder = !!_mapRef && (natA.regions || []).some(rId => {
+    const conn = _mapRef[rId]?.connections ?? [];
+    return conn.some(nb => regB.has(nb));
+  });
   const proximity = hasBorder ? 1.0 : 0.35;
 
   // Наступательный потенциал = доля армии от населения
@@ -1291,15 +1299,16 @@ function _recordBetrayalDirect(nationId) {
 }
 
 function _areNeighbors(nationA, nationB) {
-  const regions = Object.values(GAME_STATE.regions ?? {});
-  const regA = new Set(regions.filter(r => r.nation === nationA).map(r => r.id));
-  const regB = new Set(regions.filter(r => r.nation === nationB).map(r => r.id));
-  for (const r of regions) {
-    if (regA.has(r.id)) {
-      for (const c of (r.connections ?? [])) {
-        if (regB.has(c)) return true;
-      }
-    }
+  const natA = GAME_STATE.nations?.[nationA];
+  const natB = GAME_STATE.nations?.[nationB];
+  if (!natA || !natB) return false;
+  const regB = new Set(natB.regions || []);
+  // connections хранятся в MAP_REGIONS, не в GAME_STATE.regions
+  const _mapRef = typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS : null;
+  if (!_mapRef) return false;
+  for (const rId of (natA.regions || [])) {
+    const conn = _mapRef[rId]?.connections ?? [];
+    if (conn.some(nb => regB.has(nb))) return true;
   }
   return false;
 }
