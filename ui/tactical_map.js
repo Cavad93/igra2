@@ -3,7 +3,13 @@
 // Этап 2: renderGrid + инициализация Canvas
 // Этап 4: renderUnit + redrawAll
 // Этап 5: сетка иконок солдат + полоски силы/морали
+// Этап 6: управление мышью — выбор и перемещение юнитов
 // ══════════════════════════════════════════════════════
+
+// ── Этап 6: глобальные ссылки ────────────────────────
+let _battleState = null;
+let _canvas      = null;
+let _ctx         = null;
 
 const UNIT_MIN_SZ = 26;
 const UNIT_MAX_SZ = 52;
@@ -180,6 +186,107 @@ function redrawAll(ctx, battleState) {
   for (const u of battleState.enemyUnits)  renderUnit(ctx, u, battleState);
 }
 
+// ── Этап 6: логические функции ───────────────────────
+
+function findUnitAt(gridX, gridY, bs) {
+  return [...bs.playerUnits, ...bs.enemyUnits]
+    .find(u => u.gridX === gridX && u.gridY === gridY && u.strength > 0) ?? null;
+}
+
+function selectUnit(unit, bs) {
+  [...bs.playerUnits, ...bs.enemyUnits].forEach(u => u.selected = false);
+  if (unit) { unit.selected = true; bs.selectedUnitId = unit.id; }
+  else       { bs.selectedUnitId = null; }
+  updateUnitPanel(unit, bs);
+}
+
+function getSelectedUnit(bs) {
+  return [...bs.playerUnits, ...bs.enemyUnits]
+    .find(u => u.id === bs.selectedUnitId) ?? null;
+}
+
+function isCellFree(gridX, gridY, bs) {
+  return !findUnitAt(gridX, gridY, bs);
+}
+
+function addLog(bs, message) {
+  bs.log.unshift({ text: message, turn: bs.turn });
+  if (bs.log.length > 20) bs.log.pop();
+  const el = document.getElementById('tactical-log');
+  if (el) el.innerHTML = bs.log.slice(0, 6)
+    .map(e => `<div class="tac-log-entry">${e.text}</div>`).join('');
+}
+
+// ── Этап 6: обработчики мыши ─────────────────────────
+
+function onTacticalClick(e) {
+  if (!_battleState || !_canvas) return;
+  const rect  = _canvas.getBoundingClientRect();
+  const gridX = Math.floor((e.clientX - rect.left)  / CELL_SIZE);
+  const gridY = Math.floor((e.clientY - rect.top)   / CELL_SIZE);
+  if (gridX < 0 || gridX >= TACTICAL_GRID_COLS) return;
+  if (gridY < 0 || gridY >= TACTICAL_GRID_ROWS) return;
+
+  const clicked  = findUnitAt(gridX, gridY, _battleState);
+  const selected = getSelectedUnit(_battleState);
+
+  if (!selected) {
+    // Выбрать свой юнит
+    if (clicked?.side === 'player') selectUnit(clicked, _battleState);
+  } else if (clicked?.side === 'player') {
+    // Переключить выбор на другой свой юнит
+    selectUnit(clicked, _battleState);
+  } else if (!clicked) {
+    // Переместить если в радиусе moveSpeed
+    const dist = Math.abs(gridX - selected.gridX) + Math.abs(gridY - selected.gridY);
+    if (dist <= selected.moveSpeed && isCellFree(gridX, gridY, _battleState)) {
+      selected.gridX = gridX;
+      selected.gridY = gridY;
+      addLog(_battleState, `Юнит перемещён на (${gridX},${gridY})`);
+    }
+  } else if (clicked?.side === 'enemy') {
+    // Атака — будет реализована в Этапе 8
+    addLog(_battleState, `Атака врага запланирована (Этап 8)`);
+  }
+
+  redrawAll(_ctx, _battleState);
+}
+
+function onTacticalHover(e) {
+  if (!_battleState || !_canvas) return;
+  const rect  = _canvas.getBoundingClientRect();
+  const gridX = Math.floor((e.clientX - rect.left) / CELL_SIZE);
+  const gridY = Math.floor((e.clientY - rect.top)  / CELL_SIZE);
+  const unit  = findUnitAt(gridX, gridY, _battleState);
+  const key   = `${gridX},${gridY}`;
+  const isElev = _battleState.elevatedCells.has(key);
+  const tip   = document.getElementById('tac-tooltip');
+  if (!tip) return;
+
+  if (unit) {
+    tip.style.display = 'block';
+    tip.style.left    = (e.clientX + 12) + 'px';
+    tip.style.top     = (e.clientY + 12) + 'px';
+    tip.textContent   =
+      `${unit.type} | ${unit.strength.toLocaleString()} чел.\n` +
+      `Мораль: ${unit.morale} | Усталость: ${unit.fatigue}\n` +
+      (unit.type === 'archers' ? `Боеприпасы: ${unit.ammo}/30\n` : '') +
+      (isElev ? '⛰ Возвышенность: +15% защита' : '');
+  } else if (isElev) {
+    tip.style.display = 'block';
+    tip.style.left    = (e.clientX + 12) + 'px';
+    tip.style.top     = (e.clientY + 12) + 'px';
+    tip.textContent   = '⛰ Возвышенность: +15% защита, +1 дальность лучникам';
+  } else {
+    tip.style.display = 'none';
+  }
+}
+
+// ── Этап 7 (заглушка) — панель юнита ─────────────────
+function updateUnitPanel(unit, bs) {
+  /* TODO: этап 7 */
+}
+
 function openTacticalMap(atkArmy, defArmy, region) {
   const overlay = document.getElementById('tactical-overlay');
   const canvas  = document.getElementById('tactical-canvas');
@@ -188,8 +295,20 @@ function openTacticalMap(atkArmy, defArmy, region) {
   canvas.height = TACTICAL_GRID_ROWS * CELL_SIZE;
   const ctx = canvas.getContext('2d');
 
-  const bs = initTacticalBattle(atkArmy || {}, defArmy || {}, region || {});
-  redrawAll(ctx, bs);
+  // ── Этап 6: сохранить глобальные ссылки ─────────────
+  // Убрать старые слушатели если канвас переиспользуется
+  if (_canvas) {
+    _canvas.removeEventListener('click',     onTacticalClick);
+    _canvas.removeEventListener('mousemove', onTacticalHover);
+  }
+  _canvas      = canvas;
+  _ctx         = ctx;
+  _battleState = initTacticalBattle(atkArmy || {}, defArmy || {}, region || {});
+
+  _canvas.addEventListener('click',     onTacticalClick);
+  _canvas.addEventListener('mousemove', onTacticalHover);
+
+  redrawAll(_ctx, _battleState);
 
   document.getElementById('tac-terrain').textContent =
     region?.name ?? 'Неизвестная местность';
