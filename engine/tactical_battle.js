@@ -431,6 +431,41 @@ function checkStandardCapture(bs) {
   }
 }
 
+// ── Этап 17: отступление с расчётом выживших ─────────
+
+function calcRetreatSurvival(bs) {
+  const enemyActive = bs.enemyUnits.filter(u => u.strength > 0 && !u.isRouting);
+
+  // Проверка направлений окружения
+  const hasEnemyBehind      = enemyActive.some(e => e.gridX < RESERVE_ZONE_COLS + 2);
+  const hasEnemyTopFlank    = enemyActive.some(e => e.gridY <= 2);
+  const hasEnemyBottomFlank = enemyActive.some(e => e.gridY >= TACTICAL_GRID_ROWS - 3);
+  const flankedBothSides    = hasEnemyTopFlank && hasEnemyBottomFlank;
+
+  const routingRatio = bs.playerUnits.filter(u => u.isRouting).length /
+                       Math.max(1, bs.playerUnits.length);
+
+  let base = 0.68;
+  if (hasEnemyBehind && flankedBothSides) base = 0.12; // полное окружение
+  else if (hasEnemyBehind || flankedBothSides) base = 0.35; // частичное окружение
+  else if (routingRatio > 0.5) base = 0.50;
+
+  const hasCavalry = bs.playerUnits.some(u => u.type === 'cavalry' && u.strength > 0);
+  const cavBonus   = hasCavalry ? 0.10 : 0;
+
+  return Math.min(0.80, base + cavBonus);
+}
+
+function executeRetreat(bs) {
+  const pct = calcRetreatSurvival(bs);
+  for (const u of bs.playerUnits) {
+    u.strength = Math.floor(u.strength * pct);
+  }
+  bs.phase = 'ended';
+  addLog(bs, `🏃 Армия отступила. Спаслось ~${Math.round(pct * 100)}% войск.`);
+  endTacticalBattle(bs, 'player_retreat');
+}
+
 function tacticalTick(bs) {
   if (bs.phase === 'ended') return;
   bs.turn++;

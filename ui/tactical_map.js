@@ -513,6 +513,39 @@ function _withdrawReserve(unitId) {
   }
 }
 
+// ── Этап 17: диалог отступления ──────────────────────
+
+function showRetreatConfirm(bs) {
+  const pct           = calcRetreatSurvival(bs);
+  const totalStrength = bs.playerUnits.reduce((s, u) => s + u.strength, 0);
+  const survivors     = Math.floor(totalStrength * pct);
+
+  const msg = document.createElement('div');
+  msg.id = 'retreat-confirm';
+  msg.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.7);
+    z-index:9500;display:flex;align-items:center;justify-content:center;`;
+  msg.innerHTML = `
+    <div style="background:#141414;border:1px solid #555;border-radius:4px;
+                padding:24px 32px;text-align:center;color:#ddd;min-width:280px;">
+      <h3 style="margin:0 0 12px;color:#ee8888">Отступление</h3>
+      <p>Спасётся примерно <b>${survivors.toLocaleString()}</b> солдат (${Math.round(pct * 100)}%)</p>
+      <p style="color:#aaa;font-size:12px">
+        ${pct < 0.2 ? '⚠️ Полное окружение' :
+          pct < 0.4 ? '⚠️ Частичное окружение' : ''}
+      </p>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px">
+        <button onclick="document.getElementById('retreat-confirm').remove();
+                         executeRetreat(_battleState)"
+          style="padding:8px 20px;background:#3a1a1a;border:1px solid #aa4444;
+                 color:#ee8888;border-radius:3px;cursor:pointer">Отступить</button>
+        <button onclick="document.getElementById('retreat-confirm').remove()"
+          style="padding:8px 20px;background:#1a1a1a;border:1px solid #444;
+                 color:#ccc;border-radius:3px;cursor:pointer">Продолжать бой</button>
+      </div>
+    </div>`;
+  document.body.appendChild(msg);
+}
+
 // ── Этап 8: завершение боя ────────────────────────────
 
 function endTacticalBattle(bs, outcome) {
@@ -551,6 +584,14 @@ function openTacticalMap(atkArmy, defArmy, region) {
   if (btnNext) {
     btnNext.onclick = () => {
       if (_battleState?.phase === 'battle') tacticalTick(_battleState);
+    };
+  }
+
+  // ── Этап 17: привязать кнопку отступления ────────────
+  const btnRetreat = document.getElementById('tac-btn-retreat');
+  if (btnRetreat) {
+    btnRetreat.onclick = () => {
+      if (_battleState?.phase === 'battle') showRetreatConfirm(_battleState);
     };
   }
 
