@@ -126,25 +126,49 @@ function renderUnit(ctx, unit, battleState) {
   // Подход 3: цвет и яркость
   const isPlayer  = unit.side === 'player';
   const strPct    = unit.strength / unit.maxStrength;
-  const fillColor = isPlayer ? '#1a4a9e' : '#8b1a1a';
   // Г2: используем палитру _P
   const borderColor = unit.isCommander     ? _P.cmdGold
                     : unit.strength > 5000 ? '#e8c840'
                     : unit.isRouting       ? _P.routeBorder
                     : isPlayer             ? _P.playerBorder
                     :                        _P.enemyBorder;
-  const R = 4; // радиус скругления углов
+  const R  = 4;                         // радиус скругления
+  const cx = px + sz / 2;
+  const cy = py + sz / 2;
 
   // ── Этап 12: мигание routing-юнитов ─────────────────
   if (unit.isRouting) {
     ctx.globalAlpha = (Math.floor(Date.now() / 400) % 2 === 0) ? 0.6 : 0.2;
   } else {
-    ctx.globalAlpha = unit.isReserve ? 0.50 : 0.45 + 0.55 * strPct;
+    ctx.globalAlpha = unit.isReserve ? 0.65 : 1.0;
   }
 
-  // Г2: скруглённые углы вместо fillRect
-  ctx.fillStyle = fillColor;
+  // Г3: радиальный градиент — источник света слева-сверху
+  const alpha = unit.isReserve ? 0.55 : (0.5 + 0.5 * strPct);
+  const grad  = ctx.createRadialGradient(
+    px + sz * 0.3, py + sz * 0.25, sz * 0.05,
+    cx, cy, sz * 0.75
+  );
+  if (isPlayer) {
+    grad.addColorStop(0,   `rgba(70,130,230,${alpha})`);
+    grad.addColorStop(0.5, `rgba(26,74,158,${alpha})`);
+    grad.addColorStop(1,   `rgba(8,22,55,${alpha})`);
+  } else {
+    grad.addColorStop(0,   `rgba(210,70,70,${alpha})`);
+    grad.addColorStop(0.5, `rgba(139,26,26,${alpha})`);
+    grad.addColorStop(1,   `rgba(40,8,8,${alpha})`);
+  }
   _rrect(ctx, px, py, sz, sz, R);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Г3: bevel-блик — тонкий градиент сверху-слева для объёмности
+  const bevel = ctx.createLinearGradient(px, py, px + sz * 0.5, py + sz * 0.5);
+  bevel.addColorStop(0,   'rgba(255,255,255,0.18)');
+  bevel.addColorStop(0.4, 'rgba(255,255,255,0.04)');
+  bevel.addColorStop(1,   'rgba(0,0,0,0)');
+  _rrect(ctx, px, py, sz, sz, R);
+  ctx.fillStyle = bevel;
   ctx.fill();
 
   ctx.globalAlpha = unit.isRouting
