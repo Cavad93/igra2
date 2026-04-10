@@ -8,10 +8,11 @@
 // Этап 8: endTacticalBattle + привязка кнопки "Следующий ход"
 // ══════════════════════════════════════════════════════
 
-// ── Этап 6: глобальные ссылки ────────────────────────
+// ── Глобальные ссылки ────────────────────────────────
 let _battleState = null;
 let _canvas      = null;
 let _ctx         = null;
+let _dpr         = 1;   // devicePixelRatio — для HiDPI/Retina
 
 const UNIT_MIN_SZ = 26;
 const UNIT_MAX_SZ = 52;
@@ -279,9 +280,11 @@ function addLog(bs, message) {
 function onTacticalClick(e) {
   if (!_battleState || !_canvas) return;
   const rect  = _canvas.getBoundingClientRect();
-  // Масштабирование: canvas может быть CSS-растянут относительно внутреннего размера
-  const scaleX = _canvas.width  / rect.width;
-  const scaleY = _canvas.height / rect.height;
+  // Г1: используем логический размер canvas (не физический canvas.width*dpr)
+  const logW  = TACTICAL_GRID_COLS * CELL_SIZE;
+  const logH  = TACTICAL_GRID_ROWS * CELL_SIZE;
+  const scaleX = logW / rect.width;
+  const scaleY = logH / rect.height;
   const gridX = Math.floor((e.clientX - rect.left) * scaleX / CELL_SIZE);
   const gridY = Math.floor((e.clientY - rect.top)  * scaleY / CELL_SIZE);
   if (gridX < 0 || gridX >= TACTICAL_GRID_COLS) return;
@@ -322,8 +325,11 @@ function onTacticalClick(e) {
 function onTacticalHover(e) {
   if (!_battleState || !_canvas) return;
   const rect  = _canvas.getBoundingClientRect();
-  const scaleX = _canvas.width  / rect.width;
-  const scaleY = _canvas.height / rect.height;
+  // Г1: логический масштаб, HiDPI-safe
+  const logW  = TACTICAL_GRID_COLS * CELL_SIZE;
+  const logH  = TACTICAL_GRID_ROWS * CELL_SIZE;
+  const scaleX = logW / rect.width;
+  const scaleY = logH / rect.height;
   const gridX = Math.floor((e.clientX - rect.left) * scaleX / CELL_SIZE);
   const gridY = Math.floor((e.clientY - rect.top)  * scaleY / CELL_SIZE);
   const unit  = findUnitAt(gridX, gridY, _battleState);
@@ -576,9 +582,17 @@ function openTacticalMap(atkArmy, defArmy, region) {
   const overlay = document.getElementById('tactical-overlay');
   const canvas  = document.getElementById('tactical-canvas');
   overlay.classList.add('visible');
-  canvas.width  = TACTICAL_GRID_COLS * CELL_SIZE;
-  canvas.height = TACTICAL_GRID_ROWS * CELL_SIZE;
+
+  // ── Г1: HiDPI / Retina — физический размер × dpr, логический через CSS ──
+  _dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
+  const logW = TACTICAL_GRID_COLS * CELL_SIZE;
+  const logH = TACTICAL_GRID_ROWS * CELL_SIZE;
+  canvas.width  = logW * _dpr;
+  canvas.height = logH * _dpr;
+  canvas.style.width  = logW + 'px';
+  canvas.style.height = logH + 'px';
   const ctx = canvas.getContext('2d');
+  ctx.scale(_dpr, _dpr);
 
   // ── Этап 6: сохранить глобальные ссылки ─────────────
   // Убрать старые слушатели если канвас переиспользуется
