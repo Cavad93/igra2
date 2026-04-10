@@ -31,6 +31,67 @@ const _P = {
   selBorder:    '#ffffff',
 };
 
+// ── Г4: иконки типов юнитов — чистый canvas, без emoji ──
+const _ICONS = {
+  infantry(ctx, cx, cy, sz) {
+    // Два скрещённых меча
+    const s = sz * 0.26;
+    ctx.strokeStyle = 'rgba(255,255,255,0.90)';
+    ctx.lineWidth   = Math.max(1.2, sz * 0.045);
+    ctx.lineCap     = 'round';
+    ctx.beginPath(); ctx.moveTo(cx - s, cy - s); ctx.lineTo(cx + s, cy + s); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + s, cy - s); ctx.lineTo(cx - s, cy + s); ctx.stroke();
+    // Гарды (крестовины)
+    ctx.lineWidth = Math.max(1, sz * 0.032);
+    const g = s * 0.5;
+    ctx.beginPath(); ctx.moveTo(cx - g, cy - g); ctx.lineTo(cx + g, cy - g); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - g, cy + g); ctx.lineTo(cx + g, cy + g); ctx.stroke();
+  },
+  cavalry(ctx, cx, cy, sz) {
+    // Силуэт лошади: тело-эллипс + голова + ноги
+    const s = sz * 0.20;
+    ctx.strokeStyle = 'rgba(255,255,255,0.90)';
+    ctx.lineWidth   = Math.max(1.2, sz * 0.04);
+    ctx.lineCap     = 'round';
+    // Тело
+    ctx.beginPath(); ctx.ellipse(cx, cy, s * 1.3, s * 0.7, -0.15, 0, Math.PI * 2); ctx.stroke();
+    // Голова
+    ctx.beginPath(); ctx.ellipse(cx + s * 1.2, cy - s * 0.5, s * 0.48, s * 0.38, 0.3, 0, Math.PI * 2); ctx.stroke();
+    // Ноги (4 штуки)
+    ctx.lineWidth = Math.max(1, sz * 0.028);
+    const legY = cy + s * 0.6;
+    for (const [lx, ang] of [[-0.75, -0.1], [-0.25, 0.1], [0.25, -0.1], [0.75, 0.1]]) {
+      ctx.beginPath();
+      ctx.moveTo(cx + lx * s, legY);
+      ctx.lineTo(cx + lx * s + ang * s, legY + s * 0.9);
+      ctx.stroke();
+    }
+  },
+  archers(ctx, cx, cy, sz) {
+    // Лук + стрела
+    const s = sz * 0.26;
+    ctx.strokeStyle = 'rgba(255,255,255,0.90)';
+    ctx.lineWidth   = Math.max(1.2, sz * 0.045);
+    ctx.lineCap     = 'round';
+    // Дуга лука
+    ctx.beginPath(); ctx.arc(cx - s * 0.25, cy, s, -Math.PI * 0.6, Math.PI * 0.6); ctx.stroke();
+    // Тетива
+    const sx = cx - s * 0.25 + Math.cos(Math.PI * 0.6) * s;
+    const sy1 = cy - Math.sin(Math.PI * 0.6) * s;
+    const sy2 = cy + Math.sin(Math.PI * 0.6) * s;
+    ctx.beginPath(); ctx.moveTo(sx, sy1); ctx.lineTo(sx, sy2); ctx.stroke();
+    // Стрела
+    ctx.lineWidth = Math.max(1, sz * 0.030);
+    ctx.beginPath(); ctx.moveTo(cx - s * 0.05, cy); ctx.lineTo(cx + s * 1.1, cy); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + s * 1.1, cy);
+    ctx.lineTo(cx + s * 0.82, cy - s * 0.22);
+    ctx.moveTo(cx + s * 1.1, cy);
+    ctx.lineTo(cx + s * 0.82, cy + s * 0.22);
+    ctx.stroke();
+  }
+};
+
 // ── Г2: скруглённый прямоугольник ────────────────────
 function _rrect(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -225,13 +286,11 @@ function renderUnit(ctx, unit, battleState) {
   _rrect(ctx, px, py - 6, sz * (unit.morale / 100),3, 1.5); ctx.fillStyle = _P.moraleBar; ctx.fill();
   ctx.globalAlpha = 1.0;
 
-  // Иконка типа в центре
-  const icon = { infantry: '⚔', cavalry: '🐴', archers: '🏹' }[unit.type] ?? '⚔';
-  ctx.globalAlpha = unit.isRouting ? 0.5 : 1.0;
-  ctx.font      = `bold ${Math.max(10, sz * 0.28 | 0)}px monospace`;
-  ctx.fillStyle = '#ffffff';
-  ctx.textAlign = 'center';
-  ctx.fillText(icon, px + sz / 2, py + sz / 2 + 5);
+  // Г4: иконка типа — чистый canvas (без emoji)
+  ctx.save();
+  ctx.globalAlpha = unit.isRouting ? 0.40 : 0.88;
+  (_ICONS[unit.type] ?? _ICONS.infantry)(ctx, cx, cy - sz * 0.04, sz);
+  ctx.restore();
 
   if (unit.isCommander) {
     ctx.font      = `${Math.max(10, sz * 0.28 | 0)}px monospace`;
