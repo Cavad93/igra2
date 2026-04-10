@@ -12,7 +12,8 @@
 let _battleState = null;
 let _canvas      = null;
 let _ctx         = null;
-let _dpr         = 1;   // devicePixelRatio — для HiDPI/Retina
+let _dpr         = 1;          // devicePixelRatio — для HiDPI/Retina
+let _bgOffscreen = null;       // Г6: offscreen-кэш фона (рисуется один раз)
 
 const UNIT_MIN_SZ = 26;
 const UNIT_MAX_SZ = 52;
@@ -178,6 +179,42 @@ function _rrect(ctx, x, y, w, h, r) {
   ctx.lineTo(x, y + r);
   ctx.quadraticCurveTo(x,     y,     x + r, y);
   ctx.closePath();
+}
+
+// ── Г6: offscreen-кэш фона ────────────────────────────
+function _getBgCanvas(battleState) {
+  if (_bgOffscreen) return _bgOffscreen;
+  const W   = TACTICAL_GRID_COLS * CELL_SIZE;
+  const H   = TACTICAL_GRID_ROWS * CELL_SIZE;
+  const off = document.createElement('canvas');
+  off.width  = W;
+  off.height = H;
+  renderGrid(off.getContext('2d'), battleState.terrain, battleState.elevatedCells);
+  _bgOffscreen = off;
+  return off;
+}
+
+// ── Г6: подсветка зоны движения выбранного юнита ─────
+function renderMovementRange(ctx, unit, battleState) {
+  if (!unit || !unit.selected || unit._movedThisTick) return;
+  const cavOnElev = unit.type === 'cavalry' &&
+    battleState.elevatedCells.has(`${unit.gridX},${unit.gridY}`);
+  const spd = cavOnElev ? Math.max(1, unit.moveSpeed - 1) : unit.moveSpeed;
+
+  ctx.fillStyle   = 'rgba(0,200,200,0.10)';
+  ctx.strokeStyle = 'rgba(0,200,200,0.35)';
+  ctx.lineWidth   = 0.5;
+  for (let gx = 0; gx < TACTICAL_GRID_COLS; gx++) {
+    for (let gy = 0; gy < TACTICAL_GRID_ROWS; gy++) {
+      const dist = Math.abs(gx - unit.gridX) + Math.abs(gy - unit.gridY);
+      if (dist > 0 && dist <= spd && !findUnitAt(gx, gy, battleState)) {
+        const cpx = gx * CELL_SIZE + 1;
+        const cpy = gy * CELL_SIZE + 1;
+        ctx.fillRect(cpx, cpy, CELL_SIZE - 2, CELL_SIZE - 2);
+        ctx.strokeRect(cpx, cpy, CELL_SIZE - 2, CELL_SIZE - 2);
+      }
+    }
+  }
 }
 
 function renderGrid(ctx, terrain, elevatedCells = new Set()) {
@@ -444,7 +481,11 @@ function drawStandards(ctx, bs) {
 }
 
 function redrawAll(ctx, battleState) {
-  renderGrid(ctx, battleState.terrain, battleState.elevatedCells);
+  // Г6: фон из кэша (не перерисовываем terrain каждый кадр)
+  ctx.drawImage(_getBgCanvas(battleState), 0, 0);
+  // Г6: подсветка зоны движения
+  const sel = getSelectedUnit(battleState);
+  if (sel) renderMovementRange(ctx, sel, battleState);
   for (const u of battleState.playerUnits) renderUnit(ctx, u, battleState);
   for (const u of battleState.enemyUnits)  renderUnit(ctx, u, battleState);
   drawFlankArrow(ctx, battleState);
@@ -777,6 +818,8 @@ function endTacticalBattle(bs, outcome) {
       canvas.removeEventListener('mousemove', onTacticalHover);
     }
   }
+  // Г6: сбросить кэш фона
+  _bgOffscreen = null;
   const result = finalizeTacticalBattle(bs, outcome);
   if (typeof showBattleResult === 'function') showBattleResult(result);
   // Этап 20: callback для армейской интеграции (синхронизация потерь, отступление, захват)
@@ -789,6 +832,9 @@ function openTacticalMap(atkArmy, defArmy, region) {
   const overlay = document.getElementById('tactical-overlay');
   const canvas  = document.getElementById('tactical-canvas');
   overlay.classList.add('visible');
+
+  // Г6: сбросить кэш фона при новом бою
+  _bgOffscreen = null;
 
   // ── Г1: HiDPI / Retina — физический размер × dpr, логический через CSS ──
   _dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
