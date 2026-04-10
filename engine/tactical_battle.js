@@ -466,6 +466,69 @@ function executeRetreat(bs) {
   endTacticalBattle(bs, 'player_retreat');
 }
 
+// ── Этап 18: многоуровневый ИИ противника ────────────
+
+function moveTowards(unit, tx, ty, bs) {
+  const dx = Math.sign(tx - unit.gridX);
+  const dy = Math.sign(ty - unit.gridY);
+  // Пробуем горизонтальное движение, потом вертикальное
+  const options = [];
+  if (dx !== 0) options.push({ x: unit.gridX + dx, y: unit.gridY });
+  if (dy !== 0) options.push({ x: unit.gridX,      y: unit.gridY + dy });
+  for (const opt of options) {
+    if (opt.x >= 0 && opt.x < TACTICAL_GRID_COLS &&
+        opt.y >= 0 && opt.y < TACTICAL_GRID_ROWS &&
+        !findUnitAt(opt.x, opt.y, bs)) {
+      unit.gridX = opt.x; unit.gridY = opt.y;
+      return;
+    }
+  }
+}
+
+function runEnemyAI(bs) {
+  const enemyAlive  = bs.enemyUnits.filter(u => u.strength > 0 && !u.isRouting);
+  const playerAlive = bs.playerUnits.filter(u => u.strength > 0 && !u.isRouting);
+  if (playerAlive.length === 0) return;
+
+  const enemyCmd   = enemyAlive.find(u => u.isCommander);
+  const ownHpRatio = enemyAlive.reduce((s, u) => s + u.strength, 0) /
+                     Math.max(1, bs.enemyUnits.reduce((s, u) => s + u.maxStrength, 0));
+
+  for (const eu of enemyAlive) {
+    if (eu.isReserve) continue;
+    eu._movedThisTick = false;
+
+    // TIER 1: Защита командира при низком HP
+    if (ownHpRatio < 0.40 && enemyCmd && eu.id !== enemyCmd.id) {
+      const distToCmd = Math.abs(eu.gridX - enemyCmd.gridX) + Math.abs(eu.gridY - enemyCmd.gridY);
+      if (distToCmd > 2) {
+        moveTowards(eu, enemyCmd.gridX, enemyCmd.gridY, bs);
+        eu._movedThisTick = true;
+        continue;
+      }
+    }
+
+    // TIER 2: Атаковать ближайшего слабого (низкая мораль)
+    const weakTarget = playerAlive
+      .filter(p => Math.abs(p.gridX - eu.gridX) + Math.abs(p.gridY - eu.gridY) <= eu.moveSpeed + 1)
+      .sort((a, b) => a.morale - b.morale)[0];
+
+    if (weakTarget) {
+      moveTowards(eu, weakTarget.gridX, weakTarget.gridY, bs);
+      eu._movedThisTick = true;
+      continue;
+    }
+
+    // TIER 3: Двигаться к ближайшему
+    const nearest = playerAlive.reduce((best, p) =>
+      (Math.abs(p.gridX - eu.gridX) + Math.abs(p.gridY - eu.gridY)) <
+      (Math.abs(best.gridX - eu.gridX) + Math.abs(best.gridY - eu.gridY)) ? p : best
+    );
+    moveTowards(eu, nearest.gridX, nearest.gridY, bs);
+    eu._movedThisTick = true;
+  }
+}
+
 function tacticalTick(bs) {
   if (bs.phase === 'ended') return;
   bs.turn++;
@@ -569,50 +632,8 @@ function tacticalTick(bs) {
     }
   }
 
-  // 2b. ИИ противника: движение с учётом стратегии захвата стандарта (Этап 16)
-  {
-    const enemyTotalStr  = bs.enemyUnits.reduce((s, u) => s + u.strength, 0);
-    const enemyMaxStr    = bs.enemyUnits.reduce((s, u) => s + u.maxStrength, 0);
-    const enemyHpRatio   = enemyMaxStr > 0 ? enemyTotalStr / enemyMaxStr : 1;
-
-    for (const eu of bs.enemyUnits) {
-      if (eu.isRouting || eu.strength === 0 || eu.isReserve) continue;
-      const alive = bs.playerUnits.filter(u => u.strength > 0);
-      if (alive.length === 0) break;
-
-      let targetX, targetY;
-
-      // Этап 16: ИИ-стратегия стандарта
-      if (enemyHpRatio < 0.40 && bs.enemyStandardPos) {
-        // Прикрывать командира: двигаться к позиции стандарта врага (нашего командира)
-        targetX = bs.enemyStandardPos.x;
-        targetY = bs.enemyStandardPos.y;
-      } else if (enemyHpRatio > 0.60 && bs.playerStandardPos) {
-        // Прорваться к стандарту игрока
-        targetX = bs.playerStandardPos.x;
-        targetY = bs.playerStandardPos.y;
-      } else {
-        // Обычное движение к ближайшему юниту игрока
-        const nearest = alive.reduce((best, u) =>
-          (Math.abs(u.gridX - eu.gridX) + Math.abs(u.gridY - eu.gridY)) <
-          (Math.abs(best.gridX - eu.gridX) + Math.abs(best.gridY - eu.gridY)) ? u : best
-        );
-        targetX = nearest.gridX;
-        targetY = nearest.gridY;
-      }
-
-      const dx = Math.sign(targetX - eu.gridX);
-      const dy = Math.sign(targetY - eu.gridY);
-      const nx = eu.gridX + (dx !== 0 ? dx : 0);
-      const ny = eu.gridY + (dx === 0 ? dy : 0);
-      if (nx >= 0 && nx < TACTICAL_GRID_COLS && ny >= 0 && ny < TACTICAL_GRID_ROWS) {
-        if (!findUnitAt(nx, ny, bs)) {
-          eu.gridX = nx; eu.gridY = ny;
-          eu._movedThisTick = true;
-        }
-      }
-    }
-  }
+  // 2b. Этап 18: многоуровневый ИИ противника
+  runEnemyAI(bs);
 
   // 2c. Этап 16: проверить захват стандарта после перемещений
   checkStandardCapture(bs);
