@@ -2,6 +2,7 @@
 // Тактическая карта боя — Canvas UI
 // Этап 2: renderGrid + инициализация Canvas
 // Этап 4: renderUnit + redrawAll
+// Этап 5: сетка иконок солдат + полоски силы/морали
 // ══════════════════════════════════════════════════════
 
 const UNIT_MIN_SZ = 26;
@@ -96,6 +97,54 @@ function renderUnit(ctx, unit, battleState) {
   if (unit.isReserve) ctx.setLineDash([4, 3]);
   ctx.strokeRect(px, py, sz, sz);
   ctx.setLineDash([]);
+
+  // ── Этап 5: сетка иконок солдат (Подход 1) ──────────
+  const DOT_SIZE = 3;
+  const DOT_MAX  = 25;
+  const dotCount = Math.min(DOT_MAX, Math.max(1, Math.round(unit.strength / UNIT_BASE_SIZE)));
+  const dotCols  = Math.ceil(Math.sqrt(dotCount));
+  const dotRows  = Math.ceil(dotCount / dotCols);
+  const gapX     = sz / (dotCols + 1);
+  const gapY     = (sz * 0.65) / (dotRows + 1);
+
+  ctx.fillStyle   = '#ffffff';
+  ctx.globalAlpha = unit.isRouting ? 0.2 : 0.80;
+  for (let r = 0; r < dotRows; r++) {
+    for (let c = 0; c < dotCols; c++) {
+      if (r * dotCols + c >= dotCount) break;
+      ctx.fillRect(
+        px + gapX * (c + 1) - DOT_SIZE / 2,
+        py + gapY * (r + 1) - DOT_SIZE / 2,
+        DOT_SIZE, DOT_SIZE
+      );
+    }
+  }
+
+  // Число солдат (у нижнего края квадрата)
+  ctx.globalAlpha = unit.isRouting ? 0.4 : 1.0;
+  ctx.font        = `${Math.max(8, sz * 0.16 | 0)}px monospace`;
+  ctx.fillStyle   = '#cccccc';
+  ctx.textAlign   = 'center';
+  const label = unit.strength >= 1000
+    ? (unit.strength / 1000).toFixed(1) + 'k'
+    : unit.strength.toString();
+  ctx.fillText(label, px + sz / 2, py + sz * 0.94);
+
+  // Подход 4: полоска силы (под квадратом)
+  const strPct2  = unit.strength / unit.maxStrength;
+  const barColor = strPct2 > 0.6 ? '#44dd44' : strPct2 > 0.3 ? '#ddaa00' : '#dd2222';
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle   = '#222222';
+  ctx.fillRect(px, py + sz + 3, sz, 4);
+  ctx.fillStyle   = barColor;
+  ctx.fillRect(px, py + sz + 3, sz * strPct2, 4);
+
+  // Полоска морали (над квадратом, синяя)
+  ctx.fillStyle   = '#222222';
+  ctx.fillRect(px, py - 6, sz, 3);
+  ctx.fillStyle   = '#4488ff';
+  ctx.fillRect(px, py - 6, sz * (unit.morale / 100), 3);
+  ctx.globalAlpha = 1.0;
 
   // Иконка типа в центре
   const icon = { infantry: '⚔', cavalry: '🐴', archers: '🏹' }[unit.type] ?? '⚔';
