@@ -4,6 +4,7 @@
 // Этап 4: renderUnit + redrawAll
 // Этап 5: сетка иконок солдат + полоски силы/морали
 // Этап 6: управление мышью — выбор и перемещение юнитов
+// Этап 7: панель выбранного юнита и кнопки формаций
 // ══════════════════════════════════════════════════════
 
 // ── Этап 6: глобальные ссылки ────────────────────────
@@ -282,9 +283,101 @@ function onTacticalHover(e) {
   }
 }
 
-// ── Этап 7 (заглушка) — панель юнита ─────────────────
+// ── Этап 7: панель выбранного юнита и кнопки формаций ─
+
+const FORMATION_LABELS = {
+  standard:  'Строй',
+  aggressive:'Атака',
+  defensive: 'Оборона',
+  flanking:  'Охват',
+  siege:     'Осада'
+};
+
 function updateUnitPanel(unit, bs) {
-  /* TODO: этап 7 */
+  const panel = document.getElementById('tactical-unit-panel');
+  if (!panel) return;
+
+  if (!unit || unit.side !== 'player') {
+    panel.style.display = 'none';
+    return;
+  }
+  panel.style.display = 'block';
+
+  document.getElementById('tup-name').textContent =
+    (unit.isCommander ? '★ Командир' : FORMATION_LABELS[unit.type] ?? unit.type)
+    + ` (${unit.side === 'player' ? 'Свои' : 'Враги'})`;
+
+  document.getElementById('tup-strength').textContent =
+    `${unit.strength.toLocaleString()} / ${unit.maxStrength.toLocaleString()} чел.`;
+
+  const moraleEl  = document.getElementById('tup-morale');
+  const fatigueEl = document.getElementById('tup-fatigue');
+  if (moraleEl)  moraleEl.style.width  = unit.morale  + '%';
+  if (fatigueEl) fatigueEl.style.width = unit.fatigue + '%';
+
+  const ammoEl = document.getElementById('tup-ammo');
+  if (ammoEl) {
+    if (unit.type === 'archers') {
+      ammoEl.textContent = unit.ammo > 0
+        ? `🏹 ${unit.ammo}/30 зарядов`
+        : '🏹 Стрелы кончились';
+      ammoEl.style.color = unit.ammo <= 5 ? '#dd4444' : '';
+    } else {
+      ammoEl.textContent = '';
+    }
+  }
+
+  const elevEl = document.getElementById('tup-elevation-hint');
+  if (elevEl) {
+    const key = `${unit.gridX},${unit.gridY}`;
+    elevEl.textContent = bs.elevatedCells.has(key)
+      ? '⛰ На возвышенности (+15% защита)' : '';
+  }
+
+  // Кнопки формаций
+  const fbtns = document.getElementById('tup-formation-btns');
+  if (fbtns) {
+    fbtns.innerHTML = Object.entries(FORMATION_LABELS)
+      .map(([f, label]) =>
+        `<button class="tup-form-btn${unit.formation === f ? ' active' : ''}"
+         onclick="_setFormation('${unit.id}','${f}')">${label}</button>`)
+      .join('');
+  }
+
+  // Кнопка резерва
+  const resBtn = document.getElementById('tup-reserve-btn');
+  if (resBtn) {
+    resBtn.innerHTML = unit.isReserve
+      ? `<button onclick="_withdrawReserve('${unit.id}')">⚔ В бой!</button>`
+      : `<button onclick="_sendReserve('${unit.id}')">🛡 В резерв</button>`;
+  }
+}
+
+function _setFormation(unitId, formation) {
+  const unit = _battleState?.playerUnits.find(u => u.id === unitId);
+  if (unit) {
+    unit.formation = formation;
+    updateUnitPanel(unit, _battleState);
+    redrawAll(_ctx, _battleState);
+  }
+}
+
+function _sendReserve(unitId) {
+  const unit = _battleState?.playerUnits.find(u => u.id === unitId);
+  if (unit) {
+    unit.isReserve = true;
+    updateUnitPanel(unit, _battleState);
+    redrawAll(_ctx, _battleState);
+  }
+}
+
+function _withdrawReserve(unitId) {
+  const unit = _battleState?.playerUnits.find(u => u.id === unitId);
+  if (unit) {
+    unit.isReserve = false;
+    updateUnitPanel(unit, _battleState);
+    redrawAll(_ctx, _battleState);
+  }
 }
 
 function openTacticalMap(atkArmy, defArmy, region) {
