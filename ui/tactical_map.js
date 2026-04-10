@@ -31,6 +31,79 @@ const _P = {
   selBorder:    '#ffffff',
 };
 
+// ── Г5: детализация местности ─────────────────────────
+
+// Детерминированный генератор псевдослучайных чисел по seed
+function _rng(seed) {
+  let s = seed | 0;
+  return function() {
+    s = (Math.imul(s, 1664525) + 1013904223) | 0;
+    return (s >>> 0) / 0xffffffff;
+  };
+}
+
+// Трава — небольшие стебли
+function _paintGrass(ctx, px, py, rng) {
+  ctx.strokeStyle = 'rgba(80,150,40,0.28)';
+  ctx.lineWidth   = 1;
+  ctx.lineCap     = 'round';
+  const n = 3 + (rng() * 4 | 0);
+  for (let i = 0; i < n; i++) {
+    const gx = px + 3 + rng() * (CELL_SIZE - 6);
+    const gy = py + CELL_SIZE * 0.35 + rng() * CELL_SIZE * 0.55;
+    const h  = 3 + rng() * 4;
+    ctx.beginPath();
+    ctx.moveTo(gx,     gy);
+    ctx.lineTo(gx - 2, gy - h);
+    ctx.moveTo(gx,     gy);
+    ctx.lineTo(gx + 2, gy - h);
+    ctx.stroke();
+  }
+}
+
+// Холмы — треугольные силуэты
+function _paintHills(ctx, px, py, rng) {
+  ctx.fillStyle = 'rgba(110,90,50,0.22)';
+  const base = py + CELL_SIZE - 3;
+  const n    = 1 + (rng() * 2 | 0);
+  for (let i = 0; i < n; i++) {
+    const hx = px + CELL_SIZE * (0.2 + rng() * 0.6);
+    const hw = CELL_SIZE * (0.22 + rng() * 0.18);
+    const hh = CELL_SIZE * (0.22 + rng() * 0.18);
+    ctx.beginPath();
+    ctx.moveTo(hx - hw, base);
+    ctx.lineTo(hx,      base - hh);
+    ctx.lineTo(hx + hw, base);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+// Горы — более высокий силуэт со снежной шапкой
+function _paintMountain(ctx, px, py, rng) {
+  const base = py + CELL_SIZE - 2;
+  const hx   = px + CELL_SIZE * (0.35 + rng() * 0.3);
+  const hw   = CELL_SIZE * 0.40;
+  const hh   = CELL_SIZE * 0.58;
+  ctx.fillStyle = 'rgba(95,88,105,0.30)';
+  ctx.beginPath();
+  ctx.moveTo(hx - hw, base);
+  ctx.lineTo(hx - hw * 0.3, base - hh * 0.55);
+  ctx.lineTo(hx,             base - hh);
+  ctx.lineTo(hx + hw * 0.3,  base - hh * 0.55);
+  ctx.lineTo(hx + hw, base);
+  ctx.closePath();
+  ctx.fill();
+  // Снежная шапка
+  ctx.fillStyle = 'rgba(210,225,255,0.28)';
+  ctx.beginPath();
+  ctx.moveTo(hx - hw * 0.20, base - hh * 0.74);
+  ctx.lineTo(hx,              base - hh);
+  ctx.lineTo(hx + hw * 0.20, base - hh * 0.74);
+  ctx.closePath();
+  ctx.fill();
+}
+
 // ── Г4: иконки типов юнитов — чистый canvas, без emoji ──
 const _ICONS = {
   infantry(ctx, cx, cy, sz) {
@@ -122,6 +195,26 @@ function renderGrid(ctx, terrain, elevatedCells = new Set()) {
 
   ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, W, H);
+
+  // Г5: детальная отрисовка клеток по типу местности
+  for (let col = 0; col < TACTICAL_GRID_COLS; col++) {
+    for (let row = 0; row < TACTICAL_GRID_ROWS; row++) {
+      const seed = col * 37 + row * 53 + (terrain.charCodeAt(0) || 0);
+      const rng  = _rng(seed);
+      const cpx  = col * CELL_SIZE;
+      const cpy  = row * CELL_SIZE;
+      if (terrain === 'plains') {
+        _paintGrass(ctx, cpx, cpy, rng);
+      } else if (terrain === 'hills') {
+        if (rng() > 0.5) _paintHills(ctx, cpx, cpy, _rng(seed + 1));
+        else             _paintGrass(ctx, cpx, cpy, _rng(seed + 2));
+      } else if (terrain === 'mountains') {
+        if (rng() > 0.35) _paintMountain(ctx, cpx, cpy, _rng(seed + 1));
+      } else if (terrain === 'river_valley') {
+        _paintGrass(ctx, cpx, cpy, rng);
+      }
+    }
+  }
 
   // Возвышенные клетки — светлая заливка
   ctx.fillStyle = 'rgba(255,255,200,0.08)';
