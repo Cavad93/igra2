@@ -590,9 +590,23 @@ function processAttackAction(attackerNationId, defenderNationId, opts = {}) {
   // Проверка пакта о ненападении
   if (_isBlockedByNonAggression(attackerNationId, defenderNationId)) return null;
 
+  // Этап 20: бой игрока (не морской) — показать выбор режима
+  if (attackerNationId === GAME_STATE.player_nation && opts.type !== 'naval') {
+    _showTacticalChoiceModal(attackerNationId, defenderNationId, opts);
+    return null; // результат придёт асинхронно через модал
+  }
+
   const result = opts.type === 'naval'
     ? resolveNavalBattle(attackerNationId, defenderNationId)
     : resolveBattle(attackerNationId, defenderNationId, opts);
+  if (!result) return;
+
+  _applyBattleResult(attackerNationId, defenderNationId, result, opts);
+  return result;
+}
+
+// Применяет пост-боевые эффекты: союзы, добычу, лог, трекинг достижений
+function _applyBattleResult(attackerNationId, defenderNationId, result, opts = {}) {
   if (!result) return;
 
   // Оборонные союзы: союзники защитника автоматически вступают в войну
@@ -656,8 +670,78 @@ function processAttackAction(attackerNationId, defenderNationId, opts = {}) {
     const rName = MAP_REGIONS?.[result.capturedRegionId]?.name ?? result.capturedRegionId;
     addEventLog(`Потерян регион ${rName}! Укрепите оборону.`, 'danger');
   }
+}
 
-  return result;
+// ── Этап 20: модальный выбор режима боя ─────────────────────────────
+
+function _showTacticalChoiceModal(attackerNationId, defenderNationId, opts) {
+  document.getElementById('tactical-choice-modal')?.remove();
+
+  const atk = GAME_STATE.nations[attackerNationId];
+  const def = GAME_STATE.nations[defenderNationId];
+  if (!atk || !def) return;
+
+  const targetRegionId = opts.targetRegionId
+    || (def.regions?.length > 0 ? def.regions[def.regions.length - 1] : null);
+  const regionData = targetRegionId ? (GAME_STATE.regions?.[targetRegionId]) : null;
+  const regionName = MAP_REGIONS?.[targetRegionId]?.name
+    ?? regionData?.name ?? targetRegionId ?? 'неизвестном месте';
+  const terrain = regionData?.terrain || 'plains';
+
+  const atkStr = (atk.military?.infantry || 0) + (atk.military?.cavalry || 0) + (atk.military?.archers || 0);
+  const defStr = (def.military?.infantry || 0) + (def.military?.cavalry || 0) + (def.military?.archers || 0);
+  const terrainLabel = {
+    plains: 'Равнина', hills: 'Холмы', mountains: 'Горы',
+    river_valley: 'Речная долина', coastal_city: 'Побережье'
+  }[terrain] ?? terrain;
+
+  const modal = document.createElement('div');
+  modal.id = 'tactical-choice-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);'
+    + 'z-index:8900;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML = `
+    <div style="background:#141414;border:1px solid #555;border-radius:4px;
+                padding:28px 36px;text-align:center;color:#ddd;min-width:300px;">
+      <h3 style="margin:0 0 8px;font-size:17px">Битва при ${regionName}</h3>
+      <p style="margin:0 0 4px">${atkStr.toLocaleString()} против ${defStr.toLocaleString()} воинов</p>
+      <p style="color:#888;font-size:12px;margin:0 0 20px">${terrainLabel}</p>
+      <div style="display:flex;gap:12px;justify-content:center">
+        <button id="tcm-play"
+          style="padding:9px 22px;background:#1a2a1a;border:1px solid #4a7a4a;
+                 color:#88cc88;border-radius:3px;cursor:pointer;font-size:14px">
+          ⚔ Сыграть битву
+        </button>
+        <button id="tcm-auto"
+          style="padding:9px 22px;background:#1e1e1e;border:1px solid #555;
+                 color:#ccc;border-radius:3px;cursor:pointer;font-size:14px">
+          ⚡ Авторассчёт
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  document.getElementById('tcm-play').onclick = () => {
+    modal.remove();
+    // Используем military-объект напрямую — finalizeTacticalBattle запишет потери обратно
+    const atkArmy = atk.military;
+    atkArmy.nation_id = attackerNationId;
+    if (atkArmy.archers === undefined) atkArmy.archers = 0;
+
+    const defArmy = def.military;
+    defArmy.nation_id = defenderNationId;
+    if (defArmy.archers === undefined) defArmy.archers = 0;
+
+    const region = { id: targetRegionId, name: regionName, terrain };
+    if (typeof openTacticalMap === 'function') openTacticalMap(atkArmy, defArmy, region);
+  };
+
+  document.getElementById('tcm-auto').onclick = () => {
+    modal.remove();
+    const result = resolveBattle(attackerNationId, defenderNationId, opts);
+    if (!result) return;
+    _applyBattleResult(attackerNationId, defenderNationId, result, opts);
+    if (typeof showBattleResult === 'function') showBattleResult(result);
+  };
 }
 
 // Вспомогательная: название местности (если getTerrainName не определена глобально)
