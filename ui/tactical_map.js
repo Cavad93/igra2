@@ -193,10 +193,33 @@ function renderUnit(ctx, unit, battleState) {
   ctx.textAlign   = 'left';
 }
 
+// ── Этап 11: стрелка фланговой атаки ─────────────────
+
+function drawFlankArrow(ctx, bs) {
+  const a = bs._lastFlankArrow;
+  if (!a) return;
+  const color = a.type === 'rear' ? '#ff3333' : '#ffaa00';
+  const fx = a.fromX * CELL_SIZE + CELL_SIZE / 2;
+  const fy = a.fromY * CELL_SIZE + CELL_SIZE / 2;
+  const tx = a.toX   * CELL_SIZE + CELL_SIZE / 2;
+  const ty = a.toY   * CELL_SIZE + CELL_SIZE / 2;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 3]);
+  ctx.beginPath();
+  ctx.moveTo(fx, fy);
+  ctx.lineTo(tx, ty);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // Стрелка живёт 1 ход
+  bs._lastFlankArrow = null;
+}
+
 function redrawAll(ctx, battleState) {
   renderGrid(ctx, battleState.terrain, battleState.elevatedCells);
   for (const u of battleState.playerUnits) renderUnit(ctx, u, battleState);
   for (const u of battleState.enemyUnits)  renderUnit(ctx, u, battleState);
+  drawFlankArrow(ctx, battleState);
 }
 
 // ── Этап 6: логические функции ───────────────────────

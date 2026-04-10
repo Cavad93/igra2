@@ -150,6 +150,29 @@ function getTerrainAttackMult(attacker, defender, bs) {
   return 1.0;
 }
 
+// ── Этап 11: фланговая атака ─────────────────────────
+
+function getAttackDirection(attacker, defender) {
+  const dx = attacker.gridX - defender.gridX;
+  const dy = attacker.gridY - defender.gridY;
+  // Флаг если атака преимущественно горизонтальная
+  const isHorizontal = Math.abs(dx) >= Math.abs(dy);
+  if (isHorizontal) {
+    // Фронт цели смотрит в сторону противника:
+    // player смотрит вправо (ожидает атаку с dx > 0 — это фронт)
+    // enemy  смотрит влево  (ожидает атаку с dx < 0 — это фронт)
+    const expectedSide = defender.side === 'player' ? 1 : -1;
+    return Math.sign(dx) === expectedSide ? 'front' : 'rear';
+  }
+  return 'flank';
+}
+
+function flankBonus(direction) {
+  if (direction === 'rear')  return { dmg: 1.70, morale: -35 };
+  if (direction === 'flank') return { dmg: 1.40, morale: -20 };
+  return { dmg: 1.00, morale: 0 };
+}
+
 // ── Этап 9: боеприпасы стрелков ──────────────────────
 
 function resolveArrows(archer, target, bs) {
@@ -209,17 +232,35 @@ function getAdjacentUnits(unit, side, bs) {
 }
 
 function resolveMelee(attacker, defender, bs) {
-  const fm      = FORMATION_MULT[attacker.formation] ?? FORMATION_MULT.standard;
-  const terrain = getTerrainAttackMult(attacker, defender, bs);
-  const damage  = attacker.strength
-    * 0.04
+  const fm  = FORMATION_MULT[attacker.formation] ?? FORMATION_MULT.standard;
+  const dir = getAttackDirection(attacker, defender);
+  const fb  = flankBonus(dir);
+  const tm  = getTerrainAttackMult(attacker, defender, bs);
+
+  const damage = Math.floor(
+    attacker.strength * 0.04
     * fm.atk
-    * terrain
     * moraleMultiplier(attacker.morale)
-    * fatigueMultiplier(attacker.fatigue);
-  defender.strength = Math.max(0, defender.strength - Math.floor(damage));
+    * fatigueMultiplier(attacker.fatigue)
+    * fb.dmg
+    * tm
+  );
+
+  defender.strength = Math.max(0, defender.strength - damage);
+  defender.morale   = Math.max(0, defender.morale  + fb.morale);
+
+  if (dir !== 'front' && fb.morale < 0) {
+    const dirLabel = dir === 'flank' ? 'во фланг' : 'в тыл';
+    addLog(bs, `⚔️ Удар ${dirLabel}! ${defender.type} деморализован (${fb.morale} мораль)`);
+    bs._lastFlankArrow = {
+      fromX: attacker.gridX, fromY: attacker.gridY,
+      toX: defender.gridX,   toY: defender.gridY,
+      type: dir
+    };
+  }
+
   if (defender.strength === 0) defender.morale = 0;
-  return Math.floor(damage);
+  return damage;
 }
 
 function checkVictory(bs) {
