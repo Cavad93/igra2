@@ -108,6 +108,32 @@ function initTacticalBattle(atkArmy, defArmy, region) {
   };
 }
 
+// ── Этап 9: боеприпасы стрелков ──────────────────────
+
+function resolveArrows(archer, target, bs) {
+  const isElev   = bs.elevatedCells.has(`${archer.gridX},${archer.gridY}`);
+  const rangeMax = isElev ? 4 : 3;
+  const dist     = Math.abs(archer.gridX - target.gridX)
+                 + Math.abs(archer.gridY - target.gridY);
+  if (dist > rangeMax || dist === 0) return 0;
+
+  const ammoBonus = archer.ammo > 10 ? 1.0 : archer.ammo > 0 ? 0.65 : 0;
+  if (ammoBonus === 0) return 0;
+
+  const elevBonus = isElev ? 1.15 : 1.0;
+  const dmg = Math.floor(archer.strength * 0.06 * ammoBonus * elevBonus
+    * moraleMultiplier(archer.morale) * fatigueMultiplier(archer.fatigue));
+
+  archer.ammo = Math.max(0, archer.ammo - 1);
+  target.strength = Math.max(0, target.strength - dmg);
+  if (target.strength === 0) target.morale = 0;
+
+  if (archer.ammo === 0) {
+    addLog(bs, `⚠️ Лучники ${archer.id} израсходовали стрелы!`);
+  }
+  return dmg;
+}
+
 // ── Этап 8: боевые формулы и тактический тик ──────────
 
 const FORMATION_MULT = {
@@ -161,7 +187,44 @@ function checkVictory(bs) {
 }
 
 function tacticalTick(bs) {
+  if (bs.phase === 'ended') return;
   bs.turn++;
+
+  // 0. Стрелковая фаза (до рукопашной)
+  for (const pu of bs.playerUnits) {
+    if (pu.type !== 'archers' || pu.isRouting || pu.strength === 0 || pu.isReserve) continue;
+    if (pu.ammo === 0) continue;
+    const isElev = bs.elevatedCells.has(`${pu.gridX},${pu.gridY}`);
+    const rangeMax = isElev ? 4 : 3;
+    const inRange = bs.enemyUnits.filter(eu =>
+      eu.strength > 0 && !eu.isRouting &&
+      Math.abs(eu.gridX - pu.gridX) + Math.abs(eu.gridY - pu.gridY) <= rangeMax
+    );
+    if (inRange.length === 0) continue;
+    const target = inRange.reduce((best, eu) =>
+      (Math.abs(eu.gridX - pu.gridX) + Math.abs(eu.gridY - pu.gridY)) <
+      (Math.abs(best.gridX - pu.gridX) + Math.abs(best.gridY - pu.gridY)) ? eu : best
+    );
+    const dmg = resolveArrows(pu, target, bs);
+    if (dmg > 0) addLog(bs, `🏹 Лучники выпустили залп: −${dmg} (осталось ${pu.ammo})`);
+  }
+  for (const eu of bs.enemyUnits) {
+    if (eu.type !== 'archers' || eu.isRouting || eu.strength === 0 || eu.isReserve) continue;
+    if (eu.ammo === 0) continue;
+    const isElev = bs.elevatedCells.has(`${eu.gridX},${eu.gridY}`);
+    const rangeMax = isElev ? 4 : 3;
+    const inRange = bs.playerUnits.filter(pu =>
+      pu.strength > 0 && !pu.isRouting &&
+      Math.abs(pu.gridX - eu.gridX) + Math.abs(pu.gridY - eu.gridY) <= rangeMax
+    );
+    if (inRange.length === 0) continue;
+    const target = inRange.reduce((best, pu) =>
+      (Math.abs(pu.gridX - eu.gridX) + Math.abs(pu.gridY - eu.gridY)) <
+      (Math.abs(best.gridX - eu.gridX) + Math.abs(best.gridY - eu.gridY)) ? pu : best
+    );
+    const dmg = resolveArrows(eu, target, bs);
+    if (dmg > 0) addLog(bs, `🏹 Вражеские лучники: −${dmg} (осталось ${eu.ammo})`);
+  }
 
   // 1. Рукопашный бой: каждый юнит игрока атакует соседних врагов
   for (const pu of bs.playerUnits) {
