@@ -17,6 +17,35 @@ let _dpr         = 1;   // devicePixelRatio — для HiDPI/Retina
 const UNIT_MIN_SZ = 26;
 const UNIT_MAX_SZ = 52;
 
+// ── Г2: палитра цветов ────────────────────────────────
+const _P = {
+  playerBorder: '#4488dd',
+  enemyBorder:  '#dd5533',
+  cmdGold:      '#ffd700',
+  routeBorder:  '#555555',
+  strBarGreen:  '#44dd44',
+  strBarAmber:  '#ddaa00',
+  strBarRed:    '#dd2222',
+  moraleBar:    '#4488ff',
+  barBg:        '#1a1a1a',
+  selBorder:    '#ffffff',
+};
+
+// ── Г2: скруглённый прямоугольник ────────────────────
+function _rrect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y,     x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x,     y + h, x,     y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x,     y,     x + r, y);
+  ctx.closePath();
+}
+
 function renderGrid(ctx, terrain, elevatedCells = new Set()) {
   const W = TACTICAL_GRID_COLS * CELL_SIZE;
   const H = TACTICAL_GRID_ROWS * CELL_SIZE;
@@ -98,11 +127,13 @@ function renderUnit(ctx, unit, battleState) {
   const isPlayer  = unit.side === 'player';
   const strPct    = unit.strength / unit.maxStrength;
   const fillColor = isPlayer ? '#1a4a9e' : '#8b1a1a';
-  const borderColor = unit.isCommander     ? '#ffd700'
+  // Г2: используем палитру _P
+  const borderColor = unit.isCommander     ? _P.cmdGold
                     : unit.strength > 5000 ? '#e8c840'
-                    : unit.isRouting       ? '#555555'
-                    : isPlayer             ? '#4488dd'
-                    :                        '#dd5533';
+                    : unit.isRouting       ? _P.routeBorder
+                    : isPlayer             ? _P.playerBorder
+                    :                        _P.enemyBorder;
+  const R = 4; // радиус скругления углов
 
   // ── Этап 12: мигание routing-юнитов ─────────────────
   if (unit.isRouting) {
@@ -111,8 +142,10 @@ function renderUnit(ctx, unit, battleState) {
     ctx.globalAlpha = unit.isReserve ? 0.50 : 0.45 + 0.55 * strPct;
   }
 
+  // Г2: скруглённые углы вместо fillRect
   ctx.fillStyle = fillColor;
-  ctx.fillRect(px, py, sz, sz);
+  _rrect(ctx, px, py, sz, sz, R);
+  ctx.fill();
 
   ctx.globalAlpha = unit.isRouting
     ? ((Math.floor(Date.now() / 400) % 2 === 0) ? 0.6 : 0.2)
@@ -120,7 +153,8 @@ function renderUnit(ctx, unit, battleState) {
   ctx.strokeStyle = borderColor;
   ctx.lineWidth   = unit.isCommander ? 2.5 : 1.5;
   if (unit.isReserve) ctx.setLineDash([4, 3]);
-  ctx.strokeRect(px, py, sz, sz);
+  _rrect(ctx, px, py, sz, sz, R);
+  ctx.stroke();
   ctx.setLineDash([]);
 
   // ── Этап 5: сетка иконок солдат (Подход 1) ──────────
@@ -155,20 +189,16 @@ function renderUnit(ctx, unit, battleState) {
     : unit.strength.toString();
   ctx.fillText(label, px + sz / 2, py + sz * 0.94);
 
-  // Подход 4: полоска силы (под квадратом)
+  // Г2: полоска силы (под юнитом) — скруглённая
   const strPct2  = unit.strength / unit.maxStrength;
-  const barColor = strPct2 > 0.6 ? '#44dd44' : strPct2 > 0.3 ? '#ddaa00' : '#dd2222';
-  ctx.globalAlpha = 0.85;
-  ctx.fillStyle   = '#222222';
-  ctx.fillRect(px, py + sz + 3, sz, 4);
-  ctx.fillStyle   = barColor;
-  ctx.fillRect(px, py + sz + 3, sz * strPct2, 4);
+  const barColor = strPct2 > 0.6 ? _P.strBarGreen : strPct2 > 0.3 ? _P.strBarAmber : _P.strBarRed;
+  ctx.globalAlpha = 0.90;
+  _rrect(ctx, px, py + sz + 3, sz,           4, 2); ctx.fillStyle = _P.barBg;   ctx.fill();
+  _rrect(ctx, px, py + sz + 3, sz * strPct2, 4, 2); ctx.fillStyle = barColor;   ctx.fill();
 
-  // Полоска морали (над квадратом, синяя)
-  ctx.fillStyle   = '#222222';
-  ctx.fillRect(px, py - 6, sz, 3);
-  ctx.fillStyle   = '#4488ff';
-  ctx.fillRect(px, py - 6, sz * (unit.morale / 100), 3);
+  // Г2: полоска морали (над юнитом) — скруглённая
+  _rrect(ctx, px, py - 6, sz,                      3, 1.5); ctx.fillStyle = _P.barBg;     ctx.fill();
+  _rrect(ctx, px, py - 6, sz * (unit.morale / 100),3, 1.5); ctx.fillStyle = _P.moraleBar; ctx.fill();
   ctx.globalAlpha = 1.0;
 
   // Иконка типа в центре
@@ -188,10 +218,11 @@ function renderUnit(ctx, unit, battleState) {
 
   if (unit.selected) {
     ctx.globalAlpha = 1.0;
-    ctx.strokeStyle = '#ffffff';
+    ctx.strokeStyle = _P.selBorder;
     ctx.lineWidth   = 1.5;
     ctx.setLineDash([3, 2]);
-    ctx.strokeRect(px - 3, py - 3, sz + 6, sz + 6);
+    _rrect(ctx, px - 3, py - 3, sz + 6, sz + 6, R + 2);
+    ctx.stroke();
     ctx.setLineDash([]);
   }
 
