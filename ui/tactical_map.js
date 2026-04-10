@@ -561,6 +561,10 @@ function endTacticalBattle(bs, outcome) {
   }
   const result = finalizeTacticalBattle(bs, outcome);
   if (typeof showBattleResult === 'function') showBattleResult(result);
+  // Этап 20: callback для армейской интеграции (синхронизация потерь, отступление, захват)
+  if (typeof window !== 'undefined' && typeof window._onTacticalBattleEnd === 'function') {
+    window._onTacticalBattleEnd(result);
+  }
 }
 
 function openTacticalMap(atkArmy, defArmy, region) {

@@ -84,12 +84,26 @@ const COMBAT = {
 
 /**
  * Разрешить бой между двумя армейскими стеками.
+ * Этап 20: если участвует игрок — показать выбор тактического режима.
  * @param {Object} atkArmy - атакующая армия
  * @param {Object} defArmy - обороняющаяся армия
  * @param {string} regionId - регион боя
- * @returns {Object} результат боя
+ * @returns {Object|null} результат боя (null если асинхронный тактический)
  */
 function resolveArmyBattle(atkArmy, defArmy, regionId) {
+  // Этап 20: бой с участием игрока — показать выбор режима
+  const playerInvolved = atkArmy.nation === GAME_STATE.player_nation
+    || defArmy.nation === GAME_STATE.player_nation;
+  if (playerInvolved && typeof document !== 'undefined') {
+    atkArmy.state = 'battle_pending';
+    _showArmyTacticalChoice(atkArmy, defArmy, regionId);
+    return null;
+  }
+
+  return _resolveArmyBattleCore(atkArmy, defArmy, regionId);
+}
+
+function _resolveArmyBattleCore(atkArmy, defArmy, regionId) {
   const region    = _getRegionData(regionId);
   const terrain   = region?.terrain ?? 'plains';
   const atkNation = GAME_STATE.nations[atkArmy.nation];
@@ -605,4 +619,122 @@ function _traitSum(cmd, field) {
   return traits.reduce((sum, t) => {
     return sum + (COMBAT.TRAITS[t]?.[field] ?? 0);
   }, 0);
+}
+
+// ── Этап 20: модальный выбор режима боя для армейских стеков ─────────
+
+function _showArmyTacticalChoice(atkArmy, defArmy, regionId) {
+  document.getElementById('tactical-choice-modal')?.remove();
+
+  const region    = _getRegionData(regionId);
+  const terrain   = region?.terrain ?? 'plains';
+  const atkNation = GAME_STATE.nations[atkArmy.nation];
+  const defNation = GAME_STATE.nations[defArmy.nation];
+
+  const atkTotal  = _landTotal(atkArmy.units);
+  const defTotal  = _landTotal(defArmy.units);
+  const regionName = region?.name ?? regionId;
+  const terrainLabel = {
+    plains: 'Равнина', hills: 'Холмы', mountains: 'Горы',
+    river_valley: 'Речная долина', coastal_city: 'Побережье'
+  }[terrain] ?? terrain;
+
+  const modal = document.createElement('div');
+  modal.id = 'tactical-choice-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);'
+    + 'z-index:8900;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML = `
+    <div style="background:#141414;border:1px solid #555;border-radius:4px;
+                padding:28px 36px;text-align:center;color:#ddd;min-width:300px;">
+      <h3 style="margin:0 0 8px;font-size:17px">Битва при ${regionName}</h3>
+      <p style="margin:0 0 4px">${atkTotal.toLocaleString()} против ${defTotal.toLocaleString()} воинов</p>
+      <p style="color:#888;font-size:12px;margin:0 0 20px">${terrainLabel}</p>
+      <div style="display:flex;gap:12px;justify-content:center">
+        <button id="tcm-play"
+          style="padding:9px 22px;background:#1a2a1a;border:1px solid #4a7a4a;
+                 color:#88cc88;border-radius:3px;cursor:pointer;font-size:14px">
+          ⚔ Сыграть битву
+        </button>
+        <button id="tcm-auto"
+          style="padding:9px 22px;background:#1e1e1e;border:1px solid #555;
+                 color:#ccc;border-radius:3px;cursor:pointer;font-size:14px">
+          ⚡ Авторассчёт
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  // ── Кнопка «⚔ Сыграть битву» ─────────────────────────────────────
+  document.getElementById('tcm-play').onclick = () => {
+    modal.remove();
+
+    // Адаптируем армейские стеки → формат openTacticalMap
+    // Используем atkArmy.units напрямую → finalizeTacticalBattle пишет обратно
+    const tacticalAtk = atkArmy.units;
+    tacticalAtk.nation_id = atkArmy.nation;
+    if (tacticalAtk.archers === undefined) tacticalAtk.archers = 0;
+    tacticalAtk.commander = typeof getArmyCommander === 'function'
+      ? getArmyCommander(atkArmy) : null;
+    tacticalAtk.marchedThisTurn = atkArmy.fatigue > 20;
+
+    const tacticalDef = defArmy.units;
+    tacticalDef.nation_id = defArmy.nation;
+    if (tacticalDef.archers === undefined) tacticalDef.archers = 0;
+    tacticalDef.commander = typeof getArmyCommander === 'function'
+      ? getArmyCommander(defArmy) : null;
+
+    const regionObj = { id: regionId, name: regionName, terrain };
+
+    // Callback после завершения тактического боя
+    window._onTacticalBattleEnd = (result) => {
+      window._onTacticalBattleEnd = null;
+
+      // Синхронизировать потери обратно в nation.military
+      _syncArmyToNation(atkArmy);
+      _syncArmyToNation(defArmy);
+
+      // Проигравший отступает
+      const atkWins = result.atkWins;
+      const loser  = atkWins ? defArmy : atkArmy;
+      loser.state = 'routing';
+      _setRetreatPath(loser);
+
+      // Победитель: остановить движение
+      const winner = atkWins ? atkArmy : defArmy;
+      if (winner.state === 'battle_pending') winner.state = 'stationed';
+
+      // Захват региона
+      if (atkWins) {
+        const fortress = region?.fortress_level ?? 0;
+        if (fortress > 0) {
+          if (typeof beginSiege === 'function')
+            beginSiege(atkArmy, regionId, fortress, region?.garrison ?? 0);
+        } else {
+          if (typeof captureRegion === 'function')
+            captureRegion(atkArmy.nation, regionId, defArmy.nation);
+        }
+      }
+
+      // Статистика
+      atkArmy.battles_won  += atkWins ? 1 : 0;
+      atkArmy.battles_lost += atkWins ? 0 : 1;
+      defArmy.battles_won  += atkWins ? 0 : 1;
+      defArmy.battles_lost += atkWins ? 1 : 0;
+
+      // War score
+      if (typeof WarScoreEngine !== 'undefined') {
+        if (atkWins) WarScoreEngine.onBattleResult(atkArmy.nation, defArmy.nation, result.defCas, regionId);
+        else         WarScoreEngine.onBattleResult(defArmy.nation, atkArmy.nation, result.atkCas, null);
+      }
+    };
+
+    if (typeof openTacticalMap === 'function') openTacticalMap(tacticalAtk, tacticalDef, regionObj);
+  };
+
+  // ── Кнопка «⚡ Авторассчёт» ──────────────────────────────────────
+  document.getElementById('tcm-auto').onclick = () => {
+    modal.remove();
+    atkArmy.state = 'moving'; // восстановить состояние
+    _resolveArmyBattleCore(atkArmy, defArmy, regionId);
+  };
 }
