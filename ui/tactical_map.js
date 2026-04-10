@@ -279,8 +279,11 @@ function addLog(bs, message) {
 function onTacticalClick(e) {
   if (!_battleState || !_canvas) return;
   const rect  = _canvas.getBoundingClientRect();
-  const gridX = Math.floor((e.clientX - rect.left)  / CELL_SIZE);
-  const gridY = Math.floor((e.clientY - rect.top)   / CELL_SIZE);
+  // Масштабирование: canvas может быть CSS-растянут относительно внутреннего размера
+  const scaleX = _canvas.width  / rect.width;
+  const scaleY = _canvas.height / rect.height;
+  const gridX = Math.floor((e.clientX - rect.left) * scaleX / CELL_SIZE);
+  const gridY = Math.floor((e.clientY - rect.top)  * scaleY / CELL_SIZE);
   if (gridX < 0 || gridX >= TACTICAL_GRID_COLS) return;
   if (gridY < 0 || gridY >= TACTICAL_GRID_ROWS) return;
 
@@ -319,8 +322,10 @@ function onTacticalClick(e) {
 function onTacticalHover(e) {
   if (!_battleState || !_canvas) return;
   const rect  = _canvas.getBoundingClientRect();
-  const gridX = Math.floor((e.clientX - rect.left) / CELL_SIZE);
-  const gridY = Math.floor((e.clientY - rect.top)  / CELL_SIZE);
+  const scaleX = _canvas.width  / rect.width;
+  const scaleY = _canvas.height / rect.height;
+  const gridX = Math.floor((e.clientX - rect.left) * scaleX / CELL_SIZE);
+  const gridY = Math.floor((e.clientY - rect.top)  * scaleY / CELL_SIZE);
   const unit  = findUnitAt(gridX, gridY, _battleState);
   const key   = `${gridX},${gridY}`;
   const isElev = _battleState.elevatedCells.has(key);

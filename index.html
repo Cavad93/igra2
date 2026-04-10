@@ -7300,7 +7300,18 @@
       flex-direction: column;
     }
     #tactical-overlay.visible { display: flex; }
-    #tactical-canvas { flex: 1; display: block; cursor: crosshair; }
+    #tactical-canvas-wrap {
+      flex: 1; min-height: 0; overflow: auto;
+      display: flex; align-items: center; justify-content: center;
+      background: #080808;
+    }
+    #tactical-canvas {
+      display: block; cursor: crosshair;
+      /* canvas не растягивается — внутренний размер 880×640.
+         CSS max-* масштабирует визуально; scaleX/Y в JS корректирует клики. */
+      max-width: 100%;
+      max-height: 100%;
+    }
     #tactical-top-bar {
       height: 34px; background: #111; color: #aaa;
       display: flex; align-items: center; gap: 24px;
@@ -7728,7 +7739,9 @@
       <span id="tac-terrain"></span>
       <span id="tac-ratio"></span>
     </div>
-    <canvas id="tactical-canvas"></canvas>
+    <div id="tactical-canvas-wrap">
+      <canvas id="tactical-canvas"></canvas>
+    </div>
     <div id="tactical-unit-panel">
       <div id="tup-name"></div>
       <div id="tup-strength"></div>
