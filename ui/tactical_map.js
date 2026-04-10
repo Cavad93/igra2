@@ -14,6 +14,7 @@ let _canvas      = null;
 let _ctx         = null;
 let _dpr         = 1;          // devicePixelRatio — для HiDPI/Retina
 let _bgOffscreen = null;       // Г6: offscreen-кэш фона (рисуется один раз)
+let _rafId       = null;       // Г7: requestAnimationFrame ID
 
 const UNIT_MIN_SZ = 26;
 const UNIT_MAX_SZ = 52;
@@ -430,10 +431,12 @@ function renderUnit(ctx, unit, battleState) {
   }
 
   if (unit.selected) {
-    ctx.globalAlpha = 1.0;
+    // Г7: пульсирующая обводка через Math.sin
+    const pulse = 0.55 + 0.45 * Math.sin(Date.now() / 220);
+    ctx.globalAlpha = pulse;
     ctx.strokeStyle = _P.selBorder;
-    ctx.lineWidth   = 1.5;
-    ctx.setLineDash([3, 2]);
+    ctx.lineWidth   = 2.0;
+    ctx.setLineDash([4, 3]);
     _rrect(ctx, px - 3, py - 3, sz + 6, sz + 6, R + 2);
     ctx.stroke();
     ctx.setLineDash([]);
@@ -808,6 +811,8 @@ function showRetreatConfirm(bs) {
 // ── Этап 19: завершение боя с финализацией ────────────
 
 function endTacticalBattle(bs, outcome) {
+  // Г7: остановить rAF-цикл
+  _stopRenderLoop();
   const overlay = document.getElementById('tactical-overlay');
   if (overlay) {
     overlay.classList.remove('visible');
@@ -825,6 +830,28 @@ function endTacticalBattle(bs, outcome) {
   // Этап 20: callback для армейской интеграции (синхронизация потерь, отступление, захват)
   if (typeof window !== 'undefined' && typeof window._onTacticalBattleEnd === 'function') {
     window._onTacticalBattleEnd(result);
+  }
+}
+
+// ── Г7: rAF-цикл для плавной анимации ────────────────
+function _startRenderLoop() {
+  if (typeof requestAnimationFrame === 'undefined') return;
+  if (_rafId !== null) return;
+  function loop() {
+    if (!_battleState || !_ctx || !_canvas) { _rafId = null; return; }
+    const W = TACTICAL_GRID_COLS * CELL_SIZE;
+    const H = TACTICAL_GRID_ROWS * CELL_SIZE;
+    _ctx.clearRect(0, 0, W, H);
+    redrawAll(_ctx, _battleState);
+    _rafId = requestAnimationFrame(loop);
+  }
+  _rafId = requestAnimationFrame(loop);
+}
+
+function _stopRenderLoop() {
+  if (_rafId !== null) {
+    if (typeof cancelAnimationFrame !== 'undefined') cancelAnimationFrame(_rafId);
+    _rafId = null;
   }
 }
 
@@ -876,7 +903,9 @@ function openTacticalMap(atkArmy, defArmy, region) {
     };
   }
 
-  redrawAll(_ctx, _battleState);
+  // Г7: запустить rAF-цикл анимации
+  _stopRenderLoop();
+  _startRenderLoop();
 
   document.getElementById('tac-terrain').textContent =
     region?.name ?? 'Неизвестная местность';
