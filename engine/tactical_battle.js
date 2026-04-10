@@ -263,6 +263,65 @@ function resolveMelee(attacker, defender, bs) {
   return damage;
 }
 
+// ── Этап 12: паника и бегство ────────────────────────
+
+function processPanic(bs) {
+  const allUnits = [...bs.playerUnits, ...bs.enemyUnits];
+
+  for (const unit of allUnits) {
+    if (unit.strength === 0) continue;
+
+    // Новые routing-юниты (мораль ≤ 20)
+    if (!unit.isRouting && unit.morale <= 20) {
+      unit.isRouting = true;
+      addLog(bs, `💀 ${unit.type} (${unit.side === 'player' ? 'наши' : 'враги'}) обратились в бегство!`);
+
+      // Эффект домино: соседи теряют мораль
+      const allies = (unit.side === 'player' ? bs.playerUnits : bs.enemyUnits)
+        .filter(u => u.id !== unit.id && u.strength > 0 && !u.isRouting &&
+          Math.abs(u.gridX - unit.gridX) + Math.abs(u.gridY - unit.gridY) <= 2);
+      for (const ally of allies) {
+        ally.morale = Math.max(0, ally.morale - 15);
+        if (allies.length > 0)
+          addLog(bs, `😱 Паника распространяется на ${ally.type}! (-15 мораль)`);
+      }
+    }
+
+    // Движение routing-юнитов — назад к своему краю
+    if (unit.isRouting && unit.strength > 0) {
+      const retreatDir = unit.side === 'player' ? -1 : 1;
+      const nx = unit.gridX + retreatDir;
+      if (nx < 0 || nx >= TACTICAL_GRID_COLS) {
+        // Вышел за карту — потерян
+        addLog(bs, `🏃 ${unit.type} покинули поле боя (потеряны)`);
+        unit.strength = 0;
+      } else if (!findUnitAt(nx, unit.gridY, bs)) {
+        unit.gridX = nx;
+      }
+    }
+  }
+}
+
+// Попытка остановить панику командиром (30% шанс)
+function processCommanderRally(bs) {
+  for (const side of ['player', 'enemy']) {
+    const units = side === 'player' ? bs.playerUnits : bs.enemyUnits;
+    const cmd   = units.find(u => u.isCommander && u.strength > 0);
+    if (!cmd) continue;
+
+    const routing = units.filter(u => u.isRouting && u.strength > 0 &&
+      Math.abs(u.gridX - cmd.gridX) + Math.abs(u.gridY - cmd.gridY) <= 2);
+
+    for (const ru of routing) {
+      if (Math.random() < 0.30) {
+        ru.isRouting = false;
+        ru.morale    = 30;
+        addLog(bs, `★ Командир остановил бегущих ${ru.type}!`);
+      }
+    }
+  }
+}
+
 function checkVictory(bs) {
   const playerAlive = bs.playerUnits.filter(u => u.strength > 0 && !u.isRouting);
   const enemyAlive  = bs.enemyUnits.filter(u => u.strength > 0 && !u.isRouting);
@@ -355,7 +414,11 @@ function tacticalTick(bs) {
     }
   }
 
-  // 3. Проверить победу
+  // 3. Фаза паники и попытка командира остановить бегство
+  processPanic(bs);
+  processCommanderRally(bs);
+
+  // 4. Проверить победу
   const outcome = checkVictory(bs);
   if (outcome) {
     bs.phase = 'ended';

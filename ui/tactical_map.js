@@ -103,14 +103,19 @@ function renderUnit(ctx, unit, battleState) {
                     : isPlayer             ? '#4488dd'
                     :                        '#dd5533';
 
-  ctx.globalAlpha = unit.isReserve ? 0.50
-                  : unit.isRouting  ? 0.35
-                  :                   0.45 + 0.55 * strPct;
+  // ── Этап 12: мигание routing-юнитов ─────────────────
+  if (unit.isRouting) {
+    ctx.globalAlpha = (Math.floor(Date.now() / 400) % 2 === 0) ? 0.6 : 0.2;
+  } else {
+    ctx.globalAlpha = unit.isReserve ? 0.50 : 0.45 + 0.55 * strPct;
+  }
 
   ctx.fillStyle = fillColor;
   ctx.fillRect(px, py, sz, sz);
 
-  ctx.globalAlpha = unit.isRouting ? 0.4 : 1.0;
+  ctx.globalAlpha = unit.isRouting
+    ? ((Math.floor(Date.now() / 400) % 2 === 0) ? 0.6 : 0.2)
+    : 1.0;
   ctx.strokeStyle = borderColor;
   ctx.lineWidth   = unit.isCommander ? 2.5 : 1.5;
   if (unit.isReserve) ctx.setLineDash([4, 3]);
