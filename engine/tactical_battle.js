@@ -95,6 +95,10 @@ function initTacticalBattle(atkArmy, defArmy, region) {
     ...enemyUnits.map(u => u.maxStrength)
   );
 
+  // Этап 16: сохранить стартовые позиции стандартов (клетки командиров)
+  const playerCmd = playerUnits.find(u => u.isCommander);
+  const enemyCmd  = enemyUnits.find(u => u.isCommander);
+
   return {
     playerUnits,
     enemyUnits,
@@ -108,7 +112,9 @@ function initTacticalBattle(atkArmy, defArmy, region) {
     defArmy,
     maxStrengthInBattle: maxStrength,
     ambushUsed: false,
-    selectedUnitId: null
+    selectedUnitId: null,
+    playerStandardPos: playerCmd ? { x: playerCmd.gridX, y: playerCmd.gridY } : null,
+    enemyStandardPos:  enemyCmd  ? { x: enemyCmd.gridX,  y: enemyCmd.gridY  } : null
   };
 }
 
@@ -391,6 +397,40 @@ function checkVictory(bs) {
   return null;
 }
 
+// ── Этап 16: захват стандарта ─────────────────────────
+
+function checkStandardCapture(bs) {
+  if (bs.phase === 'ended') return;
+
+  const eStd = bs.enemyStandardPos;
+  const pStd = bs.playerStandardPos;
+
+  // Игрок захватывает стандарт врага
+  if (eStd) {
+    const captor = bs.playerUnits.find(u =>
+      u.strength > 0 && !u.isRouting && u.gridX === eStd.x && u.gridY === eStd.y);
+    if (captor) {
+      addLog(bs, `🏴 СТАНДАРТ ЗАХВАЧЕН! Враг деморализован — ПОБЕДА!`);
+      bs.enemyUnits.forEach(u => { u.isRouting = true; u.morale = 0; });
+      bs.phase = 'ended';
+      setTimeout(() => endTacticalBattle(bs, 'player_captured_standard'), 1500);
+      return;
+    }
+  }
+
+  // Враг захватывает стандарт игрока
+  if (pStd) {
+    const captor = bs.enemyUnits.find(u =>
+      u.strength > 0 && !u.isRouting && u.gridX === pStd.x && u.gridY === pStd.y);
+    if (captor) {
+      addLog(bs, `🏴 Враг захватил наш стандарт — ПОРАЖЕНИЕ!`);
+      bs.playerUnits.forEach(u => { u.isRouting = true; u.morale = 0; });
+      bs.phase = 'ended';
+      setTimeout(() => endTacticalBattle(bs, 'player_loses'), 1500);
+    }
+  }
+}
+
 function tacticalTick(bs) {
   if (bs.phase === 'ended') return;
   bs.turn++;
@@ -494,26 +534,54 @@ function tacticalTick(bs) {
     }
   }
 
-  // 2b. Простой ИИ: враги двигаются к ближайшему юниту игрока
-  for (const eu of bs.enemyUnits) {
-    if (eu.isRouting || eu.strength === 0 || eu.isReserve) continue;
-    const alive = bs.playerUnits.filter(u => u.strength > 0);
-    if (alive.length === 0) break;
-    const target = alive.reduce((best, u) =>
-      (Math.abs(u.gridX - eu.gridX) + Math.abs(u.gridY - eu.gridY)) <
-      (Math.abs(best.gridX - eu.gridX) + Math.abs(best.gridY - eu.gridY)) ? u : best
-    );
-    const dx = Math.sign(target.gridX - eu.gridX);
-    const dy = Math.sign(target.gridY - eu.gridY);
-    const nx = eu.gridX + (dx !== 0 ? dx : 0);
-    const ny = eu.gridY + (dx === 0 ? dy : 0);
-    if (nx >= 0 && nx < TACTICAL_GRID_COLS && ny >= 0 && ny < TACTICAL_GRID_ROWS) {
-      if (!findUnitAt(nx, ny, bs)) {
-        eu.gridX = nx; eu.gridY = ny;
-        eu._movedThisTick = true;
+  // 2b. ИИ противника: движение с учётом стратегии захвата стандарта (Этап 16)
+  {
+    const enemyTotalStr  = bs.enemyUnits.reduce((s, u) => s + u.strength, 0);
+    const enemyMaxStr    = bs.enemyUnits.reduce((s, u) => s + u.maxStrength, 0);
+    const enemyHpRatio   = enemyMaxStr > 0 ? enemyTotalStr / enemyMaxStr : 1;
+
+    for (const eu of bs.enemyUnits) {
+      if (eu.isRouting || eu.strength === 0 || eu.isReserve) continue;
+      const alive = bs.playerUnits.filter(u => u.strength > 0);
+      if (alive.length === 0) break;
+
+      let targetX, targetY;
+
+      // Этап 16: ИИ-стратегия стандарта
+      if (enemyHpRatio < 0.40 && bs.enemyStandardPos) {
+        // Прикрывать командира: двигаться к позиции стандарта врага (нашего командира)
+        targetX = bs.enemyStandardPos.x;
+        targetY = bs.enemyStandardPos.y;
+      } else if (enemyHpRatio > 0.60 && bs.playerStandardPos) {
+        // Прорваться к стандарту игрока
+        targetX = bs.playerStandardPos.x;
+        targetY = bs.playerStandardPos.y;
+      } else {
+        // Обычное движение к ближайшему юниту игрока
+        const nearest = alive.reduce((best, u) =>
+          (Math.abs(u.gridX - eu.gridX) + Math.abs(u.gridY - eu.gridY)) <
+          (Math.abs(best.gridX - eu.gridX) + Math.abs(best.gridY - eu.gridY)) ? u : best
+        );
+        targetX = nearest.gridX;
+        targetY = nearest.gridY;
+      }
+
+      const dx = Math.sign(targetX - eu.gridX);
+      const dy = Math.sign(targetY - eu.gridY);
+      const nx = eu.gridX + (dx !== 0 ? dx : 0);
+      const ny = eu.gridY + (dx === 0 ? dy : 0);
+      if (nx >= 0 && nx < TACTICAL_GRID_COLS && ny >= 0 && ny < TACTICAL_GRID_ROWS) {
+        if (!findUnitAt(nx, ny, bs)) {
+          eu.gridX = nx; eu.gridY = ny;
+          eu._movedThisTick = true;
+        }
       }
     }
   }
+
+  // 2c. Этап 16: проверить захват стандарта после перемещений
+  checkStandardCapture(bs);
+  if (bs.phase === 'ended') return;
 
   // 3. Аура командира (воодушевление союзников)
   processCommanderAura(bs);

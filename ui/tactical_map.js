@@ -220,11 +220,27 @@ function drawFlankArrow(ctx, bs) {
   bs._lastFlankArrow = null;
 }
 
+// ── Этап 16: рисовать флаг на позиции стандарта если командир ушёл ──
+
+function drawStandards(ctx, bs) {
+  for (const [std, cmd] of [
+    [bs.enemyStandardPos,  bs.enemyUnits.find(u => u.isCommander)],
+    [bs.playerStandardPos, bs.playerUnits.find(u => u.isCommander)]
+  ]) {
+    if (!std || !cmd) continue;
+    // Показывать флаг только если командир покинул свою стартовую клетку
+    if (cmd.gridX === std.x && cmd.gridY === std.y) continue;
+    ctx.font = '18px monospace';
+    ctx.fillText('🚩', std.x * CELL_SIZE + 4, std.y * CELL_SIZE + 20);
+  }
+}
+
 function redrawAll(ctx, battleState) {
   renderGrid(ctx, battleState.terrain, battleState.elevatedCells);
   for (const u of battleState.playerUnits) renderUnit(ctx, u, battleState);
   for (const u of battleState.enemyUnits)  renderUnit(ctx, u, battleState);
   drawFlankArrow(ctx, battleState);
+  drawStandards(ctx, battleState);
 }
 
 // ── Этап 6: логические функции ───────────────────────
