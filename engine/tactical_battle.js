@@ -259,8 +259,52 @@ function resolveMelee(attacker, defender, bs) {
     };
   }
 
+  // Этап 13: шанс гибели командира при атаке
+  if (defender.isCommander && damage > 0) {
+    processCommanderDeath(defender, bs);
+  }
+
   if (defender.strength === 0) defender.morale = 0;
   return damage;
+}
+
+// ── Этап 13: аура командира ───────────────────────────
+
+function processCommanderAura(bs) {
+  for (const side of ['player', 'enemy']) {
+    const units = side === 'player' ? bs.playerUnits : bs.enemyUnits;
+    const cmd   = units.find(u => u.isCommander && u.strength > 0);
+    if (!cmd) continue;
+
+    const skills    = cmd.commander?.skills ?? [];
+    const auraBonus = 15 + (skills.includes('inspiring') ? 10 : 0);
+
+    const nearby = units.filter(u =>
+      u.id !== cmd.id && u.strength > 0 && !u.isRouting &&
+      Math.abs(u.gridX - cmd.gridX) + Math.abs(u.gridY - cmd.gridY) <= 2
+    );
+
+    for (const u of nearby) {
+      const prev = u.morale;
+      u.morale = Math.min(100, u.morale + auraBonus * 0.1); // +1.5 (или +2.5) за тик
+      if (prev < 60 && u.morale > prev)
+        addLog(bs, `★ ${cmd.commander?.name ?? 'Командир'} воодушевляет войска`);
+    }
+  }
+}
+
+// Вызывается из resolveMelee при атаке на командира
+function processCommanderDeath(cmd, bs) {
+  const side  = cmd.side;
+  const units = side === 'player' ? bs.playerUnits : bs.enemyUnits;
+
+  if (Math.random() < 0.10) { // 10% шанс гибели за атаку
+    cmd.strength = 0;
+    addLog(bs, `💀 КОМАНДИР ПАЛ В БОЮ! Армия в смятении! (-30 мораль всем)`);
+    for (const u of units) {
+      u.morale = Math.max(0, u.morale - 30);
+    }
+  }
 }
 
 // ── Этап 12: паника и бегство ────────────────────────
@@ -414,11 +458,14 @@ function tacticalTick(bs) {
     }
   }
 
-  // 3. Фаза паники и попытка командира остановить бегство
+  // 3. Аура командира (воодушевление союзников)
+  processCommanderAura(bs);
+
+  // 4. Фаза паники и попытка командира остановить бегство
   processPanic(bs);
   processCommanderRally(bs);
 
-  // 4. Проверить победу
+  // 5. Проверить победу
   const outcome = checkVictory(bs);
   if (outcome) {
     bs.phase = 'ended';

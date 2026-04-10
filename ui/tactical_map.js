@@ -390,13 +390,59 @@ function updateUnitPanel(unit, bs) {
       .join('');
   }
 
-  // Кнопка резерва
+  // Кнопка резерва (командиров в резерв не отправляем)
   const resBtn = document.getElementById('tup-reserve-btn');
   if (resBtn) {
-    resBtn.innerHTML = unit.isReserve
-      ? `<button onclick="_withdrawReserve('${unit.id}')">⚔ В бой!</button>`
-      : `<button onclick="_sendReserve('${unit.id}')">🛡 В резерв</button>`;
+    if (unit.isCommander) {
+      resBtn.innerHTML = '';
+    } else {
+      resBtn.innerHTML = unit.isReserve
+        ? `<button onclick="_withdrawReserve('${unit.id}')">⚔ В бой!</button>`
+        : `<button onclick="_sendReserve('${unit.id}')">🛡 В резерв</button>`;
+    }
   }
+
+  // Этап 13: кнопка засады для командира с навыком cunning
+  const ambushBtn = document.getElementById('tup-ambush-btn');
+  if (ambushBtn) {
+    if (unit.isCommander && unit.strength > 0 &&
+        unit.commander?.skills?.includes('cunning')) {
+      if (bs.ambushUsed) {
+        ambushBtn.innerHTML = '<span style="color:#888;font-size:11px">(Засада использована)</span>';
+      } else {
+        ambushBtn.innerHTML =
+          '<button onclick="_triggerAmbush()" style="width:100%;margin-top:6px;padding:4px;' +
+          'background:#1a1a1a;border:1px solid #8a5a00;color:#ffaa00;' +
+          'border-radius:2px;cursor:pointer;font-size:11px">🎯 Засада</button>';
+      }
+    } else {
+      ambushBtn.innerHTML = '';
+    }
+  }
+}
+
+// ── Этап 13: засада командира ─────────────────────────
+
+function _triggerAmbush() {
+  if (!_battleState || _battleState.ambushUsed) return;
+  const cmd = _battleState.playerUnits.find(u => u.isCommander && u.strength > 0);
+  if (!cmd || !cmd.commander?.skills?.includes('cunning')) return;
+
+  _battleState.ambushUsed = true;
+  const r        = 3;
+  const affected = _battleState.enemyUnits.filter(u =>
+    u.strength > 0 &&
+    Math.abs(u.gridX - cmd.gridX) + Math.abs(u.gridY - cmd.gridY) <= r
+  );
+  for (const u of affected) {
+    u.morale = Math.max(0, u.morale - 20);
+  }
+  addLog(_battleState, `🎯 Засада! Враги в радиусе ${r} клеток деморализованы (-20 мораль)`);
+
+  const ambushBtn = document.getElementById('tup-ambush-btn');
+  if (ambushBtn) ambushBtn.innerHTML = '<span style="color:#888;font-size:11px">(Засада использована)</span>';
+
+  redrawAll(_ctx, _battleState);
 }
 
 function _setFormation(unitId, formation) {
