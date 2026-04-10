@@ -289,6 +289,7 @@ function onTacticalClick(e) {
     if (dist <= effectiveMoveSpeed && isCellFree(gridX, gridY, _battleState)) {
       selected.gridX = gridX;
       selected.gridY = gridY;
+      selected._movedThisTick = true; // Этап 14: флаг усталости
       addLog(_battleState, `Юнит перемещён на (${gridX},${gridY})`);
     }
   } else if (clicked?.side === 'enemy') {

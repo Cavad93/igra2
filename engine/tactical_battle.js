@@ -86,6 +86,10 @@ function initTacticalBattle(atkArmy, defArmy, region) {
   playerUnits.push(...splitArmy(atkArmy, 'player'));
   enemyUnits.push(...splitArmy(defArmy, 'enemy'));
 
+  // Этап 14: начальная усталость если армия маршировала в этот ход
+  const marchedThisTurn = atkArmy.marchedThisTurn ?? false;
+  playerUnits.forEach(u => { u.fatigue = marchedThisTurn ? 35 : 0; });
+
   const maxStrength = Math.max(
     ...playerUnits.map(u => u.maxStrength),
     ...enemyUnits.map(u => u.maxStrength)
@@ -221,6 +225,19 @@ function fatigueMultiplier(fatigue) {
   if (fatigue < 70)  return 0.85;
   if (fatigue < 90)  return 0.65;
   return 0.45;
+}
+
+// ── Этап 14: усталость ───────────────────────────────
+
+function processFatigue(unit, moved, fought) {
+  if (unit.isReserve) {
+    unit.fatigue = Math.max(0, unit.fatigue - 5); // отдых в резерве
+    return;
+  }
+  if (fought)       unit.fatigue = Math.min(100, unit.fatigue + 8);
+  else if (moved)   unit.fatigue = Math.min(100, unit.fatigue + 6);
+  else              unit.fatigue = Math.max(0,   unit.fatigue - 3); // отдых
+  if (unit.type === 'cavalry') unit.fatigue = Math.min(100, unit.fatigue + 2); // кавалерия устаёт быстрее
 }
 
 function getAdjacentUnits(unit, side, bs) {
@@ -394,7 +411,10 @@ function tacticalTick(bs) {
       (Math.abs(best.gridX - pu.gridX) + Math.abs(best.gridY - pu.gridY)) ? eu : best
     );
     const dmg = resolveArrows(pu, target, bs);
-    if (dmg > 0) addLog(bs, `🏹 Лучники выпустили залп: −${dmg} (осталось ${pu.ammo})`);
+    if (dmg > 0) {
+      addLog(bs, `🏹 Лучники выпустили залп: −${dmg} (осталось ${pu.ammo})`);
+      pu._foughtThisTick = true;
+    }
   }
   for (const eu of bs.enemyUnits) {
     if (eu.type !== 'archers' || eu.isRouting || eu.strength === 0 || eu.isReserve) continue;
@@ -411,7 +431,10 @@ function tacticalTick(bs) {
       (Math.abs(best.gridX - eu.gridX) + Math.abs(best.gridY - eu.gridY)) ? pu : best
     );
     const dmg = resolveArrows(eu, target, bs);
-    if (dmg > 0) addLog(bs, `🏹 Вражеские лучники: −${dmg} (осталось ${eu.ammo})`);
+    if (dmg > 0) {
+      addLog(bs, `🏹 Вражеские лучники: −${dmg} (осталось ${eu.ammo})`);
+      eu._foughtThisTick = true;
+    }
   }
 
   // 1. Рукопашный бой: каждый юнит игрока атакует соседних врагов
@@ -423,7 +446,11 @@ function tacticalTick(bs) {
     );
     for (const eu of enemies) {
       const dmg = resolveMelee(pu, eu, bs);
-      if (dmg > 0) addLog(bs, `⚔ ${pu.type} → ${eu.type}: −${dmg}`);
+      if (dmg > 0) {
+        addLog(bs, `⚔ ${pu.type} → ${eu.type}: −${dmg}`);
+        pu._foughtThisTick = true;
+        eu._foughtThisTick = true;
+      }
     }
   }
 
@@ -436,7 +463,11 @@ function tacticalTick(bs) {
     );
     for (const pu of players) {
       const dmg = resolveMelee(eu, pu, bs);
-      if (dmg > 0) addLog(bs, `🛡 ${eu.type} бьёт ${pu.type}: −${dmg}`);
+      if (dmg > 0) {
+        addLog(bs, `🛡 ${eu.type} бьёт ${pu.type}: −${dmg}`);
+        eu._foughtThisTick = true;
+        pu._foughtThisTick = true;
+      }
     }
   }
 
@@ -454,7 +485,10 @@ function tacticalTick(bs) {
     const nx = eu.gridX + (dx !== 0 ? dx : 0);
     const ny = eu.gridY + (dx === 0 ? dy : 0);
     if (nx >= 0 && nx < TACTICAL_GRID_COLS && ny >= 0 && ny < TACTICAL_GRID_ROWS) {
-      if (!findUnitAt(nx, ny, bs)) { eu.gridX = nx; eu.gridY = ny; }
+      if (!findUnitAt(nx, ny, bs)) {
+        eu.gridX = nx; eu.gridY = ny;
+        eu._movedThisTick = true;
+      }
     }
   }
 
@@ -465,7 +499,15 @@ function tacticalTick(bs) {
   processPanic(bs);
   processCommanderRally(bs);
 
-  // 5. Проверить победу
+  // 5. Фаза усталости
+  for (const u of [...bs.playerUnits, ...bs.enemyUnits]) {
+    if (u.strength === 0) continue;
+    processFatigue(u, u._movedThisTick, u._foughtThisTick);
+    u._movedThisTick  = false;
+    u._foughtThisTick = false;
+  }
+
+  // 6. Проверить победу
   const outcome = checkVictory(bs);
   if (outcome) {
     bs.phase = 'ended';
