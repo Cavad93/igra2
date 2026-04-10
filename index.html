@@ -7288,6 +7288,61 @@
       transition: all .15s;
     }
     .dp-cm-signed-close:hover { background: rgba(139,90,43,.5); }
+
+    /* ══════════════════════════════════════
+       ТАКТИЧЕСКИЙ БОЙ — оверлей
+    ══════════════════════════════════════ */
+    #tactical-overlay {
+      position: fixed; inset: 0;
+      background: #080808;
+      z-index: 9000;
+      display: none;
+      flex-direction: column;
+    }
+    #tactical-overlay.visible { display: flex; }
+    #tactical-canvas { flex: 1; display: block; cursor: crosshair; }
+    #tactical-top-bar {
+      height: 34px; background: #111; color: #aaa;
+      display: flex; align-items: center; gap: 24px;
+      padding: 0 14px; font-size: 12px;
+      border-bottom: 1px solid #2a2a2a; flex-shrink: 0;
+    }
+    #tactical-bottom-bar {
+      height: 46px; background: #111;
+      border-top: 1px solid #2a2a2a;
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 14px; flex-shrink: 0;
+    }
+    #tactical-bottom-bar button {
+      padding: 5px 14px; background: #1a1a1a;
+      border: 1px solid #444; color: #ccc;
+      border-radius: 2px; cursor: pointer; font-size: 12px;
+    }
+    #tactical-bottom-bar button:hover { background: #252525; }
+    #tac-btn-next    { border-color: #2a7a2a; color: #88ee88; }
+    #tac-btn-retreat { border-color: #7a2a2a; color: #ee8888; }
+    #tactical-unit-panel {
+      position: absolute; top: 42px; left: 6px;
+      width: 176px; background: rgba(8,8,8,0.90);
+      border: 1px solid #383838; border-radius: 3px;
+      padding: 10px; color: #ccc; font-size: 12px;
+      display: none; line-height: 1.5;
+    }
+    #tactical-log {
+      position: absolute; bottom: 54px; right: 6px;
+      width: 250px; background: rgba(8,8,8,0.82);
+      border: 1px solid #2a2a2a; border-radius: 3px;
+      padding: 6px; font-size: 11px; color: #aaa;
+      max-height: 130px; overflow: hidden;
+    }
+    .tac-log-entry { padding: 2px 0; border-bottom: 1px solid #1e1e1e; line-height: 1.4; }
+    .tac-log-entry:first-child { color: #ddd; }
+    #tac-tooltip {
+      position: fixed; background: rgba(0,0,0,0.88);
+      border: 1px solid #444; color: #ccc;
+      font-size: 11px; padding: 5px 8px; border-radius: 3px;
+      pointer-events: none; white-space: pre; z-index: 9100; display: none;
+    }
   </style>
 </head>
 <body>
@@ -7652,6 +7707,36 @@
   </div>
 
   <!-- ═══════════════════════════
+       ТАКТИЧЕСКИЙ БОЙ — оверлей
+  ═══════════════════════════ -->
+  <div id="tactical-overlay">
+    <div id="tactical-top-bar">
+      <span id="tac-turn">Ход 1</span>
+      <span id="tac-terrain"></span>
+      <span id="tac-ratio"></span>
+    </div>
+    <canvas id="tactical-canvas"></canvas>
+    <div id="tactical-unit-panel">
+      <div id="tup-name"></div>
+      <div id="tup-strength"></div>
+      <div class="tup-bar-wrap"><div id="tup-morale"  class="tup-bar-fill tup-morale"></div></div>
+      <div class="tup-bar-wrap"><div id="tup-fatigue" class="tup-bar-fill tup-fatigue"></div></div>
+      <div id="tup-ammo"></div>
+      <div id="tup-elevation-hint"></div>
+      <div id="tup-formation-btns"></div>
+      <div id="tup-reserve-btn"></div>
+      <div id="tup-ambush-btn"></div>
+    </div>
+    <div id="tactical-bottom-bar">
+      <button id="tac-btn-next">⏭ Следующий ход</button>
+      <button id="tac-btn-retreat">🏃 Отступить</button>
+      <button id="tac-btn-auto">⚡ Авторассчёт</button>
+    </div>
+    <div id="tactical-log"></div>
+    <div id="tac-tooltip"></div>
+  </div>
+
+  <!-- ═══════════════════════════
        СКРИПТЫ (порядок важен!)
   ═══════════════════════════ -->
   <script src="config.js"></script>
@@ -7747,6 +7832,8 @@
   <script src="ai/treaty_interpreter.js"></script>
   <script src="ui/apikey.js"></script>
   <script src="ui/input.js"></script>
+  <script src="engine/tactical_battle.js"></script>
+  <script src="ui/tactical_map.js"></script>
 
   <script>
     // ──────────────────────────────────────────
