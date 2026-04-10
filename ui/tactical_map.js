@@ -546,16 +546,21 @@ function showRetreatConfirm(bs) {
   document.body.appendChild(msg);
 }
 
-// ── Этап 8: завершение боя ────────────────────────────
+// ── Этап 19: завершение боя с финализацией ────────────
 
 function endTacticalBattle(bs, outcome) {
-  // TODO: Этапы 10+ — интеграция с основным игровым потоком
-  const msg = outcome === 'player_wins' ? '🏆 Победа!' : '💀 Поражение!';
-  console.log('[tactical] Бой завершён:', outcome);
   const overlay = document.getElementById('tactical-overlay');
   if (overlay) {
-    setTimeout(() => overlay.classList.remove('visible'), 2500);
+    overlay.classList.remove('visible');
+    // Снять слушатели событий чтобы избежать утечек памяти
+    const canvas = document.getElementById('tactical-canvas');
+    if (canvas) {
+      canvas.removeEventListener('click',     onTacticalClick);
+      canvas.removeEventListener('mousemove', onTacticalHover);
+    }
   }
+  const result = finalizeTacticalBattle(bs, outcome);
+  if (typeof showBattleResult === 'function') showBattleResult(result);
 }
 
 function openTacticalMap(atkArmy, defArmy, region) {

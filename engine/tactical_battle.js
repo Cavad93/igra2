@@ -666,3 +666,49 @@ function tacticalTick(bs) {
   document.getElementById('tac-turn').textContent = `Ход ${bs.turn}`;
   redrawAll(_ctx, bs);
 }
+
+// ── Этап 19: финализация боя ──────────────────────────
+
+function finalizeTacticalBattle(bs, outcome) {
+  // Суммировать выживших (routing-юниты считаются потерянными)
+  const playerSurvived = bs.playerUnits.reduce((s, u) => s + (u.isRouting ? 0 : u.strength), 0);
+  const enemySurvived  = bs.enemyUnits.reduce((s, u) => s + (u.isRouting  ? 0 : u.strength), 0);
+
+  const playerTotal = bs.playerUnits.reduce((s, u) => s + u.maxStrength, 0);
+  const enemyTotal  = bs.enemyUnits.reduce((s, u) => s + u.maxStrength, 0);
+
+  const playerCas = playerTotal - playerSurvived;
+  const enemyCas  = enemyTotal  - enemySurvived;
+
+  // Записать обратно в army-объекты пропорционально выживаемости
+  const atkSurvRatio = playerTotal > 0 ? playerSurvived / playerTotal : 0;
+  bs.atkArmy.infantry = Math.floor((bs.atkArmy.infantry || 0) * atkSurvRatio);
+  bs.atkArmy.cavalry  = Math.floor((bs.atkArmy.cavalry  || 0) * atkSurvRatio);
+  bs.atkArmy.archers  = Math.floor((bs.atkArmy.archers  || 0) * atkSurvRatio);
+
+  const defSurvRatio = enemyTotal > 0 ? enemySurvived / enemyTotal : 0;
+  bs.defArmy.infantry = Math.floor((bs.defArmy.infantry || 0) * defSurvRatio);
+  bs.defArmy.cavalry  = Math.floor((bs.defArmy.cavalry  || 0) * defSurvRatio);
+  bs.defArmy.archers  = Math.floor((bs.defArmy.archers  || 0) * defSurvRatio);
+
+  const atkWins = outcome === 'player_wins' || outcome === 'player_captured_standard';
+  const margin  = enemyCas > 0 ? playerCas / enemyCas : 0.5;
+
+  const gs = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : {};
+  return {
+    atkWins,
+    atkName: gs.nations?.[bs.atkArmy.nation_id]?.name ?? 'Атакующий',
+    defName: gs.nations?.[bs.defArmy.nation_id]?.name ?? 'Защитник',
+    atkFlag: gs.nations?.[bs.atkArmy.nation_id]?.flag ?? '⚔',
+    defFlag: gs.nations?.[bs.defArmy.nation_id]?.flag ?? '🛡',
+    atkTotal: playerTotal,
+    defTotal: enemyTotal,
+    atkCas:   playerCas,
+    defCas:   enemyCas,
+    terrain:  bs.terrain,
+    terrainLabel: bs.region?.name ?? bs.terrain,
+    margin:   Math.abs(1 - margin),
+    capturedRegionName: (outcome === 'player_captured_standard' || atkWins)
+      ? bs.region?.name : null
+  };
+}
