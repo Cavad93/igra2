@@ -5,6 +5,7 @@
 // Этап 5: сетка иконок солдат + полоски силы/морали
 // Этап 6: управление мышью — выбор и перемещение юнитов
 // Этап 7: панель выбранного юнита и кнопки формаций
+// Этап 8: endTacticalBattle + привязка кнопки "Следующий ход"
 // ══════════════════════════════════════════════════════
 
 // ── Этап 6: глобальные ссылки ────────────────────────
@@ -380,6 +381,18 @@ function _withdrawReserve(unitId) {
   }
 }
 
+// ── Этап 8: завершение боя ────────────────────────────
+
+function endTacticalBattle(bs, outcome) {
+  // TODO: Этапы 10+ — интеграция с основным игровым потоком
+  const msg = outcome === 'player_wins' ? '🏆 Победа!' : '💀 Поражение!';
+  console.log('[tactical] Бой завершён:', outcome);
+  const overlay = document.getElementById('tactical-overlay');
+  if (overlay) {
+    setTimeout(() => overlay.classList.remove('visible'), 2500);
+  }
+}
+
 function openTacticalMap(atkArmy, defArmy, region) {
   const overlay = document.getElementById('tactical-overlay');
   const canvas  = document.getElementById('tactical-canvas');
@@ -400,6 +413,14 @@ function openTacticalMap(atkArmy, defArmy, region) {
 
   _canvas.addEventListener('click',     onTacticalClick);
   _canvas.addEventListener('mousemove', onTacticalHover);
+
+  // ── Этап 8: привязать кнопки управления боем ─────────
+  const btnNext = document.getElementById('tac-btn-next');
+  if (btnNext) {
+    btnNext.onclick = () => {
+      if (_battleState?.phase === 'battle') tacticalTick(_battleState);
+    };
+  }
 
   redrawAll(_ctx, _battleState);
 

@@ -2,6 +2,7 @@
 // Тактический режим боя — логика
 // Этап 1: константы
 // Этап 3: createUnit + initTacticalBattle
+// Этап 8: боевые формулы и тактический тик
 // ══════════════════════════════════════════════════════
 
 const TACTICAL_GRID_COLS = 22;
@@ -105,4 +106,116 @@ function initTacticalBattle(atkArmy, defArmy, region) {
     ambushUsed: false,
     selectedUnitId: null
   };
+}
+
+// ── Этап 8: боевые формулы и тактический тик ──────────
+
+const FORMATION_MULT = {
+  standard:  { atk: 1.0, def: 1.0 },
+  aggressive:{ atk: 1.3, def: 0.8 },
+  defensive: { atk: 0.7, def: 1.4 },
+  flanking:  { atk: 1.1, def: 0.9 },
+  siege:     { atk: 0.5, def: 1.2 }
+};
+
+function moraleMultiplier(morale) {
+  if (morale >= 80) return 1.20;
+  if (morale >= 50) return 1.00;
+  if (morale >= 30) return 0.80;
+  return 0.50;
+}
+
+function fatigueMultiplier(fatigue) {
+  if (fatigue < 40)  return 1.00;
+  if (fatigue < 70)  return 0.85;
+  if (fatigue < 90)  return 0.65;
+  return 0.45;
+}
+
+function getAdjacentUnits(unit, side, bs) {
+  const all = side === 'player' ? bs.playerUnits : bs.enemyUnits;
+  return all.filter(u =>
+    u.strength > 0 && !u.isRouting &&
+    Math.abs(u.gridX - unit.gridX) + Math.abs(u.gridY - unit.gridY) === 1
+  );
+}
+
+function resolveMelee(attacker, defender, bs) {
+  const fm  = FORMATION_MULT[attacker.formation] ?? FORMATION_MULT.standard;
+  const damage = attacker.strength
+    * 0.04
+    * fm.atk
+    * moraleMultiplier(attacker.morale)
+    * fatigueMultiplier(attacker.fatigue);
+  defender.strength = Math.max(0, defender.strength - Math.floor(damage));
+  if (defender.strength === 0) defender.morale = 0;
+  return Math.floor(damage);
+}
+
+function checkVictory(bs) {
+  const playerAlive = bs.playerUnits.filter(u => u.strength > 0 && !u.isRouting);
+  const enemyAlive  = bs.enemyUnits.filter(u => u.strength > 0 && !u.isRouting);
+  if (enemyAlive.length === 0) return 'player_wins';
+  if (playerAlive.length === 0) return 'player_loses';
+  return null;
+}
+
+function tacticalTick(bs) {
+  bs.turn++;
+
+  // 1. Рукопашный бой: каждый юнит игрока атакует соседних врагов
+  for (const pu of bs.playerUnits) {
+    if (pu.isRouting || pu.strength === 0 || pu.isReserve) continue;
+    const enemies = bs.enemyUnits.filter(eu =>
+      eu.strength > 0 &&
+      Math.abs(eu.gridX - pu.gridX) + Math.abs(eu.gridY - pu.gridY) === 1
+    );
+    for (const eu of enemies) {
+      const dmg = resolveMelee(pu, eu, bs);
+      if (dmg > 0) addLog(bs, `⚔ ${pu.type} → ${eu.type}: −${dmg}`);
+    }
+  }
+
+  // 1b. Ответный удар: каждый враг атакует соседних юнитов игрока
+  for (const eu of bs.enemyUnits) {
+    if (eu.isRouting || eu.strength === 0 || eu.isReserve) continue;
+    const players = bs.playerUnits.filter(pu =>
+      pu.strength > 0 &&
+      Math.abs(pu.gridX - eu.gridX) + Math.abs(pu.gridY - eu.gridY) === 1
+    );
+    for (const pu of players) {
+      const dmg = resolveMelee(eu, pu, bs);
+      if (dmg > 0) addLog(bs, `🛡 ${eu.type} бьёт ${pu.type}: −${dmg}`);
+    }
+  }
+
+  // 2. Простой ИИ: враги двигаются к ближайшему юниту игрока
+  for (const eu of bs.enemyUnits) {
+    if (eu.isRouting || eu.strength === 0 || eu.isReserve) continue;
+    const alive = bs.playerUnits.filter(u => u.strength > 0);
+    if (alive.length === 0) break;
+    const target = alive.reduce((best, u) =>
+      (Math.abs(u.gridX - eu.gridX) + Math.abs(u.gridY - eu.gridY)) <
+      (Math.abs(best.gridX - eu.gridX) + Math.abs(best.gridY - eu.gridY)) ? u : best
+    );
+    const dx = Math.sign(target.gridX - eu.gridX);
+    const dy = Math.sign(target.gridY - eu.gridY);
+    const nx = eu.gridX + (dx !== 0 ? dx : 0);
+    const ny = eu.gridY + (dx === 0 ? dy : 0);
+    if (nx >= 0 && nx < TACTICAL_GRID_COLS && ny >= 0 && ny < TACTICAL_GRID_ROWS) {
+      if (!findUnitAt(nx, ny, bs)) { eu.gridX = nx; eu.gridY = ny; }
+    }
+  }
+
+  // 3. Проверить победу
+  const outcome = checkVictory(bs);
+  if (outcome) {
+    bs.phase = 'ended';
+    addLog(bs, outcome === 'player_wins' ? '🏆 Победа!' : '💀 Поражение!');
+    endTacticalBattle(bs, outcome);
+    return;
+  }
+
+  document.getElementById('tac-turn').textContent = `Ход ${bs.turn}`;
+  redrawAll(_ctx, bs);
 }
