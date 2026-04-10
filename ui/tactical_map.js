@@ -455,21 +455,45 @@ function _setFormation(unitId, formation) {
   }
 }
 
+// ── Этап 15: резерв — полная реализация ───────────────
+
 function _sendReserve(unitId) {
   const unit = _battleState?.playerUnits.find(u => u.id === unitId);
-  if (unit) {
-    unit.isReserve = true;
-    updateUnitPanel(unit, _battleState);
-    redrawAll(_ctx, _battleState);
+  if (!unit || unit.isCommander) return;
+
+  // Найти свободную клетку в резервной зоне (колонки 0–2)
+  for (let x = 0; x < RESERVE_ZONE_COLS; x++) {
+    for (let y = 0; y < TACTICAL_GRID_ROWS; y++) {
+      if (!findUnitAt(x, y, _battleState)) {
+        unit.gridX = x; unit.gridY = y;
+        unit.isReserve = true;
+        addLog(_battleState, `🛡 ${unit.type} отведён в резерв`);
+        updateUnitPanel(unit, _battleState);
+        redrawAll(_ctx, _battleState);
+        return;
+      }
+    }
   }
+  addLog(_battleState, `⚠️ Нет места в резерве`);
+  redrawAll(_ctx, _battleState);
 }
 
 function _withdrawReserve(unitId) {
   const unit = _battleState?.playerUnits.find(u => u.id === unitId);
-  if (unit) {
-    unit.isReserve = false;
-    updateUnitPanel(unit, _battleState);
-    redrawAll(_ctx, _battleState);
+  if (!unit) return;
+
+  // Найти свободную клетку на линии фронта (колонки 4–8)
+  for (let x = RESERVE_ZONE_COLS + 1; x <= 8; x++) {
+    for (let y = 0; y < TACTICAL_GRID_ROWS; y++) {
+      if (!findUnitAt(x, y, _battleState)) {
+        unit.gridX = x; unit.gridY = y;
+        unit.isReserve = false;
+        addLog(_battleState, `⚔ ${unit.type} введён в бой!`);
+        updateUnitPanel(unit, _battleState);
+        redrawAll(_ctx, _battleState);
+        return;
+      }
+    }
   }
 }
 

@@ -471,7 +471,30 @@ function tacticalTick(bs) {
     }
   }
 
-  // 2. Простой ИИ: враги двигаются к ближайшему юниту игрока
+  // 2. Этап 15: ИИ-резерв — ввести если фронт < 3 активных юнитов
+  {
+    const enemyFront = bs.enemyUnits.filter(u => !u.isReserve && u.strength > 0 && !u.isRouting);
+    if (enemyFront.length < 3) {
+      const reserveUnit = bs.enemyUnits.find(u => u.isReserve && u.strength > 0);
+      if (reserveUnit) {
+        for (let x = TACTICAL_GRID_COLS - RESERVE_ZONE_COLS - 2; x >= 14; x--) {
+          let placed = false;
+          for (let y = 0; y < TACTICAL_GRID_ROWS; y++) {
+            if (!findUnitAt(x, y, bs)) {
+              reserveUnit.gridX = x; reserveUnit.gridY = y;
+              reserveUnit.isReserve = false;
+              addLog(bs, `⚔ Враг вводит резерв в бой!`);
+              placed = true;
+              break;
+            }
+          }
+          if (placed) break;
+        }
+      }
+    }
+  }
+
+  // 2b. Простой ИИ: враги двигаются к ближайшему юниту игрока
   for (const eu of bs.enemyUnits) {
     if (eu.isRouting || eu.strength === 0 || eu.isReserve) continue;
     const alive = bs.playerUnits.filter(u => u.strength > 0);
