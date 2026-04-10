@@ -96,7 +96,7 @@ function initTacticalBattle(atkArmy, defArmy, region) {
     enemyUnits,
     region,
     terrain: region?.terrain ?? 'plains',
-    elevatedCells: new Set(),
+    elevatedCells: generateElevatedCells(region?.terrain ?? 'plains', TACTICAL_GRID_COLS, TACTICAL_GRID_ROWS),
     turn: 0,
     phase: 'battle',
     log: [],
@@ -106,6 +106,48 @@ function initTacticalBattle(atkArmy, defArmy, region) {
     ambushUsed: false,
     selectedUnitId: null
   };
+}
+
+// ── Этап 10: генерация возвышенных клеток ────────────
+
+function generateElevatedCells(terrain, cols, rows) {
+  const elevated = new Set();
+  const ratio = { plains: 0, river_valley: 0.04, coastal_city: 0.05,
+                  hills: 0.25, mountains: 0.40 }[terrain] ?? 0;
+  if (ratio === 0) return elevated;
+
+  const totalCells   = cols * rows;
+  const targetCount  = Math.floor(totalCells * ratio);
+  const clusterCount = Math.ceil(targetCount / 10);
+
+  for (let i = 0; i < clusterCount; i++) {
+    const cx = RESERVE_ZONE_COLS + 1 +
+               Math.floor(Math.random() * (cols - RESERVE_ZONE_COLS * 2 - 2));
+    const cy = 1 + Math.floor(Math.random() * (rows - 2));
+    const r  = 2 + Math.floor(Math.random() * 2);
+    for (let dx = -r; dx <= r; dx++) {
+      for (let dy = -r; dy <= r; dy++) {
+        if (dx * dx + dy * dy <= r * r) {
+          const ex = cx + dx, ey = cy + dy;
+          if (ex >= RESERVE_ZONE_COLS && ex < cols - RESERVE_ZONE_COLS &&
+              ey >= 0 && ey < rows) {
+            elevated.add(`${ex},${ey}`);
+          }
+        }
+      }
+    }
+  }
+  return elevated;
+}
+
+// ── Этап 10: боевой бонус от рельефа ─────────────────
+
+function getTerrainAttackMult(attacker, defender, bs) {
+  const atkElev = bs.elevatedCells.has(`${attacker.gridX},${attacker.gridY}`);
+  const defElev = bs.elevatedCells.has(`${defender.gridX},${defender.gridY}`);
+  if (atkElev && !defElev) return 1.10; // атака с высоты
+  if (!atkElev && defElev) return 0.88; // атака вверх
+  return 1.0;
 }
 
 // ── Этап 9: боеприпасы стрелков ──────────────────────
@@ -167,10 +209,12 @@ function getAdjacentUnits(unit, side, bs) {
 }
 
 function resolveMelee(attacker, defender, bs) {
-  const fm  = FORMATION_MULT[attacker.formation] ?? FORMATION_MULT.standard;
-  const damage = attacker.strength
+  const fm      = FORMATION_MULT[attacker.formation] ?? FORMATION_MULT.standard;
+  const terrain = getTerrainAttackMult(attacker, defender, bs);
+  const damage  = attacker.strength
     * 0.04
     * fm.atk
+    * terrain
     * moraleMultiplier(attacker.morale)
     * fatigueMultiplier(attacker.fatigue);
   defender.strength = Math.max(0, defender.strength - Math.floor(damage));

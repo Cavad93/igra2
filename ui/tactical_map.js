@@ -32,11 +32,22 @@ function renderGrid(ctx, terrain, elevatedCells = new Set()) {
   ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, W, H);
 
-  // Возвышенные клетки
+  // Возвышенные клетки — светлая заливка
   ctx.fillStyle = 'rgba(255,255,200,0.08)';
   for (const key of elevatedCells) {
     const [ex, ey] = key.split(',').map(Number);
     ctx.fillRect(ex * CELL_SIZE, ey * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+  }
+
+  // Возвышенные клетки — жёлтый треугольник в правом нижнем углу
+  ctx.fillStyle = 'rgba(255,220,100,0.35)';
+  for (const key of elevatedCells) {
+    const [ex, ey] = key.split(',').map(Number);
+    ctx.beginPath();
+    ctx.moveTo((ex + 1) * CELL_SIZE - 8, (ey + 1) * CELL_SIZE);
+    ctx.lineTo((ex + 1) * CELL_SIZE,     (ey + 1) * CELL_SIZE);
+    ctx.lineTo((ex + 1) * CELL_SIZE,     (ey + 1) * CELL_SIZE - 8);
+    ctx.fill();
   }
 
   // Зоны резерва
@@ -240,8 +251,14 @@ function onTacticalClick(e) {
     selectUnit(clicked, _battleState);
   } else if (!clicked) {
     // Переместить если в радиусе moveSpeed
+    // Этап 10: кавалерия на возвышенности теряет 1 ед. скорости
+    const cavOnElev = selected.type === 'cavalry' &&
+      _battleState.elevatedCells.has(`${selected.gridX},${selected.gridY}`);
+    const effectiveMoveSpeed = cavOnElev
+      ? Math.max(1, selected.moveSpeed - 1)
+      : selected.moveSpeed;
     const dist = Math.abs(gridX - selected.gridX) + Math.abs(gridY - selected.gridY);
-    if (dist <= selected.moveSpeed && isCellFree(gridX, gridY, _battleState)) {
+    if (dist <= effectiveMoveSpeed && isCellFree(gridX, gridY, _battleState)) {
       selected.gridX = gridX;
       selected.gridY = gridY;
       addLog(_battleState, `Юнит перемещён на (${gridX},${gridY})`);
