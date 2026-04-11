@@ -15,6 +15,48 @@
 
   <style>
     /* ══════════════════════════════════════════════════
+       D3: ЭКРАН ЗАГРУЗКИ
+    ══════════════════════════════════════════════════ */
+    #splash-screen {
+      position: fixed; inset: 0; z-index: 99999;
+      background: #080603;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.5s ease;
+    }
+    #splash-inner {
+      text-align: center; color: #d4a853;
+    }
+    #splash-title {
+      font-family: 'Cinzel', 'Georgia', serif;
+      font-size: 42px; font-weight: 900;
+      letter-spacing: 0.12em;
+      color: #d4a853;
+      text-shadow: 0 0 30px rgba(212,168,83,0.4);
+      margin-bottom: 6px;
+    }
+    #splash-subtitle {
+      font-family: 'Cinzel', serif;
+      font-size: 14px; letter-spacing: 0.25em;
+      color: #7a5a28; margin-bottom: 40px;
+    }
+    #splash-bar-wrap {
+      width: 260px; height: 3px;
+      background: #1e1608;
+      border-radius: 2px; margin: 0 auto 12px;
+      overflow: hidden;
+    }
+    #splash-bar-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, #7a5a18, #d4a853);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+    #splash-status {
+      font-size: 11px; letter-spacing: 0.1em;
+      color: #5a4520; font-family: 'Georgia', serif;
+    }
+
+    /* ══════════════════════════════════════════════════
        БАЗОВЫЙ СБРОС И ПЕРЕМЕННЫЕ
     ══════════════════════════════════════════════════ */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -7394,6 +7436,16 @@
   </style>
 </head>
 <body>
+
+  <!-- D3: экран загрузки -->
+  <div id="splash-screen">
+    <div id="splash-inner">
+      <div id="splash-title">Ancient Strategy</div>
+      <div id="splash-subtitle">Сиракузы · 301 BC</div>
+      <div id="splash-bar-wrap"><div id="splash-bar-fill"></div></div>
+      <div id="splash-status">Загрузка...</div>
+    </div>
+  </div>
   <div id="app">
 
     <!-- ═══════════════════════════
@@ -7894,16 +7946,32 @@
     // Инициализируем ввод
     initInput();
 
-    // Запускаем игру (async: загружает сохранение из IndexedDB)
+    // D3: показать экран загрузки
+    const _splash = document.getElementById('splash-screen');
+    function _splashProgress(pct, text) {
+      const bar = document.getElementById('splash-bar-fill');
+      const lbl = document.getElementById('splash-status');
+      if (bar) bar.style.width = pct + '%';
+      if (lbl) lbl.textContent = text;
+    }
+    function _splashHide() {
+      if (!_splash) return;
+      _splash.style.opacity = '0';
+      setTimeout(() => { _splash.style.display = 'none'; }, 500);
+    }
+
+    _splashProgress(10, 'Инициализация...');
     initGame().then(() => {
-      // Инициализируем сенаты (Lazy Materialization)
+      _splashProgress(60, 'Загрузка карты...');
       initAllSenates();
-      // Заполняем легенду наций
+      _splashProgress(80, 'Подготовка наций...');
       renderNationLegend();
-      // Загружаем зашифрованный API ключ; если не найден — показываем модал
+      _splashProgress(95, 'Готово');
       initAPIKey();
+      setTimeout(_splashHide, 300);
     }).catch(e => {
       console.error('[initGame] Критическая ошибка:', e);
+      _splashProgress(100, 'Ошибка инициализации');
     });
 
     // ──────────────────────────────────────────
