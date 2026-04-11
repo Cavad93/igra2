@@ -846,23 +846,32 @@ function endTacticalBattle(bs, outcome) {
   // Г7: остановить rAF-цикл
   _stopRenderLoop();
   const overlay = document.getElementById('tactical-overlay');
-  if (overlay) {
-    overlay.classList.remove('visible');
-    overlay.classList.remove('faded-in');
-    // Снять слушатели событий чтобы избежать утечек памяти
-    const canvas = document.getElementById('tactical-canvas');
-    if (canvas) {
-      canvas.removeEventListener('click',     onTacticalClick);
-      canvas.removeEventListener('mousemove', onTacticalHover);
+
+  // B3: сначала fade-out (убираем faded-in → CSS переход opacity 0),
+  //     потом через 360ms полностью скрываем оверлей
+  function _finalize() {
+    if (overlay) {
+      overlay.classList.remove('visible');
+      overlay.classList.remove('faded-in');
+      const canvas = document.getElementById('tactical-canvas');
+      if (canvas) {
+        canvas.removeEventListener('click',     onTacticalClick);
+        canvas.removeEventListener('mousemove', onTacticalHover);
+      }
+    }
+    _bgOffscreen = null;
+    const result = finalizeTacticalBattle(bs, outcome);
+    if (typeof showBattleResult === 'function') showBattleResult(result);
+    if (typeof window !== 'undefined' && typeof window._onTacticalBattleEnd === 'function') {
+      window._onTacticalBattleEnd(result);
     }
   }
-  // Г6: сбросить кэш фона
-  _bgOffscreen = null;
-  const result = finalizeTacticalBattle(bs, outcome);
-  if (typeof showBattleResult === 'function') showBattleResult(result);
-  // Этап 20: callback для армейской интеграции (синхронизация потерь, отступление, захват)
-  if (typeof window !== 'undefined' && typeof window._onTacticalBattleEnd === 'function') {
-    window._onTacticalBattleEnd(result);
+
+  if (overlay && overlay.classList.contains('faded-in')) {
+    overlay.classList.remove('faded-in'); // запускает CSS fade-out 0.35s
+    setTimeout(_finalize, 370);
+  } else {
+    _finalize();
   }
 }
 
