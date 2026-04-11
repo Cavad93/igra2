@@ -395,15 +395,20 @@ function renderUnit(ctx, unit, battleState) {
     }
   }
 
-  // Число солдат (у нижнего края квадрата)
-  ctx.globalAlpha = unit.isRouting ? 0.4 : 1.0;
-  ctx.font        = `${Math.max(8, sz * 0.16 | 0)}px monospace`;
-  ctx.fillStyle   = '#cccccc';
-  ctx.textAlign   = 'center';
+  // А2: число солдат с outline для читаемости на любом фоне
+  ctx.globalAlpha  = unit.isRouting ? 0.4 : 1.0;
+  ctx.font         = `bold ${Math.max(8, sz * 0.17 | 0)}px 'Cinzel','Georgia',serif`;
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'alphabetic';
   const label = unit.strength >= 1000
     ? (unit.strength / 1000).toFixed(1) + 'k'
     : unit.strength.toString();
-  ctx.fillText(label, px + sz / 2, py + sz * 0.94);
+  ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+  ctx.lineWidth   = 2.5;
+  ctx.lineJoin    = 'round';
+  ctx.strokeText(label, cx, py + sz * 0.94);
+  ctx.fillStyle   = '#f0e8c0';
+  ctx.fillText(label, cx, py + sz * 0.94);
 
   // Г2: полоска силы (под юнитом) — скруглённая
   const strPct2  = unit.strength / unit.maxStrength;
