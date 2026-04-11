@@ -426,11 +426,22 @@ function buildTooltipContent(regionId, mapData, nationId) {
     }
   }
 
+  // B4: военная сила нации в регионе
+  let milStr = '';
+  if (nation) {
+    const mil = nation.military;
+    const total = (mil?.infantry || 0) + (mil?.cavalry || 0) + (mil?.archers || 0);
+    if (total > 0) {
+      const totalFmt = total >= 1000 ? (total / 1000).toFixed(1) + 'k' : total;
+      milStr = `<div class="rt-mil">⚔ ${totalFmt} воинов</div>`;
+    }
+  }
+
   return `
     <div class="rt-name">${mapData.name}</div>
     <div class="rt-nation" style="color:${nationColor}">${nationName}</div>
     <div class="rt-pop">👥 ${pop}</div>
-    ${occupyStr}${fortStr}${blockStr}
+    ${milStr}${occupyStr}${fortStr}${blockStr}
   `;
 }
 
