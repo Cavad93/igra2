@@ -7290,11 +7290,23 @@
     .dp-cm-signed-close:hover { background: rgba(139,90,43,.5); }
 
     /* ══════════════════════════════════════
-       ТАКТИЧЕСКИЙ БОЙ — оверлей
+       ТАКТИЧЕСКИЙ БОЙ — D1: CSS-переменные
     ══════════════════════════════════════ */
     #tactical-overlay {
+      --tac-bg:         #0d0d0d;
+      --tac-bar:        #111111;
+      --tac-border:     #2a2a2a;
+      --tac-border-acc: #3a3a3a;
+      --tac-text:       #c8c0b0;
+      --tac-text-dim:   #888880;
+      --tac-gold:       #e0c060;
+      --tac-green:      #88ee88;
+      --tac-red:        #ee8888;
+      --tac-panel:      rgba(10,10,10,0.92);
+    }
+    #tactical-overlay {
       position: fixed; inset: 0;
-      background: #080808;
+      background: var(--tac-bg);
       z-index: 9000;
       display: none;
       flex-direction: column;
@@ -7302,70 +7314,64 @@
       opacity: 0;
       transition: opacity 0.35s ease;
     }
-    #tactical-overlay.visible {
-      display: flex;
-    }
-    #tactical-overlay.visible.faded-in {
-      opacity: 1;
-    }
+    #tactical-overlay.visible { display: flex; }
+    #tactical-overlay.visible.faded-in { opacity: 1; }
     #tactical-canvas-wrap {
       flex: 1; min-height: 0; overflow: auto;
       display: flex; align-items: center; justify-content: center;
-      background: #080808;
+      background: var(--tac-bg);
     }
     #tactical-canvas {
       display: block; cursor: crosshair;
-      /* canvas не растягивается — внутренний размер 880×640.
-         CSS max-* масштабирует визуально; scaleX/Y в JS корректирует клики. */
-      max-width: 100%;
-      max-height: 100%;
+      max-width: 100%; max-height: 100%;
     }
     #tactical-top-bar {
-      height: 34px; background: #111; color: #aaa;
+      height: 34px; background: var(--tac-bar); color: var(--tac-text);
       display: flex; align-items: center; gap: 24px;
       padding: 0 14px; font-size: 12px;
-      border-bottom: 1px solid #2a2a2a; flex-shrink: 0;
+      border-bottom: 1px solid var(--tac-border); flex-shrink: 0;
       font-family: 'Cinzel', 'Georgia', serif; letter-spacing: 0.04em;
     }
     #tactical-bottom-bar {
-      height: 46px; background: #111;
-      border-top: 1px solid #2a2a2a;
+      height: 46px; background: var(--tac-bar);
+      border-top: 1px solid var(--tac-border);
       display: flex; align-items: center; gap: 10px;
       padding: 0 14px; flex-shrink: 0;
     }
     #tactical-bottom-bar button {
-      padding: 5px 14px; background: #1a1a1a;
-      border: 1px solid #444; color: #ccc;
-      border-radius: 2px; cursor: pointer; font-size: 12px;
+      padding: 5px 14px; background: #181818;
+      border: 1px solid var(--tac-border-acc); color: var(--tac-text);
+      border-radius: 3px; cursor: pointer; font-size: 12px;
+      transition: background 0.15s;
     }
-    #tactical-bottom-bar button:hover { background: #252525; }
-    #tac-btn-next    { border-color: #2a7a2a; color: #88ee88; }
-    #tac-btn-retreat { border-color: #7a2a2a; color: #ee8888; }
+    #tactical-bottom-bar button:hover { background: #222222; }
+    #tac-btn-next    { border-color: #2a6a2a; color: var(--tac-green); }
+    #tac-btn-retreat { border-color: #6a2a2a; color: var(--tac-red); }
     #tactical-unit-panel {
       position: absolute; top: 42px; left: 6px;
-      width: 176px; background: rgba(8,8,8,0.90);
-      border: 1px solid #383838; border-radius: 3px;
-      padding: 10px; color: #ccc; font-size: 12px;
+      width: 176px; background: var(--tac-panel);
+      border: 1px solid var(--tac-border-acc); border-radius: 4px;
+      padding: 10px; color: var(--tac-text); font-size: 12px;
       display: none; line-height: 1.5;
     }
-    #tup-name { font-family: 'Cinzel', serif; font-size: 11px; color: #e0c060; letter-spacing: 0.05em; }
+    #tup-name { font-family: 'Cinzel', serif; font-size: 11px; color: var(--tac-gold); letter-spacing: 0.05em; }
     #tactical-log {
       position: absolute; bottom: 54px; right: 6px;
-      width: 250px; background: rgba(8,8,8,0.82);
-      border: 1px solid #2a2a2a; border-radius: 3px;
-      padding: 6px; font-size: 11px; color: #aaa;
+      width: 250px; background: var(--tac-panel);
+      border: 1px solid var(--tac-border); border-radius: 4px;
+      padding: 6px; font-size: 11px; color: var(--tac-text-dim);
       max-height: 130px; overflow: hidden;
     }
     .tac-log-entry { padding: 2px 0; border-bottom: 1px solid #1e1e1e; line-height: 1.4; }
-    .tac-log-entry:first-child { color: #ddd; }
+    .tac-log-entry:first-child { color: var(--tac-text); }
     #tac-tooltip {
-      position: fixed; background: rgba(0,0,0,0.88);
-      border: 1px solid #444; color: #ccc;
-      font-size: 11px; padding: 5px 8px; border-radius: 3px;
+      position: fixed; background: rgba(5,5,5,0.92);
+      border: 1px solid var(--tac-border-acc); color: var(--tac-text);
+      font-size: 11px; padding: 5px 8px; border-radius: 4px;
       pointer-events: none; white-space: pre; z-index: 9100; display: none;
     }
-    /* ── Этап 7: панель выбранного юнита ── */
-    .tup-bar-wrap { height: 5px; background: #2a2a2a; border-radius: 2px; margin: 3px 0; }
+    /* ── панель выбранного юнита ── */
+    .tup-bar-wrap { height: 5px; background: #252525; border-radius: 2px; margin: 3px 0; }
     .tup-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
     .tup-morale   { background: #3a9a3a; }
     .tup-fatigue  { background: #cc8822; }
