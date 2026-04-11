@@ -16,6 +16,7 @@ let _dpr         = 1;          // devicePixelRatio — для HiDPI/Retina
 let _bgOffscreen  = null;       // Г6: offscreen-кэш фона (рисуется один раз)
 let _rafId        = null;       // Г7: requestAnimationFrame ID
 let _floatNums    = [];         // C1: плавающие числа урона [{x,y,val,alpha,vy,color}]
+let _hoverEnemy   = null;      // C2: юнит-враг под курсором (для линии прицела)
 
 const UNIT_MIN_SZ = 26;
 const UNIT_MAX_SZ = 52;
@@ -499,6 +500,8 @@ function redrawAll(ctx, battleState) {
   for (const u of battleState.enemyUnits)  renderUnit(ctx, u, battleState);
   drawFlankArrow(ctx, battleState);
   drawStandards(ctx, battleState);
+  // C2: линия прицела
+  if (_hoverEnemy) drawAimLine(ctx, getSelectedUnit(battleState), _hoverEnemy);
   // C1: плавающие числа урона поверх всего
   _updateFloatNums();
   _drawFloatNums(ctx);
@@ -596,6 +599,11 @@ function onTacticalHover(e) {
   const key   = `${gridX},${gridY}`;
   const isElev = _battleState.elevatedCells.has(key);
   const tip   = document.getElementById('tac-tooltip');
+
+  // C2: запомнить врага под курсором для линии прицела
+  const sel = getSelectedUnit(_battleState);
+  _hoverEnemy = (sel && unit?.side === 'enemy') ? unit : null;
+
   if (!tip) return;
 
   if (unit) {
@@ -841,6 +849,36 @@ function endTacticalBattle(bs, outcome) {
   if (typeof window !== 'undefined' && typeof window._onTacticalBattleEnd === 'function') {
     window._onTacticalBattleEnd(result);
   }
+}
+
+// ── C2: линия прицела выбранного юнита к врагу ───────
+function drawAimLine(ctx, selected, enemy) {
+  if (!selected || !enemy) return;
+  const sx = selected.gridX * CELL_SIZE + CELL_SIZE / 2;
+  const sy = selected.gridY * CELL_SIZE + CELL_SIZE / 2;
+  const ex = enemy.gridX   * CELL_SIZE + CELL_SIZE / 2;
+  const ey = enemy.gridY   * CELL_SIZE + CELL_SIZE / 2;
+
+  // Пунктирная красная линия
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,60,60,0.75)';
+  ctx.lineWidth   = 1.5;
+  ctx.setLineDash([5, 4]);
+  ctx.lineDashOffset = -(Date.now() / 50 % 9); // бегущий пунктир
+  ctx.beginPath();
+  ctx.moveTo(sx, sy);
+  ctx.lineTo(ex, ey);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // Прицел на враге: крестик
+  ctx.strokeStyle = 'rgba(255,80,80,0.9)';
+  ctx.lineWidth   = 1.5;
+  const cs = 5;
+  ctx.beginPath();
+  ctx.moveTo(ex - cs, ey - cs); ctx.lineTo(ex + cs, ey + cs);
+  ctx.moveTo(ex + cs, ey - cs); ctx.lineTo(ex - cs, ey + cs);
+  ctx.stroke();
+  ctx.restore();
 }
 
 // ── C1: плавающие числа урона ─────────────────────────
