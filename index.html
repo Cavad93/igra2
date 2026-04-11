@@ -11,6 +11,9 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
 
+  <!-- Pixi.js v8 — battle map renderer -->
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@8.17.1/dist/pixi.min.js"></script>
+
 
 
   <style>
@@ -7837,6 +7840,8 @@
     <div id="tactical-log"></div>
     <canvas id="tac-minimap"></canvas>
     <div id="tac-tooltip"></div>
+    <!-- Pixi.js battle map container (arma.md Шаг 1) -->
+    <div id="pixi-battle-map"></div>
   </div>
 
   <!-- ═══════════════════════════
@@ -7937,6 +7942,7 @@
   <script src="ui/input.js"></script>
   <script src="engine/tactical_battle.js"></script>
   <script src="ui/tactical_map.js"></script>
+  <script src="ui/battle_map_pixi.js"></script>
 
   <script>
     // ──────────────────────────────────────────
