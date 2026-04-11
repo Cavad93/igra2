@@ -7365,6 +7365,13 @@
     }
     .tac-log-entry { padding: 2px 0; border-bottom: 1px solid #1e1e1e; line-height: 1.4; }
     .tac-log-entry:first-child { color: var(--tac-text); }
+    #tac-minimap {
+      position: absolute; bottom: 54px; left: 6px;
+      width: 110px; height: 80px;
+      background: rgba(5,5,5,0.88);
+      border: 1px solid var(--tac-border-acc); border-radius: 3px;
+      pointer-events: none; display: none;
+    }
     #tac-tooltip {
       position: fixed; background: rgba(5,5,5,0.92);
       border: 1px solid var(--tac-border-acc); color: var(--tac-text);
@@ -7776,6 +7783,7 @@
       <button id="tac-btn-auto">⚡ Авторассчёт</button>
     </div>
     <div id="tactical-log"></div>
+    <canvas id="tac-minimap"></canvas>
     <div id="tac-tooltip"></div>
   </div>
 

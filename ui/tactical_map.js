@@ -520,6 +520,8 @@ function redrawAll(ctx, battleState) {
   // C1: плавающие числа урона поверх всего
   _updateFloatNums();
   _drawFloatNums(ctx);
+  // A4: мини-карта (отдельный canvas — перерисовываем каждый кадр)
+  renderMinimap(battleState);
 }
 
 // ── Этап 6: логические функции ───────────────────────
@@ -860,6 +862,8 @@ function endTacticalBattle(bs, outcome) {
       }
     }
     _bgOffscreen = null;
+    const mm = document.getElementById('tac-minimap');
+    if (mm) mm.style.display = 'none';
     const result = finalizeTacticalBattle(bs, outcome);
     if (typeof showBattleResult === 'function') showBattleResult(result);
     if (typeof window !== 'undefined' && typeof window._onTacticalBattleEnd === 'function') {
@@ -922,6 +926,54 @@ function _drawParticles(ctx) {
   }
   ctx.globalAlpha = 1.0;
   ctx.restore();
+}
+
+// ── A4: мини-карта ────────────────────────────────────
+function renderMinimap(battleState) {
+  const mc = document.getElementById('tac-minimap');
+  if (!mc) return;
+  mc.style.display = 'block';
+  mc.width  = 110;
+  mc.height = 80;
+  const ctx = mc.getContext('2d');
+  const cw  = mc.width  / TACTICAL_GRID_COLS;
+  const ch  = mc.height / TACTICAL_GRID_ROWS;
+
+  ctx.clearRect(0, 0, mc.width, mc.height);
+
+  // Фон
+  ctx.fillStyle = '#0d0d0d';
+  ctx.fillRect(0, 0, mc.width, mc.height);
+
+  // Возвышенные клетки
+  ctx.fillStyle = 'rgba(200,180,80,0.25)';
+  for (const key of battleState.elevatedCells) {
+    const [ex, ey] = key.split(',').map(Number);
+    ctx.fillRect(ex * cw, ey * ch, cw, ch);
+  }
+
+  // Юниты игрока — синие точки
+  for (const u of battleState.playerUnits) {
+    if (u.strength <= 0) continue;
+    ctx.fillStyle = u.isCommander ? '#ffd700' : '#4488dd';
+    ctx.beginPath();
+    ctx.arc(u.gridX * cw + cw / 2, u.gridY * ch + ch / 2, Math.max(1.5, cw * 0.4), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Юниты врага — красные точки
+  for (const u of battleState.enemyUnits) {
+    if (u.strength <= 0) continue;
+    ctx.fillStyle = u.isCommander ? '#ffaa00' : '#dd4444';
+    ctx.beginPath();
+    ctx.arc(u.gridX * cw + cw / 2, u.gridY * ch + ch / 2, Math.max(1.5, cw * 0.4), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Обводка
+  ctx.strokeStyle = 'rgba(80,80,80,0.5)';
+  ctx.lineWidth   = 0.5;
+  ctx.strokeRect(0, 0, mc.width, mc.height);
 }
 
 // ── A5: анимация атаки — юнит "прыгает" к цели и назад ──
