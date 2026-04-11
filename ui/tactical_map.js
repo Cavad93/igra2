@@ -13,8 +13,9 @@ let _battleState = null;
 let _canvas      = null;
 let _ctx         = null;
 let _dpr         = 1;          // devicePixelRatio — для HiDPI/Retina
-let _bgOffscreen = null;       // Г6: offscreen-кэш фона (рисуется один раз)
-let _rafId       = null;       // Г7: requestAnimationFrame ID
+let _bgOffscreen  = null;       // Г6: offscreen-кэш фона (рисуется один раз)
+let _rafId        = null;       // Г7: requestAnimationFrame ID
+let _floatNums    = [];         // C1: плавающие числа урона [{x,y,val,alpha,vy,color}]
 
 const UNIT_MIN_SZ = 26;
 const UNIT_MAX_SZ = 52;
@@ -498,6 +499,9 @@ function redrawAll(ctx, battleState) {
   for (const u of battleState.enemyUnits)  renderUnit(ctx, u, battleState);
   drawFlankArrow(ctx, battleState);
   drawStandards(ctx, battleState);
+  // C1: плавающие числа урона поверх всего
+  _updateFloatNums();
+  _drawFloatNums(ctx);
 }
 
 // ── Этап 6: логические функции ───────────────────────
@@ -837,6 +841,51 @@ function endTacticalBattle(bs, outcome) {
   if (typeof window !== 'undefined' && typeof window._onTacticalBattleEnd === 'function') {
     window._onTacticalBattleEnd(result);
   }
+}
+
+// ── C1: плавающие числа урона ─────────────────────────
+function emitDamageNumber(gridX, gridY, value, isEnemy) {
+  if (!value || value <= 0) return;
+  _floatNums.push({
+    x:     gridX * CELL_SIZE + CELL_SIZE / 2,
+    y:     gridY * CELL_SIZE + CELL_SIZE / 4,
+    val:   value,
+    alpha: 1.0,
+    vy:    -0.9,           // скорость подъёма px/frame
+    color: isEnemy ? '#ff6060' : '#60b0ff',
+  });
+  // Не более 30 активных чисел
+  if (_floatNums.length > 30) _floatNums.shift();
+}
+
+function _drawFloatNums(ctx) {
+  if (!_floatNums.length) return;
+  ctx.save();
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  for (const fn of _floatNums) {
+    if (fn.alpha <= 0) continue;
+    ctx.font        = 'bold 13px Cinzel,Georgia,serif';
+    ctx.globalAlpha = fn.alpha;
+    // Outline
+    ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+    ctx.lineWidth   = 2.5;
+    ctx.lineJoin    = 'round';
+    ctx.strokeText(`-${fn.val}`, fn.x, fn.y);
+    ctx.fillStyle   = fn.color;
+    ctx.fillText(`-${fn.val}`, fn.x, fn.y);
+  }
+  ctx.globalAlpha = 1.0;
+  ctx.restore();
+}
+
+function _updateFloatNums() {
+  for (const fn of _floatNums) {
+    fn.y     += fn.vy;
+    fn.alpha -= 0.018;      // угасание за ~55 кадров (~0.9 сек)
+  }
+  // Удалить угасшие
+  _floatNums = _floatNums.filter(fn => fn.alpha > 0);
 }
 
 // ── Г7: rAF-цикл для плавной анимации ────────────────

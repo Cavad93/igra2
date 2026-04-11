@@ -552,6 +552,8 @@ function tacticalTick(bs) {
     if (dmg > 0) {
       addLog(bs, `🏹 Лучники выпустили залп: −${dmg} (осталось ${pu.ammo})`);
       pu._foughtThisTick = true;
+      // C1: число урона над целью
+      if (typeof emitDamageNumber === 'function') emitDamageNumber(target.gridX, target.gridY, dmg, false);
     }
   }
   for (const eu of bs.enemyUnits) {
@@ -572,6 +574,7 @@ function tacticalTick(bs) {
     if (dmg > 0) {
       addLog(bs, `🏹 Вражеские лучники: −${dmg} (осталось ${eu.ammo})`);
       eu._foughtThisTick = true;
+      if (typeof emitDamageNumber === 'function') emitDamageNumber(target.gridX, target.gridY, dmg, true);
     }
   }
 
@@ -588,6 +591,7 @@ function tacticalTick(bs) {
         addLog(bs, `⚔ ${pu.type} → ${eu.type}: −${dmg}`);
         pu._foughtThisTick = true;
         eu._foughtThisTick = true;
+        if (typeof emitDamageNumber === 'function') emitDamageNumber(eu.gridX, eu.gridY, dmg, false);
       }
     }
   }
@@ -605,6 +609,7 @@ function tacticalTick(bs) {
         addLog(bs, `🛡 ${eu.type} бьёт ${pu.type}: −${dmg}`);
         eu._foughtThisTick = true;
         pu._foughtThisTick = true;
+        if (typeof emitDamageNumber === 'function') emitDamageNumber(pu.gridX, pu.gridY, dmg, true);
       }
     }
   }
