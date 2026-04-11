@@ -821,6 +821,7 @@ function endTacticalBattle(bs, outcome) {
   const overlay = document.getElementById('tactical-overlay');
   if (overlay) {
     overlay.classList.remove('visible');
+    overlay.classList.remove('faded-in');
     // Снять слушатели событий чтобы избежать утечек памяти
     const canvas = document.getElementById('tactical-canvas');
     if (canvas) {
@@ -864,6 +865,8 @@ function openTacticalMap(atkArmy, defArmy, region) {
   const overlay = document.getElementById('tactical-overlay');
   const canvas  = document.getElementById('tactical-canvas');
   overlay.classList.add('visible');
+  // A3: плавное появление — добавить класс после одного кадра
+  requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('faded-in')));
 
   // Г6: сбросить кэш фона при новом бою
   _bgOffscreen = null;

@@ -7298,8 +7298,16 @@
       z-index: 9000;
       display: none;
       flex-direction: column;
+      /* A3: fade-in */
+      opacity: 0;
+      transition: opacity 0.35s ease;
     }
-    #tactical-overlay.visible { display: flex; }
+    #tactical-overlay.visible {
+      display: flex;
+    }
+    #tactical-overlay.visible.faded-in {
+      opacity: 1;
+    }
     #tactical-canvas-wrap {
       flex: 1; min-height: 0; overflow: auto;
       display: flex; align-items: center; justify-content: center;
