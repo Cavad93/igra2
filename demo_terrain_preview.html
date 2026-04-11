@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Превью: fBm + Domain Warping + Биомы + Paper003</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; color: #ccc; font-family: 'Georgia', serif; }
+
+  #controls {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 12px 18px;
+    background: #1a1a1a; border-bottom: 1px solid #333;
+  }
+  #controls h2 { font-size: 14px; color: #d4a853; font-family: 'Georgia', serif; }
+  button {
+    padding: 6px 14px; background: #2a2010; border: 1px solid #6b4f1a;
+    color: #d4a853; border-radius: 3px; cursor: pointer; font-size: 12px;
+  }
+  button:hover { background: #3a2a18; }
+  label { font-size: 11px; color: #888; }
+  input[type=range] { width: 100px; accent-color: #d4a853; }
+  .val { color: #d4a853; font-size: 11px; min-width: 28px; }
+
+  #canvas-wrap {
+    display: flex; justify-content: center; align-items: flex-start;
+    gap: 20px; padding: 16px; flex-wrap: wrap;
+  }
+  .preview { text-align: center; }
+  .preview canvas { display: block; border: 1px solid #333; }
+  .preview p { font-size: 10px; color: #666; margin-top: 4px; }
+
+  #legend {
+    padding: 12px 18px; background: #161616;
+    border-top: 1px solid #333; font-size: 11px;
+  }
+  #legend h3 { color: #d4a853; margin-bottom: 8px; font-size: 12px; }
+  .legend-row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+  .legend-swatch { width: 16px; height: 10px; border-radius: 1px; border: 1px solid #333; }
+  #status { font-size: 11px; color: #888; }
+</style>
+</head>
+<body>
+
+<div id="controls">
+  <h2>fBm + Domain Warping + Paper003 overlay</h2>
+
+  <div>
+    <label>Seed: </label>
+    <input type="range" id="seed" min="1" max="999" value="42">
+    <span class="val" id="seed-val">42</span>
+  </div>
+
+  <div>
+    <label>Октавы fBm: </label>
+    <input type="range" id="octaves" min="1" max="10" value="8">
+    <span class="val" id="oct-val">8</span>
+  </div>
+
+  <div>
+    <label>Domain Warp: </label>
+    <input type="range" id="warp" min="0" max="100" value="60">
+    <span class="val" id="warp-val">60</span>
+  </div>
+
+  <div>
+    <label>Paper overlay: </label>
+    <input type="range" id="paper" min="0" max="60" value="22">
+    <span class="val" id="paper-val">22%</span>
+  </div>
+
+  <div>
+    <label>Виньетка: </label>
+    <input type="range" id="vignette" min="0" max="100" value="55">
+    <span class="val" id="vig-val">55%</span>
+  </div>
+
+  <button onclick="generate()">⟳ Новый seed</button>
+  <span id="status"></span>
+</div>
+
+<div id="canvas-wrap">
+  <div class="preview">
+    <canvas id="c-noise" width="320" height="240"></canvas>
+    <p>1. Высотная карта (fBm + warp)</p>
+  </div>
+  <div class="preview">
+    <canvas id="c-biome" width="320" height="240"></canvas>
+    <p>2. Биомы по высоте</p>
+  </div>
+  <div class="preview">
+    <canvas id="c-final" width="640" height="480"></canvas>
+    <p>3. Финал: биомы + Paper003 overlay + виньетка</p>
+  </div>
+</div>
+
+<div id="legend">
+  <h3>Легенда биомов (тёмная военная палитра)</h3>
+  <div style="display:flex;gap:24px;flex-wrap:wrap;">
+    <div class="legend-row"><div class="legend-swatch" style="background:#0d1e2e"></div>Глубокая вода</div>
+    <div class="legend-row"><div class="legend-swatch" style="background:#162840"></div>Мелководье</div>
+    <div class="legend-row"><div class="legend-swatch" style="background:#3d3420"></div>Берег / песок</div>
+    <div class="legend-row"><div class="legend-swatch" style="background:#1e3212"></div>Равнины</div>
+    <div class="legend-row"><div class="legend-swatch" style="background:#162610"></div>Густой лес</div>
+    <div class="legend-row"><div class="legend-swatch" style="background:#2e2a18"></div>Холмы</div>
+    <div class="legend-row"><div class="legend-swatch" style="background:#28282e"></div>Горы</div>
+    <div class="legend-row"><div class="legend-swatch" style="background:#3a3a40"></div>Высокие горы</div>
+    <div class="legend-row"><div class="legend-swatch" style="background:#e0e0d8;border-color:#888"></div>Снег</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  Simplex / Perlin Noise — классическая реализация Ken Perlin
+// ═══════════════════════════════════════════════════════════
+
+class PerlinNoise {
+  constructor(seed = 0) {
+    this.p = new Uint8Array(512);
+    const perm = [...Array(256).keys()];
+    // shuffle с seed
+    let s = seed;
+    for (let i = 255; i > 0; i--) {
+      s = (s * 1664525 + 1013904223) & 0xffffffff;
+      const j = (s >>> 0) % (i + 1);
+      [perm[i], perm[j]] = [perm[j], perm[i]];
+    }
+    for (let i = 0; i < 512; i++) this.p[i] = perm[i & 255];
+  }
+
+  fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+  lerp(a, b, t) { return a + t * (b - a); }
+
+  grad(hash, x, y) {
+    const h = hash & 7;
+    const u = h < 4 ? x : y;
+    const v = h < 4 ? y : x;
+    return ((h & 1) ? -u : u) + ((h & 2) ? -v : v);
+  }
+
+  noise(x, y) {
+    const X = Math.floor(x) & 255;
+    const Y = Math.floor(y) & 255;
+    x -= Math.floor(x);
+    y -= Math.floor(y);
+    const u = this.fade(x);
+    const v = this.fade(y);
+    const A  = this.p[X]   + Y;
+    const B  = this.p[X+1] + Y;
+    return this.lerp(
+      this.lerp(this.grad(this.p[A],   x,   y  ),
+                this.grad(this.p[B],   x-1, y  ), u),
+      this.lerp(this.grad(this.p[A+1], x,   y-1),
+                this.grad(this.p[B+1], x-1, y-1), u), v
+    );
+  }
+}
+
+// ─── fBm (Fractal Brownian Motion) ───────────────────────
+function fbm(pn, x, y, octaves, lacunarity = 2.0, gain = 0.5) {
+  let val = 0, amp = 0.5, freq = 1;
+  for (let i = 0; i < octaves; i++) {
+    val  += pn.noise(x * freq, y * freq) * amp;
+    amp  *= gain;
+    freq *= lacunarity;
+  }
+  return val; // примерно [-1..1]
+}
+
+// ─── Domain Warping ──────────────────────────────────────
+function warpedNoise(pn, pn2, x, y, octaves, warpStr) {
+  // Первый шаг искажения
+  const wx = fbm(pn,  x + 0.0, y + 0.0, octaves);
+  const wy = fbm(pn2, x + 5.2, y + 1.3, octaves);
+  // Второй шаг (двойное искажение — более органично)
+  const wx2 = fbm(pn,  x + warpStr*wx + 1.7, y + warpStr*wy + 9.2, octaves);
+  const wy2 = fbm(pn2, x + warpStr*wx + 8.3, y + warpStr*wy + 2.8, octaves);
+  return fbm(pn, x + warpStr*wx2, y + warpStr*wy2, octaves);
+}
+
+// ─── Биомы по высоте ─────────────────────────────────────
+function biomeColor(h) {
+  // h ∈ [0..1], нормализовано
+  if (h < 0.28) return [0x0d, 0x1e, 0x2e]; // глубокая вода
+  if (h < 0.35) return [0x16, 0x28, 0x40]; // мелководье
+  if (h < 0.40) return [0x3d, 0x34, 0x20]; // берег
+  if (h < 0.52) return [0x1e, 0x32, 0x12]; // равнины
+  if (h < 0.60) return [0x16, 0x26, 0x10]; // густой лес
+  if (h < 0.70) return [0x2e, 0x2a, 0x18]; // холмы
+  if (h < 0.80) return [0x28, 0x28, 0x2e]; // горы
+  if (h < 0.90) return [0x3a, 0x3a, 0x40]; // высокие горы
+  return [0xe0, 0xe0, 0xd8];               // снег
+}
+
+// ─── Генерация пергаментной текстуры (симуляция Paper003) ─
+function generateParchment(w, h, seed) {
+  const pn = new PerlinNoise(seed + 999);
+  const data = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const scale = 6.0 / Math.max(w, h);
+      // Несколько слоёв для имитации бумаги
+      const n1 = fbm(pn, x * scale * 3, y * scale * 3, 4) * 0.5 + 0.5;
+      const n2 = fbm(pn, x * scale + 10, y * scale + 10, 2) * 0.5 + 0.5;
+      // Цвет пергамента: тёплый бежево-коричневый
+      const base = 0.75 + 0.20 * n1 + 0.05 * n2;
+      const r = Math.min(255, 220 * base + 20);
+      const g = Math.min(255, 195 * base + 10);
+      const b = Math.min(255, 155 * base);
+      const i = (y * w + x) * 4;
+      data[i]   = r;
+      data[i+1] = g;
+      data[i+2] = b;
+      data[i+3] = 255;
+    }
+  }
+  return new ImageData(data, w, h);
+}
+
+// ─── Виньетка ─────────────────────────────────────────────
+function applyVignette(ctx, w, h, strength) {
+  const grad = ctx.createRadialGradient(w/2, h/2, h*0.2, w/2, h/2, h*0.75);
+  grad.addColorStop(0,   'rgba(0,0,0,0)');
+  grad.addColorStop(1,   `rgba(0,0,0,${strength/100})`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Главная функция генерации
+// ═══════════════════════════════════════════════════════════
+function generate() {
+  const t0 = performance.now();
+  document.getElementById('status').textContent = 'Генерирую...';
+
+  const seed    = +document.getElementById('seed').value;
+  const octaves = +document.getElementById('octaves').value;
+  const warpStr = +document.getElementById('warp').value / 100 * 2.5;
+  const paperA  = +document.getElementById('paper').value / 100;
+  const vigStr  = +document.getElementById('vignette').value;
+
+  const pn1 = new PerlinNoise(seed);
+  const pn2 = new PerlinNoise(seed + 137);
+
+  // ── Шаг 1: Высотная карта ─────────────────────────────
+  const cN = document.getElementById('c-noise');
+  const W1 = cN.width, H1 = cN.height;
+  const ctxN = cN.getContext('2d');
+  const imgN = ctxN.createImageData(W1, H1);
+
+  // Предвычислить высоты
+  const heights = new Float32Array(W1 * H1);
+  let hMin = Infinity, hMax = -Infinity;
+  const scale = 4.0 / Math.max(W1, H1);
+
+  for (let y = 0; y < H1; y++) {
+    for (let x = 0; x < W1; x++) {
+      const h = warpedNoise(pn1, pn2, x * scale, y * scale, octaves, warpStr);
+      heights[y * W1 + x] = h;
+      if (h < hMin) hMin = h;
+      if (h > hMax) hMax = h;
+    }
+  }
+
+  // Нормализовать и отрисовать высотную карту (grayscale)
+  const rng = hMax - hMin;
+  for (let i = 0; i < W1 * H1; i++) {
+    const v = ((heights[i] - hMin) / rng * 255) | 0;
+    imgN.data[i*4]   = v;
+    imgN.data[i*4+1] = v;
+    imgN.data[i*4+2] = v;
+    imgN.data[i*4+3] = 255;
+  }
+  ctxN.putImageData(imgN, 0, 0);
+
+  // ── Шаг 2: Биомы ──────────────────────────────────────
+  const cB = document.getElementById('c-biome');
+  const W2 = cB.width, H2 = cB.height;
+  const ctxB = cB.getContext('2d');
+  const imgB = ctxB.createImageData(W2, H2);
+
+  // Пересчитываем для размера биомного канваса
+  const heights2 = new Float32Array(W2 * H2);
+  let hMin2 = Infinity, hMax2 = -Infinity;
+  const scale2 = 4.0 / Math.max(W2, H2);
+  for (let y = 0; y < H2; y++) {
+    for (let x = 0; x < W2; x++) {
+      const h = warpedNoise(pn1, pn2, x * scale2, y * scale2, octaves, warpStr);
+      heights2[y * W2 + x] = h;
+      if (h < hMin2) hMin2 = h;
+      if (h > hMax2) hMax2 = h;
+    }
+  }
+  const rng2 = hMax2 - hMin2;
+  for (let i = 0; i < W2 * H2; i++) {
+    const hn = (heights2[i] - hMin2) / rng2;
+    const [r, g, b] = biomeColor(hn);
+    imgB.data[i*4]   = r;
+    imgB.data[i*4+1] = g;
+    imgB.data[i*4+2] = b;
+    imgB.data[i*4+3] = 255;
+  }
+  ctxB.putImageData(imgB, 0, 0);
+
+  // ── Шаг 3: Финальный canvas (640×480) ─────────────────
+  const cF = document.getElementById('c-final');
+  const W  = cF.width, H = cF.height;
+  const ctxF = cF.getContext('2d');
+  const imgF = ctxF.createImageData(W, H);
+
+  // Вычисляем биомы для финального размера
+  const heights3 = new Float32Array(W * H);
+  let hMin3 = Infinity, hMax3 = -Infinity;
+  const scale3 = 4.0 / Math.max(W, H);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const h = warpedNoise(pn1, pn2, x * scale3, y * scale3, octaves, warpStr);
+      heights3[y * W + x] = h;
+      if (h < hMin3) hMin3 = h;
+      if (h > hMax3) hMax3 = h;
+    }
+  }
+  const rng3 = hMax3 - hMin3;
+  for (let i = 0; i < W * H; i++) {
+    const hn = (heights3[i] - hMin3) / rng3;
+    const [r, g, b] = biomeColor(hn);
+    imgF.data[i*4]   = r;
+    imgF.data[i*4+1] = g;
+    imgF.data[i*4+2] = b;
+    imgF.data[i*4+3] = 255;
+  }
+  ctxF.putImageData(imgF, 0, 0);
+
+  // ── Overlay: Пергамент (симуляция Paper003) ───────────
+  if (paperA > 0) {
+    const parchImg = generateParchment(W, H, seed);
+    // Рисуем parchment на temp canvas
+    const tmp = document.createElement('canvas');
+    tmp.width = W; tmp.height = H;
+    tmp.getContext('2d').putImageData(parchImg, 0, 0);
+    // Накладываем multiply-подобным способом
+    ctxF.save();
+    ctxF.globalAlpha = paperA;
+    ctxF.globalCompositeOperation = 'multiply';
+    ctxF.drawImage(tmp, 0, 0);
+    ctxF.restore();
+  }
+
+  // ── Overlay: тонкая сетка (опционально, для карты) ────
+  ctxF.save();
+  ctxF.strokeStyle = 'rgba(180,160,100,0.06)';
+  ctxF.lineWidth = 0.5;
+  const gridSize = 40;
+  for (let x = 0; x < W; x += gridSize) {
+    ctxF.beginPath(); ctxF.moveTo(x, 0); ctxF.lineTo(x, H); ctxF.stroke();
+  }
+  for (let y = 0; y < H; y += gridSize) {
+    ctxF.beginPath(); ctxF.moveTo(0, y); ctxF.lineTo(W, y); ctxF.stroke();
+  }
+  ctxF.restore();
+
+  // ── Виньетка ──────────────────────────────────────────
+  applyVignette(ctxF, W, H, vigStr);
+
+  // ── Рамка в стиле старой карты ────────────────────────
+  ctxF.save();
+  ctxF.strokeStyle = 'rgba(160,120,60,0.5)';
+  ctxF.lineWidth = 6;
+  ctxF.strokeRect(3, 3, W-6, H-6);
+  ctxF.strokeStyle = 'rgba(100,80,40,0.3)';
+  ctxF.lineWidth = 2;
+  ctxF.strokeRect(10, 10, W-20, H-20);
+  ctxF.restore();
+
+  const ms = (performance.now() - t0).toFixed(0);
+  document.getElementById('status').textContent = `Готово за ${ms}ms`;
+}
+
+// ─── Обработчики слайдеров ────────────────────────────────
+function bindSlider(id, valId, suffix, cb) {
+  const el  = document.getElementById(id);
+  const val = document.getElementById(valId);
+  el.addEventListener('input', () => {
+    val.textContent = el.value + (suffix||'');
+    if (cb) cb();
+  });
+}
+
+bindSlider('seed',     'seed-val',  '',  null);
+bindSlider('octaves',  'oct-val',   '',  generate);
+bindSlider('warp',     'warp-val',  '',  generate);
+bindSlider('paper',    'paper-val', '%', generate);
+bindSlider('vignette', 'vig-val',   '%', generate);
+
+document.getElementById('seed').addEventListener('change', generate);
+
+// Случайный seed по кнопке
+document.querySelector('button').onclick = () => {
+  document.getElementById('seed').value = Math.floor(Math.random() * 999) + 1;
+  document.getElementById('seed-val').textContent = document.getElementById('seed').value;
+  generate();
+};
+
+// Первая генерация
+generate();
+</script>
+</body>
+</html>
