@@ -18,6 +18,7 @@ let _rafId        = null;       // Г7: requestAnimationFrame ID
 let _floatNums    = [];         // C1: плавающие числа урона [{x,y,val,alpha,vy,color}]
 let _hoverEnemy   = null;      // C2: юнит-враг под курсором (для линии прицела)
 const _particles  = [];        // A1: пул частиц при ударе [{x,y,vx,vy,life,maxLife,r,color}]
+const _attackAnims = new Map(); // A5: атак-анимации {unitId → {tx,ty,progress}} (0→1→0)
 
 const UNIT_MIN_SZ = 26;
 const UNIT_MAX_SZ = 52;
@@ -309,8 +310,16 @@ function renderGrid(ctx, terrain, elevatedCells = new Set()) {
 // ── Этап 4: рендер юнита ────────────────────────────
 
 function renderUnit(ctx, unit, battleState) {
-  const cellX = unit.gridX * CELL_SIZE;
-  const cellY = unit.gridY * CELL_SIZE;
+  // A5: анимация атаки — смещаем позицию рисования на 30% пути к цели
+  let offsetX = 0, offsetY = 0;
+  const anim = _attackAnims.get(unit.id);
+  if (anim) {
+    const ease = anim.t * (2 - anim.t); // ease-out
+    offsetX = (anim.toX - anim.fromX) * CELL_SIZE * ease * 0.30;
+    offsetY = (anim.toY - anim.fromY) * CELL_SIZE * ease * 0.30;
+  }
+  const cellX = unit.gridX * CELL_SIZE + offsetX;
+  const cellY = unit.gridY * CELL_SIZE + offsetY;
 
   // Подход 2: размер зависит от силы
   const ratio = Math.min(1, unit.strength / battleState.maxStrengthInBattle);
@@ -501,6 +510,8 @@ function redrawAll(ctx, battleState) {
   for (const u of battleState.enemyUnits)  renderUnit(ctx, u, battleState);
   drawFlankArrow(ctx, battleState);
   drawStandards(ctx, battleState);
+  // A5: обновить анимации атак
+  _updateAttackAnims();
   // A1: частицы удара
   _updateParticles();
   _drawParticles(ctx);
@@ -902,6 +913,27 @@ function _drawParticles(ctx) {
   }
   ctx.globalAlpha = 1.0;
   ctx.restore();
+}
+
+// ── A5: анимация атаки — юнит "прыгает" к цели и назад ──
+function startAttackAnim(attacker, defender) {
+  if (!attacker || !defender) return;
+  _attackAnims.set(attacker.id, {
+    fromX: attacker.gridX,
+    fromY: attacker.gridY,
+    toX:   defender.gridX,
+    toY:   defender.gridY,
+    t:     0,       // 0..1..0 (туда и обратно)
+    dir:   1,       // 1 = вперёд, -1 = назад
+  });
+}
+
+function _updateAttackAnims() {
+  for (const [id, a] of _attackAnims) {
+    a.t += 0.12 * a.dir;
+    if (a.t >= 1) { a.t = 1; a.dir = -1; }
+    if (a.t <= 0 && a.dir === -1) _attackAnims.delete(id);
+  }
 }
 
 // ── C2: линия прицела выбранного юнита к врагу ───────

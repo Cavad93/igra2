@@ -593,6 +593,7 @@ function tacticalTick(bs) {
         addLog(bs, `⚔ ${pu.type} → ${eu.type}: −${dmg}`);
         pu._foughtThisTick = true;
         eu._foughtThisTick = true;
+        if (typeof startAttackAnim   === 'function') startAttackAnim(pu, eu);
         if (typeof emitDamageNumber  === 'function') emitDamageNumber(eu.gridX, eu.gridY, dmg, false);
         if (typeof emitHitParticles  === 'function') emitHitParticles(eu.gridX, eu.gridY, true);
       }
@@ -612,6 +613,7 @@ function tacticalTick(bs) {
         addLog(bs, `🛡 ${eu.type} бьёт ${pu.type}: −${dmg}`);
         eu._foughtThisTick = true;
         pu._foughtThisTick = true;
+        if (typeof startAttackAnim   === 'function') startAttackAnim(eu, pu);
         if (typeof emitDamageNumber  === 'function') emitDamageNumber(pu.gridX, pu.gridY, dmg, true);
         if (typeof emitHitParticles  === 'function') emitHitParticles(pu.gridX, pu.gridY, true);
       }
