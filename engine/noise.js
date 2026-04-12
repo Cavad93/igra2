@@ -1,8 +1,8 @@
 // ══════════════════════════════════════════════════════════════════════
-// NOISE — Perlin noise + fBm + Domain Warping (arma.md Шаг 2)
+// NOISE — Perlin noise + fBm + Domain Warping + Heightmap (arma.md Шаг 2–3)
 //
 // Чистый, без зависимостей, модуль генерации органичного шума.
-// Используется для heightmap тактической карты (engine/noise.js, Шаг 3).
+// Используется для heightmap тактической карты.
 //
 // Экспортирует (через глобалы / module.exports):
 //   mulberry32(seed)                           — seeded PRNG
@@ -10,6 +10,8 @@
 //     .noise2d(x, y)                           → число в [-1, 1]
 //   fbm(noise, x, y, octaves, pers, lac)       → число в [0, 1]
 //   domainWarp(noise, x, y, octaves, strength) → число в [0, 1]
+//   generateHeightmap(w, h, seed, options)     → { data: Float32Array, width, height }
+//   getHeight(heightmap, x, y)                 → число в [0, 1]
 //
 // Алгоритмы:
 //   - Ken Perlin improved noise (permutation table 512, fade 6t⁵-15t⁴+10t³)
@@ -188,15 +190,122 @@ function domainWarp(noise, x, y, octaves, warpStrength) {
   return rx; // уже в [0, 1]
 }
 
+/**
+ * generateHeightmap(width, height, seed, options)
+ *
+ * Генерация 2D heightmap через Perlin + Domain Warping с последующей
+ * строгой нормализацией min/max в диапазон [0, 1]. (arma.md Шаг 3)
+ *
+ * Для каждого пикселя (x, y):
+ *   nx = x / width
+ *   ny = y / height
+ *   h  = domainWarp(noise, nx * 3, ny * 3, octaves, warpStrength)
+ * Затем весь массив нормализуется: (v - min) / (max - min).
+ *
+ * Множитель ×3 на входе в domainWarp определяет "масштаб" карты —
+ * ~3 крупных "провинции" (гор/равнин) по диагонали.
+ *
+ * @param {number} width   — ширина карты в пикселях
+ * @param {number} height  — высота карты в пикселях
+ * @param {number} seed    — seed для PerlinNoise (целое число)
+ * @param {object} [options]
+ * @param {number} [options.octaves=6]
+ * @param {number} [options.persistence=0.5]
+ * @param {number} [options.lacunarity=2.0]
+ * @param {number} [options.warpStrength=1.2]
+ * @returns {{data: Float32Array, width: number, height: number}}
+ */
+function generateHeightmap(width, height, seed, options) {
+  const opts         = options || {};
+  const octaves      = opts.octaves      != null ? opts.octaves      : 6;
+  const persistence  = opts.persistence  != null ? opts.persistence  : 0.5;
+  const lacunarity   = opts.lacunarity   != null ? opts.lacunarity   : 2.0;
+  const warpStrength = opts.warpStrength != null ? opts.warpStrength : 1.2;
+
+  const noise = new PerlinNoise(seed | 0);
+  const data  = new Float32Array(width * height);
+
+  // domainWarp использует захардкоженные 0.5/2.0 для persistence/lacunarity
+  // (см. Шаг 2). Чтобы не переписывать его сигнатуру, мы пропускаем
+  // opts.persistence/lacunarity в fbm напрямую только для "прямого" режима:
+  // спецификация Шага 3 явно говорит вызывать domainWarp, поэтому octaves/warp
+  // прокидываем как есть. persistence/lacunarity оставлены в API для будущего.
+  void persistence;
+  void lacunarity;
+
+  const invW = 1 / width;
+  const invH = 1 / height;
+
+  let min =  Infinity;
+  let max = -Infinity;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const nx = x * invW;
+      const ny = y * invH;
+      const h  = domainWarp(noise, nx * 3, ny * 3, octaves, warpStrength);
+      data[y * width + x] = h;
+      if (h < min) min = h;
+      if (h > max) max = h;
+    }
+  }
+
+  // Строгая нормализация min/max → [0, 1]. Защита от константной карты.
+  // Дополнительный clamp требуется: f64 → f32 округление может дать значения
+  // вроде -2.95e-8 или 1 + 3e-8 на крайних пикселях.
+  const range = max - min;
+  if (range > 1e-12) {
+    const inv = 1 / range;
+    for (let i = 0; i < data.length; i++) {
+      let v = (data[i] - min) * inv;
+      if (v < 0) v = 0;
+      else if (v > 1) v = 1;
+      data[i] = v;
+    }
+  } else {
+    // Вырожденный случай: вся карта — одно значение.
+    for (let i = 0; i < data.length; i++) data[i] = 0;
+  }
+
+  return { data: data, width: width, height: height };
+}
+
+/**
+ * getHeight(heightmap, x, y)
+ *
+ * Безопасный доступ к значению heightmap с clamp-ом координат к границам.
+ *
+ * @param {{data: Float32Array, width: number, height: number}} heightmap
+ * @param {number} x  — целочисленная координата (будет clamp-нута)
+ * @param {number} y  — целочисленная координата (будет clamp-нута)
+ * @returns {number}  — значение в [0, 1]
+ */
+function getHeight(heightmap, x, y) {
+  const w = heightmap.width;
+  const h = heightmap.height;
+  let ix = x | 0;
+  let iy = y | 0;
+  if (ix < 0) ix = 0;
+  else if (ix >= w) ix = w - 1;
+  if (iy < 0) iy = 0;
+  else if (iy >= h) iy = h - 1;
+  return heightmap.data[iy * w + ix];
+}
+
 // ──────────────────────────────────────────────────────────────────────
 // Экспорт: глобалы (браузер) + module.exports (Node.js тесты)
 // ──────────────────────────────────────────────────────────────────────
 if (typeof window !== 'undefined') {
-  window.mulberry32  = mulberry32;
-  window.PerlinNoise = PerlinNoise;
-  window.fbm         = fbm;
-  window.domainWarp  = domainWarp;
+  window.mulberry32       = mulberry32;
+  window.PerlinNoise      = PerlinNoise;
+  window.fbm              = fbm;
+  window.domainWarp       = domainWarp;
+  window.generateHeightmap = generateHeightmap;
+  window.getHeight        = getHeight;
 }
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-  module.exports = { mulberry32, PerlinNoise, fbm, domainWarp };
+  module.exports = {
+    mulberry32, PerlinNoise, fbm, domainWarp,
+    generateHeightmap, getHeight
+  };
 }
