@@ -646,6 +646,17 @@ function _applyBattleResult(attackerNationId, defenderNationId, result, opts = {
   if (result.capturedRegionId) {
     const rName = MAP_REGIONS?.[result.capturedRegionId]?.name ?? result.capturedRegionId;
     msg += ` Захвачен регион: ${rName}!`;
+
+    // Шаг 27: toast-уведомление о захвате региона (если игрок задействован)
+    if (isPlayerInvolved && typeof window !== 'undefined' && typeof window.showToast === 'function') {
+      const playerId = GAME_STATE.player_nation;
+      const playerWon = result.winner === playerId;
+      if (playerWon) {
+        window.showToast(`🏳 Захвачен регион: ${rName}`, 'success');
+      } else {
+        window.showToast(`🏳 Мы потеряли регион: ${rName}`, 'danger');
+      }
+    }
   }
 
   addEventLog(msg, isPlayerInvolved ? 'danger' : 'info');

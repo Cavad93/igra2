@@ -1160,6 +1160,19 @@ function declareWar(attackerNationId, targetNationId) {
     addEventLog(`⚔️ ${aN} объявляет войну ${bN}!${warn}`, 'danger');
   }
 
+  // Шаг 27: toast-уведомление если игрок затронут объявлением войны
+  if (typeof window !== 'undefined' && typeof window.showToast === 'function') {
+    const playerId = GAME_STATE.player_nation;
+    if (attackerNationId === playerId || targetNationId === playerId) {
+      const otherId = attackerNationId === playerId ? targetNationId : attackerNationId;
+      const otherName = GAME_STATE.nations?.[otherId]?.name ?? otherId;
+      const msg = attackerNationId === playerId
+        ? `⚔ Вы объявили войну: ${otherName}`
+        : `⚔ ${otherName} объявил(а) войну!`;
+      window.showToast(msg, 'danger');
+    }
+  }
+
   // Трекинг статистики войн (для системы достижений и клятв)
   if (natA) {
     natA._wars_declared           = (natA._wars_declared ?? 0) + 1;

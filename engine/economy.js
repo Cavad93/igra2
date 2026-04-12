@@ -1254,6 +1254,13 @@ function _checkEconomicEventTriggers() {
       `⚠ Казна отрицательна (${Math.round(playerNation.economy.treasury)} монет). Риск банкротства!`,
       'danger',
     );
+    // Шаг 27: toast-уведомление о дефиците
+    if (typeof window !== 'undefined' && typeof window.showToast === 'function') {
+      window.showToast(
+        `💰 Казна пуста — дефицит (${Math.round(playerNation.economy.treasury)} монет)!`,
+        'warning',
+      );
+    }
   }
 }
 

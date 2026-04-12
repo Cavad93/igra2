@@ -402,6 +402,71 @@
       scrollbar-color: var(--border-gold) var(--bg-deep);
     }
 
+    /* ══════════════════════════════════════════════════
+       Шаг 27 — Toast-уведомления
+       ══════════════════════════════════════════════════ */
+    #toast-container {
+      position: fixed;
+      top: 54px;
+      right: 12px;
+      z-index: 9000;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: none;
+    }
+    @keyframes toast-in {
+      from { transform: translateX(110%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+    @keyframes toast-out {
+      from { transform: translateX(0);    opacity: 1; }
+      to   { transform: translateX(110%); opacity: 0; }
+    }
+    .toast {
+      min-width: 240px;
+      max-width: 320px;
+      padding: 10px 14px;
+      background: rgba(20, 15, 8, 0.96);
+      border-left: 3px solid var(--border-gold);
+      border-radius: 3px;
+      font-size: 12px;
+      color: var(--text-light);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+      pointer-events: auto;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      animation: toast-in 0.25s ease-out;
+      will-change: transform, opacity;
+    }
+    .toast.toast-hide {
+      animation: toast-out 0.2s ease-in forwards;
+    }
+    .toast .toast-text {
+      flex: 1;
+      line-height: 1.35;
+      word-wrap: break-word;
+    }
+    .toast .toast-close {
+      flex: 0 0 auto;
+      background: none;
+      border: none;
+      color: var(--text-light);
+      opacity: 0.65;
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      padding: 0 2px;
+    }
+    .toast .toast-close:hover { opacity: 1; }
+    .toast.info     { border-left-color: var(--border-gold); }
+    .toast.warning  { border-left-color: #ff9800; }
+    .toast.danger   { border-left-color: #f44336; background: rgba(30, 10, 8, 0.97); }
+    .toast.success  { border-left-color: #4caf50; }
+
     /* Скроллбар webkit */
     #left-panel::-webkit-scrollbar,
     #left-panel-content::-webkit-scrollbar,
@@ -7814,6 +7879,9 @@
 </head>
 <body>
 
+  <!-- Шаг 27: контейнер для toast-уведомлений -->
+  <div id="toast-container"></div>
+
   <!-- D3: экран загрузки -->
   <div id="splash-screen">
     <div id="splash-inner">
@@ -8312,6 +8380,7 @@
   </script>
 
   <script src="ui/log.js"></script>
+  <script src="ui/toast.js"></script>
   <script src="engine/pops.js"></script>
   <script src="engine/land_capacity.js"></script>
   <script src="engine/diplomacy.js"></script>
