@@ -721,3 +721,677 @@ textures/
 | 19 | battle_map_pixi.js | renderFortifications, emitDamageNumber, drawAimLine |
 | 20 | battle_map_pixi.js | HiDPI, ticker, интеграция |
 
+---
+
+# ЧАСТЬ 2 — Редизайн главного экрана игры
+
+> Улучшения главной игровой страницы `index.html`.
+> Каждый шаг независим — можно реализовывать в любом порядке внутри блока.
+> После каждого шага тест в браузере перед переходом к следующему.
+
+## БЛОК I — Layout: нижняя строка и алерты (Шаги 24–26)
+
+---
+
+### Шаг 24 — Лог событий как drawer (выдвижная панель)
+
+**Цель:** освободить нижнюю строку — лог свёрнут по умолчанию, разворачивается по клику.
+
+**Что сделать:**
+
+1. Изменить `#event-log` на двухрежимный элемент:
+   - **Свёрнутый** (по умолчанию): одна строка высотой 32px — показывает последнее событие + счётчики по типам.
+   - **Развёрнутый**: высота 180px, показывает полный список `#log-entries`.
+
+2. HTML структура свёрнутого вида:
+   ```html
+   <div id="log-collapsed">
+     <span id="log-last-entry">—</span>
+     <div id="log-counters">
+       <span class="log-cnt" data-filter="danger">⚠ <b>0</b></span>
+       <span class="log-cnt" data-filter="economy">💰 <b>0</b></span>
+       <span class="log-cnt" data-filter="character">👤 <b>0</b></span>
+     </div>
+     <button id="log-expand-btn" onclick="toggleLog()">▲ Хроники</button>
+   </div>
+   ```
+
+3. CSS:
+   - `#event-log.collapsed`: `height: 32px; overflow: hidden`
+   - `#event-log.expanded`: `height: 180px; transition: height 0.2s ease`
+   - `#log-collapsed`: `display: flex; align-items: center; gap: 8px; padding: 0 10px; height: 32px`
+   - `#log-expand-btn.open`: иконка меняется на `▼`
+
+4. JS: `toggleLog()` — переключает классы `collapsed/expanded`. При добавлении нового события — обновлять `#log-last-entry` и счётчики в `#log-counters`.
+5. При добавлении события с `data-filter="danger"` — счётчик `⚠` мигает 2 сек (CSS animation `pulse`).
+
+**Тест Шага 24:**
+- По умолчанию лог занимает 32px — видна одна строка.
+- Клик "▲ Хроники" → плавно разворачивается до 180px.
+- Счётчики `⚠ 2` обновляются при добавлении событий.
+- После хода: последнее событие видно в свёрнутом виде.
+
+---
+
+### Шаг 25 — Строка ввода команды — всегда видна
+
+**Цель:** главная механика (ввод приказов) должна быть доступна всегда, без скролла и скрытия.
+
+**Что сделать:**
+
+1. Изменить `#bottom-area` на flex-колонку с фиксированными высотами:
+   ```
+   #bottom-area {
+     display: flex;
+     flex-direction: row;
+     height: 32px;        ← одна строка (лог свёрнут)
+     flex-shrink: 0;
+   }
+   ```
+
+2. Расположить элементы в одну строку:
+   ```
+   [#event-log] flex: 1  |  [#input-row] width: 420px  |  [#orders-mini] width: 160px
+   ```
+
+3. `#input-row` всегда виден:
+   - `#command-input`: `flex: 1; height: 30px; background: var(--bg-section); border: 1px solid var(--border-gold); color: var(--text-light); padding: 0 10px; font-family: inherit; font-size: 12px`
+   - `#send-btn`: `height: 30px; padding: 0 14px; white-space: nowrap`
+
+4. `#orders-panel` свернуть аналогично логу — в одну кнопку `📋 2 приказа`, клик разворачивает вверх.
+
+5. `placeholder` поля укоротить: `"Ваш приказ... (напр. «набрать 500 пехотинцев»)"`.
+
+**Тест Шага 25:**
+- Поле ввода всегда видно в нижней строке.
+- Нижняя строка занимает ровно 32px (один ряд).
+- Ввод команды и нажатие Enter работает как раньше.
+- На маленьких экранах (1024px) строка не переносится.
+
+---
+
+### Шаг 26 — Значки-алерты на вкладках панели
+
+**Цель:** показать где требуется внимание без открытия каждой вкладки.
+
+**Что сделать:**
+
+1. Добавить к каждой кнопке `#left-nav` атрибут `data-tab` и дочерний элемент-бейдж:
+   ```html
+   <button class="lnav-btn" data-tab="economy" title="Экономика">
+     💰
+     <span class="lnav-badge" id="badge-economy" style="display:none">0</span>
+   </button>
+   ```
+
+2. CSS `.lnav-badge`:
+   ```css
+   .lnav-badge {
+     position: absolute; top: 2px; right: 2px;
+     min-width: 14px; height: 14px;
+     background: #e53935; border-radius: 7px;
+     font-size: 9px; color: #fff; font-family: sans-serif;
+     display: flex; align-items: center; justify-content: center;
+     font-weight: bold; line-height: 1;
+   }
+   ```
+   `.lnav-btn` должен иметь `position: relative`.
+
+3. JS: написать функцию `updateAlertBadges(state)`, вызываемую после каждого хода:
+   - `economy`: показать бейдж если `state.treasury < 0` (дефицит) — значение `!`
+   - `army`: показать если есть армии без приказа — значение = количество
+   - `diplomacy`: показать если есть входящие предложения — значение = количество
+   - `laws`: показать если идёт голосование
+
+4. При открытии вкладки — скрыть её бейдж (`badge.style.display = 'none'`).
+
+**Тест Шага 26:**
+- При дефиците казны на вкладке 💰 появляется красный кружок с `!`.
+- При входящем дипломатическом предложении на 🤝 появляется `1`.
+- Открытие вкладки скрывает бейдж.
+- При нуле алертов — бейджи скрыты.
+
+---
+
+## БЛОК H — Layout: топ-бар и панели (Шаги 21–23)
+
+---
+
+### Шаг 21 — Ресурс-бар в топ-баре
+
+**Цель:** игрок всегда видит ключевые показатели — не нужно заходить в боковую панель.
+
+**Что сделать:**
+
+1. В `index.html`, в `<header id="top-bar">`, добавить блок ресурсов между датой и кнопкой хода:
+   ```html
+   <div id="resource-bar">
+     <div class="res-item" id="res-gold"    title="Казна">💰 <span>—</span></div>
+     <div class="res-item" id="res-troops"  title="Войска">⚔ <span>—</span></div>
+     <div class="res-item" id="res-food"    title="Снабжение">🌾 <span>—</span></div>
+     <div class="res-item" id="res-pop"     title="Население">👥 <span>—</span></div>
+   </div>
+   ```
+
+2. CSS для `#resource-bar`:
+   - `display: flex; gap: 4px; align-items: center`
+   - `.res-item`: `padding: 0 10px; height: 100%; display: flex; align-items: center; gap: 5px; cursor: pointer; border-left: 1px solid var(--border-gold); font-size: 13px; color: var(--text-light)`
+   - `.res-item:hover`: `background: rgba(212,168,83,0.08); color: var(--text-gold)`
+   - `.res-item span`: `font-family: 'Cinzel', serif; font-size: 12px; min-width: 40px`
+
+3. В `panels.js` (или где обновляется UI после хода): добавить функцию `updateResourceBar(state)`:
+   - Найти элементы `#res-gold span`, `#res-troops span` и т.д.
+   - Обновлять значения: `el.textContent = formatNum(state.treasury)`
+   - Добавить суффикс дельты: если растёт — `+45` зелёным, если падает — `-12` красным
+   - Вызывать `updateResourceBar` после каждого хода и при загрузке
+
+4. При клике на ресурс — открывать соответствующий оверлей (казна → `#treasury-overlay`, войска → армейская панель).
+
+**Тест Шага 21:**
+- После загрузки игры в топ-баре видны 4 ресурса с реальными числами.
+- После нажатия "Следующий ход" числа обновляются.
+- Наведение на ресурс → подсветка.
+- Клик на 💰 → открывается экран казны.
+
+---
+
+### Шаг 22 — API ключи → иконка настроек ⚙
+
+**Цель:** убрать технический контент из игрового UI в отдельное модальное окно.
+
+**Что сделать:**
+
+1. В `#top-bar` добавить иконку настроек крайней справа (после кнопки хода):
+   ```html
+   <button id="settings-btn" onclick="toggleSettingsModal()" title="Настройки">⚙</button>
+   ```
+   CSS: `background: none; border: none; color: var(--text-dim); font-size: 16px; cursor: pointer; padding: 0 8px`
+   Hover: `color: var(--text-gold)`
+
+2. Создать модальное окно `#settings-modal` (добавить в конец `<body>`):
+   - Структура: overlay + box (400px), заголовок "Настройки", вкладки "API ключи" / "Интерфейс"
+   - Перенести всё содержимое `#api-key-inline-panel` и `#api-key-section` внутрь вкладки "API ключи"
+   - Кнопка закрытия `✕` в правом верхнем углу
+
+3. Скрыть/удалить из `#right-panel` блок `#api-key-inline-panel`.
+4. Скрыть/удалить из `#bottom-area` блок `#api-key-section`.
+5. JS: `toggleSettingsModal()` — показывает/скрывает модал, закрытие по Esc и по клику на overlay.
+
+**Тест Шага 22:**
+- В правой панели и нижней строке API ключи больше не видны.
+- Клик на ⚙ → модал открывается с полями для ключей.
+- Сохранение ключей в модале работает так же как раньше.
+- `Esc` закрывает модал.
+
+---
+
+### Шаг 23 — Иконки-вкладки в левой панели
+
+**Цель:** заменить длинный скролл в левой панели на навигацию по вкладкам.
+
+**Что сделать:**
+
+1. Изменить структуру `#left-panel`:
+   ```html
+   <div id="left-panel">
+     <nav id="left-nav">
+       <button class="lnav-btn active" data-tab="overview" title="Обзор нации">🗺</button>
+       <button class="lnav-btn" data-tab="army"     title="Армия">⚔</button>
+       <button class="lnav-btn" data-tab="economy"  title="Экономика">💰</button>
+       <button class="lnav-btn" data-tab="diplomacy" title="Дипломатия">🤝</button>
+       <button class="lnav-btn" data-tab="laws"     title="Законы">📜</button>
+     </nav>
+     <div id="left-panel-content">
+       <!-- контент вкладки -->
+     </div>
+   </div>
+   ```
+
+2. CSS:
+   - `#left-panel`: `display: flex; flex-direction: row` (иконки слева, контент справа)
+   - `#left-nav`: `width: 40px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; border-right: 1px solid var(--border-gold); flex-shrink: 0`
+   - `.lnav-btn`: `width: 34px; height: 34px; background: none; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; color: var(--text-dim); transition: all 0.15s`
+   - `.lnav-btn:hover`: `background: rgba(212,168,83,0.1); color: var(--text-gold)`
+   - `.lnav-btn.active`: `background: rgba(212,168,83,0.15); color: var(--text-gold); box-shadow: inset 2px 0 0 var(--border-gold)`
+   - `#left-panel-content`: `flex: 1; overflow-y: auto; padding: 8px`
+
+3. JS: при клике на `.lnav-btn` — убрать `active` у всех, добавить к кликнутой, вызвать `renderLeftPanelTab(tabName)`.
+4. `renderLeftPanelTab` — переключает отображаемый контент (существующие функции рендера переиспользуются).
+
+**Тест Шага 23:**
+- Левая панель показывает 5 иконок-вкладок слева.
+- Клик на ⚔ → контент меняется на военный.
+- Активная вкладка подсвечена.
+- Контент прокручивается внутри `#left-panel-content`, иконки фиксированы.
+
+---
+
+## БЛОК J — Уведомления и навигация (Шаги 27–29)
+
+---
+
+### Шаг 27 — Toast-уведомления
+
+**Цель:** важные события всплывают как краткие уведомления — не теряются в логе.
+
+**Что сделать:**
+
+1. Добавить контейнер в конец `<body>`:
+   ```html
+   <div id="toast-container"></div>
+   ```
+   CSS: `position: fixed; top: 54px; right: 12px; z-index: 9000; display: flex; flex-direction: column; gap: 6px; pointer-events: none`
+
+2. JS: написать функцию `showToast(message, type, duration)`:
+   - `type`: `'info'` | `'warning'` | `'danger'` | `'success'`
+   - Создать `div.toast` с классом типа, добавить в `#toast-container`
+   - Анимация появления: CSS `@keyframes toast-in` — `translateX(110%) → translateX(0)`, 0.25s
+   - Автоудаление через `duration` мс (по умолчанию 4000). `danger` — не удалять автоматически, добавить кнопку `✕`
+   - Анимация исчезновения: `translateX(110%)`, 0.2s, затем `remove()`
+
+3. CSS `.toast`:
+   ```css
+   .toast {
+     min-width: 240px; max-width: 320px;
+     padding: 10px 14px;
+     background: rgba(20,15,8,0.96);
+     border-left: 3px solid var(--border-gold);
+     border-radius: 3px;
+     font-size: 12px; color: var(--text-light);
+     box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+     pointer-events: auto;
+     backdrop-filter: blur(6px);
+   }
+   .toast.warning  { border-left-color: #ff9800; }
+   .toast.danger   { border-left-color: #f44336; background: rgba(30,10,8,0.97); }
+   .toast.success  { border-left-color: #4caf50; }
+   ```
+
+4. Вызывать `showToast` из существующих игровых событий:
+   - Война объявлена → `showToast('⚔ Рим объявил войну!', 'danger')`
+   - Дефицит казны → `showToast('💰 Казна пуста — дефицит!', 'warning')`
+   - Регион захвачен → `showToast('🏳 Захвачена Мессина', 'success')`
+
+**Тест Шага 27:**
+- Вызвать `showToast('Тест!', 'warning')` в консоли — уведомление появляется справа.
+- Через 4 сек уведомление исчезает (кроме `danger`).
+- `danger`-уведомление имеет кнопку закрытия.
+- Несколько уведомлений не накладываются, а выстраиваются столбцом.
+
+---
+
+### Шаг 28 — Горячие клавиши
+
+**Цель:** ускорить навигацию — без мыши открывать основные экраны.
+
+**Что сделать:**
+
+1. В основном JS добавить глобальный слушатель `document.addEventListener('keydown', onHotkey)`.
+
+2. Таблица горячих клавиш:
+
+   | Клавиша | Действие | Функция |
+   |---------|---------|---------|
+   | `Space` | Завершить ход | `processTurn()` |
+   | `E` | Вкладка Экономика | `switchLeftTab('economy')` |
+   | `D` | Вкладка Дипломатия | `switchLeftTab('diplomacy')` |
+   | `A` | Вкладка Армия | `switchLeftTab('army')` |
+   | `Esc` | Закрыть открытую панель / модал | `closeTopModal()` |
+   | `Tab` | Перейти к следующему алерту | `focusNextAlert()` |
+   | `M` | Сменить режим карты | `cycleMapMode()` |
+   | `/` | Фокус на поле ввода команды | `focusCommandInput()` |
+
+3. `onHotkey(e)`:
+   - Игнорировать если `e.target` — это `<input>` или `<textarea>` (не мешать вводу)
+   - Игнорировать если зажаты `Ctrl`, `Alt`, `Meta`
+   - Для `Space` — `e.preventDefault()` (не скроллить страницу)
+
+4. Добавить тултип к кнопке "Следующий ход": `title="Следующий ход [Space]"`.
+5. Показать подсказку по горячим клавишам в модале ⚙: таблица всех шорткатов.
+
+**Тест Шага 28:**
+- Нажать `E` — переключается вкладка Экономика в левой панели.
+- Нажать `/` — курсор появляется в поле ввода команды.
+- Нажать `Space` в поле ввода — хотки НЕ срабатывают (ввод текста не прерывается).
+- Нажать `Esc` — закрывается последний открытый оверлей.
+
+---
+
+### Шаг 29 — Режимы карты (Map modes)
+
+**Цель:** быстро переключать визуализацию карты между политическим, экономическим и военным видами.
+
+**Что сделать:**
+
+1. Добавить панель режимов над картой (или в левом верхнем углу карты):
+   ```html
+   <div id="map-mode-bar">
+     <button class="mm-btn active" data-mode="political" title="Политический [1]">🗺</button>
+     <button class="mm-btn" data-mode="economy"  title="Экономика [2]">💰</button>
+     <button class="mm-btn" data-mode="military" title="Военный [3]">⚔</button>
+     <button class="mm-btn" data-mode="population" title="Население [4]">👥</button>
+   </div>
+   ```
+   CSS: `position: absolute; top: 8px; left: 8px; z-index: 500; display: flex; gap: 4px`
+   `.mm-btn`: `width: 32px; height: 32px; background: rgba(13,10,5,0.85); border: 1px solid var(--border-gold); border-radius: 3px; cursor: pointer; font-size: 15px`
+   `.mm-btn.active`: `background: rgba(107,79,26,0.5); border-color: var(--accent)`
+
+2. JS: написать `setMapMode(mode)`:
+   - `political` — стандартные цвета наций (текущий вид, ничего не менять)
+   - `economy` — перекрасить регионы через Leaflet `setStyle`: цвет = тепловая карта по `region.wealth` (от тёмного к светло-жёлтому, 5 градаций)
+   - `military` — показать только регионы с армиями, остальные затемнить (`opacity: 0.4`)
+   - `population` — перекрасить по `region.population` (от светлого к тёмно-синему)
+
+3. Хоткеи `1`–`4` переключают режим (добавить в таблицу Шага 28).
+4. При переключении режима — анимация: плавный переход цветов через Leaflet `setStyle` с `transition: fill 0.3s` в CSS.
+
+**Тест Шага 29:**
+- Клик на 💰 → регионы перекрашиваются в тепловую карту по богатству.
+- Клик на ⚔ → регионы без армий затемняются.
+- Нажать `2` — режим экономики активируется.
+- Возврат на `🗺` → политический вид восстанавливается.
+
+---
+
+## БЛОК K — Карта и интерактивность (Шаги 30–32)
+
+---
+
+### Шаг 30 — Контекстное меню правой кнопкой мыши
+
+**Цель:** самые частые действия на регион — в 1 клик, без открытия боковой панели.
+
+**Что сделать:**
+
+1. Добавить `<div id="ctx-menu"></div>` в конец `<body>`:
+   ```css
+   #ctx-menu {
+     position: fixed; z-index: 8000;
+     min-width: 160px;
+     background: rgba(13,10,5,0.97);
+     border: 1px solid var(--border-gold);
+     border-radius: 3px;
+     box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+     display: none;
+     backdrop-filter: blur(4px);
+   }
+   .ctx-item {
+     padding: 7px 14px; font-size: 12px;
+     color: var(--text-light); cursor: pointer;
+     display: flex; align-items: center; gap: 8px;
+     border-bottom: 1px solid rgba(107,79,26,0.15);
+     transition: background 0.1s;
+   }
+   .ctx-item:hover { background: rgba(212,168,83,0.1); color: var(--text-gold); }
+   .ctx-item:last-child { border-bottom: none; }
+   .ctx-separator { height: 1px; background: rgba(107,79,26,0.25); margin: 2px 0; }
+   ```
+
+2. В Leaflet: при `layer.on('contextmenu', e)` на регионе:
+   - `e.originalEvent.preventDefault()`
+   - Вызвать `showContextMenu(e.originalEvent.clientX, e.originalEvent.clientY, region)`
+
+3. `showContextMenu(x, y, region)`:
+   - Определить доступные пункты меню по состоянию региона:
+     - Всегда: `📜 Подробности` → открывает `#region-info`
+     - Если регион чужой + есть армия рядом: `⚔ Атаковать`
+     - Если регион чужой + мир: `🤝 Предложить союз`
+     - Если регион свой: `🏗 Построить`, `📦 Управление`
+   - Позиционировать `#ctx-menu` с учётом края экрана (не выходить за viewport)
+   - `display: block`
+
+4. Закрывать меню при: `document.addEventListener('click', closeCtxMenu)` и `Esc`.
+
+**Тест Шага 30:**
+- Правый клик по региону → меню появляется рядом с курсором.
+- Меню не выходит за край экрана (проверить в правом нижнем углу карты).
+- Клик на пункт меню выполняет действие.
+- Клик в любом другом месте → меню закрывается.
+
+---
+
+### Шаг 31 — Индикатор прогресса хода
+
+**Цель:** показать что уже сделано за текущий ход и что ещё доступно.
+
+**Что сделать:**
+
+1. Добавить в `#top-bar` между ресурс-баром и кнопкой хода:
+   ```html
+   <div id="turn-progress" title="Прогресс хода">
+     <div class="tp-dots" id="tp-dots"></div>
+     <span id="tp-label">0/0</span>
+   </div>
+   ```
+   CSS: `display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim)`
+   `.tp-dots`: `display: flex; gap: 3px`
+   `.tp-dot`: `width: 8px; height: 8px; border-radius: 50%; background: rgba(107,79,26,0.3); border: 1px solid var(--border-gold); transition: background 0.2s`
+   `.tp-dot.done`: `background: var(--border-gold)`
+
+2. Определить список "действий хода" — массив `TURN_ACTIONS`:
+   ```js
+   TURN_ACTIONS = [
+     { id: 'taxes',    label: 'Налоги собраны' },
+     { id: 'orders',   label: 'Приказы выданы' },
+     { id: 'diplo',    label: 'Дипломатия' },
+     { id: 'build',    label: 'Строительство' },
+     { id: 'events',   label: 'События рассмотрены' },
+   ]
+   ```
+
+3. JS: `markTurnAction(id)` — помечает действие выполненным, перерисовывает точки и счётчик `2/5`.
+4. При нажатии "Следующий ход" — сбросить все действия (`resetTurnProgress()`).
+5. При наведении на `#turn-progress` — тултип перечисляет что сделано / не сделано.
+
+**Тест Шага 31:**
+- В топ-баре 5 маленьких точек.
+- При выдаче приказа — одна точка заполняется.
+- Счётчик `2/5` обновляется.
+- После нажатия хода — точки сбрасываются.
+
+---
+
+### Шаг 32 — Drag-to-resize боковых панелей
+
+**Цель:** игрок может уменьшить боковые панели чтобы видеть больше карты.
+
+**Что сделать:**
+
+1. Добавить `<div class="panel-resizer" id="left-resizer"></div>` между `#left-panel` и `#center-panel`.
+   CSS:
+   ```css
+   .panel-resizer {
+     width: 4px; flex-shrink: 0;
+     background: var(--border-gold);
+     opacity: 0.3; cursor: col-resize;
+     transition: opacity 0.15s;
+   }
+   .panel-resizer:hover, .panel-resizer.dragging { opacity: 0.8; }
+   ```
+
+2. JS: `initPanelResize(resizerId, panelId, minW, maxW)`:
+   - `mousedown` на resizer → начать отслеживание `mousemove` на `document`
+   - `mousemove`: `newW = clamp(startW + dx, minW, maxW)` → `panel.style.width = newW + 'px'`
+   - `mouseup` → остановить, сохранить в `localStorage`
+   - `minW = 40` (только иконки), `maxW = 360`
+
+3. При `width < 80px` — скрыть `#left-panel-content`, показать только иконки `#left-nav` (collapsed mode).
+4. При загрузке: восстановить ширину из `localStorage`.
+
+**Тест Шага 32:**
+- Потянуть за разделитель → левая панель меняет ширину.
+- При ширине < 80px контент скрывается, остаются только иконки.
+- Перезагрузка страницы → ширина сохранена.
+- FPS не падает при перетаскивании.
+
+---
+
+## БЛОК L — Финальная полировка (Шаги 33–35)
+
+---
+
+### Шаг 33 — Строка статуса внизу (Status bar)
+
+**Цель:** все технические статусы в одну строку — освобождает правую панель и нижнюю область.
+
+**Что сделать:**
+
+1. Добавить `<div id="status-bar"></div>` после `#app` (или как последний элемент внутри `#app`):
+   ```html
+   <div id="status-bar">
+     <span id="sb-game">Сиракузы · 301 BC · Ход 12</span>
+     <span class="sb-sep">|</span>
+     <span id="sb-save">💾 Сохранено 2 мин назад</span>
+     <span class="sb-sep">|</span>
+     <span id="sb-ai">🤖 AI: готов</span>
+     <span class="sb-sep">|</span>
+     <span id="sb-fps">60 fps</span>
+   </div>
+   ```
+
+2. CSS:
+   ```css
+   #status-bar {
+     height: 22px; flex-shrink: 0;
+     background: #0a0705;
+     border-top: 1px solid rgba(107,79,26,0.3);
+     display: flex; align-items: center;
+     gap: 0; padding: 0 10px;
+     font-size: 10px; color: var(--text-dim);
+     font-family: 'Georgia', serif;
+   }
+   .sb-sep { margin: 0 8px; opacity: 0.3; }
+   #sb-ai.ready   { color: #4caf50; }
+   #sb-ai.busy    { color: #ff9800; }
+   #sb-ai.error   { color: #f44336; }
+   ```
+
+3. JS: обновлять `#sb-ai` при изменении статуса AI (запрос отправлен → `busy`, ответ получен → `ready`).
+4. `#sb-save`: обновлять при автосохранении — `'Сохранено только что'`, затем через таймер → `'Сохранено N мин назад'`.
+5. `#sb-fps`: опционально — считать FPS через `requestAnimationFrame`, обновлять раз в 2 сек.
+
+**Тест Шага 33:**
+- Строка статуса видна в самом низу экрана под нижней строкой.
+- При отправке AI-запроса — `🤖 AI: обрабатывает...` жёлтым.
+- После ответа — `🤖 AI: готов` зелёным.
+- Время сохранения обновляется корректно.
+
+---
+
+### Шаг 34 — Поиск по игре
+
+**Цель:** быстрый доступ к нациям, персонажам, регионам без навигации по панелям.
+
+**Что сделать:**
+
+1. Добавить кнопку поиска в `#top-bar`: `<button id="search-btn" title="Поиск [/]">🔍</button>`
+
+2. Добавить панель поиска (скрытую по умолчанию):
+   ```html
+   <div id="search-panel" class="hidden">
+     <input id="search-input" type="text" placeholder="Поиск нации, региона, персонажа...">
+     <div id="search-results"></div>
+   </div>
+   ```
+   CSS: `position: fixed; top: calc(var(--header-h) + 4px); left: 50%; transform: translateX(-50%); width: 400px; z-index: 7000; background: rgba(13,10,5,0.98); border: 1px solid var(--border-gold); border-radius: 4px; backdrop-filter: blur(8px)`
+
+3. JS: `onSearchInput(query)` — при каждом нажатии клавиши (debounce 150ms):
+   - Искать по `regions` (имя региона), `nations` (имя нации), `characters` (имя персонажа)
+   - Показывать максимум 8 результатов сгруппированными:
+     ```
+     🗺 Регионы
+       Сиракузы, Катания
+     🏳 Нации
+       Карфаген
+     👤 Персонажи
+       Менандр, посол
+     ```
+   - Клик на результат → перейти к нему (центрировать карту / открыть панель)
+
+4. Открывать: клик на `🔍` или хоткей `/`. Закрывать: `Esc` или клик вне панели.
+
+**Тест Шага 34:**
+- Нажать `/` → поле поиска появляется в центре экрана.
+- Ввести `Сир` → появляется результат "🗺 Сиракузы".
+- Клик на результат → карта центрируется на регионе.
+- Ввести имя персонажа → результат в категории 👤.
+
+---
+
+### Шаг 35 — Визуальный "пульс" для критических событий
+
+**Цель:** критические события мгновенно привлекают внимание — без звука, через визуальный эффект.
+
+**Что сделать:**
+
+1. Добавить псевдоэлемент в CSS:
+   ```css
+   body::after {
+     content: '';
+     position: fixed; inset: 0;
+     pointer-events: none;
+     z-index: 9999;
+     opacity: 0;
+     transition: opacity 0.1s;
+   }
+   body.pulse-war::after {
+     background: radial-gradient(ellipse at center,
+       transparent 40%,
+       rgba(200, 30, 30, 0.18) 100%);
+     animation: pulse-edge 2s ease-out forwards;
+   }
+   body.pulse-gold::after {
+     background: radial-gradient(ellipse at center,
+       transparent 40%,
+       rgba(212, 168, 83, 0.2) 100%);
+     animation: pulse-edge 1.5s ease-out forwards;
+   }
+   @keyframes pulse-edge {
+     0%   { opacity: 1; }
+     100% { opacity: 0; }
+   }
+   ```
+
+2. Таблица пульсов по событиям:
+
+   | Событие | Класс | Цвет |
+   |---------|-------|------|
+   | Война объявлена | `pulse-war` | Красный |
+   | Победа / захват | `pulse-gold` | Золото |
+   | Казна пуста | `pulse-warning` | Жёлтый |
+   | Персонаж умер | `pulse-dark` | Тёмно-серый |
+
+3. JS: `triggerPulse(type)`:
+   - Удалить все `pulse-*` классы с `body`
+   - Добавить `body.classList.add('pulse-' + type)`
+   - Через 2000ms — убрать класс
+
+**Тест Шага 35:**
+- Вызвать `triggerPulse('war')` в консоли → красное свечение по краям экрана на 2 сек.
+- После завершения анимации класс удаляется, следующий пульс работает.
+- Пульс не мешает кликам (pointer-events: none).
+- На слабых устройствах нет просадки FPS (чисто CSS animation).
+
+---
+
+## Итоговая таблица всех 35 шагов
+
+| Шаг | Блок | Файл | Суть |
+|-----|------|------|------|
+| 1–20 | A–G | engine/*, ui/battle_map_pixi.js | Pixi.js тактическая карта |
+| 21 | H | index.html, panels.js | Ресурс-бар в топ-баре |
+| 22 | H | index.html | API ключи → модал ⚙ |
+| 23 | H | index.html | Иконки-вкладки левой панели |
+| 24 | I | index.html | Лог как drawer |
+| 25 | I | index.html | Ввод команды всегда виден |
+| 26 | I | index.html, panels.js | Значки-алерты на вкладках |
+| 27 | J | index.html | Toast-уведомления |
+| 28 | J | index.html | Горячие клавиши |
+| 29 | J | index.html, ui/map.js | Режимы карты |
+| 30 | K | index.html, ui/map.js | Контекстное меню (ПКМ) |
+| 31 | K | index.html | Индикатор прогресса хода |
+| 32 | K | index.html | Drag-to-resize панелей |
+| 33 | L | index.html | Строка статуса |
+| 34 | L | index.html | Поиск по игре |
+| 35 | L | index.html | Визуальный пульс событий |
+
