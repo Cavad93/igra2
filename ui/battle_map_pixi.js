@@ -3,6 +3,7 @@
    Шаг 1: инициализация Application + 6 контейнеров-слоёв
    Шаг 4: BIOMES палитра + getBiomeColor / getBiomeAt
    Шаг 5: renderTerrain — Canvas 2D → PIXI.Texture → Sprite
+   Шаг 6: parchment overlay + vignette (TilingSprite + radial gradient)
    ═══════════════════════════════════════════════════════════ */
 
 /**
@@ -210,6 +211,239 @@ function renderTerrain(app, layers, heightmap) {
   return sprite;
 }
 
+/* ─────────────────────────────────────────────────────────
+   Шаг 6 — Parchment overlay + Vignette
+
+   Цель (по arma.md):
+     1) Пергаментная текстура (Paper003, CC0) как TilingSprite поверх
+        terrain, blendMode='multiply', alpha=0.22 — даёт "старинный"
+        тёплый бежевый оттенок.
+     2) Виньет — радиальный градиент от прозрачного центра к
+        тёмным краям (rgba(0,0,0,0.55)) — фокусирует взгляд в центре.
+
+   Почему TilingSprite:
+     Текстура пергамента 1024×1024, а экран может быть 800×600, 1920×1080
+     и т.д. TilingSprite повторяет текстуру без растяжения — каждая ячейка
+     остаётся резкой, что важно для органичности бумаги.
+
+   Fallback-парчмент:
+     Если `PIXI.Assets.load(url)` упал (offline / 404 / non-browser),
+     собираем процедурный пергамент в Canvas 2D — тёплая бежевая база
+     с shaded noise. Это гарантирует, что карта не останется "голой".
+   ───────────────────────────────────────────────────────── */
+
+/**
+ * buildProceduralParchmentCanvas(size, seed)
+ *
+ * Собирает Canvas 2D size×size с процедурным пергаментом:
+ *   — тёплая бежевая база (#d8c79a)
+ *   — мелкий шум (светлые/тёмные пятна)
+ *   — лёгкое виньетирование по краям тайла, чтобы при tiling не было швов
+ *
+ * Используется как fallback, когда реальная текстура Paper003 недоступна.
+ *
+ * @param {number} size  — сторона квадратного канваса (по умолчанию 256)
+ * @param {number} seed  — целое, для детерминированного шума
+ * @returns {HTMLCanvasElement}
+ */
+function buildProceduralParchmentCanvas(size, seed) {
+  const S = (size | 0) || 256;
+  if (typeof document === 'undefined') {
+    throw new Error('[buildProceduralParchmentCanvas] document is not available');
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width  = S;
+  canvas.height = S;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('[buildProceduralParchmentCanvas] getContext("2d") null');
+
+  // Тёплая бежевая база
+  ctx.fillStyle = '#d8c79a';
+  ctx.fillRect(0, 0, S, S);
+
+  // Простой детерминированный PRNG (mulberry32)
+  let s = ((seed | 0) || 1) >>> 0;
+  function rnd() {
+    s = (s + 0x6D2B79F5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+
+  // Пиксельный шум поверх базы
+  const img = ctx.getImageData(0, 0, S, S);
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const n = (rnd() - 0.5) * 24; // ±12
+    d[i    ] = Math.max(0, Math.min(255, d[i    ] + n));
+    d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + n * 0.9));
+    d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + n * 0.7));
+    // alpha оставляем 255
+  }
+  ctx.putImageData(img, 0, 0);
+
+  return canvas;
+}
+
+/**
+ * loadParchmentTexture(url)
+ *
+ * Пытается загрузить текстуру пергамента через PIXI.Assets.load.
+ * Если загрузка провалилась (нет PIXI.Assets, сеть, 404), возвращает
+ * процедурный fallback через PIXI.Texture.from(proceduralCanvas).
+ *
+ * @param {string} [url='./textures/Paper003_1K_Color.jpg']
+ * @returns {Promise<PIXI.Texture>}
+ */
+async function loadParchmentTexture(url) {
+  const src = url || './textures/Paper003_1K_Color.jpg';
+  if (typeof PIXI === 'undefined') {
+    throw new Error('[loadParchmentTexture] PIXI is not loaded');
+  }
+  // Путь 1: PIXI.Assets.load (браузер, production)
+  if (PIXI.Assets && typeof PIXI.Assets.load === 'function') {
+    try {
+      const tex = await PIXI.Assets.load(src);
+      if (tex) return tex;
+    } catch (e) {
+      console.warn('[loadParchmentTexture] Assets.load failed, using procedural fallback:', e && e.message);
+    }
+  }
+  // Путь 2: процедурный пергамент
+  const canvas = buildProceduralParchmentCanvas(256, 42);
+  return PIXI.Texture.from(canvas);
+}
+
+/**
+ * renderParchmentOverlay(app, layers, texture)
+ *
+ * Создаёт TilingSprite с пергаментной текстурой, накрывает им всю
+ * область app.screen, blendMode='multiply' + alpha=0.22, добавляет
+ * в layers.bg (поверх terrain, под vignette).
+ *
+ * @param {PIXI.Application} app
+ * @param {{bg: PIXI.Container}} layers
+ * @param {PIXI.Texture} texture  — предварительно загруженная парчмент-текстура
+ * @returns {PIXI.TilingSprite}
+ */
+function renderParchmentOverlay(app, layers, texture) {
+  if (!app || !layers || !layers.bg) {
+    throw new Error('[renderParchmentOverlay] app/layers not initialised');
+  }
+  if (!texture) {
+    throw new Error('[renderParchmentOverlay] texture is required');
+  }
+  if (typeof PIXI === 'undefined' || !PIXI.TilingSprite) {
+    throw new Error('[renderParchmentOverlay] PIXI.TilingSprite is not available');
+  }
+
+  // v8: новый object-конструктор TilingSprite
+  const sprite = new PIXI.TilingSprite({
+    texture: texture,
+    width:   app.screen.width,
+    height:  app.screen.height
+  });
+
+  sprite.blendMode = 'multiply';
+  sprite.alpha     = 0.22;
+
+  layers.bg.addChild(sprite);
+  return sprite;
+}
+
+/**
+ * buildVignetteCanvas(width, height)
+ *
+ * Создаёт Canvas 2D width×height с радиальным градиентом:
+ *   центр: rgba(0,0,0,0)    — полностью прозрачный
+ *   края:  rgba(0,0,0,0.55) — затемнение 55%
+ *
+ * @param {number} width
+ * @param {number} height
+ * @returns {HTMLCanvasElement}
+ */
+function buildVignetteCanvas(width, height) {
+  const w = width  | 0;
+  const h = height | 0;
+  if (typeof document === 'undefined') {
+    throw new Error('[buildVignetteCanvas] document is not available');
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width  = w;
+  canvas.height = h;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('[buildVignetteCanvas] getContext("2d") null');
+
+  const cx = w / 2;
+  const cy = h / 2;
+  // Радиус до самого дальнего угла — чтобы градиент дотягивался до краёв.
+  const rOuter = Math.sqrt(cx * cx + cy * cy);
+  const rInner = Math.min(cx, cy) * 0.30; // центральное "ядро" без затемнения
+
+  const grad = ctx.createRadialGradient(cx, cy, rInner, cx, cy, rOuter);
+  grad.addColorStop(0,   'rgba(0,0,0,0)');
+  grad.addColorStop(0.6, 'rgba(0,0,0,0.18)');
+  grad.addColorStop(1,   'rgba(0,0,0,0.55)');
+
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  return canvas;
+}
+
+/**
+ * renderVignette(app, layers)
+ *
+ * Собирает виньет-Canvas по размеру app.screen, конвертирует в
+ * PIXI.Texture и добавляет Sprite поверх layers.bg (как последний
+ * дочерний элемент — поверх parchment и terrain).
+ *
+ * @param {PIXI.Application} app
+ * @param {{bg: PIXI.Container}} layers
+ * @returns {PIXI.Sprite}
+ */
+function renderVignette(app, layers) {
+  if (!app || !layers || !layers.bg) {
+    throw new Error('[renderVignette] app/layers not initialised');
+  }
+  if (typeof PIXI === 'undefined') {
+    throw new Error('[renderVignette] PIXI is not loaded');
+  }
+  const canvas  = buildVignetteCanvas(app.screen.width, app.screen.height);
+  const texture = PIXI.Texture.from(canvas);
+  const sprite  = new PIXI.Sprite(texture);
+  sprite.width  = app.screen.width;
+  sprite.height = app.screen.height;
+  layers.bg.addChild(sprite);
+  return sprite;
+}
+
+/**
+ * renderTerrainOverlays(app, layers, [parchmentTexture], [opts])
+ *
+ * Удобный хелпер: добавляет к уже отрисованному terrain и parchment,
+ * и vignette одним вызовом. Если parchmentTexture не передан —
+ * загружает / генерирует его через loadParchmentTexture().
+ *
+ * Порядок детей в layers.bg после вызова (снизу вверх):
+ *   [0] terrain sprite    — из Шага 5
+ *   [1] parchment overlay — TilingSprite, multiply, α=0.22
+ *   [2] vignette          — Sprite с радиальным градиентом
+ *
+ * @param {PIXI.Application} app
+ * @param {{bg: PIXI.Container}} layers
+ * @param {PIXI.Texture}  [parchmentTexture]
+ * @returns {Promise<{parchment: PIXI.TilingSprite, vignette: PIXI.Sprite}>}
+ */
+async function renderTerrainOverlays(app, layers, parchmentTexture) {
+  const tex = parchmentTexture || await loadParchmentTexture();
+  const parchment = renderParchmentOverlay(app, layers, tex);
+  const vignette  = renderVignette(app, layers);
+  return { parchment, vignette };
+}
+
 /**
  * initBattleMap(containerId, width, height)
  *
@@ -305,19 +539,31 @@ function destroyBattleMap() {
 // Экспорт: глобалы (браузер) + module.exports (Node.js тесты)
 // ──────────────────────────────────────────────────────────────────────
 if (typeof window !== 'undefined') {
-  window.BIOMES            = BIOMES;
-  window.getBiomeColor     = getBiomeColor;
-  window.getBiomeAt        = getBiomeAt;
-  window.fillTerrainPixels = fillTerrainPixels;
+  window.BIOMES             = BIOMES;
+  window.getBiomeColor      = getBiomeColor;
+  window.getBiomeAt         = getBiomeAt;
+  window.fillTerrainPixels  = fillTerrainPixels;
   window.buildTerrainCanvas = buildTerrainCanvas;
-  window.renderTerrain     = renderTerrain;
-  window.initBattleMap     = initBattleMap;
-  window.destroyBattleMap  = destroyBattleMap;
+  window.renderTerrain      = renderTerrain;
+  window.buildProceduralParchmentCanvas = buildProceduralParchmentCanvas;
+  window.loadParchmentTexture = loadParchmentTexture;
+  window.renderParchmentOverlay = renderParchmentOverlay;
+  window.buildVignetteCanvas  = buildVignetteCanvas;
+  window.renderVignette       = renderVignette;
+  window.renderTerrainOverlays = renderTerrainOverlays;
+  window.initBattleMap      = initBattleMap;
+  window.destroyBattleMap   = destroyBattleMap;
 }
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
   module.exports = {
     BIOMES, getBiomeColor, getBiomeAt,
     fillTerrainPixels, buildTerrainCanvas, renderTerrain,
+    buildProceduralParchmentCanvas,
+    loadParchmentTexture,
+    renderParchmentOverlay,
+    buildVignetteCanvas,
+    renderVignette,
+    renderTerrainOverlays,
     initBattleMap, destroyBattleMap
   };
 }
