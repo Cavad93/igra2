@@ -2009,3 +2009,183 @@ function lightenColor(hex, amount) {
     return hex;
   }
 }
+
+// ══════════════════════════════════════════════════════════════
+// ШАГ 29 — РЕЖИМЫ КАРТЫ (political / economy / military / population)
+// ══════════════════════════════════════════════════════════════
+
+window.MAP_MODES        = ['political', 'economy', 'military', 'population'];
+window.CURRENT_MAP_MODE = 'political';
+
+/**
+ * Линейная интерполяция между двумя hex-цветами.
+ * @param {string} fromHex — '#rrggbb'
+ * @param {string} toHex   — '#rrggbb'
+ * @param {number} t       — 0..1
+ */
+function _lerpHex(fromHex, toHex, t) {
+  const f = (h) => [
+    parseInt(h.slice(1, 3), 16),
+    parseInt(h.slice(3, 5), 16),
+    parseInt(h.slice(5, 7), 16),
+  ];
+  const a = f(fromHex), b = f(toHex);
+  const r = Math.round(a[0] + (b[0] - a[0]) * t);
+  const g = Math.round(a[1] + (b[1] - a[1]) * t);
+  const bl = Math.round(a[2] + (b[2] - a[2]) * t);
+  return `rgb(${r},${g},${bl})`;
+}
+
+/**
+ * Квантуем t ∈ [0..1] в k ступеней (0..k-1) и нормализуем обратно в [0..1].
+ * Это даёт ровно k видимых градаций тепловой карты.
+ */
+function _quantize(t, k) {
+  if (k <= 1) return 0;
+  const i = Math.min(k - 1, Math.floor(t * k));
+  return i / (k - 1);
+}
+
+/** Прокси "богатства" региона: используется для экономического режима. */
+function _computeRegionWealth(rid) {
+  const gr = GAME_STATE?.regions?.[rid];
+  if (!gr) return 0;
+  // Если кто-то позже введёт поле wealth — используем его напрямую.
+  if (typeof gr.wealth === 'number') return gr.wealth;
+  let w = (gr.fertility ?? 0.5) * ((gr.population ?? 0) / 1000);
+  if (Array.isArray(gr.building_slots)) {
+    for (const slot of gr.building_slots) w += (slot.level || 1) * 5;
+  }
+  if (gr.production && typeof gr.production === 'object') {
+    for (const k in gr.production) w += (gr.production[k] || 0) * 0.01;
+  }
+  return w;
+}
+
+/** Восстановить "политический" стиль конкретного региона. */
+function _restorePoliticalStyle(regionId) {
+  const layer = regionLayers[regionId];
+  if (!layer) return;
+  const mapData    = MAP_REGIONS[regionId];
+  if (!mapData) return;
+  // Не-игровые (океан и т.п.) — откатываем к их стилям
+  if (NON_PLAYABLE_TYPES.has(mapData.mapType)) {
+    const style = NON_PLAYABLE_STYLES[mapData.mapType] || NON_PLAYABLE_STYLES.Ocean;
+    layer.setStyle(style);
+    return;
+  }
+  const gameRegion = GAME_STATE.regions[regionId];
+  const nationId   = gameRegion ? gameRegion.nation : mapData.nation;
+  const nation     = GAME_STATE.nations[nationId];
+  const blendColor = (typeof getProvinceBlendColor === 'function')
+                     ? getProvinceBlendColor(regionId) : null;
+  const color        = blendColor ?? (nation ? nation.color : '#A8A898');
+  const isPlayer     = (nationId === GAME_STATE.player_nation);
+  const isSelected   = (selectedRegionId === regionId);
+  const [origC, occC] = _regionOccupationColors(regionId);
+  layer.setStyle(buildPolygonStyle(color, isPlayer, isSelected, origC, occC));
+}
+
+/**
+ * Переключает режим отображения карты.
+ * @param {'political'|'economy'|'military'|'population'} mode
+ */
+function setMapMode(mode) {
+  if (!window.MAP_MODES.includes(mode)) return;
+  window.CURRENT_MAP_MODE = mode;
+
+  // Синхронизируем состояние кнопок
+  const bar = document.getElementById('map-mode-bar');
+  if (bar) {
+    bar.querySelectorAll('.mm-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+  }
+
+  if (!regionLayers || Object.keys(regionLayers).length === 0) return;
+
+  // Собираем id играбельных регионов
+  const playableIds = [];
+  for (const [rid, md] of Object.entries(MAP_REGIONS)) {
+    if (NON_PLAYABLE_TYPES.has(md.mapType)) continue;
+    if (!regionLayers[rid]) continue;
+    playableIds.push(rid);
+  }
+
+  // 1. ПОЛИТИЧЕСКИЙ — восстановить оригинальные стили всех слоёв
+  if (mode === 'political') {
+    for (const rid of Object.keys(regionLayers)) _restorePoliticalStyle(rid);
+    return;
+  }
+
+  // 2. ЭКОНОМИКА — тепловая карта по "богатству" (5 градаций)
+  if (mode === 'economy') {
+    const values = playableIds.map((rid) => _computeRegionWealth(rid));
+    const maxV = Math.max(1, ...values);
+    for (let i = 0; i < playableIds.length; i++) {
+      const rid = playableIds[i];
+      const layer = regionLayers[rid];
+      const t = _quantize(values[i] / maxV, 5);
+      const fill = _lerpHex('#3a2608', '#ffe394', t); // тёмный → светло-жёлтый
+      const isSelected = (selectedRegionId === rid);
+      layer.setStyle({
+        fillColor:   fill,
+        fillOpacity: 0.80,
+        color:       isSelected ? '#FFD700' : 'rgba(70,50,25,0.45)',
+        weight:      isSelected ? 3.0 : 1.0,
+        opacity:     1.0,
+        dashArray:   null,
+      });
+    }
+    return;
+  }
+
+  // 3. ВОЕННЫЙ — регионы с армиями видны, остальные затемнены
+  if (mode === 'military') {
+    const withArmy = new Set(
+      ((GAME_STATE.armies ?? [])
+        .filter((a) => a && a.state !== 'disbanded')
+        .map((a) => a.position))
+    );
+    for (const rid of playableIds) {
+      const layer = regionLayers[rid];
+      if (withArmy.has(rid)) {
+        // Восстанавливаем политический стиль для активных регионов
+        _restorePoliticalStyle(rid);
+      } else {
+        layer.setStyle({
+          fillOpacity: 0.15,
+          opacity:     0.4,
+          weight:      1.0,
+          color:       'rgba(70,50,25,0.25)',
+          dashArray:   null,
+        });
+      }
+    }
+    return;
+  }
+
+  // 4. НАСЕЛЕНИЕ — от светлого к тёмно-синему
+  if (mode === 'population') {
+    const values = playableIds.map((rid) => (GAME_STATE.regions[rid]?.population ?? 0));
+    const maxV = Math.max(1, ...values);
+    for (let i = 0; i < playableIds.length; i++) {
+      const rid = playableIds[i];
+      const layer = regionLayers[rid];
+      const t = _quantize(values[i] / maxV, 5);
+      const fill = _lerpHex('#d8e6f2', '#0d3b6b', t); // светлый → тёмно-синий
+      const isSelected = (selectedRegionId === rid);
+      layer.setStyle({
+        fillColor:   fill,
+        fillOpacity: 0.80,
+        color:       isSelected ? '#FFD700' : 'rgba(70,50,25,0.45)',
+        weight:      isSelected ? 3.0 : 1.0,
+        opacity:     1.0,
+        dashArray:   null,
+      });
+    }
+    return;
+  }
+}
+
+window.setMapMode = setMapMode;

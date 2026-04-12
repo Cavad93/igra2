@@ -2870,6 +2870,48 @@
       flex-shrink: 0;
     }
 
+    /* ══════════════════════════════════════════════════
+       ШАГ 29: ПАНЕЛЬ РЕЖИМОВ КАРТЫ (Map modes)
+    ══════════════════════════════════════════════════ */
+    #map-mode-bar {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 500;
+      display: flex;
+      gap: 4px;
+      pointer-events: auto;
+    }
+    .mm-btn {
+      width: 32px;
+      height: 32px;
+      background: rgba(13,10,5,0.85);
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 15px;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      line-height: 1;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .mm-btn:hover {
+      background: rgba(42,32,16,0.95);
+      border-color: var(--accent);
+    }
+    .mm-btn.active {
+      background: rgba(107,79,26,0.5);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    /* Плавный переход цветов при смене режимов */
+    .leaflet-interactive {
+      transition: fill 0.3s, fill-opacity 0.3s, stroke-opacity 0.3s;
+    }
+
     /* Адаптивность для маленьких экранов */
     @media (max-width: 1200px) {
       :root { --panel-w: 220px; }
@@ -7968,6 +8010,13 @@
       <div id="center-panel">
         <div id="map-container">
           <!-- Leaflet монтируется сюда в renderMap() -->
+          <!-- Шаг 29: панель режимов карты -->
+          <div id="map-mode-bar">
+            <button class="mm-btn active" data-mode="political" title="Политический [1]" onclick="setMapMode('political')">🗺</button>
+            <button class="mm-btn"        data-mode="economy"   title="Экономика [2]"    onclick="setMapMode('economy')">💰</button>
+            <button class="mm-btn"        data-mode="military"  title="Военный [3]"       onclick="setMapMode('military')">⚔</button>
+            <button class="mm-btn"        data-mode="population" title="Население [4]"    onclick="setMapMode('population')">👥</button>
+          </div>
           <!-- Легенда наций -->
           <div id="nation-legend">
             <!-- Заполняется динамически -->
@@ -8805,6 +8854,23 @@
         case 'm':
           e.preventDefault();
           cycleMapMode();
+          break;
+        // Шаг 29: режимы карты — 1..4
+        case '1':
+          e.preventDefault();
+          if (typeof setMapMode === 'function') setMapMode('political');
+          break;
+        case '2':
+          e.preventDefault();
+          if (typeof setMapMode === 'function') setMapMode('economy');
+          break;
+        case '3':
+          e.preventDefault();
+          if (typeof setMapMode === 'function') setMapMode('military');
+          break;
+        case '4':
+          e.preventDefault();
+          if (typeof setMapMode === 'function') setMapMode('population');
           break;
       }
     }
