@@ -946,6 +946,162 @@ function startRiverSparkleTicker(app, layers, riverGroups, opts) {
   };
 }
 
+/* ─────────────────────────────────────────────────────────
+   Шаг 12 — Road rendering: Chaikin smoothing + двойная линия
+
+   Цель (по arma.md):
+     Нарисовать дороги в Pixi.js как плавные линии с эффектом
+     "грунтовки": для каждой дороги — две накладывающиеся линии,
+     тёмный контур + светлый центр.
+
+   Почему Chaikin (а не Catmull-Rom как для рек):
+     Дороги — это рукотворные тракты, они должны выглядеть сглажено,
+     но без "параболического" провисания между опорами. Chaikin
+     срезает углы и быстро (3 итерации) превращает A*-зигзаг из
+     8-связной сетки в плавную кривую, проходящую "близко" к исходным
+     точкам. Для рек Catmull-Rom даёт более естественное течение,
+     а для дорог достаточно простого срезания углов.
+
+   API из arma.md:
+     chaikin(points, iterations)            — публичный алиас
+                                               (в модуле уже есть
+                                               chaikinSmooth — алгоритмически
+                                               идентичная функция из Шага 8;
+                                               экспортируем оба имени).
+     renderRoads(app, layers, roads, hmW, hmH)
+       Для каждой дороги:
+         1. Маппим heightmap → экран (через mapRiverPathToScreen —
+            проекция идентичная, общая).
+         2. Применяем chaikin(smoothed, 3).
+         3. Создаём новый PIXI.Graphics:
+              а) внешняя линия: moveTo + lineTo по сглаженному пути,
+                 stroke({ width: 4, color: 0x2a1a0a, alpha: 0.8 })
+              б) внутренняя линия (поверх):
+                 stroke({ width: 2, color: 0x8a6a3a, alpha: 0.9 })
+         4. Добавляем в layers.roads.
+     Возвращает массив созданных Graphics.
+
+   Pixi v8 API:
+     В v8 нет lineStyle() — путь строится через moveTo/lineTo, затем
+     замыкается вызовом stroke({...}). Чтобы получить "двойную линию",
+     нужно ДВА раза пройти путь в одном Graphics: сначала outer stroke,
+     затем inner stroke (каждый stroke применяется только к незавершённым
+     path-операциям до него). Это стандартный приём для двухслойных
+     линий в v8.
+   ───────────────────────────────────────────────────────── */
+
+/**
+ * chaikin(points, iterations)
+ *
+ * Публичный алиас chaikinSmooth — по имени из спецификации
+ * arma.md Шаг 12. Реализация одна: каждая итерация заменяет
+ * каждую пару соседних точек на Q=0.75 P0 + 0.25 P1 и R=0.25 P0 + 0.75 P1,
+ * крайние точки сохраняются. 3 итерации обычно дают плавную дугу.
+ *
+ * @param {Array<{x:number,y:number}>} points
+ * @param {number} [iterations=3]
+ * @returns {Array<{x:number,y:number}>}
+ */
+function chaikin(points, iterations) {
+  return chaikinSmooth(points, iterations == null ? 3 : iterations);
+}
+
+/**
+ * drawPolyline(g, points)
+ *
+ * Собирает в Graphics путь из moveTo + lineTo по всем точкам.
+ * Не вызывает stroke() — это ответственность вызывающего кода,
+ * который добавляет нужный стиль (цвет/ширина/alpha).
+ *
+ * @param {PIXI.Graphics|object} g
+ * @param {Array<{x:number,y:number}>} points
+ */
+function drawPolyline(g, points) {
+  if (!points || points.length < 2) return;
+  g.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    g.lineTo(points[i].x, points[i].y);
+  }
+}
+
+/**
+ * renderRoads(app, layers, roads, hmW, hmH)
+ *
+ * Рисует все дороги в layers.roads как двойную линию (тёмный контур +
+ * светлый центр) поверх сглаженного Chaikin-пути. Каждая дорога —
+ * один PIXI.Graphics в контейнере roads.
+ *
+ * Проекция heightmap → экран использует ту же пропорцию, что и реки
+ * (mapRiverPathToScreen), чтобы дороги и реки совпадали по позициям.
+ *
+ * Короткие пути (< 2 точек) и пустой список — молча пропускаются.
+ *
+ * @param {PIXI.Application} app
+ * @param {{roads: PIXI.Container}} layers
+ * @param {Array<{path:Array<{x:number,y:number}>}>} roads
+ * @param {number} hmW  — ширина heightmap
+ * @param {number} hmH  — высота heightmap
+ * @returns {Array<PIXI.Graphics>}  — массив созданных Graphics по одному на дорогу
+ */
+function renderRoads(app, layers, roads, hmW, hmH) {
+  if (!app || !layers || !layers.roads) {
+    throw new Error('[renderRoads] app/layers not initialised — call initBattleMap() first');
+  }
+  if (typeof PIXI === 'undefined' || !PIXI.Graphics) {
+    throw new Error('[renderRoads] PIXI.Graphics is not available');
+  }
+  if (!Array.isArray(roads) || roads.length === 0) return [];
+  if (!(hmW > 0) || !(hmH > 0)) {
+    throw new Error('[renderRoads] invalid heightmap dimensions');
+  }
+
+  const screenW = app.screen.width;
+  const screenH = app.screen.height;
+  const created = [];
+
+  for (let r = 0; r < roads.length; r++) {
+    const road = roads[r];
+    if (!road || !Array.isArray(road.path) || road.path.length < 2) continue;
+
+    // 1. heightmap → экранные координаты (общая проекция с реками).
+    const mapped = mapRiverPathToScreen(road.path, hmW, hmH, screenW, screenH);
+    // 2. Chaikin (3 итерации) — срезает зигзаги A* на 8-связной сетке.
+    const smoothed = chaikin(mapped, 3);
+    if (smoothed.length < 2) continue;
+
+    // 3. Двойная линия в одном Graphics.
+    const g = new PIXI.Graphics();
+
+    // 3a. Внешний контур (тёмно-коричневый, ширина 4).
+    drawPolyline(g, smoothed);
+    g.stroke({
+      width: 4,
+      color: 0x2a1a0a,
+      alpha: 0.8,
+      cap:   'round',
+      join:  'round'
+    });
+
+    // 3b. Внутренняя "дорожная" линия (светло-коричневая, ширина 2).
+    // Второй проход path-ов, затем новый stroke — в Pixi v8 каждый
+    // stroke применяется к накопленным moveTo/lineTo, поэтому нужно
+    // повторить путь заново перед следующим stroke.
+    drawPolyline(g, smoothed);
+    g.stroke({
+      width: 2,
+      color: 0x8a6a3a,
+      alpha: 0.9,
+      cap:   'round',
+      join:  'round'
+    });
+
+    layers.roads.addChild(g);
+    created.push(g);
+  }
+
+  return created;
+}
+
 /**
  * initBattleMap(containerId, width, height)
  *
@@ -1062,6 +1218,9 @@ if (typeof window !== 'undefined') {
   window.sampleSparklePosition = sampleSparklePosition;
   window.drawRiverSparkles    = drawRiverSparkles;
   window.startRiverSparkleTicker = startRiverSparkleTicker;
+  window.chaikin            = chaikin;
+  window.drawPolyline       = drawPolyline;
+  window.renderRoads        = renderRoads;
   window.initBattleMap      = initBattleMap;
   window.destroyBattleMap   = destroyBattleMap;
 }
@@ -1084,6 +1243,9 @@ if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     sampleSparklePosition,
     drawRiverSparkles,
     startRiverSparkleTicker,
+    chaikin,
+    drawPolyline,
+    renderRoads,
     initBattleMap, destroyBattleMap
   };
 }
