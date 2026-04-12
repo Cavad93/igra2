@@ -1207,6 +1207,325 @@ function renderForests(app, layers, treePositions, hmW, hmH) {
   return created;
 }
 
+/* ═════════════════════════════════════════════════════════════════════
+   Шаг 17 (arma.md) — renderUnit / renderAllUnits:
+   Рендер батальона как изометрического блока (ромб + 2 боковые грани),
+   поверх — иконка типа войск, поверх — полоска HP.
+
+   Структура контейнера юнита (PIXI.Container):
+     ├─ Graphics #1 — 3 грани блока (top / left / right)
+     ├─ Graphics #2 — иконка типа войск (infantry/cavalry/archers/cannon)
+     └─ Graphics #3 — HP-бар (чёрный фон + цветная полоска)
+
+   Размер ромба: w=40, h=20 px; глубина боковых граней — depth=8 px.
+   Цвета сторон:
+     • ally  base = 0x3a6a2a  → top ≈ *1.10 (lighter), left *0.70, right *0.80
+     • enemy base = 0x6a2a2a  → аналогично
+
+   HP-бар (arma.md):
+     • чёрный фон: rect(-18, -22, 36, 4)
+     • полоса:     rect(-18, -22, 36*(health/maxHealth), 4)
+     • цвет: green >50%, yellow >25%, red ≤25%
+
+   Painter's algorithm: container.zIndex = screenY.
+   ═════════════════════════════════════════════════════════════════════ */
+
+var UNIT_DIAMOND_W     = 40;
+var UNIT_DIAMOND_H     = 20;
+var UNIT_DIAMOND_DEPTH = 8;
+
+// Базовые цвета для стороны (ally / enemy) — тёмно-зелёный / тёмно-красный,
+// как указано в arma.md Шаг 17.
+var UNIT_BASE_COLOR = {
+  ally:  0x3a6a2a,
+  enemy: 0x6a2a2a
+};
+
+// Цвета HP-полоски по порогам.
+var UNIT_HP_GREEN  = 0x00cc00;
+var UNIT_HP_YELLOW = 0xffcc00;
+var UNIT_HP_RED    = 0xcc0000;
+var UNIT_HP_BG     = 0x000000;
+
+/**
+ * _shadeColor(color, factor)
+ *
+ * Умножает каждую компоненту RGB на factor (0..2) с клампом [0, 255].
+ * factor < 1 → темнее, > 1 → светлее.
+ *
+ * @param {number} color  — 0xRRGGBB
+ * @param {number} factor — множитель яркости
+ * @returns {number} 0xRRGGBB
+ */
+function _shadeColor(color, factor) {
+  var r = (color >> 16) & 0xff;
+  var g = (color >>  8) & 0xff;
+  var b =  color        & 0xff;
+  r = Math.round(r * factor); if (r > 255) r = 255; if (r < 0) r = 0;
+  g = Math.round(g * factor); if (g > 255) g = 255; if (g < 0) g = 0;
+  b = Math.round(b * factor); if (b > 255) b = 255; if (b < 0) b = 0;
+  return (r << 16) | (g << 8) | b;
+}
+
+/**
+ * _getHpColor(health, maxHealth)
+ * Возвращает цвет полоски HP по процентному порогу (arma.md).
+ */
+function _getHpColor(health, maxHealth) {
+  if (!(maxHealth > 0)) return UNIT_HP_RED;
+  var pct = health / maxHealth;
+  if (pct > 0.5)  return UNIT_HP_GREEN;
+  if (pct > 0.25) return UNIT_HP_YELLOW;
+  return UNIT_HP_RED;
+}
+
+/**
+ * _drawUnitDiamond(g, side)
+ *
+ * Рисует изометрический блок (3 грани) в Graphics g, координаты
+ * относительно (0,0) — верх-ромба на (0, -h/2).
+ *
+ * @param {PIXI.Graphics} g
+ * @param {'ally'|'enemy'} side
+ */
+function _drawUnitDiamond(g, side) {
+  var base = UNIT_BASE_COLOR[side];
+  if (typeof base !== 'number') base = UNIT_BASE_COLOR.ally;
+
+  var topColor   = _shadeColor(base, 1.10); // чуть светлее
+  var leftColor  = _shadeColor(base, 0.70); // темнее на 30%
+  var rightColor = _shadeColor(base, 0.80); // темнее на 20%
+
+  var hw = UNIT_DIAMOND_W / 2; // 20
+  var hh = UNIT_DIAMOND_H / 2; // 10
+  var d  = UNIT_DIAMOND_DEPTH; // 8
+
+  // Вершины ромба (top face):
+  //   top    = ( 0, -hh)
+  //   right  = ( hw, 0)
+  //   bottom = ( 0,  hh)
+  //   left   = (-hw, 0)
+
+  // Left side face — параллелограмм:
+  //   left(-hw, 0) → bottom(0, hh) → (0, hh+d) → (-hw, d)
+  g.moveTo(-hw, 0);
+  g.lineTo(0,   hh);
+  g.lineTo(0,   hh + d);
+  g.lineTo(-hw, d);
+  g.lineTo(-hw, 0);
+  g.fill({ color: leftColor, alpha: 1.0 });
+
+  // Right side face — параллелограмм:
+  //   right(hw, 0) → bottom(0, hh) → (0, hh+d) → (hw, d)
+  g.moveTo(hw, 0);
+  g.lineTo(0,  hh);
+  g.lineTo(0,  hh + d);
+  g.lineTo(hw, d);
+  g.lineTo(hw, 0);
+  g.fill({ color: rightColor, alpha: 1.0 });
+
+  // Top face (ромб) — рисуется последним, чтобы перекрывать боковые.
+  g.moveTo(0,   -hh);
+  g.lineTo(hw,  0);
+  g.lineTo(0,   hh);
+  g.lineTo(-hw, 0);
+  g.lineTo(0,   -hh);
+  g.fill({ color: topColor, alpha: 1.0 });
+}
+
+/**
+ * _drawUnitIcon(g, unitType)
+ *
+ * Рисует схематическую иконку типа войск поверх ромба (в координатах
+ * Graphics, относительно (0,0) — центра ромба). Используется Graphics-
+ * примитивы (линии/круги/прямоугольники), без PIXI.Text — чтобы модуль
+ * оставался тестируемым без мока текста.
+ *
+ * @param {PIXI.Graphics} g
+ * @param {'infantry'|'cavalry'|'archers'|'cannon'} unitType
+ */
+function _drawUnitIcon(g, unitType) {
+  var ICON_COLOR = 0xffffff;
+  var ICON_DARK  = 0x111111;
+
+  if (unitType === 'infantry') {
+    // Три вертикальные «пики»: три тонких прямоугольника.
+    g.rect(-5, -6, 2, 8);
+    g.fill({ color: ICON_COLOR, alpha: 1.0 });
+    g.rect(-1, -6, 2, 8);
+    g.fill({ color: ICON_COLOR, alpha: 1.0 });
+    g.rect( 3, -6, 2, 8);
+    g.fill({ color: ICON_COLOR, alpha: 1.0 });
+    return;
+  }
+
+  if (unitType === 'cavalry') {
+    // Диагональная линия (через тонкий прямоугольник) + точка-наконечник.
+    // Рисуем линию как полигон, чтобы не зависеть от mock-stroke.
+    g.moveTo(-6, 4);
+    g.lineTo(-4, 4);
+    g.lineTo( 6, -6);
+    g.lineTo( 4, -6);
+    g.lineTo(-6, 4);
+    g.fill({ color: ICON_COLOR, alpha: 1.0 });
+    // Наконечник-точка.
+    g.circle(6, -6, 2);
+    g.fill({ color: ICON_COLOR, alpha: 1.0 });
+    return;
+  }
+
+  if (unitType === 'archers') {
+    // «Дуга + стрела»: круг как дуга (декоративно) + горизонтальный
+    // прямоугольник + треугольник-наконечник.
+    g.circle(0, 0, 5);
+    g.fill({ color: ICON_DARK, alpha: 0.35 });
+    g.rect(-5, -1, 8, 2);
+    g.fill({ color: ICON_COLOR, alpha: 1.0 });
+    g.moveTo(3,  -3);
+    g.lineTo(6,   0);
+    g.lineTo(3,   3);
+    g.lineTo(3,  -3);
+    g.fill({ color: ICON_COLOR, alpha: 1.0 });
+    return;
+  }
+
+  if (unitType === 'cannon') {
+    // Прямоугольник (корпус) + труба (узкий прямоугольник) + колесо.
+    g.rect(-6, -2, 10, 5);
+    g.fill({ color: ICON_COLOR, alpha: 1.0 });
+    g.rect( 4, -1, 4, 2);
+    g.fill({ color: ICON_COLOR, alpha: 1.0 });
+    g.circle(-3, 4, 2);
+    g.fill({ color: ICON_DARK, alpha: 1.0 });
+    return;
+  }
+
+  // Fallback (неизвестный тип) — маленький квадрат, чтобы не было
+  // «пустой» иконки в отладке.
+  g.rect(-3, -3, 6, 6);
+  g.fill({ color: ICON_COLOR, alpha: 0.8 });
+}
+
+/**
+ * _drawUnitHpBar(g, health, maxHealth)
+ *
+ * Чёрный фон (rect -18,-22, 36,4) + цветная полоса поверх
+ * пропорциональной ширины.
+ *
+ * @param {PIXI.Graphics} g
+ * @param {number} health
+ * @param {number} maxHealth
+ */
+function _drawUnitHpBar(g, health, maxHealth) {
+  g.rect(-18, -22, 36, 4);
+  g.fill({ color: UNIT_HP_BG, alpha: 1.0 });
+
+  var pct = (maxHealth > 0) ? (health / maxHealth) : 0;
+  if (pct < 0) pct = 0;
+  if (pct > 1) pct = 1;
+  var w = 36 * pct;
+  if (w > 0) {
+    g.rect(-18, -22, w, 4);
+    g.fill({ color: _getHpColor(health, maxHealth), alpha: 1.0 });
+  }
+}
+
+/**
+ * renderUnit(battalion, app, layers, hmW, hmH)
+ *
+ * Создаёт PIXI.Container для одного батальона и добавляет его в
+ * layers.units. Внутри контейнера — три Graphics: блок, иконка, HP-бар.
+ *
+ * Координаты battalion.x/y заданы в пространстве heightmap;
+ * преобразование в экранные идёт через sx = screenW/hmW, sy = screenH/hmH.
+ *
+ * @param {Battalion} battalion
+ * @param {PIXI.Application} app
+ * @param {{units: PIXI.Container}} layers
+ * @param {number} hmW
+ * @param {number} hmH
+ * @returns {PIXI.Container}
+ */
+function renderUnit(battalion, app, layers, hmW, hmH) {
+  if (!app || !layers || !layers.units) {
+    throw new Error('[renderUnit] app/layers not initialised — call initBattleMap() first');
+  }
+  if (typeof PIXI === 'undefined' || !PIXI.Container || !PIXI.Graphics) {
+    throw new Error('[renderUnit] PIXI.Container/Graphics is not available');
+  }
+  if (!battalion || typeof battalion.x !== 'number' || typeof battalion.y !== 'number') {
+    throw new Error('[renderUnit] invalid battalion');
+  }
+  if (!(hmW > 0) || !(hmH > 0)) {
+    throw new Error('[renderUnit] invalid heightmap dimensions');
+  }
+
+  var screenW = app.screen.width;
+  var screenH = app.screen.height;
+  var sx = screenW / hmW;
+  var sy = screenH / hmH;
+  var screenX = battalion.x * sx;
+  var screenY = battalion.y * sy;
+
+  var container = new PIXI.Container();
+
+  // 1) Изометрический блок (3 грани).
+  var blockG = new PIXI.Graphics();
+  _drawUnitDiamond(blockG, battalion.side);
+  container.addChild(blockG);
+
+  // 2) Иконка типа войск.
+  var iconG = new PIXI.Graphics();
+  _drawUnitIcon(iconG, battalion.unitType);
+  container.addChild(iconG);
+
+  // 3) HP-бар.
+  var hpG = new PIXI.Graphics();
+  _drawUnitHpBar(hpG, battalion.health, battalion.maxHealth);
+  container.addChild(hpG);
+
+  container.x = screenX;
+  container.y = screenY;
+  container.zIndex = screenY;
+
+  // Ссылки для последующего обновления (arma.md Шаг 18).
+  container.battalionId = battalion.id;
+  container._blockG = blockG;
+  container._iconG  = iconG;
+  container._hpG    = hpG;
+
+  layers.units.addChild(container);
+  return container;
+}
+
+/**
+ * renderAllUnits(battalions, app, layers, hmW, hmH)
+ *
+ * Итерирует по массиву батальонов и рендерит каждый через renderUnit.
+ * layers.units.sortableChildren ← true (Painter's algorithm).
+ *
+ * @returns {Array<PIXI.Container>}
+ */
+function renderAllUnits(battalions, app, layers, hmW, hmH) {
+  if (!app || !layers || !layers.units) {
+    throw new Error('[renderAllUnits] app/layers not initialised — call initBattleMap() first');
+  }
+  if (!Array.isArray(battalions) || battalions.length === 0) return [];
+  if (!(hmW > 0) || !(hmH > 0)) {
+    throw new Error('[renderAllUnits] invalid heightmap dimensions');
+  }
+
+  layers.units.sortableChildren = true;
+
+  var created = [];
+  for (var i = 0; i < battalions.length; i++) {
+    var b = battalions[i];
+    if (!b) continue;
+    created.push(renderUnit(b, app, layers, hmW, hmH));
+  }
+  return created;
+}
+
 /**
  * initBattleMap(containerId, width, height)
  *
@@ -1327,6 +1646,8 @@ if (typeof window !== 'undefined') {
   window.drawPolyline       = drawPolyline;
   window.renderRoads        = renderRoads;
   window.renderForests      = renderForests;
+  window.renderUnit         = renderUnit;
+  window.renderAllUnits     = renderAllUnits;
   window.initBattleMap      = initBattleMap;
   window.destroyBattleMap   = destroyBattleMap;
 }
@@ -1353,6 +1674,8 @@ if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     drawPolyline,
     renderRoads,
     renderForests,
+    renderUnit,
+    renderAllUnits,
     initBattleMap, destroyBattleMap
   };
 }
