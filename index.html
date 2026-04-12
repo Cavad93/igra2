@@ -2912,6 +2912,46 @@
       transition: fill 0.3s, fill-opacity 0.3s, stroke-opacity 0.3s;
     }
 
+    /* ══════════════════════════════════════════════════
+       ШАГ 30: КОНТЕКСТНОЕ МЕНЮ ПРАВОЙ КНОПКИ МЫШИ
+    ══════════════════════════════════════════════════ */
+    #ctx-menu {
+      position: fixed;
+      z-index: 8000;
+      min-width: 160px;
+      background: rgba(13,10,5,0.97);
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+      display: none;
+      backdrop-filter: blur(4px);
+      padding: 2px 0;
+      user-select: none;
+    }
+    .ctx-item {
+      padding: 7px 14px;
+      font-size: 12px;
+      color: var(--text-light);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(107,79,26,0.15);
+      transition: background 0.1s;
+    }
+    .ctx-item:hover {
+      background: rgba(212,168,83,0.1);
+      color: var(--text-gold);
+    }
+    .ctx-item:last-child {
+      border-bottom: none;
+    }
+    .ctx-separator {
+      height: 1px;
+      background: rgba(107,79,26,0.25);
+      margin: 2px 0;
+    }
+
     /* Адаптивность для маленьких экранов */
     @media (max-width: 1200px) {
       :root { --panel-w: 220px; }
@@ -7957,6 +7997,9 @@
   <!-- Шаг 27: контейнер для toast-уведомлений -->
   <div id="toast-container"></div>
 
+  <!-- Шаг 30: контекстное меню правой кнопки мыши (на регионе карты) -->
+  <div id="ctx-menu"></div>
+
   <!-- D3: экран загрузки -->
   <div id="splash-screen">
     <div id="splash-inner">
@@ -8877,6 +8920,189 @@
 
     document.addEventListener('keydown', onHotkey);
 
+    // ══════════════════════════════════════════════════
+    // ШАГ 30: КОНТЕКСТНОЕ МЕНЮ ПРАВОЙ КНОПКИ МЫШИ
+    // ══════════════════════════════════════════════════
+
+    /**
+     * Построить список пунктов меню по состоянию региона.
+     * @param {string} regionId
+     * @returns {Array<{label:string, icon:string, action:function|null, sep?:boolean}>}
+     */
+    function _buildCtxMenuItems(regionId) {
+      const items = [];
+      const gs = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
+      const mr = (typeof MAP_REGIONS !== 'undefined') ? MAP_REGIONS : null;
+      const region = gs?.regions?.[regionId] || null;
+      const mapData = mr?.[regionId] || null;
+      const playerId = gs?.player_nation;
+      const ownerId  = region ? region.nation : mapData?.nation;
+      const isOwn    = (ownerId && ownerId === playerId);
+      const isForeign = (ownerId && ownerId !== playerId);
+
+      // Всегда: Подробности
+      items.push({
+        label: 'Подробности',
+        icon:  '📜',
+        action: () => {
+          if (typeof onRegionClick === 'function') {
+            onRegionClick(regionId);
+          } else if (typeof showRegionInfo === 'function') {
+            showRegionInfo(regionId);
+          }
+        },
+      });
+
+      if (isForeign) {
+        // Есть ли у игрока живая армия рядом (в этом или соседнем регионе)
+        const armies = Array.isArray(gs?.armies) ? gs.armies : [];
+        const hasArmyNear = armies.some(a => {
+          if (!a || a.nation !== playerId) return false;
+          if (a.state === 'disbanded') return false;
+          if (a.position === regionId) return true;
+          // соседние регионы, если доступны
+          const neigh = mr?.[a.position]?.neighbors || region?.neighbors || [];
+          return Array.isArray(neigh) && neigh.includes(regionId);
+        });
+
+        if (hasArmyNear) {
+          items.push({
+            label: 'Атаковать',
+            icon:  '⚔',
+            action: () => {
+              if (typeof onRegionClick === 'function') onRegionClick(regionId);
+              if (typeof showToast === 'function') showToast('Выберите армию и цель для атаки', 'info');
+            },
+          });
+        }
+
+        // Проверка: нет состояния войны → можно предложить союз
+        const myNation  = gs?.nations?.[playerId];
+        const atWarList = myNation?.military?.at_war_with || [];
+        const atWar     = Array.isArray(atWarList) && atWarList.includes(ownerId);
+        if (!atWar) {
+          items.push({
+            label: 'Предложить союз',
+            icon:  '🤝',
+            action: () => {
+              if (typeof switchLeftTab === 'function') switchLeftTab('diplomacy');
+              if (typeof showToast === 'function') {
+                const nn = gs?.nations?.[ownerId]?.name || ownerId;
+                showToast(`Дипломатия: ${nn}`, 'info');
+              }
+            },
+          });
+        }
+      }
+
+      if (isOwn) {
+        items.push({ sep: true });
+        items.push({
+          label: 'Построить',
+          icon:  '🏗',
+          action: () => {
+            if (typeof onRegionClick === 'function') onRegionClick(regionId);
+            if (typeof switchRegionTab === 'function') switchRegionTab('build');
+          },
+        });
+        items.push({
+          label: 'Управление',
+          icon:  '📦',
+          action: () => {
+            if (typeof onRegionClick === 'function') onRegionClick(regionId);
+          },
+        });
+      }
+
+      return items;
+    }
+
+    /**
+     * Показать контекстное меню рядом с курсором, без выхода за viewport.
+     */
+    function showContextMenu(x, y, regionOrId) {
+      const menu = document.getElementById('ctx-menu');
+      if (!menu) return;
+
+      const regionId = (typeof regionOrId === 'string')
+        ? regionOrId
+        : (regionOrId && (regionOrId.id || regionOrId.regionId)) || null;
+      if (!regionId) return;
+
+      const items = _buildCtxMenuItems(regionId);
+      if (!items.length) { closeCtxMenu(); return; }
+
+      // Сборка HTML — только текстовое содержимое, без inline JS
+      menu.innerHTML = '';
+      items.forEach((it, idx) => {
+        if (it.sep) {
+          const sep = document.createElement('div');
+          sep.className = 'ctx-separator';
+          menu.appendChild(sep);
+          return;
+        }
+        const el = document.createElement('div');
+        el.className = 'ctx-item';
+        el.setAttribute('data-ctx-idx', String(idx));
+        el.innerHTML = `<span class="ctx-icon">${it.icon}</span><span class="ctx-label">${it.label}</span>`;
+        el.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          try { it.action && it.action(); }
+          catch (e) { console.warn('[ctx-menu] action error:', e); }
+          closeCtxMenu();
+        });
+        menu.appendChild(el);
+      });
+
+      // Показать в заэкранной позиции, чтобы измерить размер
+      menu.style.left = '-9999px';
+      menu.style.top  = '-9999px';
+      menu.style.display = 'block';
+
+      const vw = window.innerWidth  || document.documentElement.clientWidth;
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const rect = menu.getBoundingClientRect();
+      const w = rect.width  || 160;
+      const h = rect.height || 40;
+
+      let left = x;
+      let top  = y;
+      if (left + w > vw - 4) left = Math.max(4, vw - w - 4);
+      if (top  + h > vh - 4) top  = Math.max(4, vh - h - 4);
+      if (left < 4) left = 4;
+      if (top  < 4) top  = 4;
+
+      menu.style.left = left + 'px';
+      menu.style.top  = top  + 'px';
+    }
+
+    function closeCtxMenu() {
+      const menu = document.getElementById('ctx-menu');
+      if (menu) menu.style.display = 'none';
+    }
+
+    // Закрытие по клику в любом месте (кроме самого меню)
+    document.addEventListener('click', function (e) {
+      const menu = document.getElementById('ctx-menu');
+      if (!menu || menu.style.display !== 'block') return;
+      if (e.target && menu.contains(e.target)) return;
+      closeCtxMenu();
+    });
+    // Закрытие по правому клику вне региона (нативное меню всё ещё блокируется Leaflet'ом)
+    document.addEventListener('contextmenu', function (e) {
+      const menu = document.getElementById('ctx-menu');
+      if (!menu || menu.style.display !== 'block') return;
+      if (e.target && menu.contains(e.target)) return;
+      closeCtxMenu();
+    });
+    // Закрытие по Esc
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        const menu = document.getElementById('ctx-menu');
+        if (menu && menu.style.display === 'block') closeCtxMenu();
+      }
+    });
+
     // Экспорт в глобальную область
     window.onHotkey           = onHotkey;
     window.switchLeftTab      = switchLeftTab;
@@ -8884,6 +9110,8 @@
     window.focusNextAlert     = focusNextAlert;
     window.closeTopModal      = closeTopModal;
     window.cycleMapMode       = cycleMapMode;
+    window.showContextMenu    = showContextMenu;
+    window.closeCtxMenu       = closeCtxMenu;
   </script>
 
 

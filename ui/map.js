@@ -344,6 +344,18 @@ function renderRegionPolygons() {
     polygon.on('click',     () => onRegionClick(regionId));
     polygon.on('mouseover', (e) => onRegionHover(e, regionId, true,  color, isPlayerRegion));
     polygon.on('mouseout',  (e) => onRegionHover(e, regionId, false, color, isPlayerRegion));
+    // Шаг 30: правый клик по региону → контекстное меню
+    polygon.on('contextmenu', (e) => {
+      if (e && e.originalEvent) {
+        try { e.originalEvent.preventDefault(); } catch (err) {}
+        try { e.originalEvent.stopPropagation(); } catch (err) {}
+      }
+      if (typeof window.showContextMenu === 'function') {
+        const ox = e?.originalEvent?.clientX ?? 0;
+        const oy = e?.originalEvent?.clientY ?? 0;
+        window.showContextMenu(ox, oy, regionId);
+      }
+    });
 
     polygon.bindTooltip(buildTooltipContent(regionId, mapData, nationId), {
       className: 'region-tooltip',
