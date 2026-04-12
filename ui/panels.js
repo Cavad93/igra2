@@ -157,6 +157,156 @@ function renderLeftPanel() {
       ${renderLaws(nation.active_laws)}
     </div>
   `;
+
+  // Шаг 21: после каждой перерисовки левой панели обновляем и топ-бар ресурсов
+  try { updateResourceBar(GAME_STATE); } catch (e) { console.error('updateResourceBar error:', e); }
+}
+
+// ──────────────────────────────────────────────────────────────
+// Шаг 21 — РЕСУРС-БАР В ТОП-БАРЕ
+// ──────────────────────────────────────────────────────────────
+
+// Хранилище предыдущих значений для расчёта дельты между ходами.
+// Обновляется ТОЛЬКО при смене GAME_STATE.turn — чтобы повторные вызовы
+// renderLeftPanel внутри одного хода не затирали показанную дельту.
+const _resourceBarPrev = { gold: null, troops: null, food: null, pop: null, _turn: null };
+
+function _formatResBarNum(n) {
+  if (n === null || n === undefined || Number.isNaN(n)) return '—';
+  const v = Math.round(n);
+  const abs = Math.abs(v);
+  if (abs >= 1000000) return (v / 1000000).toFixed(1) + 'М';
+  if (abs >= 10000)   return Math.round(v / 1000) + 'К';
+  return v.toLocaleString('ru-RU');
+}
+
+function _sumFoodStockpile(stockpile) {
+  if (!stockpile) return 0;
+  // Основные продовольственные товары: пшеница, рыба, мясо, оливки, вино
+  const foods = ['wheat', 'fish', 'meat', 'olives', 'wine', 'fruit', 'bread'];
+  let total = 0;
+  for (const k of foods) {
+    if (typeof stockpile[k] === 'number') total += stockpile[k];
+  }
+  // fallback: если ничего не нашли — суммируем всё, что выглядит как еда
+  if (total === 0 && typeof stockpile === 'object') {
+    total = stockpile.wheat || 0;
+  }
+  return total;
+}
+
+function _collectResourceValues(state) {
+  if (!state) return null;
+  const nationId = state.player_nation;
+  const nation   = state.nations?.[nationId];
+  if (!nation) return null;
+  const economy  = nation.economy  || {};
+  const military = nation.military || {};
+  const pop      = nation.population || {};
+
+  const troops = (military.infantry  || 0)
+               + (military.cavalry   || 0)
+               + (military.ships     || 0)
+               + (military.mercenaries || 0);
+
+  return {
+    gold:   Math.round(economy.treasury || 0),
+    troops: Math.round(troops),
+    food:   Math.round(_sumFoodStockpile(economy.stockpile)),
+    pop:    Math.round(pop.total || 0),
+  };
+}
+
+function _applyResourceDelta(key, curr) {
+  const deltaEl = document.querySelector(`#res-${key} .res-delta`);
+  if (!deltaEl) return;
+  const prev = _resourceBarPrev[key];
+  if (prev === null || prev === undefined || prev === curr) {
+    deltaEl.textContent = '';
+    deltaEl.classList.remove('positive', 'negative');
+    return;
+  }
+  const d = curr - prev;
+  if (d === 0) { deltaEl.textContent = ''; return; }
+  const sign = d > 0 ? '+' : '';
+  deltaEl.textContent = sign + _formatResBarNum(d);
+  deltaEl.classList.toggle('positive', d > 0);
+  deltaEl.classList.toggle('negative', d < 0);
+}
+
+function updateResourceBar(state) {
+  const values = _collectResourceValues(state);
+  if (!values) return;
+
+  const setVal = (id, v) => {
+    const el = document.querySelector(`#${id} > span:first-of-type`);
+    if (el) el.textContent = _formatResBarNum(v);
+  };
+  setVal('res-gold',   values.gold);
+  setVal('res-troops', values.troops);
+  setVal('res-food',   values.food);
+  setVal('res-pop',    values.pop);
+
+  const currentTurn = state?.turn ?? 0;
+  const prevTurn    = _resourceBarPrev._turn;
+
+  // Дельту обновляем только при смене хода:
+  // - при первом вызове (prevTurn === null) — инициализируем baseline без дельты
+  // - при смене хода — показываем дельту и сдвигаем baseline
+  // - при повторных вызовах внутри одного хода — делтбу не трогаем (чтобы не стёрлась)
+  if (prevTurn === null) {
+    for (const key of ['gold', 'troops', 'food', 'pop']) {
+      _resourceBarPrev[key] = values[key];
+    }
+    _resourceBarPrev._turn = currentTurn;
+    // Очистить badge-и на первой отрисовке
+    for (const key of ['gold', 'troops', 'food', 'pop']) {
+      const el = document.querySelector(`#res-${key} .res-delta`);
+      if (el) { el.textContent = ''; el.classList.remove('positive', 'negative'); }
+    }
+  } else if (prevTurn !== currentTurn) {
+    for (const key of ['gold', 'troops', 'food', 'pop']) {
+      _applyResourceDelta(key, values[key]);
+      _resourceBarPrev[key] = values[key];
+    }
+    _resourceBarPrev._turn = currentTurn;
+  }
+  // Иначе (повторный рендер в том же ходу) — просто оставляем дельту как есть.
+}
+
+function onResourceBarClick(key) {
+  switch (key) {
+    case 'gold':
+      if (typeof showTreasuryOverlay === 'function') showTreasuryOverlay();
+      break;
+    case 'troops':
+      // Нет выделенного оверлея армий — прокручиваем левую панель к секции армии
+      try {
+        const panel = document.getElementById('left-panel');
+        if (panel) {
+          const sections = panel.querySelectorAll('.section-title');
+          for (const s of sections) {
+            if (s.textContent && s.textContent.indexOf('Армия') !== -1) {
+              s.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              break;
+            }
+          }
+        }
+      } catch (e) {}
+      break;
+    case 'food':
+      if (typeof showEconomyOverlay === 'function') showEconomyOverlay();
+      break;
+    case 'pop':
+      if (typeof showPopulationOverlay === 'function') showPopulationOverlay();
+      break;
+  }
+}
+
+// Экспорт в window для доступа из inline onclick и из других модулей
+if (typeof window !== 'undefined') {
+  window.updateResourceBar  = updateResourceBar;
+  window.onResourceBarClick = onResourceBarClick;
 }
 
 function renderPopMiniWidget(pop) {
