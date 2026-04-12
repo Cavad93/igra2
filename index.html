@@ -196,6 +196,116 @@
     #resource-bar .res-delta.negative { color: #f44336; }
     #resource-bar .res-delta:empty { display: none; }
 
+    /* Шаг 22 — Кнопка настроек в топ-баре */
+    #settings-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0 8px;
+      height: 100%;
+      transition: color 0.15s;
+      line-height: 1;
+    }
+    #settings-btn:hover {
+      color: var(--text-gold);
+    }
+
+    /* Шаг 22 — Модальное окно настроек */
+    #settings-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.72);
+      z-index: 9500;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(3px);
+    }
+    #settings-modal.open {
+      display: flex;
+    }
+    #settings-modal .sm-box {
+      width: 400px;
+      max-height: 80vh;
+      background: linear-gradient(to bottom, #2a1a08, #1a1208);
+      border: 2px solid var(--border-gold);
+      border-radius: 4px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #settings-modal .sm-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-gold);
+      background: rgba(0, 0, 0, 0.25);
+    }
+    #settings-modal .sm-title {
+      font-family: 'Cinzel', serif;
+      font-size: 15px;
+      color: var(--text-gold);
+      letter-spacing: 1px;
+    }
+    #settings-modal .sm-close {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+    }
+    #settings-modal .sm-close:hover {
+      color: var(--text-gold);
+    }
+    #settings-modal .sm-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-gold);
+      background: rgba(0, 0, 0, 0.15);
+    }
+    #settings-modal .sm-tab {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      padding: 8px 12px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      transition: all 0.15s;
+      border-bottom: 2px solid transparent;
+    }
+    #settings-modal .sm-tab:hover {
+      color: var(--text-light);
+      background: rgba(212, 168, 83, 0.05);
+    }
+    #settings-modal .sm-tab.active {
+      color: var(--text-gold);
+      border-bottom-color: var(--border-gold);
+      background: rgba(212, 168, 83, 0.08);
+    }
+    #settings-modal .sm-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px;
+      color: var(--text-light);
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-gold) transparent;
+    }
+    #settings-modal .sm-tab-pane { display: none; }
+    #settings-modal .sm-tab-pane.active { display: block; }
+    #settings-modal .sm-hint {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
     /* Основная область */
     #main-area {
       flex: 1;
@@ -7508,6 +7618,8 @@
         <div class="res-item" id="res-pop"     title="Население"   onclick="onResourceBarClick('pop')">👥 <span>—</span><span class="res-delta"></span></div>
       </div>
       <button id="end-turn-btn" onclick="processTurn()">⚔ Следующий ход</button>
+      <!-- Шаг 22: Иконка настроек (API ключи и пр.) -->
+      <button id="settings-btn" onclick="toggleSettingsModal()" title="Настройки">⚙</button>
     </header>
 
     <!-- ═══════════════════════════
@@ -7620,31 +7732,7 @@
           ✨ Созвать советников (AI)
         </button>
 
-        <!-- Сохранение API ключей — ВВЕРХУ панели для удобного доступа -->
-        <div class="api-key-prompt" id="api-key-inline-panel">
-          <div class="api-key-title">🔑 API ключи AI</div>
-
-          <div class="api-key-desc">Groq — бесплатно, для AI-наций</div>
-          <div class="api-key-input-row">
-            <input type="password" id="inline-groq-key" class="api-key-field"
-                   placeholder="gsk_..." autocomplete="off" spellcheck="false">
-          </div>
-          <div class="api-key-hint" style="margin-bottom:6px">
-            🔗 <a href="https://console.groq.com" target="_blank">console.groq.com</a> → API Keys (бесплатно)
-          </div>
-
-          <div class="api-key-desc">Anthropic Claude — для дипломатии</div>
-          <div class="api-key-input-row">
-            <input type="password" id="inline-anthropic-key" class="api-key-field"
-                   placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false">
-          </div>
-          <div class="api-key-hint" style="margin-bottom:6px">
-            🔗 <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys
-          </div>
-
-          <button class="api-key-btn" style="width:100%;padding:6px;" onclick="saveInlineAPIKeys()">💾 Сохранить ключи</button>
-          <div id="inline-key-status" style="font-size:10px;margin-top:4px;color:var(--text-dim);text-align:center"></div>
-        </div>
+        <!-- Шаг 22: API ключи перенесены в модальное окно настроек (⚙ в топ-баре) -->
 
         <div class="characters-list">
           <div style="color:var(--text-dim);font-size:11px;padding:4px;">Загрузка...</div>
@@ -7699,12 +7787,7 @@
         </div>
       </div>
 
-      <!-- API ключи -->
-      <div id="api-key-section">
-        <div class="ak-title">🔑 API ключи AI</div>
-        <div id="ak-section-status" class="ak-status"></div>
-        <button class="ak-btn" onclick="changeAPIKey()">Добавить / сменить ключ</button>
-      </div>
+      <!-- Шаг 22: API ключи перенесены в модальное окно настроек (⚙ в топ-баре) -->
     </footer>
 
   </div><!-- #app -->
@@ -7813,6 +7896,53 @@
   <!-- Модал: мирные переговоры после победы -->
   <div id="peace-offer-overlay" onclick="if(event.target===this)closePeacePanel()">
     <div id="peace-offer-box"></div>
+  </div>
+
+  <!-- Шаг 22: Модал настроек (⚙) — API ключи и прочее -->
+  <div id="settings-modal" onclick="if(event.target===this)closeSettingsModal()">
+    <div class="sm-box">
+      <div class="sm-header">
+        <span class="sm-title">⚙ Настройки</span>
+        <button class="sm-close" onclick="closeSettingsModal()" title="Закрыть">✕</button>
+      </div>
+      <div class="sm-tabs">
+        <button class="sm-tab active" data-sm-tab="keys" onclick="switchSettingsTab('keys')">🔑 API ключи</button>
+        <button class="sm-tab" data-sm-tab="ui" onclick="switchSettingsTab('ui')">🎨 Интерфейс</button>
+      </div>
+      <div class="sm-body">
+        <!-- Вкладка: API ключи -->
+        <div class="sm-tab-pane active" data-sm-pane="keys">
+          <div class="api-key-prompt" id="api-key-inline-panel" style="margin:0">
+            <div class="api-key-title">🔑 API ключи AI</div>
+
+            <div class="api-key-desc">Groq — бесплатно, для AI-наций</div>
+            <div class="api-key-input-row">
+              <input type="password" id="inline-groq-key" class="api-key-field"
+                     placeholder="gsk_..." autocomplete="off" spellcheck="false">
+            </div>
+            <div class="api-key-hint" style="margin-bottom:6px">
+              🔗 <a href="https://console.groq.com" target="_blank">console.groq.com</a> → API Keys (бесплатно)
+            </div>
+
+            <div class="api-key-desc">Anthropic Claude — для дипломатии</div>
+            <div class="api-key-input-row">
+              <input type="password" id="inline-anthropic-key" class="api-key-field"
+                     placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false">
+            </div>
+            <div class="api-key-hint" style="margin-bottom:6px">
+              🔗 <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys
+            </div>
+
+            <button class="api-key-btn" style="width:100%;padding:6px;" onclick="saveInlineAPIKeys()">💾 Сохранить ключи</button>
+            <div id="inline-key-status" style="font-size:10px;margin-top:4px;color:var(--text-dim);text-align:center"></div>
+          </div>
+        </div>
+        <!-- Вкладка: Интерфейс -->
+        <div class="sm-tab-pane" data-sm-pane="ui">
+          <div class="sm-hint">Параметры интерфейса будут добавлены позже.</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Модал: ввод API ключа при первом запуске или смене ключа -->
@@ -8085,6 +8215,12 @@
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        // Шаг 22: закрыть модал настроек первым, если он открыт
+        const sm = document.getElementById('settings-modal');
+        if (sm && sm.classList.contains('open')) {
+          closeSettingsModal();
+          return;
+        }
         closeCharacterDetail();
         const votingOverlay = document.getElementById('voting-overlay');
         if (votingOverlay && votingOverlay.style.display !== 'none') {
@@ -8093,6 +8229,46 @@
         closeRegionInfo();
       }
     });
+
+    // ──────────────────────────────────────────
+    // Шаг 22 — Модал настроек (⚙)
+    // ──────────────────────────────────────────
+    function toggleSettingsModal() {
+      const modal = document.getElementById('settings-modal');
+      if (!modal) return;
+      if (modal.classList.contains('open')) {
+        closeSettingsModal();
+      } else {
+        openSettingsModal();
+      }
+    }
+    function openSettingsModal() {
+      const modal = document.getElementById('settings-modal');
+      if (!modal) return;
+      modal.classList.add('open');
+      // обновить статус сохранённых ключей
+      if (typeof _updateInlineKeyStatus === 'function') _updateInlineKeyStatus();
+    }
+    function closeSettingsModal() {
+      const modal = document.getElementById('settings-modal');
+      if (!modal) return;
+      modal.classList.remove('open');
+    }
+    function switchSettingsTab(name) {
+      const modal = document.getElementById('settings-modal');
+      if (!modal) return;
+      modal.querySelectorAll('.sm-tab').forEach(t => {
+        t.classList.toggle('active', t.getAttribute('data-sm-tab') === name);
+      });
+      modal.querySelectorAll('.sm-tab-pane').forEach(p => {
+        p.classList.toggle('active', p.getAttribute('data-sm-pane') === name);
+      });
+    }
+    // Экспорт в глобальную область (функции вызываются через inline onclick)
+    window.toggleSettingsModal = toggleSettingsModal;
+    window.openSettingsModal   = openSettingsModal;
+    window.closeSettingsModal  = closeSettingsModal;
+    window.switchSettingsTab   = switchSettingsTab;
   </script>
 
 
