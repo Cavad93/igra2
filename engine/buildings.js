@@ -1267,6 +1267,11 @@ function processAutonomousBuilding(nationId) {
     region.construction_queue = region.construction_queue || [];
     region.construction_queue.push(queueEntry);
 
+    // Шаг 31: отметить, что строительство было запущено за этот ход (только для игрока)
+    if (isPlayer && typeof markTurnAction === 'function') {
+      try { markTurnAction('build'); } catch (_) {}
+    }
+
     if (isPlayer && typeof addEventLog === 'function') {
       const rName = (typeof MAP_REGIONS !== 'undefined' && MAP_REGIONS[bestRid]?.name) || bestRid;
       addEventLog(

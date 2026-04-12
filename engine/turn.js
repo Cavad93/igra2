@@ -49,6 +49,11 @@ async function processTurn() {
   if (IS_PROCESSING_TURN) return;
   IS_PROCESSING_TURN = true;
 
+  // Шаг 31: при нажатии "Следующий ход" — сбросить прогресс хода
+  if (typeof resetTurnProgress === 'function') {
+    try { resetTurnProgress(); } catch (_) {}
+  }
+
   const btn = document.getElementById('end-turn-btn');
   const _setStep = (label) => {
     if (btn) btn.textContent = `⏳ ${label}`;

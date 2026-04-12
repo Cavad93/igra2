@@ -65,6 +65,11 @@ async function handleCommand() {
   // Показываем команду в логе
   addEventLog(`› ${text}`, 'info');
 
+  // Шаг 31: отметить, что приказы выданы за этот ход
+  if (typeof markTurnAction === 'function') {
+    try { markTurnAction('orders'); } catch (_) {}
+  }
+
   // Показываем индикатор загрузки
   showAIThinking(true);
 

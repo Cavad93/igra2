@@ -196,6 +196,40 @@
     #resource-bar .res-delta.negative { color: #f44336; }
     #resource-bar .res-delta:empty { display: none; }
 
+    /* Шаг 31 — Индикатор прогресса хода */
+    #turn-progress {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-dim);
+      padding: 0 10px;
+      height: 100%;
+      cursor: help;
+      user-select: none;
+      border-left: 1px solid var(--border-gold);
+    }
+    #turn-progress .tp-dots {
+      display: flex;
+      gap: 3px;
+    }
+    #turn-progress .tp-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(107, 79, 26, 0.3);
+      border: 1px solid var(--border-gold);
+      transition: background 0.2s;
+    }
+    #turn-progress .tp-dot.done {
+      background: var(--border-gold);
+    }
+    #turn-progress #tp-label {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+
     /* Шаг 22 — Кнопка настроек в топ-баре */
     #settings-btn {
       background: none;
@@ -8024,6 +8058,11 @@
         <div class="res-item" id="res-food"    title="Снабжение"   onclick="onResourceBarClick('food')">🌾 <span>—</span><span class="res-delta"></span></div>
         <div class="res-item" id="res-pop"     title="Население"   onclick="onResourceBarClick('pop')">👥 <span>—</span><span class="res-delta"></span></div>
       </div>
+      <!-- Шаг 31: Индикатор прогресса хода -->
+      <div id="turn-progress" title="Прогресс хода">
+        <div class="tp-dots" id="tp-dots"></div>
+        <span id="tp-label">0/0</span>
+      </div>
       <button id="end-turn-btn" onclick="processTurn()" title="Следующий ход [Space]">⚔ Следующий ход</button>
       <!-- Шаг 22: Иконка настроек (API ключи и пр.) -->
       <button id="settings-btn" onclick="toggleSettingsModal()" title="Настройки">⚙</button>
@@ -9112,6 +9151,71 @@
     window.cycleMapMode       = cycleMapMode;
     window.showContextMenu    = showContextMenu;
     window.closeCtxMenu       = closeCtxMenu;
+
+    // ──────────────────────────────────────────
+    // Шаг 31 — Индикатор прогресса хода
+    // ──────────────────────────────────────────
+
+    // Список действий, которые игрок может выполнить за один ход
+    const TURN_ACTIONS = [
+      { id: 'taxes',  label: 'Налоги собраны' },
+      { id: 'orders', label: 'Приказы выданы' },
+      { id: 'diplo',  label: 'Дипломатия' },
+      { id: 'build',  label: 'Строительство' },
+      { id: 'events', label: 'События рассмотрены' },
+    ];
+
+    // Множество выполненных id для текущего хода
+    const _turnDone = new Set();
+
+    function renderTurnProgress() {
+      const dots = document.getElementById('tp-dots');
+      const label = document.getElementById('tp-label');
+      const wrap = document.getElementById('turn-progress');
+      if (!dots || !label) return;
+      // Перерисовываем точки
+      dots.innerHTML = '';
+      for (const act of TURN_ACTIONS) {
+        const d = document.createElement('div');
+        d.className = 'tp-dot' + (_turnDone.has(act.id) ? ' done' : '');
+        d.setAttribute('data-tp-id', act.id);
+        d.title = act.label + (_turnDone.has(act.id) ? ' ✓' : '');
+        dots.appendChild(d);
+      }
+      label.textContent = _turnDone.size + '/' + TURN_ACTIONS.length;
+      // Тултип на контейнере — список выполнено / не выполнено
+      if (wrap) {
+        const done = TURN_ACTIONS.filter(a => _turnDone.has(a.id)).map(a => '✓ ' + a.label);
+        const todo = TURN_ACTIONS.filter(a => !_turnDone.has(a.id)).map(a => '○ ' + a.label);
+        wrap.title = 'Прогресс хода (' + _turnDone.size + '/' + TURN_ACTIONS.length + ')\n'
+          + (done.length ? done.join('\n') + '\n' : '')
+          + todo.join('\n');
+      }
+    }
+
+    function markTurnAction(id) {
+      if (!TURN_ACTIONS.some(a => a.id === id)) return;
+      if (_turnDone.has(id)) return;
+      _turnDone.add(id);
+      renderTurnProgress();
+    }
+
+    function resetTurnProgress() {
+      _turnDone.clear();
+      renderTurnProgress();
+    }
+
+    // Первичная отрисовка после загрузки DOM
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', renderTurnProgress);
+    } else {
+      renderTurnProgress();
+    }
+
+    window.TURN_ACTIONS      = TURN_ACTIONS;
+    window.markTurnAction    = markTurnAction;
+    window.resetTurnProgress = resetTurnProgress;
+    window.renderTurnProgress = renderTurnProgress;
   </script>
 
 
