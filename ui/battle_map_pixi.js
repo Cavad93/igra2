@@ -2,6 +2,7 @@
    battle_map_pixi.js — Pixi.js v8 Battle Map (arma.md)
    Шаг 1: инициализация Application + 6 контейнеров-слоёв
    Шаг 4: BIOMES палитра + getBiomeColor / getBiomeAt
+   Шаг 5: renderTerrain — Canvas 2D → PIXI.Texture → Sprite
    ═══════════════════════════════════════════════════════════ */
 
 /**
@@ -80,6 +81,133 @@ function getBiomeAt(heightmap, x, y) {
   }
   const h = gh(heightmap, x, y);
   return getBiomeColor(h);
+}
+
+/* ─────────────────────────────────────────────────────────
+   Шаг 5 — renderTerrain: биомы → пиксели → PIXI.Sprite
+
+   Почему Canvas → Texture, а не Graphics:
+     Pixi.js Graphics на каждый пиксель — десятки тысяч draw calls,
+     это на два порядка медленнее прямой записи в ImageData.
+     Canvas 2D imageData заполняется в один проход (O(w*h)),
+     затем один раз конвертируется в GPU-текстуру через Texture.from().
+   ───────────────────────────────────────────────────────── */
+
+/**
+ * fillTerrainPixels(heightmap)
+ *
+ * Чистая функция: по heightmap генерирует RGBA-массив Uint8ClampedArray
+ * размером width*height*4, где для каждого пикселя цвет = биом по его высоте.
+ * Альфа = 255 (непрозрачный). Порядок: [R,G,B,A, R,G,B,A, ...].
+ *
+ * Разделено из renderTerrain для (а) тестируемости без DOM/PIXI,
+ * (б) возможности повторного использования (mini-map, экспорт PNG).
+ *
+ * @param {{data: Float32Array, width: number, height: number}} heightmap
+ * @returns {Uint8ClampedArray}  — RGBA buffer длиной width*height*4
+ */
+function fillTerrainPixels(heightmap) {
+  const w = heightmap.width | 0;
+  const h = heightmap.height | 0;
+  const data = heightmap.data;
+  const out  = new Uint8ClampedArray(w * h * 4);
+
+  for (let y = 0; y < h; y++) {
+    const row = y * w;
+    for (let x = 0; x < w; x++) {
+      const hv    = data[row + x];
+      const biome = getBiomeColor(hv);
+      const c     = biome.color;
+      const i     = (row + x) * 4;
+      out[i    ] = (c >> 16) & 0xFF;
+      out[i + 1] = (c >>  8) & 0xFF;
+      out[i + 2] =  c        & 0xFF;
+      out[i + 3] = 255;
+    }
+  }
+
+  return out;
+}
+
+/**
+ * buildTerrainCanvas(heightmap)
+ *
+ * Создаёт HTMLCanvasElement размером heightmap.width × heightmap.height,
+ * заполненный цветами биомов через putImageData. Возвращает canvas.
+ *
+ * @param {{data: Float32Array, width: number, height: number}} heightmap
+ * @returns {HTMLCanvasElement}
+ */
+function buildTerrainCanvas(heightmap) {
+  const w = heightmap.width | 0;
+  const h = heightmap.height | 0;
+
+  // Node-среда тестов может не иметь document — в этом случае тесты должны
+  // использовать fillTerrainPixels напрямую и передавать свой canvas-мок.
+  if (typeof document === 'undefined') {
+    throw new Error('[buildTerrainCanvas] document is not available (non-DOM env)');
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = w;
+  canvas.height = h;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('[buildTerrainCanvas] getContext("2d") returned null');
+  }
+
+  const imageData = ctx.createImageData(w, h);
+  const pixels    = fillTerrainPixels(heightmap);
+  imageData.data.set(pixels);
+  ctx.putImageData(imageData, 0, 0);
+
+  return canvas;
+}
+
+/**
+ * renderTerrain(app, layers, heightmap)
+ *
+ * Рисует рельеф в layers.bg:
+ *   1. Строит Canvas 2D по heightmap (биом → RGBA).
+ *   2. Конвертирует его в PIXI.Texture через Texture.from().
+ *   3. Создаёт PIXI.Sprite, масштабирует под размер app.screen.
+ *   4. Добавляет Sprite в layers.bg.
+ *
+ * Возвращает созданный Sprite (полезно для повторного использования
+ * или удаления при смене seed).
+ *
+ * @param {PIXI.Application} app
+ * @param {{bg: PIXI.Container}} layers
+ * @param {{data: Float32Array, width: number, height: number}} heightmap
+ * @returns {PIXI.Sprite}
+ */
+function renderTerrain(app, layers, heightmap) {
+  if (!app || !layers || !layers.bg) {
+    throw new Error('[renderTerrain] app/layers not initialised — call initBattleMap() first');
+  }
+  if (!heightmap || !heightmap.data || !heightmap.width || !heightmap.height) {
+    throw new Error('[renderTerrain] invalid heightmap');
+  }
+  if (typeof PIXI === 'undefined') {
+    throw new Error('[renderTerrain] PIXI is not loaded');
+  }
+
+  // 1. Canvas с цветами биомов.
+  const canvas  = buildTerrainCanvas(heightmap);
+
+  // 2. Canvas → GPU-текстура (Pixi v8).
+  const texture = PIXI.Texture.from(canvas);
+
+  // 3. Sprite, масштабированный под размер приложения.
+  const sprite  = new PIXI.Sprite(texture);
+  sprite.width  = app.screen.width;
+  sprite.height = app.screen.height;
+
+  // 4. Добавляем в фоновый слой.
+  layers.bg.addChild(sprite);
+
+  return sprite;
 }
 
 /**
@@ -177,15 +305,19 @@ function destroyBattleMap() {
 // Экспорт: глобалы (браузер) + module.exports (Node.js тесты)
 // ──────────────────────────────────────────────────────────────────────
 if (typeof window !== 'undefined') {
-  window.BIOMES         = BIOMES;
-  window.getBiomeColor  = getBiomeColor;
-  window.getBiomeAt     = getBiomeAt;
-  window.initBattleMap  = initBattleMap;
-  window.destroyBattleMap = destroyBattleMap;
+  window.BIOMES            = BIOMES;
+  window.getBiomeColor     = getBiomeColor;
+  window.getBiomeAt        = getBiomeAt;
+  window.fillTerrainPixels = fillTerrainPixels;
+  window.buildTerrainCanvas = buildTerrainCanvas;
+  window.renderTerrain     = renderTerrain;
+  window.initBattleMap     = initBattleMap;
+  window.destroyBattleMap  = destroyBattleMap;
 }
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
   module.exports = {
     BIOMES, getBiomeColor, getBiomeAt,
+    fillTerrainPixels, buildTerrainCanvas, renderTerrain,
     initBattleMap, destroyBattleMap
   };
 }
