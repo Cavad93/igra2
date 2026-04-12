@@ -5,6 +5,8 @@
    Шаг 5: renderTerrain — Canvas 2D → PIXI.Texture → Sprite
    Шаг 6: parchment overlay + vignette (TilingSprite + radial gradient)
    Шаг 8: renderRivers — Chaikin + Catmull-Rom → bezierCurveTo
+   Шаг 9: renderRiversPolished — двойная линия (тень+вода) +
+          буферные "блики" (sparkles) на ticker-анимации
    ═══════════════════════════════════════════════════════════ */
 
 /**
@@ -634,6 +636,316 @@ function renderRivers(app, layers, rivers, hmW, hmH) {
   return created;
 }
 
+/* ─────────────────────────────────────────────────────────
+   Шаг 9 — River polish: двойная линия + анимация течения
+
+   Цель (по arma.md):
+     1) Двойная линия — тёмный контур (width+2, 0x1a3a5a, α=0.9) +
+        светлый «водный» верх (width, 0x4a8abf, α=0.7). Даёт глубину.
+     2) Мерцание течения — редкие белые точки (0xffffff, α≈0.3,
+        r≈1px) вдоль пути, анимируемые через app.ticker. Это
+        упрощённый "шейдерный" вариант без GLSL.
+
+   Почему Container-на-реку:
+     Чтобы layers.rivers.children.length == rivers.length осталось
+     истинным и группа из двух Graphics (outer+inner) убиралась/
+     двигалась одним объектом.
+
+   Sparkle-анимация:
+     Блики описываются массивом лёгких объектов
+       { groupIndex, phase∈[0,1), speed, radius }
+     Каждая sparkle "бежит" по своему path линейно: при каждом
+     тике drawRiverSparkles() очищает sparkleGraphics и перерисовывает
+     все блики в текущей позиции u = (phase + t * speed) mod 1.
+     Одна Graphics на всех sparkle'ов — это дёшево (десятки
+     draw calls против сотен), FPS не проседает.
+   ───────────────────────────────────────────────────────── */
+
+/**
+ * renderRiversPolished(app, layers, rivers, hmW, hmH)
+ *
+ * Рисует каждую реку как пару Graphics (тёмный контур + светлая
+ * жила) в собственном PIXI.Container, добавленном в layers.rivers.
+ * Каждый контейнер помечается полями _smoothed (сглаженный путь,
+ * в экранных координатах) и _baseWidth — чтобы sparkle-анимация
+ * могла переиспользовать эти данные без пересчётов.
+ *
+ * Порядок детей group (снизу вверх):
+ *   [0] outerG — width+2, 0x1a3a5a, α=0.9, round cap/join
+ *   [1] innerG — width,   0x4a8abf, α=0.7, round cap/join
+ *
+ * @param {PIXI.Application} app
+ * @param {{rivers: PIXI.Container}} layers
+ * @param {Array<{path:Array<{x:number,y:number}>, width:number}>} rivers
+ * @param {number} hmW
+ * @param {number} hmH
+ * @returns {Array<PIXI.Container>}  — массив групп-контейнеров
+ */
+function renderRiversPolished(app, layers, rivers, hmW, hmH) {
+  if (!app || !layers || !layers.rivers) {
+    throw new Error('[renderRiversPolished] app/layers not initialised — call initBattleMap() first');
+  }
+  if (typeof PIXI === 'undefined' || !PIXI.Graphics || !PIXI.Container) {
+    throw new Error('[renderRiversPolished] PIXI.Graphics/Container not available');
+  }
+  if (!Array.isArray(rivers) || rivers.length === 0) return [];
+  if (!(hmW > 0) || !(hmH > 0)) {
+    throw new Error('[renderRiversPolished] invalid heightmap dimensions');
+  }
+
+  const screenW = app.screen.width;
+  const screenH = app.screen.height;
+  const created = [];
+
+  for (let r = 0; r < rivers.length; r++) {
+    const river = rivers[r];
+    if (!river || !Array.isArray(river.path) || river.path.length < 2) continue;
+
+    // 1. heightmap → экран
+    const mapped = mapRiverPathToScreen(river.path, hmW, hmH, screenW, screenH);
+    // 2. Chaikin smoothing (3 итерации)
+    const smoothed = chaikinSmooth(mapped, 3);
+    if (smoothed.length < 2) continue;
+
+    // 3. Ширина (клэмп в [1,3]) — как в Шаге 8
+    let w = river.width;
+    if (!(w > 0)) w = 1;
+    if (w < 1) w = 1;
+    if (w > 3) w = 3;
+
+    // 4. Контейнер-группа
+    const group = new PIXI.Container();
+
+    // 5. Внешняя линия (тень / глубина)
+    const outerG = new PIXI.Graphics();
+    drawCatmullRomBezier(outerG, smoothed);
+    outerG.stroke({
+      width: w + 2,
+      color: 0x1a3a5a,
+      alpha: 0.9,
+      cap:   'round',
+      join:  'round'
+    });
+    group.addChild(outerG);
+
+    // 6. Внутренняя линия (цвет воды)
+    const innerG = new PIXI.Graphics();
+    drawCatmullRomBezier(innerG, smoothed);
+    innerG.stroke({
+      width: w,
+      color: 0x4a8abf,
+      alpha: 0.7,
+      cap:   'round',
+      join:  'round'
+    });
+    group.addChild(innerG);
+
+    // 7. Сохраняем исходные данные для sparkle-анимации
+    group._smoothed  = smoothed;
+    group._baseWidth = w;
+
+    layers.rivers.addChild(group);
+    created.push(group);
+  }
+
+  return created;
+}
+
+/**
+ * buildRiverSparkles(riverGroups, opts)
+ *
+ * Создаёт массив описаний бликов. На реку — от 2 до
+ * floor(len(smoothed) * density) бликов, но не более maxPerRiver
+ * (чтобы длинные реки не разрастались). Общий счётчик бликов
+ * клэмпится в maxTotal (ограничение на FPS-budget, arma.md).
+ *
+ * Поля sparkle:
+ *   groupIndex — индекс в riverGroups
+ *   phase      — начальное смещение ∈ [0, 1)
+ *   speed      — скорость прогресса по path в единицах "u в мс"
+ *                (1.0 = пройти весь путь за 1 мс; типично ~2e-4)
+ *   radius     — радиус точки в px ∈ [0.8, 1.4]
+ *
+ * @param {Array<PIXI.Container>} riverGroups
+ * @param {object} [opts]
+ * @param {number} [opts.density=0.04]   — доля точек-бликов относительно len(smoothed)
+ * @param {number} [opts.maxPerRiver=14]
+ * @param {number} [opts.maxTotal=200]
+ * @param {number} [opts.seed=1337]
+ * @returns {Array<{groupIndex:number, phase:number, speed:number, radius:number}>}
+ */
+function buildRiverSparkles(riverGroups, opts) {
+  if (!Array.isArray(riverGroups) || riverGroups.length === 0) return [];
+  const o = opts || {};
+  const density     = (o.density     > 0) ? o.density     : 0.04;
+  const maxPerRiver = (o.maxPerRiver > 0) ? (o.maxPerRiver | 0) : 14;
+  const maxTotal    = (o.maxTotal    > 0) ? (o.maxTotal    | 0) : 200;
+  const seed        = (o.seed != null) ? (o.seed | 0) : 1337;
+
+  // mulberry32 из engine/noise.js — в браузере глобал, в Node VM —
+  // передан через контекст. Если его нет, используем простой fallback.
+  let rnd;
+  if (typeof mulberry32 === 'function') {
+    rnd = mulberry32(seed);
+  } else if (typeof globalThis !== 'undefined' && typeof globalThis.mulberry32 === 'function') {
+    rnd = globalThis.mulberry32(seed);
+  } else {
+    // локальный fallback (не зависит от среды)
+    let s = seed >>> 0 || 1;
+    rnd = function() {
+      s = (s + 0x6D2B79F5) >>> 0;
+      let t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  const sparkles = [];
+  for (let r = 0; r < riverGroups.length; r++) {
+    const group = riverGroups[r];
+    const pts   = group && group._smoothed;
+    if (!pts || pts.length < 2) continue;
+
+    let count = Math.floor(pts.length * density);
+    if (count < 2) count = 2;
+    if (count > maxPerRiver) count = maxPerRiver;
+
+    for (let i = 0; i < count; i++) {
+      if (sparkles.length >= maxTotal) return sparkles;
+      sparkles.push({
+        groupIndex: r,
+        phase:      rnd(),                      // 0..1
+        speed:      0.00015 + rnd() * 0.00025,  // u per ms
+        radius:     0.8 + rnd() * 0.6           // 0.8..1.4 px
+      });
+    }
+  }
+  return sparkles;
+}
+
+/**
+ * sampleSparklePosition(smoothed, u)
+ *
+ * Линейная интерполяция точки на path по нормализованной координате
+ * u ∈ [0, 1]. Чистая функция — для тестируемости.
+ *
+ * @param {Array<{x:number,y:number}>} smoothed
+ * @param {number} u
+ * @returns {{x:number,y:number}|null}
+ */
+function sampleSparklePosition(smoothed, u) {
+  if (!smoothed || smoothed.length < 2) return null;
+  let uu = u;
+  if (!(uu >= 0)) uu = 0;
+  if (uu >= 1) uu = uu - Math.floor(uu);  // modulo 1
+  const fi   = uu * (smoothed.length - 1);
+  const i0   = fi | 0;
+  const i1   = (i0 + 1 < smoothed.length) ? i0 + 1 : smoothed.length - 1;
+  const frac = fi - i0;
+  const p0   = smoothed[i0];
+  const p1   = smoothed[i1];
+  return {
+    x: p0.x * (1 - frac) + p1.x * frac,
+    y: p0.y * (1 - frac) + p1.y * frac
+  };
+}
+
+/**
+ * drawRiverSparkles(g, sparkles, riverGroups, t)
+ *
+ * Очищает Graphics и перерисовывает все блики в позициях,
+ * соответствующих времени t (в мс). Sparkle перемещается по path
+ * линейно: u = (phase + speed * t) mod 1.
+ *
+ * @param {PIXI.Graphics} g
+ * @param {Array<object>} sparkles
+ * @param {Array<PIXI.Container>} riverGroups
+ * @param {number} t — время с начала анимации в мс
+ */
+function drawRiverSparkles(g, sparkles, riverGroups, t) {
+  if (!g || typeof g.clear !== 'function') return;
+  g.clear();
+  if (!Array.isArray(sparkles) || sparkles.length === 0) return;
+  if (!Array.isArray(riverGroups) || riverGroups.length === 0) return;
+
+  for (let i = 0; i < sparkles.length; i++) {
+    const sp = sparkles[i];
+    const gr = riverGroups[sp.groupIndex];
+    if (!gr || !gr._smoothed) continue;
+    let u = sp.phase + sp.speed * t;
+    u = u - Math.floor(u);   // mod 1
+    const pos = sampleSparklePosition(gr._smoothed, u);
+    if (!pos) continue;
+    g.circle(pos.x, pos.y, sp.radius);
+  }
+  // Один fill на все circles — экономит draw calls.
+  g.fill({ color: 0xffffff, alpha: 0.3 });
+}
+
+/**
+ * startRiverSparkleTicker(app, layers, riverGroups, opts)
+ *
+ * Создаёт Graphics для бликов, добавляет его в layers.rivers поверх
+ * всех групп рек, регистрирует ticker-handler, который обновляет
+ * позиции бликов каждые `stepMs` миллисекунд (не каждый кадр —
+ * экономит CPU). Возвращает объект с методом stop(), убирающим
+ * handler и Graphics.
+ *
+ * @param {PIXI.Application} app
+ * @param {{rivers: PIXI.Container, fx?: PIXI.Container}} layers
+ * @param {Array<PIXI.Container>} riverGroups
+ * @param {object} [opts]
+ * @param {number} [opts.stepMs=33]  — минимальный интервал перерисовки
+ * @param {object} [opts.sparkleOpts] — передаётся в buildRiverSparkles
+ * @returns {{stop: Function, sparkles: Array, graphics: PIXI.Graphics}}
+ */
+function startRiverSparkleTicker(app, layers, riverGroups, opts) {
+  if (!app || !app.ticker) {
+    throw new Error('[startRiverSparkleTicker] app.ticker is required');
+  }
+  if (!layers || !layers.rivers) {
+    throw new Error('[startRiverSparkleTicker] layers.rivers is required');
+  }
+  if (typeof PIXI === 'undefined' || !PIXI.Graphics) {
+    throw new Error('[startRiverSparkleTicker] PIXI.Graphics not available');
+  }
+  const o = opts || {};
+  const stepMs = (o.stepMs > 0) ? o.stepMs : 33;
+
+  const sparkles = buildRiverSparkles(riverGroups, o.sparkleOpts);
+  const g = new PIXI.Graphics();
+  layers.rivers.addChild(g);
+
+  let t = 0;
+  let accum = 0;
+  // Pixi v8 ticker callback принимает PIXI.Ticker — читаем deltaMS
+  const handler = function(ticker) {
+    const dt = (ticker && typeof ticker.deltaMS === 'number')
+      ? ticker.deltaMS
+      : 16.6667;
+    t     += dt;
+    accum += dt;
+    if (accum < stepMs) return;
+    accum = 0;
+    drawRiverSparkles(g, sparkles, riverGroups, t);
+  };
+  app.ticker.add(handler);
+  // Первичная отрисовка (чтобы блики появились сразу, до первого тика)
+  drawRiverSparkles(g, sparkles, riverGroups, 0);
+
+  return {
+    sparkles: sparkles,
+    graphics: g,
+    stop: function() {
+      try { app.ticker.remove(handler); } catch (_) { /* noop */ }
+      try {
+        if (g.parent) g.parent.removeChild(g);
+      } catch (_) { /* noop */ }
+    }
+  };
+}
+
 /**
  * initBattleMap(containerId, width, height)
  *
@@ -745,6 +1057,11 @@ if (typeof window !== 'undefined') {
   window.mapRiverPathToScreen = mapRiverPathToScreen;
   window.drawCatmullRomBezier = drawCatmullRomBezier;
   window.renderRivers         = renderRivers;
+  window.renderRiversPolished = renderRiversPolished;
+  window.buildRiverSparkles   = buildRiverSparkles;
+  window.sampleSparklePosition = sampleSparklePosition;
+  window.drawRiverSparkles    = drawRiverSparkles;
+  window.startRiverSparkleTicker = startRiverSparkleTicker;
   window.initBattleMap      = initBattleMap;
   window.destroyBattleMap   = destroyBattleMap;
 }
@@ -762,6 +1079,11 @@ if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     mapRiverPathToScreen,
     drawCatmullRomBezier,
     renderRivers,
+    renderRiversPolished,
+    buildRiverSparkles,
+    sampleSparklePosition,
+    drawRiverSparkles,
+    startRiverSparkleTicker,
     initBattleMap, destroyBattleMap
   };
 }
