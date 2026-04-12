@@ -1,8 +1,10 @@
 // ══════════════════════════════════════════════════════════════════════
 // FORESTS — Worley noise + forest mask (arma.md Шаг 13)
+//           Poisson Disk Sampling для размещения деревьев (arma.md Шаг 14)
 //
 // Чистый, без зависимостей от DOM / PIXI, модуль.
-// Определяет какие пиксели heightmap принадлежат зонам густого леса.
+// Определяет какие пиксели heightmap принадлежат зонам густого леса,
+// и генерирует равномерно распределённые позиции деревьев внутри этих зон.
 //
 // Экспортирует:
 //   worleyNoise(x, y, points, maxDist)         → нормализованное [0,1]
@@ -11,9 +13,15 @@
 //   generateForestMask(heightmap, seed, opts?) → Uint8Array(width*height)
 //                                                 (1 = пиксель густого
 //                                                 леса, 0 = иначе).
+//   poissonDisk(mask, w, h, minDist, maxPoints, seed)
+//                                              → Array<{x,y}> позиций,
+//                                                 равномерно распределённых
+//                                                 внутри маски (Bridson).
 //   FOREST_MIN, FOREST_MAX                      — пороги биома «forest»
 //                                                 (соответствуют палитре
 //                                                 BIOMES в battle_map_pixi.js).
+//   DEFAULT_TREE_MIN_DIST, DEFAULT_TREE_MAX_POINTS
+//                                              — параметры для деревьев.
 //
 // Алгоритм:
 //   1. Сгенерировать N feature points (N ∈ [20, 30], seeded mulberry32).
@@ -212,15 +220,179 @@
   }
 
   // ────────────────────────────────────────────────────────────────
+  // poissonDisk(mask, width, height, minDist, maxPoints, seed)
+  //
+  // Bridson's Fast Poisson Disk Sampling (2007) — равномерное
+  // размещение точек внутри маски с гарантией минимального расстояния.
+  //
+  // Алгоритм (arma.md Шаг 14):
+  //   1. Начать со случайной точки (x0, y0), где mask[y0*W+x0] == 1.
+  //      Добавить её в activeList и result.
+  //   2. Пока activeList не пуст:
+  //      - взять случайную точку p из activeList;
+  //      - сгенерировать K=30 кандидатов в кольце [minDist, 2*minDist]
+  //        вокруг p (равномерно по углу и радиусу);
+  //      - для каждого кандидата проверить:
+  //          * в пределах карты [0, W)×[0, H)
+  //          * пиксель внутри маски (mask[iy*W+ix] === 1)
+  //          * расстояние до ближайшего уже размещённого ≥ minDist
+  //      - первый подходящий кандидат — добавить в activeList и result.
+  //      - если за K попыток никто не прошёл — убрать p из activeList.
+  //   3. Остановиться когда result.length >= maxPoints.
+  //
+  // Оптимизация: spatial grid. Классический трюк Bridson: ячейка размера
+  // r/sqrt(2), где r = minDist. Тогда в одной ячейке не может быть больше
+  // одной точки (её диагональ = r). Поиск соседей ведётся только в квадрате
+  // 5×5 ячеек вокруг кандидата. Это сводит проверку к O(1) вместо O(n).
+  //
+  // Детерминированность: один seed + одна mask → идентичный результат
+  // (все случайные решения идут через mulberry32).
+  //
+  // Защиты:
+  //   - null/invalid mask, W/H ≤ 0, minDist ≤ 0, maxPoints ≤ 0 → [].
+  //   - Пустая маска (ни одной «1») → [].
+  //   - Стартовая точка ищется до 1000 случайных попыток,
+  //     затем — линейным сканом.
+  //
+  // @param {Uint8Array} mask          — 1 = валидная позиция, 0 = нет
+  // @param {number}     width
+  // @param {number}     height
+  // @param {number}     minDist       — минимальное расстояние (пиксели)
+  // @param {number}     maxPoints     — верхний предел числа точек
+  // @param {number}     seed          — seed mulberry32
+  // @returns {Array<{x:number,y:number}>}
+  // ────────────────────────────────────────────────────────────────
+  var DEFAULT_TREE_MIN_DIST   = 12;
+  var DEFAULT_TREE_MAX_POINTS = 500;
+  var POISSON_K               = 30;
+
+  function poissonDisk(mask, width, height, minDist, maxPoints, seed) {
+    var W = width | 0, H = height | 0;
+    if (!mask || !mask.length || !(W > 0) || !(H > 0)) return [];
+    if (mask.length !== W * H) return [];
+    if (!(minDist > 0) || !(maxPoints > 0)) return [];
+
+    var rng = PRNG(seed | 0);
+
+    // 1. Стартовая точка внутри маски.
+    var startX = -1, startY = -1;
+    for (var t = 0; t < 1000; t++) {
+      var rx = (rng() * W) | 0;
+      var ry = (rng() * H) | 0;
+      if (rx >= W) rx = W - 1;
+      if (ry >= H) ry = H - 1;
+      if (mask[ry * W + rx] === 1) { startX = rx; startY = ry; break; }
+    }
+    if (startX < 0) {
+      // Фоллбек: линейный скан. Тоже детерминировано.
+      for (var i = 0; i < mask.length; i++) {
+        if (mask[i] === 1) {
+          startX = i % W;
+          startY = (i / W) | 0;
+          break;
+        }
+      }
+    }
+    if (startX < 0) return [];
+
+    // 2. Spatial grid (cell = r/sqrt(2)).
+    var cellSize = minDist / Math.SQRT2;
+    var gridW = Math.max(1, Math.ceil(W / cellSize));
+    var gridH = Math.max(1, Math.ceil(H / cellSize));
+    var grid = new Int32Array(gridW * gridH);
+    for (var g = 0; g < grid.length; g++) grid[g] = -1; // -1 = пусто
+
+    var result = [];
+    var activeList = [];
+    var minDist2 = minDist * minDist;
+
+    function addPoint(px, py) {
+      var idx = result.length;
+      result.push({ x: px, y: py });
+      activeList.push(idx);
+      var gx = (px / cellSize) | 0;
+      var gy = (py / cellSize) | 0;
+      if (gx >= gridW) gx = gridW - 1;
+      if (gy >= gridH) gy = gridH - 1;
+      grid[gy * gridW + gx] = idx;
+    }
+
+    addPoint(startX + 0.5, startY + 0.5);
+
+    // 3. Главный цикл Bridson.
+    while (activeList.length > 0 && result.length < maxPoints) {
+      var aIdx = (rng() * activeList.length) | 0;
+      if (aIdx >= activeList.length) aIdx = activeList.length - 1;
+      var pIdx = activeList[aIdx];
+      var p = result[pIdx];
+      var accepted = false;
+
+      for (var k = 0; k < POISSON_K; k++) {
+        var angle  = rng() * Math.PI * 2;
+        var radius = minDist + rng() * minDist; // [minDist, 2*minDist]
+        var nx = p.x + Math.cos(angle) * radius;
+        var ny = p.y + Math.sin(angle) * radius;
+
+        if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+
+        var ix = nx | 0;
+        var iy = ny | 0;
+        if (mask[iy * W + ix] !== 1) continue;
+
+        // Проверка соседей: 5×5 ячеек вокруг кандидата.
+        var cgx = (nx / cellSize) | 0;
+        var cgy = (ny / cellSize) | 0;
+        if (cgx >= gridW) cgx = gridW - 1;
+        if (cgy >= gridH) cgy = gridH - 1;
+        var x0 = cgx - 2; if (x0 < 0) x0 = 0;
+        var y0 = cgy - 2; if (y0 < 0) y0 = 0;
+        var x1 = cgx + 2; if (x1 > gridW - 1) x1 = gridW - 1;
+        var y1 = cgy + 2; if (y1 > gridH - 1) y1 = gridH - 1;
+
+        var ok = true;
+        for (var yy = y0; yy <= y1 && ok; yy++) {
+          for (var xx = x0; xx <= x1 && ok; xx++) {
+            var gIdx = grid[yy * gridW + xx];
+            if (gIdx >= 0) {
+              var q = result[gIdx];
+              var ddx = nx - q.x;
+              var ddy = ny - q.y;
+              if (ddx * ddx + ddy * ddy < minDist2) ok = false;
+            }
+          }
+        }
+
+        if (ok) {
+          addPoint(nx, ny);
+          accepted = true;
+          break;
+        }
+      }
+
+      if (!accepted) {
+        // swap-remove из activeList
+        var lastI = activeList.length - 1;
+        activeList[aIdx] = activeList[lastI];
+        activeList.pop();
+      }
+    }
+
+    return result;
+  }
+
+  // ────────────────────────────────────────────────────────────────
   // Экспорт: глобалы (браузер) + module.exports (Node.js / vm)
   // ────────────────────────────────────────────────────────────────
   var api = {
-    worleyNoise:        worleyNoise,
-    generateForestMask: generateForestMask,
-    FOREST_MIN:         FOREST_MIN,
-    FOREST_MAX:         FOREST_MAX,
-    DEFAULT_N_POINTS:   DEFAULT_N_POINTS,
-    DEFAULT_THRESHOLD:  DEFAULT_THRESHOLD
+    worleyNoise:             worleyNoise,
+    generateForestMask:      generateForestMask,
+    poissonDisk:             poissonDisk,
+    FOREST_MIN:              FOREST_MIN,
+    FOREST_MAX:              FOREST_MAX,
+    DEFAULT_N_POINTS:        DEFAULT_N_POINTS,
+    DEFAULT_THRESHOLD:       DEFAULT_THRESHOLD,
+    DEFAULT_TREE_MIN_DIST:   DEFAULT_TREE_MIN_DIST,
+    DEFAULT_TREE_MAX_POINTS: DEFAULT_TREE_MAX_POINTS
   };
 
   if (typeof module !== 'undefined' && module.exports) {
@@ -229,6 +401,7 @@
   if (root) {
     root.worleyNoise        = worleyNoise;
     root.generateForestMask = generateForestMask;
+    root.poissonDisk        = poissonDisk;
   }
 })(typeof window !== 'undefined' ? window
   : typeof globalThis !== 'undefined' ? globalThis
