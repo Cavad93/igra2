@@ -1395,3 +1395,965 @@ textures/
 | 34 | L | index.html | Поиск по игре |
 | 35 | L | index.html | Визуальный пульс событий |
 
+---
+
+# ЧАСТЬ 3 — Карта, регионы, персонажи
+
+> Улучшения карты Leaflet, popup-панели регионов, системы персонажей.
+> Каждый шаг независим — можно реализовывать в любом порядке.
+
+---
+
+## БЛОК M — Исправления и popup региона (Шаги 36–38)
+
+---
+
+### Шаг 36 — Исправить баг потери цветов регионов при перезагрузке
+
+**Цель:** после перезагрузки страницы регионы должны сразу отображаться в цветах наций — без клика.
+
+**Причина бага:** в `map.js:1872` страховочный `setTimeout(refreshRegionStyles, 400)` срабатывает раньше чем Leaflet Canvas-рендерер завершает внутреннюю перестройку после `invalidateSize()`. Canvas очищается уже после того как цвета применены.
+
+**Что сделать:**
+
+1. В `initLeafletMap()` добавить третий страховочный вызов:
+   ```js
+   setTimeout(() => { if (leafletMap) refreshRegionStyles(); }, 1200);
+   ```
+
+2. Добавить слушатель на событие завершения рендера Leaflet Canvas:
+   ```js
+   leafletMap.on('layeradd', () => {
+     clearTimeout(_colorRefreshTimer);
+     _colorRefreshTimer = setTimeout(refreshRegionStyles, 100);
+   });
+   ```
+   Переменная `_colorRefreshTimer` — дебаунс чтобы не вызывать `refreshRegionStyles` 300 раз подряд.
+
+3. В `renderMap()` — если `leafletMap` уже существует (повторный вызов), принудительно вызвать:
+   ```js
+   leafletMap.invalidateSize();
+   refreshRegionStyles();
+   ```
+
+4. В `refreshRegionStyles()` добавить защиту: если полигон не имеет `_renderer` — пропустить и добавить в очередь повтора.
+
+**Тест Шага 36:**
+- Перезагрузить страницу 5 раз — каждый раз регионы должны быть окрашены без клика.
+- Изменить размер окна браузера (resize) — цвета не должны теряться.
+- Открыть в новой вкладке — цвета сразу правильные.
+
+---
+
+### Шаг 37 — Переработать popup региона
+
+**Цель:** из плоского HTML-блока сделать профессиональную информационную панель с иерархией данных.
+
+**Что сделать:**
+
+1. **Шапка панели** — заменить тонкий `border-left: 4px` на широкую цветную полосу + glassmorphism фон:
+   ```css
+   .region-info-header {
+     background: linear-gradient(135deg,
+       ${nationColor}33 0%,
+       rgba(13,10,5,0.0) 60%);
+     border-bottom: 2px solid ${nationColor}66;
+     padding: 14px 16px 10px;
+   }
+   .ri-nation-stripe {
+     height: 3px;
+     background: ${nationColor};
+     margin: -14px -16px 12px;
+     border-radius: 0;
+   }
+   ```
+
+2. **Блок ключевых цифр** — три числа крупно, сразу под шапкой (до вкладок):
+   ```html
+   <div class="ri-key-stats">
+     <div class="ri-key-stat">
+       <span class="ri-key-num">12,400</span>
+       <span class="ri-key-lbl">👥 Население</span>
+     </div>
+     <div class="ri-key-stat">
+       <span class="ri-key-num">+45</span>
+       <span class="ri-key-lbl">💰 /ход</span>
+     </div>
+     <div class="ri-key-stat">
+       <span class="ri-key-num">3,200</span>
+       <span class="ri-key-lbl">⚔ Гарнизон</span>
+     </div>
+   </div>
+   ```
+   CSS: `display: grid; grid-template-columns: 1fr 1fr 1fr; border-bottom: 1px solid`
+   `.ri-key-num`: `font-size: 18px; font-family: 'Cinzel'; color: var(--text-gold)`
+
+3. **Прогресс-бары** — заменить текстовые `78%` на визуальные бары:
+   ```html
+   <div class="ri-bar-row">
+     <span class="ri-bar-lbl">🌿 Плодородие</span>
+     <div class="ri-bar-track">
+       <div class="ri-bar-fill" style="width: 78%; background: #4caf50"></div>
+     </div>
+     <span class="ri-bar-val">78%</span>
+   </div>
+   ```
+
+4. **Анимация появления** панели: при `panel.classList.remove('hidden')` добавлять класс `ri-entering`, CSS:
+   ```css
+   .region-info.ri-entering {
+     animation: ri-slide-in 0.2s ease-out forwards;
+   }
+   @keyframes ri-slide-in {
+     from { opacity: 0; transform: translateX(20px); }
+     to   { opacity: 1; transform: translateX(0); }
+   }
+   ```
+
+5. **Кнопки действий** — переместить в фиксированный футер панели (не внутри скроллируемого контента):
+   ```html
+   <div class="ri-footer">
+     <button class="ri-action-btn primary">⚔ Собрать армию</button>
+     <button class="ri-action-btn">🏗 Построить</button>
+   </div>
+   ```
+
+**Тест Шага 37:**
+- Клик на регион → панель появляется с анимацией slide-in.
+- Три ключевые цифры видны крупно без скролла.
+- Прогресс-бары отображают корректные значения.
+- Кнопки действий всегда видны внизу (не скроллятся).
+- Шапка имеет градиент в цвете нации.
+
+---
+
+### Шаг 38 — Анимированный индикатор вкладок (скользящий)
+
+**Цель:** переключение вкладок в popup региона с плавной анимацией — как в профессиональных приложениях.
+
+**Что сделать:**
+
+1. Добавить `div.ri-tab-indicator` внутрь `.ri-tabs`:
+   ```html
+   <div class="ri-tabs">
+     <button class="ri-tab ri-tab--active" data-tab="info">ℹ Обзор</button>
+     <button class="ri-tab" data-tab="build">🏗 Строить</button>
+     <button class="ri-tab" data-tab="diplomacy">🤝 Дипломатия</button>
+     <div class="ri-tab-indicator"></div>
+   </div>
+   ```
+
+2. CSS:
+   ```css
+   .ri-tabs { position: relative; display: flex; border-bottom: 1px solid var(--border-gold); }
+   .ri-tab { flex: 1; padding: 8px 4px; background: none; border: none;
+             font-size: 11px; color: var(--text-dim); cursor: pointer; transition: color 0.15s; }
+   .ri-tab--active { color: var(--text-gold); font-weight: 600; }
+   .ri-tab-indicator {
+     position: absolute; bottom: 0; height: 2px;
+     background: var(--accent);
+     transition: left 0.25s cubic-bezier(.4,0,.2,1), width 0.25s cubic-bezier(.4,0,.2,1);
+     border-radius: 1px 1px 0 0;
+   }
+   ```
+
+3. JS: функция `updateTabIndicator(activeBtn)`:
+   ```js
+   function updateTabIndicator(activeBtn) {
+     const indicator = activeBtn.parentElement.querySelector('.ri-tab-indicator');
+     indicator.style.left  = activeBtn.offsetLeft + 'px';
+     indicator.style.width = activeBtn.clientWidth + 'px';
+   }
+   ```
+   Вызывать при: первом рендере панели и при каждом `switchRegionTab()`.
+
+4. Контент вкладки появляется с анимацией:
+   ```css
+   .ri-tab-content {
+     animation: ri-tab-fade 0.15s ease-out;
+   }
+   @keyframes ri-tab-fade {
+     from { opacity: 0; transform: translateY(4px); }
+     to   { opacity: 1; transform: translateY(0); }
+   }
+   ```
+
+**Тест Шага 38:**
+- Открыть popup региона — индикатор стоит под первой вкладкой.
+- Кликнуть на вторую вкладку — индикатор плавно скользит к ней за 250ms.
+- Контент новой вкладки появляется с мягким fade-in.
+- При разных количествах вкладок (2 или 3) индикатор корректно позиционируется.
+
+---
+
+## БЛОК N — Армии и события на карте (Шаги 39–41)
+
+---
+
+### Шаг 39 — Анимированные маркеры армий
+
+**Цель:** заменить emoji-маркеры армий на SVG-иконки с цветом нации и анимацией выбора.
+
+**Что сделать:**
+
+1. Написать функцию `createArmyIcon(army, nationColor)` → возвращает `L.divIcon`:
+   ```js
+   function createArmyIcon(army, nationColor) {
+     const size = army.size > 5000 ? 36 : army.size > 1000 ? 30 : 24;
+     const html = `
+       <div class="army-marker ${army.selected ? 'army-selected' : ''}"
+            style="--nc: ${nationColor}; width:${size}px; height:${size}px">
+         <svg viewBox="0 0 24 24" fill="${nationColor}">
+           <path d="M12 2L15 9H22L16.5 13.5L18.5 21L12 17L5.5 21L7.5 13.5L2 9H9Z"/>
+         </svg>
+         <span class="army-count">${formatArmySize(army.size)}</span>
+       </div>`;
+     return L.divIcon({ html, className: '', iconSize: [size, size+14], iconAnchor: [size/2, size/2] });
+   }
+   ```
+
+2. CSS `.army-marker`:
+   ```css
+   .army-marker {
+     position: relative; display: flex; flex-direction: column;
+     align-items: center; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+     transition: transform 0.15s;
+   }
+   .army-marker:hover { transform: scale(1.15); }
+   .army-selected svg {
+     filter: drop-shadow(0 0 6px var(--nc));
+     animation: army-pulse 1.2s ease-in-out infinite;
+   }
+   @keyframes army-pulse {
+     0%, 100% { opacity: 1; }
+     50% { opacity: 0.6; }
+   }
+   .army-count {
+     font-size: 9px; color: #fff; background: rgba(0,0,0,0.65);
+     padding: 0 3px; border-radius: 3px; margin-top: 2px;
+     font-family: 'Georgia', serif; white-space: nowrap;
+   }
+   ```
+
+3. Иконка типа войск из **game-icons.net** (CC BY 3.0):
+   - Infantry: `crossed-swords`
+   - Cavalry: `horse-head`
+   - Archers: `arrow-cluster`
+   - Пути SVG встроить inline (не внешние файлы).
+
+4. При движении армии — `leafletMap.motion` (MIT): плавно перемещает маркер по маршруту.
+   Если `leafletMap.motion` недоступен — обойтись через `setInterval` + `marker.setLatLng(interpolate(from, to, t))`.
+
+**Тест Шага 39:**
+- Армии отображаются как цветные звёзды/значки (цвет нации).
+- Выбранная армия пульсирует.
+- При наведении — маркер увеличивается на 15%.
+- Числовой размер армии виден под иконкой (`4.2k`, `800`).
+
+---
+
+### Шаг 40 — Прогресс строительства на карте
+
+**Цель:** когда в регионе идёт строительство — показать визуальный индикатор прямо на карте.
+
+**Что сделать:**
+
+1. После каждого хода: найти все регионы с активным строительством (`gameRegion.building_queue`).
+
+2. Для каждого такого региона создать `L.marker` с `divIcon`:
+   ```html
+   <div class="build-progress-marker">
+     🏗
+     <div class="bpm-bar">
+       <div class="bpm-fill" style="width: ${pct}%"></div>
+     </div>
+     <span class="bpm-turns">${turns} хода</span>
+   </div>
+   ```
+   CSS: маркер 48×32px, полоска прогресса 44×3px золотого цвета.
+
+3. Хранить маркеры в словаре `buildMarkers = {}` (regionId → marker). При обновлении — удалять старый, добавлять новый.
+
+4. При завершении строительства — маркер удаляется + всплывает иконка-пульс `✓` на 2 сек (шаг 41).
+
+**Тест Шага 40:**
+- Начать строительство в регионе → на карте появляется `🏗` с полоской прогресса.
+- После хода прогресс увеличивается.
+- После завершения маркер исчезает.
+
+---
+
+### Шаг 41 — Пульсирующие иконки событий на карте
+
+**Цель:** важные события (восстание, чума, победа) визуально отображаются на карте в момент возникновения.
+
+**Что сделать:**
+
+1. Создать `L.SVGOverlay` поверх карты для событийных иконок:
+   ```js
+   const eventSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+   eventSvg.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:450';
+   leafletMap.getPanes().overlayPane.appendChild(eventSvg);
+   ```
+
+2. JS: функция `showMapEvent(regionId, type, duration)`:
+   - Получить центр региона: `regionLayers[regionId].getCenter()`
+   - Конвертировать в пиксели: `leafletMap.latLngToLayerPoint(center)`
+   - Добавить в SVG группу `<g>`:
+     ```svg
+     <circle cx={x} cy={y} r="8" fill={color} opacity="0.8">
+       <animate attributeName="r" from="8" to="24" dur="1s" repeatCount="2"/>
+       <animate attributeName="opacity" from="0.8" to="0" dur="1s" repeatCount="2"/>
+     </circle>
+     <text x={x} y={y} text-anchor="middle" dominant-baseline="middle" font-size="14">{icon}</text>
+     ```
+   - Через `duration` мс — удалить группу из SVG.
+
+3. Таблица иконок событий:
+   | Событие | Иконка | Цвет круга |
+   |---------|--------|-----------|
+   | Восстание | 🔥 | #f44336 |
+   | Чума | 💀 | #9c27b0 |
+   | Урожай | 🌾 | #4caf50 |
+   | Победа | ⭐ | #ffd700 |
+   | Смерть персонажа | 💔 | #607d8b |
+   | Постройка завершена | 🏛 | #2196f3 |
+
+4. Обновлять позиции при зуме/пане: `leafletMap.on('zoom move', repositionEventSvg)`.
+
+**Тест Шага 41:**
+- Вызвать `showMapEvent('sicily_1', 'revolt', 3000)` → над регионом пульсирует 🔥.
+- Через 3 сек иконка исчезает.
+- При зуме/пане иконки остаются над правильными регионами.
+- Несколько событий одновременно не накладываются.
+
+---
+
+## БЛОК O — Торговля, двор, зум (Шаги 42–44)
+
+---
+
+### Шаг 42 — Анимированные торговые маршруты
+
+**Цель:** линии торговли показывают направление потока ресурсов — движущиеся точки вдоль маршрута.
+
+**Что сделать:**
+
+1. Существующие `L.polyline` торговых маршрутов (`tradeRouteLines`) заменить на SVG-пути с анимацией.
+
+2. Для каждого маршрута создать SVG `<path>` с `stroke-dasharray` и анимацией `stroke-dashoffset`:
+   ```svg
+   <path d="M x1,y1 L x2,y2"
+         stroke="#d4a853" stroke-width="1.5" fill="none"
+         stroke-dasharray="6 8" opacity="0.6">
+     <animateTransform attributeName="stroke-dashoffset"
+       from="0" to="-14" dur="1s" repeatCount="indefinite"/>
+   </path>
+   ```
+   Точки "двигаются" вдоль линии создавая иллюзию потока.
+
+3. Ширина линии пропорциональна объёму торговли: `weight = 1 + trade_volume / 500`.
+
+4. Цвет по типу товара:
+   - Зерно 🌾 → `#a5d6a7` (зелёный)
+   - Металл ⚙ → `#b0bec5` (серый)
+   - Роскошь 💎 → `#ce93d8` (фиолетовый)
+   - Общий → `#d4a853` (золотой)
+
+5. При отключении режима торговых маршрутов — SVG-пути удаляются, при включении — пересоздаются.
+
+**Тест Шага 42:**
+- Включить показ торговых маршрутов → линии с движущимися точками.
+- Ширина линий различается (более богатые маршруты — толще).
+- При зуме линии масштабируются корректно.
+- Анимация не роняет FPS ниже 30.
+
+---
+
+### Шаг 43 — Экран должностей: переработка правой панели (Двор)
+
+**Цель:** заменить список персонажей на систему должностей — персонажи назначаются на роли.
+
+**Что сделать:**
+
+1. Изменить структуру `#right-panel`:
+   ```html
+   <div id="right-panel">
+     <div class="court-header">
+       <span class="court-title">👑 Двор Агафокла</span>
+       <span class="court-era">Сиракузы · 301 BC</span>
+     </div>
+
+     <div id="positions-list">
+       <!-- Слоты должностей -->
+       <div class="position-slot" data-role="strategos">
+         <div class="pos-role-icon">⚔</div>
+         <div class="pos-info">
+           <div class="pos-title">Стратег</div>
+           <div class="pos-holder" id="pos-strategos">— вакантно —</div>
+         </div>
+         <button class="pos-assign-btn" onclick="openAssignModal('strategos')">↔</button>
+       </div>
+       <!-- ещё 3-4 должности -->
+     </div>
+
+     <div class="court-section-title">Советники</div>
+     <div id="free-advisors">
+       <!-- персонажи без должности -->
+     </div>
+   </div>
+   ```
+
+2. CSS `.position-slot`:
+   ```css
+   .position-slot {
+     display: flex; align-items: center; gap: 8px;
+     padding: 8px 10px; margin-bottom: 4px;
+     background: rgba(40,25,8,0.4);
+     border: 1px solid var(--border-gold);
+     border-radius: 4px; cursor: pointer;
+     transition: background 0.15s;
+   }
+   .position-slot:hover { background: rgba(60,40,12,0.5); }
+   .pos-role-icon { font-size: 20px; flex-shrink: 0; width: 28px; text-align: center; }
+   .pos-title { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+   .pos-holder { font-size: 12px; color: var(--text-gold); font-family: 'Cinzel', serif; }
+   .pos-assign-btn { margin-left: auto; background: none; border: 1px solid rgba(107,79,26,0.3);
+                     color: var(--text-dim); border-radius: 3px; padding: 2px 6px; cursor: pointer; }
+   ```
+
+3. Должности по умолчанию:
+   - ⚔ Стратег — бонус к армии
+   - 💰 Казначей — бонус к доходу
+   - 🤝 Посол — бонус к дипломатии
+   - 📜 Советник — бонус к внутренней политике
+
+4. JS: `openAssignModal(role)` — открывает модал со списком доступных персонажей, отсортированных по релевантному навыку для роли. Клик "Назначить" → `assignCharacter(charId, role)`.
+
+5. Свободные советники — маленькие "чипы" с именем и главным навыком:
+   ```html
+   <div class="advisor-chip" onclick="showCharacterDetail(id)">
+     <span class="adv-avatar">😐</span>
+     <span class="adv-name">Демокрит</span>
+     <span class="adv-skill">⚔6</span>
+   </div>
+   ```
+
+**Тест Шага 43:**
+- Правая панель показывает 4 слота должностей.
+- Клик на `↔` → модал с персонажами для назначения.
+- После назначения — имя персонажа появляется в слоте.
+- Свободные советники отображаются как чипы ниже должностей.
+
+---
+
+### Шаг 44 — Стратегические уровни зума
+
+**Цель:** на разных уровнях зума карта показывает разный уровень детализации.
+
+**Что сделать:**
+
+1. Определить три уровня зума:
+   ```js
+   const ZOOM_LEVELS = {
+     strategic: { max: 4 },   // zoom < 4 — вид сверху
+     regional:  { min: 4, max: 6.5 }, // zoom 4-6.5 — текущий вид
+     detailed:  { min: 6.5 },  // zoom > 6.5 — детальный
+   };
+   ```
+
+2. Добавить слушатель `leafletMap.on('zoomend', onZoomChange)`.
+
+3. **Стратегический вид** (`zoom < 4`):
+   - Скрыть мелкие подписи регионов (уже `_labelTimerId` управляет этим — расширить логику)
+   - Увеличить `fillOpacity` регионов до 0.85 (цвета наций ярче)
+   - Маркеры армий: уменьшить до 18px, показывать только флаг нации
+   - Скрыть `#map-mode-bar` (не нужен на этом зуме)
+
+4. **Детальный вид** (`zoom > 6.5`):
+   - Добавить иконки построек на регионах: для каждого региона игрока — `L.marker` с `divIcon` содержащим список построек в миниатюре
+   - Показывать численность гарнизона как число под флагом
+   - Торговые маршруты — утолщённые, с названиями товаров
+
+5. Переходы между уровнями — плавные через CSS `transition: opacity 0.3s` на соответствующих слоях.
+
+**Тест Шага 44:**
+- При `zoom < 4` карта упрощается: крупные цветные зоны.
+- При `zoom > 6.5` на регионах игрока видны иконки построек.
+- Маркеры армий адаптируют размер к уровню зума.
+- Переходы между уровнями плавные.
+
+---
+
+## БЛОК P — Визуальная информация (Шаги 45–47)
+
+---
+
+### Шаг 45 — Сезонный визуал карты
+
+**Цель:** сезоны из `super_ou.js` (`tick % 4`) визуально отображаются на карте и в интерфейсе.
+
+**Что сделать:**
+
+1. В `index.html` добавить div-оверлей поверх карты:
+   ```html
+   <div id="season-overlay"></div>
+   ```
+   CSS: `position:absolute; inset:0; pointer-events:none; z-index:200; transition: background 2s ease, filter 2s ease`
+
+2. JS: функция `applySeasonVisual(season)` (season = 0–3):
+   ```js
+   const SEASON_STYLES = {
+     0: { // Весна
+       overlay: 'rgba(100,180,80,0.04)',
+       filter:  'hue-rotate(8deg) saturate(1.15)',
+       icon: '🌸', label: 'Весна'
+     },
+     1: { // Лето
+       overlay: 'rgba(255,200,50,0.05)',
+       filter:  'brightness(1.04) saturate(0.92)',
+       icon: '☀', label: 'Лето'
+     },
+     2: { // Осень
+       overlay: 'rgba(180,100,30,0.07)',
+       filter:  'hue-rotate(-12deg) sepia(0.2)',
+       icon: '🍂', label: 'Осень'
+     },
+     3: { // Зима
+       overlay: 'rgba(180,210,240,0.06)',
+       filter:  'saturate(0.5) brightness(0.92)',
+       icon: '❄', label: 'Зима'
+     }
+   };
+   ```
+   Применить: `seasonOverlay.style.background = style.overlay`, `leafletMap.getContainer().style.filter = style.filter`.
+
+3. В топ-баре обновить иконку сезона рядом с датой: `🌸 Весна · 301 BC`.
+
+4. Вызывать `applySeasonVisual` после каждого хода и при загрузке игры.
+
+**Тест Шага 45:**
+- При загрузке карта имеет визуальный фильтр соответствующего сезона.
+- После нескольких ходов сезон меняется, фильтр плавно переходит (2s transition).
+- Иконка сезона в топ-баре обновляется.
+- Фильтр не мешает кликам и интерактивности карты.
+
+---
+
+### Шаг 46 — Спарклайны трендов в ресурс-баре
+
+**Цель:** рядом с каждым ресурсом — мини-график за последние 8 ходов (рост/падение видны сразу).
+
+**Что сделать:**
+
+1. В `GAME_STATE` добавить историю ресурсов:
+   ```js
+   GAME_STATE.history = {
+     treasury:   [],  // последние 10 значений
+     army_size:  [],
+     population: [],
+     food:       [],
+   };
+   ```
+   После каждого хода: `GAME_STATE.history.treasury.push(GAME_STATE.treasury)`, обрезать до 10 элементов.
+
+2. Написать функцию `drawSparkline(canvas, values, color)`:
+   - `canvas` — HTMLCanvasElement 44×14px
+   - Нормализовать values в [0, 1]
+   - Нарисовать полилинию через все точки
+   - Последняя точка — круг-маркер
+   - Цвет: зелёный если последнее > предпоследнего, красный если меньше
+
+3. В каждый `.res-item` добавить `<canvas class="res-sparkline" width="44" height="14"></canvas>`.
+
+4. В `updateResourceBar(state)` — после обновления числа вызвать `drawSparkline(canvas, history, color)`.
+
+5. Стрелка тренда рядом с числом: `↗ +45` (зелёный) или `↘ -12` (красный).
+
+**Тест Шага 46:**
+- В топ-баре рядом с каждым ресурсом виден мини-график.
+- После 3+ ходов график показывает историю изменений.
+- При росте — зелёная линия, при падении — красная.
+- Canvas не вызывает layout reflow (размер фиксирован).
+
+---
+
+### Шаг 47 — Планировщик маршрутов армии
+
+**Цель:** показать предполагаемый маршрут армии до нажатия "подтвердить" — игрок видит путь и сколько ходов займёт.
+
+**Что сделать:**
+
+1. При выборе армии (клик на маркер): установить `selectedArmy = army`, подсветить маркер.
+
+2. При наведении на целевой регион (пока армия выбрана):
+   - Рассчитать маршрут BFS/Dijkstra по соседним регионам: `findArmyPath(fromRegion, toRegion)`
+   - Получить центры промежуточных регионов
+   - Нарисовать `L.polyline` пунктиром:
+     ```js
+     L.polyline(pathCoords, {
+       color: nationColor, weight: 2,
+       dashArray: '8 6', opacity: 0.7,
+       className: 'army-route-preview'
+     })
+     ```
+   - Добавить CSS анимацию движения: `stroke-dashoffset` animation
+
+3. Показать тултип у курсора: `📍 3 хода · через Катанию → Акрагант`.
+
+4. При клике на целевой регион — подтвердить маршрут: сохранить в `army.planned_route`, убрать preview-линию, нарисовать постоянную пунктирную линию маршрута.
+
+5. При очередном ходе — армия двигается по первому региону маршрута, линия укорачивается.
+
+**Тест Шага 47:**
+- Выбрать армию → навести на далёкий регион → появляется пунктирная линия маршрута.
+- Тултип показывает количество ходов.
+- Клик подтверждает маршрут.
+- Линия маршрута остаётся на карте между ходами.
+- После прибытия армии — линия исчезает.
+
+---
+
+## БЛОК Q — Стратегическая информация (Шаги 48–50)
+
+---
+
+### Шаг 48 — Туман войны (разведка)
+
+**Цель:** игрок видит разный уровень информации о регионах в зависимости от близости и союзников.
+
+**Что сделать:**
+
+1. Написать функцию `getIntelLevel(regionId)` → возвращает `0`, `1`, или `2`:
+   - `2` (полная информация) — свои регионы + союзники + соседние
+   - `1` (частичная) — регионы в 2 перехода, торговые партнёры
+   - `0` (минимум) — все остальные
+
+2. В `buildTooltipContent()` фильтровать данные по `intelLevel`:
+   ```js
+   const intel = getIntelLevel(regionId);
+   const population = intel >= 1 ? gameData.population : '???';
+   const treasury   = intel >= 2 ? region.treasury    : '—';
+   const garrison   = intel >= 1 ? gameData.garrison  : '~' + roughEstimate(gameData.garrison);
+   ```
+
+3. В `showRegionInfo()` — аналогично скрывать/размывать поля при низком intel:
+   - `intelLevel = 0`: показать только нацию-владельца, название, тип региона
+   - `intelLevel = 1`: добавить примерное население (`~10–15k`), тип армии
+   - `intelLevel = 2`: полные данные
+
+4. Визуально на карте: регионы с `intelLevel = 0` получают `fillOpacity: 0.45` и hatching-паттерн (SVG `<pattern>` с диагональными линиями).
+
+5. Иконка разведки в popup: `🔍 Разведка: частичная` с подсказкой как улучшить.
+
+**Тест Шага 48:**
+- Далёкие вражеские регионы показывают `???` вместо точных цифр.
+- Соседние регионы показывают примерные данные.
+- Свои регионы — полные данные как раньше.
+- Визуально далёкие регионы чуть темнее/прозрачнее.
+
+---
+
+### Шаг 49 — Граф дипломатических отношений
+
+**Цель:** визуальная сеть союзов, войн и договоров между нациями — одним взглядом.
+
+**Что сделать:**
+
+1. Добавить кнопку `🕸` в левую навигацию (или в `#map-mode-bar`) — открывает оверлей.
+
+2. Создать `#diplo-graph-overlay` (fullscreen, z-index 2000):
+   ```html
+   <div id="diplo-graph-overlay" class="hidden">
+     <div class="dg-header">
+       <h2>Дипломатические отношения</h2>
+       <button onclick="closeDiploGraph()">✕</button>
+     </div>
+     <svg id="diplo-graph-svg"></svg>
+   </div>
+   ```
+
+3. JS: `renderDiploGraph()`:
+   a. Получить список активных наций из `GAME_STATE.nations`.
+   b. Расставить нации по кругу: `angle = (i / total) * 2 * Math.PI`, `x = cx + r * cos(angle)`.
+   c. Нарисовать линии-отношения:
+      - Войны → красные линии, толщина 3px
+      - Союзы → зелёные линии, толщина 2px
+      - Торговые договоры → синие пунктиры
+      - Мирные договоры → серые линии
+   d. Нарисовать узлы-нации: `<circle>` в цвете нации + `<text>` с именем.
+   e. При клике на узел → открыть дипломатическую панель с этой нацией.
+
+4. Легенда в углу: цветные квадраты + подписи типов отношений.
+
+**Тест Шага 49:**
+- Кнопка `🕸` открывает оверлей с графом.
+- Все активные нации расположены по кругу.
+- Цветные линии соответствуют типам отношений.
+- Клик на нацию в графе — открывает дипломатическую панель.
+- `Esc` закрывает оверлей.
+
+---
+
+### Шаг 50 — Лента событий на карте (Event Feed)
+
+**Цель:** события видны на карте как всплывающие иконки — игрок сразу понимает что происходит где.
+
+**Цель отличается от Шага 41:** там разовые пульсирующие круги. Здесь — постоянная очередь событий с иконками которые поочерёдно появляются над регионами и текстом описания.
+
+**Что сделать:**
+
+1. Создать очередь событий `eventFeedQueue = []`. После каждого хода `turn.js` добавляет события:
+   ```js
+   addMapEvent({ regionId: 'sicily_1', icon: '🔥', text: 'Восстание!', type: 'revolt' });
+   addMapEvent({ regionId: 'carthage_1', icon: '💰', text: '+340 доход', type: 'economy' });
+   ```
+
+2. Функция `processEventFeedQueue()` — показывает события по очереди с задержкой 600ms между ними:
+   - Создаёт `L.divIcon` маркер над регионом
+   - Маркер содержит: иконку + текст в мини-баббле
+   - CSS анимация: `slideup` 0.3s → видимость 2s → `fadeout` 0.3s → удаление
+   - `pointer-events: none`
+
+3. CSS маркер-баббл:
+   ```css
+   .event-feed-marker {
+     background: rgba(13,10,5,0.88);
+     border: 1px solid var(--border-gold);
+     border-radius: 12px;
+     padding: 3px 8px;
+     font-size: 11px; color: var(--text-light);
+     white-space: nowrap;
+     box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+     animation: event-bubble 2.6s forwards;
+   }
+   @keyframes event-bubble {
+     0%   { opacity: 0; transform: translateY(8px); }
+     15%  { opacity: 1; transform: translateY(0); }
+     75%  { opacity: 1; }
+     100% { opacity: 0; transform: translateY(-6px); }
+   }
+   ```
+
+4. Максимум 5 одновременных маркеров — остальные в очереди.
+
+**Тест Шага 50:**
+- После хода над регионами всплывают баббл-иконки с текстом.
+- Каждый баббл живёт ~2.6 сек и плавно исчезает.
+- Одновременно не более 5 на экране.
+- Бабблы не мешают кликам на регионы.
+
+---
+
+## БЛОК R — Финальная полировка (Шаги 51–53)
+
+---
+
+### Шаг 51 — Индикаторы действий ИИ-наций
+
+**Цель:** показать что делают другие нации — карта перестаёт быть "мёртвой" между ходами игрока.
+
+**Что сделать:**
+
+1. После обработки хода в `turn.js`: собрать действия всех AI-наций в `aiActions[]`:
+   ```js
+   aiActions = [
+     { nationId: 'rome',     regionId: 'latium_1',  type: 'building', icon: '🏗' },
+     { nationId: 'carthage', regionId: 'carthage_1', type: 'recruiting', icon: '⚔' },
+     { nationId: 'egypt',    regionId: 'nile_delta', type: 'trade', icon: '💰' },
+   ];
+   ```
+
+2. Написать `renderAIIndicators(aiActions)`:
+   - Для каждого действия создать `L.divIcon` маркер над регионом
+   - Маркер: маленькая иконка 20×20px в цвете нации (полупрозрачный фон)
+   - При наведении на маркер — тултип: `Рим: строит Акведук в Латиуме`
+   - Маркеры хранятся в `aiIndicatorMarkers[]`, удаляются в начале следующего хода
+
+3. CSS:
+   ```css
+   .ai-indicator {
+     width: 20px; height: 20px;
+     border-radius: 50%;
+     background: var(--nc, #888);
+     opacity: 0.75;
+     display: flex; align-items: center; justify-content: center;
+     font-size: 11px;
+     border: 1px solid rgba(255,255,255,0.2);
+     box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+     animation: ai-appear 0.4s ease-out;
+   }
+   @keyframes ai-appear {
+     from { transform: scale(0); opacity: 0; }
+     to   { transform: scale(1); opacity: 0.75; }
+   }
+   ```
+
+4. Таблица иконок действий:
+   | Действие | Иконка |
+   |---------|--------|
+   | Строительство | 🏗 |
+   | Набор войск | ⚔ |
+   | Торговля | 💰 |
+   | Дипломатия | 🤝 |
+   | Перемещение армий | → |
+
+**Тест Шага 51:**
+- После хода над регионами AI-наций появляются маленькие цветные кружки с иконками.
+- Наведение на кружок → тултип с расшифровкой действия.
+- В начале следующего хода старые индикаторы исчезают.
+- Индикаторы соответствуют реальным действиям из `turn.js`.
+
+---
+
+### Шаг 52 — Визуальная карточка итога хода
+
+**Цель:** после обработки хода — красивая карточка с итогами, которая информирует и удовлетворяет.
+
+**Что сделать:**
+
+1. Добавить `#turn-summary-card` в `<body>`:
+   ```html
+   <div id="turn-summary-card" class="hidden">
+     <div class="tsc-header">
+       <span id="tsc-turn">Ход 13</span>
+       <span id="tsc-date">Гекатомбеон, 301 BC</span>
+       <span id="tsc-season">🌸</span>
+     </div>
+     <div class="tsc-deltas" id="tsc-deltas">
+       <!-- заполняется динамически -->
+     </div>
+     <div class="tsc-alerts" id="tsc-alerts"></div>
+     <div class="tsc-footer">
+       <div class="tsc-progress"></div>
+       <button onclick="closeTurnSummaryCard()">Продолжить →</button>
+     </div>
+   </div>
+   ```
+
+2. CSS:
+   ```css
+   #turn-summary-card {
+     position: fixed; top: 50%; left: 50%;
+     transform: translate(-50%, -50%);
+     width: 340px; z-index: 8500;
+     background: rgba(13,10,5,0.97);
+     border: 1px solid var(--border-gold);
+     border-radius: 6px;
+     box-shadow: 0 8px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(212,168,83,0.1);
+     backdrop-filter: blur(12px);
+     animation: tsc-appear 0.3s ease-out;
+   }
+   @keyframes tsc-appear {
+     from { opacity: 0; transform: translate(-50%, calc(-50% + 20px)); }
+     to   { opacity: 1; transform: translate(-50%, -50%); }
+   }
+   .tsc-delta-row { display:flex; justify-content:space-between; padding: 5px 0;
+                    border-bottom: 1px solid rgba(107,79,26,0.15); font-size: 13px; }
+   .tsc-delta-pos { color: #4caf50; }
+   .tsc-delta-neg { color: #f44336; }
+   .tsc-progress { height: 2px; background: var(--border-gold);
+                   animation: tsc-countdown 5s linear forwards; }
+   @keyframes tsc-countdown { from { width: 100%; } to { width: 0%; } }
+   ```
+
+3. JS: `showTurnSummaryCard(prevState, newState)` — вычислить дельты и заполнить `#tsc-deltas`:
+   ```js
+   const rows = [
+     { label: '💰 Казна',    delta: newState.treasury - prevState.treasury },
+     { label: '👥 Население', delta: newState.population - prevState.population },
+     { label: '⚔ Армия',     delta: newState.total_troops - prevState.total_troops },
+   ];
+   ```
+
+4. Карточка закрывается: через 5 сек автоматически (прогресс-бар показывает таймер) или по кнопке "Продолжить →".
+
+**Тест Шага 52:**
+- После нажатия "Следующий ход" — карточка появляется по центру экрана.
+- Показывает дельты ресурсов с цветными +/-.
+- Прогресс-бар убывает за 5 сек.
+- Закрывается по кнопке или автоматически.
+- После закрытия фокус возвращается на карту.
+
+---
+
+### Шаг 53 — Режим сравнения регионов
+
+**Цель:** быстро сравнить два региона рядом — без переключения между ними вручную.
+
+**Что сделать:**
+
+1. В popup региона (`.ri-footer`) добавить кнопку:
+   ```html
+   <button class="ri-action-btn" onclick="pinRegionForCompare('${regionId}')">⚖ Сравнить</button>
+   ```
+
+2. При нажатии первый раз — регион "закрепляется" (`pinnedRegionId = regionId`), кнопка меняется на `⚖ Сравнивается...` (мигает).
+
+3. При клике на второй регион (если `pinnedRegionId` установлен) — вместо обычного popup открыть **панель сравнения**:
+   ```html
+   <div id="compare-panel">
+     <div class="cp-header">
+       <span>⚖ Сравнение регионов</span>
+       <button onclick="closeCompare()">✕</button>
+     </div>
+     <div class="cp-body">
+       <div class="cp-col" id="cp-left"></div>
+       <div class="cp-divider"></div>
+       <div class="cp-col" id="cp-right"></div>
+     </div>
+   </div>
+   ```
+
+4. CSS: панель 580px шириной, два столбца по 50%, расположена в центре экрана.
+
+5. JS: `renderComparePanel(regionA, regionB)`:
+   - Заполнить оба столбца одинаковым набором строк
+   - Для каждой строки — подсвечивать лучшее значение зелёным, худшее — тусклее:
+     ```js
+     const rows = ['population','garrison','fertility','wealth','buildings_count'];
+     rows.forEach(key => {
+       const better = valA[key] > valB[key] ? 'left' : 'right';
+       // добавить класс .cp-winner к лучшей ячейке
+     });
+     ```
+   - Стрелки `↑↓` у каждой метрики
+
+6. Кнопка "Сбросить" (`pinnedRegionId = null`) в шапке панели.
+
+**Тест Шага 53:**
+- Открыть popup → нажать "⚖ Сравнить" → иконка мигает.
+- Кликнуть на второй регион → открывается панель сравнения (два столбца).
+- Лучшие значения подсвечены зелёным.
+- Стрелки `↑↓` у каждой метрики корректны.
+- Закрытие панели сбрасывает `pinnedRegionId`.
+
+---
+
+## Итоговая таблица шагов 36–53
+
+| Шаг | Блок | Файл | Суть |
+|-----|------|------|------|
+| 36 | M | ui/map.js | Исправить баг потери цветов |
+| 37 | M | ui/map.js, index.html | Переработать popup региона |
+| 38 | M | ui/map.js, index.html | Скользящий индикатор вкладок |
+| 39 | N | ui/map.js | Анимированные SVG маркеры армий |
+| 40 | N | ui/map.js | Прогресс строительства на карте |
+| 41 | N | ui/map.js | Пульсирующие иконки событий |
+| 42 | O | ui/map.js | Анимированные торговые маршруты |
+| 43 | O | index.html, ui/panels.js | Экран должностей (Двор) |
+| 44 | O | ui/map.js | Стратегические уровни зума |
+| 45 | P | ui/map.js, index.html | Сезонный визуал карты |
+| 46 | P | index.html, ui/panels.js | Спарклайны трендов |
+| 47 | P | ui/map.js | Планировщик маршрутов армии |
+| 48 | Q | ui/map.js | Туман войны (разведка) |
+| 49 | Q | index.html | Граф дипломатических отношений |
+| 50 | Q | ui/map.js | Лента событий на карте |
+| 51 | R | ui/map.js | Индикаторы действий ИИ |
+| 52 | R | index.html | Карточка итога хода |
+| 53 | R | ui/map.js, index.html | Режим сравнения регионов |
+
+
+
+
+
