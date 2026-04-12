@@ -23,6 +23,9 @@ function renderLeftPanel() {
 
   // Шаг 21: после каждой перерисовки левой панели обновляем и топ-бар ресурсов
   try { updateResourceBar(GAME_STATE); } catch (e) { console.error('updateResourceBar error:', e); }
+
+  // Шаг 26: обновляем бейджи-алерты на иконках-вкладках
+  try { updateAlertBadges(GAME_STATE); } catch (e) { console.error('updateAlertBadges error:', e); }
 }
 
 // Сбор HTML всех секций; активная вкладка определяет, какие из них отрисовываются.
@@ -246,6 +249,9 @@ function renderLeftPanelTab(tabName) {
     });
   }
 
+  // Шаг 26: при открытии вкладки скрываем её бейдж-алерт
+  try { _hideAlertBadge(tabName); } catch (e) {}
+
   _renderLeftPanelContent();
 }
 
@@ -393,6 +399,139 @@ function onResourceBarClick(key) {
 if (typeof window !== 'undefined') {
   window.updateResourceBar  = updateResourceBar;
   window.onResourceBarClick = onResourceBarClick;
+}
+
+// ──────────────────────────────────────────────────────────────
+// Шаг 26 — ЗНАЧКИ-АЛЕРТЫ НА ВКЛАДКАХ ЛЕВОЙ ПАНЕЛИ
+// ──────────────────────────────────────────────────────────────
+//
+// Индикатор на иконке вкладки показывает что требует внимания:
+//   💰 economy   — дефицит казны (treasury < 0) → '!'
+//   ⚔  army     — армии без активного приказа → количество
+//   🤝 diplomacy — входящие дипломатические предложения → количество
+//   📜 laws     — идёт голосование → '!'
+//
+// Функция updateAlertBadges(state) вызывается после каждого хода.
+// При открытии вкладки (renderLeftPanelTab) бейдж этой вкладки скрывается.
+
+function _setAlertBadge(tab, value) {
+  const doc = typeof document !== 'undefined' ? document : null;
+  if (!doc || typeof doc.getElementById !== 'function') return;
+  const el = doc.getElementById('badge-' + tab);
+  if (!el) return;
+
+  // Пустое / нулевое значение → скрыть бейдж
+  const hide =
+       value === null
+    || value === undefined
+    || value === 0
+    || value === '0'
+    || value === ''
+    || value === false;
+
+  if (hide) {
+    if (el.style) el.style.display = 'none';
+    el.textContent = '';
+    return;
+  }
+
+  let text = String(value);
+  // Ограничиваем большие числа для читабельности
+  if (typeof value === 'number' && value > 99) text = '99+';
+
+  el.textContent = text;
+  if (el.style) el.style.display = 'flex';
+}
+
+function _countArmiesWithoutOrders(state, nationId) {
+  const armies = (state && Array.isArray(state.armies) ? state.armies : [])
+    .filter(a => a && a.nation === nationId && a.state !== 'disbanded');
+  if (!armies.length) return 0;
+
+  const activeOrders = (state && Array.isArray(state.orders) ? state.orders : [])
+    .filter(o => o && o.status === 'active' && o.army_id != null);
+  const busyIds = new Set(activeOrders.map(o => o.army_id));
+
+  let count = 0;
+  for (const a of armies) {
+    if (!busyIds.has(a.id)) count++;
+  }
+  return count;
+}
+
+function _countIncomingProposals(state, nationId) {
+  if (!state) return 0;
+  let count = 0;
+
+  // Главный источник: GAME_STATE.diplomatic_proposals[]
+  const proposals = Array.isArray(state.diplomatic_proposals)
+    ? state.diplomatic_proposals
+    : [];
+  for (const p of proposals) {
+    if (!p) continue;
+    if (p.to !== nationId) continue;
+    const status = p.status || 'pending';
+    if (status === 'pending') count++;
+  }
+
+  // Дополнительный источник: nation.incoming_proposals[]
+  const nation = state.nations?.[nationId];
+  if (nation && Array.isArray(nation.incoming_proposals)) {
+    for (const p of nation.incoming_proposals) {
+      if (!p) continue;
+      const status = p.status || 'pending';
+      if (status === 'pending') count++;
+    }
+  }
+
+  return count;
+}
+
+function _isLawVotingActive(state, nationId) {
+  if (!state) return false;
+  // Глобальный флаг голосования
+  if (state.law_voting && state.law_voting.active) return true;
+  if (state.active_vote && state.active_vote.law)  return true;
+
+  const nation = state.nations?.[nationId];
+  if (nation) {
+    if (nation.pending_law_vote) return true;
+    if (Array.isArray(nation.pending_laws) && nation.pending_laws.length > 0) return true;
+    if (nation.law_vote_active) return true;
+  }
+  return false;
+}
+
+function updateAlertBadges(state) {
+  if (!state) return;
+  const nationId = state.player_nation;
+  const nation   = state.nations?.[nationId];
+  if (!nation) return;
+
+  // economy: дефицит казны
+  const treasury = nation.economy?.treasury ?? 0;
+  _setAlertBadge('economy', treasury < 0 ? '!' : 0);
+
+  // army: армии без приказа
+  const idle = _countArmiesWithoutOrders(state, nationId);
+  _setAlertBadge('army', idle);
+
+  // diplomacy: входящие предложения
+  const proposals = _countIncomingProposals(state, nationId);
+  _setAlertBadge('diplomacy', proposals);
+
+  // laws: идёт голосование
+  _setAlertBadge('laws', _isLawVotingActive(state, nationId) ? '!' : 0);
+}
+
+function _hideAlertBadge(tab) {
+  _setAlertBadge(tab, 0);
+}
+
+// Экспорт в window для доступа из inline onclick и тестов
+if (typeof window !== 'undefined') {
+  window.updateAlertBadges = updateAlertBadges;
+  window._hideAlertBadge   = _hideAlertBadge;
 }
 
 function renderPopMiniWidget(pop) {

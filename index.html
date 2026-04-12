@@ -348,6 +348,7 @@
       flex-shrink: 0;
     }
     .lnav-btn {
+      position: relative;
       width: 34px;
       height: 34px;
       background: none;
@@ -369,6 +370,27 @@
       background: rgba(212,168,83,0.15);
       color: var(--text-gold);
       box-shadow: inset 2px 0 0 var(--border-gold);
+    }
+    /* Шаг 26 — значки-алерты на вкладках левой панели */
+    .lnav-badge {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      min-width: 14px;
+      height: 14px;
+      padding: 0 3px;
+      box-sizing: border-box;
+      background: #e53935;
+      border-radius: 7px;
+      font-size: 9px;
+      color: #fff;
+      font-family: sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      line-height: 1;
+      pointer-events: none;
     }
     #left-panel-content {
       flex: 1;
@@ -7829,11 +7851,11 @@
       <!-- Левая панель: статистика нации (Шаг 23 — иконки-вкладки) -->
       <div id="left-panel">
         <nav id="left-nav">
-          <button class="lnav-btn active" data-tab="overview"  title="Обзор нации" onclick="renderLeftPanelTab('overview')">🗺</button>
-          <button class="lnav-btn"        data-tab="army"      title="Армия"       onclick="renderLeftPanelTab('army')">⚔</button>
-          <button class="lnav-btn"        data-tab="economy"   title="Экономика"   onclick="renderLeftPanelTab('economy')">💰</button>
-          <button class="lnav-btn"        data-tab="diplomacy" title="Дипломатия"  onclick="renderLeftPanelTab('diplomacy')">🤝</button>
-          <button class="lnav-btn"        data-tab="laws"      title="Законы"      onclick="renderLeftPanelTab('laws')">📜</button>
+          <button class="lnav-btn active" data-tab="overview"  title="Обзор нации" onclick="renderLeftPanelTab('overview')">🗺<span class="lnav-badge" id="badge-overview"  style="display:none">0</span></button>
+          <button class="lnav-btn"        data-tab="army"      title="Армия"       onclick="renderLeftPanelTab('army')">⚔<span class="lnav-badge" id="badge-army"      style="display:none">0</span></button>
+          <button class="lnav-btn"        data-tab="economy"   title="Экономика"   onclick="renderLeftPanelTab('economy')">💰<span class="lnav-badge" id="badge-economy"   style="display:none">0</span></button>
+          <button class="lnav-btn"        data-tab="diplomacy" title="Дипломатия"  onclick="renderLeftPanelTab('diplomacy')">🤝<span class="lnav-badge" id="badge-diplomacy" style="display:none">0</span></button>
+          <button class="lnav-btn"        data-tab="laws"      title="Законы"      onclick="renderLeftPanelTab('laws')">📜<span class="lnav-badge" id="badge-laws"      style="display:none">0</span></button>
         </nav>
         <div id="left-panel-content">
           <!-- Заполняется из panels.js renderLeftPanel() -->
