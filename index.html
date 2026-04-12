@@ -305,6 +305,39 @@
       color: var(--text-dim);
       font-style: italic;
     }
+    /* Шаг 28: таблица горячих клавиш */
+    #settings-modal .hotkey-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      color: var(--text-light);
+    }
+    #settings-modal .hotkey-table th,
+    #settings-modal .hotkey-table td {
+      text-align: left;
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(212, 168, 83, 0.18);
+    }
+    #settings-modal .hotkey-table th {
+      color: var(--text-gold);
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      font-weight: normal;
+    }
+    #settings-modal .hotkey-table kbd {
+      display: inline-block;
+      min-width: 22px;
+      padding: 2px 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: var(--text-gold);
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+      text-align: center;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+    }
 
     /* Основная область */
     #main-area {
@@ -7906,7 +7939,7 @@
         <div class="res-item" id="res-food"    title="Снабжение"   onclick="onResourceBarClick('food')">🌾 <span>—</span><span class="res-delta"></span></div>
         <div class="res-item" id="res-pop"     title="Население"   onclick="onResourceBarClick('pop')">👥 <span>—</span><span class="res-delta"></span></div>
       </div>
-      <button id="end-turn-btn" onclick="processTurn()">⚔ Следующий ход</button>
+      <button id="end-turn-btn" onclick="processTurn()" title="Следующий ход [Space]">⚔ Следующий ход</button>
       <!-- Шаг 22: Иконка настроек (API ключи и пр.) -->
       <button id="settings-btn" onclick="toggleSettingsModal()" title="Настройки">⚙</button>
     </header>
@@ -8226,6 +8259,7 @@
       </div>
       <div class="sm-tabs">
         <button class="sm-tab active" data-sm-tab="keys" onclick="switchSettingsTab('keys')">🔑 API ключи</button>
+        <button class="sm-tab" data-sm-tab="hotkeys" onclick="switchSettingsTab('hotkeys')">⌨ Клавиши</button>
         <button class="sm-tab" data-sm-tab="ui" onclick="switchSettingsTab('ui')">🎨 Интерфейс</button>
       </div>
       <div class="sm-body">
@@ -8254,6 +8288,27 @@
 
             <button class="api-key-btn" style="width:100%;padding:6px;" onclick="saveInlineAPIKeys()">💾 Сохранить ключи</button>
             <div id="inline-key-status" style="font-size:10px;margin-top:4px;color:var(--text-dim);text-align:center"></div>
+          </div>
+        </div>
+        <!-- Вкладка: Горячие клавиши (Шаг 28) -->
+        <div class="sm-tab-pane" data-sm-pane="hotkeys">
+          <table class="hotkey-table">
+            <thead>
+              <tr><th>Клавиша</th><th>Действие</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><kbd>Space</kbd></td><td>Завершить ход</td></tr>
+              <tr><td><kbd>E</kbd></td><td>Вкладка «Экономика»</td></tr>
+              <tr><td><kbd>D</kbd></td><td>Вкладка «Дипломатия»</td></tr>
+              <tr><td><kbd>A</kbd></td><td>Вкладка «Армия»</td></tr>
+              <tr><td><kbd>Esc</kbd></td><td>Закрыть открытую панель / модал</td></tr>
+              <tr><td><kbd>Tab</kbd></td><td>Перейти к следующему алерту</td></tr>
+              <tr><td><kbd>M</kbd></td><td>Сменить режим карты</td></tr>
+              <tr><td><kbd>/</kbd></td><td>Фокус на поле ввода команды</td></tr>
+            </tbody>
+          </table>
+          <div class="sm-hint" style="margin-top:10px">
+            Хоткеи игнорируются, когда курсор находится в поле ввода.
           </div>
         </div>
         <!-- Вкладка: Интерфейс -->
@@ -8589,6 +8644,180 @@
     window.openSettingsModal   = openSettingsModal;
     window.closeSettingsModal  = closeSettingsModal;
     window.switchSettingsTab   = switchSettingsTab;
+
+    // ──────────────────────────────────────────
+    // Шаг 28 — Горячие клавиши
+    // ──────────────────────────────────────────
+
+    // Отображение tabName → реальная функция переключения
+    function switchLeftTab(tabName) {
+      if (typeof renderLeftPanelTab === 'function') {
+        renderLeftPanelTab(tabName);
+      }
+    }
+
+    // Фокус на поле ввода команды
+    function focusCommandInput() {
+      const inp = document.getElementById('command-input');
+      if (inp) {
+        inp.focus();
+        // Поставить курсор в конец
+        try { inp.setSelectionRange(inp.value.length, inp.value.length); } catch (e) {}
+      }
+    }
+
+    // Индекс текущего алерта для циклического перехода
+    let _alertCycleIdx = -1;
+    function focusNextAlert() {
+      // Собираем все видимые бейджи-алерты в левой навигации
+      const badges = Array.from(document.querySelectorAll('#left-nav .lnav-badge'))
+        .filter(b => b && b.style.display !== 'none');
+      if (badges.length === 0) return false;
+      _alertCycleIdx = (_alertCycleIdx + 1) % badges.length;
+      const badge = badges[_alertCycleIdx];
+      const btn = badge.closest('.lnav-btn');
+      if (btn) {
+        const tab = btn.getAttribute('data-tab');
+        if (tab) switchLeftTab(tab);
+        btn.focus();
+      }
+      return true;
+    }
+
+    // Закрыть "верхний" открытый оверлей/модал
+    function closeTopModal() {
+      // 1. Модал настроек
+      const sm = document.getElementById('settings-modal');
+      if (sm && sm.classList.contains('open')) {
+        closeSettingsModal();
+        return true;
+      }
+      // 2. Детали персонажа
+      if (typeof closeCharacterDetail === 'function') {
+        const co = document.getElementById('char-overlay');
+        if (co && co.classList && co.classList.contains('open')) {
+          closeCharacterDetail();
+          return true;
+        }
+      }
+      // 3. Голосование
+      const votingOverlay = document.getElementById('voting-overlay');
+      if (votingOverlay && votingOverlay.style.display && votingOverlay.style.display !== 'none') {
+        votingOverlay.style.display = 'none';
+        return true;
+      }
+      // 4. Popup региона
+      if (typeof closeRegionInfo === 'function') {
+        closeRegionInfo();
+      }
+      // 5. Orders panel (если открыта)
+      const op = document.getElementById('orders-panel');
+      if (op && !op.classList.contains('closed')) {
+        if (typeof toggleOrdersMini === 'function') toggleOrdersMini();
+        return true;
+      }
+      return false;
+    }
+
+    // Циклическое переключение режима карты (заглушка до Шага 29)
+    function cycleMapMode() {
+      if (typeof setMapMode === 'function' && Array.isArray(window.MAP_MODES)) {
+        const modes = window.MAP_MODES;
+        const cur = window.CURRENT_MAP_MODE || modes[0];
+        const i = modes.indexOf(cur);
+        const next = modes[(i + 1) % modes.length];
+        setMapMode(next);
+        return;
+      }
+      // До реализации Шага 29 — покажем тост-заглушку
+      if (typeof showToast === 'function') {
+        showToast('Режимы карты будут добавлены в Шаге 29', 'info');
+      }
+    }
+
+    // Главный обработчик горячих клавиш
+    function onHotkey(e) {
+      // Игнорировать модификаторы
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+      // Игнорировать ввод в полях (input, textarea, contenteditable)
+      const t = e.target;
+      if (t) {
+        const tag = (t.tagName || '').toUpperCase();
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || t.isContentEditable) {
+          // Исключение: Esc и в поле ввода → сбросить фокус
+          if (e.key === 'Escape') {
+            try { t.blur(); } catch (err) {}
+          }
+          return;
+        }
+      }
+
+      const key = e.key;
+
+      // Space → завершить ход
+      if (key === ' ' || key === 'Spacebar') {
+        e.preventDefault();
+        if (typeof processTurn === 'function') processTurn();
+        return;
+      }
+
+      // Esc → закрыть верхний модал
+      if (key === 'Escape') {
+        closeTopModal();
+        return;
+      }
+
+      // Tab → следующий алерт (только если есть алерты)
+      if (key === 'Tab') {
+        const badges = document.querySelectorAll('#left-nav .lnav-badge');
+        let hasVisible = false;
+        badges.forEach(b => { if (b.style.display !== 'none') hasVisible = true; });
+        if (hasVisible) {
+          e.preventDefault();
+          focusNextAlert();
+        }
+        return;
+      }
+
+      // / → фокус на командную строку
+      if (key === '/') {
+        e.preventDefault();
+        focusCommandInput();
+        return;
+      }
+
+      // Буквенные хоткеи — нормализуем регистр
+      const k = key.length === 1 ? key.toLowerCase() : key;
+      switch (k) {
+        case 'e':
+          e.preventDefault();
+          switchLeftTab('economy');
+          break;
+        case 'd':
+          e.preventDefault();
+          switchLeftTab('diplomacy');
+          break;
+        case 'a':
+          e.preventDefault();
+          switchLeftTab('army');
+          break;
+        case 'm':
+          e.preventDefault();
+          cycleMapMode();
+          break;
+      }
+    }
+
+    document.addEventListener('keydown', onHotkey);
+
+    // Экспорт в глобальную область
+    window.onHotkey           = onHotkey;
+    window.switchLeftTab      = switchLeftTab;
+    window.focusCommandInput  = focusCommandInput;
+    window.focusNextAlert     = focusNextAlert;
+    window.closeTopModal      = closeTopModal;
+    window.cycleMapMode       = cycleMapMode;
   </script>
 
 
