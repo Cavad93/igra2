@@ -4,6 +4,7 @@
    Шаг 4: BIOMES палитра + getBiomeColor / getBiomeAt
    Шаг 5: renderTerrain — Canvas 2D → PIXI.Texture → Sprite
    Шаг 6: parchment overlay + vignette (TilingSprite + radial gradient)
+   Шаг 8: renderRivers — Chaikin + Catmull-Rom → bezierCurveTo
    ═══════════════════════════════════════════════════════════ */
 
 /**
@@ -444,6 +445,195 @@ async function renderTerrainOverlays(app, layers, parchmentTexture) {
   return { parchment, vignette };
 }
 
+/* ─────────────────────────────────────────────────────────
+   Шаг 8 — River rendering: Chaikin smoothing + Catmull-Rom → Bezier
+
+   Цель (по arma.md):
+     Нарисовать реки как плавные кривые в layerRivers. Перед рендером
+     точки пути сглаживаются алгоритмом Chaikin (3 итерации), затем по
+     сглаженному пути строится цепочка cubic-Bezier сегментов методом
+     Catmull-Rom → Bezier — так получается кривая, проходящая через
+     ВСЕ опорные точки, без полилинии-зигзагов.
+
+   Координаты:
+     Исходные точки пути — в координатах heightmap (hm_x ∈ [0, hmW),
+     hm_y ∈ [0, hmH)). На экран они проецируются простым растяжением:
+        screenX = (hm_x / hmW) * app.screen.width
+        screenY = (hm_y / hmH) * app.screen.height
+
+   Ширина линии:
+     river.width из generateRivers() — уже "1 + len/80". Клэмпим в
+     [1, 3] px (требование из arma.md: "Ширина линии 1-3px").
+
+   Pixi.js v8 API:
+     В v8 нет lineStyle(); путь строится через moveTo/bezierCurveTo,
+     затем один раз закрашивается g.stroke({ width, color, alpha }).
+   ───────────────────────────────────────────────────────── */
+
+/**
+ * chaikinSmooth(points, iterations)
+ *
+ * Сглаживание Chaikin: на каждой итерации для каждой пары соседних
+ * точек [P0, P1] создаёт две новые — Q (75/25) и R (25/75). Крайние
+ * точки сохраняются. За 3 итерации зигзаги Perlin-потока превращаются
+ * в плавную кривую, проходящую "между" исходных вершин.
+ *
+ * @param {Array<{x:number,y:number}>} points
+ * @param {number} [iterations=3]
+ * @returns {Array<{x:number,y:number}>}
+ */
+function chaikinSmooth(points, iterations) {
+  if (!Array.isArray(points) || points.length < 3) {
+    return points ? points.slice() : [];
+  }
+  const iters = (iterations == null) ? 3 : (iterations | 0);
+  let pts = points.slice();
+  for (let k = 0; k < iters; k++) {
+    const next = new Array(2 * (pts.length - 1) + 2);
+    next[0] = pts[0];
+    let j = 1;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i];
+      const p1 = pts[i + 1];
+      next[j++] = { x: 0.75 * p0.x + 0.25 * p1.x,
+                    y: 0.75 * p0.y + 0.25 * p1.y };
+      next[j++] = { x: 0.25 * p0.x + 0.75 * p1.x,
+                    y: 0.25 * p0.y + 0.75 * p1.y };
+    }
+    next[j] = pts[pts.length - 1];
+    pts = next;
+  }
+  return pts;
+}
+
+/**
+ * mapRiverPathToScreen(path, hmW, hmH, screenW, screenH)
+ *
+ * Чистая функция: преобразует массив точек heightmap-координат в
+ * экранные координаты по простой пропорции. Ничего не рисует —
+ * нужна для тестов и для композиции с chaikinSmooth.
+ *
+ * @param {Array<{x:number,y:number}>} path
+ * @param {number} hmW
+ * @param {number} hmH
+ * @param {number} screenW
+ * @param {number} screenH
+ * @returns {Array<{x:number,y:number}>}
+ */
+function mapRiverPathToScreen(path, hmW, hmH, screenW, screenH) {
+  if (!Array.isArray(path) || path.length === 0) return [];
+  if (!(hmW > 0) || !(hmH > 0)) return [];
+  const sx = screenW / hmW;
+  const sy = screenH / hmH;
+  const out = new Array(path.length);
+  for (let i = 0; i < path.length; i++) {
+    out[i] = { x: path[i].x * sx, y: path[i].y * sy };
+  }
+  return out;
+}
+
+/**
+ * drawCatmullRomBezier(g, points)
+ *
+ * По массиву опорных точек (length >= 2) строит плавную кривую через
+ * все точки: moveTo(p[0]), затем для каждого сегмента [p[i]..p[i+1]]
+ * один cubic Bezier с контрольными точками:
+ *     B1 = p[i]   + (p[i+1] - p[i-1]) / 6
+ *     B2 = p[i+1] - (p[i+2] - p[i])   / 6
+ * (стандартная аппроксимация Catmull-Rom → Bezier).
+ * На границах "виртуальные" p[-1] = p[0] и p[n] = p[n-1].
+ *
+ * Для length === 2 вырождается в lineTo.
+ *
+ * @param {PIXI.Graphics|object} g — Pixi v8 Graphics (mockable в тестах)
+ * @param {Array<{x:number,y:number}>} points
+ */
+function drawCatmullRomBezier(g, points) {
+  const n = points.length;
+  if (n < 2) return;
+  g.moveTo(points[0].x, points[0].y);
+  if (n === 2) {
+    g.lineTo(points[1].x, points[1].y);
+    return;
+  }
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = points[i === 0 ? 0 : i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2 < n ? i + 2 : n - 1];
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    g.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+  }
+}
+
+/**
+ * renderRivers(app, layers, rivers, hmW, hmH)
+ *
+ * Рисует все реки в layers.rivers как плавные Bezier-кривые.
+ * Каждая река — отдельный PIXI.Graphics в контейнере rivers, ширина
+ * линии клэмпится в [1, 3] px. Для сглаживания применяется
+ * chaikinSmooth(path, 3), затем Catmull-Rom → Bezier.
+ *
+ * @param {PIXI.Application} app
+ * @param {{rivers: PIXI.Container}} layers
+ * @param {Array<{path:Array<{x:number,y:number}>, width:number}>} rivers
+ * @param {number} hmW  — ширина heightmap
+ * @param {number} hmH  — высота heightmap
+ * @returns {Array<PIXI.Graphics>}
+ */
+function renderRivers(app, layers, rivers, hmW, hmH) {
+  if (!app || !layers || !layers.rivers) {
+    throw new Error('[renderRivers] app/layers not initialised — call initBattleMap() first');
+  }
+  if (typeof PIXI === 'undefined' || !PIXI.Graphics) {
+    throw new Error('[renderRivers] PIXI.Graphics is not available');
+  }
+  if (!Array.isArray(rivers) || rivers.length === 0) return [];
+  if (!(hmW > 0) || !(hmH > 0)) {
+    throw new Error('[renderRivers] invalid heightmap dimensions');
+  }
+
+  const screenW = app.screen.width;
+  const screenH = app.screen.height;
+  const created = [];
+
+  for (let r = 0; r < rivers.length; r++) {
+    const river = rivers[r];
+    if (!river || !Array.isArray(river.path) || river.path.length < 2) continue;
+
+    // 1. heightmap → экран
+    const mapped = mapRiverPathToScreen(river.path, hmW, hmH, screenW, screenH);
+    // 2. Сглаживание Chaikin (3 итерации)
+    const smoothed = chaikinSmooth(mapped, 3);
+    if (smoothed.length < 2) continue;
+
+    // 3. Ширина: river.width (1 + len/80) → клэмп [1, 3]
+    let w = river.width;
+    if (!(w > 0)) w = 1;
+    if (w < 1) w = 1;
+    if (w > 3) w = 3;
+
+    // 4. Рисуем путь и закрашиваем stroke-ом (Pixi v8)
+    const g = new PIXI.Graphics();
+    drawCatmullRomBezier(g, smoothed);
+    g.stroke({
+      width: w,
+      color: 0x2a5a8a,   // тёмно-синий (arma.md Шаг 8)
+      alpha: 1.0,
+      cap:   'round',
+      join:  'round'
+    });
+
+    layers.rivers.addChild(g);
+    created.push(g);
+  }
+
+  return created;
+}
+
 /**
  * initBattleMap(containerId, width, height)
  *
@@ -551,6 +741,10 @@ if (typeof window !== 'undefined') {
   window.buildVignetteCanvas  = buildVignetteCanvas;
   window.renderVignette       = renderVignette;
   window.renderTerrainOverlays = renderTerrainOverlays;
+  window.chaikinSmooth        = chaikinSmooth;
+  window.mapRiverPathToScreen = mapRiverPathToScreen;
+  window.drawCatmullRomBezier = drawCatmullRomBezier;
+  window.renderRivers         = renderRivers;
   window.initBattleMap      = initBattleMap;
   window.destroyBattleMap   = destroyBattleMap;
 }
@@ -564,6 +758,10 @@ if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     buildVignetteCanvas,
     renderVignette,
     renderTerrainOverlays,
+    chaikinSmooth,
+    mapRiverPathToScreen,
+    drawCatmullRomBezier,
+    renderRivers,
     initBattleMap, destroyBattleMap
   };
 }
