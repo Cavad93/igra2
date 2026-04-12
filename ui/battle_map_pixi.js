@@ -1102,6 +1102,111 @@ function renderRoads(app, layers, roads, hmW, hmH) {
   return created;
 }
 
+/* ═════════════════════════════════════════════════════════════════════
+   Шаг 15 (arma.md) — renderForests:
+   Painter's algorithm (sort by Y) для индивидуальных деревьев.
+
+   Принцип:
+     1. Сортируем treePositions по возрастанию y (Painter's algorithm:
+        дальние объекты рисуются первыми, ближние перекрывают их).
+     2. Для каждой точки создаём PIXI.Graphics с 4 примитивами:
+        тень (эллипс), крона (круг), блик (круг), ствол (прямоугольник).
+     3. Устанавливаем tree.x / tree.y / tree.zIndex = screenY.
+     4. Включаем layers.forests.sortableChildren = true (Pixi отсортирует
+        детей по zIndex автоматически — это страховка к ручной сортировке
+        перед добавлением).
+
+   Координаты примитивов внутри Graphics — относительно (0, 0), потому
+   что позиция всего объекта задаётся через tree.x / tree.y. Это важно
+   для Painter's сортировки и для batch-рендера в Pixi.
+
+   Параметры спрайта точно соответствуют arma.md Шаг 15:
+     • тень:   ellipse(0, +6),  rgba(0,0,0,0.25), rx=7, ry=3
+     • крона:  circle(0, 0),    0x1a3a14,         r=8
+     • блик:   circle(-3, -3),  0x2d5a24, α=0.6,  r=4
+     • ствол:  rect(-1.5, +5),  0x4a2800,         3×5
+   ═════════════════════════════════════════════════════════════════════ */
+
+/**
+ * renderForests(app, layers, treePositions, hmW, hmH)
+ *
+ * Рисует индивидуальные деревья в layers.forests с правильным
+ * перекрытием по Painter's algorithm (zIndex = screenY).
+ *
+ * @param {PIXI.Application} app
+ * @param {{forests: PIXI.Container}} layers
+ * @param {Array<{x:number,y:number}>} treePositions — позиции в координатах
+ *        heightmap (как возвращает poissonDisk).
+ * @param {number} hmW — ширина heightmap
+ * @param {number} hmH — высота heightmap
+ * @returns {Array<PIXI.Graphics>} массив созданных Graphics-объектов
+ *          (по одному на дерево).
+ */
+function renderForests(app, layers, treePositions, hmW, hmH) {
+  if (!app || !layers || !layers.forests) {
+    throw new Error('[renderForests] app/layers not initialised — call initBattleMap() first');
+  }
+  if (typeof PIXI === 'undefined' || !PIXI.Graphics) {
+    throw new Error('[renderForests] PIXI.Graphics is not available');
+  }
+  if (!Array.isArray(treePositions) || treePositions.length === 0) return [];
+  if (!(hmW > 0) || !(hmH > 0)) {
+    throw new Error('[renderForests] invalid heightmap dimensions');
+  }
+
+  // Painter's algorithm: ближние (большой y) рисуются ПОСЛЕ дальних,
+  // поэтому сортируем по возрастанию y. Создаём копию, чтобы не
+  // мутировать вход.
+  var sorted = treePositions.slice().sort(function(a, b) { return a.y - b.y; });
+
+  // Включаем сортировку по zIndex — в Pixi v8 это перерисовывает
+  // детей по zIndex при каждом render(). Дешёвая страховка на случай,
+  // если кто-то добавит дерево после первичного рендера.
+  layers.forests.sortableChildren = true;
+
+  var screenW = app.screen.width;
+  var screenH = app.screen.height;
+  var sx = screenW / hmW;
+  var sy = screenH / hmH;
+
+  var created = [];
+
+  for (var i = 0; i < sorted.length; i++) {
+    var pt = sorted[i];
+    if (!pt || typeof pt.x !== 'number' || typeof pt.y !== 'number') continue;
+
+    var screenX = pt.x * sx;
+    var screenY = pt.y * sy;
+
+    var g = new PIXI.Graphics();
+
+    // a. Тень — эллипс (0, +6), rx=7, ry=3, rgba(0,0,0,0.25)
+    g.ellipse(0, 6, 7, 3);
+    g.fill({ color: 0x000000, alpha: 0.25 });
+
+    // b. Крона — круг (0, 0), r=8, 0x1a3a14
+    g.circle(0, 0, 8);
+    g.fill({ color: 0x1a3a14, alpha: 1.0 });
+
+    // c. Блик кроны — круг (-3, -3), r=4, 0x2d5a24, α=0.6
+    g.circle(-3, -3, 4);
+    g.fill({ color: 0x2d5a24, alpha: 0.6 });
+
+    // d. Ствол — прямоугольник (-1.5, +5), 3×5, 0x4a2800
+    g.rect(-1.5, 5, 3, 5);
+    g.fill({ color: 0x4a2800, alpha: 1.0 });
+
+    g.x = screenX;
+    g.y = screenY;
+    g.zIndex = screenY;
+
+    layers.forests.addChild(g);
+    created.push(g);
+  }
+
+  return created;
+}
+
 /**
  * initBattleMap(containerId, width, height)
  *
@@ -1221,6 +1326,7 @@ if (typeof window !== 'undefined') {
   window.chaikin            = chaikin;
   window.drawPolyline       = drawPolyline;
   window.renderRoads        = renderRoads;
+  window.renderForests      = renderForests;
   window.initBattleMap      = initBattleMap;
   window.destroyBattleMap   = destroyBattleMap;
 }
@@ -1246,6 +1352,7 @@ if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     chaikin,
     drawPolyline,
     renderRoads,
+    renderForests,
     initBattleMap, destroyBattleMap
   };
 }
