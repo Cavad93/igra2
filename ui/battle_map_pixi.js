@@ -1493,6 +1493,13 @@ function renderUnit(battalion, app, layers, hmW, hmH) {
   container._blockG = blockG;
   container._iconG  = iconG;
   container._hpG    = hpG;
+  container._selectionG = null;
+
+  // arma.md Шаг 18 — интерактивность по-умолчанию.
+  // Настоящий обработчик pointerdown подключается в
+  // attachBattleMapInteractions(state) — там есть ссылка на state.
+  container.interactive = true;
+  container.eventMode   = 'static';
 
   layers.units.addChild(container);
   return container;
@@ -1524,6 +1531,357 @@ function renderAllUnits(battalions, app, layers, hmW, hmH) {
     created.push(renderUnit(b, app, layers, hmW, hmH));
   }
   return created;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// arma.md Шаг 18 — Взаимодействие: выбор и движение юнитов
+//
+// Public API:
+//   createBattleMapState({ app, layers, battalions, containers, hmW, hmH })
+//   attachBattleMapInteractions(state)
+//   selectBattalion(id, state)
+//   deselectAll(state)
+//   onMapClick(globalPos, state)
+//   redrawUnit(battalion, container, app, hmW, hmH)
+//   stepBattleMapAnimations(state, delta)
+//
+// Чеклист (arma.md Шаг 18):
+//   [1] renderUnit делает контейнер интерактивным
+//       (interactive=true, eventMode='static').
+//   [2] selectBattalion(id): снимает выделение с предыдущего юнита,
+//       ставит isSelected = true, рисует пульсирующий жёлтый контур.
+//   [3] onMapClick(e.global): если выбран — ставим цель движения
+//       в state.moves[id], плавно лерпаем x, y.
+//   [4] stepBattleMapAnimations(state, delta): двигает юнитов по lerp,
+//       обновляет zIndex = container.y (Painter's algorithm).
+//   [5] redrawUnit(battalion, container): пересоздаёт Graphics
+//       (блок, иконка, HP) + при желании обновляет позицию.
+// ══════════════════════════════════════════════════════════════════════
+
+var SELECTION_OUTLINE_COLOR = 0xffcc00; // жёлтый
+
+/**
+ * _drawSelectionOutline(g)
+ *
+ * Рисует жёлтый ромбический контур чуть больше ромба юнита.
+ * Контур — stroke, чтобы можно было мигать через alpha.
+ */
+function _drawSelectionOutline(g) {
+  var hw = UNIT_DIAMOND_W / 2 + 3;
+  var hh = UNIT_DIAMOND_H / 2 + 3;
+  g.moveTo(0,   -hh);
+  g.lineTo(hw,   0);
+  g.lineTo(0,    hh);
+  g.lineTo(-hw,  0);
+  g.lineTo(0,   -hh);
+  g.stroke({ width: 2, color: SELECTION_OUTLINE_COLOR, alpha: 1.0 });
+}
+
+function _addSelectionOutline(container) {
+  if (!container) return null;
+  if (container._selectionG) return container._selectionG;
+  if (typeof PIXI === 'undefined' || !PIXI.Graphics) return null;
+  var g = new PIXI.Graphics();
+  _drawSelectionOutline(g);
+  g.alpha = 1.0;
+  container._selectionG = g;
+  if (typeof container.addChild === 'function') {
+    container.addChild(g);
+  } else if (container.children && container.children.push) {
+    container.children.push(g);
+  }
+  return g;
+}
+
+function _removeSelectionOutline(container) {
+  if (!container || !container._selectionG) return;
+  var g = container._selectionG;
+  if (container.children && container.children.length) {
+    var idx = container.children.indexOf(g);
+    if (idx >= 0) container.children.splice(idx, 1);
+  }
+  try {
+    if (typeof g.destroy === 'function') g.destroy();
+  } catch (_) { /* noop */ }
+  container._selectionG = null;
+}
+
+/**
+ * createBattleMapState(opts)
+ *
+ * Собирает объект-состояние тактической карты, объединяющий батальоны,
+ * их контейнеры, ссылки на app/layers и словарь анимаций.
+ *
+ * @param {{ app:any, layers:any, battalions:Array, containers:Array,
+ *           hmW:number, hmH:number }} opts
+ * @returns {object} state
+ */
+function createBattleMapState(opts) {
+  if (!opts || typeof opts !== 'object') {
+    throw new Error('[createBattleMapState] opts required');
+  }
+  var app        = opts.app;
+  var layers     = opts.layers;
+  var battalions = Array.isArray(opts.battalions) ? opts.battalions : [];
+  var containers = Array.isArray(opts.containers) ? opts.containers : [];
+  var hmW        = opts.hmW;
+  var hmH        = opts.hmH;
+
+  if (battalions.length !== containers.length) {
+    throw new Error('[createBattleMapState] battalions.length != containers.length');
+  }
+
+  var units = {};
+  for (var i = 0; i < battalions.length; i++) {
+    var b = battalions[i];
+    var c = containers[i];
+    if (!b || typeof b.id !== 'string') {
+      throw new Error('[createBattleMapState] battalion without id at index ' + i);
+    }
+    units[b.id] = { battalion: b, container: c };
+  }
+
+  return {
+    app:        app,
+    layers:     layers,
+    hmW:        hmW,
+    hmH:        hmH,
+    battalions: battalions,
+    units:      units,
+    selectedId: null,
+    moves:      {},                // id → { startX, startY, targetX, targetY, t }
+    pulse:      { phase: 0, alpha: 1 }
+  };
+}
+
+/**
+ * attachBattleMapInteractions(state)
+ *
+ * Подключает pointerdown-обработчики:
+ *  • на каждый контейнер юнита → selectBattalion(id, state)
+ *  • на app.stage → onMapClick(e.global, state) (если событие не
+ *    помечено _unitHandled).
+ *
+ * Безопасно вызывать в тестовых окружениях, где у контейнеров нет
+ * метода .on() — такие объекты просто пропускаются.
+ */
+function attachBattleMapInteractions(state) {
+  if (!state || !state.units) return;
+
+  Object.keys(state.units).forEach(function(id) {
+    var unit = state.units[id];
+    var container = unit && unit.container;
+    if (!container) return;
+    container.interactive = true;
+    container.eventMode   = 'static';
+    if (typeof container.on === 'function') {
+      container.on('pointerdown', function(e) {
+        if (e) {
+          e._unitHandled = true;
+          if (typeof e.stopPropagation === 'function') {
+            try { e.stopPropagation(); } catch (_) { /* noop */ }
+          }
+        }
+        selectBattalion(id, state);
+      });
+    }
+  });
+
+  var stage = state.app && state.app.stage;
+  if (stage) {
+    if ('eventMode' in stage) stage.eventMode = 'static';
+    if (typeof stage.on === 'function') {
+      stage.on('pointerdown', function(e) {
+        if (e && e._unitHandled) return;
+        if (state.selectedId == null) return;
+        var g = e && e.global ? e.global : { x: 0, y: 0 };
+        onMapClick(g, state);
+      });
+    }
+  }
+}
+
+/**
+ * selectBattalion(id, state)
+ *
+ * Снимает предыдущее выделение, ставит isSelected=true у выбранного
+ * батальона, добавляет пульсирующий жёлтый контур.
+ *
+ * Клик по несуществующему id — no-op.
+ */
+function selectBattalion(id, state) {
+  if (!state || !state.units) return;
+  var unit = state.units[id];
+  if (!unit) return;
+
+  // Deselect previous
+  if (state.selectedId != null && state.units[state.selectedId]) {
+    var prev = state.units[state.selectedId];
+    if (prev.battalion) prev.battalion.isSelected = false;
+    _removeSelectionOutline(prev.container);
+  }
+
+  if (unit.battalion) unit.battalion.isSelected = true;
+  state.selectedId = id;
+  _addSelectionOutline(unit.container);
+}
+
+/**
+ * deselectAll(state)
+ *
+ * Сбрасывает выделение без выбора нового юнита.
+ */
+function deselectAll(state) {
+  if (!state) return;
+  if (state.selectedId != null && state.units && state.units[state.selectedId]) {
+    var prev = state.units[state.selectedId];
+    if (prev.battalion) prev.battalion.isSelected = false;
+    _removeSelectionOutline(prev.container);
+  }
+  state.selectedId = null;
+}
+
+/**
+ * onMapClick(globalPos, state)
+ *
+ * Если есть выбранный юнит — ставит цель движения в state.moves[id].
+ * Координаты клика — в пиксельном пространстве экрана; внутри
+ * пересчитываются обратно в координаты heightmap для battalion.x/y.
+ *
+ * @returns {object|null} описание move-анимации или null, если движение
+ *                       невозможно (нет выделения / невалидные размеры).
+ */
+function onMapClick(globalPos, state) {
+  if (!state || state.selectedId == null) return null;
+  if (!globalPos || typeof globalPos.x !== 'number' || typeof globalPos.y !== 'number') {
+    return null;
+  }
+  var unit = state.units[state.selectedId];
+  if (!unit || !unit.container || !unit.battalion) return null;
+
+  var app = state.app;
+  var screenW = app && app.screen ? app.screen.width  : 0;
+  var screenH = app && app.screen ? app.screen.height : 0;
+  if (!(screenW > 0) || !(screenH > 0) || !(state.hmW > 0) || !(state.hmH > 0)) {
+    return null;
+  }
+
+  var sx = screenW / state.hmW;
+  var sy = screenH / state.hmH;
+
+  // Clamp target внутрь экрана.
+  var tx = globalPos.x;
+  var ty = globalPos.y;
+  if (tx < 0) tx = 0;
+  if (ty < 0) ty = 0;
+  if (tx > screenW) tx = screenW;
+  if (ty > screenH) ty = screenH;
+
+  // Обновляем координаты батальона (heightmap-space) сразу —
+  // визуальный контейнер догонит их анимацией.
+  unit.battalion.x = tx / sx;
+  unit.battalion.y = ty / sy;
+
+  var move = {
+    startX:  unit.container.x,
+    startY:  unit.container.y,
+    targetX: tx,
+    targetY: ty,
+    t:       0
+  };
+  state.moves[state.selectedId] = move;
+  return move;
+}
+
+/**
+ * redrawUnit(battalion, container, app, hmW, hmH)
+ *
+ * Перерисовывает Graphics-дочерние элементы контейнера (блок, иконка,
+ * HP-бар) по текущим значениям battalion. Если переданы app/hmW/hmH —
+ * также пересчитывает container.x/y и zIndex.
+ *
+ * @param {Battalion} battalion
+ * @param {PIXI.Container} container
+ * @param {PIXI.Application} [app]
+ * @param {number} [hmW]
+ * @param {number} [hmH]
+ * @returns {PIXI.Container}
+ */
+function redrawUnit(battalion, container, app, hmW, hmH) {
+  if (!battalion) throw new Error('[redrawUnit] battalion required');
+  if (!container) throw new Error('[redrawUnit] container required');
+
+  if (container._blockG && typeof container._blockG.clear === 'function') {
+    container._blockG.clear();
+    _drawUnitDiamond(container._blockG, battalion.side);
+  }
+  if (container._iconG && typeof container._iconG.clear === 'function') {
+    container._iconG.clear();
+    _drawUnitIcon(container._iconG, battalion.unitType);
+  }
+  if (container._hpG && typeof container._hpG.clear === 'function') {
+    container._hpG.clear();
+    _drawUnitHpBar(container._hpG, battalion.health, battalion.maxHealth);
+  }
+
+  if (app && app.screen && hmW > 0 && hmH > 0) {
+    var sx = app.screen.width  / hmW;
+    var sy = app.screen.height / hmH;
+    container.x = battalion.x * sx;
+    container.y = battalion.y * sy;
+    container.zIndex = container.y;
+  }
+
+  return container;
+}
+
+/**
+ * stepBattleMapAnimations(state, delta)
+ *
+ * Advance per-frame анимации тактической карты: движение юнитов и
+ * пульсация жёлтого контура выделения.
+ *
+ * @param {object} state
+ * @param {number} delta — коэффициент от Pixi ticker
+ *                         (1.0 на 60Гц; в тестах можно передавать произвольный).
+ */
+function stepBattleMapAnimations(state, delta) {
+  if (!state) return;
+  if (typeof delta !== 'number' || !isFinite(delta) || delta < 0) delta = 0;
+
+  // 1) Пульс контура.
+  state.pulse.phase = (state.pulse.phase + delta * 0.05) % 1;
+  state.pulse.alpha = 0.5 + 0.5 * Math.sin(state.pulse.phase * Math.PI * 2);
+
+  if (state.selectedId != null && state.units && state.units[state.selectedId]) {
+    var selected = state.units[state.selectedId];
+    if (selected.container && selected.container._selectionG) {
+      selected.container._selectionG.alpha = state.pulse.alpha;
+    }
+  }
+
+  // 2) Движение юнитов (lerp, t += delta * 0.05).
+  if (!state.moves) return;
+  var ids = Object.keys(state.moves);
+  for (var i = 0; i < ids.length; i++) {
+    var id = ids[i];
+    var m  = state.moves[id];
+    var u  = state.units ? state.units[id] : null;
+    if (!u || !u.container) { delete state.moves[id]; continue; }
+
+    m.t += delta * 0.05;
+    if (m.t > 1) m.t = 1;
+
+    var c = u.container;
+    c.x = m.startX + (m.targetX - m.startX) * m.t;
+    c.y = m.startY + (m.targetY - m.startY) * m.t;
+    c.zIndex = c.y;
+
+    if (m.t >= 1) {
+      // Синхронизация — battalion.x уже был выставлен в onMapClick.
+      delete state.moves[id];
+    }
+  }
 }
 
 /**
@@ -1648,6 +2006,13 @@ if (typeof window !== 'undefined') {
   window.renderForests      = renderForests;
   window.renderUnit         = renderUnit;
   window.renderAllUnits     = renderAllUnits;
+  window.createBattleMapState       = createBattleMapState;
+  window.attachBattleMapInteractions = attachBattleMapInteractions;
+  window.selectBattalion             = selectBattalion;
+  window.deselectAll                 = deselectAll;
+  window.onMapClick                  = onMapClick;
+  window.redrawUnit                  = redrawUnit;
+  window.stepBattleMapAnimations     = stepBattleMapAnimations;
   window.initBattleMap      = initBattleMap;
   window.destroyBattleMap   = destroyBattleMap;
 }
@@ -1676,6 +2041,13 @@ if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     renderForests,
     renderUnit,
     renderAllUnits,
+    createBattleMapState,
+    attachBattleMapInteractions,
+    selectBattalion,
+    deselectAll,
+    onMapClick,
+    redrawUnit,
+    stepBattleMapAnimations,
     initBattleMap, destroyBattleMap
   };
 }
