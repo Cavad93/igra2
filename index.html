@@ -1617,8 +1617,82 @@
       min-width: 0;
       border-right: 1px solid var(--border-gold);
       overflow: hidden;
-      padding: 6px 8px;
+      padding: 0;
     }
+
+    /* Шаг 24 — двухрежимный лог-drawer */
+    #event-log.collapsed {
+      height: 32px;
+      overflow: hidden;
+      transition: height 0.2s ease;
+    }
+    #event-log.expanded {
+      height: 180px;
+      overflow: hidden;
+      transition: height 0.2s ease;
+    }
+    #event-log.collapsed .log-title,
+    #event-log.collapsed #log-entries { display: none; }
+    #event-log.expanded  #log-collapsed { display: none; }
+
+    #log-collapsed {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      height: 32px;
+      font-size: 11px;
+      color: var(--text-light);
+    }
+    #log-last-entry {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-light);
+    }
+    #log-counters {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .log-cnt {
+      font-size: 11px;
+      color: var(--text-dim);
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: rgba(0,0,0,0.2);
+    }
+    .log-cnt b { color: var(--text-light); font-weight: bold; }
+    .log-cnt.pulse {
+      animation: logCntPulse 0.5s ease-in-out 0s 4;
+      color: #ef5350;
+    }
+    @keyframes logCntPulse {
+      0%, 100% { background: rgba(0,0,0,0.2); }
+      50%      { background: rgba(229,57,53,0.6); }
+    }
+    #log-expand-btn {
+      flex-shrink: 0;
+      height: 24px;
+      padding: 0 10px;
+      background: rgba(139,69,19,0.2);
+      border: 1px solid var(--border-gold);
+      color: var(--text-light);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 11px;
+      border-radius: 3px;
+    }
+    #log-expand-btn:hover { background: rgba(139,69,19,0.4); }
+    #log-expand-btn.open  { background: rgba(139,69,19,0.45); }
+
+    #event-log.expanded .log-title,
+    #event-log.expanded #log-entries {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+    #event-log.expanded .log-title { padding-top: 6px; }
 
     .log-title {
       font-size: 11px;
@@ -7805,8 +7879,19 @@
          НИЖНЯЯ СТРОКА: ЛОГ + ВВОД
     ═══════════════════════════ -->
     <footer id="bottom-area">
-      <!-- Лог событий -->
-      <div id="event-log">
+      <!-- Лог событий — Шаг 24: drawer (свёрнутый/развёрнутый) -->
+      <div id="event-log" class="collapsed">
+        <!-- Свёрнутый вид: одна строка 32px -->
+        <div id="log-collapsed">
+          <span id="log-last-entry">—</span>
+          <div id="log-counters">
+            <span class="log-cnt" data-filter="danger">⚠ <b>0</b></span>
+            <span class="log-cnt" data-filter="economy">💰 <b>0</b></span>
+            <span class="log-cnt" data-filter="character">👤 <b>0</b></span>
+          </div>
+          <button id="log-expand-btn" onclick="toggleLog()">▲ Хроники</button>
+        </div>
+        <!-- Развёрнутый вид: заголовок + список -->
         <div class="log-title">
           ⚔ Хроники
           <button class="log-filter-btn active" data-filter="all"     onclick="setLogFilter('all')">Все</button>

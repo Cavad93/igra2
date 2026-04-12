@@ -21,6 +21,9 @@ const LOG_STYLES = {
   achievement: { icon: '🏆', cls: 'log-achievement' },
 };
 
+// Шаг 24 — счётчики по категориям (для свёрнутого вида #log-collapsed)
+const _LOG_COUNTERS = { danger: 0, economy: 0, character: 0 };
+
 // Добавить запись в лог
 function addEventLog(message, type = 'info') {
   const entry = {
@@ -41,8 +44,75 @@ function addEventLog(message, type = 'info') {
     }
   }
 
+  // Шаг 24: обновляем счётчики по категориям и последнюю строку
+  if (type === 'danger' || type === 'economy' || type === 'character') {
+    _LOG_COUNTERS[type] = (_LOG_COUNTERS[type] ?? 0) + 1;
+  }
+  updateLogCollapsed(entry);
+
   // Обновляем DOM сразу
   renderLog();
+}
+
+// Шаг 24 — обновить свёрнутый вид (последнее событие + счётчики)
+function updateLogCollapsed(lastEntry) {
+  if (typeof document === 'undefined') return;
+
+  // Последняя строка
+  const lastEl = document.getElementById('log-last-entry');
+  if (lastEl && lastEntry) {
+    const style = LOG_STYLES[lastEntry.type] || LOG_STYLES.info;
+    lastEl.textContent = `${style.icon} ${lastEntry.message}`;
+    lastEl.setAttribute('data-type', lastEntry.type);
+  }
+
+  // Счётчики
+  const countersEl = document.getElementById('log-counters');
+  if (countersEl) {
+    countersEl.querySelectorAll('.log-cnt').forEach(cnt => {
+      const f = cnt.getAttribute('data-filter');
+      const b = cnt.querySelector('b');
+      if (b) b.textContent = String(_LOG_COUNTERS[f] ?? 0);
+    });
+
+    // Импульс-анимация для danger при появлении нового danger-события
+    if (lastEntry && lastEntry.type === 'danger') {
+      const dangerCnt = countersEl.querySelector('.log-cnt[data-filter="danger"]');
+      if (dangerCnt) {
+        dangerCnt.classList.remove('pulse');
+        // reflow чтобы перезапустить CSS-анимацию
+        // eslint-disable-next-line no-unused-expressions
+        void dangerCnt.offsetWidth;
+        dangerCnt.classList.add('pulse');
+        setTimeout(() => dangerCnt.classList.remove('pulse'), 2000);
+      }
+    }
+  }
+}
+
+// Шаг 24 — переключить свёрнутый/развёрнутый режим лога
+function toggleLog() {
+  if (typeof document === 'undefined') return;
+  const logEl = document.getElementById('event-log');
+  const btn = document.getElementById('log-expand-btn');
+  if (!logEl) return;
+
+  const isCollapsed = logEl.classList.contains('collapsed') || !logEl.classList.contains('expanded');
+  if (isCollapsed) {
+    logEl.classList.remove('collapsed');
+    logEl.classList.add('expanded');
+    if (btn) {
+      btn.classList.add('open');
+      btn.textContent = '▼ Хроники';
+    }
+  } else {
+    logEl.classList.remove('expanded');
+    logEl.classList.add('collapsed');
+    if (btn) {
+      btn.classList.remove('open');
+      btn.textContent = '▲ Хроники';
+    }
+  }
 }
 
 // Отрисовать лог
@@ -62,6 +132,14 @@ function renderLog() {
       </div>
     `;
   }).join('');
+}
+
+// Экспорт в глобальную область — чтобы onclick в HTML видели функции
+if (typeof window !== 'undefined') {
+  window.addEventLog      = addEventLog;
+  window.renderLog        = renderLog;
+  window.toggleLog        = toggleLog;
+  window.updateLogCollapsed = updateLogCollapsed;
 }
 
 // Экранирование HTML для безопасного вывода
