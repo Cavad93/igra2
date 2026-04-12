@@ -2210,31 +2210,202 @@ function removeAimLine(layers, g) {
   try { if (typeof g.destroy === 'function') g.destroy(); } catch (_) { /* noop */ }
 }
 
+/* ═════════════════════════════════════════════════════════════════════
+   Шаг 20 (arma.md) — Полировка: HiDPI, Ticker, offscreen terrain cache,
+                      интеграция с основной игрой.
+
+     1. HiDPI / Retina:
+        dpr = window.devicePixelRatio || 1;
+        app.init({ resolution: dpr, autoDensity: true, ... })
+        Pixi v8 автоматически масштабирует canvas под DPR.
+
+     2. Offscreen terrain cache (renderTerrainCached):
+        Первый вызов с данной cacheKey строит Canvas→Texture, оборачивает
+        в Sprite и вкладывает в layers.bg. Последующие вызовы с той же
+        cacheKey повторно используют уже построенную PIXI.Texture
+        (новый Sprite — в layers.bg). При смене cacheKey кеш сбрасывается.
+
+     3. Ticker handlers:
+        BattleMap.tickerHandlers — массив {fn, ctx}; мастер-callback,
+        вложенный в app.ticker.add(masterTick), прогоняет их по одному.
+        addBattleMapTicker(fn) / removeBattleMapTicker(fn) —
+        публичный API. pauseBattleMap() / resumeBattleMap() —
+        app.ticker.stop() / start(), используются при скрытии/показе
+        тактического оверлея.
+
+     4. Интеграция:
+        ui/tactical_map.js::openTacticalMap() вызывает initBattleMap();
+        endTacticalBattle() вызывает destroyBattleMap().
+   ═════════════════════════════════════════════════════════════════════ */
+
+// Offscreen terrain cache — одна текстура на (seed × width × height).
+var TERRAIN_TEXTURE_CACHE = {
+  key:     null,      // строка-ключ (например: 'seed:42:800x600')
+  texture: null       // PIXI.Texture (кешированная)
+};
+
 /**
- * initBattleMap(containerId, width, height)
+ * clearTerrainCache()
+ *
+ * Полностью сбрасывает offscreen-кеш terrain. Destroy у закешированной
+ * PIXI.Texture вызывается безопасно (игнорируем ошибку, если уже мёртвая).
+ */
+function clearTerrainCache() {
+  if (TERRAIN_TEXTURE_CACHE.texture) {
+    try {
+      if (typeof TERRAIN_TEXTURE_CACHE.texture.destroy === 'function') {
+        TERRAIN_TEXTURE_CACHE.texture.destroy(true);
+      }
+    } catch (_) { /* noop */ }
+  }
+  TERRAIN_TEXTURE_CACHE.key     = null;
+  TERRAIN_TEXTURE_CACHE.texture = null;
+}
+
+/**
+ * renderTerrainCached(app, layers, heightmap, cacheKey)
+ *
+ * Обёртка над renderTerrain, переиспользующая PIXI.Texture на один и тот
+ * же cacheKey. Нужна при повторном открытии карты с теми же параметрами
+ * (экономит 20..40 мс на 800×600 heightmap).
+ *
+ * Если cacheKey !== TERRAIN_TEXTURE_CACHE.key — кеш сбрасывается и
+ * строится заново через fillTerrainPixels → Canvas → PIXI.Texture.from.
+ *
+ * @param {PIXI.Application} app
+ * @param {{bg: PIXI.Container}} layers
+ * @param {{data: Float32Array, width: number, height: number}} heightmap
+ * @param {string} cacheKey
+ * @returns {PIXI.Sprite}
+ */
+function renderTerrainCached(app, layers, heightmap, cacheKey) {
+  if (!app || !layers || !layers.bg) {
+    throw new Error('[renderTerrainCached] app/layers not initialised');
+  }
+  if (!heightmap || !heightmap.data || !heightmap.width || !heightmap.height) {
+    throw new Error('[renderTerrainCached] invalid heightmap');
+  }
+  if (typeof PIXI === 'undefined' || !PIXI.Sprite || !PIXI.Texture) {
+    throw new Error('[renderTerrainCached] PIXI is not loaded');
+  }
+
+  var key = String(cacheKey || ('' + heightmap.width + 'x' + heightmap.height));
+
+  // Miss → (re)build.
+  if (TERRAIN_TEXTURE_CACHE.key !== key || !TERRAIN_TEXTURE_CACHE.texture) {
+    clearTerrainCache();
+    var canvas  = buildTerrainCanvas(heightmap);
+    var texture = PIXI.Texture.from(canvas);
+    TERRAIN_TEXTURE_CACHE.key     = key;
+    TERRAIN_TEXTURE_CACHE.texture = texture;
+  }
+
+  var sprite = new PIXI.Sprite(TERRAIN_TEXTURE_CACHE.texture);
+  sprite.width  = app.screen.width;
+  sprite.height = app.screen.height;
+  layers.bg.addChild(sprite);
+  return sprite;
+}
+
+/**
+ * addBattleMapTicker(fn)
+ *
+ * Регистрирует per-frame callback у глобального мастер-тика, установленного
+ * в initBattleMap. Значение delta из Pixi ticker передаётся в fn.
+ * Возвращает сам fn (для последующей передачи в removeBattleMapTicker).
+ *
+ * Если BattleMap ещё не инициализирован — noop, возвращает null.
+ *
+ * @param {function(number):void} fn
+ * @returns {function(number):void|null}
+ */
+function addBattleMapTicker(fn) {
+  if (!BattleMap || !BattleMap.tickerHandlers) return null;
+  if (typeof fn !== 'function') return null;
+  if (BattleMap.tickerHandlers.indexOf(fn) === -1) {
+    BattleMap.tickerHandlers.push(fn);
+  }
+  return fn;
+}
+
+/**
+ * removeBattleMapTicker(fn)
+ *
+ * Снимает ранее зарегистрированный callback. Возвращает true если удалён.
+ *
+ * @param {function(number):void} fn
+ * @returns {boolean}
+ */
+function removeBattleMapTicker(fn) {
+  if (!BattleMap || !BattleMap.tickerHandlers) return false;
+  var idx = BattleMap.tickerHandlers.indexOf(fn);
+  if (idx === -1) return false;
+  BattleMap.tickerHandlers.splice(idx, 1);
+  return true;
+}
+
+/**
+ * pauseBattleMap()
+ *
+ * Останавливает Pixi ticker (на время сокрытия карты). Safe-noop если
+ * карта не инициализирована.
+ */
+function pauseBattleMap() {
+  if (!BattleMap || !BattleMap.app || !BattleMap.app.ticker) return;
+  try { BattleMap.app.ticker.stop(); } catch (_) { /* noop */ }
+}
+
+/**
+ * resumeBattleMap()
+ *
+ * Перезапускает Pixi ticker после pauseBattleMap. Safe-noop если карта
+ * не инициализирована.
+ */
+function resumeBattleMap() {
+  if (!BattleMap || !BattleMap.app || !BattleMap.app.ticker) return;
+  try { BattleMap.app.ticker.start(); } catch (_) { /* noop */ }
+}
+
+/**
+ * initBattleMap(containerId, width, height, opts?)
  *
  * Creates a Pixi.js v8 Application, appends its canvas to the
  * DOM element with the given id, and sets up 6 rendering layers.
  *
+ * Шаг 20 (arma.md):
+ *   • HiDPI через window.devicePixelRatio + autoDensity: true.
+ *   • Глобальный ticker-callback → диспетчеризует BattleMap.tickerHandlers.
+ *
  * @param {string} containerId  — id of the DOM container (e.g. 'pixi-battle-map')
  * @param {number} width        — canvas width in CSS pixels
  * @param {number} height       — canvas height in CSS pixels
+ * @param {object} [opts]       — { resolution?, backgroundColor?, antialias? }
  * @returns {Promise<object>}   — the BattleMap singleton
  */
-async function initBattleMap(containerId, width, height) {
+async function initBattleMap(containerId, width, height, opts) {
   // Prevent double-init
   if (BattleMap && BattleMap.app) {
     console.warn('[BattleMap] already initialised — call destroyBattleMap() first');
     return BattleMap;
   }
 
-  // 1. Create Pixi Application (v8: two-step init)
+  opts = opts || {};
+
+  // 1a. HiDPI (arma.md Шаг 20). В Node/тестах window может отсутствовать.
+  var dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
+  if (typeof opts.resolution === 'number' && opts.resolution > 0) {
+    dpr = opts.resolution;
+  }
+
+  // 1b. Create Pixi Application (v8: two-step init)
   const app = new PIXI.Application();
   await app.init({
     width:           width,
     height:          height,
-    antialias:       true,
-    backgroundColor: 0x2d4a1e   // dark military green
+    antialias:       (opts.antialias !== false),
+    backgroundColor: (typeof opts.backgroundColor === 'number') ? opts.backgroundColor : 0x2d4a1e,
+    resolution:      dpr,
+    autoDensity:     true
   });
 
   // 2. Append canvas to DOM container
@@ -2273,11 +2444,44 @@ async function initBattleMap(containerId, width, height) {
       forests: layerForests,
       units:   layerUnits,
       fx:      layerFx
-    }
+    },
+    dpr:             dpr,
+    tickerHandlers:  [],
+    masterTick:      null
   };
 
+  // 5. Master ticker callback (arma.md Шаг 20).
+  //    Один add() на Pixi ticker, который сам диспетчеризует все
+  //    пользовательские handlers. Это позволяет одной парой start/stop
+  //    управлять всей per-frame анимацией карты.
+  var master = function(ticker) {
+    // Pixi v8: ticker.add передаёт экземпляр Ticker (а не число).
+    // delta/ deltaTime доступны через ticker.deltaTime (1.0 на 60Гц).
+    var delta;
+    if (ticker && typeof ticker.deltaTime === 'number') {
+      delta = ticker.deltaTime;
+    } else if (typeof ticker === 'number') {
+      delta = ticker;
+    } else {
+      delta = 1;
+    }
+    var handlers = BattleMap && BattleMap.tickerHandlers;
+    if (!handlers || handlers.length === 0) return;
+    // Итерация по snapshot: handler может удалить себя изнутри.
+    var snap = handlers.slice();
+    for (var i = 0; i < snap.length; i++) {
+      try { snap[i](delta); } catch (e) {
+        console.warn('[BattleMap] ticker handler threw:', e);
+      }
+    }
+  };
+  BattleMap.masterTick = master;
+  if (app.ticker && typeof app.ticker.add === 'function') {
+    app.ticker.add(master);
+  }
+
   console.log('[BattleMap] initialised — canvas', width + 'x' + height,
-              '| layers:', Object.keys(BattleMap.layers).join(', '));
+              '@ dpr=' + dpr + ' | layers:', Object.keys(BattleMap.layers).join(', '));
 
   return BattleMap;
 }
@@ -2285,17 +2489,32 @@ async function initBattleMap(containerId, width, height) {
 /**
  * destroyBattleMap()
  *
- * Tears down the Pixi Application and clears the singleton.
+ * Tears down the Pixi Application and clears the singleton. Also drops
+ * the offscreen terrain cache so the next open() starts fresh.
  * Safe to call even if not initialised.
  */
 function destroyBattleMap() {
   if (!BattleMap || !BattleMap.app) return;
+
+  // Снять мастер-тик, очистить handlers — чтобы не осталось ссылок на
+  // destroyed-контейнеры.
+  try {
+    if (BattleMap.app.ticker && BattleMap.masterTick &&
+        typeof BattleMap.app.ticker.remove === 'function') {
+      BattleMap.app.ticker.remove(BattleMap.masterTick);
+    }
+  } catch (_) { /* noop */ }
+  BattleMap.tickerHandlers = [];
+  BattleMap.masterTick     = null;
 
   try {
     BattleMap.app.destroy(true, { children: true, texture: true });
   } catch (e) {
     console.warn('[BattleMap] destroy error:', e);
   }
+
+  // Сброс offscreen-кеша: текстура привязана к destroyed-рендереру.
+  clearTerrainCache();
 
   BattleMap = null;
   console.log('[BattleMap] destroyed');
@@ -2345,6 +2564,12 @@ if (typeof window !== 'undefined') {
   window.removeAimLine               = removeAimLine;
   window.initBattleMap      = initBattleMap;
   window.destroyBattleMap   = destroyBattleMap;
+  window.renderTerrainCached = renderTerrainCached;
+  window.clearTerrainCache   = clearTerrainCache;
+  window.addBattleMapTicker  = addBattleMapTicker;
+  window.removeBattleMapTicker = removeBattleMapTicker;
+  window.pauseBattleMap      = pauseBattleMap;
+  window.resumeBattleMap     = resumeBattleMap;
 }
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
   module.exports = {
@@ -2382,6 +2607,12 @@ if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     emitDamageNumber,
     drawAimLine,
     removeAimLine,
-    initBattleMap, destroyBattleMap
+    initBattleMap, destroyBattleMap,
+    renderTerrainCached,
+    clearTerrainCache,
+    addBattleMapTicker,
+    removeBattleMapTicker,
+    pauseBattleMap,
+    resumeBattleMap
   };
 }

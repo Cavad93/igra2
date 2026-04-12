@@ -862,6 +862,15 @@ function endTacticalBattle(bs, outcome) {
       }
     }
     _bgOffscreen = null;
+    // ── arma.md Шаг 20: уничтожить Pixi Battle Map при закрытии тактики
+    try {
+      if (typeof destroyBattleMap === 'function' &&
+          typeof window !== 'undefined' && window.BattleMap && window.BattleMap.app) {
+        destroyBattleMap();
+      }
+    } catch (err) {
+      console.warn('[tactical_map] destroyBattleMap failed:', err);
+    }
     const mm = document.getElementById('tac-minimap');
     if (mm) mm.style.display = 'none';
     const result = finalizeTacticalBattle(bs, outcome);
@@ -1150,4 +1159,24 @@ function openTacticalMap(atkArmy, defArmy, region) {
 
   document.getElementById('tac-terrain').textContent =
     region?.name ?? 'Неизвестная местность';
+
+  // ── arma.md Шаг 20: инициализация Pixi Battle Map (поверх базового canvas)
+  // Вызывается "fire-and-forget" — не блокирует основной рендер-цикл.
+  try {
+    if (typeof initBattleMap === 'function' &&
+        typeof document !== 'undefined' &&
+        document.getElementById('pixi-battle-map')) {
+      // Если уже был инициализирован — сперва destroy (re-open сценарий).
+      if (typeof destroyBattleMap === 'function' &&
+          typeof window !== 'undefined' && window.BattleMap && window.BattleMap.app) {
+        destroyBattleMap();
+      }
+      const _bmPromise = initBattleMap('pixi-battle-map', 800, 600);
+      if (_bmPromise && typeof _bmPromise.catch === 'function') {
+        _bmPromise.catch(err => console.warn('[tactical_map] initBattleMap failed:', err));
+      }
+    }
+  } catch (err) {
+    console.warn('[tactical_map] initBattleMap threw:', err);
+  }
 }
