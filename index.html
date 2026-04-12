@@ -327,13 +327,65 @@
       scrollbar-width: thin;
       scrollbar-color: var(--border-gold) var(--bg-deep);
     }
-    #left-panel  { border-right: 2px solid var(--border-gold); }
+    #left-panel  {
+      border-right: 2px solid var(--border-gold);
+      display: flex;
+      flex-direction: row;
+      padding: 0;
+      overflow: hidden;
+    }
     #right-panel { border-left:  2px solid var(--border-gold); }
+
+    /* Шаг 23 — иконки-вкладки левой панели */
+    #left-nav {
+      width: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 0;
+      border-right: 1px solid var(--border-gold);
+      flex-shrink: 0;
+    }
+    .lnav-btn {
+      width: 34px;
+      height: 34px;
+      background: none;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--text-dim);
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lnav-btn:hover {
+      background: rgba(212,168,83,0.1);
+      color: var(--text-gold);
+    }
+    .lnav-btn.active {
+      background: rgba(212,168,83,0.15);
+      color: var(--text-gold);
+      box-shadow: inset 2px 0 0 var(--border-gold);
+    }
+    #left-panel-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 8px;
+      min-width: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-gold) var(--bg-deep);
+    }
 
     /* Скроллбар webkit */
     #left-panel::-webkit-scrollbar,
+    #left-panel-content::-webkit-scrollbar,
     #right-panel::-webkit-scrollbar { width: 5px; }
     #left-panel::-webkit-scrollbar-thumb,
+    #left-panel-content::-webkit-scrollbar-thumb,
     #right-panel::-webkit-scrollbar-thumb { background: var(--border-gold); border-radius: 2px; }
 
     /* ══════════════════════════════════════════════════
@@ -7627,10 +7679,19 @@
     ═══════════════════════════ -->
     <main id="main-area">
 
-      <!-- Левая панель: статистика нации -->
+      <!-- Левая панель: статистика нации (Шаг 23 — иконки-вкладки) -->
       <div id="left-panel">
-        <!-- Заполняется из panels.js renderLeftPanel() -->
-        <div style="color:var(--text-dim);font-size:11px;padding:8px;">Загрузка...</div>
+        <nav id="left-nav">
+          <button class="lnav-btn active" data-tab="overview"  title="Обзор нации" onclick="renderLeftPanelTab('overview')">🗺</button>
+          <button class="lnav-btn"        data-tab="army"      title="Армия"       onclick="renderLeftPanelTab('army')">⚔</button>
+          <button class="lnav-btn"        data-tab="economy"   title="Экономика"   onclick="renderLeftPanelTab('economy')">💰</button>
+          <button class="lnav-btn"        data-tab="diplomacy" title="Дипломатия"  onclick="renderLeftPanelTab('diplomacy')">🤝</button>
+          <button class="lnav-btn"        data-tab="laws"      title="Законы"      onclick="renderLeftPanelTab('laws')">📜</button>
+        </nav>
+        <div id="left-panel-content">
+          <!-- Заполняется из panels.js renderLeftPanel() -->
+          <div style="color:var(--text-dim);font-size:11px;padding:8px;">Загрузка...</div>
+        </div>
       </div>
 
       <!-- Центральная панель: карта -->

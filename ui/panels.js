@@ -1,8 +1,12 @@
 // Боковые панели — статистика нации и двор
 
 // ──────────────────────────────────────────────────────────────
-// ЛЕВАЯ ПАНЕЛЬ — статистика игрока
+// ЛЕВАЯ ПАНЕЛЬ — статистика игрока (Шаг 23: вкладки-иконки)
 // ──────────────────────────────────────────────────────────────
+
+// Текущая активная вкладка левой панели. Значения:
+// 'overview' | 'army' | 'economy' | 'diplomacy' | 'laws'
+let _currentLeftTab = 'overview';
 
 function renderLeftPanel() {
   const panel = document.getElementById('left-panel');
@@ -12,6 +16,17 @@ function renderLeftPanel() {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
+  // Контент рендерится в #left-panel-content (Шаг 23).
+  // Если контейнер отсутствует (старая HTML-структура), пишем в сам #left-panel
+  // для обратной совместимости.
+  _renderLeftPanelContent();
+
+  // Шаг 21: после каждой перерисовки левой панели обновляем и топ-бар ресурсов
+  try { updateResourceBar(GAME_STATE); } catch (e) { console.error('updateResourceBar error:', e); }
+}
+
+// Сбор HTML всех секций; активная вкладка определяет, какие из них отрисовываются.
+function _buildLeftPanelSections(nation, nationId) {
   const economy  = nation.economy;
   const military = nation.military;
   const pop      = nation.population;
@@ -28,7 +43,7 @@ function renderLeftPanel() {
   const rulerName = gov.ruler?.name ?? gov.ruler ?? '?';
   const govTypeName = getGovernmentName(gov.type, gov.custom_name);
 
-  panel.innerHTML = `
+  const ruler = `
     <!-- ПРАВИТЕЛЬ -->
     <div class="panel-section ruler-section">
       <div class="ruler-name">⚔️ ${rulerName}</div>
@@ -67,7 +82,9 @@ function renderLeftPanel() {
     </div>
     <!-- Динамические цели -->
     <div id="dynamic-goals-block"></div>
+  `;
 
+  const treasury = `
     <!-- КАЗНА -->
     <div class="panel-section">
       <div class="section-title">💰 Казна</div>
@@ -88,13 +105,17 @@ function renderLeftPanel() {
         <span class="stat-value ${deltaClass}">${deltaStr}</span>
       </div>
     </div>
+  `;
 
+  const population = `
     <!-- НАСЕЛЕНИЕ -->
     <div class="panel-section">
       <div class="section-title">👥 Население</div>
       ${renderPopMiniWidget(pop)}
     </div>
+  `;
 
+  const army = `
     <!-- АРМИЯ -->
     <div class="panel-section">
       <div class="section-title">⚔️ Армия</div>
@@ -130,27 +151,35 @@ function renderLeftPanel() {
         <span class="stat-value">${military.loyalty}%</span>
       </div>
     </div>
+  `;
 
+  const culture = `
     <!-- КУЛЬТУРА -->
     <div class="panel-section">
       <div class="section-title">🎭 Культура</div>
       ${renderCulturePanel(nationId)}
       <button class="cw-btn-open" onclick="openCultureWindow('${nationId}')">📊 Подробнее о культурах</button>
     </div>
+  `;
 
+  const religion = `
     <!-- РЕЛИГИЯ -->
     <div class="panel-section">
       <div class="section-title">⛪ Религия</div>
       ${typeof renderReligionPanel === 'function' ? renderReligionPanel(nationId) : '<div class="no-data">Нет данных</div>'}
       <button class="cw-btn-open" onclick="openReligionWindow('${nationId}')">⛪ Подробнее о религиях</button>
     </div>
+  `;
 
+  const diplomacy = `
     <!-- ДИПЛОМАТИЯ -->
     <div class="panel-section">
       <div class="section-title">🤝 Дипломатия</div>
       ${renderRelations(nation.relations)}
     </div>
+  `;
 
+  const laws = `
     <!-- ЗАКОНЫ -->
     <div class="panel-section">
       <div class="section-title">📜 Законы <span class="laws-count">${(nation.active_laws || []).length}</span></div>
@@ -158,8 +187,71 @@ function renderLeftPanel() {
     </div>
   `;
 
-  // Шаг 21: после каждой перерисовки левой панели обновляем и топ-бар ресурсов
-  try { updateResourceBar(GAME_STATE); } catch (e) { console.error('updateResourceBar error:', e); }
+  return { ruler, treasury, population, army, culture, religion, diplomacy, laws };
+}
+
+// Заполняет #left-panel-content в соответствии с текущей вкладкой _currentLeftTab.
+function _renderLeftPanelContent() {
+  if (!GAME_STATE) return;
+  const nationId = GAME_STATE.player_nation;
+  const nation = GAME_STATE.nations?.[nationId];
+  if (!nation) return;
+
+  // Контейнер контента. Если его нет — fallback к #left-panel
+  const contentEl =
+    document.getElementById('left-panel-content') ||
+    document.getElementById('left-panel');
+  if (!contentEl) return;
+
+  const s = _buildLeftPanelSections(nation, nationId);
+
+  let html = '';
+  switch (_currentLeftTab) {
+    case 'army':
+      html = s.army;
+      break;
+    case 'economy':
+      html = s.treasury + s.population;
+      break;
+    case 'diplomacy':
+      html = s.diplomacy;
+      break;
+    case 'laws':
+      html = s.laws;
+      break;
+    case 'overview':
+    default:
+      html = s.ruler + s.culture + s.religion;
+      break;
+  }
+  contentEl.innerHTML = html;
+}
+
+// Переключает активную вкладку левой панели: обновляет подсветку кнопок
+// в #left-nav и перерисовывает содержимое в #left-panel-content.
+function renderLeftPanelTab(tabName) {
+  _currentLeftTab = tabName;
+
+  // Переключаем active-класс у иконок-вкладок
+  const nav = document.getElementById('left-nav');
+  if (nav && typeof nav.querySelectorAll === 'function') {
+    const btns = nav.querySelectorAll('.lnav-btn');
+    btns.forEach(b => {
+      const t = b.getAttribute ? b.getAttribute('data-tab') : null;
+      if (t === tabName) {
+        if (b.classList && b.classList.add) b.classList.add('active');
+      } else {
+        if (b.classList && b.classList.remove) b.classList.remove('active');
+      }
+    });
+  }
+
+  _renderLeftPanelContent();
+}
+
+// Экспорт в window — чтобы inline onclick в index.html видел функцию.
+if (typeof window !== 'undefined') {
+  window.renderLeftPanelTab = renderLeftPanelTab;
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -280,17 +372,11 @@ function onResourceBarClick(key) {
       if (typeof showTreasuryOverlay === 'function') showTreasuryOverlay();
       break;
     case 'troops':
-      // Нет выделенного оверлея армий — прокручиваем левую панель к секции армии
+      // Нет выделенного оверлея армий — переключаемся на вкладку "Армия"
+      // в левой панели (Шаг 23).
       try {
-        const panel = document.getElementById('left-panel');
-        if (panel) {
-          const sections = panel.querySelectorAll('.section-title');
-          for (const s of sections) {
-            if (s.textContent && s.textContent.indexOf('Армия') !== -1) {
-              s.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              break;
-            }
-          }
+        if (typeof renderLeftPanelTab === 'function') {
+          renderLeftPanelTab('army');
         }
       } catch (e) {}
       break;

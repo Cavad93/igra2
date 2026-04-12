@@ -231,6 +231,7 @@ section('Выполнение updateResourceBar в sandbox');
 
 const doc = buildFakeDocument();
 let treasuryCalled = 0, economyCalled = 0, populationCalled = 0;
+let renderTabArg = null;
 
 const sandbox = {
   document:  doc,
@@ -239,6 +240,8 @@ const sandbox = {
   showTreasuryOverlay:   () => { treasuryCalled++; },
   showEconomyOverlay:    () => { economyCalled++; },
   showPopulationOverlay: () => { populationCalled++; },
+  // Шаг 23: onResourceBarClick("troops") вызывает renderLeftPanelTab("army")
+  renderLeftPanelTab:    (name) => { renderTabArg = name; },
 };
 // Уходим от `window.* = ` наружу
 sandbox.window.document = doc;
@@ -341,11 +344,11 @@ check(economyCalled === 1,  '[12b] click food → showEconomyOverlay()');
 onResourceBarClick('pop');
 check(populationCalled === 1, '[12c] click pop → showPopulationOverlay()');
 
-// troops → скроллит панель к секции "Армия"
-const armyTitle = doc._find('left-panel').children[0];
+// troops → переключает вкладку левой панели на "Армия" (Шаг 23).
+// До Шага 23 вместо этого происходил scrollIntoView по .section-title.
 onResourceBarClick('troops');
-check(armyTitle._scrolled === true,
-  '[12d] click troops → scrollIntoView по section-title с "Армия"');
+check(renderTabArg === 'army',
+  '[12d] click troops → renderLeftPanelTab("army") (Шаг 23)');
 
 // ═══════════════════════════════════════════════════════════════
 // ИТОГ
