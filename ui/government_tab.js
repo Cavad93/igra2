@@ -3769,6 +3769,53 @@ function renderOrdersPanel() {
   }
 
   listEl.innerHTML = html;
+
+  // Шаг 25: обновляем счётчик активных приказов в свёрнутой мини-кнопке
+  if (typeof updateOrdersMiniCount === 'function') updateOrdersMiniCount();
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Шаг 25 — Мини-кнопка приказов (свёрнутый orders-panel, всегда видна)
+// ──────────────────────────────────────────────────────────────────────
+
+/**
+ * Обновить счётчик активных приказов в #orders-mini-count.
+ * Вызывается из renderOrdersPanel().
+ */
+function updateOrdersMiniCount() {
+  const el = document.getElementById('orders-mini-count');
+  if (!el) return;
+  const active = typeof getActiveOrders === 'function' ? getActiveOrders() : [];
+  el.textContent = String(active.length);
+}
+
+/**
+ * Развернуть/свернуть popup #orders-panel над мини-кнопкой.
+ * Открывается ВВЕРХ (над bottom-area).
+ */
+function toggleOrdersMini() {
+  const panel = document.getElementById('orders-panel');
+  const btn   = document.getElementById('orders-mini-btn');
+  if (!panel) return;
+  const opening = panel.classList.contains('closed');
+  if (opening) {
+    panel.classList.remove('closed');
+    panel.classList.add('open');
+    if (btn) btn.classList.add('open');
+    // Освежить список при открытии
+    if (typeof renderOrdersPanel === 'function') {
+      try { renderOrdersPanel(); } catch (e) {}
+    }
+  } else {
+    panel.classList.remove('open');
+    panel.classList.add('closed');
+    if (btn) btn.classList.remove('open');
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.updateOrdersMiniCount = updateOrdersMiniCount;
+  window.toggleOrdersMini      = toggleOrdersMini;
 }
 
 function _renderMpCard(order, isActive) {

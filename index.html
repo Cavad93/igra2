@@ -82,7 +82,7 @@
       --accent:       #FFD700;
       --panel-w:      260px;
       --header-h:     42px;
-      --footer-h:     220px;
+      --footer-h:     32px;  /* Шаг 25: одна строка (лог свёрнут, ввод всегда виден) */
     }
 
     html, body {
@@ -1589,10 +1589,10 @@
       .culture-window { width: 420px; }
     }
     @media (max-width: 768px) {
-      :root { --panel-w: 0px; --footer-h: 140px; }
+      :root { --panel-w: 0px; --footer-h: 32px; }
       #left-panel, #right-panel { display: none; }
-      #orders-panel { display: none; }
-      #input-area { width: auto; flex: 1; }
+      #input-row   { width: auto; flex: 1; }
+      #orders-mini { width: 110px; }
       .culture-window { width: 95vw; }
       #region-info { width: 92vw; right: 4vw; }
     }
@@ -1604,12 +1604,15 @@
     /* ══════════════════════════════════════════════════
        НИЖНЯЯ ОБЛАСТЬ — ЛОГ + ВВОД
     ══════════════════════════════════════════════════ */
+    /* Шаг 25 — нижняя область: ровно одна строка 32px (лог свёрнут, ввод всегда виден) */
     #bottom-area {
-      height: var(--footer-h);
+      height: 32px;
       display: flex;
+      flex-direction: row;
       border-top: 2px solid var(--border-gold);
       flex-shrink: 0;
       background: var(--bg-panel);
+      position: relative;  /* контекст для popup-ов: orders-panel / event-log.expanded / ai-response */
     }
 
     #event-log {
@@ -1626,10 +1629,19 @@
       overflow: hidden;
       transition: height 0.2s ease;
     }
+    /* Шаг 25: в развёрнутом состоянии лог — popup, выезжающий ВВЕРХ над bottom-area */
     #event-log.expanded {
       height: 180px;
       overflow: hidden;
       transition: height 0.2s ease;
+      position: absolute;
+      left: 0;
+      bottom: 32px;
+      right: 580px;  /* 420px (#input-row) + 160px (#orders-mini) */
+      background: var(--bg-panel);
+      border-top: 2px solid var(--border-gold);
+      border-right: 1px solid var(--border-gold);
+      z-index: 50;
     }
     #event-log.collapsed .log-title,
     #event-log.collapsed #log-entries { display: none; }
@@ -1852,14 +1864,33 @@
     /* ══════════════════════════════════════════════════
        ПАНЕЛЬ ПРИКАЗОВ (главный экран)
     ══════════════════════════════════════════════════ */
+    /* Шаг 25: orders-panel — popup, выезжающий ВВЕРХ из orders-mini-btn */
     #orders-panel {
-      flex: 1;
-      border-right: 1px solid var(--border-gold);
+      position: absolute;
+      bottom: 32px;
+      right: 0;
+      width: 380px;
+      max-height: 320px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-gold);
+      border-bottom: none;
       display: flex;
       flex-direction: column;
       overflow: hidden;
       padding: 6px 8px;
-      min-width: 0;
+      box-shadow: 0 -4px 18px rgba(0,0,0,0.55);
+      z-index: 60;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+    #orders-panel.closed {
+      transform: translateY(8px);
+      opacity: 0;
+      pointer-events: none;
+    }
+    #orders-panel.open {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
     }
     .op-hdr {
       font-size: 11px; color: var(--text-dim);
@@ -2002,18 +2033,26 @@
       background: rgba(180,140,60,0.3);
     }
 
+    /* Шаг 25: AI-ответ — popup над строкой ввода (всплывает над bottom-area) */
     #ai-response {
-      flex: 1;
+      position: absolute;
+      bottom: 32px;
+      right: 160px;        /* над #input-row */
+      width: 420px;
+      max-height: 240px;
       overflow-y: auto;
       font-size: 11px;
       line-height: 1.5;
       background: var(--bg-section);
       border: 1px solid var(--border-gold);
-      border-radius: 2px;
-      padding: 6px 8px;
+      border-bottom: none;
+      border-radius: 2px 2px 0 0;
+      padding: 8px 10px;
       color: var(--text-light);
       scrollbar-width: thin;
       scrollbar-color: var(--border-gold) transparent;
+      box-shadow: 0 -4px 18px rgba(0,0,0,0.55);
+      z-index: 55;
     }
     #ai-response.hidden { display: none; }
 
@@ -2092,21 +2131,28 @@
     .api-key-hint { font-size: 10px; color: var(--text-dim); }
     .api-key-hint a { color: var(--text-gold); }
 
+    /* Шаг 25 — строка ввода команды (всегда видна, прямой ребёнок #bottom-area) */
     #input-row {
+      width: 420px;
+      flex-shrink: 0;
       display: flex;
       gap: 6px;
-      flex-shrink: 0;
+      align-items: center;
+      padding: 0 6px;
+      border-right: 1px solid var(--border-gold);
+      background: var(--bg-panel);
     }
 
     #command-input {
       flex: 1;
-      background: var(--bg-deep);
+      height: 30px;
+      background: var(--bg-section);
       border: 1px solid var(--border-gold);
       border-radius: 2px;
       color: var(--text-light);
-      padding: 8px 12px;
-      font-family: 'Georgia', serif;
-      font-size: 13px;
+      padding: 0 10px;
+      font-family: inherit;
+      font-size: 12px;
       outline: none;
       transition: border-color 0.2s;
     }
@@ -2117,13 +2163,14 @@
     }
 
     #send-btn {
+      height: 30px;
+      padding: 0 14px;
       background: linear-gradient(to bottom, #5a3010, #3a1a08);
       border: 1px solid var(--border-gold);
       color: var(--text-gold);
-      padding: 8px 18px;
       cursor: pointer;
       font-family: inherit;
-      font-size: 13px;
+      font-size: 12px;
       border-radius: 2px;
       white-space: nowrap;
       transition: all 0.2s;
@@ -2133,6 +2180,32 @@
       color: var(--accent);
     }
     #send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Шаг 25 — мини-кнопка приказов (свёрнутый orders-panel, разворачивается ВВЕРХ) */
+    #orders-mini {
+      width: 160px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 6px;
+      background: var(--bg-panel);
+    }
+    #orders-mini-btn {
+      width: 100%;
+      height: 30px;
+      background: rgba(107,79,26,0.35);
+      border: 1px solid var(--border-gold);
+      color: var(--text-gold);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      border-radius: 2px;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    #orders-mini-btn:hover { background: rgba(107,79,26,0.65); }
+    #orders-mini-btn.open  { background: rgba(107,79,26,0.65); }
 
     /* ══════════════════════════════════════════════════
        ПАНЕЛИ — ОБЩИЕ СТИЛИ
@@ -7904,11 +7977,33 @@
         <div id="log-entries"></div>
       </div>
 
-      <!-- Приказы и делегирование -->
-      <div id="orders-panel">
+      <!-- Шаг 25: Строка ввода команды — всегда видна -->
+      <div id="input-row">
+        <input
+          type="text"
+          id="command-input"
+          placeholder="Ваш приказ... (напр. «набрать 500 пехотинцев»)"
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <button id="send-btn">⚔ Приказать</button>
+      </div>
+
+      <!-- Шаг 25: Мини-кнопка приказов (свёрнутый orders-panel) -->
+      <div id="orders-mini">
+        <button id="orders-mini-btn" onclick="toggleOrdersMini()" title="Развернуть приказы">
+          📋 <span id="orders-mini-count">0</span> приказов
+        </button>
+      </div>
+
+      <!-- Приказы и делегирование — popup, разворачивается вверх по клику на orders-mini-btn -->
+      <div id="orders-panel" class="closed">
         <div class="op-hdr">
           📋 Приказы и делегирование
-          <button class="op-new-btn" onclick="showMpOrderForm()">+ Новый приказ</button>
+          <span style="display:flex;gap:6px;align-items:center">
+            <button class="op-new-btn" onclick="showMpOrderForm()">+ Новый приказ</button>
+            <button class="op-new-btn" onclick="toggleOrdersMini()" title="Свернуть">▼</button>
+          </span>
         </div>
         <!-- Форма выдачи приказа (скрыта по умолчанию) -->
         <div id="mp-order-form" style="display:none"></div>
@@ -7918,20 +8013,8 @@
         </div>
       </div>
 
-      <!-- Ввод команд -->
-      <div id="input-area">
-        <div id="ai-response" class="hidden"></div>
-        <div id="input-row">
-          <input
-            type="text"
-            id="command-input"
-            placeholder="Ваш приказ, стратег... (наберите &quot;набрать 500 пехотинцев&quot;, &quot;предложить торговый договор Египту&quot;, &quot;снизить налоги до 10%&quot;...)"
-            autocomplete="off"
-            spellcheck="false"
-          >
-          <button id="send-btn">⚔ Приказать</button>
-        </div>
-      </div>
+      <!-- AI-ответ — popup над строкой ввода -->
+      <div id="ai-response" class="hidden"></div>
 
       <!-- Шаг 22: API ключи перенесены в модальное окно настроек (⚙ в топ-баре) -->
     </footer>
