@@ -1882,6 +1882,332 @@ function stepBattleMapAnimations(state, delta) {
       delete state.moves[id];
     }
   }
+
+  // 3) Плавающие числа урона (arma.md Шаг 19).
+  //    text.y -= delta * 1.5; text.alpha -= delta * 0.03.
+  //    При alpha <= 0 — удаление из layer.fx и списка state.damageNumbers.
+  if (state.damageNumbers && state.damageNumbers.length) {
+    for (var di = state.damageNumbers.length - 1; di >= 0; di--) {
+      var dt = state.damageNumbers[di];
+      if (!dt) { state.damageNumbers.splice(di, 1); continue; }
+      dt.y     -= delta * 1.5;
+      dt.alpha -= delta * 0.03;
+      if (dt.alpha <= 0) {
+        dt.alpha = 0;
+        if (dt.parent && dt.parent.children) {
+          var idxD = dt.parent.children.indexOf(dt);
+          if (idxD >= 0) dt.parent.children.splice(idxD, 1);
+        }
+        try { if (typeof dt.destroy === 'function') dt.destroy(); } catch (_) { /* noop */ }
+        state.damageNumbers.splice(di, 1);
+      }
+    }
+  }
+
+  // 4) Aim-line dash-offset (arma.md Шаг 19): бегущий пунктир.
+  //    Если у state есть aimLine — мигаем alpha, чтобы пунктир "жил".
+  if (state.aimLine && state.aimLine.graphics) {
+    var ag = state.aimLine.graphics;
+    // Плавная пульсация 0.4..0.9 (не задевает саму геометрию, только alpha).
+    state.aimLine.phase = ((state.aimLine.phase || 0) + delta * 0.08) % 1;
+    ag.alpha = 0.4 + 0.5 * (0.5 + 0.5 * Math.sin(state.aimLine.phase * Math.PI * 2));
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   Шаг 19 (arma.md) — Укрепления и эффекты атаки:
+     1. renderFortifications(app, layers, forts, hmW, hmH):
+        Для каждого fort (3..5 точек вокруг города):
+          • Ломаная линия stroke({ width:2, color:0x8a0000, alpha:0.9 }).
+          • Шипы вдоль линии каждые ~8px — треугольники высотой 5 px,
+            направленные наружу от центра fort.
+        Добавляется в layers.roads (под деревьями, над terrain).
+     2. emitDamageNumber(layers, x, y, amount, opts):
+        Создаёт PIXI.Text(amount) в layers.fx. При передаче opts.state
+        добавляет в state.damageNumbers — stepBattleMapAnimations
+        анимирует text.y -= 1.5*δ, text.alpha -= 0.03*δ, удаляет по alpha<=0.
+     3. drawAimLine(layers, fromUnit, toUnit):
+        Пунктирная оранжевая линия от fromUnit к toUnit в layers.fx.
+        Реализация — moveTo/lineTo с чередованием 6px dash / 6px gap,
+        затем один stroke({ width:1, color:0xff8800, alpha:0.7 }).
+     4. removeAimLine(layers, g): удаляет Graphics из layers.fx.children.
+   ═════════════════════════════════════════════════════════════════════ */
+
+var FORT_STROKE_COLOR = 0x8a0000; // тёмно-красный
+var FORT_SPIKE_STEP   = 8;        // шаг между шипами вдоль линии, px
+var FORT_SPIKE_H      = 5;        // высота шипа наружу, px
+var FORT_SPIKE_BASE   = 2;        // полуширина основания шипа, px
+
+/**
+ * renderFortifications(app, layers, forts, hmW, hmH)
+ *
+ * Рисует красные шипастые линии обороны вокруг городов в layers.roads.
+ * Каждый fort = {center:{x,y}, points:[{x,y},...]} (см. generateFortifications
+ * из engine/fortifications.js).
+ *
+ * Координаты points / center — в heightmap-пространстве; функция
+ * проецирует их на screen через app.screen.width/height.
+ *
+ * @param {PIXI.Application} app
+ * @param {{roads: PIXI.Container}} layers
+ * @param {Array<{center:{x:number,y:number}, points:Array<{x:number,y:number}>}>} forts
+ * @param {number} hmW
+ * @param {number} hmH
+ * @returns {Array<PIXI.Graphics>}
+ */
+function renderFortifications(app, layers, forts, hmW, hmH) {
+  if (!app || !layers || !layers.roads) {
+    throw new Error('[renderFortifications] app/layers not initialised — call initBattleMap() first');
+  }
+  if (typeof PIXI === 'undefined' || !PIXI.Graphics) {
+    throw new Error('[renderFortifications] PIXI.Graphics is not available');
+  }
+  if (!Array.isArray(forts) || forts.length === 0) return [];
+  if (!(hmW > 0) || !(hmH > 0)) {
+    throw new Error('[renderFortifications] invalid heightmap dimensions');
+  }
+
+  var screenW = app.screen.width;
+  var screenH = app.screen.height;
+  var sx = screenW / hmW;
+  var sy = screenH / hmH;
+
+  var created = [];
+
+  for (var f = 0; f < forts.length; f++) {
+    var fort = forts[f];
+    if (!fort || !Array.isArray(fort.points) || fort.points.length < 2) continue;
+
+    // heightmap → screen
+    var mapped = [];
+    for (var p = 0; p < fort.points.length; p++) {
+      var pt = fort.points[p];
+      if (!pt || typeof pt.x !== 'number' || typeof pt.y !== 'number') continue;
+      mapped.push({ x: pt.x * sx, y: pt.y * sy });
+    }
+    if (mapped.length < 2) continue;
+
+    var cx = (fort.center && typeof fort.center.x === 'number') ? fort.center.x * sx : mapped[0].x;
+    var cy = (fort.center && typeof fort.center.y === 'number') ? fort.center.y * sy : mapped[0].y;
+
+    var g = new PIXI.Graphics();
+
+    // 1) Ломаная линия обороны.
+    g.moveTo(mapped[0].x, mapped[0].y);
+    for (var m = 1; m < mapped.length; m++) {
+      g.lineTo(mapped[m].x, mapped[m].y);
+    }
+    g.stroke({
+      width: 2,
+      color: FORT_STROKE_COLOR,
+      alpha: 0.9,
+      cap:   'round',
+      join:  'round'
+    });
+
+    // 2) Шипы наружу: по сегментам (mapped[i] → mapped[i+1]) каждые
+    //    FORT_SPIKE_STEP px ставим треугольник высотой FORT_SPIKE_H,
+    //    направленный в ту сторону перпендикуляра, которая "от центра".
+    for (var s = 0; s < mapped.length - 1; s++) {
+      var a  = mapped[s];
+      var b  = mapped[s + 1];
+      var dx = b.x - a.x;
+      var dy = b.y - a.y;
+      var len = Math.sqrt(dx * dx + dy * dy);
+      if (len < 1e-6) continue;
+
+      var tx = dx / len;   // tangent
+      var ty = dy / len;
+      var nx = -ty;        // normal (90° CCW)
+      var ny =  tx;
+
+      // Сколько шипов помещается: хотя бы 1 на сегмент.
+      var count = Math.max(1, Math.floor(len / FORT_SPIKE_STEP));
+      for (var t = 0; t < count; t++) {
+        var u   = (t + 0.5) / count;
+        var px  = a.x + dx * u;
+        var py  = a.y + dy * u;
+
+        // Сторона "наружу" — та, где скалярное произведение
+        // (midpoint - center) · normal положительно.
+        var ox = px - cx;
+        var oy = py - cy;
+        var sign = ((ox * nx + oy * ny) >= 0) ? 1 : -1;
+
+        var tipX = px + nx * sign * FORT_SPIKE_H;
+        var tipY = py + ny * sign * FORT_SPIKE_H;
+
+        var b1x = px - tx * FORT_SPIKE_BASE;
+        var b1y = py - ty * FORT_SPIKE_BASE;
+        var b2x = px + tx * FORT_SPIKE_BASE;
+        var b2y = py + ty * FORT_SPIKE_BASE;
+
+        g.moveTo(b1x, b1y);
+        g.lineTo(tipX, tipY);
+        g.lineTo(b2x, b2y);
+        g.lineTo(b1x, b1y);
+        g.fill({ color: FORT_STROKE_COLOR, alpha: 0.9 });
+      }
+    }
+
+    layers.roads.addChild(g);
+    created.push(g);
+  }
+
+  return created;
+}
+
+/**
+ * emitDamageNumber(layers, x, y, amount, opts)
+ *
+ * Создаёт плавающее число урона (PIXI.Text) в layers.fx на позиции (x, y).
+ * Если передан opts.state — регистрирует текст в state.damageNumbers,
+ * чтобы stepBattleMapAnimations мог его двигать/угашать.
+ *
+ * @param {{fx: PIXI.Container}} layers
+ * @param {number} x — экранные координаты
+ * @param {number} y
+ * @param {number} amount — величина урона
+ * @param {{state?: object}} [opts]
+ * @returns {PIXI.Text}
+ */
+function emitDamageNumber(layers, x, y, amount, opts) {
+  if (!layers || !layers.fx) {
+    throw new Error('[emitDamageNumber] layers.fx required');
+  }
+  if (typeof PIXI === 'undefined' || !PIXI.Text) {
+    throw new Error('[emitDamageNumber] PIXI.Text not available');
+  }
+  if (typeof x !== 'number' || typeof y !== 'number') {
+    throw new Error('[emitDamageNumber] x/y must be numbers');
+  }
+
+  var text = new PIXI.Text({
+    text:  String(amount),
+    style: {
+      fill:       0xff4444,
+      fontSize:   14,
+      fontFamily: 'serif',
+      fontWeight: 'bold'
+    }
+  });
+  text.x = x;
+  text.y = y;
+  text.alpha = 1;
+
+  if (typeof layers.fx.addChild === 'function') {
+    layers.fx.addChild(text);
+  } else if (layers.fx.children && layers.fx.children.push) {
+    layers.fx.children.push(text);
+    text.parent = layers.fx;
+  }
+
+  var state = opts && opts.state;
+  if (state) {
+    if (!Array.isArray(state.damageNumbers)) state.damageNumbers = [];
+    state.damageNumbers.push(text);
+  }
+
+  return text;
+}
+
+/**
+ * _drawDashedLine(g, x0, y0, x1, y1, dash)
+ *
+ * Рисует пунктир вдоль отрезка (x0,y0)→(x1,y1): чередование dash/gap
+ * длиной dash (обычно 6 px) через moveTo/lineTo. stroke() вызывает
+ * caller'ом ОДИН раз после накопления всех отрезков.
+ *
+ * Pixi v8 не поддерживает dashed stroke натирно — стандартный приём
+ * (описан в Pixi docs и discussions) — именно последовательные
+ * moveTo/lineTo с перерывами.
+ */
+function _drawDashedLine(g, x0, y0, x1, y1, dash) {
+  var dx = x1 - x0;
+  var dy = y1 - y0;
+  var len = Math.sqrt(dx * dx + dy * dy);
+  if (len < 1e-6) return;
+  var ux = dx / len;
+  var uy = dy / len;
+  var step = (dash > 0) ? dash : 6;
+
+  var pos = 0;
+  var drawSegment = true;
+  while (pos < len) {
+    var next = pos + step;
+    if (next > len) next = len;
+    if (drawSegment) {
+      g.moveTo(x0 + ux * pos,  y0 + uy * pos);
+      g.lineTo(x0 + ux * next, y0 + uy * next);
+    }
+    pos = next;
+    drawSegment = !drawSegment;
+  }
+}
+
+/**
+ * drawAimLine(layers, fromUnit, toUnit)
+ *
+ * Рисует пунктирную оранжевую линию от fromUnit к toUnit.
+ * Точки берутся у .container.x/y, если контейнер есть; иначе — .x/.y.
+ *
+ * @param {{fx: PIXI.Container}} layers
+ * @param {object} fromUnit — {container:{x,y}} или {x,y}
+ * @param {object} toUnit
+ * @returns {PIXI.Graphics}
+ */
+function drawAimLine(layers, fromUnit, toUnit) {
+  if (!layers || !layers.fx) {
+    throw new Error('[drawAimLine] layers.fx required');
+  }
+  if (typeof PIXI === 'undefined' || !PIXI.Graphics) {
+    throw new Error('[drawAimLine] PIXI.Graphics not available');
+  }
+  if (!fromUnit || !toUnit) {
+    throw new Error('[drawAimLine] fromUnit and toUnit required');
+  }
+
+  function _coord(u) {
+    if (u.container && typeof u.container.x === 'number' && typeof u.container.y === 'number') {
+      return { x: u.container.x, y: u.container.y };
+    }
+    return { x: u.x, y: u.y };
+  }
+  var f = _coord(fromUnit);
+  var t = _coord(toUnit);
+  if (typeof f.x !== 'number' || typeof f.y !== 'number' ||
+      typeof t.x !== 'number' || typeof t.y !== 'number') {
+    throw new Error('[drawAimLine] fromUnit/toUnit have no numeric coordinates');
+  }
+
+  var g = new PIXI.Graphics();
+  g._isAimLine = true;
+
+  _drawDashedLine(g, f.x, f.y, t.x, t.y, 6);
+  g.stroke({ width: 1, color: 0xff8800, alpha: 0.7 });
+
+  if (typeof layers.fx.addChild === 'function') {
+    layers.fx.addChild(g);
+  } else if (layers.fx.children && layers.fx.children.push) {
+    layers.fx.children.push(g);
+    g.parent = layers.fx;
+  }
+
+  return g;
+}
+
+/**
+ * removeAimLine(layers, g)
+ *
+ * Удаляет Graphics пунктирной линии из layers.fx (если он там есть).
+ */
+function removeAimLine(layers, g) {
+  if (!layers || !layers.fx || !g) return;
+  if (layers.fx.children && layers.fx.children.length) {
+    var idx = layers.fx.children.indexOf(g);
+    if (idx >= 0) layers.fx.children.splice(idx, 1);
+  }
+  try { if (typeof g.destroy === 'function') g.destroy(); } catch (_) { /* noop */ }
 }
 
 /**
@@ -2013,6 +2339,10 @@ if (typeof window !== 'undefined') {
   window.onMapClick                  = onMapClick;
   window.redrawUnit                  = redrawUnit;
   window.stepBattleMapAnimations     = stepBattleMapAnimations;
+  window.renderFortifications        = renderFortifications;
+  window.emitDamageNumber            = emitDamageNumber;
+  window.drawAimLine                 = drawAimLine;
+  window.removeAimLine               = removeAimLine;
   window.initBattleMap      = initBattleMap;
   window.destroyBattleMap   = destroyBattleMap;
 }
@@ -2048,6 +2378,10 @@ if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     onMapClick,
     redrawUnit,
     stepBattleMapAnimations,
+    renderFortifications,
+    emitDamageNumber,
+    drawAimLine,
+    removeAimLine,
     initBattleMap, destroyBattleMap
   };
 }
