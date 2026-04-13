@@ -3632,6 +3632,317 @@ const CULTURE_GROUPS = {
 
 ---
 
+## БЛОК Z — Исправление цвета регионов при перезагрузке (Шаг 61)
+
+---
+
+### Шаг 61 — Цвета стран не пропадают при перезагрузке: три уровня защиты
+
+**Цель:** устранить баг, при котором после перезагрузки страницы регионы теряют цвет и их нужно кликать по одному чтобы цвет вернулся. Причина — race condition: Leaflet Canvas рендерит тайлы асинхронно и сбрасывает стили, пока `refreshRegionStyles()` уже отработал.
+
+**Диагностика:**
+- Leaflet Canvas renderer вызывает `_redraw()` несколько раз после `invalidateSize()`
+- Каждый `_redraw()` сбрасывает заливку полигонов к дефолтной
+- `refreshRegionStyles()` нужно вызывать ПОСЛЕ последнего `_redraw()`, а не после DOMContentLoaded
+
+**Что сделать:**
+
+1. Первый уровень — три последовательных `setTimeout` с возрастающей задержкой:
+   ```js
+   // После инициализации карты
+   setTimeout(refreshRegionStyles, 300);
+   setTimeout(refreshRegionStyles, 800);
+   setTimeout(refreshRegionStyles, 1500);
+   ```
+   Это перекрывает большинство кейсов на быстрых и медленных машинах.
+
+2. Второй уровень — слушать события Leaflet после добавления слоёв:
+   ```js
+   leafletMap.on('layeradd', debounce(refreshRegionStyles, 200));
+   leafletMap.on('zoomend',  debounce(refreshRegionStyles, 150));
+   leafletMap.on('moveend',  debounce(refreshRegionStyles, 150));
+   ```
+   Функция `debounce` — стандартная, задержка 150–200 мс:
+   ```js
+   function debounce(fn, delay) {
+     let timer;
+     return (...args) => {
+       clearTimeout(timer);
+       timer = setTimeout(() => fn(...args), delay);
+     };
+   }
+   ```
+
+3. Третий уровень — Canvas renderer hook. Leaflet Canvas имеет метод `_updateStyle`, патчим его:
+   ```js
+   // После создания renderer
+   const originalUpdateStyle = L.Canvas.prototype._updateStyle;
+   L.Canvas.prototype._updateStyle = function(layer) {
+     originalUpdateStyle.call(this, layer);
+     // Восстановить цвет из gameState если слой — регион
+     if (layer._regionId && gameState.regionColors[layer._regionId]) {
+       layer.setStyle({ fillColor: gameState.regionColors[layer._regionId] });
+     }
+   };
+   ```
+
+4. Сохранять цвета регионов в `localStorage` при каждом изменении:
+   ```js
+   function setRegionColor(regionId, color) {
+     // Обновить слой на карте
+     regionLayers[regionId]?.setStyle({ fillColor: color, fillOpacity: 0.5 });
+
+     // Сохранить в gameState
+     gameState.regionColors[regionId] = color;
+
+     // Персистировать
+     localStorage.setItem('regionColors', JSON.stringify(gameState.regionColors));
+   }
+   ```
+
+5. При загрузке восстанавливать цвета ДО первого рендера карты:
+   ```js
+   function loadSavedRegionColors() {
+     try {
+       const saved = JSON.parse(localStorage.getItem('regionColors') ?? '{}');
+       Object.assign(gameState.regionColors, saved);
+     } catch { /* ignore */ }
+   }
+
+   // Порядок вызовов при старте:
+   loadSavedRegionColors();   // 1. загрузить цвета
+   initLeafletMap();          // 2. создать карту
+   setTimeout(refreshRegionStyles, 300);  // 3. применить цвета
+   ```
+
+6. `refreshRegionStyles()` должна читать из `gameState.regionColors`:
+   ```js
+   function refreshRegionStyles() {
+     for (const [regionId, layer] of Object.entries(regionLayers)) {
+       const color = gameState.regionColors[regionId];
+       if (color) {
+         layer.setStyle({ fillColor: color, fillOpacity: 0.5 });
+       }
+     }
+   }
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/map.js` (или основной файл карты) — патч Canvas, `refreshRegionStyles`, дебаунсированные обработчики
+- `js/game.js` — `loadSavedRegionColors`, `setRegionColor`, порядок инициализации
+
+**Тест Шага 61:**
+- Установить цвет нескольких регионов, обновить страницу — цвета сохранились.
+- `localStorage.getItem('regionColors')` содержит корректный JSON с ID регионов.
+- При масштабировании карты цвета не пропадают.
+- При быстром открытии в Firefox (медленный Canvas) цвета также восстанавливаются.
+
+---
+
+## БЛОК AA — Переработка всплывающего окна региона (Шаг 62)
+
+---
+
+### Шаг 62 — Popup региона: вкладки, иконки, прогресс-бар строительства
+
+**Цель:** заменить простой `L.popup` на кастомный HTML-попап, закреплённый за регионом. Попап содержит три вкладки: «Регион», «Армия», «Строительство». Закрывается по клику вне, перетаскивается мышью, запоминает позицию в сессии.
+
+**Что сделать:**
+
+1. HTML-шаблон кастомного попапа в `index.html`:
+   ```html
+   <div id="region-popup" class="rpopup" hidden>
+     <div class="rpopup__header">
+       <img class="rpopup__nation-icon" src="" width="20" height="20" alt="">
+       <span class="rpopup__region-name"></span>
+       <button class="rpopup__close" aria-label="Закрыть">×</button>
+     </div>
+
+     <nav class="rpopup__tabs">
+       <button class="rpopup__tab is-active" data-tab="region">Регион</button>
+       <button class="rpopup__tab" data-tab="army">Армия</button>
+       <button class="rpopup__tab" data-tab="build">Строительство</button>
+     </nav>
+
+     <div class="rpopup__body">
+       <!-- Вкладка: Регион -->
+       <div class="rpopup__panel" data-panel="region">
+         <div class="rpopup__stats"></div>
+       </div>
+       <!-- Вкладка: Армия -->
+       <div class="rpopup__panel" data-panel="army" hidden>
+         <div class="rpopup__army-list"></div>
+       </div>
+       <!-- Вкладка: Строительство -->
+       <div class="rpopup__panel" data-panel="build" hidden>
+         <div class="rpopup__build-list"></div>
+       </div>
+     </div>
+   </div>
+   ```
+
+2. CSS попапа:
+   ```css
+   .rpopup {
+     position: fixed;
+     width: 280px;
+     background: rgba(15,10,5,0.95);
+     border: 1px solid rgba(200,170,90,0.3);
+     border-radius: 6px;
+     z-index: 1000;
+     box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+     font-size: 13px;
+     color: #ddd;
+   }
+   .rpopup__header {
+     display: flex;
+     align-items: center;
+     gap: 8px;
+     padding: 8px 10px;
+     border-bottom: 1px solid rgba(200,170,90,0.2);
+     cursor: move;          /* drag handle */
+   }
+   .rpopup__region-name { font-weight: 600; flex: 1; }
+   .rpopup__close {
+     background: none; border: none; color: #aaa;
+     cursor: pointer; font-size: 18px; line-height: 1;
+   }
+   .rpopup__tabs {
+     display: flex;
+     border-bottom: 1px solid rgba(200,170,90,0.15);
+   }
+   .rpopup__tab {
+     flex: 1; padding: 6px 0;
+     background: none; border: none;
+     color: rgba(255,255,255,0.5); cursor: pointer;
+     font-size: 12px; transition: color 0.15s;
+   }
+   .rpopup__tab.is-active {
+     color: #f0e8c8;
+     border-bottom: 2px solid rgba(200,170,90,0.7);
+   }
+   .rpopup__body { padding: 10px; }
+
+   /* Прогресс-бар строительства */
+   .build-item__bar {
+     height: 4px;
+     background: rgba(255,255,255,0.1);
+     border-radius: 2px;
+     margin-top: 4px;
+   }
+   .build-item__fill {
+     height: 100%;
+     background: rgba(200,170,90,0.7);
+     border-radius: 2px;
+     transition: width 0.3s ease;
+   }
+   ```
+
+3. JS — открыть попап при клике на регион:
+   ```js
+   function openRegionPopup(regionId, screenX, screenY) {
+     const popup = document.getElementById('region-popup');
+     const data  = getRegionData(regionId);
+
+     // Заполнить заголовок
+     popup.querySelector('.rpopup__nation-icon').src =
+       getNationIconPath(data.ownerNationId);
+     popup.querySelector('.rpopup__region-name').textContent = data.name;
+
+     // Заполнить вкладку «Регион»
+     popup.querySelector('.rpopup__stats').innerHTML = `
+       <div>Население: ${data.population.toLocaleString()}</div>
+       <div>Доход: ${data.income} зол./ход</div>
+       <div>Защита: ${data.defense}</div>
+     `;
+
+     // Заполнить вкладку «Строительство»
+     const buildList = popup.querySelector('.rpopup__build-list');
+     buildList.innerHTML = '';
+     for (const project of data.buildQueue) {
+       const pct = Math.round((project.progress / project.total) * 100);
+       buildList.insertAdjacentHTML('beforeend', `
+         <div class="build-item">
+           <span>${project.name}</span>
+           <span>${project.progress}/${project.total} ходов</span>
+           <div class="build-item__bar">
+             <div class="build-item__fill" style="width:${pct}%"></div>
+           </div>
+         </div>
+       `);
+     }
+
+     // Позиционировать, не выходя за края экрана
+     const w = 280, h = 200;
+     const left = Math.min(screenX + 10, window.innerWidth  - w - 10);
+     const top  = Math.min(screenY + 10, window.innerHeight - h - 10);
+     popup.style.left = `${left}px`;
+     popup.style.top  = `${top}px`;
+
+     popup.hidden = false;
+     activateTab(popup, 'region');
+   }
+   ```
+
+4. Переключение вкладок:
+   ```js
+   function activateTab(popup, tabName) {
+     popup.querySelectorAll('.rpopup__tab').forEach(t => {
+       t.classList.toggle('is-active', t.dataset.tab === tabName);
+     });
+     popup.querySelectorAll('.rpopup__panel').forEach(p => {
+       p.hidden = p.dataset.panel !== tabName;
+     });
+   }
+
+   document.getElementById('region-popup').addEventListener('click', e => {
+     if (e.target.matches('.rpopup__tab')) {
+       activateTab(e.target.closest('.rpopup'), e.target.dataset.tab);
+     }
+     if (e.target.matches('.rpopup__close')) {
+       e.target.closest('.rpopup').hidden = true;
+     }
+   });
+   ```
+
+5. Drag-to-move попапа:
+   ```js
+   function makeDraggable(el, handleSel) {
+     let ox = 0, oy = 0, mx = 0, my = 0;
+     el.querySelector(handleSel).addEventListener('mousedown', e => {
+       ox = el.offsetLeft; oy = el.offsetTop;
+       mx = e.clientX;     my = e.clientY;
+       const move = ev => {
+         el.style.left = (ox + ev.clientX - mx) + 'px';
+         el.style.top  = (oy + ev.clientY - my) + 'px';
+       };
+       const up = () => {
+         document.removeEventListener('mousemove', move);
+         document.removeEventListener('mouseup',   up);
+       };
+       document.addEventListener('mousemove', move);
+       document.addEventListener('mouseup',   up);
+       e.preventDefault();
+     });
+   }
+   makeDraggable(document.getElementById('region-popup'), '.rpopup__header');
+   ```
+
+**Какие файлы затрагиваются:**
+- `index.html` — разметка `#region-popup`
+- `ui/styles.css` — CSS попапа, вкладок, прогресс-баров
+- `js/map.js` — `openRegionPopup`, заменить вызовы `L.popup`
+- `js/ui.js` — `activateTab`, `makeDraggable`
+
+**Тест Шага 62:**
+- Клик по региону открывает кастомный попап с тремя вкладками.
+- Вкладка «Строительство» показывает прогресс-бар для каждого проекта.
+- Попап перетаскивается мышью.
+- Попап не выходит за границы экрана при открытии у края карты.
+- Закрытие по кнопке × работает.
+
+---
+
 
 
 
