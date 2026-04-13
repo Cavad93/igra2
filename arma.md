@@ -5503,3 +5503,274 @@ const CULTURE_GROUPS = {
 
 ---
 
+## БЛОК AL — Спарклайны ресурсов (Шаг 73)
+
+---
+
+### Шаг 73 — Мини-графики динамики ресурсов: sparklines в панели ресурсов
+
+**Цель:** рядом с каждым ресурсом (золото, население, армия) показывать крошечный мини-график за последние 20 ходов. Игрок сразу видит тренд — растёт или падает без клика. Реализация — SVG, генерируется из массива истории.
+
+**Что сделать:**
+
+1. Хранить историю ресурсов в `gameState`:
+   ```js
+   // Добавить в gameState при инициализации
+   gameState.history = {
+     gold:      [],   // массив значений по ходам, макс. 20 элементов
+     manpower:  [],
+     food:      [],
+   };
+
+   // Записывать после каждого хода
+   function recordResourceHistory() {
+     const MAX = 20;
+     for (const key of ['gold', 'manpower', 'food']) {
+       gameState.history[key].push(gameState.resources[key]);
+       if (gameState.history[key].length > MAX) {
+         gameState.history[key].shift();
+       }
+     }
+   }
+   ```
+
+2. Функция `buildSparkline(values, width, height)` — генерирует SVG-строку:
+   ```js
+   // ui/sparkline.js
+   export function buildSparkline(values, width = 48, height = 16) {
+     if (values.length < 2) return '';
+
+     const min  = Math.min(...values);
+     const max  = Math.max(...values);
+     const range = max - min || 1;
+
+     const xStep = width / (values.length - 1);
+     const points = values.map((v, i) => {
+       const x = i * xStep;
+       const y = height - ((v - min) / range) * height;
+       return `${x.toFixed(1)},${y.toFixed(1)}`;
+     }).join(' ');
+
+     // Цвет: зелёный если последнее > первого, красный если меньше
+     const trend = values[values.length - 1] >= values[0];
+     const color = trend ? 'rgba(100,210,80,0.8)' : 'rgba(220,80,60,0.8)';
+
+     return `
+       <svg xmlns="http://www.w3.org/2000/svg"
+            width="${width}" height="${height}"
+            viewBox="0 0 ${width} ${height}"
+            class="sparkline">
+         <polyline points="${points}"
+                   fill="none"
+                   stroke="${color}"
+                   stroke-width="1.5"
+                   stroke-linejoin="round"
+                   stroke-linecap="round"/>
+         <!-- Последняя точка — кружок -->
+         <circle cx="${(values.length-1)*xStep}" cy="${height - ((values[values.length-1]-min)/range)*height}"
+                 r="2" fill="${color}"/>
+       </svg>
+     `;
+   }
+   ```
+
+3. Встроить sparkline в строку ресурса в `ui/resource_bar.js`:
+   ```js
+   import { buildSparkline } from './sparkline.js';
+
+   function renderResourceRow(key, label, value, history) {
+     const spark = buildSparkline(history, 48, 16);
+     return `
+       <div class="resource-row" data-resource="${key}">
+         <span class="resource-row__label">${label}</span>
+         <span class="resource-row__value">${formatValue(value)}</span>
+         <span class="resource-row__spark">${spark}</span>
+       </div>
+     `;
+   }
+   ```
+   CSS:
+   ```css
+   .resource-row {
+     display: flex;
+     align-items: center;
+     gap: 8px;
+     padding: 3px 0;
+   }
+   .resource-row__label { font-size: 11px; opacity: 0.6; min-width: 60px; }
+   .resource-row__value { font-size: 13px; font-weight: 600; min-width: 48px; }
+   .resource-row__spark { flex-shrink: 0; }
+   .sparkline { vertical-align: middle; }
+   ```
+
+4. Обновлять sparklines после каждого хода:
+   ```js
+   function refreshResourceBar() {
+     const keys = ['gold', 'manpower', 'food'];
+     const labels = { gold: 'Золото', manpower: 'Армия', food: 'Еда' };
+
+     const container = document.getElementById('resource-bar');
+     container.innerHTML = keys.map(k =>
+       renderResourceRow(k, labels[k],
+         gameState.resources[k],
+         gameState.history[k])
+     ).join('');
+   }
+
+   eventBus.on('turnEnd', () => {
+     recordResourceHistory();
+     refreshResourceBar();
+   });
+   ```
+
+5. Тултип при наведении на sparkline — показывает точные значения за последние ходы:
+   ```js
+   // Делегированный обработчик на resource-bar
+   document.getElementById('resource-bar').addEventListener('mouseover', e => {
+     const row = e.target.closest('[data-resource]');
+     if (!row) return;
+     const key  = row.dataset.resource;
+     const hist = gameState.history[key];
+     const tip  = hist.slice(-5).reverse()
+       .map((v, i) => `Ход -${i}: ${v}`)
+       .join('\n');
+     row.title = tip;
+   });
+   ```
+
+**Какие файлы затрагиваются:**
+- `ui/sparkline.js` — новый файл, `buildSparkline`
+- `ui/resource_bar.js` — `renderResourceRow` с sparkline
+- `js/game.js` — `recordResourceHistory`, `refreshResourceBar` после хода
+- `ui/styles.css` — `.resource-row`, `.sparkline`
+
+**Тест Шага 73:**
+- Рядом с каждым ресурсом виден мини-график из 20 точек.
+- Растущий тренд — зелёная линия, падающий — красная.
+- После каждого хода график обновляется.
+- Наведение на строку ресурса показывает последние 5 значений в `title`.
+
+---
+
+## БЛОК AM — Индикаторы ИИ (Шаг 74)
+
+---
+
+### Шаг 74 — Визуальные индикаторы действий ИИ: что делают другие нации
+
+**Цель:** после хода ИИ-наций показывать краткий отчёт об их действиях. На карте рядом с регионами ИИ появляются временные иконки-флеши (армия двигалась, велось строительство, заключён договор). Это делает мир «живым» — игрок видит, что происходит вокруг.
+
+**Что сделать:**
+
+1. Структура события действия ИИ:
+   ```js
+   {
+     nationId:  'rome',
+     type:      'move',       // move | build | diplo | recruit | attack
+     regionId:  'latium',
+     text:      'Рим двигает армию в Лациум',
+   }
+   ```
+
+2. Функция `flashAIAction(action)` — показать временную иконку на карте:
+   ```js
+   // js/ai_indicators.js
+   const AI_ICONS = {
+     move:    'assets/icons/nomadic_bow.svg',    // стрела движения
+     build:   'assets/icons/construction.svg',
+     diplo:   'assets/icons/scroll.svg',
+     recruit: 'assets/icons/roman_eagle.svg',
+     attack:  'assets/icons/generic_sword.svg',
+   };
+
+   export function flashAIAction(action) {
+     const [lat, lng] = getRegionCenter(action.regionId);
+     const icon = AI_ICONS[action.type] ?? AI_ICONS.attack;
+
+     const html = `
+       <div class="ai-flash ai-flash--${action.type}">
+         <img src="${icon}" width="16" height="16">
+       </div>
+     `;
+     const divIcon = L.divIcon({ className: '', html, iconSize: [28,28], iconAnchor: [14,14] });
+     const marker  = L.marker([lat + 0.2, lng + 0.2], { icon: divIcon, zIndexOffset: 200 });
+     marker.addTo(leafletMap);
+
+     // Удалить через 2.5 секунды
+     setTimeout(() => marker.remove(), 2500);
+   }
+   ```
+   CSS:
+   ```css
+   .ai-flash {
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     width: 28px; height: 28px;
+     border-radius: 50%;
+     background: rgba(10,8,4,0.8);
+     border: 1px solid rgba(200,170,90,0.5);
+     animation: aiFlashPop 0.3s ease, aiFlashFade 0.5s ease 2s forwards;
+   }
+   @keyframes aiFlashPop {
+     from { transform: scale(0.5); opacity: 0; }
+     to   { transform: scale(1);   opacity: 1; }
+   }
+   @keyframes aiFlashFade {
+     to { opacity: 0; transform: scale(0.8); }
+   }
+   .ai-flash img { filter: invert(1) sepia(1) saturate(1.5); opacity: 0.85; }
+   ```
+
+3. Показывать индикаторы поочерёдно с небольшой задержкой (не все сразу):
+   ```js
+   export function showAITurnActions(actions) {
+     // Показывать не более 8 индикаторов чтобы не перегрузить карту
+     const limited = actions.slice(0, 8);
+
+     limited.forEach((action, i) => {
+       setTimeout(() => flashAIAction(action), i * 180);
+     });
+
+     // Добавить все действия ИИ в ленту событий (Шаг 68), но некоторые
+     // пропустить чтобы не спамить — только важные
+     for (const action of actions) {
+       if (action.type === 'attack' || action.type === 'diplo') {
+         addEvent({ type: 'war', text: action.text });
+       }
+     }
+   }
+   ```
+
+4. Вызов после расчёта хода ИИ:
+   ```js
+   // В основном игровом цикле после processAITurns()
+   const aiActions = collectAIActions();   // собрать все действия за ход
+   showAITurnActions(aiActions);
+   ```
+
+5. Настройка в меню опций — «Показывать действия ИИ» (по умолчанию включено):
+   ```js
+   // settings.js
+   const showAIIndicators = () =>
+     localStorage.getItem('showAIIndicators') !== 'false';
+
+   // В flashAIAction:
+   if (!showAIIndicators()) return;
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/ai_indicators.js` — новый файл
+- `js/game.js` — `showAITurnActions` после хода ИИ
+- `ui/styles.css` — `.ai-flash`, анимации
+- `js/settings.js` — опция `showAIIndicators`
+
+**Тест Шага 74:**
+- После нажатия «Следующий ход» на карте появляются мигающие иконки в регионах ИИ.
+- Иконки исчезают через ~2.5 сек с плавным fade.
+- Одновременно не более 8 иконок на карте.
+- При выключении опции в настройках иконки не показываются.
+- Атаки ИИ попадают в ленту событий как военные события.
+
+---
+
