@@ -1,0 +1,104 @@
+{
+  "version": "1.0",
+  "assets": [
+    {
+      "id": "greek/woman_red",
+      "group": "portraits",
+      "filename": "assets/portraits/greek/woman_red.jpg",
+      "source": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547860/1228117/main-image",
+      "license": "CC0 1.0",
+      "attribution": "The Metropolitan Museum of Art, object 547860",
+      "description": "Молодая женщина в красном, Фаюм, 90-120 н.э."
+    },
+    {
+      "id": "greek/man_bearded",
+      "group": "portraits",
+      "filename": "assets/portraits/greek/man_bearded.jpg",
+      "source": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547856/1178594/main-image",
+      "license": "CC0 1.0",
+      "attribution": "The Metropolitan Museum of Art, object 547856",
+      "description": "Бородатый мужчина, Фаюм, 150-200 н.э."
+    },
+    {
+      "id": "greek/man_thinface",
+      "group": "portraits",
+      "filename": "assets/portraits/greek/man_thinface.jpg",
+      "source": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547858/1151914/main-image",
+      "license": "CC0 1.0",
+      "attribution": "The Metropolitan Museum of Art, object 547858",
+      "description": "Мужчина, Фаюм, 100-150 н.э."
+    },
+    {
+      "id": "greek/woman_wreath",
+      "group": "portraits",
+      "filename": "assets/portraits/greek/woman_wreath.jpg",
+      "source": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547861/1215090/main-image",
+      "license": "CC0 1.0",
+      "attribution": "The Metropolitan Museum of Art, object 547861",
+      "description": "Женщина с золотым венком, Фаюм, 100-150 н.э."
+    },
+    {
+      "id": "roman/roman_youth",
+      "group": "portraits",
+      "filename": "assets/portraits/roman/roman_youth.jpg",
+      "source": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547768/1084202/main-image",
+      "license": "CC0 1.0",
+      "attribution": "The Metropolitan Museum of Art, object 547768",
+      "description": "Молодой римлянин, Фаюм, 80-100 н.э."
+    },
+    {
+      "id": "egyptian/mummy_youth",
+      "group": "portraits",
+      "filename": "assets/portraits/egyptian/mummy_youth.jpg",
+      "source": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547697/1178606/main-image",
+      "license": "CC0 1.0",
+      "attribution": "The Metropolitan Museum of Art, object 547697",
+      "description": "Юноша, Фаюм, 120-140 н.э."
+    },
+    {
+      "id": "greek_vase",
+      "group": "textures",
+      "filename": "assets/textures/greek_vase.jpg",
+      "source": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/254944/541377/main-image",
+      "license": "CC0 1.0",
+      "attribution": "The Metropolitan Museum of Art, object 254944, Antimenes Painter",
+      "description": "Чернофигурная амфора, 520-510 до н.э."
+    },
+    {
+      "id": "linen",
+      "group": "textures",
+      "filename": "assets/textures/linen.jpg",
+      "source": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/254896/1866772/main-image",
+      "license": "CC0 1.0",
+      "attribution": "The Metropolitan Museum of Art, object 254896, Berlin Painter",
+      "description": "Краснофигурный лекиф, 500-490 до н.э."
+    },
+    {
+      "id": "splash_pompeii",
+      "group": "backgrounds",
+      "filename": "assets/backgrounds/splash_pompeii.jpg",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Fresco_from_the_House_of_Julia_Felix,_Pompeii_depicting_scenes_from_the_Forum_market.JPG",
+      "license": "Public Domain",
+      "attribution": "Fresco from the House of Julia Felix, Pompeii. Wikimedia Commons",
+      "description": "Помпейская фреска, рынок, I в. н.э."
+    },
+    {
+      "id": "splash_alexander",
+      "group": "backgrounds",
+      "filename": "assets/backgrounds/splash_alexander.jpg",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Alexander_%28Battle_of_Issus%29_Mosaic.jpg",
+      "license": "Public Domain",
+      "attribution": "Alexander Mosaic (Battle of Issus). Wikimedia Commons",
+      "description": "Мозаика Александра, Помпеи, ок. 100 до н.э."
+    },
+    {
+      "id": "splash_battle",
+      "group": "backgrounds",
+      "filename": "assets/backgrounds/splash_battle.jpg",
+      "source": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Alexander_%28Battle_of_Issus%29_Mosaic.jpg",
+      "license": "Public Domain",
+      "attribution": "Alexander Mosaic (Battle of Issus). Wikimedia Commons",
+      "description": "Мозаика Александра (общий план)"
+    }
+  ]
+}
