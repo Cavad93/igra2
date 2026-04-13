@@ -953,9 +953,32 @@ function switchRegionTab(tab) {
   if (infoPane)  infoPane.classList.toggle('hidden', tab !== 'info');
   if (buildPane) buildPane.classList.toggle('hidden', tab !== 'build');
   if (diplPane)  diplPane.classList.toggle('hidden', tab !== 'diplomacy');
-  document.querySelectorAll('.ri-tab').forEach(b =>
-    b.classList.toggle('ri-tab--active', b.dataset.tab === tab)
-  );
+  let activeBtn = null;
+  document.querySelectorAll('.ri-tab').forEach(b => {
+    const isActive = b.dataset.tab === tab;
+    b.classList.toggle('ri-tab--active', isActive);
+    if (isActive) activeBtn = b;
+  });
+  if (activeBtn) updateTabIndicator(activeBtn);
+  // Перезапуск fade-in анимации для активного контента
+  const activePane = tab === 'info' ? infoPane : tab === 'build' ? buildPane : diplPane;
+  if (activePane) {
+    activePane.classList.remove('ri-tab-content');
+    void activePane.offsetWidth;
+    activePane.classList.add('ri-tab-content');
+  }
+}
+
+/**
+ * Шаг 38 — обновляет позицию скользящего индикатора активной вкладки.
+ * Принимает кнопку .ri-tab--active и пересчитывает left/width индикатора.
+ */
+function updateTabIndicator(activeBtn) {
+  if (!activeBtn || !activeBtn.parentElement) return;
+  const indicator = activeBtn.parentElement.querySelector('.ri-tab-indicator');
+  if (!indicator) return;
+  indicator.style.left  = activeBtn.offsetLeft  + 'px';
+  indicator.style.width = activeBtn.clientWidth + 'px';
 }
 
 function showRegionInfo(regionId) {
@@ -1118,8 +1141,9 @@ function showRegionInfo(regionId) {
           onclick="switchRegionTab('build')">${isPlayer ? '🏗 Строительство' : 'Строительство'}</button>
         ${!isPlayer ? `<button class="ri-tab${curTab === 'diplomacy' ? ' ri-tab--active' : ''}" data-tab="diplomacy"
           onclick="switchRegionTab('diplomacy')">🤝 Дипломатия</button>` : ''}
+        <div class="ri-tab-indicator"></div>
       </div>
-      <div id="region-tab-info" class="region-info-body${curTab !== 'info' ? ' hidden' : ''}">
+      <div id="region-tab-info" class="region-info-body ri-tab-content${curTab !== 'info' ? ' hidden' : ''}">
         <div class="region-info-desc">${mapData.description}</div>
         <div class="ri-bar-row">
           <span class="ri-bar-lbl">🌿 Плодородие</span>
@@ -1143,10 +1167,10 @@ function showRegionInfo(regionId) {
         ${productionLines ? `<div class="region-production"><div class="section-label">Производство:</div>${productionLines}</div>` : ''}
         ${buildings ? `<div class="region-buildings"><div class="section-label">Постройки:</div>${buildings}</div>` : ''}
       </div>
-      <div id="region-tab-build" class="region-tab-build${curTab !== 'build' ? ' hidden' : ''}">
+      <div id="region-tab-build" class="region-tab-build ri-tab-content${curTab !== 'build' ? ' hidden' : ''}">
         ${buildTabHtml}
       </div>
-      ${!isPlayer ? `<div id="region-tab-diplomacy" class="region-tab-diplomacy${curTab !== 'diplomacy' ? ' hidden' : ''}">
+      ${!isPlayer ? `<div id="region-tab-diplomacy" class="region-tab-diplomacy ri-tab-content${curTab !== 'diplomacy' ? ' hidden' : ''}">
         ${diplTabHtml}
       </div>` : ''}
       ${footerHtml}
@@ -1174,6 +1198,11 @@ function showRegionInfo(regionId) {
   // force reflow, чтобы анимация перезапускалась на повторных кликах
   void panel.offsetWidth;
   panel.classList.add('ri-entering');
+
+  // Шаг 38: позиционируем скользящий индикатор под активной вкладкой
+  // после того, как DOM смонтирован (учитываем offsetLeft/clientWidth).
+  const activeBtn = panel.querySelector('.ri-tab.ri-tab--active');
+  if (activeBtn) updateTabIndicator(activeBtn);
 }
 
 function closeRegionInfo() {

@@ -5910,6 +5910,7 @@
        ВКЛАДКИ ПАНЕЛИ РЕГИОНА
     ══════════════════════════════════════════════════════════ */
     .ri-tabs {
+      position: relative;
       display: flex;
       border-bottom: 1px solid var(--border-gold);
       background: rgba(30,18,6,0.85);
@@ -5931,7 +5932,28 @@
     .ri-tab--active {
       color: var(--text-gold);
       background: rgba(107,79,26,.25);
-      border-bottom: 2px solid var(--text-gold);
+      font-weight: 600;
+    }
+    /* Скользящий индикатор активной вкладки (Шаг 38) */
+    .ri-tab-indicator {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: left 0.25s cubic-bezier(.4,0,.2,1),
+                  width 0.25s cubic-bezier(.4,0,.2,1);
+      border-radius: 1px 1px 0 0;
+      pointer-events: none;
+    }
+    /* Плавное появление контента вкладки (Шаг 38) */
+    .ri-tab-content {
+      animation: ri-tab-fade 0.15s ease-out;
+    }
+    @keyframes ri-tab-fade {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
     .region-tab-build { padding: 0; }
     .region-tab-diplomacy { padding: 8px; overflow-y: auto; }
