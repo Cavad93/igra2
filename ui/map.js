@@ -7,6 +7,7 @@ let regionLayers = {};          // { regionId: L.Polygon }
 let selectedRegionId = null;
 let awmcProvinceLayer = null;   // слой границ провинций из AWMC geodata
 let canvasRenderer = null;      // Canvas-рендерер для производительности с 2800+ полигонами
+let svgTradeRenderer = null;    // SVG-рендерер (Шаг 42) — только для торговых маршрутов (CSS-анимация)
 let regionIdMarkers = [];       // маркеры с ID регионов (для отладки)
 let showRegionIds = false;      // флаг показа ID регионов
 let showTradeRoutes = false;    // флаг показа торговых маршрутов
@@ -114,6 +115,9 @@ function initLeafletMap() {
 
   // Canvas-рендерер: критично для производительности с 2800+ полигонами
   canvasRenderer = L.canvas({ padding: 0.5, tolerance: 4 });
+  // SVG-рендерер (Шаг 42) — только для линий торговых маршрутов.
+  // Нужен, чтобы CSS-анимация stroke-dashoffset работала на <path>.
+  svgTradeRenderer = L.svg({ padding: 0.5 });
 
   // Карта центрируется на Средиземноморье
   // Настройки зума/панорамирования в стиле Google Maps:
@@ -1859,6 +1863,38 @@ function clearRegionIdLabels() {
 // ТОРГОВЫЕ МАРШРУТЫ — ВИЗУАЛИЗАЦИЯ НА КАРТЕ
 // ──────────────────────────────────────────────────────────────
 
+// ── Категории товаров для визуализации (Шаг 42) ─────────────
+// Определяют класс/цвет SVG-линии торгового маршрута.
+const _TRADE_CATEGORY = {
+  // Зерно/еда → зелёный
+  wheat: 'grain', barley: 'grain', salt: 'grain', fish: 'grain',
+  cloth: 'grain', cattle: 'grain', olive_oil: 'grain',
+  // Металлы/сырьё → серый
+  iron: 'metal', tools: 'metal', timber: 'metal', bronze: 'metal',
+  stone: 'metal', marble: 'metal', copper: 'metal', lead: 'metal',
+  // Роскошь → фиолетовый
+  wine: 'luxury', pottery: 'luxury', silk: 'luxury', gold: 'luxury',
+  silver: 'luxury', gems: 'luxury', spices: 'luxury', incense: 'luxury',
+  ivory: 'luxury', purple_dye: 'luxury',
+};
+
+// Возвращает { category, topGood, volume } — главный товар в экспорте игрока партнёру.
+function _classifyTradeRoute(nation) {
+  const stockpile = nation?.economy?.stockpile || {};
+  const surpluses = Object.entries(stockpile)
+    .filter(([, q]) => q > 100)
+    .sort(([, a], [, b]) => b - a);
+  if (!surpluses.length) {
+    return { category: 'general', topGood: null, volume: 0 };
+  }
+  // Объём = сумма трёх крупнейших избытков (суррогат trade_volume).
+  const volume = surpluses.slice(0, 3).reduce((s, [, q]) => s + q, 0);
+  // Категория по крупнейшему избытку; если неизвестен — general.
+  const [topGood] = surpluses[0];
+  const category  = _TRADE_CATEGORY[topGood] || 'general';
+  return { category, topGood, volume };
+}
+
 function renderTradeRouteLines() {
   clearTradeRouteLines();
   if (!window.GAME_STATE?.nations) return;
@@ -1868,15 +1904,26 @@ function renderTradeRouteLines() {
   const playerCenter = _getRegionGroupCenter(playerNation.regions || []);
   if (!playerCenter) return;
 
+  const { category, volume } = _classifyTradeRoute(playerNation);
+  // Ширина ∝ объёму торговли: weight = 1 + volume/500, капнутая на 6.
+  const weight = Math.min(6, Math.max(1.2, 1 + volume / 500));
+
   for (const partnerId of (playerNation.economy?.trade_routes || [])) {
     const partner = GAME_STATE.nations[partnerId];
     if (!partner) continue;
     const partnerCenter = _getRegionGroupCenter(partner.regions || []);
     if (!partnerCenter) continue;
-    const income = _estimateRouteIncome(playerNation, partner);
-    const color  = income > 50 ? '#4CAF50' : income > 10 ? '#FFC107' : '#F44336';
+
+    // L.polyline с SVG-рендерером → <path class="trade-route-path ..." />.
+    // Анимация stroke-dashoffset выполняется через CSS (см. index.html).
     const line = L.polyline([playerCenter, partnerCenter], {
-      color, weight: 2, opacity: 0.7, dashArray: '6,4',
+      renderer: svgTradeRenderer,
+      weight,
+      opacity: 0.75,
+      dashArray: '6 8',
+      lineCap: 'round',
+      className: `trade-route-path ${category}`,
+      interactive: true,
     });
     line.bindTooltip(
       _buildRouteTooltip(playerNation, partner, GAME_STATE.market || {}),
@@ -1888,7 +1935,13 @@ function renderTradeRouteLines() {
 
   if (_hasWorldMarketAccess(playerNation)) {
     const wmLine = L.polyline([playerCenter, [36, 15]], {
-      color: '#2196F3', weight: 2, opacity: 0.5, dashArray: '3,8',
+      renderer: svgTradeRenderer,
+      weight: Math.max(1.5, weight * 0.8),
+      opacity: 0.55,
+      dashArray: '3 8',
+      lineCap: 'round',
+      className: 'trade-route-path world',
+      interactive: true,
     });
     wmLine.bindTooltip('🌍 Мировой рынок');
     wmLine.addTo(leafletMap);

@@ -836,6 +836,30 @@
     }
     .trade-routes-toggle-btn.active { background: #2196F3 !important; color: white !important; border-color: #1565C0 !important; }
 
+    /* ── Шаг 42: Анимированные торговые маршруты ───────────────
+       Маршруты рисуются SVG-линиями с анимацией stroke-dashoffset.
+       Создаётся иллюзия потока точек вдоль линии. */
+    .trade-route-path {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      animation: tradeFlow 1s linear infinite;
+      pointer-events: stroke;
+    }
+    .trade-route-path.grain   { stroke: #a5d6a7; }
+    .trade-route-path.metal   { stroke: #b0bec5; }
+    .trade-route-path.luxury  { stroke: #ce93d8; }
+    .trade-route-path.general { stroke: #d4a853; }
+    .trade-route-path.world   { stroke: #64b5f6; animation-duration: 1.5s; opacity: 0.55; }
+    @keyframes tradeFlow {
+      from { stroke-dashoffset: 0;   }
+      to   { stroke-dashoffset: -14; }
+    }
+    /* Уважаем prefers-reduced-motion — статические пунктиры */
+    @media (prefers-reduced-motion: reduce) {
+      .trade-route-path { animation: none; }
+    }
+
     /* Разбивка производства (ECO_006) */
     .prod-breakdown       { margin-top: 8px; border-top: 1px solid #444; padding-top: 6px; }
     .prod-breakdown-title { font-size: 11px; font-weight: bold; color: #d4a853; margin-bottom: 4px; }
