@@ -3774,3 +3774,342 @@ main().catch(console.error);
 
 ---
 
+## БЛОК AZ — Архив ассетов: сбор изображений (Шаги 62–68)
+
+---
+
+### Шаг 62 — Инфраструктура архива: папки, .gitignore, manifest.json, download.sh
+
+**Цель:** создать в репозитории каркас архива ассетов. JPG-файлы не хранятся в git (они тяжёлые и не нужны разработчику без запуска). Хранятся только: манифест с URL, скрипт загрузки, SVG-файлы. Команда `bash assets/download.sh` воспроизводимо скачивает всё на любой машине.
+
+**Что сделать:**
+
+1. Создать структуру папок:
+   ```
+   assets/
+   ├── portraits/
+   │   ├── greek/
+   │   ├── roman/
+   │   ├── carthaginian/
+   │   ├── egyptian/
+   │   ├── persian/
+   │   ├── celtic/
+   │   ├── indian/
+   │   ├── east_asian/
+   │   └── nomadic/
+   ├── textures/
+   ├── backgrounds/
+   ├── icons/
+   ├── manifest.json
+   ├── download.sh
+   └── README.md
+   ```
+
+2. Добавить в `.gitignore`:
+   ```
+   assets/portraits/**/*.jpg
+   assets/textures/*.jpg
+   assets/backgrounds/*.jpg
+   ```
+
+3. Создать `assets/manifest.json` — реестр всех ассетов:
+   ```json
+   {
+     "version": "1.0",
+     "assets": [
+       {
+         "id": "greek/woman_red",
+         "group": "portraits",
+         "filename": "assets/portraits/greek/woman_red.jpg",
+         "source": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547860/1228117/main-image",
+         "license": "CC0 1.0",
+         "attribution": "The Metropolitan Museum of Art, object 547860"
+       }
+     ]
+   }
+   ```
+   Каждый ассет имеет `id`, `group`, `filename`, `source` (прямой URL), `license`, `attribution`.
+
+4. Создать `assets/download.sh`:
+   ```bash
+   #!/usr/bin/env bash
+   set -euo pipefail
+   MANIFEST="$(dirname "$0")/manifest.json"
+
+   # jq обязателен: brew install jq / apt install jq
+   count=$(jq '.assets | length' "$MANIFEST")
+   echo "Загружаю $count ассетов..."
+
+   jq -c '.assets[]' "$MANIFEST" | while IFS= read -r asset; do
+     filename=$(echo "$asset" | jq -r '.filename')
+     source=$(echo   "$asset" | jq -r '.source')
+
+     if [ -f "$filename" ]; then
+       echo "  SKIP $filename"
+       continue
+     fi
+
+     mkdir -p "$(dirname "$filename")"
+     echo "  GET  $filename"
+     curl -fsSL --retry 3 --retry-delay 2 \
+          -o "$filename" "$source" || echo "  FAIL $filename"
+   done
+
+   echo "Готово."
+   ```
+
+5. Создать `assets/README.md` с таблицей источников и лицензий.
+
+**Тест Шага 62:**
+- `bash assets/download.sh` завершается без ошибок.
+- `node -e "require('./assets/manifest.json')"` — валидный JSON.
+- `git ls-files assets/ | grep '\.jpg'` возвращает пусто.
+- SVG-файлы из `assets/icons/` присутствуют в git.
+
+---
+
+### Шаг 63 — Греческие и римские портреты: Фаюмская коллекция Met Museum
+
+**Цель:** добавить в манифест 6 портретов из Фаюмской коллекции Метрополитен-музея (CC0). Это основа для греческой, римской и египетской культурных групп. Все портреты — реалистичные энкаустические картины I–III вв. н.э.
+
+**Добавить в `assets/manifest.json`:**
+
+| id | Описание | Met object |
+|----|----------|-----------|
+| `greek/woman_red` | Молодая женщина в красном | 547860 |
+| `greek/man_bearded` | Бородатый мужчина | 547856 |
+| `greek/man_thinface` | Мужчина | 547858 |
+| `greek/woman_wreath` | Женщина с золотым венком | 547861 |
+| `roman/roman_youth` | Молодой римлянин | 547768 |
+| `egyptian/mummy_youth` | Юноша | 547697 |
+
+Все URL вида:
+```
+https://collectionapi.metmuseum.org/api/collection/v1/iiif/{objectId}/{imageId}/main-image
+```
+
+**Дополнительные портреты для расширения пула** — найти через API:
+```bash
+# Поиск Фаюмских портретов в открытом доступе
+curl "https://collectionapi.metmuseum.org/public/collection/v1/search\
+?q=fayum+portrait&isPublicDomain=true&medium=Encaustic" \
+| jq '.objectIDs[:20]'
+```
+Из результатов выбрать ещё 4–6 объектов с `hasImages: true` и добавить в манифест.
+
+**Тест Шага 63:**
+- После `bash assets/download.sh` все 6 файлов присутствуют в `assets/portraits/greek/` и `roman/`.
+- Каждый JPG весит не менее 50 KB (не пустой).
+- `file assets/portraits/greek/woman_red.jpg` → `JPEG image data`.
+
+---
+
+### Шаг 64 — Персидские, карфагенские и ближневосточные портреты
+
+**Цель:** найти CC0-изображения подходящие для персидской и карфагенской культурных групп. Прямых фаюмских портретов для них нет, поэтому используем: рельефы, терракотовые бюсты, мозаики — всё из Met CC0 или Wikimedia PD.
+
+**Источники для поиска:**
+
+1. **Персидская группа** — рельефы из Персеполя (Met CC0):
+   ```bash
+   curl "https://collectionapi.metmuseum.org/public/collection/v1/search\
+   ?q=achaemenid+portrait&isPublicDomain=true" | jq '.objectIDs[:10]'
+   ```
+   Ориентиры: объекты с тегами `Achaemenid`, `Persian`, `relief`, `head`.
+
+2. **Карфагенская группа** — терракотовые маски и бюсты (Wikimedia PD):
+   - Punic terracotta masks (категория Wikimedia: `Carthaginian_art`)
+   - Стела Баала — Национальный музей Карфагена, PD
+
+3. **Добавить в манифест** (пример для персидской):
+   ```json
+   {
+     "id": "persian/achaemenid_warrior",
+     "group": "portraits",
+     "filename": "assets/portraits/persian/achaemenid_warrior.jpg",
+     "source": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/{id}/{imageId}/main-image",
+     "license": "CC0 1.0",
+     "attribution": "The Metropolitan Museum of Art"
+   }
+   ```
+
+4. Заглушка для групп без реальных портретов — SVG с инициалами нации:
+   ```svg
+   <!-- assets/portraits/placeholder.svg -->
+   <svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+     <rect width="96" height="96" rx="8" fill="#2a1a08"/>
+     <circle cx="48" cy="36" r="20" fill="#4a3010"/>
+     <ellipse cx="48" cy="80" rx="30" ry="20" fill="#4a3010"/>
+     <text x="48" y="42" text-anchor="middle" font-size="20"
+           font-family="serif" fill="rgba(200,170,90,0.8)">?</text>
+   </svg>
+   ```
+
+**Тест Шага 64:**
+- `assets/portraits/persian/` содержит хотя бы 2 JPG после `download.sh`.
+- `assets/portraits/placeholder.svg` существует в git.
+- Заглушка корректно отображается в браузере как 96×96 SVG.
+
+---
+
+### Шаг 65 — Кельтские, индийские и восточноазиатские портреты
+
+**Цель:** подобрать CC0-изображения для трёх оставшихся культурных групп — кельтской, индийской и восточноазиатской. Для каждой группы нужно минимум 2 разных изображения (мужское + женское или молодой + зрелый).
+
+**Источники:**
+
+1. **Кельтская группа** — реконструкции, монеты, украшения как визуальные маркеры:
+   - Wikimedia: категория `Iron_Age_art_of_the_British_Isles` — PD
+   - British Museum (Wikimedia Commons) — многие файлы PD
+   - Ориентир: `La Tène art`, декоративные узоры для текстуры панелей
+
+2. **Индийская группа** — скульптура периода Маурьев и Гупт:
+   ```bash
+   curl "https://collectionapi.metmuseum.org/public/collection/v1/search\
+   ?q=gandhara+head&isPublicDomain=true" | jq '.objectIDs[:10]'
+   ```
+   Гандхарская скульптура I–III вв. — греко-буддийский стиль, лица реалистичны.
+
+3. **Восточноазиатская группа** — портреты эпохи Хань:
+   ```bash
+   curl "https://collectionapi.metmuseum.org/public/collection/v1/search\
+   ?q=han+dynasty+figure&isPublicDomain=true" | jq '.objectIDs[:10]'
+   ```
+   Терракотовые фигуры и фрески эпохи Хань (III в. до н.э. – III в. н.э.).
+
+4. **Кочевая группа** — скифское искусство:
+   ```bash
+   curl "https://collectionapi.metmuseum.org/public/collection/v1/search\
+   ?q=scythian&isPublicDomain=true" | jq '.objectIDs[:10]'
+   ```
+
+5. Добавить найденные объекты в `manifest.json` по той же схеме.
+
+**Тест Шага 65:**
+- `assets/portraits/` содержит не менее 6 подпапок с хотя бы 1 JPG в каждой.
+- `bash assets/download.sh` проходит без ошибок `FAIL`.
+- `wc -l assets/manifest.json` > 100 строк (достаточно записей).
+
+---
+
+### Шаг 66 — Фоновые текстуры панелей: вазы, папирус, ткань
+
+**Цель:** собрать 4–5 фоновых текстур для панелей разных культурных групп. Текстуры должны быть достаточно нейтральными (не мешать читать текст), исторически аутентичными и CC0.
+
+**Источники текстур:**
+
+1. **`greek_vase`** — греческая чернофигурная керамика:
+   ```bash
+   curl "https://collectionapi.metmuseum.org/public/collection/v1/search\
+   ?q=black-figure+amphora&isPublicDomain=true&medium=Terracotta" \
+   | jq '.objectIDs[:5]'
+   ```
+   Выбрать объект с плотным узором на тёмном фоне.
+
+2. **`papyrus`** — египетский папирус (для египетской группы):
+   ```bash
+   curl "https://collectionapi.metmuseum.org/public/collection/v1/search\
+   ?q=papyrus+egypt&isPublicDomain=true" | jq '.objectIDs[:5]'
+   ```
+
+3. **`roman_mosaic`** — римская мозаика (для римской группы):
+   - Wikimedia: `Roman_mosaics` — множество PD файлов
+   - Ориентир: мелкий геометрический паттерн
+
+4. **`persian_textile`** — персидский текстиль (для персидской группы):
+   ```bash
+   curl "https://collectionapi.metmuseum.org/public/collection/v1/search\
+   ?q=persian+textile&isPublicDomain=true" | jq '.objectIDs[:5]'
+   ```
+
+5. **`linen`** — нейтральный льняной фон (для остальных групп):
+   - Любая Met CC0 текстура ткани древнего периода
+
+**Добавить в манифест** найденные текстуры с `"group": "textures"`.
+
+**Тест Шага 66:**
+- `assets/textures/` содержит 4–5 JPG после `download.sh`.
+- Каждая текстура при `background-size: 320px` создаёт повторяющийся паттерн без разрывов.
+- Текст поверх текстуры с `opacity: 0.07` читается без труда.
+
+---
+
+### Шаг 67 — Splash-фоны: исторические сцены для каждой культурной группы
+
+**Цель:** подобрать по одному полноэкранному фону для splash-экрана каждой из 10 культурных групп. Фоны должны быть атмосферными, горизонтальными (landscape), с тёмными зонами где будет текст.
+
+**Источники и целевые изображения:**
+
+| Группа | Описание | Источник |
+|--------|----------|----------|
+| greek | Помпейская фреска — рыночная сцена | Wikimedia PD |
+| roman | Мозаика Александра (Битва при Иссе) | Wikimedia PD |
+| carthaginian | Рельеф с Ваал-Аммоном / пунийская стела | Wikimedia PD |
+| egyptian | Роспись гробницы Небамуна — пир | British Museum / Wikimedia PD |
+| persian | Рельеф из Персеполя — процессия данников | Wikimedia PD |
+| celtic | Котёл из Гундеструпа | Wikimedia PD (Nat. Museum Denmark) |
+| indian | Скульптура Санчи — восточные ворота | Wikimedia PD |
+| east_asian | Шёлковая живопись эпохи Хань | Met Museum CC0 |
+| nomadic | Скифские золотые украшения (Эрмитаж) | Wikimedia PD |
+| generic | Мозаика Александра (альтернативный кроп) | Wikimedia PD |
+
+**Для каждого изображения:**
+1. Найти на Wikimedia Commons или через Met API
+2. Скачать оригинал (не thumbnail — нужно минимум 1920px ширины)
+3. Добавить в `manifest.json` с `"group": "backgrounds"`
+
+**Скрипт поиска на Wikimedia для конкретного изображения:**
+```bash
+# Пример: найти прямой URL файла по имени
+curl "https://en.wikipedia.org/w/api.php?action=query\
+&titles=File:Nebamun_hunting_in_the_marshes.jpg\
+&prop=imageinfo&iiprop=url&format=json" | jq '.query.pages[].imageinfo[].url'
+```
+
+**Тест Шага 67:**
+- `assets/backgrounds/` содержит 10 JPG после `download.sh`.
+- Каждый файл весит не менее 200 KB (достаточное разрешение).
+- Splash-экран выглядит атмосферно при `filter: sepia(0.25) brightness(0.75)`.
+
+---
+
+### Шаг 68 — SVG-иконки наций и декоративные рамки (файлы в git)
+
+**Цель:** создать 10 SVG-иконок культурных групп и 2 варианта декоративной рамки. SVG маленькие — они хранятся в git. Это завершает архив ассетов: все файлы на месте, скрипт работает.
+
+**SVG-иконки для `assets/icons/`:**
+
+```
+owl_athena.svg       — греческая сова (голова совы, стилизованная)
+roman_eagle.svg      — орёл легиона (расправленные крылья, SPQR)
+carthage_star.svg    — звезда Танит (восьмилучевая + треугольник)
+egyptian_ankh.svg    — анкх (крест с петлёй сверху)
+persian_faravahar.svg — фравахар (крылатый диск, упрощённый)
+celtic_torque.svg    — кельтский торк (круговой узел)
+indian_lotus.svg     — лотос (8 лепестков)
+east_asian_dragon.svg — дракон (S-образный силуэт)
+nomadic_bow.svg      — составной лук (дугообразный, со стрелой)
+generic_sword.svg    — прямой меч (крест + клинок)
+```
+
+**SVG-рамки:**
+```
+border_meander_gold.svg  — меандровый орнамент, золотистый
+border_meander_dark.svg  — меандровый орнамент, тёмный
+```
+
+**Требования к каждому SVG:**
+- `viewBox="0 0 32 32"` (или 24×24 для маленьких вариантов)
+- `fill="currentColor"` — цвет задаётся через CSS
+- Монохромный — без градиентов и сложных фильтров
+- Размер файла ≤ 2 KB
+
+**Тест Шага 68:**
+- `git ls-files assets/icons/` показывает все 12 SVG-файлов.
+- Каждый SVG валиден: `xmllint --noout assets/icons/owl_athena.svg`.
+- В браузере иконка корректно масштабируется до 16px и 48px.
+- `bash assets/download.sh` + проверка: `ls assets/portraits/greek/ | wc -l` ≥ 4.
+- Итог: архив полностью воспроизводим на чистой машине командой `bash assets/download.sh`.
+
+---
+
