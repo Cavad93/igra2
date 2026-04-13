@@ -623,6 +623,106 @@
     }
 
     /* ══════════════════════════════════════════════════
+       Шаг 52 — Визуальная карточка итога хода
+       ══════════════════════════════════════════════════ */
+    #turn-summary-card {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 340px;
+      z-index: 8500;
+      background: rgba(13, 10, 5, 0.97);
+      border: 1px solid var(--border-gold);
+      border-radius: 6px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7),
+                  0 0 0 1px rgba(212, 168, 83, 0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      animation: tsc-appear 0.3s ease-out;
+      color: var(--text-light);
+      font-size: 13px;
+      padding: 14px 16px 12px;
+    }
+    #turn-summary-card.hidden { display: none; }
+    @keyframes tsc-appear {
+      from { opacity: 0; transform: translate(-50%, calc(-50% + 20px)); }
+      to   { opacity: 1; transform: translate(-50%, -50%); }
+    }
+    #turn-summary-card .tsc-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(107, 79, 26, 0.35);
+      font-weight: 600;
+      color: var(--border-gold);
+    }
+    #turn-summary-card .tsc-header #tsc-turn   { flex: 0 0 auto; }
+    #turn-summary-card .tsc-header #tsc-date   { flex: 1 1 auto; text-align: center; color: var(--text-dim); font-weight: 400; }
+    #turn-summary-card .tsc-header #tsc-season { flex: 0 0 auto; font-size: 16px; }
+    #turn-summary-card .tsc-deltas { margin-bottom: 6px; }
+    #turn-summary-card .tsc-delta-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(107, 79, 26, 0.15);
+      font-size: 13px;
+    }
+    #turn-summary-card .tsc-delta-row:last-child { border-bottom: none; }
+    #turn-summary-card .tsc-delta-label { color: var(--text-light); }
+    #turn-summary-card .tsc-delta-val   { font-variant-numeric: tabular-nums; font-weight: 600; }
+    #turn-summary-card .tsc-delta-pos { color: #4caf50; }
+    #turn-summary-card .tsc-delta-neg { color: #f44336; }
+    #turn-summary-card .tsc-alerts:empty { display: none; }
+    #turn-summary-card .tsc-alert {
+      margin-top: 6px;
+      padding: 5px 8px;
+      font-size: 11px;
+      border-radius: 3px;
+      background: rgba(244, 67, 54, 0.12);
+      border-left: 2px solid #f44336;
+      color: #ffcdd2;
+    }
+    #turn-summary-card .tsc-alert-warning {
+      background: rgba(255, 152, 0, 0.12);
+      border-left-color: #ff9800;
+      color: #ffe0b2;
+    }
+    #turn-summary-card .tsc-footer {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #turn-summary-card .tsc-progress {
+      height: 2px;
+      width: 100%;
+      background: var(--border-gold);
+      animation: tsc-countdown 5s linear forwards;
+      transform-origin: left center;
+    }
+    @keyframes tsc-countdown {
+      from { width: 100%; }
+      to   { width: 0%; }
+    }
+    #turn-summary-card #tsc-continue-btn {
+      align-self: flex-end;
+      padding: 6px 14px;
+      background: rgba(107, 79, 26, 0.3);
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+      color: var(--text-light);
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #turn-summary-card #tsc-continue-btn:hover {
+      background: rgba(212, 168, 83, 0.25);
+    }
+
+    /* ══════════════════════════════════════════════════
        Шаг 27 — Toast-уведомления
        ══════════════════════════════════════════════════ */
     #toast-container {
@@ -9029,6 +9129,21 @@
   <!-- Шаг 27: контейнер для toast-уведомлений -->
   <div id="toast-container"></div>
 
+  <!-- Шаг 52: визуальная карточка итога хода -->
+  <div id="turn-summary-card" class="hidden">
+    <div class="tsc-header">
+      <span id="tsc-turn">Ход 0</span>
+      <span id="tsc-date"></span>
+      <span id="tsc-season">🌸</span>
+    </div>
+    <div class="tsc-deltas" id="tsc-deltas"></div>
+    <div class="tsc-alerts" id="tsc-alerts"></div>
+    <div class="tsc-footer">
+      <div class="tsc-progress"></div>
+      <button type="button" id="tsc-continue-btn" onclick="closeTurnSummaryCard()">Продолжить →</button>
+    </div>
+  </div>
+
   <!-- Шаг 30: контекстное меню правой кнопки мыши (на регионе карты) -->
   <div id="ctx-menu"></div>
 
@@ -9651,6 +9766,7 @@
   <script src="ui/map_events.js"></script>
   <script src="ui/map_event_feed.js"></script>
   <script src="ui/map_ai_indicators.js"></script>
+  <script src="ui/turn_summary_card.js"></script>
   <script src="ui/region_build_tab.js"></script>
   <script src="ui/diplomacy_tab.js"></script>
   <script src="ui/diplo_graph.js"></script>

@@ -2310,6 +2310,8 @@ textures/
 
 ### Шаг 52 — Визуальная карточка итога хода
 
+> **Статус:** ✅ **ВЫПОЛНЕНО** — файл `ui/turn_summary_card.js` (`snapshotNationState` / `showTurnSummaryCard` / `closeTurnSummaryCard`), HTML `#turn-summary-card` + CSS `.tsc-*` + `@keyframes tsc-appear` / `@keyframes tsc-countdown` в `index.html`, интеграция в `engine/turn.js` (`_tscPrevSnapshot` ДО обработки + вызов `showTurnSummaryCard` после `_recordTurnSummary`), тесты `tests/test_arma_stage52.mjs` (77 passed). Не реализовывать повторно.
+
 **Цель:** после обработки хода — красивая карточка с итогами, которая информирует и удовлетворяет.
 
 **Что сделать:**

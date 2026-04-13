@@ -54,6 +54,15 @@ async function processTurn() {
     try { resetTurnProgress(); } catch (_) {}
   }
 
+  // Шаг 52 — снимок состояния игрока ДО обработки хода (для карточки итогов)
+  let _tscPrevSnapshot = null;
+  try {
+    if (typeof snapshotNationState === 'function') {
+      const _playerNation = GAME_STATE?.nations?.[GAME_STATE?.player_nation];
+      if (_playerNation) _tscPrevSnapshot = snapshotNationState(_playerNation);
+    }
+  } catch (_) {}
+
   const btn = document.getElementById('end-turn-btn');
   const _setStep = (label) => {
     if (btn) btn.textContent = `⏳ ${label}`;
@@ -313,6 +322,17 @@ async function processTurn() {
 
     // 6.5. Итоги хода
     try { _recordTurnSummary(); } catch (e) { console.warn('[summary]', e); }
+
+    // Шаг 52 — визуальная карточка итога хода (дельты ресурсов игрока)
+    try {
+      if (typeof showTurnSummaryCard === 'function' && typeof snapshotNationState === 'function') {
+        const _playerNation = GAME_STATE?.nations?.[GAME_STATE?.player_nation];
+        if (_playerNation && _tscPrevSnapshot) {
+          const _next = snapshotNationState(_playerNation);
+          showTurnSummaryCard(_tscPrevSnapshot, _next);
+        }
+      }
+    } catch (e) { console.warn('[turn_summary_card]', e); }
 
     // 6.55. Шаг 46 — история ресурсов игрока (для спарклайнов в топ-баре)
     {
