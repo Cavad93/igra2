@@ -3491,6 +3491,20 @@
       white-space: nowrap;
     }
 
+    /* ══════════════════════════════════════════════════
+       Шаг 41 — Пульсирующие иконки событий на карте
+    ══════════════════════════════════════════════════ */
+    .map-event-svg {
+      /* SVG-overlay поверх Leaflet, не блокирует клики */
+      pointer-events: none;
+    }
+    .map-event-icon {
+      paint-order: stroke;
+      stroke: rgba(0, 0, 0, 0.55);
+      stroke-width: 0.5px;
+      filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+    }
+
     /* ══════════════════════════════════════════
        РЕЗУЛЬТАТ БИТВЫ (#battle-result-overlay)
     ══════════════════════════════════════════ */
@@ -9022,6 +9036,7 @@
   <script src="engine/turn.js"></script>
   <script src="ui/map.js"></script>
   <script src="ui/map_armies.js"></script>
+  <script src="ui/map_events.js"></script>
   <script src="ui/region_build_tab.js"></script>
   <script src="ui/diplomacy_tab.js"></script>
   <script src="ui/panels.js"></script>
