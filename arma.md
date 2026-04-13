@@ -2353,6 +2353,649 @@ textures/
 | 52 | R | index.html | Карточка итога хода |
 | 53 | R | ui/map.js, index.html | Режим сравнения регионов |
 
+---
+
+# ЧАСТЬ 4 — Визуальные ассеты: CC0-изображения в игре
+
+> Все изображения в этой части — **Public Domain или CC0**.
+> Допустимо коммерческое использование без ограничений.
+> Источники: Metropolitan Museum of Art (CC0), Wikimedia Commons (PD).
+
+---
+
+## БЛОК S — Инфраструктура ассетов (Шаг 54)
+
+---
+
+### Шаг 54 — Asset pipeline: структура папок, манифест, скрипт загрузки
+
+**Цель:** создать в репозитории систему хранения CC0-изображений с манифестом лицензий и скриптом автоматической загрузки. Изображений много — хранить их в git нецелесообразно (вес), поэтому в репозитории хранится только манифест и лёгкие SVG. Тяжёлые JPG загружаются скриптом.
+
+---
+
+**Структура директорий:**
+
+```
+assets/
+  portraits/          ← Фаюмские портреты и другие CC0-лица
+    greek/            ← Эллинская культурная группа
+    roman/            ← Римская / италийская
+    celtic/           ← Кельтская / германская
+    persian/          ← Персидская / ближневосточная
+    egyptian/         ← Египетская
+    indian/           ← Индийская
+    east_asian/       ← Восточноазиатская
+    nomadic/          ← Скифская / кочевая
+    iberian/          ← Иберийская
+    african/          ← Северо- и Центральноафриканская
+    placeholder.svg   ← Fallback-аватар (генерируется при отсутствии)
+
+  textures/           ← Фоновые текстуры панелей
+    greek_vase.jpg    ← Чернофигурная амфора (Met CC0)
+    papyrus.jpg       ← Египетский папирус
+    linen.jpg         ← Льняная ткань (Paper003 уже есть)
+    celtic_knot.svg   ← Кельтский узел
+
+  backgrounds/        ← Полноэкранные фоны
+    splash_pompeii.jpg     ← Фреска Помпеи (Wikimedia PD)
+    splash_battle.jpg      ← Мозаика Александра (Wikimedia PD)
+
+  borders/            ← Декоративные рамки
+    meander_gold.svg       ← Греческий меандр
+    meander_dark.svg       ← Тёмный вариант
+    celtic_border.svg      ← Кельтская рамка
+    egyptian_border.svg    ← Египетский иероглифический бордюр
+
+  icons/              ← Иконки наций
+    owl_athena.svg         ← Сова Афины (Wikimedia CC0)
+    roman_eagle.svg        ← Римский орёл
+    carthage_horse.svg     ← Конь Карфагена
+    celtic_torque.svg      ← Кельтский торквес
+    persian_faravahar.svg  ← Фараваxар (зороастрийский символ)
+
+  manifest.json       ← Манифест всех ассетов (источник, лицензия, URL)
+  download.sh         ← Bash-скрипт загрузки всех JPG/PNG-ассетов
+```
+
+---
+
+**Содержимое `assets/manifest.json`:**
+
+```json
+{
+  "version": "1.0",
+  "generated": "2025",
+  "license_note": "All assets are CC0 or Public Domain. Safe for commercial use.",
+  "assets": [
+    {
+      "id": "portrait_greek_woman_red",
+      "file": "assets/portraits/greek/woman_red.jpg",
+      "source_url": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547860/1228117/main-image",
+      "source_page": "https://www.metmuseum.org/art/collection/search/547860",
+      "title": "Portrait of a young woman in red",
+      "date": "A.D. 90–120",
+      "license": "CC0",
+      "institution": "Metropolitan Museum of Art",
+      "use": ["greek", "roman", "hellenistic"]
+    },
+    {
+      "id": "portrait_greek_man_bearded",
+      "file": "assets/portraits/greek/man_bearded.jpg",
+      "source_url": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547856/1178594/main-image",
+      "source_page": "https://www.metmuseum.org/art/collection/search/547856",
+      "title": "Portrait of a thin-faced, bearded man",
+      "date": "A.D. 140–170",
+      "license": "CC0",
+      "institution": "Metropolitan Museum of Art",
+      "use": ["greek", "roman", "hellenistic"]
+    },
+    {
+      "id": "portrait_greek_man_thinface",
+      "file": "assets/portraits/greek/man_thinface.jpg",
+      "source_url": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547858/1151914/main-image",
+      "source_page": "https://www.metmuseum.org/art/collection/search/547858",
+      "title": "Portrait of a thin-faced man",
+      "date": "A.D. 140–170",
+      "license": "CC0",
+      "institution": "Metropolitan Museum of Art",
+      "use": ["greek", "roman", "hellenistic"]
+    },
+    {
+      "id": "portrait_greek_woman_wreath",
+      "file": "assets/portraits/greek/woman_wreath.jpg",
+      "source_url": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547861/1215090/main-image",
+      "source_page": "https://www.metmuseum.org/art/collection/search/547861",
+      "title": "Portrait of a young woman with a gilded wreath",
+      "date": "A.D. 100–150",
+      "license": "CC0",
+      "institution": "Metropolitan Museum of Art",
+      "use": ["greek", "roman", "egyptian", "hellenistic"]
+    },
+    {
+      "id": "portrait_roman_youth",
+      "file": "assets/portraits/roman/youth.jpg",
+      "source_url": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547768/1084202/main-image",
+      "source_page": "https://www.metmuseum.org/art/collection/search/547768",
+      "title": "Portrait of a Youth",
+      "date": "A.D. 190–210",
+      "license": "CC0",
+      "institution": "Metropolitan Museum of Art",
+      "use": ["roman", "greek", "hellenistic"]
+    },
+    {
+      "id": "portrait_egyptian_mummy",
+      "file": "assets/portraits/egyptian/mummy_youth.jpg",
+      "source_url": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547697/1178606/main-image",
+      "source_page": "https://www.metmuseum.org/art/collection/search/547697",
+      "title": "Mummy with Inserted Panel Portrait of a Youth",
+      "date": "A.D. 100–200",
+      "license": "CC0",
+      "institution": "Metropolitan Museum of Art",
+      "use": ["egyptian", "ptolemaic", "african"]
+    },
+    {
+      "id": "texture_greek_vase_antimenes",
+      "file": "assets/textures/greek_vase.jpg",
+      "source_url": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/254944/541377/main-image",
+      "source_page": "https://www.metmuseum.org/art/collection/search/254944",
+      "title": "Terracotta amphora — Antimenes Painter, ca. 530–520 BCE",
+      "license": "CC0",
+      "institution": "Metropolitan Museum of Art",
+      "use": ["panel_background_greek"]
+    },
+    {
+      "id": "texture_greek_vase_berlin",
+      "file": "assets/textures/greek_vase_berlin.jpg",
+      "source_url": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/254896/1866772/main-image",
+      "source_page": "https://www.metmuseum.org/art/collection/search/254896",
+      "title": "Terracotta amphora — Berlin Painter, ca. 490 BCE",
+      "license": "CC0",
+      "institution": "Metropolitan Museum of Art",
+      "use": ["panel_background_greek"]
+    },
+    {
+      "id": "bg_splash_pompeii",
+      "file": "assets/backgrounds/splash_pompeii.jpg",
+      "source_url": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Fresco_from_the_House_of_Julia_Felix,_Pompeii_depicting_scenes_from_the_Forum_market.JPG",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Fresco_from_the_House_of_Julia_Felix,_Pompeii_depicting_scenes_from_the_Forum_market.JPG",
+      "title": "Fresco from the House of Julia Felix, Pompeii",
+      "date": "1st century AD",
+      "license": "Public Domain",
+      "institution": "Wikimedia Commons",
+      "use": ["splash_screen", "roman_background"]
+    },
+    {
+      "id": "bg_battle_alexander",
+      "file": "assets/backgrounds/splash_battle.jpg",
+      "source_url": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Alexander_%28Battle_of_Issus%29_Mosaic.jpg",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Alexander_(Battle_of_Issus)_Mosaic.jpg",
+      "title": "Alexander Mosaic — Battle of Issus",
+      "date": "ca. 100 BC",
+      "license": "Public Domain",
+      "institution": "Wikimedia Commons",
+      "use": ["battle_screen", "macedonian_background"]
+    },
+    {
+      "id": "border_meander",
+      "file": "assets/borders/meander_gold.svg",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Meander_alagrek.svg",
+      "title": "Greek key meander pattern",
+      "license": "Public Domain",
+      "institution": "Wikimedia Commons",
+      "use": ["panel_border_greek", "popup_border"]
+    },
+    {
+      "id": "icon_owl_athena",
+      "file": "assets/icons/owl_athena.svg",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Owl_from_Ancient_Greece_-_icon.svg",
+      "title": "Owl from Ancient Greece — icon",
+      "license": "CC0",
+      "institution": "Wikimedia Commons",
+      "use": ["nation_icon_greek"]
+    }
+  ]
+}
+```
+
+---
+
+**Содержимое `assets/download.sh`:**
+
+```bash
+#!/bin/bash
+# Загрузка CC0/PD ассетов для Ancient Strategy
+# Запустить: bash assets/download.sh
+# Все ассеты Public Domain или CC0 — безопасно для коммерческого использования
+
+set -e
+mkdir -p assets/portraits/greek assets/portraits/roman assets/portraits/egyptian
+mkdir -p assets/textures assets/backgrounds assets/borders assets/icons
+
+echo "Загрузка портретов (Фаюмские, CC0, Met Museum)..."
+curl -L -o assets/portraits/greek/woman_red.jpg \
+  "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547860/1228117/main-image"
+
+curl -L -o assets/portraits/greek/man_bearded.jpg \
+  "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547856/1178594/main-image"
+
+curl -L -o assets/portraits/greek/man_thinface.jpg \
+  "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547858/1151914/main-image"
+
+curl -L -o assets/portraits/greek/woman_wreath.jpg \
+  "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547861/1215090/main-image"
+
+curl -L -o assets/portraits/roman/youth.jpg \
+  "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547768/1084202/main-image"
+
+curl -L -o assets/portraits/egyptian/mummy_youth.jpg \
+  "https://collectionapi.metmuseum.org/api/collection/v1/iiif/547697/1178606/main-image"
+
+echo "Загрузка текстур (CC0, Met Museum)..."
+curl -L -o assets/textures/greek_vase.jpg \
+  "https://collectionapi.metmuseum.org/api/collection/v1/iiif/254944/541377/main-image"
+
+curl -L -o assets/textures/greek_vase_berlin.jpg \
+  "https://collectionapi.metmuseum.org/api/collection/v1/iiif/254896/1866772/main-image"
+
+echo "Загрузка фонов (Public Domain, Wikimedia)..."
+curl -L -o assets/backgrounds/splash_pompeii.jpg \
+  "https://upload.wikimedia.org/wikipedia/commons/d/d3/Fresco_from_the_House_of_Julia_Felix,_Pompeii_depicting_scenes_from_the_Forum_market.JPG"
+
+curl -L -o assets/backgrounds/splash_battle.jpg \
+  "https://upload.wikimedia.org/wikipedia/commons/7/7c/Alexander_%28Battle_of_Issus%29_Mosaic.jpg"
+
+echo "Готово. Все ассеты загружены в assets/"
+echo "Лицензии: см. assets/manifest.json"
+```
+
+---
+
+**Создать файл `assets/README.md`:**
+
+```
+# Визуальные ассеты Ancient Strategy
+
+## Лицензии
+Все изображения CC0 (Creative Commons Zero) или Public Domain.
+Разрешено коммерческое использование без ограничений и без атрибуции.
+
+## Источники
+- Metropolitan Museum of Art Open Access: https://www.metmuseum.org/about-the-met/policies-and-documents/image-resources
+- Wikimedia Commons: https://commons.wikimedia.org
+
+## Загрузка
+bash assets/download.sh
+
+## Манифест
+assets/manifest.json — полный список с источниками и лицензиями.
+```
+
+---
+
+**Что сохраняется в git:**
+- `assets/manifest.json` (текстовый файл, ~5 KB)
+- `assets/download.sh` (скрипт, ~2 KB)
+- `assets/README.md`
+- `assets/borders/*.svg` (векторные, ~5 KB каждый)
+- `assets/icons/*.svg` (векторные, ~3 KB каждый)
+- `assets/portraits/placeholder.svg` (генерируемый fallback)
+
+**Что НЕ сохраняется в git** (добавить в `.gitignore`):
+```
+assets/portraits/**/*.jpg
+assets/textures/*.jpg
+assets/backgrounds/*.jpg
+```
+Тяжёлые JPG загружаются скриптом на каждой машине.
+
+---
+
+**Тест Шага 54:**
+- `bash assets/download.sh` завершается без ошибок.
+- Все JPG-файлы скачаны и не пусты: `ls -lh assets/portraits/greek/`.
+- `assets/manifest.json` валидный JSON: `node -e "require('./assets/manifest.json')"`.
+- В git нет JPG-файлов: `git ls-files assets/ | grep jpg` возвращает пусто.
+- `assets/download.sh` идемпотентен — повторный запуск не ломает ничего.
+
+---
+
+## БЛОК T — Культурные группы и маппинг портретов (Шаг 55)
+
+---
+
+### Шаг 55 — Культурная карта наций: 10 групп, визуальный стиль каждой
+
+**Цель:** сгруппировать все нации игры по культурным регионам. Каждая группа получает свой набор портретов, фоновую текстуру, цветовую гамму панелей и иконку. В игре сотни наций — у каждой нет отдельного арта, но у каждой есть культурная группа.
+
+**Что сделать:**
+
+1. Создать файл `data/culture_groups.js` — маппинг `nationId → cultureGroup`:
+
+```js
+const CULTURE_GROUPS = {
+  // ── ЭЛЛИНСКАЯ (греки, эллинистические царства)
+  greek: {
+    label: 'Эллинская',
+    nations: [
+      'syracuse','athens','corinth','sparta','macedon','epirus','rhodes',
+      'pergamon','antigonid_kingdom','seleukid_empire','ptolemaic_kingdom',
+      'acarnania','aetolia','boeotian_states','argos','megalopolis',
+      'achola','aigion','amphissa','andros','apollonia','arsinoe',
+      'gela','herakleia','herakleia_minoa','herakleia_pontica',
+      'korkyra','kos','knidos','miletos','nesiotic_league',
+      'selinous','sicyon','sinope','thurii','rhegium',
+      'massilia','emporion',
+      // + все greek_states, hellenistic splinters
+    ],
+    portrait_pool: ['greek/woman_red','greek/man_bearded','greek/man_thinface','greek/woman_wreath'],
+    texture: 'greek_vase',
+    panel_tint: 'rgba(60,40,10,0.85)',
+    border: 'meander_gold',
+    icon: 'owl_athena',
+    splash_bg: 'splash_pompeii',
+  },
+
+  // ── РИМСКАЯ / ИТАЛИЙСКАЯ
+  roman: {
+    label: 'Римская',
+    nations: [
+      'rome','roman_republic','samnites','brutii','lucani','etruscan_conf',
+      'umbrians','picentes','paeligni','marrucini','vestini','frentani',
+      'messapians','iapygia','apulians','taras','locri','croton',
+      'neapolis','brundisium','ancona','ravenna','genua','spina',
+      'capua','nuceria',
+    ],
+    portrait_pool: ['roman/youth','greek/man_bearded','greek/man_thinface'],
+    texture: 'greek_vase_berlin',
+    panel_tint: 'rgba(50,20,10,0.85)',
+    border: 'meander_dark',
+    icon: 'roman_eagle',
+    splash_bg: 'splash_pompeii',
+  },
+
+  // ── КАРФАГЕНСКАЯ / ФИНИКИЙСКАЯ / ПУНИЙСКАЯ
+  carthaginian: {
+    label: 'Пунийская',
+    nations: [
+      'carthage','numidia','masaesyli','massylii','mauretania',
+      'utica','lixus','gadir','hadrametum','lepcis_parva',
+      'byblos','sidon','arados','tyre',
+    ],
+    portrait_pool: ['egyptian/mummy_youth','greek/man_bearded'],
+    texture: 'papyrus',
+    panel_tint: 'rgba(40,20,30,0.85)',
+    border: 'egyptian_border',
+    icon: 'carthage_horse',
+    splash_bg: 'splash_battle',
+  },
+
+  // ── ЕГИПЕТСКАЯ / НУБИЙСКАЯ
+  egyptian: {
+    label: 'Египетская',
+    nations: [
+      'ptolemaic_kingdom','meroe','napata','kush','nubia',
+      'dodekaschoinos','hermopolis_magna','oxyrhynchus',
+      'antaiopolis','lykopolis','kynopolis','sedeinga',
+    ],
+    portrait_pool: ['egyptian/mummy_youth','greek/woman_wreath'],
+    texture: 'papyrus',
+    panel_tint: 'rgba(60,45,10,0.85)',
+    border: 'egyptian_border',
+    icon: 'egyptian_eye',
+    splash_bg: 'splash_pompeii',
+  },
+
+  // ── ПЕРСИДСКАЯ / БЛИЖНЕВОСТОЧНАЯ / ИРАНСКАЯ
+  persian: {
+    label: 'Персидская',
+    nations: [
+      'persis','parthia','bactria','sogdia','arachosia','gedrosia',
+      'media','atropatene','gordyene','sophene','cappadocia',
+      'paphlagonia','pontus','bithynia','armenia','tigranocerta',
+      'seleukid_empire','ecbatana','hecatompylos','susa',
+    ],
+    portrait_pool: ['greek/man_bearded','greek/man_thinface'],
+    texture: 'linen',
+    panel_tint: 'rgba(35,25,45,0.85)',
+    border: 'meander_dark',
+    icon: 'persian_faravahar',
+    splash_bg: 'splash_battle',
+  },
+
+  // ── КЕЛЬТСКАЯ / ГЕРМАНСКАЯ
+  celtic: {
+    label: 'Кельтская',
+    nations: [
+      'arverni','aedui','helvetii','carnutes','senones','sequani',
+      'pictones','santones','namnetes','venelli','remi','treveria',
+      'bellovaci','sugambria','britannia','iceni','catuvellauni',
+      'brigantes','ordovices','silures','corieltauvi','dobunni',
+      'cornovii','durotriges','cantabri','celtiberi','vaccaei',
+      'gallaeci','lusitanii','boii','boiiii','insubri',
+      'cenomanni','leponti','tauriscia','scordisci','odrysian_kingdom',
+    ],
+    portrait_pool: ['greek/man_bearded','greek/man_thinface'],
+    texture: 'linen',
+    panel_tint: 'rgba(20,35,20,0.85)',
+    border: 'celtic_border',
+    icon: 'celtic_torque',
+    splash_bg: 'splash_battle',
+  },
+
+  // ── ИНДИЙСКАЯ / ЮЖНОАЗИАТСКАЯ
+  indian: {
+    label: 'Индийская',
+    nations: [
+      'maurya_empire','gandhara','andhra','kalinga','pandya','chola',
+      'chera','magadha','patala','paurava','asmaka','bhoja',
+      'samatata','kamarupa','kuntala','lumbini',
+    ],
+    portrait_pool: ['egyptian/mummy_youth','greek/woman_wreath'],
+    texture: 'linen',
+    panel_tint: 'rgba(55,30,10,0.85)',
+    border: 'meander_dark',
+    icon: 'indian_lotus',
+    splash_bg: 'splash_battle',
+  },
+
+  // ── ВОСТОЧНОАЗИАТСКАЯ (Китай, Корея, Япония)
+  east_asian: {
+    label: 'Восточноазиатская',
+    nations: [
+      'qin','han','zhao','wei','qi','yan','chu','zhou','song',
+      'gojoseon','goguryeo','baekje','yayoi_japan','yamato',
+      'donghu','xiongnu','yuezhi','wusun',
+    ],
+    portrait_pool: ['greek/man_thinface','greek/woman_red'],
+    texture: 'linen',
+    panel_tint: 'rgba(50,15,15,0.85)',
+    border: 'meander_dark',
+    icon: 'east_asian_dragon',
+    splash_bg: 'splash_battle',
+  },
+
+  // ── СКИФСКАЯ / КОЧЕВАЯ / СТЕПНАЯ
+  nomadic: {
+    label: 'Кочевая',
+    nations: [
+      'scythians','saka','sarmatians','iazyges','roxolani',
+      'massagetae','issedones','arismaspians','dahae','parni',
+      'yuezhi','xiongnu','wusun','maeotae','siraces',
+    ],
+    portrait_pool: ['greek/man_bearded','greek/man_thinface'],
+    texture: 'linen',
+    panel_tint: 'rgba(35,30,15,0.85)',
+    border: 'meander_dark',
+    icon: 'nomadic_bow',
+    splash_bg: 'splash_battle',
+  },
+
+  // ── ОБЩАЯ (для всех остальных, малых и неизвестных наций)
+  generic: {
+    label: 'Прочие',
+    nations: [], // все не попавшие в группы выше
+    portrait_pool: ['greek/man_bearded','greek/man_thinface','greek/woman_red'],
+    texture: 'greek_vase',
+    panel_tint: 'rgba(26,18,8,0.85)',
+    border: 'meander_dark',
+    icon: 'generic_sword',
+    splash_bg: 'splash_pompeii',
+  },
+};
+```
+
+2. Написать вспомогательную функцию `getCultureGroup(nationId)`:
+   ```js
+   function getCultureGroup(nationId) {
+     for (const [groupId, group] of Object.entries(CULTURE_GROUPS)) {
+       if (group.nations.includes(nationId)) return { groupId, ...group };
+     }
+     return { groupId: 'generic', ...CULTURE_GROUPS.generic };
+   }
+   ```
+
+3. Написать `getPortraitForCharacter(char, nationId)`:
+   ```js
+   function getPortraitForCharacter(char, nationId) {
+     const group = getCultureGroup(nationId);
+     const pool = group.portrait_pool;
+     // Детерминированный выбор по ID персонажа (не случайный каждый раз)
+     const idx = hashCode(char.id) % pool.length;
+     return `assets/portraits/${pool[idx]}.jpg`;
+   }
+   function hashCode(str) {
+     let h = 0;
+     for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+     return Math.abs(h);
+   }
+   ```
+
+4. Обновить `assets/download.sh` — добавить в нём заглушки `placeholder.svg` для групп которые ещё не имеют реальных портретов. Заглушка — SVG с инициалами и цветом нации.
+
+**Тест Шага 55:**
+- `getCultureGroup('syracuse').groupId` → `'greek'`
+- `getCultureGroup('rome').groupId` → `'roman'`
+- `getCultureGroup('xiongnu').groupId` → `'nomadic'`
+- `getCultureGroup('unknown_small_tribe').groupId` → `'generic'`
+- `getPortraitForCharacter({id:'char_001'}, 'athens')` → `'assets/portraits/greek/woman_red.jpg'`
+- Один и тот же персонаж всегда получает один и тот же портрет (детерминированность).
+
+---
+
+## БЛОК U — Фоновые текстуры панелей (Шаг 56)
+
+---
+
+### Шаг 56 — Фон панелей: культурная текстура через CSS-переменные
+
+**Цель:** применить текстуру (`texture`) и тинт (`panel_tint`) из культурной группы текущего игрока к боковым панелям. Панели должны выглядеть как выдержанный пергамент, папирус или керамика — в зависимости от нации. Контент панелей не должен деградировать: текстура накладывается псевдоэлементом `::before`, не касаясь дочерних элементов.
+
+**Что сделать:**
+
+1. Объявить CSS-переменные на `:root` в `index.html` (или `ui/styles.css`):
+   ```css
+   :root {
+     --panel-texture: url('assets/textures/greek_vase.jpg');
+     --panel-tint:    rgba(26, 18, 8, 0.85);
+     --panel-radius:  6px;
+   }
+   ```
+
+2. Применить текстуру через `::before` на оба боковых панели:
+   ```css
+   #left-panel,
+   #right-panel {
+     position: relative;
+     overflow: hidden;
+     background: var(--panel-tint);
+     border-radius: var(--panel-radius);
+   }
+
+   #left-panel::before,
+   #right-panel::before {
+     content: '';
+     position: absolute;
+     inset: 0;                          /* top/right/bottom/left: 0 */
+     background-image: var(--panel-texture);
+     background-size: 320px auto;
+     background-repeat: repeat;
+     opacity: 0.07;                     /* очень тонко — текстура, не обои */
+     pointer-events: none;
+     z-index: 0;
+   }
+
+   /* Весь контент поверх псевдоэлемента */
+   #left-panel > *,
+   #right-panel > * {
+     position: relative;
+     z-index: 1;
+   }
+   ```
+
+3. В `ui/panels.js` добавить функцию `applyNationTheme(nationId)`, которая вызывается при смене активной нации:
+   ```js
+   import { getCultureGroup } from '../data/culture_groups.js';
+
+   function applyNationTheme(nationId) {
+     const group = getCultureGroup(nationId);
+     const root  = document.documentElement;
+
+     // Текстура: берём имя файла из group.texture
+     const texturePath = `assets/textures/${group.texture}.jpg`;
+     root.style.setProperty('--panel-texture', `url('${texturePath}')`);
+
+     // Тинт (полупрозрачный цвет поверх текстуры)
+     root.style.setProperty('--panel-tint', group.panel_tint);
+   }
+   ```
+
+4. Вызвать `applyNationTheme` в двух местах:
+   - При старте игры, после загрузки сохранения:
+     ```js
+     applyNationTheme(gameState.playerNation);
+     ```
+   - При событии смены активной нации (например, после дипломатической победы или смены сессии):
+     ```js
+     eventBus.on('playerNationChanged', ({ nationId }) => applyNationTheme(nationId));
+     ```
+
+5. Добавить fallback — если JPG текстура ещё не скачана (первый запуск до `download.sh`), панель выглядит нормально за счёт `background: var(--panel-tint)` без текстуры:
+   ```css
+   #left-panel::before,
+   #right-panel::before {
+     /* Если файл не найден браузер просто не рисует background-image */
+     background-image: var(--panel-texture);
+   }
+   ```
+   Никакого JS-fallback не нужно — CSS сам деградирует.
+
+6. Добавить `preload` для текстуры активной нации в `<head>` (динамически из JS при старте):
+   ```js
+   function preloadTexture(texturePath) {
+     const link = document.createElement('link');
+     link.rel  = 'preload';
+     link.as   = 'image';
+     link.href = texturePath;
+     document.head.appendChild(link);
+   }
+   // вызов:
+   preloadTexture(`assets/textures/${group.texture}.jpg`);
+   ```
+
+**Какие файлы затрагиваются:**
+- `index.html` или `ui/styles.css` — новые CSS-переменные и правила `::before`
+- `ui/panels.js` — функция `applyNationTheme`
+- `data/culture_groups.js` — уже готов (Шаг 55), только импортируется
+
+**Тест Шага 56:**
+- При старте за греческую нацию панели имеют едва заметный орнамент греческой вазы.
+- `document.documentElement.style.getPropertyValue('--panel-tint')` возвращает правильное значение для текущей нации.
+- Если удалить `assets/textures/greek_vase.jpg`, панели остаются читаемыми (деградация без ошибок).
+- Нет накладок текстуры поверх кнопок и текста (z-index корректен).
+- `applyNationTheme('rome')` меняет тинт и текстуру на римские.
+
+---
+
 
 
 
