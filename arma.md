@@ -5774,3 +5774,328 @@ const CULTURE_GROUPS = {
 
 ---
 
+## БЛОК AN — Планировщик маршрутов армий (Шаг 75)
+
+---
+
+### Шаг 75 — Планировщик маршрутов: визуальная прокладка пути армии по карте
+
+**Цель:** игрок кликает на армию, затем кликает на целевой регион — отображается маршрут (A* по графу регионов) с указанием числа ходов. Подтверждение стрелкой или клавишей Enter. Маршрут рисуется пунктирной линией с анимацией.
+
+**Что сделать:**
+
+1. A* по графу регионов — `js/pathfinding.js`:
+   ```js
+   // Граф регионов: { regionId: [neighborId, ...] }
+   // Предполагается что gameState.regionGraph уже заполнен при инициализации
+
+   export function findPath(fromId, toId, graph) {
+     const open   = new Set([fromId]);
+     const cameFrom = {};
+     const gScore   = { [fromId]: 0 };
+     const fScore   = { [fromId]: heuristic(fromId, toId) };
+
+     while (open.size > 0) {
+       // Узел с наименьшим fScore
+       const current = [...open].reduce((a, b) =>
+         (fScore[a] ?? Infinity) < (fScore[b] ?? Infinity) ? a : b
+       );
+
+       if (current === toId) return reconstructPath(cameFrom, current);
+
+       open.delete(current);
+
+       for (const neighbor of (graph[current] ?? [])) {
+         const tentative = (gScore[current] ?? Infinity) + 1;
+         if (tentative < (gScore[neighbor] ?? Infinity)) {
+           cameFrom[neighbor]  = current;
+           gScore[neighbor]    = tentative;
+           fScore[neighbor]    = tentative + heuristic(neighbor, toId);
+           open.add(neighbor);
+         }
+       }
+     }
+     return null;   // путь не найден
+   }
+
+   function reconstructPath(cameFrom, current) {
+     const path = [current];
+     while (cameFrom[current]) {
+       current = cameFrom[current];
+       path.unshift(current);
+     }
+     return path;
+   }
+
+   // Эвристика: евклидово расстояние между центрами регионов
+   function heuristic(aId, bId) {
+     const [aLat, aLng] = getRegionCenter(aId);
+     const [bLat, bLng] = getRegionCenter(bId);
+     return Math.hypot(aLat - bLat, aLng - bLng);
+   }
+   ```
+
+2. UI — режим планирования маршрута:
+   ```js
+   // js/route_planner.js
+   let selectedArmyId = null;
+
+   export function selectArmyForRoute(armyId) {
+     selectedArmyId = armyId;
+     showToast('Выберите целевой регион', 'info');
+
+     // Подсветить армию
+     armyMarkers[armyId]?.getElement()
+       ?.classList.add('army-marker--selected');
+
+     // Ждать клика по региону
+     for (const [regionId, layer] of Object.entries(regionLayers)) {
+       layer.once('click', () => planRouteTo(regionId));
+     }
+   }
+
+   function planRouteTo(targetRegionId) {
+     const army  = getArmy(selectedArmyId);
+     if (!army) return;
+
+     const path = findPath(army.regionId, targetRegionId, gameState.regionGraph);
+     if (!path || path.length < 2) {
+       showToast('Путь не найден', 'warning');
+       return;
+     }
+
+     drawRoute(path);
+     showRouteConfirm(army, path, targetRegionId);
+   }
+   ```
+
+3. Отрисовать маршрут пунктирной линией:
+   ```js
+   let routeLine = null;
+
+   function drawRoute(regionIds) {
+     routeLine?.remove();
+
+     const points = regionIds.map(id => getRegionCenter(id));
+     routeLine = L.polyline(points, {
+       color:     'rgba(200,200,255,0.8)',
+       weight:    2.5,
+       dashArray: '8 5',
+       className: 'route-line',
+     });
+     routeLine.addTo(leafletMap);
+
+     // Стрелка в конце маршрута
+     const last   = points[points.length - 1];
+     const prelast = points[points.length - 2];
+     drawArrowhead(prelast, last);
+   }
+
+   function drawArrowhead(from, to) {
+     // L.marker в конечной точке с SVG-стрелкой
+     const angle = Math.atan2(to[0] - from[0], to[1] - from[1]) * 180 / Math.PI;
+     const html  = `<div class="route-arrow" style="transform:rotate(${angle}deg)">▶</div>`;
+     L.marker(to, {
+       icon: L.divIcon({ className: '', html, iconSize: [12,12], iconAnchor: [6,6] }),
+       zIndexOffset: 300,
+     }).addTo(leafletMap);
+   }
+   ```
+   CSS:
+   ```css
+   .route-line { animation: routeDash 0.8s linear infinite; }
+   @keyframes routeDash { to { stroke-dashoffset: -26; } }
+
+   .route-arrow {
+     color: rgba(200,200,255,0.9);
+     font-size: 12px;
+     line-height: 1;
+   }
+   .army-marker--selected {
+     box-shadow: 0 0 0 3px rgba(200,200,255,0.6);
+     border-color: rgba(200,200,255,0.9) !important;
+   }
+   ```
+
+4. Подтверждение маршрута:
+   ```js
+   function showRouteConfirm(army, path, targetId) {
+     const turns = path.length - 1;   // упрощённо: 1 регион = 1 ход
+     const toast = showToast(
+       `Маршрут: ${turns} ход(а). [Enter] подтвердить, [Esc] отмена`,
+       'info',
+       0   // не исчезает сам
+     );
+
+     const onKey = e => {
+       if (e.key === 'Enter') {
+         assignRoute(army.id, path);
+         cancelRoute();
+       } else if (e.key === 'Escape') {
+         cancelRoute();
+       }
+     };
+     document.addEventListener('keydown', onKey, { once: false });
+
+     function cancelRoute() {
+       routeLine?.remove();
+       routeLine = null;
+       toast?.dismiss?.();
+       document.removeEventListener('keydown', onKey);
+       armyMarkers[army.id]?.getElement()
+         ?.classList.remove('army-marker--selected');
+     }
+   }
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/pathfinding.js` — новый файл, A*
+- `js/route_planner.js` — новый файл, UI планировщика
+- `js/game.js` — `assignRoute` — сохранить маршрут в `army.route`
+- `ui/styles.css` — `.route-line`, `.route-arrow`, `.army-marker--selected`
+
+**Тест Шага 75:**
+- Клик на маркер армии → клик на далёкий регион → отображается A*-маршрут через промежуточные регионы.
+- Пунктирная линия анимирована (бежит в сторону цели).
+- Нажатие Enter подтверждает маршрут, армия начнёт движение в следующий ход.
+- Нажатие Esc отменяет выбор без последствий.
+- Маршрут огибает «чужие» регионы если граф это поддерживает.
+
+---
+
+## БЛОК AO — Туман войны (Шаг 76)
+
+---
+
+### Шаг 76 — Туман войны: скрытые регионы за пределами разведки
+
+**Цель:** регионы, где у игрока нет армий и нет смежных территорий, покрыты «туманом» — полупрозрачным тёмным оверлеем. Туман снимается при приближении армии. Это создаёт элемент неизвестности и стратегии.
+
+**Что сделать:**
+
+1. Вычислить «видимые» регионы для игрока:
+   ```js
+   // js/fog_of_war.js
+   export function getVisibleRegions(playerNationId, graph) {
+     const visible = new Set();
+
+     // Все регионы игрока
+     for (const region of gameState.regions) {
+       if (region.ownerNationId === playerNationId) {
+         visible.add(region.id);
+         // + все соседи (разведка на 1 регион)
+         for (const neighbor of (graph[region.id] ?? [])) {
+           visible.add(neighbor);
+         }
+       }
+     }
+
+     // Все регионы где есть армии игрока
+     for (const army of gameState.armies) {
+       if (army.nationId === playerNationId) {
+         visible.add(army.regionId);
+         for (const neighbor of (graph[army.regionId] ?? [])) {
+           visible.add(neighbor);
+         }
+       }
+     }
+
+     return visible;
+   }
+   ```
+
+2. Применить туман — затемнить невидимые регионы:
+   ```js
+   export function applyFogOfWar(playerNationId) {
+     const visible = getVisibleRegions(playerNationId, gameState.regionGraph);
+
+     for (const [regionId, layer] of Object.entries(regionLayers)) {
+       if (visible.has(regionId)) {
+         layer.setStyle({ fillOpacity: 0.5, opacity: 0.8 });
+         layer.getElement()?.classList.remove('region--fogged');
+       } else {
+         layer.setStyle({ fillColor: '#1a1a2e', fillOpacity: 0.75, opacity: 0.4 });
+         layer.getElement()?.classList.add('region--fogged');
+       }
+     }
+
+     // Скрыть маркеры армий чужих наций в тумане
+     for (const army of gameState.armies) {
+       if (army.nationId !== playerNationId) {
+         const isVisible = visible.has(army.regionId);
+         const marker = armyMarkers[army.id];
+         if (marker) {
+           marker.getElement()?.style.setProperty('opacity', isVisible ? '1' : '0');
+           marker.getElement()?.style.setProperty('pointer-events',
+             isVisible ? '' : 'none');
+         }
+       }
+     }
+   }
+   ```
+
+3. CSS для затуманенных регионов:
+   ```css
+   .region--fogged {
+     /* Дополнительный штриховой паттерн поверх слоя */
+     /* Leaflet Canvas не поддерживает CSS на path, поэтому используем оверлей */
+   }
+   ```
+   Для Canvas renderer Leaflet — использовать `setStyle` как выше, не CSS-классы.
+
+4. SVG-overlay для визуального «тумана» — тонкий noise-паттерн:
+   ```js
+   // Создать SVG дефинишн для паттерна тумана
+   const fogPattern = `
+     <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0">
+       <defs>
+         <pattern id="fog-pattern" x="0" y="0" width="8" height="8"
+                  patternUnits="userSpaceOnUse">
+           <rect width="8" height="8" fill="rgba(20,18,35,0.6)"/>
+           <circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.04)"/>
+           <circle cx="6" cy="6" r="1" fill="rgba(255,255,255,0.03)"/>
+         </pattern>
+       </defs>
+     </svg>
+   `;
+   document.body.insertAdjacentHTML('afterbegin', fogPattern);
+   ```
+
+5. Настройка «Туман войны вкл/выкл» в меню опций:
+   ```js
+   let fogEnabled = localStorage.getItem('fogOfWar') !== 'false';
+
+   function toggleFog(enabled) {
+     fogEnabled = enabled;
+     localStorage.setItem('fogOfWar', String(enabled));
+     if (enabled) {
+       applyFogOfWar(gameState.playerNation);
+     } else {
+       // Снять туман со всех регионов
+       for (const layer of Object.values(regionLayers)) {
+         layer.setStyle({ fillOpacity: 0.5, opacity: 0.8 });
+       }
+     }
+   }
+   ```
+
+6. Обновлять туман после каждого хода и при движении армий:
+   ```js
+   eventBus.on('turnEnd',    () => applyFogOfWar(gameState.playerNation));
+   eventBus.on('armyMoved',  () => applyFogOfWar(gameState.playerNation));
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/fog_of_war.js` — новый файл, `getVisibleRegions`, `applyFogOfWar`
+- `js/game.js` — вызов `applyFogOfWar` после хода и движения армий
+- `js/settings.js` — `toggleFog`
+
+**Тест Шага 76:**
+- Регионы вдали от владений игрока покрыты тёмным оверлеем.
+- При движении армии в новый регион туман снимается с него и его соседей.
+- Маркеры армий ИИ не видны в тумане.
+- Переключатель в настройках включает/выключает туман мгновенно.
+- После перезагрузки состояние тумана восстанавливается корректно.
+
+---
+
