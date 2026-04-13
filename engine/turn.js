@@ -1800,6 +1800,11 @@ function _getSaveWorker() {
         if (typeof addEventLog === 'function') {
           addEventLog('⚠ Автосохранение не удалось: ' + data.error, 'warning');
         }
+      } else {
+        // Шаг 33: обновляем #sb-save в строке статуса
+        if (typeof window !== 'undefined' && typeof window.markSaved === 'function') {
+          window.markSaved();
+        }
       }
     };
     _saveWorker.onerror = (e) => {
@@ -1869,7 +1874,12 @@ async function saveGame() {
     // Fallback: воркер занят или недоступен.
     // Откладываем через setTimeout(0), чтобы structured clone IndexedDB не блокировал ход.
     setTimeout(() => {
-      GameStorage.save(payload).catch(e => {
+      GameStorage.save(payload).then(() => {
+        // Шаг 33: обновляем #sb-save в строке статуса
+        if (typeof window !== 'undefined' && typeof window.markSaved === 'function') {
+          window.markSaved();
+        }
+      }).catch(e => {
         console.warn('[save] Ошибка сохранения:', e);
         if (typeof addEventLog === 'function') {
           addEventLog('⚠ Автосохранение не удалось: ' + e.message, 'warning');

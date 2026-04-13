@@ -487,6 +487,29 @@
     body.resizing-panel * { user-select: none !important; cursor: col-resize !important; }
 
     /* ══════════════════════════════════════════════════
+       Шаг 33 — Строка статуса внизу
+       ══════════════════════════════════════════════════ */
+    #status-bar {
+      height: 22px;
+      flex-shrink: 0;
+      background: #0a0705;
+      border-top: 1px solid rgba(107,79,26,0.3);
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0 10px;
+      font-size: 10px;
+      color: var(--text-dim);
+      font-family: 'Georgia', serif;
+      user-select: none;
+    }
+    #status-bar > span { white-space: nowrap; }
+    .sb-sep { margin: 0 8px; opacity: 0.3; }
+    #sb-ai.ready   { color: #4caf50; }
+    #sb-ai.busy    { color: #ff9800; }
+    #sb-ai.error   { color: #f44336; }
+
+    /* ══════════════════════════════════════════════════
        Шаг 27 — Toast-уведомления
        ══════════════════════════════════════════════════ */
     #toast-container {
@@ -8293,6 +8316,17 @@
       <!-- Шаг 22: API ключи перенесены в модальное окно настроек (⚙ в топ-баре) -->
     </footer>
 
+    <!-- Шаг 33 — Строка статуса внизу -->
+    <div id="status-bar">
+      <span id="sb-game">—</span>
+      <span class="sb-sep">|</span>
+      <span id="sb-save">💾 Не сохранено</span>
+      <span class="sb-sep">|</span>
+      <span id="sb-ai" class="ready">🤖 AI: готов</span>
+      <span class="sb-sep">|</span>
+      <span id="sb-fps">— fps</span>
+    </div>
+
   </div><!-- #app -->
 
   <!-- ═══════════════════════════
@@ -8724,15 +8758,18 @@
 
       btn.disabled = true;
       btn.textContent = '⏳ Генерирую...';
+      if (typeof setAIStatus === 'function') setAIStatus('busy');
 
       try {
         await generateCharactersForNation(GAME_STATE.player_nation, 7);
         btn.textContent = '✅ Советники явились';
+        if (typeof setAIStatus === 'function') setAIStatus('ready');
       } catch (err) {
         console.error('Ошибка генерации персонажей:', err);
         addEventLog(`Ошибка генерации персонажей: ${err.message}`, 'warning');
         btn.disabled = false;
         btn.textContent = '✨ Созвать советников (AI)';
+        if (typeof setAIStatus === 'function') setAIStatus('error');
       }
     }
 
@@ -9237,6 +9274,120 @@
     window.markTurnAction    = markTurnAction;
     window.resetTurnProgress = resetTurnProgress;
     window.renderTurnProgress = renderTurnProgress;
+
+    // ──────────────────────────────────────────
+    // Шаг 33 — Строка статуса внизу (#status-bar)
+    // ──────────────────────────────────────────
+    (function initStatusBar(){
+      let _sbLastSaveTs = null;
+      let _sbSaveTimer  = null;
+
+      function _el(id){ return document.getElementById(id); }
+
+      // Обновление левой части — дата, нация, ход
+      function updateSbGame(){
+        const span = _el('sb-game');
+        if (!span) return;
+        let date = '';
+        const dateEl = _el('game-date');
+        if (dateEl) date = (dateEl.textContent || '').trim();
+        let nation = '';
+        try {
+          const gs = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
+          if (gs) {
+            const pid = gs.player_nation;
+            const nat = (gs.nations && Array.isArray(gs.nations))
+              ? gs.nations.find(n => n && n.id === pid)
+              : null;
+            if (nat && nat.name) nation = nat.name;
+            var turn = (gs.turn != null) ? ('Ход ' + gs.turn) : '';
+          }
+        } catch(_) {}
+        const parts = [];
+        if (nation) parts.push(nation);
+        if (date)   parts.push(date);
+        if (typeof turn !== 'undefined' && turn) parts.push(turn);
+        span.textContent = parts.length ? parts.join(' · ') : '—';
+      }
+
+      // AI: ready | busy | error
+      function setAIStatus(status, text){
+        const el = _el('sb-ai');
+        if (!el) return;
+        el.classList.remove('ready','busy','error');
+        const s = (status || 'ready').toLowerCase();
+        el.classList.add(s);
+        if (typeof text === 'string' && text) {
+          el.textContent = text;
+        } else {
+          if (s === 'busy')       el.textContent = '🤖 AI: обрабатывает…';
+          else if (s === 'error') el.textContent = '🤖 AI: ошибка';
+          else                    el.textContent = '🤖 AI: готов';
+        }
+      }
+
+      // Обновление текста сохранения
+      function _renderSaveLabel(){
+        const el = _el('sb-save');
+        if (!el) return;
+        if (_sbLastSaveTs == null) {
+          el.textContent = '💾 Не сохранено';
+          return;
+        }
+        const diffMs = Date.now() - _sbLastSaveTs;
+        const mins   = Math.floor(diffMs / 60000);
+        if (diffMs < 5000)       el.textContent = '💾 Сохранено только что';
+        else if (mins < 1)       el.textContent = '💾 Сохранено ' + Math.floor(diffMs/1000) + ' сек назад';
+        else if (mins === 1)     el.textContent = '💾 Сохранено 1 мин назад';
+        else if (mins < 60)      el.textContent = '💾 Сохранено ' + mins + ' мин назад';
+        else {
+          const h = Math.floor(mins / 60);
+          el.textContent = '💾 Сохранено ' + h + ' ч назад';
+        }
+      }
+
+      function markSaved(){
+        _sbLastSaveTs = Date.now();
+        _renderSaveLabel();
+        if (_sbSaveTimer) clearInterval(_sbSaveTimer);
+        _sbSaveTimer = setInterval(_renderSaveLabel, 15000);
+      }
+
+      // FPS-счётчик — обновление раз в 2 сек
+      (function fpsLoop(){
+        const el = _el('sb-fps');
+        if (!el) return;
+        let frames = 0;
+        let lastTs = performance.now();
+        function tick(now){
+          frames++;
+          if (now - lastTs >= 2000) {
+            const fps = Math.round((frames * 1000) / (now - lastTs));
+            el.textContent = fps + ' fps';
+            frames = 0;
+            lastTs = now;
+          }
+          requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      })();
+
+      // Периодическое обновление левой части
+      function _bootGameLabel(){
+        updateSbGame();
+        setInterval(updateSbGame, 3000);
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _bootGameLabel);
+      } else {
+        _bootGameLabel();
+      }
+
+      // Экспорт
+      window.setAIStatus   = setAIStatus;
+      window.markSaved     = markSaved;
+      window.updateSbGame  = updateSbGame;
+    })();
   </script>
 
 
