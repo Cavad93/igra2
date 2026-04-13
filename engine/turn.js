@@ -314,6 +314,15 @@ async function processTurn() {
     // 6.5. Итоги хода
     try { _recordTurnSummary(); } catch (e) { console.warn('[summary]', e); }
 
+    // 6.55. Шаг 46 — история ресурсов игрока (для спарклайнов в топ-баре)
+    {
+      const _pushHist = (typeof window !== 'undefined' && window._pushResourceHistory)
+        || (typeof _pushResourceHistory === 'function' ? _pushResourceHistory : null);
+      if (typeof _pushHist === 'function') {
+        try { _pushHist(GAME_STATE); } catch (e) { console.warn('[res-history]', e); }
+      }
+    }
+
     // 7. Автосохранение
     _setStep('Сохранение...');
     await saveGame();

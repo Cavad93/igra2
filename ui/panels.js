@@ -327,7 +327,11 @@ function _applyResourceDelta(key, curr) {
   const d = curr - prev;
   if (d === 0) { deltaEl.textContent = ''; return; }
   const sign = d > 0 ? '+' : '';
-  deltaEl.textContent = sign + _formatResBarNum(d);
+  // Шаг 46 — стрелка тренда рядом с числом: "+45 ↗" / "-12 ↘"
+  // (arrow идёт ПОСЛЕ числа, чтобы сохранить совместимость с тестами Шага 21,
+  // которые ожидают, что .res-delta.textContent начинается с "+" или "-")
+  const arrow = d > 0 ? ' ↗' : ' ↘';
+  deltaEl.textContent = sign + _formatResBarNum(d) + arrow;
   deltaEl.classList.toggle('positive', d > 0);
   deltaEl.classList.toggle('negative', d < 0);
 }
@@ -370,6 +374,168 @@ function updateResourceBar(state) {
     _resourceBarPrev._turn = currentTurn;
   }
   // Иначе (повторный рендер в том же ходу) — просто оставляем дельту как есть.
+
+  // Шаг 46 — спарклайны трендов ресурсов
+  try { _renderResourceSparklines(state); } catch (e) { /* noop в тестах */ }
+}
+
+// ──────────────────────────────────────────────────────────────
+// Шаг 46 — СПАРКЛАЙНЫ ТРЕНДОВ В РЕСУРС-БАРЕ
+// ──────────────────────────────────────────────────────────────
+//
+// У каждого .res-item есть <canvas class="res-sparkline" width="44" height="14">,
+// в котором рисуется мини-график истории за последние 10 ходов.
+// Источник данных: GAME_STATE.history.{treasury,army_size,population,food}.
+// Наполнение истории — _pushResourceHistory(state), вызывается раз за ход
+// из engine/turn.js после _recordTurnSummary().
+
+// Максимум точек, хранимых в истории каждого ресурса.
+const _RES_HISTORY_MAX = 10;
+
+// Соответствие ключ-ресурса (как в updateResourceBar) → ключ в GAME_STATE.history
+const _RES_HISTORY_KEYS = {
+  gold:   'treasury',
+  troops: 'army_size',
+  food:   'food',
+  pop:    'population',
+};
+
+/**
+ * _pushResourceHistory(state)
+ *
+ * Обновляет GAME_STATE.history.{treasury, army_size, population, food}
+ * значениями игрока на текущем ходу. Обрезает каждый массив до
+ * _RES_HISTORY_MAX элементов. Создаёт state.history, если его нет.
+ *
+ * Вызывается из engine/turn.js после _recordTurnSummary() — т.е.
+ * ровно один раз за ход.
+ */
+function _pushResourceHistory(state) {
+  if (!state) return;
+  const values = _collectResourceValues(state);
+  if (!values) return;
+
+  if (!state.history || typeof state.history !== 'object') {
+    state.history = { treasury: [], army_size: [], population: [], food: [] };
+  }
+  const H = state.history;
+  for (const arr of ['treasury', 'army_size', 'population', 'food']) {
+    if (!Array.isArray(H[arr])) H[arr] = [];
+  }
+  H.treasury.push(values.gold);
+  H.army_size.push(values.troops);
+  H.food.push(values.food);
+  H.population.push(values.pop);
+
+  for (const arr of ['treasury', 'army_size', 'population', 'food']) {
+    while (H[arr].length > _RES_HISTORY_MAX) H[arr].shift();
+  }
+}
+
+/**
+ * drawSparkline(canvas, values, color)
+ *
+ * Рисует мини-график по массиву values на HTMLCanvasElement 44×14.
+ *   - values нормализуются в [0, 1] внутри их собственного диапазона
+ *   - проводится полилиния через все точки
+ *   - последняя точка отмечается кружком
+ *   - color — hex-строка цвета линии (#4CAF50 / #f44336 / #888)
+ *
+ * Если values содержит < 2 точек — просто очищает canvas.
+ * Если canvas или его getContext недоступны (headless) — функция
+ * тихо завершает работу.
+ */
+function drawSparkline(canvas, values, color) {
+  if (!canvas || typeof canvas.getContext !== 'function') return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const W = canvas.width  || 44;
+  const H = canvas.height || 14;
+
+  // Полная очистка
+  if (typeof ctx.clearRect === 'function') ctx.clearRect(0, 0, W, H);
+
+  if (!Array.isArray(values) || values.length < 2) return;
+
+  // Нормализация: min..max → [pad, H - pad]
+  let minV = Infinity, maxV = -Infinity;
+  for (const v of values) {
+    if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+    if (v < minV) minV = v;
+    if (v > maxV) maxV = v;
+  }
+  if (!Number.isFinite(minV) || !Number.isFinite(maxV)) return;
+
+  const pad = 2;
+  const usableH = H - pad * 2;
+  const usableW = W - pad * 2;
+  const range = (maxV - minV) || 1;   // избегаем деления на 0 при плоской линии
+
+  const n = values.length;
+  // Координата X — равномерное распределение
+  const xAt = (i) => pad + (n === 1 ? usableW / 2 : (i * usableW) / (n - 1));
+  // Координата Y — инверсия: большее значение выше на графике
+  const yAt = (v) => pad + usableH - ((v - minV) / range) * usableH;
+
+  ctx.lineWidth   = 1.5;
+  ctx.strokeStyle = color || '#c8a84b';
+  ctx.fillStyle   = color || '#c8a84b';
+  ctx.lineJoin    = 'round';
+  ctx.lineCap     = 'round';
+
+  // Полилиния
+  ctx.beginPath();
+  ctx.moveTo(xAt(0), yAt(values[0]));
+  for (let i = 1; i < n; i++) {
+    ctx.lineTo(xAt(i), yAt(values[i]));
+  }
+  ctx.stroke();
+
+  // Маркер последней точки
+  const lastX = xAt(n - 1);
+  const lastY = yAt(values[n - 1]);
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/**
+ * _sparklineColor(values)
+ *
+ * Определяет цвет спарклайна по тренду:
+ *   зелёный — последнее > предпоследнего
+ *   красный — последнее < предпоследнего
+ *   серый   — без изменения / недостаточно точек
+ */
+function _sparklineColor(values) {
+  if (!Array.isArray(values) || values.length < 2) return '#888';
+  const last = values[values.length - 1];
+  const prev = values[values.length - 2];
+  if (typeof last !== 'number' || typeof prev !== 'number') return '#888';
+  if (last > prev) return '#4CAF50';
+  if (last < prev) return '#f44336';
+  return '#888';
+}
+
+/**
+ * _renderResourceSparklines(state)
+ *
+ * Для каждого из 4-х ключей (gold/troops/food/pop) находит canvas.res-sparkline
+ * и рисует спарклайн по соответствующему массиву state.history.*.
+ * Если истории нет или она пуста — canvas очищается.
+ */
+function _renderResourceSparklines(state) {
+  if (typeof document === 'undefined') return;
+  const hist = state?.history;
+  for (const key of ['gold', 'troops', 'food', 'pop']) {
+    const el = document.querySelector(`#res-${key} .res-sparkline`);
+    if (!el) continue;
+    const arrKey = _RES_HISTORY_KEYS[key];
+    const series = (hist && Array.isArray(hist[arrKey])) ? hist[arrKey] : [];
+    const color = _sparklineColor(series);
+    drawSparkline(el, series, color);
+  }
 }
 
 function onResourceBarClick(key) {
@@ -399,6 +565,9 @@ function onResourceBarClick(key) {
 if (typeof window !== 'undefined') {
   window.updateResourceBar  = updateResourceBar;
   window.onResourceBarClick = onResourceBarClick;
+  // Шаг 46
+  window.drawSparkline        = drawSparkline;
+  window._pushResourceHistory = _pushResourceHistory;
 }
 
 // ──────────────────────────────────────────────────────────────

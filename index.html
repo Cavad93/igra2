@@ -196,6 +196,17 @@
     #resource-bar .res-delta.negative { color: #f44336; }
     #resource-bar .res-delta:empty { display: none; }
 
+    /* Шаг 46 — Спарклайн тренда в ресурс-баре */
+    #resource-bar .res-sparkline {
+      width: 44px;
+      height: 14px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 4px;
+      image-rendering: crisp-edges;
+      pointer-events: none;
+    }
+
     /* Шаг 31 — Индикатор прогресса хода */
     #turn-progress {
       display: flex;
@@ -8804,10 +8815,10 @@
       <span id="game-title">ANCIENT STRATEGY</span>
       <!-- Шаг 21: Ресурс-бар — 4 ключевых показателя всегда на виду -->
       <div id="resource-bar">
-        <div class="res-item" id="res-gold"    title="Казна"       onclick="onResourceBarClick('gold')">💰 <span>—</span><span class="res-delta"></span></div>
-        <div class="res-item" id="res-troops"  title="Войска"      onclick="onResourceBarClick('troops')">⚔ <span>—</span><span class="res-delta"></span></div>
-        <div class="res-item" id="res-food"    title="Снабжение"   onclick="onResourceBarClick('food')">🌾 <span>—</span><span class="res-delta"></span></div>
-        <div class="res-item" id="res-pop"     title="Население"   onclick="onResourceBarClick('pop')">👥 <span>—</span><span class="res-delta"></span></div>
+        <div class="res-item" id="res-gold"    title="Казна"       onclick="onResourceBarClick('gold')">💰 <span>—</span><span class="res-delta"></span><canvas class="res-sparkline" width="44" height="14"></canvas></div>
+        <div class="res-item" id="res-troops"  title="Войска"      onclick="onResourceBarClick('troops')">⚔ <span>—</span><span class="res-delta"></span><canvas class="res-sparkline" width="44" height="14"></canvas></div>
+        <div class="res-item" id="res-food"    title="Снабжение"   onclick="onResourceBarClick('food')">🌾 <span>—</span><span class="res-delta"></span><canvas class="res-sparkline" width="44" height="14"></canvas></div>
+        <div class="res-item" id="res-pop"     title="Население"   onclick="onResourceBarClick('pop')">👥 <span>—</span><span class="res-delta"></span><canvas class="res-sparkline" width="44" height="14"></canvas></div>
       </div>
       <!-- Шаг 31: Индикатор прогресса хода -->
       <div id="turn-progress" title="Прогресс хода">
