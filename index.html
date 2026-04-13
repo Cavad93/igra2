@@ -469,6 +469,23 @@
       scrollbar-color: var(--border-gold) var(--bg-deep);
     }
 
+    /* Шаг 32 — Drag-to-resize боковых панелей */
+    .panel-resizer {
+      width: 4px;
+      flex-shrink: 0;
+      background: var(--border-gold);
+      opacity: 0.3;
+      cursor: col-resize;
+      transition: opacity 0.15s;
+      z-index: 50;
+      user-select: none;
+    }
+    .panel-resizer:hover,
+    .panel-resizer.dragging { opacity: 0.8; }
+    #left-panel.collapsed #left-panel-content { display: none; }
+    body.resizing-panel,
+    body.resizing-panel * { user-select: none !important; cursor: col-resize !important; }
+
     /* ══════════════════════════════════════════════════
        Шаг 27 — Toast-уведомления
        ══════════════════════════════════════════════════ */
@@ -8088,6 +8105,9 @@
         </div>
       </div>
 
+      <!-- Шаг 32 — Drag-to-resize: разделитель между левой панелью и картой -->
+      <div class="panel-resizer" id="left-resizer" title="Потяните, чтобы изменить ширину"></div>
+
       <!-- Центральная панель: карта -->
       <div id="center-panel">
         <div id="map-container">
@@ -8567,6 +8587,7 @@
 
   <script src="ui/log.js"></script>
   <script src="ui/toast.js"></script>
+  <script src="ui/panel_resize.js"></script>
   <script src="engine/pops.js"></script>
   <script src="engine/land_capacity.js"></script>
   <script src="engine/diplomacy.js"></script>
