@@ -3498,6 +3498,83 @@
     }
 
     /* ══════════════════════════════════════════════════
+       ШАГ 44 (arma.md): СТРАТЕГИЧЕСКИЕ УРОВНИ ЗУМА
+    ══════════════════════════════════════════════════ */
+    /* #map-mode-bar плавно исчезает на strategic уровне. Видимость
+       управляется через inline style (opacity) из onZoomChange(). */
+    #map-mode-bar {
+      transition: opacity 0.3s ease;
+    }
+
+    /* Strategic view (zoom < 4): уменьшенные маркеры армий.
+       Показываем только флаг нации — .army-count прячется. */
+    body.map-zoom-strategic .army-marker {
+      width: 18px !important;
+      height: 18px !important;
+    }
+    body.map-zoom-strategic .army-marker__svg {
+      width: 18px !important;
+      height: 18px !important;
+    }
+    body.map-zoom-strategic .army-count {
+      display: none;
+    }
+
+    /* Detailed view (zoom > 6.5): увеличенные маркеры, утолщённые
+       торговые маршруты, иконки построек проявляются плавно. */
+    body.map-zoom-detailed .trade-route-line {
+      stroke-width: 4px !important;
+    }
+    .zoom-bld-div {
+      pointer-events: none;
+      background: transparent;
+      border: none;
+    }
+    .zoom-bld-mini {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1px;
+      padding: 2px 3px;
+      background: rgba(13,10,5,0.78);
+      border: 1px solid rgba(200,170,100,0.5);
+      border-radius: 3px;
+      font-size: 10px;
+      line-height: 1;
+      max-width: 60px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    body.map-zoom-detailed .zoom-bld-mini {
+      opacity: 1;
+    }
+    .zoom-bld-icon {
+      display: inline-block;
+      width: 12px;
+      text-align: center;
+    }
+    .zoom-garrison-div {
+      pointer-events: none;
+      background: transparent;
+      border: none;
+    }
+    .zoom-garrison-num {
+      font-size: 11px;
+      color: #ffd700;
+      background: rgba(13,10,5,0.85);
+      border: 1px solid rgba(200,170,100,0.45);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-family: 'Cinzel', Palatino, serif;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      text-align: center;
+    }
+    body.map-zoom-detailed .zoom-garrison-num {
+      opacity: 1;
+    }
+
+    /* ══════════════════════════════════════════════════
        ШАГ 30: КОНТЕКСТНОЕ МЕНЮ ПРАВОЙ КНОПКИ МЫШИ
     ══════════════════════════════════════════════════ */
     #ctx-menu {

@@ -197,7 +197,11 @@ function initLeafletMap() {
   leafletMap.on('zoomend',   () => {
     scheduleNationLabelUpdate();
     setTimeout(() => { if (_nationSvg) _nationSvg.style.opacity = '1'; }, 90);
+    // Шаг 44 (arma.md): пересчитать уровень детализации карты
+    try { onZoomChange(leafletMap.getZoom()); } catch (e) { console.warn('[Шаг 44]', e); }
   });
+  // Шаг 44: первичное применение уровня сразу после инициализации.
+  try { onZoomChange(leafletMap.getZoom()); } catch (_) {}
   window.addEventListener('resize', scheduleNationLabelUpdate);
 
   // Шаг 36: слушатель событий добавления слоя Canvas-рендерером.
@@ -2410,3 +2414,255 @@ function setMapMode(mode) {
 }
 
 window.setMapMode = setMapMode;
+
+// ══════════════════════════════════════════════════════════════
+// ШАГ 44 (arma.md) — СТРАТЕГИЧЕСКИЕ УРОВНИ ЗУМА
+// ──────────────────────────────────────────────────────────────
+// Три уровня детализации карты в зависимости от текущего zoom:
+//   strategic  (zoom < 4)   — вид сверху: крупные цветные зоны,
+//                              скрыт #map-mode-bar, подписи регионов
+//                              скрываются, армии уменьшены до 18px.
+//   regional   (4 .. 6.5)   — текущий (default) вид.
+//   detailed   (zoom > 6.5) — иконки построек на регионах игрока,
+//                              числовая численность гарнизона под флагом,
+//                              утолщённые торговые маршруты.
+//
+// Переходы между уровнями — через CSS transitions на соответствующих
+// слоях. body получает класс map-zoom-strategic|regional|detailed,
+// а всё визуальное поведение завязано на CSS-селекторы по этому классу.
+// ══════════════════════════════════════════════════════════════
+
+window.ZOOM_LEVELS = {
+  strategic: { max: 4 },
+  regional:  { min: 4, max: 6.5 },
+  detailed:  { min: 6.5 },
+};
+
+/**
+ * Определить уровень детализации карты по текущему значению zoom.
+ * @param {number} zoom — текущее значение leafletMap.getZoom()
+ * @returns {'strategic'|'regional'|'detailed'}
+ */
+function getZoomLevel(zoom) {
+  const z = Number(zoom);
+  if (!Number.isFinite(z)) return 'regional';
+  if (z < window.ZOOM_LEVELS.strategic.max) return 'strategic';
+  if (z > window.ZOOM_LEVELS.detailed.min) return 'detailed';
+  return 'regional';
+}
+
+/** Текущее состояние уровня зума (избегаем лишних перерисовок). */
+let _currentZoomLevel = null;
+
+/** Слой L.layerGroup для иконок построек (детальный вид). */
+let _detailBuildingsLayer = null;
+
+/** Слой L.layerGroup для числовой численности гарнизонов (детальный вид). */
+let _detailGarrisonsLayer = null;
+
+/**
+ * Собрать HTML из списка построек региона в миниатюре.
+ * Показываем до 6 иконок построек, по 2 ряда по 3.
+ * @param {Array<string|{type?:string,name?:string}>} buildings
+ * @returns {string}
+ */
+function _buildingsMiniHtml(buildings) {
+  const ICONS = {
+    farm:         '🌾',
+    mine:         '⛏',
+    quarry:       '🪨',
+    workshop:     '🔨',
+    temple:       '🏛',
+    market:       '🏪',
+    port:         '⚓',
+    barracks:     '🛡',
+    walls:        '🧱',
+    fortress:     '🏰',
+    aqueduct:     '💧',
+    villa:        '🏡',
+    latifundium:  '🌽',
+    forum:        '⚖',
+    granary:      '📦',
+    library:      '📚',
+  };
+  const list = (buildings || []).slice(0, 6);
+  if (list.length === 0) return '';
+  const cells = list.map((b) => {
+    const key = typeof b === 'string' ? b : (b?.type || b?.name || '');
+    const icon = ICONS[key] || '🏛';
+    return `<span class="zoom-bld-icon" title="${String(key).replace(/_/g, ' ')}">${icon}</span>`;
+  }).join('');
+  return `<div class="zoom-bld-mini">${cells}</div>`;
+}
+
+/**
+ * Построить детальный слой иконок построек для регионов игрока.
+ * Вызывается при переходе на detailed уровень и при смене nation.
+ */
+function _buildDetailBuildingsLayer() {
+  if (!leafletMap || typeof L === 'undefined') return;
+  if (!_detailBuildingsLayer) {
+    _detailBuildingsLayer = L.layerGroup();
+  } else {
+    _detailBuildingsLayer.clearLayers();
+  }
+  const playerNat = GAME_STATE?.player_nation;
+  if (!playerNat) return;
+
+  for (const [rid, gameRegion] of Object.entries(GAME_STATE?.regions ?? {})) {
+    if (!gameRegion || gameRegion.nation !== playerNat) continue;
+    const layer = regionLayers[rid];
+    if (!layer || typeof layer.getCenter !== 'function') continue;
+
+    const buildings = Array.isArray(gameRegion.buildings) ? gameRegion.buildings : [];
+    if (buildings.length === 0) continue;
+
+    let center;
+    try { center = layer.getCenter(); }
+    catch (_) { continue; }
+    if (!center) continue;
+
+    const html = _buildingsMiniHtml(buildings);
+    if (!html) continue;
+
+    const icon = L.divIcon({
+      html,
+      className: 'zoom-bld-div',
+      iconSize:   [60, 24],
+      iconAnchor: [30, 12],
+    });
+    const m = L.marker([center.lat, center.lng], { icon, interactive: false });
+    _detailBuildingsLayer.addLayer(m);
+  }
+  if (!leafletMap.hasLayer(_detailBuildingsLayer)) {
+    _detailBuildingsLayer.addTo(leafletMap);
+  }
+}
+
+/**
+ * Построить слой числовой численности гарнизона (под флагом) для
+ * регионов игрока. Показывается только на детальном уровне.
+ */
+function _buildDetailGarrisonsLayer() {
+  if (!leafletMap || typeof L === 'undefined') return;
+  if (!_detailGarrisonsLayer) {
+    _detailGarrisonsLayer = L.layerGroup();
+  } else {
+    _detailGarrisonsLayer.clearLayers();
+  }
+  const playerNat = GAME_STATE?.player_nation;
+  if (!playerNat) return;
+
+  for (const [rid, gameRegion] of Object.entries(GAME_STATE?.regions ?? {})) {
+    if (!gameRegion || gameRegion.nation !== playerNat) continue;
+    const garrison = Number(gameRegion.garrison || gameRegion.garrison_size || 0);
+    if (garrison <= 0) continue;
+    const layer = regionLayers[rid];
+    if (!layer || typeof layer.getCenter !== 'function') continue;
+    let center;
+    try { center = layer.getCenter(); }
+    catch (_) { continue; }
+    if (!center) continue;
+    const txt = garrison >= 1000 ? (garrison / 1000).toFixed(1) + 'k' : String(garrison);
+    const icon = L.divIcon({
+      html: `<div class="zoom-garrison-num">⚔ ${txt}</div>`,
+      className: 'zoom-garrison-div',
+      iconSize:   [48, 18],
+      iconAnchor: [24, -8],
+    });
+    const m = L.marker([center.lat, center.lng], { icon, interactive: false });
+    _detailGarrisonsLayer.addLayer(m);
+  }
+  if (!leafletMap.hasLayer(_detailGarrisonsLayer)) {
+    _detailGarrisonsLayer.addTo(leafletMap);
+  }
+}
+
+/** Удалить оба детальных слоя с карты (при уходе с detailed). */
+function _removeDetailLayers() {
+  if (_detailBuildingsLayer && leafletMap && leafletMap.hasLayer(_detailBuildingsLayer)) {
+    leafletMap.removeLayer(_detailBuildingsLayer);
+  }
+  if (_detailGarrisonsLayer && leafletMap && leafletMap.hasLayer(_detailGarrisonsLayer)) {
+    leafletMap.removeLayer(_detailGarrisonsLayer);
+  }
+}
+
+/**
+ * Обработчик смены зума. Определяет уровень, применяет CSS-класс к
+ * <body>, корректирует fillOpacity регионов и показ/скрытие
+ * map-mode-bar, детальных слоёв и подписей наций.
+ * @param {number} [zoom] — если не передан, берём из leafletMap.getZoom()
+ */
+function onZoomChange(zoom) {
+  if (!leafletMap) return;
+  const z = (typeof zoom === 'number') ? zoom : leafletMap.getZoom();
+  const level = getZoomLevel(z);
+  if (level === _currentZoomLevel) return;
+  _currentZoomLevel = level;
+
+  // 1. CSS-класс на body — ВСЕ визуальные правила завязаны через него
+  //    (через transition 0.3s для плавных переходов).
+  try {
+    const body = document.body;
+    if (body && body.classList) {
+      body.classList.remove('map-zoom-strategic', 'map-zoom-regional', 'map-zoom-detailed');
+      body.classList.add('map-zoom-' + level);
+    }
+  } catch (_) {}
+
+  // 2. #map-mode-bar скрывается на strategic (не нужен на мелком зуме).
+  try {
+    const bar = document.getElementById('map-mode-bar');
+    if (bar) {
+      bar.style.opacity    = (level === 'strategic') ? '0' : '1';
+      bar.style.pointerEvents = (level === 'strategic') ? 'none' : 'auto';
+    }
+  } catch (_) {}
+
+  // 3. Регионы: на strategic увеличиваем fillOpacity до 0.85 (цвета
+  //    наций становятся ярче). На остальных — возвращаем стандарт.
+  //    Реализовано через пере-применение refreshRegionStyles с
+  //    внешним множителем.
+  _applyZoomFillOpacity(level);
+
+  // 4. Детальный уровень: строим слои иконок построек и гарнизонов.
+  //    Иначе — убираем детальные слои с карты.
+  if (level === 'detailed') {
+    try { _buildDetailBuildingsLayer(); } catch (e) { console.warn('[Шаг 44] detail buildings:', e); }
+    try { _buildDetailGarrisonsLayer(); } catch (e) { console.warn('[Шаг 44] detail garrisons:', e); }
+  } else {
+    _removeDetailLayers();
+  }
+
+  // 5. Пересчитать видимость подписей наций — на strategic многие
+  //    мелкие подписи скрываются автоматически (по MIN_PX_AREA).
+  try { scheduleNationLabelUpdate(); } catch (_) {}
+}
+
+/**
+ * Применить корректировку fillOpacity регионов в зависимости от
+ * уровня зума. На strategic поднимаем opacity до 0.85 (ярче),
+ * на остальных — возвращаем default 0.70.
+ * @param {'strategic'|'regional'|'detailed'} level
+ */
+function _applyZoomFillOpacity(level) {
+  if (!regionLayers) return;
+  const targetOpacity = (level === 'strategic') ? 0.85 : 0.70;
+  for (const [regionId, layer] of Object.entries(regionLayers)) {
+    const mapData = MAP_REGIONS[regionId];
+    if (mapData && NON_PLAYABLE_TYPES.has(mapData.mapType)) continue;
+    if (!layer || !layer._renderer) continue;
+    // Не перетираем выделенный регион
+    if (regionId === selectedRegionId) continue;
+    try {
+      layer.setStyle({ fillOpacity: targetOpacity });
+    } catch (_) {}
+  }
+}
+
+window.getZoomLevel        = getZoomLevel;
+window.onZoomChange        = onZoomChange;
+window._applyZoomFillOpacity = _applyZoomFillOpacity;
+window._buildDetailBuildingsLayer = _buildDetailBuildingsLayer;
+window._buildDetailGarrisonsLayer = _buildDetailGarrisonsLayer;
