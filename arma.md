@@ -6423,3 +6423,323 @@ const CULTURE_GROUPS = {
 
 ---
 
+## БЛОК AR — Тост-уведомления (Шаг 79)
+
+---
+
+### Шаг 79 — Система тост-уведомлений: очередь, типы, автоскрытие
+
+**Цель:** централизованная система уведомлений с очередью. Тосты появляются снизу-справа, у каждого тип (success/error/warning/info), иконка, прогресс-бар времени жизни. Поддерживается ручное закрытие и действие-кнопка («Отмена», «Перейти»).
+
+**Что сделать:**
+
+1. HTML-контейнер тостов в `index.html`:
+   ```html
+   <div id="toast-container" class="toast-container" aria-live="polite"></div>
+   ```
+
+2. CSS тостов:
+   ```css
+   .toast-container {
+     position: fixed;
+     bottom: 24px;
+     right: 24px;
+     z-index: 3000;
+     display: flex;
+     flex-direction: column;
+     gap: 8px;
+     pointer-events: none;
+   }
+   .toast {
+     display: flex;
+     align-items: flex-start;
+     gap: 10px;
+     background: rgba(12,8,4,0.97);
+     border: 1px solid transparent;
+     border-radius: 6px;
+     padding: 10px 14px;
+     max-width: 320px;
+     box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+     pointer-events: auto;
+     animation: toastIn 0.25s ease;
+     position: relative;
+     overflow: hidden;
+   }
+   @keyframes toastIn {
+     from { transform: translateX(40px); opacity: 0; }
+     to   { transform: translateX(0);    opacity: 1; }
+   }
+   .toast--success { border-color: rgba(80,200,100,0.4); }
+   .toast--error   { border-color: rgba(220,60,60,0.5);  }
+   .toast--warning { border-color: rgba(220,170,40,0.5); }
+   .toast--info    { border-color: rgba(100,150,220,0.4);}
+
+   .toast__icon    { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+   .toast__body    { flex: 1; }
+   .toast__text    { font-size: 13px; color: #ddd; line-height: 1.4; }
+   .toast__action  {
+     font-size: 12px; color: rgba(200,170,90,0.9);
+     background: none; border: none; cursor: pointer; padding: 2px 0;
+     text-decoration: underline;
+   }
+   .toast__close {
+     position: absolute; top: 6px; right: 8px;
+     background: none; border: none; color: rgba(255,255,255,0.4);
+     font-size: 14px; cursor: pointer; line-height: 1;
+   }
+   /* Прогресс-бар времени жизни */
+   .toast__timer {
+     position: absolute; bottom: 0; left: 0;
+     height: 2px; background: rgba(200,170,90,0.5);
+     animation: toastTimer linear forwards;
+   }
+   @keyframes toastTimer { to { width: 0%; } }
+   ```
+
+3. JS — `js/toast.js`:
+   ```js
+   const ICONS = {
+     success: '✓',
+     error:   '✕',
+     warning: '⚠',
+     info:    'ℹ',
+   };
+
+   const queue = [];
+   let activeCount = 0;
+   const MAX_VISIBLE = 4;
+
+   export function showToast(text, type = 'info', durationMs = 4000, action = null) {
+     const item = { text, type, durationMs, action, id: crypto.randomUUID() };
+     queue.push(item);
+     processQueue();
+     return item;   // вернуть для возможности item.dismiss()
+   }
+
+   function processQueue() {
+     while (activeCount < MAX_VISIBLE && queue.length > 0) {
+       renderToast(queue.shift());
+       activeCount++;
+     }
+   }
+
+   function renderToast(item) {
+     const container = document.getElementById('toast-container');
+     const el = document.createElement('div');
+     el.className = `toast toast--${item.type}`;
+     el.dataset.toastId = item.id;
+
+     const duration = item.durationMs > 0 ? item.durationMs : 0;
+
+     el.innerHTML = `
+       <span class="toast__icon">${ICONS[item.type] ?? 'ℹ'}</span>
+       <div class="toast__body">
+         <div class="toast__text">${item.text}</div>
+         ${item.action
+           ? `<button class="toast__action">${item.action.label}</button>`
+           : ''}
+       </div>
+       <button class="toast__close">×</button>
+       ${duration > 0
+         ? `<div class="toast__timer" style="width:100%;animation-duration:${duration}ms"></div>`
+         : ''}
+     `;
+
+     if (item.action) {
+       el.querySelector('.toast__action').addEventListener('click', () => {
+         item.action.callback?.();
+         dismissToast(el);
+       });
+     }
+
+     el.querySelector('.toast__close').addEventListener('click', () => {
+       dismissToast(el);
+     });
+
+     container.appendChild(el);
+
+     // Прикрепить функцию dismiss к объекту item
+     item.dismiss = () => dismissToast(el);
+
+     if (duration > 0) {
+       setTimeout(() => dismissToast(el), duration);
+     }
+   }
+
+   function dismissToast(el) {
+     if (!el.isConnected) return;
+     el.style.animation = 'toastIn 0.2s ease reverse forwards';
+     el.addEventListener('animationend', () => {
+       el.remove();
+       activeCount = Math.max(0, activeCount - 1);
+       processQueue();
+     }, { once: true });
+   }
+   ```
+
+4. Примеры вызовов из других модулей:
+   ```js
+   // Успех
+   showToast('Построена акведук в Риме', 'success');
+
+   // Ошибка с действием
+   showToast('Недостаточно золота для найма', 'error');
+
+   // С кнопкой действия
+   showToast('Рим объявил войну!', 'warning', 6000, {
+     label: 'Открыть дипломатию',
+     callback: () => activateTab('diplomacy'),
+   });
+
+   // Бессрочный (закрывается только вручную)
+   const t = showToast('Выберите цель для армии', 'info', 0);
+   // позже:
+   t.dismiss();
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/toast.js` — новый файл, `showToast`
+- `index.html` — `#toast-container`
+- `ui/styles.css` — `.toast`, `.toast-container` и дочерние классы
+- Все модули, использующие уведомления — заменить `alert()` или прямые DOM-вставки на `showToast`
+
+**Тест Шага 79:**
+- `showToast('Тест', 'success')` показывает зелёный тост снизу-справа.
+- Тост исчезает через 4 с с плавным обратным slide.
+- Прогресс-бар истекает синхронно с таймером.
+- При 5+ одновременных тостах лишние становятся в очередь.
+- Тост с `durationMs: 0` не исчезает пока не нажать ×.
+- Кнопка действия вызывает callback и закрывает тост.
+
+---
+
+## БЛОК AS — Строка состояния (Шаг 80)
+
+---
+
+### Шаг 80 — Статус-бар: ход, дата, ресурсы, сезон, режим карты
+
+**Цель:** добавить постоянную строку состояния внизу экрана. В ней всегда видны: текущий ход, игровая дата (год), сезон, текущие ресурсы (кратко), активный режим карты, зум-уровень. Это информация которую нужно видеть не открывая панелей.
+
+**Что сделать:**
+
+1. HTML статус-бара в `index.html` (после `#map`):
+   ```html
+   <div id="status-bar" class="status-bar">
+     <span id="status-turn"   class="sb-item">Ход 1</span>
+     <span id="status-date"   class="sb-item">278 до н.э.</span>
+     <span id="status-season" class="sb-item">🌿 Весна</span>
+     <span class="sb-sep">|</span>
+     <span id="status-gold"    class="sb-item sb-item--gold">💰 1200</span>
+     <span id="status-army"    class="sb-item">⚔ 4500</span>
+     <span class="sb-sep">|</span>
+     <span id="status-mode"   class="sb-item">Обзор</span>
+     <span id="status-zoom"   class="sb-item">Стратегический</span>
+   </div>
+   ```
+
+2. CSS статус-бара:
+   ```css
+   .status-bar {
+     position: fixed;
+     bottom: 0;
+     left: 0;
+     right: 0;
+     height: 28px;
+     background: rgba(8,5,2,0.9);
+     border-top: 1px solid rgba(200,170,90,0.15);
+     display: flex;
+     align-items: center;
+     gap: 0;
+     padding: 0 12px;
+     z-index: 500;
+     font-size: 12px;
+     color: rgba(220,210,180,0.75);
+     backdrop-filter: blur(4px);
+   }
+   .sb-item {
+     padding: 0 10px;
+     white-space: nowrap;
+   }
+   .sb-item--gold { color: rgba(200,170,90,0.85); }
+   .sb-sep {
+     color: rgba(200,170,90,0.2);
+     padding: 0 2px;
+   }
+   ```
+
+3. Функция `updateStatusBar()` — вызывается после каждого хода и при изменении состояния:
+   ```js
+   // js/status_bar.js
+   import { getSeasonForTurn, SEASONS } from '../data/seasons.js';
+   import { getKey } from './hotkeys.js';
+
+   export function updateStatusBar() {
+     const turn   = gameState.turn;
+     const year   = 280 - turn;   // начало игры — 280 до н.э.
+     const season = SEASONS[getSeasonForTurn(turn)];
+
+     document.getElementById('status-turn').textContent =
+       `Ход ${turn}`;
+     document.getElementById('status-date').textContent =
+       `${Math.abs(year)} ${year < 0 ? 'до н.э.' : 'н.э.'}`;
+     document.getElementById('status-season').textContent =
+       `${season.label}`;
+
+     document.getElementById('status-gold').textContent =
+       `${formatValue(gameState.resources.gold)} зол.`;
+     document.getElementById('status-army').textContent =
+       `${formatValue(getTotalArmySize())} юн.`;
+   }
+
+   export function updateStatusMode(modeLabel) {
+     document.getElementById('status-mode').textContent = modeLabel;
+   }
+
+   export function updateStatusZoom(zoomLabel) {
+     document.getElementById('status-zoom').textContent = zoomLabel;
+   }
+   ```
+
+4. Синхронизировать статус-бар с остальными системами:
+   ```js
+   // Начальное состояние
+   updateStatusBar();
+
+   // После каждого хода
+   eventBus.on('turnEnd', () => updateStatusBar());
+
+   // При смене режима карты
+   eventBus.on('mapModeChanged', ({ label }) => updateStatusMode(label));
+
+   // При зуме
+   leafletMap.on('zoomend', () => {
+     const zoom = leafletMap.getZoom();
+     const label = zoom <= 4 ? 'Стратегический' : zoom <= 6 ? 'Тактический' : 'Детальный';
+     updateStatusZoom(label);
+   });
+   ```
+
+5. Убедиться что карта не перекрывает статус-бар — добавить отступ снизу:
+   ```css
+   #map { padding-bottom: 28px; }
+   /* или */
+   #map { height: calc(100vh - 28px); }
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/status_bar.js` — новый файл, `updateStatusBar`
+- `index.html` — `#status-bar`
+- `ui/styles.css` — `.status-bar`, `.sb-item`
+- `js/game.js` — вызов `updateStatusBar` после хода
+- `js/map.js` — `zoomend` → `updateStatusZoom`
+
+**Тест Шага 80:**
+- После каждого хода номер хода и дата обновляются в статус-баре.
+- Сезон меняется через 3–4 хода.
+- Золото обновляется после начисления дохода.
+- При зуме карты обновляется метка «Стратегический / Тактический / Детальный».
+- Статус-бар не перекрывает контент карты.
+
+---
+
