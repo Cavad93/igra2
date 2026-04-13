@@ -4113,3 +4113,381 @@ border_meander_dark.svg  — меандровый орнамент, тёмный
 
 ---
 
+## БЛОК BA — Сбор портретов из открытых источников (Шаги 69–73)
+
+---
+
+### Шаг 69 — Met Museum: Фаюмские портреты (40–50 лиц, греческая/римская/египетская группы)
+
+**Цель:** систематически собрать все доступные Фаюмские портреты из Met Museum с лицензией CC0. Это лучший источник реалистичных античных лиц — энкаустическая живопись I–III вв. н.э., высокое качество сканирования.
+
+**Скрипт поиска через Met API:**
+```bash
+#!/usr/bin/env bash
+# scripts/fetch_met_fayum.sh
+# Находит все Фаюмские портреты с CC0 лицензией и сохраняет URL в manifest
+
+BASE="https://collectionapi.metmuseum.org/public/collection/v1"
+
+# Поиск по ключевым словам
+IDS=$(curl -s "$BASE/search?q=mummy+portrait&isPublicDomain=true&medium=Encaustic" \
+     | jq '.objectIDs[]')
+
+for id in $IDS; do
+  obj=$(curl -s "$BASE/objects/$id")
+  hasImg=$(echo "$obj" | jq -r '.hasImages')
+  [ "$hasImg" != "true" ] && continue
+
+  title=$(echo  "$obj" | jq -r '.title')
+  imgUrl=$(echo "$obj" | jq -r '.primaryImageSmall')
+  [ -z "$imgUrl" ] || [ "$imgUrl" = "null" ] && continue
+
+  echo "{\"id\": $id, \"title\": \"$title\", \"url\": \"$imgUrl\"}"
+done
+```
+
+**Дополнительные поисковые запросы (запустить скрипт для каждого):**
+```bash
+q=mummy+portrait&isPublicDomain=true&medium=Encaustic
+q=fayum+portrait&isPublicDomain=true
+q=portrait+panel&isPublicDomain=true&medium=Encaustic+on+wood
+q=Romano-Egyptian+portrait&isPublicDomain=true
+```
+
+**Распределение по группам:**
+- Женские портреты → `assets/portraits/greek/` и `assets/portraits/egyptian/`
+- Мужские с римскими чертами → `assets/portraits/roman/`
+- Юношеские → `assets/portraits/greek/`
+
+**Ожидаемый результат:** 40–50 уникальных JPG, каждый ~100–300 KB (`primaryImageSmall`).
+
+**Добавить все найденные объекты в `assets/manifest.json`** с group `portraits` и правильным `id` пути.
+
+**Тест Шага 69:**
+- `ls assets/portraits/greek/ | wc -l` ≥ 15
+- `ls assets/portraits/roman/ | wc -l` ≥ 8
+- `ls assets/portraits/egyptian/ | wc -l` ≥ 8
+- Все файлы — валидные JPEG: `file assets/portraits/greek/*.jpg | grep -v JPEG` пусто.
+
+---
+
+### Шаг 70 — Met Museum: Гандхарская скульптура (индийская группа) и греко-римские бюсты
+
+**Цель:** собрать портретные изображения для индийской и расширить греческую/римскую группы. Гандхарская скульптура (I–III вв. н.э.) — греко-буддийский стиль, реалистичные лица. Греко-римские мраморные бюсты — крупнейший CC0-фонд Met.
+
+**Скрипты поиска:**
+
+```bash
+# Гандхарская скульптура
+curl -s "https://collectionapi.metmuseum.org/public/collection/v1/search\
+?q=gandhara+head&isPublicDomain=true&geoLocation=Pakistan" \
+| jq '.objectIDs[]'
+
+# Ещё запросы для Гандхары:
+# q=gandhara+bodhisattva&isPublicDomain=true
+# q=kushan+portrait&isPublicDomain=true
+# q=gandhara+relief&isPublicDomain=true&medium=Schist
+
+# Греко-римские бюсты
+curl -s "https://collectionapi.metmuseum.org/public/collection/v1/search\
+?q=roman+portrait+bust&isPublicDomain=true&medium=Marble" \
+| jq '.objectIDs[]'
+
+# Дополнительно:
+# q=greek+portrait+head&isPublicDomain=true&medium=Marble
+# q=roman+head&isPublicDomain=true&medium=Marble&dateBegin=-300&dateEnd=400
+```
+
+**Фильтрация результатов** — оставлять только объекты где:
+- `hasImages: true`
+- `primaryImageSmall` не пустой
+- В `title` или `objectName` есть слова: `head`, `portrait`, `bust`, `figure`
+
+```bash
+# Фильтр для каждого objectId
+obj=$(curl -s "$BASE/objects/$id")
+title=$(echo "$obj" | jq -r '.title + " " + .objectName' | tr '[:upper:]' '[:lower:]')
+echo "$title" | grep -qE 'head|portrait|bust|figure' || continue
+```
+
+**Распределение:**
+- Гандхарские головы → `assets/portraits/indian/` (~30–40 файлов)
+- Греческие мраморные головы → `assets/portraits/greek/` (пополнить до 25+)
+- Римские бюсты → `assets/portraits/roman/` (пополнить до 20+)
+
+**Тест Шага 70:**
+- `ls assets/portraits/indian/ | wc -l` ≥ 15
+- `ls assets/portraits/greek/ | wc -l` ≥ 25
+- `ls assets/portraits/roman/ | wc -l` ≥ 20
+
+---
+
+### Шаг 71 — Met Museum: египетские портреты + Wikimedia PD для карфагенской, персидской, кельтской, кочевой групп
+
+**Цель:** закрыть оставшиеся культурные группы. Для египетской — деревянные панели и статуэтки из Met CC0. Для карфагенской, персидской, кельтской, кочевой — рельефы, терракота, монеты из Wikimedia PD.
+
+**Met Museum — египетские:**
+```bash
+# Египетские портреты и головы
+curl -s "https://collectionapi.metmuseum.org/public/collection/v1/search\
+?q=egyptian+portrait+head&isPublicDomain=true" | jq '.objectIDs[]'
+
+# Дополнительно:
+# q=egypt+wooden+panel&isPublicDomain=true
+# q=ptolemaic+portrait&isPublicDomain=true
+# q=egypt+mummy+mask&isPublicDomain=true
+```
+→ `assets/portraits/egyptian/` (добавить до 15–20 файлов)
+
+**Wikimedia Commons — остальные группы:**
+
+Скрипт поиска файлов в категории Wikimedia:
+```bash
+#!/usr/bin/env bash
+# scripts/fetch_wikimedia_category.sh CATEGORY OUTPUT_DIR
+CATEGORY="$1"
+OUT="$2"
+
+curl -s "https://commons.wikimedia.org/w/api.php\
+?action=query&list=categorymembers&cmtitle=Category:${CATEGORY}\
+&cmtype=file&cmlimit=50&format=json" \
+| jq -r '.query.categorymembers[].title' \
+| while read title; do
+    # Получить прямой URL файла
+    fname=$(echo "$title" | sed 's/File://g' | tr ' ' '_')
+    url=$(curl -s "https://commons.wikimedia.org/w/api.php\
+?action=query&titles=File:${fname}&prop=imageinfo\
+&iiprop=url&format=json" \
+    | jq -r '.query.pages[].imageinfo[0].url')
+    echo "$url"
+  done
+```
+
+**Целевые категории Wikimedia для каждой группы:**
+
+| Группа | Категория Wikimedia |
+|--------|-------------------|
+| carthaginian | `Punic_terracotta_masks`, `Carthaginian_art` |
+| persian | `Achaemenid_art`, `Persepolis_reliefs` |
+| celtic | `La_Tène_art`, `Celtic_heads` |
+| nomadic | `Scythian_art`, `Pazyryk_culture` |
+| east_asian | `Han_dynasty_art`, `Terracotta_army` |
+
+**Из каждой категории выбрать 8–12 изображений** с человеческими лицами / головами, добавить в манифест.
+
+**Тест Шага 71:**
+- Все 10 папок `assets/portraits/*/` содержат ≥ 6 JPG.
+- `jq '.assets | length' assets/manifest.json` ≥ 150.
+- `bash assets/download.sh` проходит без единого `FAIL`.
+
+---
+
+### Шаг 72 — CSS-вариации: умножить пул портретов в 8 раз без новых файлов
+
+**Цель:** из ~150 реальных портретов получить ~1200 визуально различных вариантов. Каждый персонаж получает свою уникальную комбинацию портрет + CSS-фильтр, детерминированно из `char.id`.
+
+**Что сделать:**
+
+1. Определить 8 CSS-фильтров в `data/portrait_filters.js`:
+   ```js
+   export const PORTRAIT_FILTERS = [
+     '',                                                    // 0 — оригинал
+     'hue-rotate(20deg) brightness(1.05)',                 // 1 — теплее
+     'hue-rotate(-15deg) saturate(0.85)',                  // 2 — холоднее
+     'sepia(0.35) contrast(1.1)',                          // 3 — состаренный
+     'hue-rotate(10deg) brightness(0.90) contrast(1.05)', // 4 — темнее
+     'saturate(1.4) brightness(1.08)',                     // 5 — насыщеннее
+     'hue-rotate(-25deg) brightness(0.93)',                // 6 — синеватый
+     'sepia(0.15) hue-rotate(8deg) saturate(1.2)',        // 7 — золотистый
+   ];
+   ```
+
+2. Обновить `getPortraitForCharacter` в `data/culture_groups.js`:
+   ```js
+   import { PORTRAIT_FILTERS } from './portrait_filters.js';
+
+   export function getPortraitForCharacter(char, nationId) {
+     const group  = getCultureGroup(nationId);
+     const pool   = group.portrait_pool;
+
+     // Выбор портрета из пула
+     const imgIdx    = hashCode(char.id)             % pool.length;
+     // Выбор CSS-фильтра — второй хэш чтобы не коррелировал с imgIdx
+     const filterIdx = hashCode(char.id + '_filter') % PORTRAIT_FILTERS.length;
+
+     return {
+       src:    `assets/portraits/${pool[imgIdx]}.jpg`,
+       filter: PORTRAIT_FILTERS[filterIdx],
+     };
+   }
+   ```
+
+3. Обновить `renderPortrait` в `ui/portrait.js`:
+   ```js
+   export function renderPortrait(char, nationId, sizePx = 48) {
+     const { src, filter } = getPortraitForCharacter(char, nationId);
+     const fallback = 'assets/portraits/placeholder.svg';
+
+     const img = document.createElement('img');
+     img.className = 'char-portrait';
+     img.src       = src;
+     img.width     = sizePx;
+     img.height    = sizePx;
+     img.alt       = char.name ?? '';
+     img.loading   = 'lazy';
+     img.draggable = false;
+     if (filter) img.style.filter = filter;
+
+     img.onerror = () => { img.src = fallback; img.style.filter = ''; };
+     return img;
+   }
+   ```
+
+4. Пополнить `portrait_pool` каждой культурной группы в `culture_groups.js` — вместо 4 имён файлов указать все найденные на Шагах 69–71:
+   ```js
+   greek: {
+     portrait_pool: [
+       'greek/woman_red', 'greek/man_bearded', 'greek/man_thinface',
+       'greek/woman_wreath', 'greek/bust_01', 'greek/bust_02',
+       // ... все ~25 файлов из assets/portraits/greek/
+     ],
+     ...
+   }
+   ```
+
+**Итоговый охват:**
+```
+Группа         Портретов    × 8 фильтров = Вариантов
+greek          25           × 8          = 200
+roman          20           × 8          = 160
+egyptian       18           × 8          = 144
+indian         15           × 8          = 120
+persian        10           × 8          = 80
+carthaginian   8            × 8          = 64
+celtic         8            × 8          = 64
+east_asian     8            × 8          = 64
+nomadic        8            × 8          = 64
+generic        10           × 8          = 80
+─────────────────────────────────────────────
+Итого:        ~130                       ~1040 уникальных вариантов
+```
+
+**Тест Шага 72:**
+- Два персонажа одной нации с разными `id` получают разные `filter` или разный `src`.
+- Один и тот же персонаж всегда получает один и тот же портрет (детерминированность).
+- `PORTRAIT_FILTERS[0]` = `''` — оригинал без изменений.
+- При удалённом JPG `onerror` показывает `placeholder.svg` без фильтра.
+
+---
+
+### Шаг 73 — Процедурный SVG-портрет: уникальное лицо из хэша персонажа
+
+**Цель:** для персонажей чьи портреты не загружены (первый запуск, офлайн, малые нации) — генерировать SVG-лицо прямо в браузере из `char.id`. Каждый персонаж получает уникальное лицо: форма, цвет кожи, цвет волос — всё детерминированно.
+
+**Что сделать:**
+
+1. Детерминированный генератор псевдослучайных чисел из seed (`js/rng.js`):
+   ```js
+   // Mulberry32 — быстрый, детерминированный
+   export function seededRNG(seed) {
+     let s = seed >>> 0;
+     return function() {
+       s += 0x6D2B79F5;
+       let t = Math.imul(s ^ (s >>> 15), 1 | s);
+       t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+     };
+   }
+   ```
+
+2. Функция `generatePortraitSVG(charId, culturalGroup)` в `ui/portrait_svg.js`:
+   ```js
+   import { seededRNG }  from '../js/rng.js';
+   import { hashCode }   from '../data/culture_groups.js';
+
+   // Палитры по культурным группам
+   const SKIN_PALETTES = {
+     greek:         [[210,175,120],[195,160,105],[225,190,140]],
+     roman:         [[205,170,115],[190,155,100],[220,185,135]],
+     egyptian:      [[160,120, 80],[140,100, 60],[175,135, 90]],
+     persian:       [[170,130, 85],[155,115, 70],[185,145,100]],
+     indian:        [[150,110, 70],[130, 90, 50],[165,125, 85]],
+     carthaginian:  [[155,115, 75],[140,100, 60],[170,130, 90]],
+     celtic:        [[220,185,145],[205,170,130],[235,200,160]],
+     east_asian:    [[215,180,140],[200,165,125],[230,195,155]],
+     nomadic:       [[185,145, 95],[170,130, 80],[200,160,110]],
+     generic:       [[200,165,120],[185,150,105],[215,180,135]],
+   };
+
+   export function generatePortraitSVG(charId, groupId = 'generic', size = 96) {
+     const rng      = seededRNG(hashCode(charId));
+     const palette  = SKIN_PALETTES[groupId] ?? SKIN_PALETTES.generic;
+     const skin     = palette[Math.floor(rng() * palette.length)];
+     const [r,g,b]  = skin;
+
+     // Форма лица: 0=овал, 1=круглое, 2=вытянутое
+     const faceType = Math.floor(rng() * 3);
+     const faceRy   = faceType === 0 ? 38 : faceType === 1 ? 34 : 42;
+     const faceRx   = faceType === 0 ? 30 : faceType === 1 ? 33 : 27;
+
+     // Цвет волос
+     const hairH    = Math.floor(rng() * 60);          // оттенок
+     const hairL    = Math.floor(10 + rng() * 35);     // светлость
+     const hairColor= `hsl(${hairH},40%,${hairL}%)`;
+
+     // Борода (только для части мужских персонажей)
+     const hasBeard = rng() > 0.55;
+     const beard    = hasBeard
+       ? `<ellipse cx="48" cy="${68 + faceRy - 10}" rx="${faceRx - 6}" ry="10"
+              fill="${hairColor}" opacity="0.7"/>`
+       : '';
+
+     return `<svg xmlns="http://www.w3.org/2000/svg"
+          width="${size}" height="${size}" viewBox="0 0 96 96">
+       <!-- Фон -->
+       <rect width="96" height="96" rx="6"
+             fill="rgb(${Math.max(0,r-40)},${Math.max(0,g-40)},${Math.max(0,b-40)})"/>
+       <!-- Плечи -->
+       <ellipse cx="48" cy="90" rx="36" ry="20"
+                fill="rgb(${Math.max(0,r-30)},${Math.max(0,g-30)},${Math.max(0,b-30)})"/>
+       <!-- Волосы -->
+       <ellipse cx="48" cy="${30 - faceRy + 10}" rx="${faceRx + 4}" ry="20"
+                fill="${hairColor}"/>
+       <!-- Лицо -->
+       <ellipse cx="48" cy="45" rx="${faceRx}" ry="${faceRy}"
+                fill="rgb(${r},${g},${b})"/>
+       <!-- Глаза -->
+       <ellipse cx="${48 - faceRx*0.35}" cy="38" rx="4" ry="3" fill="#1a1008"/>
+       <ellipse cx="${48 + faceRx*0.35}" cy="38" rx="4" ry="3" fill="#1a1008"/>
+       <!-- Рот -->
+       <path d="M${48 - 8},${52 + faceRy*0.15}
+                Q48,${56 + faceRy*0.15} ${48 + 8},${52 + faceRy*0.15}"
+             stroke="rgb(${Math.max(0,r-40)},${Math.max(0,g-50)},${Math.max(0,b-40)})"
+             stroke-width="1.5" fill="none"/>
+       ${beard}
+     </svg>`;
+   }
+   ```
+
+3. Интегрировать в `renderPortrait` как fallback при `onerror`:
+   ```js
+   img.onerror = () => {
+     const group = getCultureGroup(nationId).groupId;
+     const svgStr = generatePortraitSVG(char.id, group, sizePx);
+     const blob   = new Blob([svgStr], { type: 'image/svg+xml' });
+     img.src      = URL.createObjectURL(blob);
+     img.style.filter = '';
+   };
+   ```
+
+4. Использовать SVG-портрет также в заглушке `assets/portraits/placeholder.svg` — заменить статичный вопрос на минималистичный силуэт лица.
+
+**Тест Шага 73:**
+- При отсутствии JPG-файлов все персонажи показывают сгенерированные SVG-лица.
+- Два персонажа с разными `id` всегда получают разные SVG.
+- Один персонаж всегда получает одно и то же SVG после перезагрузки.
+- Греческий персонаж и кочевой получают разные тона кожи.
+- При загруженных JPG SVG-генератор не вызывается.
+
+---
+
