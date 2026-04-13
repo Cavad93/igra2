@@ -936,6 +936,28 @@
       );
     }
 
+    /* Шаг 45 — Сезонный оверлей поверх карты */
+    #season-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 200;
+      background: transparent;
+      transition: background 2s ease, filter 2s ease;
+    }
+    /* Плавный transition фильтра leaflet-контейнера (сам #map-container
+       получает класс .leaflet-container после L.map('map-container')) */
+    #map-container,
+    #map-container.leaflet-container {
+      transition: filter 2s ease;
+    }
+    /* Иконка сезона в топ-баре */
+    #game-date .season-chip {
+      display: inline-block;
+      margin-right: 6px;
+      opacity: 0.9;
+    }
+
     /* Инфо о выбранном регионе */
     #region-info {
       /* position: fixed — вырывается из overflow:hidden центральной панели */
@@ -8845,6 +8867,8 @@
           </div>
           <!-- Виньетка поверх карты -->
           <div id="map-vignette"></div>
+          <!-- Шаг 45 — Сезонный оверлей (фильтр и лёгкая тонировка) -->
+          <div id="season-overlay"></div>
         </div>
 
         <!-- ══ ПАНЕЛЬ ОСАДЫ ══ -->

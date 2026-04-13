@@ -361,9 +361,118 @@ function formatDate(date) {
   return `${MONTH_NAMES?.[Math.max(1, Math.min(12, date.month ?? 1))] ?? 'Месяц'}, ${era}`;
 }
 
+// ──────────────────────────────────────────────────────────────
+// Шаг 45 — СЕЗОННЫЙ ВИЗУАЛ КАРТЫ
+// Сезон выводится из GAME_STATE.turn (мираж ou.tick % 4):
+//   0 = Весна, 1 = Лето, 2 = Осень, 3 = Зима
+// ──────────────────────────────────────────────────────────────
+
+const SEASON_STYLES = {
+  0: { // Весна
+    overlay: 'rgba(100,180,80,0.04)',
+    filter:  'hue-rotate(8deg) saturate(1.15)',
+    icon:    '🌸',
+    label:   'Весна',
+  },
+  1: { // Лето
+    overlay: 'rgba(255,200,50,0.05)',
+    filter:  'brightness(1.04) saturate(0.92)',
+    icon:    '☀',
+    label:   'Лето',
+  },
+  2: { // Осень
+    overlay: 'rgba(180,100,30,0.07)',
+    filter:  'hue-rotate(-12deg) sepia(0.2)',
+    icon:    '🍂',
+    label:   'Осень',
+  },
+  3: { // Зима
+    overlay: 'rgba(180,210,240,0.06)',
+    filter:  'saturate(0.5) brightness(0.92)',
+    icon:    '❄',
+    label:   'Зима',
+  },
+};
+
+/**
+ * Возвращает текущий сезон (0-3).
+ * Зеркалит логику super_ou.js: season = tick % 4 → 0=весна, 1=лето, 2=осень, 3=зима.
+ * Если у игрока есть ou.tick, используем его; иначе GAME_STATE.turn.
+ */
+function getCurrentSeason() {
+  try {
+    const gs = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
+    if (!gs) return 0;
+    // Пробуем взять tick у нации игрока (ou.tick) — это эталон для super_ou.
+    const pid = gs.player_nation;
+    const nat = pid && gs.nations ? gs.nations[pid] : null;
+    const ouTick = nat?.ou?.tick;
+    const t = (typeof ouTick === 'number') ? ouTick : (gs.turn || 0);
+    return ((t % 4) + 4) % 4;
+  } catch (e) {
+    return 0;
+  }
+}
+
+/**
+ * Применяет визуальный фильтр сезона к карте и оверлею.
+ * Плавность — через CSS transition (2s ease).
+ */
+function applySeasonVisual(season) {
+  try {
+    const s = (typeof season === 'number')
+      ? (((season % 4) + 4) % 4)
+      : getCurrentSeason();
+    const style = SEASON_STYLES[s];
+    if (!style) return;
+
+    // 1. Оверлей поверх карты — лёгкая цветовая тонировка
+    const overlay = document.getElementById('season-overlay');
+    if (overlay) overlay.style.background = style.overlay;
+
+    // 2. Фильтр leaflet-контейнера (leafletMap.getContainer().style.filter)
+    try {
+      if (typeof leafletMap !== 'undefined' && leafletMap && typeof leafletMap.getContainer === 'function') {
+        leafletMap.getContainer().style.filter = style.filter;
+      } else {
+        const mc = document.getElementById('map-container');
+        if (mc) mc.style.filter = style.filter;
+      }
+    } catch (_) {}
+  } catch (e) {
+    console.warn('[applySeasonVisual]', e);
+  }
+}
+
+// Экспортируем в window для доступа из HTML/других модулей
+if (typeof window !== 'undefined') {
+  window.SEASON_STYLES     = SEASON_STYLES;
+  window.getCurrentSeason  = getCurrentSeason;
+  window.applySeasonVisual = applySeasonVisual;
+}
+
 function updateDateDisplay() {
   const el = document.getElementById('game-date');
-  if (el) el.textContent = formatDate(GAME_STATE.date);
+  if (!el) return;
+  const dateStr = formatDate(GAME_STATE.date);
+  // Шаг 45 — префикс с иконкой сезона
+  let style = null;
+  try {
+    const season = (typeof getCurrentSeason === 'function') ? getCurrentSeason() : 0;
+    style = (typeof SEASON_STYLES !== 'undefined') ? SEASON_STYLES[season] : null;
+  } catch (e) {}
+  if (style) {
+    // безопасно через textContent + inline-элементы
+    el.textContent = '';
+    const chip = document.createElement('span');
+    chip.className = 'season-chip';
+    chip.title = style.label;
+    chip.textContent = style.icon;
+    el.appendChild(chip);
+    el.appendChild(document.createTextNode(' ' + style.label + ' · ' + dateStr));
+  } else {
+    el.textContent = dateStr;
+  }
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -2251,6 +2360,8 @@ function renderAll() {
   try { renderLeftPanel(); }              catch (e) { console.error('renderLeftPanel error:', e); }
   try { renderRightPanel(); }             catch (e) { console.error('renderRightPanel error:', e); }
   try { updateDateDisplay(); }            catch (e) { console.error('updateDateDisplay error:', e); }
+  // Шаг 45 — сезонный визуал (фильтр карты, оверлей, иконка в топ-баре)
+  try { if (typeof applySeasonVisual === 'function') applySeasonVisual(); } catch (e) { console.error('applySeasonVisual error:', e); }
   try { renderCharInitiativesPanel(); }   catch (e) { console.error('renderCharInitiativesPanel error:', e); }
   try { if (typeof renderOrdersPanel    === 'function') renderOrdersPanel();    } catch (e) {}
   try { if (typeof _applyLogFilter      === 'function') _applyLogFilter();      } catch (e) {}
