@@ -15,6 +15,8 @@ let nationBorderLayer = null;   // слой толстых границ межд
 let nationLabelMarkers = [];    // (устарело) оставлено для совместимости
 let nationLabelData   = [];     // { nationId, name, lat, lng, regions, totalGeoArea }
 let _labelTimerId     = null;   // debounce timer для обновления видимости
+let _colorRefreshTimer = null;  // Шаг 36: debounce для refreshRegionStyles после layeradd
+let _colorRefreshRetryTimer = null; // Шаг 36: таймер повтора для полигонов без _renderer
 let _nationSvg        = null;   // SVG overlay для подписей наций (Imperator Rome стиль)
 let _nationSvgGroup   = null;   // <g> элемент внутри SVG
 const _labelCanvas    = document.createElement('canvas');
@@ -193,6 +195,29 @@ function initLeafletMap() {
     setTimeout(() => { if (_nationSvg) _nationSvg.style.opacity = '1'; }, 90);
   });
   window.addEventListener('resize', scheduleNationLabelUpdate);
+
+  // Шаг 36: слушатель событий добавления слоя Canvas-рендерером.
+  // Дебаунс (100мс) нужен чтобы не дёргать refreshRegionStyles сотни раз
+  // подряд при пакетной добавке полигонов.
+  leafletMap.on('layeradd', () => {
+    if (_colorRefreshTimer) clearTimeout(_colorRefreshTimer);
+    _colorRefreshTimer = setTimeout(() => {
+      _colorRefreshTimer = null;
+      if (leafletMap) refreshRegionStyles();
+    }, 100);
+  });
+
+  // Шаг 36: при ресайзе окна Canvas пересоздаётся → повторно раскрашиваем.
+  window.addEventListener('resize', () => {
+    if (_colorRefreshTimer) clearTimeout(_colorRefreshTimer);
+    _colorRefreshTimer = setTimeout(() => {
+      _colorRefreshTimer = null;
+      if (leafletMap) {
+        leafletMap.invalidateSize();
+        refreshRegionStyles();
+      }
+    }, 150);
+  });
 
   // AWMC overlay отключён: границы провинций теперь из map.json
   // loadAWMCProvinceBoundaries();
@@ -1834,10 +1859,24 @@ window.clearTradeRouteLines  = clearTradeRouteLines;
 // ──────────────────────────────────────────────────────────────
 
 function refreshRegionStyles() {
+  // Шаг 36: очередь повтора для полигонов, которым Canvas-рендерер ещё не
+  // успел назначить ._renderer. Race condition: invalidateSize() очищает
+  // Canvas уже после того как стили применены, и цвета теряются. Поэтому
+  // пропускаем "сырой" слой и планируем повторный вызов через короткий
+  // интервал.
+  let _hadMissingRenderer = false;
+
   for (const [regionId, layer] of Object.entries(regionLayers)) {
     const mapData = MAP_REGIONS[regionId];
     // Не-игровые регионы не меняют стиль
     if (mapData && NON_PLAYABLE_TYPES.has(mapData.mapType)) continue;
+
+    // Шаг 36: защита — если у слоя ещё нет внутреннего рендерера,
+    // пропускаем и запланируем повтор ниже.
+    if (!layer._renderer) {
+      _hadMissingRenderer = true;
+      continue;
+    }
 
     const gameRegion = GAME_STATE.regions[regionId];
     const nationId = gameRegion ? gameRegion.nation : mapData?.nation;
@@ -1853,6 +1892,15 @@ function refreshRegionStyles() {
     if (layer.getTooltip && layer.getTooltip()) {
       layer.setTooltipContent(buildTooltipContent(regionId, mapData, nationId));
     }
+  }
+
+  // Если часть слоёв не получила рендерер — повторяем через 120мс
+  if (_hadMissingRenderer) {
+    if (_colorRefreshRetryTimer) clearTimeout(_colorRefreshRetryTimer);
+    _colorRefreshRetryTimer = setTimeout(() => {
+      _colorRefreshRetryTimer = null;
+      if (leafletMap) refreshRegionStyles();
+    }, 120);
   }
 }
 
@@ -1888,13 +1936,20 @@ function renderMap() {
           refreshRegionStyles();
           // Страховочный вызов — после того как Leaflet завершит внутренние RAF
           setTimeout(() => { if (leafletMap) refreshRegionStyles(); }, 400);
+          // Шаг 36: третий страховочный вызов — гарантирует корректную
+          // окраску даже если layeradd-событие не сработало
+          // (Canvas Leaflet завершает внутреннюю перестройку позже 400мс).
+          setTimeout(() => { if (leafletMap) refreshRegionStyles(); }, 1200);
         }, 200);
       } catch (e) {
         console.error('Leaflet init error:', e);
       }
     });
   } else {
-    // Последующие вызовы — только обновляем стили
+    // Шаг 36: при повторном вызове renderMap() принудительно обновляем
+    // размер Canvas и заново применяем стили — иначе после скрытия/показа
+    // карты или ресайза окна полигоны теряют цвет.
+    leafletMap.invalidateSize();
     refreshRegionStyles();
     if (showTradeRoutes) { clearTradeRouteLines(); renderTradeRouteLines(); }
   }
