@@ -4922,3 +4922,353 @@ const CULTURE_GROUPS = {
 
 ---
 
+## БЛОК AH — Сводка хода (Шаг 69)
+
+---
+
+### Шаг 69 — Карточка итогов хода: что произошло, что изменилось
+
+**Цель:** в конце каждого хода показывать компактную карточку «Итог хода» — не просто список событий, а структурированный отчёт: что построено, кто умер, какие битвы произошли, как изменились ресурсы. Карточка закрывается кнопкой «Следующий ход».
+
+**Что сделать:**
+
+1. HTML-разметка карточки сводки в `index.html`:
+   ```html
+   <div id="turn-summary" class="turn-summary" hidden>
+     <div class="turn-summary__header">
+       <span class="turn-summary__turn">Ход <b id="ts-turn-num"></b></span>
+       <h2 class="turn-summary__title">Итог хода</h2>
+     </div>
+
+     <div class="turn-summary__sections">
+       <section class="ts-section" id="ts-military" hidden>
+         <h3 class="ts-section__title">⚔ Военные события</h3>
+         <ul class="ts-section__list" id="ts-military-list"></ul>
+       </section>
+
+       <section class="ts-section" id="ts-economy" hidden>
+         <h3 class="ts-section__title">💰 Экономика</h3>
+         <ul class="ts-section__list" id="ts-economy-list"></ul>
+       </section>
+
+       <section class="ts-section" id="ts-build" hidden>
+         <h3 class="ts-section__title">🔨 Строительство</h3>
+         <ul class="ts-section__list" id="ts-build-list"></ul>
+       </section>
+
+       <section class="ts-section" id="ts-chars" hidden>
+         <h3 class="ts-section__title">👤 Персонажи</h3>
+         <ul class="ts-section__list" id="ts-chars-list"></ul>
+       </section>
+     </div>
+
+     <div class="turn-summary__footer">
+       <div class="ts-resources">
+         <span id="ts-gold-delta"></span>
+         <span id="ts-manpower-delta"></span>
+       </div>
+       <button id="ts-next-btn" class="turn-summary__btn">Следующий ход →</button>
+     </div>
+   </div>
+   ```
+
+2. CSS карточки:
+   ```css
+   .turn-summary {
+     position: fixed;
+     right: 24px;
+     bottom: 24px;
+     width: 320px;
+     max-height: 70vh;
+     overflow-y: auto;
+     background: rgba(12,8,4,0.96);
+     border: 1px solid rgba(200,170,90,0.35);
+     border-radius: 8px;
+     z-index: 800;
+     box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+     animation: slideUp 0.3s ease;
+   }
+   @keyframes slideUp {
+     from { transform: translateY(40px); opacity: 0; }
+     to   { transform: translateY(0);    opacity: 1; }
+   }
+   .turn-summary__header {
+     padding: 12px 16px 8px;
+     border-bottom: 1px solid rgba(200,170,90,0.15);
+   }
+   .turn-summary__turn { font-size: 11px; opacity: 0.5; display: block; }
+   .turn-summary__title { margin: 2px 0 0; font-size: 16px; color: #f0e8c8; }
+
+   .turn-summary__sections { padding: 8px 0; }
+   .ts-section { padding: 6px 16px; }
+   .ts-section__title {
+     font-size: 12px; font-weight: 600; margin: 0 0 4px;
+     color: rgba(200,170,90,0.8);
+   }
+   .ts-section__list {
+     margin: 0; padding: 0; list-style: none;
+     font-size: 12px; color: #ccc;
+   }
+   .ts-section__list li { padding: 2px 0; }
+
+   .turn-summary__footer {
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+     padding: 10px 16px;
+     border-top: 1px solid rgba(200,170,90,0.15);
+   }
+   .ts-resources { font-size: 12px; color: rgba(200,170,90,0.8); }
+   .turn-summary__btn {
+     padding: 8px 20px;
+     background: rgba(200,170,90,0.12);
+     border: 1px solid rgba(200,170,90,0.5);
+     color: #f0e8c8;
+     border-radius: 4px;
+     cursor: pointer;
+     font-size: 13px;
+     transition: background 0.15s;
+   }
+   .turn-summary__btn:hover { background: rgba(200,170,90,0.25); }
+   ```
+
+3. JS — собрать сводку и показать карточку:
+   ```js
+   // js/turn_summary.js
+   export function showTurnSummary(turnEvents, resourceDelta) {
+     const card = document.getElementById('turn-summary');
+
+     document.getElementById('ts-turn-num').textContent = gameState.turn;
+
+     // Заполнить секции по типам событий
+     const sections = {
+       military: { id: 'ts-military', listId: 'ts-military-list', events: [] },
+       economy:  { id: 'ts-economy',  listId: 'ts-economy-list',  events: [] },
+       build:    { id: 'ts-build',    listId: 'ts-build-list',    events: [] },
+       char:     { id: 'ts-chars',    listId: 'ts-chars-list',    events: [] },
+     };
+
+     const typeMap = { war: 'military', eco: 'economy', build: 'build', char: 'char' };
+
+     for (const ev of turnEvents) {
+       const section = sections[typeMap[ev.type] ?? 'economy'];
+       if (section) section.events.push(ev.text);
+     }
+
+     for (const [key, sec] of Object.entries(sections)) {
+       const sectionEl = document.getElementById(sec.id);
+       const listEl    = document.getElementById(sec.listId);
+       if (sec.events.length === 0) {
+         sectionEl.hidden = true;
+       } else {
+         sectionEl.hidden = false;
+         listEl.innerHTML = sec.events
+           .map(t => `<li>${t}</li>`)
+           .join('');
+       }
+     }
+
+     // Дельта ресурсов
+     const goldSign = resourceDelta.gold >= 0 ? '+' : '';
+     document.getElementById('ts-gold-delta').textContent =
+       `Золото: ${goldSign}${resourceDelta.gold}`;
+
+     card.hidden = false;
+
+     document.getElementById('ts-next-btn').onclick = () => {
+       card.hidden = true;
+       advanceTurn();   // реальное продвижение хода
+     };
+   }
+   ```
+
+4. Вызов `showTurnSummary` вместо прямого `advanceTurn`:
+   ```js
+   // Вместо:
+   endTurnButton.addEventListener('click', advanceTurn);
+   // Стало:
+   endTurnButton.addEventListener('click', () => {
+     const events = collectTurnEvents();   // все события этого хода
+     const delta  = computeResourceDelta();
+     showTurnSummary(events, delta);
+     // advanceTurn() вызывается внутри showTurnSummary по кнопке
+   });
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/turn_summary.js` — новый файл
+- `index.html` — `#turn-summary`
+- `ui/styles.css` — `.turn-summary` и дочерние классы
+- `js/game.js` — заменить прямой вызов `advanceTurn` на `showTurnSummary`
+
+**Тест Шага 69:**
+- Нажатие «Конец хода» показывает карточку снизу-справа.
+- Секции отображаются только если в ходу были соответствующие события.
+- Дельта золота показана со знаком `+` или `-`.
+- Кнопка «Следующий ход →» закрывает карточку и продвигает ход.
+- Карточка появляется с плавной анимацией вверх.
+
+---
+
+## БЛОК AI — Сравнение регионов (Шаг 70)
+
+---
+
+### Шаг 70 — Режим сравнения регионов: выбрать два и увидеть разницу
+
+**Цель:** игрок может выбрать два региона и сравнить их по ключевым параметрам (население, доход, армия, защита, строительство). Режим активируется кнопкой в панели режимов карты. Итог — компактная таблица рядом с картой.
+
+**Что сделать:**
+
+1. Кнопка сравнения в панели режимов — добавить в `js/map_modes.js`:
+   ```js
+   registerMapMode('compare', {
+     label: 'Сравнить',
+     icon:  'assets/icons/generic_sword.svg',   // временно, заменить на весы
+     onEnable:  startCompareMode,
+     onDisable: stopCompareMode,
+   });
+   ```
+
+2. Логика выбора двух регионов:
+   ```js
+   // js/compare_mode.js
+   let compareSelections = [];
+
+   export function startCompareMode() {
+     compareSelections = [];
+     showToast('Выберите первый регион для сравнения', 'info');
+
+     // Подсветить все регионы как выбираемые
+     for (const layer of Object.values(regionLayers)) {
+       layer.setStyle({ weight: 2, opacity: 0.8 });
+       layer.once('click', onRegionClickForCompare);
+     }
+   }
+
+   function onRegionClickForCompare(e) {
+     const regionId = e.target.options.regionId ?? e.target._regionId;
+     compareSelections.push(regionId);
+
+     // Подсветить выбранный
+     e.target.setStyle({ weight: 3, color: 'rgba(200,170,90,0.9)' });
+
+     if (compareSelections.length === 1) {
+       showToast('Теперь выберите второй регион', 'info');
+       // Добавить обработчик для остальных
+       for (const [rid, layer] of Object.entries(regionLayers)) {
+         if (rid !== regionId) layer.once('click', onRegionClickForCompare);
+       }
+     } else if (compareSelections.length === 2) {
+       renderComparePanel(compareSelections[0], compareSelections[1]);
+     }
+   }
+
+   export function stopCompareMode() {
+     compareSelections = [];
+     document.getElementById('compare-panel')?.remove();
+     // Снять подсветку
+     refreshRegionStyles();
+   }
+   ```
+
+3. Панель сравнения:
+   ```js
+   function renderComparePanel(regionIdA, regionIdB) {
+     const a = getRegionData(regionIdA);
+     const b = getRegionData(regionIdB);
+
+     // Удалить старую панель
+     document.getElementById('compare-panel')?.remove();
+
+     const panel = document.createElement('div');
+     panel.id = 'compare-panel';
+     panel.className = 'compare-panel';
+
+     const rows = [
+       ['Население',  a.population,  b.population,  v => v.toLocaleString()],
+       ['Доход',      a.income,      b.income,      v => `${v} зол.`],
+       ['Армия',      a.garrison,    b.garrison,    v => `${v} юн.`],
+       ['Защита',     a.defense,     b.defense,     v => String(v)],
+       ['Здания',     a.buildings.length, b.buildings.length, v => String(v)],
+     ];
+
+     const rowsHtml = rows.map(([label, va, vb, fmt]) => {
+       const better = va > vb ? 'a' : vb > va ? 'b' : '';
+       return `
+         <tr>
+           <td class="cp-cell ${better === 'a' ? 'cp-better' : ''}">${fmt(va)}</td>
+           <td class="cp-label">${label}</td>
+           <td class="cp-cell ${better === 'b' ? 'cp-better' : ''}">${fmt(vb)}</td>
+         </tr>
+       `;
+     }).join('');
+
+     panel.innerHTML = `
+       <div class="cp-header">
+         <span>${a.name}</span>
+         <span>vs</span>
+         <span>${b.name}</span>
+       </div>
+       <table class="cp-table">${rowsHtml}</table>
+       <button class="cp-close">×</button>
+     `;
+
+     panel.querySelector('.cp-close').addEventListener('click', () => {
+       deactivateMapMode('compare');
+     });
+
+     document.body.appendChild(panel);
+   }
+   ```
+
+4. CSS панели сравнения:
+   ```css
+   .compare-panel {
+     position: fixed;
+     top: 50%;
+     left: 50%;
+     transform: translate(-50%, -50%);
+     background: rgba(12,8,4,0.97);
+     border: 1px solid rgba(200,170,90,0.35);
+     border-radius: 8px;
+     z-index: 900;
+     padding: 0 0 12px;
+     min-width: 280px;
+     box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+   }
+   .cp-header {
+     display: flex;
+     justify-content: space-between;
+     padding: 10px 14px;
+     font-weight: 600;
+     font-size: 13px;
+     color: #f0e8c8;
+     border-bottom: 1px solid rgba(200,170,90,0.15);
+   }
+   .cp-table { width: 100%; border-collapse: collapse; }
+   .cp-label { text-align: center; font-size: 11px; opacity: 0.55; padding: 4px 8px; }
+   .cp-cell  { text-align: center; font-size: 13px; padding: 4px 10px; }
+   .cp-better { color: rgba(120,220,100,0.9); font-weight: 600; }
+   .cp-close {
+     position: absolute; top: 8px; right: 10px;
+     background: none; border: none; color: #aaa;
+     font-size: 18px; cursor: pointer; line-height: 1;
+   }
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/compare_mode.js` — новый файл
+- `js/map_modes.js` — регистрация режима `'compare'`
+- `ui/styles.css` — `.compare-panel`, `.cp-*`
+- `js/game.js` — `getRegionData` должна возвращать все необходимые поля
+
+**Тест Шага 70:**
+- Активация режима «Сравнить» меняет курсор и показывает подсказку.
+- Клик на два региона открывает таблицу сравнения по центру экрана.
+- Лучшие показатели выделены зелёным в каждой строке.
+- Кнопка × закрывает панель и выходит из режима.
+- При выходе из режима подсветка регионов снимается.
+
+---
+
