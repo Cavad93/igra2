@@ -4602,3 +4602,323 @@ const CULTURE_GROUPS = {
 
 ---
 
+## БЛОК AF — Дипломатический граф (Шаг 67)
+
+---
+
+### Шаг 67 — Дипломатический граф: визуализация отношений между нациями
+
+**Цель:** вкладка «Дипломатия» вместо плоского списка показывает интерактивный граф-паутину: нации как узлы, отношения как дуги с цветом (зелёный=союз, красный=война, серый=нейтрал). Canvas 2D — без внешних библиотек.
+
+**Что сделать:**
+
+1. HTML-разметка в дипломатической вкладке:
+   ```html
+   <div id="diplo-tab" class="tab-panel" hidden>
+     <canvas id="diplo-canvas" width="340" height="320"></canvas>
+     <div id="diplo-detail" class="diplo-detail" hidden></div>
+   </div>
+   ```
+
+2. Функция `renderDiploGraph(playerNationId, relations)` — рисует граф на Canvas:
+   ```js
+   // ui/diplo_graph.js
+   export function renderDiploGraph(playerNationId, relations) {
+     const canvas = document.getElementById('diplo-canvas');
+     const ctx    = canvas.getContext('2d');
+     const W = canvas.width, H = canvas.height;
+     const cx = W / 2, cy = H / 2;
+
+     ctx.clearRect(0, 0, W, H);
+
+     // Собрать уникальные нации из relations
+     const nations = new Set([playerNationId]);
+     for (const r of relations) {
+       nations.add(r.fromId);
+       nations.add(r.toId);
+     }
+     const nationList = [...nations];
+     const N = nationList.length;
+
+     // Разместить нации по кругу; игрок — в центре
+     const radius = Math.min(W, H) * 0.38;
+     const positions = {};
+     positions[playerNationId] = { x: cx, y: cy };
+
+     const others = nationList.filter(id => id !== playerNationId);
+     others.forEach((id, i) => {
+       const angle = (2 * Math.PI * i) / others.length - Math.PI / 2;
+       positions[id] = {
+         x: cx + Math.cos(angle) * radius,
+         y: cy + Math.sin(angle) * radius,
+       };
+     });
+
+     // Нарисовать дуги (отношения)
+     for (const rel of relations) {
+       const a = positions[rel.fromId];
+       const b = positions[rel.toId];
+       if (!a || !b) continue;
+
+       const color = rel.type === 'alliance' ? 'rgba(80,200,120,0.7)'
+                   : rel.type === 'war'      ? 'rgba(220,60,60,0.7)'
+                   : rel.type === 'trade'    ? 'rgba(200,170,90,0.5)'
+                   :                           'rgba(150,150,150,0.3)';
+
+       ctx.beginPath();
+       ctx.moveTo(a.x, a.y);
+       ctx.lineTo(b.x, b.y);
+       ctx.strokeStyle = color;
+       ctx.lineWidth   = rel.type === 'war' ? 2.5 : 1.5;
+       ctx.stroke();
+     }
+
+     // Нарисовать узлы (нации)
+     for (const [id, pos] of Object.entries(positions)) {
+       const isPlayer = id === playerNationId;
+       const r = isPlayer ? 14 : 9;
+
+       ctx.beginPath();
+       ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+       ctx.fillStyle   = isPlayer ? 'rgba(200,170,90,0.9)' : 'rgba(60,50,30,0.9)';
+       ctx.strokeStyle = 'rgba(200,170,90,0.6)';
+       ctx.lineWidth   = 1.5;
+       ctx.fill();
+       ctx.stroke();
+
+       // Иконка культурной группы внутри узла
+       const iconPath = getNationIconPath(id);
+       const img = new Image(r * 1.4, r * 1.4);
+       img.src = iconPath;
+       img.onload = () => {
+         ctx.drawImage(img, pos.x - r*0.7, pos.y - r*0.7, r*1.4, r*1.4);
+       };
+
+       // Подпись под узлом
+       ctx.fillStyle   = 'rgba(220,210,180,0.85)';
+       ctx.font        = `${isPlayer ? 11 : 9}px sans-serif`;
+       ctx.textAlign   = 'center';
+       ctx.fillText(getNationShortName(id), pos.x, pos.y + r + 10);
+     }
+   }
+   ```
+
+3. Клик на узел — показать детали отношений с этой нацией:
+   ```js
+   canvas.addEventListener('click', e => {
+     const rect = canvas.getBoundingClientRect();
+     const mx = e.clientX - rect.left;
+     const my = e.clientY - rect.top;
+
+     for (const [id, pos] of Object.entries(positions)) {
+       const dist = Math.hypot(mx - pos.x, my - pos.y);
+       if (dist < 14) {
+         showDiploDetail(id);
+         return;
+       }
+     }
+   });
+
+   function showDiploDetail(nationId) {
+     const panel = document.getElementById('diplo-detail');
+     const rel   = getRelationWith(nationId);
+     panel.innerHTML = `
+       <div class="diplo-detail__name">${getNationName(nationId)}</div>
+       <div>Отношение: <b>${rel.score > 0 ? '+' : ''}${rel.score}</b></div>
+       <div>Статус: ${rel.type}</div>
+       <button data-action="declare-war"   data-id="${nationId}">Объявить войну</button>
+       <button data-action="offer-alliance" data-id="${nationId}">Предложить союз</button>
+       <button data-action="offer-trade"    data-id="${nationId}">Торговый договор</button>
+     `;
+     panel.hidden = false;
+   }
+   ```
+
+4. Перерисовывать граф при открытии вкладки и после каждого хода:
+   ```js
+   document.querySelector('[data-tab="diplomacy"]').addEventListener('click', () => {
+     renderDiploGraph(gameState.playerNation, gameState.relations);
+   });
+   eventBus.on('turnEnd', () => {
+     if (activeDiploTab) renderDiploGraph(gameState.playerNation, gameState.relations);
+   });
+   ```
+
+**Какие файлы затрагиваются:**
+- `ui/diplo_graph.js` — новый файл, `renderDiploGraph`, `showDiploDetail`
+- `index.html` — `#diplo-canvas`, `#diplo-detail`
+- `ui/styles.css` — `.diplo-detail` и его дочерние классы
+
+**Тест Шага 67:**
+- Вкладка «Дипломатия» показывает граф с нациями по кругу, игрок в центре.
+- Союзники — зелёная дуга, враги — красная, нейтралы — серая.
+- Клик на узел нации показывает панель с кнопками дипломатических действий.
+- После объявления войны дуга перекрашивается в красный без перезагрузки страницы.
+
+---
+
+## БЛОК AG — Лента событий (Шаг 68)
+
+---
+
+### Шаг 68 — Лента событий: хронологический журнал с иконками и фильтрами
+
+**Цель:** заменить простой текстовый лог полноценной лентой событий. Каждое событие имеет тип (военное, дипломатическое, экономическое, персональное), иконку, временную метку (ход) и описание. Лента фильтруется по типу и прокручивается. Важные события подсвечены.
+
+**Что сделать:**
+
+1. HTML-структура ленты в боковой панели:
+   ```html
+   <div id="event-feed" class="event-feed">
+     <div class="event-feed__filters">
+       <button class="ef-filter is-active" data-type="all">Все</button>
+       <button class="ef-filter" data-type="war">⚔</button>
+       <button class="ef-filter" data-type="diplo">🤝</button>
+       <button class="ef-filter" data-type="eco">💰</button>
+       <button class="ef-filter" data-type="char">👤</button>
+     </div>
+     <div class="event-feed__list"></div>
+   </div>
+   ```
+
+2. Функция `addEvent(type, text, details)` — добавить событие в ленту:
+   ```js
+   // js/event_feed.js
+   const ICONS = {
+     war:   'assets/icons/sword.svg',
+     diplo: 'assets/icons/scroll.svg',
+     eco:   'assets/icons/coin.svg',
+     char:  'assets/icons/star.svg',
+     build: 'assets/icons/construction.svg',
+     default: 'assets/icons/generic_sword.svg',
+   };
+
+   const events = [];
+
+   export function addEvent({ type = 'default', text, details = null,
+                               important = false }) {
+     const ev = {
+       id:        crypto.randomUUID(),
+       turn:      gameState.turn,
+       type,
+       text,
+       details,
+       important,
+       ts:        Date.now(),
+     };
+     events.unshift(ev);   // новые события — сверху
+
+     renderEventItem(ev);
+
+     // Бейдж на вкладке лога (+1)
+     incrementLogBadge();
+   }
+
+   function renderEventItem(ev) {
+     const list = document.querySelector('.event-feed__list');
+     const icon = ICONS[ev.type] ?? ICONS.default;
+
+     const item = document.createElement('div');
+     item.className = `ef-item ef-item--${ev.type}${ev.important ? ' ef-item--important' : ''}`;
+     item.dataset.type = ev.type;
+     item.dataset.evId = ev.id;
+
+     item.innerHTML = `
+       <img src="${icon}" class="ef-item__icon" width="14" height="14">
+       <div class="ef-item__body">
+         <span class="ef-item__turn">Ход ${ev.turn}</span>
+         <span class="ef-item__text">${ev.text}</span>
+       </div>
+     `;
+
+     if (ev.details) {
+       item.addEventListener('click', () => showEventDetails(ev));
+     }
+
+     list.prepend(item);
+
+     // Ограничить список 200 последними событиями
+     while (list.children.length > 200) list.lastChild?.remove();
+   }
+   ```
+
+3. CSS ленты событий:
+   ```css
+   .event-feed {
+     display: flex;
+     flex-direction: column;
+     height: 100%;
+   }
+   .event-feed__filters {
+     display: flex;
+     gap: 4px;
+     padding: 6px 8px;
+     border-bottom: 1px solid rgba(200,170,90,0.15);
+     flex-shrink: 0;
+   }
+   .ef-filter {
+     padding: 2px 8px;
+     border-radius: 12px;
+     border: 1px solid rgba(200,170,90,0.25);
+     background: none;
+     color: rgba(255,255,255,0.55);
+     font-size: 12px;
+     cursor: pointer;
+     transition: all 0.15s;
+   }
+   .ef-filter.is-active {
+     background: rgba(200,170,90,0.15);
+     color: #f0e8c8;
+     border-color: rgba(200,170,90,0.5);
+   }
+   .event-feed__list {
+     overflow-y: auto;
+     flex: 1;
+     padding: 4px 0;
+   }
+   .ef-item {
+     display: flex;
+     gap: 8px;
+     align-items: flex-start;
+     padding: 5px 10px;
+     border-left: 3px solid transparent;
+     transition: background 0.1s;
+   }
+   .ef-item:hover { background: rgba(255,255,255,0.04); }
+   .ef-item--important { border-left-color: rgba(200,170,90,0.7); }
+   .ef-item--war       { border-left-color: rgba(220,60,60,0.5); }
+   .ef-item__icon { opacity: 0.7; filter: invert(1); flex-shrink: 0; margin-top: 2px; }
+   .ef-item__turn { font-size: 10px; opacity: 0.45; display: block; }
+   .ef-item__text { font-size: 12px; line-height: 1.4; }
+   ```
+
+4. Фильтрация событий по типу:
+   ```js
+   document.querySelector('.event-feed__filters').addEventListener('click', e => {
+     if (!e.target.matches('.ef-filter')) return;
+
+     document.querySelectorAll('.ef-filter').forEach(b => b.classList.remove('is-active'));
+     e.target.classList.add('is-active');
+
+     const type = e.target.dataset.type;
+     document.querySelectorAll('.ef-item').forEach(item => {
+       item.hidden = type !== 'all' && item.dataset.type !== type;
+     });
+   });
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/event_feed.js` — новый файл, `addEvent`, `renderEventItem`
+- `index.html` — `#event-feed`
+- `ui/styles.css` — `.event-feed`, `.ef-item`, `.ef-filter`
+- `js/game.js` — вызовы `addEvent` при объявлении войны, заключении договоров, смерти персонажей, завершении строительства
+
+**Тест Шага 68:**
+- При объявлении войны в ленте появляется событие с иконкой меча.
+- Фильтр «⚔» показывает только военные события.
+- Важные события (потеря столицы) выделены золотой боковой полосой.
+- Лента не накапливает больше 200 элементов (старые удаляются).
+- При завершении строительства добавляется событие типа `build`.
+
+---
+
