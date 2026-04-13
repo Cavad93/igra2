@@ -1847,8 +1847,47 @@ function renderLaws(laws) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// ПРАВАЯ ПАНЕЛЬ — двор
+// ПРАВАЯ ПАНЕЛЬ — двор (Шаг 43: должности)
 // ──────────────────────────────────────────────────────────────
+
+// Шаг 43 — список должностей при дворе
+const COURT_POSITIONS = [
+  { id: 'strategos', icon: '⚔',  title: 'Стратег',   bonus: '+армия',     skill: 'ambition',   prefRole: 'general'  },
+  { id: 'treasurer', icon: '💰', title: 'Казначей',  bonus: '+доход',     skill: 'greed',      prefRole: 'merchant' },
+  { id: 'envoy',     icon: '🤝', title: 'Посол',     bonus: '+дипломатия',skill: 'caution',    prefRole: 'advisor'  },
+  { id: 'chancellor',icon: '📜', title: 'Советник',  bonus: '+политика',  skill: 'piety',      prefRole: 'priest'   },
+];
+
+function _getCourtPositions(nation) {
+  if (!nation.court_positions) {
+    nation.court_positions = {};
+    for (const p of COURT_POSITIONS) nation.court_positions[p.id] = null;
+  }
+  // Гарантируем наличие всех ключей (на случай обновления списка должностей)
+  for (const p of COURT_POSITIONS) {
+    if (!(p.id in nation.court_positions)) nation.court_positions[p.id] = null;
+  }
+  return nation.court_positions;
+}
+
+// Очистить должность, если её носитель умер или исчез
+function _cleanupCourtPositions(nation) {
+  const positions = _getCourtPositions(nation);
+  const aliveIds = new Set((nation.characters || []).filter(c => c.alive).map(c => c.id));
+  for (const pid of Object.keys(positions)) {
+    if (positions[pid] && !aliveIds.has(positions[pid])) positions[pid] = null;
+  }
+}
+
+function _candidateScore(char, posDef) {
+  let score = 0;
+  if (char.role === posDef.prefRole) score += 30;
+  const traits = char.traits || {};
+  score += traits[posDef.skill] || 0;
+  // Лояльность всегда даёт небольшой бонус — ненадёжный человек на должности опасен
+  score += (traits.loyalty || 0) * 0.2;
+  return Math.round(score);
+}
 
 function renderRightPanel() {
   const panel = document.getElementById('right-panel');
@@ -1856,16 +1895,174 @@ function renderRightPanel() {
 
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const characters = (nation.characters || []).filter(c => c.alive);
+  _cleanupCourtPositions(nation);
+  const positions = _getCourtPositions(nation);
+  const assignedIds = new Set(Object.values(positions).filter(Boolean));
+  const freeChars = characters.filter(c => !assignedIds.has(c.id));
+
+  // Заголовок: имя правителя и эпоха
+  const rulerName = nation.ruler?.name || nation.name || 'Агафокл';
+  const capital   = nation.capital_name || nation.name || 'Сиракузы';
+  const year      = (typeof GAME_STATE.year === 'number')
+                      ? `${Math.abs(GAME_STATE.year)} ${GAME_STATE.year < 0 ? 'BC' : 'AD'}`
+                      : '301 BC';
+
+  const slotsHtml = COURT_POSITIONS.map(p => {
+    const charId = positions[p.id];
+    const char   = charId ? characters.find(c => c.id === charId) : null;
+    const filled = !!char;
+    return `
+      <div class="position-slot ${filled ? 'filled' : ''}" data-role="${p.id}"
+           onclick="if(event.target.tagName!=='BUTTON'){${filled ? `showCharacterDetail('${char.id}')` : `openAssignModal('${p.id}')`}}">
+        <div class="pos-role-icon">${p.icon}</div>
+        <div class="pos-info">
+          <div class="pos-title">${p.title}</div>
+          <div class="pos-holder ${filled ? '' : 'empty'}" id="pos-${p.id}">
+            ${filled ? char.name : '— вакантно —'}
+          </div>
+          ${filled ? `<div class="pos-bonus">${p.bonus}</div>` : ''}
+        </div>
+        <button class="pos-assign-btn" onclick="event.stopPropagation();openAssignModal('${p.id}')" title="Назначить">↔</button>
+      </div>
+    `;
+  }).join('');
+
+  const advisorsHtml = freeChars.length === 0
+    ? '<div class="no-data" style="font-size:10px;color:var(--text-dim);padding:4px;">Нет свободных персонажей</div>'
+    : freeChars.map(renderAdvisorChip).join('');
 
   panel.innerHTML = `
-    <div class="panel-title">👑 Двор Агафокла</div>
-    <div class="characters-list">
-      ${characters.length === 0
-        ? '<div class="no-data">Двор пуст. Введите команду для генерации персонажей.</div>'
-        : characters.map(renderCharacterCard).join('')
-      }
+    <div class="court-header">
+      <span class="court-title">👑 Двор ${rulerName}</span>
+      <span class="court-era">${capital} · ${year}</span>
+    </div>
+
+    <button id="generate-chars-btn" onclick="handleGenerateChars()">
+      ✨ Созвать советников (AI)
+    </button>
+
+    ${characters.length === 0
+      ? '<div class="no-data" style="margin-top:8px;">Двор пуст. Введите команду для генерации персонажей.</div>'
+      : `
+        <div id="positions-list">${slotsHtml}</div>
+        <div class="court-section-title">Советники</div>
+        <div id="free-advisors">${advisorsHtml}</div>
+      `
+    }
+  `;
+}
+
+// Чип советника без должности
+function renderAdvisorChip(char) {
+  const traits = char.traits || {};
+  // Главный навык — наибольшее значение среди черт (визуально)
+  const skillEntries = [
+    ['⚔', traits.ambition || 0],
+    ['🛡', traits.caution  || 0],
+    ['💰', traits.greed    || 0],
+    ['☥', traits.piety    || 0],
+  ];
+  skillEntries.sort((a, b) => b[1] - a[1]);
+  const [icon, val] = skillEntries[0];
+  const skillVal = Math.round(val / 10);
+  const portrait = char.portrait || '👤';
+  return `
+    <div class="advisor-chip" onclick="showCharacterDetail('${char.id}')" title="${char.name} — ${getRoleLabel(char.role)}">
+      <span class="adv-avatar">${portrait}</span>
+      <span class="adv-name">${char.name}</span>
+      <span class="adv-skill">${icon}${skillVal}</span>
     </div>
   `;
+}
+
+// Модал назначения на должность
+function openAssignModal(roleId) {
+  const overlay = document.getElementById('assign-modal-overlay');
+  if (!overlay) return;
+  const posDef = COURT_POSITIONS.find(p => p.id === roleId);
+  if (!posDef) return;
+
+  const nation = GAME_STATE.nations[GAME_STATE.player_nation];
+  const positions = _getCourtPositions(nation);
+  const characters = (nation.characters || []).filter(c => c.alive);
+  const currentId = positions[roleId];
+
+  // Кандидаты: все живые, отсортированы по релевантному навыку
+  const candidates = characters
+    .map(c => ({ char: c, score: _candidateScore(c, posDef) }))
+    .sort((a, b) => b.score - a.score);
+
+  const candHtml = candidates.length === 0
+    ? '<div class="assign-cand-empty">Нет доступных персонажей</div>'
+    : candidates.map(({ char, score }) => {
+        const isCurrent = char.id === currentId;
+        const portrait  = char.portrait || '👤';
+        return `
+          <div class="assign-cand">
+            <div class="assign-cand-portrait">${portrait}</div>
+            <div class="assign-cand-info">
+              <div class="assign-cand-name">${char.name}</div>
+              <div class="assign-cand-meta">${getRoleLabel(char.role)} · ${char.age} лет</div>
+            </div>
+            <div class="assign-cand-skill" title="Релевантный навык">${score}</div>
+            ${isCurrent
+              ? `<button class="assign-cand-btn unassign" onclick="unassignCharacter('${roleId}')">Снять</button>`
+              : `<button class="assign-cand-btn" onclick="assignCharacter('${char.id}','${roleId}')">Назначить</button>`
+            }
+          </div>
+        `;
+      }).join('');
+
+  overlay.innerHTML = `
+    <div class="assign-modal-box" onclick="event.stopPropagation()">
+      <div class="assign-modal-header">
+        <div class="assign-modal-icon">${posDef.icon}</div>
+        <div>
+          <div class="assign-modal-title">${posDef.title}</div>
+          <div class="assign-modal-sub">${posDef.bonus}</div>
+        </div>
+        <button class="close-btn" onclick="closeAssignModal()" style="margin-left:auto">✕</button>
+      </div>
+      <div class="assign-cand-list">${candHtml}</div>
+    </div>
+  `;
+  overlay.style.display = 'flex';
+}
+
+function closeAssignModal() {
+  const overlay = document.getElementById('assign-modal-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function assignCharacter(charId, roleId) {
+  const nation = GAME_STATE.nations[GAME_STATE.player_nation];
+  const positions = _getCourtPositions(nation);
+  // Если этот персонаж уже занимал другую должность — освобождаем её
+  for (const pid of Object.keys(positions)) {
+    if (positions[pid] === charId) positions[pid] = null;
+  }
+  positions[roleId] = charId;
+  const char = (nation.characters || []).find(c => c.id === charId);
+  const posDef = COURT_POSITIONS.find(p => p.id === roleId);
+  if (typeof addEventLog === 'function' && char && posDef) {
+    addEventLog(`${char.name} назначен на должность: ${posDef.title}.`, 'character');
+  }
+  closeAssignModal();
+  renderRightPanel();
+}
+
+function unassignCharacter(roleId) {
+  const nation = GAME_STATE.nations[GAME_STATE.player_nation];
+  const positions = _getCourtPositions(nation);
+  const charId = positions[roleId];
+  positions[roleId] = null;
+  const char = charId ? (nation.characters || []).find(c => c.id === charId) : null;
+  const posDef = COURT_POSITIONS.find(p => p.id === roleId);
+  if (typeof addEventLog === 'function' && char && posDef) {
+    addEventLog(`${char.name} снят с должности: ${posDef.title}.`, 'character');
+  }
+  closeAssignModal();
+  renderRightPanel();
 }
 
 function renderCharacterCard(char) {

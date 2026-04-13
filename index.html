@@ -3003,6 +3003,226 @@
     }
 
     /* ══════════════════════════════════════════════════
+       ШАГ 43 — ЭКРАН ДОЛЖНОСТЕЙ (ДВОР)
+    ══════════════════════════════════════════════════ */
+    .court-header {
+      text-align: center;
+      padding: 6px 0 8px;
+      border-bottom: 1px solid var(--border-gold);
+      margin-bottom: 8px;
+    }
+    .court-title {
+      display: block;
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--text-gold);
+      letter-spacing: 0.5px;
+    }
+    .court-era {
+      display: block;
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 2px;
+      font-style: italic;
+    }
+
+    #positions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+    .position-slot {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      margin-bottom: 4px;
+      background: rgba(40,25,8,0.4);
+      border: 1px solid var(--border-gold);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .position-slot:hover { background: rgba(60,40,12,0.5); }
+    .position-slot.filled { border-color: var(--accent); }
+    .pos-role-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      width: 28px;
+      text-align: center;
+    }
+    .pos-info { flex: 1; min-width: 0; }
+    .pos-title {
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .pos-holder {
+      font-size: 12px;
+      color: var(--text-gold);
+      font-family: 'Cinzel', serif;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pos-holder.empty { color: var(--text-dim); font-style: italic; }
+    .pos-bonus {
+      font-size: 9px;
+      color: var(--positive, #4CAF50);
+      margin-top: 1px;
+    }
+    .pos-assign-btn {
+      margin-left: auto;
+      background: none;
+      border: 1px solid rgba(107,79,26,0.5);
+      color: var(--text-dim);
+      border-radius: 3px;
+      padding: 2px 7px;
+      cursor: pointer;
+      font-size: 12px;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .pos-assign-btn:hover {
+      color: var(--text-gold);
+      border-color: var(--accent);
+      background: rgba(107,79,26,0.25);
+    }
+
+    .court-section-title {
+      font-size: 10px;
+      font-weight: bold;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 8px 0 4px;
+      padding-bottom: 2px;
+      border-bottom: 1px solid rgba(107,79,26,0.4);
+    }
+
+    #free-advisors {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .advisor-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 7px;
+      background: rgba(40,25,8,0.4);
+      border: 1px solid var(--border-gold);
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 10px;
+      transition: all 0.15s;
+    }
+    .advisor-chip:hover {
+      background: rgba(60,40,12,0.6);
+      border-color: var(--accent);
+    }
+    .adv-avatar { font-size: 13px; }
+    .adv-name {
+      color: var(--text-gold);
+      max-width: 90px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .adv-skill { color: var(--accent); font-weight: bold; }
+
+    /* Модал назначения */
+    #assign-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 1300;
+      align-items: center;
+      justify-content: center;
+    }
+    .assign-modal-box {
+      background: var(--bg-panel);
+      border: 2px solid var(--border-light);
+      border-radius: 4px;
+      padding: 16px 18px;
+      max-width: 420px;
+      width: 92%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .assign-modal-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-gold);
+    }
+    .assign-modal-icon { font-size: 22px; }
+    .assign-modal-title {
+      flex: 1;
+      font-size: 14px;
+      color: var(--accent);
+      font-weight: bold;
+    }
+    .assign-modal-sub {
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .assign-cand-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .assign-cand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      background: rgba(40,25,8,0.4);
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+    }
+    .assign-cand-portrait { font-size: 22px; }
+    .assign-cand-info { flex: 1; min-width: 0; }
+    .assign-cand-name { font-size: 12px; color: var(--text-gold); font-weight: bold; }
+    .assign-cand-meta { font-size: 10px; color: var(--text-dim); }
+    .assign-cand-skill {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: bold;
+      padding: 0 6px;
+    }
+    .assign-cand-btn {
+      background: rgba(107,79,26,0.4);
+      border: 1px solid var(--accent);
+      color: var(--text-gold);
+      padding: 4px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 11px;
+      transition: all 0.15s;
+    }
+    .assign-cand-btn:hover {
+      background: rgba(150,120,50,0.6);
+    }
+    .assign-cand-btn.unassign {
+      border-color: rgba(244,67,54,0.5);
+      color: #ef9a9a;
+    }
+    .assign-cand-empty {
+      text-align: center;
+      color: var(--text-dim);
+      font-style: italic;
+      padding: 16px;
+    }
+
+    /* ══════════════════════════════════════════════════
        ОВЕРЛЕИ
     ══════════════════════════════════════════════════ */
     #char-overlay, #voting-overlay {
@@ -8734,6 +8954,9 @@
   ═══════════════════════════ -->
   <div id="char-overlay" onclick="if(event.target===this)closeCharacterDetail()"></div>
   <div id="voting-overlay"></div>
+
+  <!-- Шаг 43 — модал назначения на должность -->
+  <div id="assign-modal-overlay" onclick="if(event.target===this)closeAssignModal()"></div>
 
   <!-- Выбор реакции на случайное событие -->
   <div id="event-choice-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
