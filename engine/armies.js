@@ -448,6 +448,8 @@ function processArmyMovement() {
     if (army.path.length === 0 && army.state === 'moving') {
       army.state         = 'stationed';
       army.move_progress = 0;
+      // Шаг 47: маршрут пройден — убираем planned_route
+      if (army.planned_route) delete army.planned_route;
       _checkSiegeOnArrival(army);
     }
   }

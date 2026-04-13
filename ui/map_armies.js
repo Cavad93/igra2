@@ -19,6 +19,13 @@ const _siegeIcons    = {};  // siegeId → L.Marker
 let _selectedArmyId     = null;
 let _activeMoveHandler  = null;  // функция-обработчик клика по региону в режиме движения
 
+// Шаг 47: state планировщика маршрута (hover preview)
+let _routePreviewLine       = null; // L.Polyline — пунктир-предпросмотр маршрута
+let _routePreviewOutline    = null; // L.Polyline — тёмная подложка для читаемости
+let _routePreviewTooltipEl  = null; // DOM-элемент — плавающий тултип у курсора
+let _routePreviewHoverRegId = null; // id региона, для которого сейчас показан превью
+let _routePreviewMapMoveFn  = null; // привязка mousemove на карту (чтобы снять потом)
+
 // Шаг 39: предыдущие координаты маркеров — для плавной анимации при движении
 const _armyPrevCenters  = {};   // armyId → [lat, lon]
 const _armyMoveAnims    = {};   // armyId → requestAnimationFrame id
@@ -510,6 +517,7 @@ function selectArmy(armyId) {
 function closeArmyPanel() {
   _selectedArmyId    = null;
   _activeMoveHandler = null;
+  _clearRoutePreview();
   const panel = document.getElementById('army-panel');
   if (panel) panel.style.display = 'none';
   if (leafletMap) leafletMap.getContainer().classList.remove('map--move-mode');
@@ -689,6 +697,8 @@ function enterMoveMode(armyId) {
         if (typeof addEventLog === 'function')
           addEventLog(`⚔️ ${army.name} ведёт осаду — нельзя двигаться.`, 'warning');
       } else if (path && path.length >= 2) {
+        // Шаг 47: сохраняем полный маршрут (включая текущую позицию) в army.planned_route
+        army.planned_route = [...path];
         const rData = GAME_STATE.regions?.[regionId] ?? MAP_REGIONS?.[regionId];
         const turns = typeof calcArmySpeed === 'function'
           ? Math.ceil((path.length - 1) / calcArmySpeed(army))
@@ -738,6 +748,7 @@ function _hideMoveBanner() {
 
 function cancelMoveMode(armyId) {
   _activeMoveHandler = null;
+  _clearRoutePreview();
   if (leafletMap) leafletMap.getContainer().classList.remove('map--move-mode');
   _hideMoveBanner();
   if (armyId) _renderArmyPanel(armyId);
@@ -749,10 +760,172 @@ function cancelMoveMode(armyId) {
  */
 function handleRegionClickForArmy(regionId) {
   if (!_activeMoveHandler) return false;
+  // Шаг 47: убрать preview-линию и тултип перед подтверждением маршрута
+  _clearRoutePreview();
   const fn = _activeMoveHandler;
   _activeMoveHandler = null;
   fn(regionId);
   return true;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// Шаг 47 — Планировщик маршрутов армии (hover preview)
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Вызывается из onRegionHover (map.js) при наведении на полигон региона.
+ * Если активна выбранная армия игрока — рисует пунктир-предпросмотр
+ * маршрута и показывает тултип с количеством ходов.
+ * Действует в режиме марша (_activeMoveHandler) — т.е. после клика "🗺 Марш".
+ *
+ * @param {string}  regionId
+ * @param {boolean} entering — true при mouseover, false при mouseout
+ * @param {*}       e        — Leaflet mouse event
+ */
+function handleRegionHoverForArmy(regionId, entering, e) {
+  // Работаем только пока активен режим марша (армия выбрана для перемещения)
+  if (!_activeMoveHandler || !_selectedArmyId) return;
+
+  const army = (typeof getArmy === 'function') ? getArmy(_selectedArmyId) : null;
+  if (!army) return;
+
+  if (!entering) {
+    // Убираем превью, если уходим именно с того региона, где рисовали маршрут
+    if (_routePreviewHoverRegId === regionId) {
+      _clearRoutePreview();
+    }
+    return;
+  }
+
+  // Не рисуем маршрут на регион, где армия уже стоит
+  if (regionId === army.position) {
+    _clearRoutePreview();
+    return;
+  }
+
+  // Чтобы не пересчитывать при каждом mouseover одного и того же региона
+  if (_routePreviewHoverRegId === regionId && _routePreviewLine) {
+    _moveRoutePreviewTooltip(e);
+    return;
+  }
+
+  _routePreviewHoverRegId = regionId;
+
+  // BFS/Dijkstra по connections — findArmyPath уже существует в engine/armies.js
+  const path = (typeof findArmyPath === 'function')
+    ? findArmyPath(army.position, regionId, army.type, army.nation)
+    : null;
+
+  _clearRoutePreviewLineOnly();
+
+  if (!path || path.length < 2) {
+    _showRoutePreviewTooltip(e, `❌ Нет пути`);
+    return;
+  }
+
+  const pts = path.map(r => _regionCenter(r)).filter(Boolean);
+  if (pts.length < 2) {
+    _showRoutePreviewTooltip(e, `❌ Нет координат`);
+    return;
+  }
+
+  const color = _nationColor(army.nation);
+
+  // Тёмная подложка — для читаемости поверх ярких полигонов
+  _routePreviewOutline = L.polyline(pts, {
+    color:     'rgba(0,0,0,0.55)',
+    weight:    5,
+    opacity:   0.55,
+    interactive: false,
+    renderer:  (typeof svgTradeRenderer !== 'undefined' && svgTradeRenderer) ? svgTradeRenderer : undefined,
+  }).addTo(armyPathsLayer);
+
+  // Основная пунктирная линия — с CSS-анимацией stroke-dashoffset
+  // (параметры точно по arma.md Шаг 47)
+  _routePreviewLine = L.polyline(pts, {
+    color,
+    weight:    2,
+    dashArray: '8 6',
+    opacity:   0.7,
+    className: 'army-route-preview',
+    interactive: false,
+    renderer:  (typeof svgTradeRenderer !== 'undefined' && svgTradeRenderer) ? svgTradeRenderer : undefined,
+  }).addTo(armyPathsLayer);
+
+  // Оценка длительности в ходах (скорость армии может быть < 1)
+  const speed = (typeof calcArmySpeed === 'function') ? calcArmySpeed(army) : 1;
+  const hops  = path.length - 1;
+  const turns = Math.max(1, Math.ceil(hops / Math.max(0.1, Number(speed) || 1)));
+
+  // Названия: промежуточные регионы + целевой
+  const nameOf = (rid) => {
+    const d = (GAME_STATE && GAME_STATE.regions && GAME_STATE.regions[rid])
+           || (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[rid] : null);
+    return d?.name ?? rid;
+  };
+  const targetName = nameOf(regionId);
+  const via = path.slice(1, -1).map(nameOf);
+  let viaStr;
+  if (via.length === 0) {
+    viaStr = `→ ${targetName}`;
+  } else if (via.length <= 2) {
+    viaStr = `через ${via.join(' → ')} → ${targetName}`;
+  } else {
+    viaStr = `через ${via[0]} → … → ${via[via.length - 1]} → ${targetName}`;
+  }
+
+  const text = `📍 ${turns} ${_bpmTurnsWord(turns)} · ${viaStr}`;
+  _showRoutePreviewTooltip(e, text);
+
+  // Привязываем mousemove к карте — чтобы тултип ехал за курсором
+  if (!_routePreviewMapMoveFn && leafletMap) {
+    _routePreviewMapMoveFn = (ev) => _moveRoutePreviewTooltip(ev);
+    try { leafletMap.on('mousemove', _routePreviewMapMoveFn); } catch (_) {}
+  }
+}
+
+function _showRoutePreviewTooltip(e, text) {
+  if (!_routePreviewTooltipEl) {
+    _routePreviewTooltipEl = document.createElement('div');
+    _routePreviewTooltipEl.id = 'army-route-preview-tooltip';
+    document.body.appendChild(_routePreviewTooltipEl);
+  }
+  _routePreviewTooltipEl.textContent = text;
+  _routePreviewTooltipEl.style.display = 'block';
+  _moveRoutePreviewTooltip(e);
+}
+
+function _moveRoutePreviewTooltip(e) {
+  if (!_routePreviewTooltipEl) return;
+  const ev = e?.originalEvent || e;
+  const x = (ev?.clientX != null) ? ev.clientX : (e?.containerPoint?.x ?? 0);
+  const y = (ev?.clientY != null) ? ev.clientY : (e?.containerPoint?.y ?? 0);
+  // Сдвиг вправо-вниз от курсора, чтобы не перекрывать его
+  _routePreviewTooltipEl.style.left = (x + 16) + 'px';
+  _routePreviewTooltipEl.style.top  = (y + 16) + 'px';
+}
+
+function _clearRoutePreviewLineOnly() {
+  if (_routePreviewLine) {
+    try { armyPathsLayer.removeLayer(_routePreviewLine); } catch (_) {}
+    _routePreviewLine = null;
+  }
+  if (_routePreviewOutline) {
+    try { armyPathsLayer.removeLayer(_routePreviewOutline); } catch (_) {}
+    _routePreviewOutline = null;
+  }
+}
+
+function _clearRoutePreview() {
+  _clearRoutePreviewLineOnly();
+  _routePreviewHoverRegId = null;
+  if (_routePreviewTooltipEl) {
+    _routePreviewTooltipEl.style.display = 'none';
+  }
+  if (_routePreviewMapMoveFn && leafletMap) {
+    try { leafletMap.off('mousemove', _routePreviewMapMoveFn); } catch (_) {}
+    _routePreviewMapMoveFn = null;
+  }
 }
 
 // ── Диалоги ───────────────────────────────────────────────────────────

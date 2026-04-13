@@ -4246,6 +4246,35 @@
     .map--move-mode { cursor: crosshair !important; }
     .map--move-mode .leaflet-interactive { cursor: crosshair !important; }
 
+    /* ══════════════════════════════════════════════════
+       Шаг 47 — Предпросмотр маршрута армии (hover)
+    ══════════════════════════════════════════════════ */
+    .leaflet-overlay-pane path.army-route-preview {
+      animation: army-route-march 1.4s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes army-route-march {
+      from { stroke-dashoffset: 0;   }
+      to   { stroke-dashoffset: -28; }  /* 2×(8+6) — 2 периода паттерна 8 6 */
+    }
+
+    #army-route-preview-tooltip {
+      position: fixed;
+      display: none;
+      z-index: 9500;
+      pointer-events: none;
+      background: rgba(10, 8, 4, 0.92);
+      color: #ffd48a;
+      border: 1px solid rgba(255, 215, 120, 0.55);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-family: 'Georgia', serif;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+    }
+
     /* Панель армии */
     #army-panel {
       display: none;

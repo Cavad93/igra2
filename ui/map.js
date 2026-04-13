@@ -541,6 +541,11 @@ function onRegionClick(regionId) {
 }
 
 function onRegionHover(e, regionId, entering, color, isPlayerRegion) {
+  // Шаг 47: предпросмотр маршрута армии (работает даже если регион "selected")
+  if (typeof handleRegionHoverForArmy === 'function') {
+    try { handleRegionHoverForArmy(regionId, entering, e); } catch (err) {}
+  }
+
   if (regionId === selectedRegionId) return;
 
   const layer = regionLayers[regionId];
