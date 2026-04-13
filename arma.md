@@ -7118,3 +7118,380 @@ const CULTURE_GROUPS = {
 
 ---
 
+## БЛОК AV — Поиск по нациям и регионам (Шаг 83)
+
+---
+
+### Шаг 83 — Глобальный поиск: нации, регионы, персонажи по ключевому слову
+
+**Цель:** поле поиска (открывается `Ctrl+F` или кнопкой) позволяет быстро найти любой регион, нацию или персонажа. Результаты — выпадающий список, клик — переход к объекту (центрирование карты или открытие панели).
+
+**Что сделать:**
+
+1. HTML поискового виджета в `index.html`:
+   ```html
+   <div id="global-search" class="gsearch" hidden>
+     <div class="gsearch__wrap">
+       <input id="gsearch-input" type="search" class="gsearch__input"
+              placeholder="Регион, нация, персонаж..." autocomplete="off">
+       <button id="gsearch-close" class="gsearch__close">×</button>
+     </div>
+     <ul id="gsearch-results" class="gsearch__results" hidden></ul>
+   </div>
+   ```
+
+2. CSS поиска:
+   ```css
+   .gsearch {
+     position: fixed;
+     top: 60px;
+     left: 50%;
+     transform: translateX(-50%);
+     width: 420px;
+     z-index: 2500;
+   }
+   .gsearch__wrap {
+     display: flex;
+     align-items: center;
+     background: rgba(10,7,3,0.97);
+     border: 1px solid rgba(200,170,90,0.4);
+     border-radius: 8px;
+     padding: 0 12px;
+     box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+   }
+   .gsearch__input {
+     flex: 1;
+     background: none; border: none;
+     padding: 12px 0;
+     font-size: 15px;
+     color: #f0e8c8;
+     outline: none;
+   }
+   .gsearch__input::placeholder { color: rgba(200,190,160,0.4); }
+   .gsearch__close {
+     background: none; border: none;
+     color: rgba(255,255,255,0.4); font-size: 18px; cursor: pointer;
+   }
+
+   .gsearch__results {
+     margin: 4px 0 0;
+     background: rgba(10,7,3,0.97);
+     border: 1px solid rgba(200,170,90,0.25);
+     border-radius: 6px;
+     max-height: 280px;
+     overflow-y: auto;
+     list-style: none;
+     padding: 4px 0;
+   }
+   .gsr-item {
+     display: flex;
+     align-items: center;
+     gap: 10px;
+     padding: 8px 14px;
+     cursor: pointer;
+     transition: background 0.1s;
+   }
+   .gsr-item:hover, .gsr-item.is-focused {
+     background: rgba(200,170,90,0.1);
+   }
+   .gsr-item__type {
+     font-size: 10px;
+     color: rgba(200,170,90,0.6);
+     min-width: 56px;
+     text-transform: uppercase;
+   }
+   .gsr-item__name { font-size: 13px; }
+   .gsr-item__sub  { font-size: 11px; opacity: 0.5; margin-left: auto; }
+   ```
+
+3. Логика поиска в `js/search.js`:
+   ```js
+   export function toggleSearch() {
+     const widget = document.getElementById('global-search');
+     const isHidden = widget.hidden;
+     widget.hidden = !isHidden;
+     if (!isHidden) {
+       document.getElementById('gsearch-input').value = '';
+       document.getElementById('gsearch-results').hidden = true;
+     } else {
+       document.getElementById('gsearch-input').focus();
+     }
+   }
+
+   export function performSearch(query) {
+     const q = query.toLowerCase().trim();
+     if (q.length < 2) return [];
+
+     const results = [];
+
+     // Поиск по регионам
+     for (const region of gameState.regions) {
+       if (region.name.toLowerCase().includes(q)) {
+         results.push({
+           type: 'region',
+           label: 'Регион',
+           name: region.name,
+           sub: getNationName(region.ownerNationId),
+           action: () => {
+             const [lat, lng] = getRegionCenter(region.id);
+             leafletMap.setView([lat, lng], 6, { animate: true });
+             openRegionPopup(region.id, window.innerWidth/2, window.innerHeight/2);
+           },
+         });
+       }
+     }
+
+     // Поиск по нациям
+     for (const nation of gameState.nations) {
+       if (nation.name.toLowerCase().includes(q)) {
+         results.push({
+           type: 'nation',
+           label: 'Нация',
+           name: nation.name,
+           sub: `${nation.regions?.length ?? 0} регионов`,
+           action: () => {
+             const capital = getCapitalRegion(nation.id);
+             if (capital) {
+               const [lat, lng] = getRegionCenter(capital);
+               leafletMap.setView([lat, lng], 6, { animate: true });
+             }
+           },
+         });
+       }
+     }
+
+     // Поиск по персонажам
+     for (const char of getAllChars()) {
+       if (char.name.toLowerCase().includes(q)) {
+         results.push({
+           type: 'char',
+           label: 'Персонаж',
+           name: char.name,
+           sub: char.role ?? getNationName(char.nationId),
+           action: () => openCharDetail(char, char.nationId),
+         });
+       }
+     }
+
+     return results.slice(0, 12);   // не более 12 результатов
+   }
+   ```
+
+4. Рендер результатов и навигация стрелками:
+   ```js
+   let focusedIndex = -1;
+
+   document.getElementById('gsearch-input').addEventListener('input', e => {
+     const results = performSearch(e.target.value);
+     renderResults(results);
+     focusedIndex = -1;
+   });
+
+   document.getElementById('gsearch-input').addEventListener('keydown', e => {
+     const items = document.querySelectorAll('.gsr-item');
+     if (e.key === 'ArrowDown') {
+       focusedIndex = Math.min(focusedIndex + 1, items.length - 1);
+       updateFocus(items);
+       e.preventDefault();
+     } else if (e.key === 'ArrowUp') {
+       focusedIndex = Math.max(focusedIndex - 1, 0);
+       updateFocus(items);
+       e.preventDefault();
+     } else if (e.key === 'Enter' && focusedIndex >= 0) {
+       items[focusedIndex]?.click();
+     } else if (e.key === 'Escape') {
+       toggleSearch();
+     }
+   });
+
+   function renderResults(results) {
+     const list = document.getElementById('gsearch-results');
+     if (results.length === 0) { list.hidden = true; return; }
+
+     list.innerHTML = results.map((r, i) => `
+       <li class="gsr-item" data-index="${i}">
+         <span class="gsr-item__type">${r.label}</span>
+         <span class="gsr-item__name">${r.name}</span>
+         <span class="gsr-item__sub">${r.sub ?? ''}</span>
+       </li>
+     `).join('');
+
+     list.hidden = false;
+
+     // Привязать действия
+     list.querySelectorAll('.gsr-item').forEach((el, i) => {
+       el.addEventListener('click', () => {
+         results[i].action();
+         toggleSearch();
+       });
+     });
+   }
+   ```
+
+5. Горячая клавиша:
+   ```js
+   registerHotkey('search', toggleSearch);
+   bindKey('search', 'F');   // или Ctrl+F — но Ctrl+F перехватывается браузером
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/search.js` — новый файл, `toggleSearch`, `performSearch`
+- `index.html` — `#global-search`
+- `ui/styles.css` — `.gsearch`, `.gsr-item` и дочерние
+- `js/hotkeys.js` — регистрация `'search'`
+
+**Тест Шага 83:**
+- Нажатие `F` (или кнопка) открывает поисковый виджет по центру экрана.
+- Ввод «рим» → в результатах: нация Рим, регион Лациум, регион Рим и т.д.
+- Клик на результат «Регион» → карта центрируется на нём и открывается popup.
+- Стрелки ↑↓ навигируют по результатам, Enter выбирает.
+- `Escape` закрывает поиск.
+
+---
+
+## БЛОК AW — Ресурсная панель (Шаг 84)
+
+---
+
+### Шаг 84 — Ресурсная панель: горизонтальная полоса вверху с иконками ресурсов
+
+**Цель:** заменить список ресурсов в боковой панели на компактную горизонтальную строку вверху игрового экрана. Каждый ресурс — иконка + значение + дельта за ход (зелёная/красная). Строка всегда видна без открытия панели.
+
+**Что сделать:**
+
+1. HTML ресурсной строки в `index.html` (под заголовком, над картой):
+   ```html
+   <div id="resource-strip" class="resource-strip">
+     <div class="rs-item" id="rs-gold" title="Золото">
+       <img src="assets/icons/coin.svg" width="16" height="16" alt="Золото">
+       <span class="rs-val" id="rs-gold-val">1200</span>
+       <span class="rs-delta" id="rs-gold-delta">+45</span>
+     </div>
+
+     <div class="rs-item" id="rs-food" title="Еда">
+       <img src="assets/icons/indian_lotus.svg" width="16" height="16" alt="Еда">
+       <span class="rs-val" id="rs-food-val">320</span>
+       <span class="rs-delta" id="rs-food-delta">+12</span>
+     </div>
+
+     <div class="rs-item" id="rs-manpower" title="Резервы">
+       <img src="assets/icons/roman_eagle.svg" width="16" height="16" alt="Резервы">
+       <span class="rs-val" id="rs-manpower-val">4500</span>
+       <span class="rs-delta" id="rs-manpower-delta">−200</span>
+     </div>
+
+     <div class="rs-item" id="rs-stability" title="Стабильность">
+       <img src="assets/icons/scroll.svg" width="16" height="16" alt="Стабильность">
+       <span class="rs-val" id="rs-stability-val">65%</span>
+       <span class="rs-delta" id="rs-stability-delta">+2</span>
+     </div>
+   </div>
+   ```
+
+2. CSS ресурсной строки:
+   ```css
+   .resource-strip {
+     position: fixed;
+     top: 0;
+     left: 50%;
+     transform: translateX(-50%);
+     display: flex;
+     gap: 0;
+     background: rgba(8,5,2,0.9);
+     border: 1px solid rgba(200,170,90,0.2);
+     border-top: none;
+     border-radius: 0 0 8px 8px;
+     padding: 4px 8px;
+     z-index: 600;
+     backdrop-filter: blur(4px);
+   }
+   .rs-item {
+     display: flex;
+     align-items: center;
+     gap: 5px;
+     padding: 2px 12px;
+     border-right: 1px solid rgba(200,170,90,0.1);
+     cursor: default;
+   }
+   .rs-item:last-child { border-right: none; }
+   .rs-item img {
+     filter: invert(1) sepia(0.5) saturate(1.5);
+     opacity: 0.8;
+     flex-shrink: 0;
+   }
+   .rs-val   { font-size: 13px; font-weight: 600; color: #f0e8c8; }
+   .rs-delta { font-size: 11px; min-width: 24px; }
+   .rs-delta--pos { color: rgba(80,200,80,0.9); }
+   .rs-delta--neg { color: rgba(220,80,60,0.9); }
+   .rs-delta--zero{ color: rgba(200,200,200,0.4); }
+   ```
+
+3. Функция обновления `updateResourceStrip()`:
+   ```js
+   // js/resource_strip.js
+   export function updateResourceStrip() {
+     const res = gameState.resources;
+     const inc = gameState.income;   // доход/расход за ход
+
+     for (const [key, prefix] of [
+       ['gold',      'rs-gold'],
+       ['food',      'rs-food'],
+       ['manpower',  'rs-manpower'],
+       ['stability', 'rs-stability'],
+     ]) {
+       const val = res[key] ?? 0;
+       const delta = inc[key] ?? 0;
+
+       const valEl   = document.getElementById(`${prefix}-val`);
+       const deltaEl = document.getElementById(`${prefix}-delta`);
+
+       if (valEl) valEl.textContent =
+         key === 'stability' ? `${val}%` : val.toLocaleString();
+
+       if (deltaEl) {
+         const sign = delta > 0 ? '+' : delta < 0 ? '−' : '';
+         const abs  = Math.abs(delta);
+         deltaEl.textContent = abs > 0 ? `${sign}${abs}` : '';
+         deltaEl.className = 'rs-delta rs-delta--'
+           + (delta > 0 ? 'pos' : delta < 0 ? 'neg' : 'zero');
+       }
+     }
+   }
+   ```
+
+4. Тултип при наведении — показывает разбивку дохода:
+   ```js
+   document.getElementById('rs-gold').addEventListener('mouseenter', () => {
+     const lines = [
+       `Доход от регионов: +${gameState.income.goldFromRegions}`,
+       `Торговля: +${gameState.income.goldFromTrade}`,
+       `Армия: −${gameState.income.goldFromArmy}`,
+       `Итого за ход: ${gameState.income.gold > 0 ? '+' : ''}${gameState.income.gold}`,
+     ];
+     document.getElementById('rs-gold').title = lines.join('\n');
+   });
+   ```
+
+5. Вызов после каждого хода:
+   ```js
+   eventBus.on('turnEnd',     () => updateResourceStrip());
+   eventBus.on('gameLoaded',  () => updateResourceStrip());
+   // Начальный вызов:
+   updateResourceStrip();
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/resource_strip.js` — новый файл, `updateResourceStrip`
+- `index.html` — `#resource-strip`
+- `ui/styles.css` — `.resource-strip`, `.rs-item`, `.rs-delta`
+- `js/game.js` — вызов `updateResourceStrip` после хода
+
+**Тест Шага 84:**
+- Горизонтальная строка ресурсов видна вверху экрана всегда.
+- Позитивная дельта золота — зелёная, отрицательная — красная.
+- После хода значения обновляются.
+- Наведение на золото показывает разбивку источников дохода.
+- Строка не перекрывает кнопки управления и не выходит за край на мобильных.
+
+---
+
