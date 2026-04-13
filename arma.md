@@ -5272,3 +5272,234 @@ const CULTURE_GROUPS = {
 
 ---
 
+## БЛОК AJ — Стратегический зум и уровни детализации (Шаг 71)
+
+---
+
+### Шаг 71 — Уровни зума: разная детализация карты на разных масштабах
+
+**Цель:** при приближении карта показывает больше деталей (иконки армий, маркеры строительства, названия городов), при отдалении — только цвета регионов и стратегический обзор. Это снижает визуальный шум на мелких масштабах.
+
+**Что сделать:**
+
+1. Определить три порога зума и что показывается на каждом:
+   ```
+   Zoom 3–4 (стратегический):  только цвет регионов + имена крупных наций
+   Zoom 5–6 (тактический):     + маркеры армий + иконки строительства
+   Zoom 7+  (детальный):       + названия регионов + торговые пути + маркеры событий
+   ```
+
+2. Функция `applyZoomLevel(zoom)` — включает/выключает слои по порогам:
+   ```js
+   // js/zoom_layers.js
+   let lastZoomLevel = null;
+
+   export function applyZoomLevel(zoom) {
+     const level = zoom <= 4 ? 'strategic' : zoom <= 6 ? 'tactical' : 'detail';
+     if (level === lastZoomLevel) return;
+     lastZoomLevel = level;
+
+     // Маркеры армий
+     const showArmies = level !== 'strategic';
+     for (const marker of Object.values(armyMarkers)) {
+       marker.getElement()?.style.setProperty('display',
+         showArmies ? '' : 'none');
+     }
+
+     // Маркеры строительства
+     const showConstruction = level !== 'strategic';
+     for (const marker of Object.values(constructionMarkers)) {
+       marker.getElement()?.style.setProperty('display',
+         showConstruction ? '' : 'none');
+     }
+
+     // Названия регионов (L.tooltip постоянные)
+     const showRegionLabels = level === 'detail';
+     for (const layer of Object.values(regionLayers)) {
+       const tooltip = layer.getTooltip();
+       if (tooltip) {
+         showRegionLabels ? tooltip.setOpacity(1) : tooltip.setOpacity(0);
+       }
+     }
+
+     // Торговые пути
+     const showTrade = level === 'detail';
+     for (const line of Object.values(tradeLines)) {
+       line.setStyle({ opacity: showTrade ? 0.5 : 0 });
+     }
+   }
+   ```
+
+3. Подключить к событию `zoomend` Leaflet:
+   ```js
+   leafletMap.on('zoomend', () => {
+     applyZoomLevel(leafletMap.getZoom());
+   });
+   // Применить при старте
+   applyZoomLevel(leafletMap.getZoom());
+   ```
+
+4. Плавная смена непрозрачности при переходе между уровнями (CSS-переходы):
+   ```css
+   /* Все маркеры армий и строительства получают CSS-переход */
+   .army-marker,
+   .constr-marker {
+     transition: opacity 0.25s ease;
+   }
+   ```
+   В `applyZoomLevel` использовать `opacity` вместо `display` для плавности:
+   ```js
+   marker.getElement()?.style.setProperty('opacity', showArmies ? '1' : '0');
+   marker.getElement()?.style.setProperty('pointer-events', showArmies ? '' : 'none');
+   ```
+
+5. Добавить индикатор текущего уровня зума в статус-бар (Шаг 35):
+   ```js
+   function updateStatusBar() {
+     const zoom  = leafletMap.getZoom();
+     const level = zoom <= 4 ? 'Стратегический' : zoom <= 6 ? 'Тактический' : 'Детальный';
+     document.getElementById('status-zoom').textContent = `Зум: ${level}`;
+   }
+   leafletMap.on('zoomend', updateStatusBar);
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/zoom_layers.js` — новый файл, `applyZoomLevel`
+- `js/map.js` — подключить `zoomend` обработчик
+- `ui/styles.css` — CSS-переходы для маркеров
+
+**Тест Шага 71:**
+- На зуме 3 маркеры армий не видны; на зуме 5 появляются с плавным fade.
+- На зуме 7 показываются торговые пути и названия регионов.
+- Статус-бар отображает текущий режим зума.
+- Переход между уровнями плавный (0.25 с, не мгновенный).
+
+---
+
+## БЛОК AK — Сезоны (Шаг 72)
+
+---
+
+### Шаг 72 — Визуальные сезоны: цветовой тинт карты и текстуры по времени года
+
+**Цель:** каждые N ходов наступает новый сезон (весна, лето, осень, зима). Сезон меняет цветовой фильтр над картой (SVG/CSS overlay) и добавляет тонкий тинт к фонам панелей. Сезоны влияют на механику (зима — штраф к движению, лето — пик урожая).
+
+**Что сделать:**
+
+1. Определить сезоны и их параметры в `data/seasons.js`:
+   ```js
+   export const SEASONS = {
+     spring: {
+       label:      'Весна',
+       turns:      3,           // длительность в ходах
+       mapFilter:  'hue-rotate(10deg) saturate(1.1) brightness(1.05)',
+       panelTint:  'rgba(20,40,10,0.15)',   // дополнительный зелёный тинт
+       mechanics:  { moveBonus: 0, harvestMod: 1.0 },
+     },
+     summer: {
+       label:      'Лето',
+       turns:      4,
+       mapFilter:  'saturate(1.2) brightness(1.08)',
+       panelTint:  'rgba(40,20,5,0.1)',
+       mechanics:  { moveBonus: 0, harvestMod: 1.2 },
+     },
+     autumn: {
+       label:      'Осень',
+       turns:      3,
+       mapFilter:  'hue-rotate(-15deg) saturate(0.9) brightness(0.95)',
+       panelTint:  'rgba(40,20,5,0.2)',
+       mechanics:  { moveBonus: 0, harvestMod: 0.9 },
+     },
+     winter: {
+       label:      'Зима',
+       turns:      3,
+       mapFilter:  'saturate(0.5) brightness(0.85) hue-rotate(-5deg)',
+       panelTint:  'rgba(10,15,30,0.25)',
+       mechanics:  { moveBonus: -1, harvestMod: 0.5 },
+     },
+   };
+
+   const SEASON_ORDER = ['spring','summer','autumn','winter'];
+
+   export function getSeasonForTurn(turn) {
+     const cycleLength = SEASON_ORDER.reduce((s, k) => s + SEASONS[k].turns, 0);
+     const pos = turn % cycleLength;
+     let acc = 0;
+     for (const key of SEASON_ORDER) {
+       acc += SEASONS[key].turns;
+       if (pos < acc) return key;
+     }
+     return 'spring';
+   }
+   ```
+
+2. Применить сезон к карте — CSS фильтр на `#map` контейнер:
+   ```js
+   // js/seasons.js
+   import { SEASONS, getSeasonForTurn } from '../data/seasons.js';
+
+   export function applySeason(turn) {
+     const key    = getSeasonForTurn(turn);
+     const season = SEASONS[key];
+
+     // Фильтр на карту
+     document.getElementById('map').style.filter = season.mapFilter;
+
+     // Дополнительный тинт панелей (поверх культурного тинта из Шага 56)
+     document.documentElement.style.setProperty(
+       '--season-tint', season.panelTint
+     );
+
+     // Обновить индикатор сезона в статус-баре
+     document.getElementById('status-season').textContent = `🌿 ${season.label}`;
+   }
+   ```
+
+3. CSS — добавить `--season-tint` как дополнительный слой `::after` на панели:
+   ```css
+   #left-panel::after,
+   #right-panel::after {
+     content: '';
+     position: absolute;
+     inset: 0;
+     background: var(--season-tint, transparent);
+     pointer-events: none;
+     z-index: 1;           /* между текстурой (z:0) и контентом (z:1) */
+     transition: background 1.5s ease;
+   }
+   /* Контент выше обоих псевдоэлементов */
+   #left-panel > *,
+   #right-panel > * { z-index: 2; }
+   ```
+
+4. Вызов при смене хода:
+   ```js
+   eventBus.on('turnStart', ({ turn }) => applySeason(turn));
+   // и при загрузке:
+   applySeason(gameState.turn);
+   ```
+
+5. Применить механику зимы при расчёте движения армий:
+   ```js
+   function getMovementPoints(army, turn) {
+     const season  = SEASONS[getSeasonForTurn(turn)];
+     const base    = army.movePoints ?? 2;
+     return Math.max(0, base + season.mechanics.moveBonus);
+   }
+   ```
+
+**Какие файлы затрагиваются:**
+- `data/seasons.js` — новый файл
+- `js/seasons.js` — `applySeason`
+- `js/game.js` — `getMovementPoints`, `applySeason` при смене хода
+- `ui/styles.css` — `--season-tint`, CSS-переход фильтра
+
+**Тест Шага 72:**
+- Через 3 хода (конец весны) карта приобретает летние тона.
+- Зимой `getMovementPoints` возвращает на 1 меньше обычного.
+- Индикатор в статус-баре показывает текущий сезон.
+- CSS-переход фильтра карты занимает ~1.5 с (не мгновенный).
+- `getSeasonForTurn(0)` → `'spring'`, `getSeasonForTurn(13)` → `'spring'` (цикл 13 ходов).
+
+---
+
