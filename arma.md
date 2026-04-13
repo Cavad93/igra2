@@ -3190,6 +3190,448 @@ const CULTURE_GROUPS = {
 
 ---
 
+## БЛОК W — Splash-экран (Шаг 58)
+
+---
+
+### Шаг 58 — Фон splash-экрана: историческая фреска с культурным тинтом
+
+**Цель:** показывать при загрузке игры полноэкранный splash с исторической фреской, логотипом и кнопкой «Начать». Фон — CC0-изображение из `assets/backgrounds/`, конкретный файл определяется `splash_bg` культурной группы текущего игрока (или последней выбранной нации). Поверх фрески — полупрозрачный цветной тинт, виньетка и оверлей для читаемости текста.
+
+**Что сделать:**
+
+1. HTML-разметка splash-экрана в `index.html` (перед основным интерфейсом):
+   ```html
+   <div id="splash-screen" class="splash">
+     <div class="splash__bg"></div>          <!-- фреска через CSS -->
+     <div class="splash__vignette"></div>    <!-- виньетка по краям -->
+     <div class="splash__content">
+       <h1 class="splash__title">IGRA²</h1>
+       <p  class="splash__subtitle">Стратегия древнего мира</p>
+       <button id="splash-start-btn" class="splash__btn">Начать игру</button>
+     </div>
+   </div>
+   ```
+
+2. CSS — фоновые слои:
+   ```css
+   .splash {
+     position: fixed;
+     inset: 0;
+     z-index: 9999;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+   }
+
+   .splash__bg {
+     position: absolute;
+     inset: 0;
+     background-image: var(--splash-bg);
+     background-size: cover;
+     background-position: center;
+     filter: sepia(0.25) brightness(0.75);
+     transition: background-image 0.4s ease;
+   }
+
+   .splash__vignette {
+     position: absolute;
+     inset: 0;
+     background: radial-gradient(
+       ellipse at center,
+       transparent 35%,
+       rgba(0,0,0,0.75) 100%
+     );
+   }
+
+   .splash__content {
+     position: relative;
+     z-index: 1;
+     text-align: center;
+     color: #f0e8c8;
+     text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+   }
+
+   .splash__title {
+     font-size: clamp(3rem, 8vw, 7rem);
+     font-family: 'Cinzel', serif;        /* или любой антиквенный шрифт */
+     letter-spacing: 0.15em;
+     margin: 0 0 0.25em;
+   }
+
+   .splash__subtitle {
+     font-size: clamp(1rem, 2vw, 1.5rem);
+     opacity: 0.75;
+     margin: 0 0 2.5em;
+   }
+
+   .splash__btn {
+     padding: 14px 48px;
+     font-size: 1.1rem;
+     background: rgba(200,170,90,0.15);
+     border: 1px solid rgba(200,170,90,0.7);
+     color: #f0e8c8;
+     border-radius: 4px;
+     cursor: pointer;
+     letter-spacing: 0.1em;
+     transition: background 0.2s, transform 0.15s;
+   }
+   .splash__btn:hover {
+     background: rgba(200,170,90,0.3);
+     transform: translateY(-2px);
+   }
+
+   /* Анимация исчезновения splash при старте */
+   .splash--hiding {
+     animation: splashFade 0.6s ease forwards;
+   }
+   @keyframes splashFade {
+     to { opacity: 0; pointer-events: none; }
+   }
+   ```
+
+3. JS — установить фон из культурной группы, скрыть splash при клике:
+   ```js
+   // ui/splash.js
+   import { getCultureGroup } from '../data/culture_groups.js';
+
+   export function initSplash(lastNationId) {
+     const splash = document.getElementById('splash-screen');
+     const btn    = document.getElementById('splash-start-btn');
+
+     const group = getCultureGroup(lastNationId ?? 'generic');
+     const bgPath = `assets/backgrounds/${group.splash_bg}.jpg`;
+
+     document.documentElement.style.setProperty(
+       '--splash-bg', `url('${bgPath}')`
+     );
+
+     btn.addEventListener('click', () => {
+       splash.classList.add('splash--hiding');
+       splash.addEventListener('animationend', () => {
+         splash.remove();
+       }, { once: true });
+     });
+   }
+   ```
+
+4. Вызов в точке старта (после определения нации игрока):
+   ```js
+   import { initSplash } from './ui/splash.js';
+   initSplash(savedNationId);   // из localStorage или null
+   ```
+
+5. Добавить в `assets/manifest.json` (Шаг 54) записи для splash-фонов:
+   ```json
+   {
+     "id": "splash_pompeii",
+     "group": "backgrounds",
+     "filename": "assets/backgrounds/splash_pompeii.jpg",
+     "source": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Fresco_from_the_House_of_Julia_Felix,_Pompeii_depicting_scenes_from_the_Forum_market.JPG",
+     "license": "Public Domain"
+   },
+   {
+     "id": "splash_alexander",
+     "group": "backgrounds",
+     "filename": "assets/backgrounds/splash_alexander.jpg",
+     "source": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Alexander_%28Battle_of_Issus%29_Mosaic.jpg",
+     "license": "Public Domain"
+   },
+   {
+     "id": "splash_battle",
+     "group": "backgrounds",
+     "filename": "assets/backgrounds/splash_battle.jpg",
+     "source": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Alexander_%28Battle_of_Issus%29_Mosaic.jpg",
+     "license": "Public Domain"
+   }
+   ```
+
+**Какие файлы затрагиваются:**
+- `index.html` — разметка `#splash-screen`
+- `ui/styles.css` — CSS splash
+- `ui/splash.js` — новый файл, `initSplash`
+- `assets/manifest.json` — записи для `splash_pompeii`, `splash_alexander`, `splash_battle`
+
+**Тест Шага 58:**
+- При открытии игры отображается splash поверх всего интерфейса.
+- Фреска зависит от последней выбранной нации (греческая → помпейский фон).
+- Кнопка «Начать игру» скрывает splash плавно за 0.6 с.
+- Если JPG не скачан, `--splash-bg` ведёт к несуществующему файлу — браузер показывает чёрный фон (без крашей).
+- На мобильных экранах `clamp()` масштабирует заголовок корректно.
+
+---
+
+## БЛОК X — Декоративные рамки (Шаг 59)
+
+---
+
+### Шаг 59 — Декоративные рамки: SVG meander как CSS border-image
+
+**Цель:** добавить тонкую декоративную рамку вокруг ключевых UI-блоков (панелей, модалов, карточек событий). Рамка — SVG с орнаментом культурной группы, применяется через `border-image`. Разные группы — разные орнаменты. SVG хранятся в `assets/icons/` и коммитятся в git (они маленькие).
+
+**Что сделать:**
+
+1. Создать `assets/icons/border_meander_gold.svg` — греческий меандр:
+   ```svg
+   <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"
+        viewBox="0 0 60 60" fill="none">
+     <!-- Угловой элемент + горизонтальная секция для 9-slice -->
+     <rect width="60" height="60" fill="none"/>
+     <!-- Внешняя рамка -->
+     <rect x="1" y="1" width="58" height="58"
+           stroke="rgba(200,170,90,0.6)" stroke-width="1" fill="none"/>
+     <!-- Меандр — угловой паттерн (упрощённый) -->
+     <polyline points="4,4 4,14 14,14 14,4 24,4 24,14 34,14 34,4"
+               stroke="rgba(200,170,90,0.5)" stroke-width="1.5" fill="none"/>
+     <polyline points="4,56 4,46 14,46 14,56 24,56 24,46 34,46 34,56"
+               stroke="rgba(200,170,90,0.5)" stroke-width="1.5" fill="none"/>
+   </svg>
+   ```
+
+2. Создать `assets/icons/border_meander_dark.svg` — более тёмный вариант (для Celtic/Nomadic/Generic):
+   — аналогичный SVG, но `stroke="rgba(150,130,80,0.4)"`.
+
+3. CSS-переменная и применение через `border-image`:
+   ```css
+   :root {
+     --panel-border-svg: url('assets/icons/border_meander_gold.svg');
+   }
+
+   /* Рамка на боковых панелях */
+   #left-panel,
+   #right-panel {
+     border: 12px solid transparent;
+     border-image: var(--panel-border-svg) 12 repeat;
+   }
+
+   /* Рамка на модальных окнах */
+   .modal,
+   .char-detail {
+     border: 10px solid transparent;
+     border-image: var(--panel-border-svg) 10 repeat;
+   }
+
+   /* Рамка на карточках событий */
+   .event-card {
+     border: 8px solid transparent;
+     border-image: var(--panel-border-svg) 8 repeat;
+   }
+   ```
+
+4. Смена рамки при смене культурной группы — добавить в `applyNationTheme` (Шаг 56):
+   ```js
+   function applyNationTheme(nationId) {
+     const group = getCultureGroup(nationId);
+     const root  = document.documentElement;
+
+     root.style.setProperty('--panel-texture',    `url('assets/textures/${group.texture}.jpg')`);
+     root.style.setProperty('--panel-tint',        group.panel_tint);
+     // Новое:
+     root.style.setProperty('--panel-border-svg', `url('assets/icons/${group.border}.svg')`);
+   }
+   ```
+   Теперь греческие нации получают `border_meander_gold.svg`, остальные — `border_meander_dark.svg`.
+
+5. Убедиться что `border-image` не ломает `border-radius`:
+   ```css
+   /* border-image и border-radius несовместимы в CSS — обходим через outline + box-shadow */
+   #left-panel,
+   #right-panel {
+     border: none;                              /* убрать border-image */
+     outline: 2px solid transparent;
+     box-shadow:
+       0 0 0 1px rgba(200,170,90,0.4),         /* внутренний контур */
+       inset 0 0 0 1px rgba(200,170,90,0.15);  /* внутренняя подсветка */
+   }
+
+   /* Декоративные уголки через псевдоэлементы */
+   #left-panel::after,
+   #right-panel::after {
+     content: '';
+     position: absolute;
+     inset: 0;
+     border-radius: var(--panel-radius);
+     background-image: var(--panel-border-svg);
+     background-size: 40px 40px;
+     background-repeat: no-repeat;
+     background-position:
+       top left,
+       top right,
+       bottom left,
+       bottom right;
+     /* Четыре угла через множественные фоны */
+     background-image:
+       var(--panel-border-svg),
+       var(--panel-border-svg),
+       var(--panel-border-svg),
+       var(--panel-border-svg);
+     background-position: 0 0, 100% 0, 0 100%, 100% 100%;
+     background-size: 40px 40px;
+     background-repeat: no-repeat;
+     opacity: 0.6;
+     pointer-events: none;
+     z-index: 2;
+   }
+   ```
+
+**Какие файлы затрагиваются:**
+- `assets/icons/border_meander_gold.svg` — новый файл, коммитится в git
+- `assets/icons/border_meander_dark.svg` — новый файл, коммитится в git
+- `ui/styles.css` — CSS border-image и угловые псевдоэлементы
+- `ui/panels.js` — добавить `--panel-border-svg` в `applyNationTheme`
+
+**Тест Шага 59:**
+- Панели греческих наций имеют золотистый угловой орнамент.
+- Панели кельтских наций имеют более тёмный вариант рамки.
+- `border-radius` панелей не сломан (скруглённые углы сохраняются).
+- SVG-файлы присутствуют в git: `git ls-files assets/icons/ | grep border`.
+- При `applyNationTheme('rome')` CSS-переменная `--panel-border-svg` обновляется.
+
+---
+
+## БЛОК Y — Иконки наций (Шаг 60)
+
+---
+
+### Шаг 60 — Иконки наций: культурный символ в заголовке, на карте и в дипломатии
+
+**Цель:** у каждой культурной группы — своя иконка-символ (SVG). Иконка используется в трёх местах: заголовок активной нации (правый верхний угол), дипломатическое окно (флаг-маркер нации), маркер армии на карте. Иконки — маленькие CC0 SVG, хранятся в `assets/icons/`.
+
+**Что сделать:**
+
+1. Создать SVG-иконки для каждой культурной группы в `assets/icons/`:
+
+   | Файл | Группа | Символ |
+   |------|--------|--------|
+   | `owl_athena.svg` | greek | Сова Афины (стилизованная) |
+   | `roman_eagle.svg` | roman | Орёл легиона SPQR |
+   | `carthage_star.svg` | carthaginian | Звезда Танит |
+   | `egyptian_ankh.svg` | egyptian | Анкх |
+   | `persian_faravahar.svg` | persian | Фравахар (крылатый символ) |
+   | `celtic_torque.svg` | celtic | Кельтский торк (круговой узел) |
+   | `indian_lotus.svg` | indian | Лотос |
+   | `east_asian_dragon.svg` | east_asian | Дракон (упрощённый) |
+   | `nomadic_bow.svg` | nomadic | Составной лук |
+   | `generic_sword.svg` | generic | Меч (нейтральный символ) |
+
+   Пример `assets/icons/owl_athena.svg` (минималистичный, монохромный):
+   ```svg
+   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor">
+     <!-- Голова совы: круг + уши -->
+     <circle cx="16" cy="14" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+     <!-- Уши -->
+     <polygon points="10,8 12,2 14,8" fill="currentColor" opacity="0.8"/>
+     <polygon points="18,8 20,2 22,8" fill="currentColor" opacity="0.8"/>
+     <!-- Глаза -->
+     <circle cx="13" cy="13" r="2" fill="currentColor"/>
+     <circle cx="19" cy="13" r="2" fill="currentColor"/>
+     <!-- Клюв -->
+     <polygon points="14,16 16,19 18,16" fill="currentColor"/>
+     <!-- Тело (упрощённое крыло) -->
+     <path d="M8,22 Q16,18 24,22 Q20,30 16,28 Q12,30 8,22Z"
+           fill="currentColor" opacity="0.7"/>
+   </svg>
+   ```
+
+2. Функция `getNationIconPath(nationId)` в `data/culture_groups.js`:
+   ```js
+   export function getNationIconPath(nationId) {
+     const group = getCultureGroup(nationId);
+     return `assets/icons/${group.icon}.svg`;
+   }
+   ```
+
+3. **Заголовок нации** — правый верхний угол интерфейса:
+   ```html
+   <!-- index.html -->
+   <div id="nation-header">
+     <img id="nation-icon" class="nation-icon" src="" alt="" width="28" height="28">
+     <span id="nation-name" class="nation-name"></span>
+   </div>
+   ```
+   ```js
+   function updateNationHeader(nationId, nationName) {
+     document.getElementById('nation-icon').src = getNationIconPath(nationId);
+     document.getElementById('nation-name').textContent = nationName;
+   }
+   ```
+   CSS:
+   ```css
+   #nation-header {
+     display: flex;
+     align-items: center;
+     gap: 8px;
+     padding: 4px 12px;
+     background: rgba(0,0,0,0.4);
+     border-radius: 0 0 6px 6px;
+   }
+   .nation-icon {
+     filter: invert(1) sepia(1) saturate(2) hue-rotate(5deg);
+     /* Делает монохромный SVG золотистым */
+     opacity: 0.85;
+   }
+   .nation-name {
+     font-size: 14px;
+     font-weight: 600;
+     letter-spacing: 0.05em;
+     color: #f0e8c8;
+   }
+   ```
+
+4. **Дипломатическое окно** — иконка рядом с именем нации в списке:
+   ```js
+   function renderDiplomacyRow(nationId, nationName) {
+     const row = document.createElement('div');
+     row.className = 'diplo-row';
+
+     const icon = document.createElement('img');
+     icon.src    = getNationIconPath(nationId);
+     icon.width  = 20;
+     icon.height = 20;
+     icon.className = 'diplo-row__icon';
+
+     const name = document.createElement('span');
+     name.textContent = nationName;
+
+     row.appendChild(icon);
+     row.appendChild(name);
+     return row;
+   }
+   ```
+
+5. **Маркер армии на карте** — SVG-иконка внутри `L.divIcon` (Leaflet):
+   ```js
+   function createArmyMarker(unitData, nationId) {
+     const iconPath = getNationIconPath(nationId);
+     const divIcon = L.divIcon({
+       className: 'army-marker',
+       html: `<img src="${iconPath}" width="18" height="18"
+                   style="filter:invert(1) sepia(1) saturate(2);">`,
+       iconSize:   [24, 24],
+       iconAnchor: [12, 12],
+     });
+     return L.marker([unitData.lat, unitData.lng], { icon: divIcon });
+   }
+   ```
+
+**Какие файлы затрагиваются:**
+- `assets/icons/*.svg` — 10 новых SVG-файлов, все коммитятся в git
+- `data/culture_groups.js` — добавить `getNationIconPath`
+- `index.html` — `#nation-header`
+- `ui/diplomacy.js` — `renderDiplomacyRow` с иконкой
+- `ui/map.js` — `createArmyMarker` с иконкой культурной группы
+- `ui/styles.css` — `.nation-icon`, `.diplo-row__icon`, `.army-marker`
+
+**Тест Шага 60:**
+- `getNationIconPath('athens')` → `'assets/icons/owl_athena.svg'`
+- `getNationIconPath('rome')` → `'assets/icons/roman_eagle.svg'`
+- Правый верхний угол показывает иконку совы для греческих наций.
+- Дипломатический список отображает разные иконки для разных культурных групп.
+- Маркеры армий на карте содержат иконку культурной группы нации.
+- Все 10 SVG-файлов присутствуют в git: `git ls-files assets/icons/`.
+
+---
+
 
 
 
