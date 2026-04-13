@@ -3366,26 +3366,51 @@
        АРМИИ НА КАРТЕ
     ══════════════════════════════════════════════════ */
 
-    /* Маркер армии */
+    /* ══════════════════════════════════════════════════
+       Шаг 39 — Анимированные SVG-маркеры армий
+    ══════════════════════════════════════════════════ */
     .army-marker {
-      width: 54px; height: 42px;
-      border: 2px solid var(--army-color, #888);
-      border-radius: 4px;
-      background: rgba(0,0,0,0.7);
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; gap: 2px;
-      cursor: pointer; transition: transform .15s, box-shadow .15s;
-      font-size: 11px; color: #fff;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.6);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+      transition: transform 0.15s;
     }
-    .army-marker:hover { transform: scale(1.1); box-shadow: 0 2px 8px rgba(0,0,0,0.8); }
-    .army-marker--selected { outline: 2px solid #ffd700; transform: scale(1.12); }
-    .army-marker--player { border-color: #ffd700 !important; }
-    .army-marker__top { display: flex; align-items: center; gap: 3px; line-height: 1; }
-    .army-marker__icon { font-size: 14px; }
-    .army-marker__count { font-weight: 700; font-size: 12px; }
-    .army-marker__state { font-size: 10px; }
-    .army-marker__bars { display: flex; gap: 2px; width: 46px; }
+    .army-marker:hover { transform: scale(1.15); }
+    .army-marker__svg {
+      display: block;
+      pointer-events: auto;
+    }
+    .army-marker__star { /* силуэт звезды — заливка цветом нации */ }
+    .army-marker__glyph { /* значок рода войск — белый */ }
+
+    .army-selected .army-marker__svg {
+      filter: drop-shadow(0 0 6px var(--nc));
+      animation: army-pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes army-pulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.6; }
+    }
+
+    .army-count {
+      font-size: 9px;
+      color: #fff;
+      background: rgba(0,0,0,0.65);
+      padding: 0 3px;
+      border-radius: 3px;
+      margin-top: 2px;
+      font-family: 'Georgia', serif;
+      white-space: nowrap;
+    }
+
+    .army-marker--player .army-marker__star {
+      stroke: #ffd700;
+      stroke-width: 1.2;
+    }
+
     .mini-bar { height: 3px; flex: 1; background: rgba(255,255,255,0.15); border-radius: 1px; overflow: hidden; }
 
     /* Призрак движения */

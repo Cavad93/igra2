@@ -19,6 +19,10 @@ const _siegeIcons    = {};  // siegeId → L.Marker
 let _selectedArmyId     = null;
 let _activeMoveHandler  = null;  // функция-обработчик клика по региону в режиме движения
 
+// Шаг 39: предыдущие координаты маркеров — для плавной анимации при движении
+const _armyPrevCenters  = {};   // armyId → [lat, lon]
+const _armyMoveAnims    = {};   // armyId → requestAnimationFrame id
+
 // ── Инициализация ─────────────────────────────────────────────────────
 
 function initArmyLayers() {
@@ -28,11 +32,162 @@ function initArmyLayers() {
   armyMarkersLayer  = L.layerGroup().addTo(leafletMap); // поверх путей
 }
 
+// ══════════════════════════════════════════════════════════════════════
+// Шаг 39 — Анимированные SVG-маркеры армий
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Формат числа войск для метки маркера: 4200 → "4.2k", 800 → "800".
+ */
+function formatArmySize(n) {
+  n = Math.max(0, Math.round(Number(n) || 0));
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000)    return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return String(n);
+}
+
+/**
+ * Определить доминирующий тип войск (для выбора иконки).
+ * @returns {'naval'|'cavalry'|'archers'|'infantry'}
+ */
+function _dominantUnitType(army) {
+  if (army?.type === 'naval') return 'naval';
+  const u = army?.units ?? {};
+  const inf  = (u.infantry    ?? 0) + (u.mercenaries ?? 0);
+  const cav  = (u.cavalry     ?? 0);
+  const arch = (u.archers     ?? 0);
+  const art  = (u.artillery   ?? 0);
+  const max = Math.max(inf, cav, arch, art);
+  if (max <= 0)    return 'infantry';
+  if (cav  === max) return 'cavalry';
+  if (arch === max) return 'archers';
+  return 'infantry';
+}
+
+/**
+ * Инлайн SVG-пути для каждого типа войск (game-icons.net стиль, CC BY 3.0).
+ * Сами пути — собственная упрощённая перерисовка.
+ */
+const _ARMY_TYPE_PATHS = {
+  // Звезда — общий силуэт (оригинал из arma.md)
+  star:     'M12 2L15 9H22L16.5 13.5L18.5 21L12 17L5.5 21L7.5 13.5L2 9H9Z',
+  // Пехота: скрещенные мечи
+  infantry: 'M4 4L11 11L8 14L5 14L5 17L7 19L7 16L10 16L13 13L20 20L19 21L12 14L9 17L7 19M14 4L20 4L20 10L17 13L14 10Z',
+  // Конница: голова лошади
+  cavalry:  'M19 3L15 4L13 6L10 5L7 7L7 10L9 12L9 15L8 16L8 19L10 19L10 17L12 15L14 15L14 18L16 18L16 15L18 13L18 9L20 7L20 4Z',
+  // Лучники: пучок стрел
+  archers:  'M2 12L8 9L8 11L16 11L16 9L22 12L16 15L16 13L8 13L8 15Z',
+  // Флот: треугольный парус
+  naval:    'M12 2L12 15L4 15L12 2M13 4L20 15L13 15L13 4M3 18Q6 20 9 18T15 18T21 18L20 20Q16 22 13 20T7 20L3 20Z',
+};
+
+/**
+ * Шаг 39 — создать L.divIcon маркера армии с SVG-звездой цвета нации.
+ * @param {object} army — объект армии из GAME_STATE.armies
+ * @param {string} nationColor — HEX/RGB цвет нации
+ * @param {object} [opts]
+ * @param {boolean} [opts.selected] — выбрана ли армия (активирует пульс)
+ * @param {boolean} [opts.isPlayer] — принадлежит игроку (золотая обводка)
+ */
+function createArmyIcon(army, nationColor, opts = {}) {
+  const isNaval = army?.type === 'naval';
+  const units   = army?.units ?? {};
+  const total   = isNaval
+    ? Object.values(army?.ships ?? {}).reduce((s, n) => s + (Number(n) || 0), 0)
+    : (units.infantry ?? 0) + (units.cavalry ?? 0)
+      + (units.mercenaries ?? 0) + (units.artillery ?? 0) + (units.archers ?? 0);
+
+  // Размер зависит от силы (как в arma.md Шаг 39)
+  const size = total > 5000 ? 36 : total > 1000 ? 30 : 24;
+
+  const kind      = _dominantUnitType(army);
+  const glyphPath = _ARMY_TYPE_PATHS[kind] ?? _ARMY_TYPE_PATHS.infantry;
+  const starPath  = _ARMY_TYPE_PATHS.star;
+
+  const selCls    = opts.selected ? ' army-selected' : '';
+  const playerCls = opts.isPlayer ? ' army-marker--player' : '';
+
+  const html = `
+    <div class="army-marker${selCls}${playerCls}"
+         style="--nc: ${nationColor}; width:${size}px; height:${size}px">
+      <svg class="army-marker__svg" viewBox="0 0 24 24" width="${size}" height="${size}"
+           fill="${nationColor}" stroke="rgba(0,0,0,0.6)" stroke-width="0.6">
+        <path class="army-marker__star" d="${starPath}"/>
+        <path class="army-marker__glyph" d="${glyphPath}"
+              fill="#ffffff" stroke="rgba(0,0,0,0.8)" stroke-width="0.5"
+              transform="translate(6 6) scale(0.5)"/>
+      </svg>
+      <span class="army-count">${formatArmySize(total)}</span>
+    </div>`;
+
+  return L.divIcon({
+    html,
+    className: '',
+    iconSize:   [size, size + 14],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
+/**
+ * Шаг 39 — плавно перемещает маркер от одной точки к другой.
+ * Fallback-реализация для случая, когда leafletMap.motion (плагин) недоступен.
+ * Используется интерполяция через requestAnimationFrame.
+ */
+function smoothMoveArmyMarker(marker, fromLatLng, toLatLng, duration = 650) {
+  if (!marker || !fromLatLng || !toLatLng) return;
+  // Если доступен плагин Leaflet.Motion — используем его
+  if (typeof L !== 'undefined' && L.motion && typeof marker.motion === 'function') {
+    try {
+      marker.motion([fromLatLng, toLatLng], { duration });
+      return;
+    } catch (_) { /* fallback */ }
+  }
+
+  const [fLat, fLng] = fromLatLng;
+  const [tLat, tLng] = toLatLng;
+  if (Math.abs(fLat - tLat) < 1e-6 && Math.abs(fLng - tLng) < 1e-6) {
+    marker.setLatLng(toLatLng);
+    return;
+  }
+
+  const armyId = marker._armyId;
+  if (armyId && _armyMoveAnims[armyId]) {
+    cancelAnimationFrame(_armyMoveAnims[armyId]);
+    delete _armyMoveAnims[armyId];
+  }
+
+  const start = performance.now();
+  marker.setLatLng(fromLatLng);
+  const step = (now) => {
+    const t    = Math.min(1, (now - start) / duration);
+    // ease-in-out cubic
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    marker.setLatLng([
+      fLat + (tLat - fLat) * ease,
+      fLng + (tLng - fLng) * ease,
+    ]);
+    if (t < 1) {
+      _armyMoveAnims[armyId] = requestAnimationFrame(step);
+    } else if (armyId) {
+      delete _armyMoveAnims[armyId];
+    }
+  };
+  _armyMoveAnims[armyId] = requestAnimationFrame(step);
+}
+
 // ── Полная перерисовка ────────────────────────────────────────────────
 
 function renderAllArmies() {
   if (!leafletMap) return;
   if (!armyMarkersLayer) initArmyLayers();
+
+  // Шаг 39: сохраним предыдущие центры для плавной анимации при перемещении
+  Object.entries(_armyMarkers).forEach(([id, m]) => {
+    try {
+      const ll = m.getLatLng?.();
+      if (ll) _armyPrevCenters[id] = [ll.lat, ll.lng];
+    } catch (_) {}
+  });
 
   armyMarkersLayer.clearLayers();
   armyPathsLayer.clearLayers();
@@ -42,11 +197,18 @@ function renderAllArmies() {
   Object.keys(_armyPaths).forEach(k => delete _armyPaths[k]);
   Object.keys(_siegeIcons).forEach(k => delete _siegeIcons[k]);
 
+  const seenArmyIds = new Set();
   for (const army of (GAME_STATE.armies ?? [])) {
     if (army.state === 'disbanded' || army.state === 'embarked') continue;
+    seenArmyIds.add(army.id);
     _renderArmyMarker(army);
     if (army.path?.length > 0) _renderMovementLine(army);
   }
+
+  // Очистим prevCenters для армий, которых больше нет
+  Object.keys(_armyPrevCenters).forEach(id => {
+    if (!seenArmyIds.has(id)) delete _armyPrevCenters[id];
+  });
 
   for (const siege of (GAME_STATE.sieges ?? [])) {
     if (siege.status === 'active') _renderSiegeIndicator(siege);
@@ -61,35 +223,20 @@ function _renderArmyMarker(army) {
 
   const isPlayer = army.nation === GAME_STATE.player_nation;
   const color    = _nationColor(army.nation);
-  const isNaval  = army.type === 'naval';
+  const selected = _selectedArmyId === army.id;
 
-  const count = isNaval
-    ? Object.values(army.ships ?? {}).reduce((s, n) => s + n, 0)
-    : (army.units.infantry ?? 0) + (army.units.cavalry ?? 0) + (army.units.mercenaries ?? 0);
+  // Шаг 39: создание иконки через createArmyIcon (SVG-звезда + тип войск)
+  const icon = createArmyIcon(army, color, { selected: selected, isPlayer: isPlayer });
 
-  const countStr = count >= 1000 ? (count / 1000).toFixed(1) + 'к' : String(count);
-  const typeIcon = isNaval ? '⛵' : '🛡';
+  // Если предыдущая позиция отличается — появимся в ней и поплывём к новой
+  const prev = _armyPrevCenters[army.id];
+  const startCenter = (prev &&
+    (Math.abs(prev[0] - center[0]) > 1e-6 || Math.abs(prev[1] - center[1]) > 1e-6))
+    ? prev
+    : center;
 
-  const stateIcon = { sieging: '🏰', routing: '💨', resting: '⛺', moving: '➡' }[army.state] ?? '';
-
-  const selected = _selectedArmyId === army.id ? ' army-marker--selected' : '';
-  const playerCls = isPlayer ? ' army-marker--player' : '';
-
-  const html = `
-    <div class="army-marker${selected}${playerCls}" style="--army-color:${color}">
-      <div class="army-marker__top">
-        <span class="army-marker__icon">${typeIcon}</span>
-        <span class="army-marker__count">${countStr}</span>
-        <span class="army-marker__state">${stateIcon}</span>
-      </div>
-      <div class="army-marker__bars">
-        ${_miniBar(army.morale,  '#4caf50', '#f44336')}
-        ${_miniBar(army.supply,  '#2196f3', '#ff5722')}
-      </div>
-    </div>`;
-
-  const icon = L.divIcon({ html, className: '', iconSize: [54, 42], iconAnchor: [27, 21] });
-  const m    = L.marker(center, { icon, zIndexOffset: 1000 });
+  const m = L.marker(startCenter, { icon, zIndexOffset: 1000 });
+  m._armyId = army.id;
 
   m.on('click', (e) => {
     L.DomEvent.stopPropagation(e);
@@ -109,6 +256,12 @@ function _renderArmyMarker(army) {
 
   m.addTo(armyMarkersLayer);
   _armyMarkers[army.id] = m;
+
+  // Шаг 39: если сменилась позиция — плавно анимируем маркер
+  if (startCenter !== center) {
+    smoothMoveArmyMarker(m, startCenter, center);
+  }
+  _armyPrevCenters[army.id] = center;
 }
 
 // ── Линия маршрута ────────────────────────────────────────────────────
@@ -224,7 +377,8 @@ function selectArmy(armyId) {
   Object.entries(_armyMarkers).forEach(([id, m]) => {
     const el = m.getElement();
     if (!el) return;
-    el.querySelector('.army-marker')?.classList.toggle('army-marker--selected', id === armyId);
+    // Шаг 39: класс .army-selected вместо старого .army-marker--selected
+    el.querySelector('.army-marker')?.classList.toggle('army-selected', id === armyId);
   });
 
   _renderArmyPanel(armyId);
