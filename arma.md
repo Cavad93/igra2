@@ -2773,6 +2773,8 @@ assets/backgrounds/*.jpg
 
 ### Шаг 55 — Культурная карта наций: 10 групп, визуальный стиль каждой
 
+> **Статус:** ✅ **ВЫПОЛНЕНО** — файл `data/culture_groups.js` (`NATION_CULTURE_GROUPS` × 10 групп: greek/roman/carthaginian/egyptian/persian/celtic/indian/east_asian/nomadic/generic + `getCultureGroup` / `getPortraitForCharacter` / `hashCode`), подключение в `index.html` сразу после `data/cultures.js`, тесты `tests/test_arma_stage55.mjs` (146 passed). Имя глобала намеренно `NATION_CULTURE_GROUPS`, а не `CULTURE_GROUPS`, чтобы не конфликтовать с уже существующим `CULTURE_GROUPS` из `data/cultures.js` (система ассимиляции Сицилии). Не реализовывать повторно.
+
 **Цель:** сгруппировать все нации игры по культурным регионам. Каждая группа получает свой набор портретов, фоновую текстуру, цветовую гамму панелей и иконку. В игре сотни наций — у каждой нет отдельного арта, но у каждой есть культурная группа.
 
 **Что сделать:**
