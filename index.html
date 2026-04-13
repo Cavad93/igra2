@@ -8841,6 +8841,100 @@
     #tup-reserve-btn button { width: 100%; margin-top: 6px; padding: 4px;
       background: #1a1a1a; border: 1px solid #444; color: #bbb;
       border-radius: 2px; cursor: pointer; font-size: 11px; }
+
+    /* ══════════════════════════════════════════════════
+       ШАГ 49 (arma.md): Граф дипломатических отношений
+    ══════════════════════════════════════════════════ */
+    #diplo-graph-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: radial-gradient(ellipse at center,
+        rgba(18,14,7,0.96) 0%,
+        rgba(8,6,3,0.98) 70%);
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    #diplo-graph-overlay.hidden { display: none; }
+    #diplo-graph-overlay .dg-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border-gold);
+      background: rgba(13,10,5,0.85);
+    }
+    #diplo-graph-overlay .dg-header h2 {
+      margin: 0;
+      color: var(--accent);
+      font-family: serif;
+      font-size: 20px;
+      letter-spacing: 0.5px;
+    }
+    #diplo-graph-overlay .dg-header button {
+      background: rgba(13,10,5,0.85);
+      border: 1px solid var(--border-gold);
+      color: var(--text-light);
+      width: 32px;
+      height: 32px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+    }
+    #diplo-graph-overlay .dg-header button:hover {
+      background: rgba(42,32,16,0.95);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    #diplo-graph-svg {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #diplo-graph-svg .dg-node circle {
+      transition: r 0.15s, stroke-width 0.15s;
+    }
+    #diplo-graph-svg .dg-node:hover circle {
+      r: 22;
+      stroke-width: 3;
+    }
+    #diplo-graph-overlay .dg-legend {
+      position: absolute;
+      right: 20px;
+      bottom: 20px;
+      background: rgba(13,10,5,0.9);
+      border: 1px solid var(--border-gold);
+      border-radius: 4px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--text-light);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: none;
+    }
+    #diplo-graph-overlay .dg-legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #diplo-graph-overlay .dg-legend-swatch {
+      display: inline-block;
+      width: 22px;
+      height: 3px;
+      border-radius: 1px;
+    }
+    #diplo-graph-overlay .dg-legend-swatch.dg-war      { background: #d93b3b; height: 3px; }
+    #diplo-graph-overlay .dg-legend-swatch.dg-alliance { background: #2fa24a; height: 2px; }
+    #diplo-graph-overlay .dg-legend-swatch.dg-trade    {
+      background: repeating-linear-gradient(to right, #3a86ff 0 6px, transparent 6px 10px);
+      height: 2px;
+    }
+    #diplo-graph-overlay .dg-legend-swatch.dg-peace    { background: #9a9a9a; height: 2px; }
   </style>
 </head>
 <body>
@@ -8887,6 +8981,21 @@
       <button id="settings-btn" onclick="toggleSettingsModal()" title="Настройки">⚙</button>
     </header>
 
+    <!-- Шаг 49 (arma.md) — Граф дипломатических отношений -->
+    <div id="diplo-graph-overlay" class="hidden">
+      <div class="dg-header">
+        <h2>Дипломатические отношения</h2>
+        <button type="button" onclick="closeDiploGraph()" title="Закрыть [Esc]">✕</button>
+      </div>
+      <svg id="diplo-graph-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="dg-legend">
+        <div class="dg-legend-row"><span class="dg-legend-swatch dg-war"></span>Война</div>
+        <div class="dg-legend-row"><span class="dg-legend-swatch dg-alliance"></span>Союз</div>
+        <div class="dg-legend-row"><span class="dg-legend-swatch dg-trade"></span>Торговый договор</div>
+        <div class="dg-legend-row"><span class="dg-legend-swatch dg-peace"></span>Мирный договор</div>
+      </div>
+    </div>
+
     <!-- Шаг 34 — Панель поиска -->
     <div id="search-panel" class="hidden">
       <input id="search-input" type="text" placeholder="Поиск нации, региона, персонажа..." autocomplete="off" spellcheck="false">
@@ -8906,6 +9015,8 @@
           <button class="lnav-btn"        data-tab="economy"   title="Экономика"   onclick="renderLeftPanelTab('economy')">💰<span class="lnav-badge" id="badge-economy"   style="display:none">0</span></button>
           <button class="lnav-btn"        data-tab="diplomacy" title="Дипломатия"  onclick="renderLeftPanelTab('diplomacy')">🤝<span class="lnav-badge" id="badge-diplomacy" style="display:none">0</span></button>
           <button class="lnav-btn"        data-tab="laws"      title="Законы"      onclick="renderLeftPanelTab('laws')">📜<span class="lnav-badge" id="badge-laws"      style="display:none">0</span></button>
+          <!-- Шаг 49 (arma.md): граф дипломатических отношений -->
+          <button class="lnav-btn"        id="diplo-graph-btn" data-tab="diplo-graph" title="Граф дипломатии" onclick="toggleDiploGraph()">🕸</button>
         </nav>
         <div id="left-panel-content">
           <!-- Заполняется из panels.js renderLeftPanel() -->
@@ -9453,6 +9564,7 @@
   <script src="ui/map_events.js"></script>
   <script src="ui/region_build_tab.js"></script>
   <script src="ui/diplomacy_tab.js"></script>
+  <script src="ui/diplo_graph.js"></script>
   <script src="ui/panels.js"></script>
   <script src="ui/government_tab.js"></script>
   <script src="ui/population_tab.js"></script>
@@ -9667,6 +9779,11 @@
 
     // Закрыть "верхний" открытый оверлей/модал
     function closeTopModal() {
+      // Шаг 49 (arma.md): граф дипломатических отношений
+      if (typeof isDiploGraphOpen === 'function' && isDiploGraphOpen()) {
+        closeDiploGraph();
+        return true;
+      }
       // 0. Шаг 34: панель поиска
       if (typeof isSearchOpen === 'function' && isSearchOpen()) {
         closeSearchPanel();
