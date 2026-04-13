@@ -168,6 +168,39 @@ function applyNationDecision(nationId, decision) {
   const _log = (msg, type = 'info') => { if (typeof addEventLog === 'function') addEventLog(msg, type); };
   const _name = (id) => GAME_STATE.nations?.[id]?.name ?? id;
 
+  // Шаг 51: регистрируем действие AI для индикаторов на карте (если загружен модуль).
+  if (decision && decision.action && decision.action !== 'wait' &&
+      typeof window !== 'undefined' &&
+      typeof window.recordAIAction === 'function') {
+    let regionForIndicator =
+      decision.region ??
+      decision.target_region ??
+      (decision.action === 'build' && (nation.regions?.[0] ?? null)) ??
+      null;
+    // Для military/диплом действий — используем target (это nationId)
+    // и конвертируем в его столицу; для move_army target уже regionId.
+    if (!regionForIndicator && decision.target) {
+      if (decision.action === 'move_army' || decision.action === 'attack') {
+        regionForIndicator = decision.target; // target уже regionId
+      } else {
+        // target — nationId; берём столицу для отметки.
+        const tNation = GAME_STATE.nations?.[decision.target];
+        regionForIndicator = tNation?.regions?.[0] ?? (nation.regions?.[0] ?? null);
+      }
+    }
+    if (!regionForIndicator) regionForIndicator = nation.regions?.[0] ?? null;
+    if (regionForIndicator) {
+      try {
+        window.recordAIAction({
+          nationId,
+          action: decision.action,
+          regionId: regionForIndicator,
+          detail:   decision.reasoning ?? ''
+        });
+      } catch (_) {}
+    }
+  }
+
   switch (decision.action) {
 
     case 'recruit': {

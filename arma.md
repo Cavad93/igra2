@@ -2251,6 +2251,8 @@ textures/
 
 ### Шаг 51 — Индикаторы действий ИИ-наций
 
+> **Статус:** ✅ **ВЫПОЛНЕНО** — файл `ui/map_ai_indicators.js` (recordAIAction / renderAIIndicators / clearAIIndicators + ACTION_ICON_MAP), CSS `.ai-indicator` + `@keyframes ai-appear` в `index.html`, интеграция в `engine/turn.js` (`processAINations` + `_rec`) и `ai/parser.js` (`applyNationDecision`), тесты `tests/test_arma_stage51.mjs` (86 passed). Не реализовывать повторно.
+
 **Цель:** показать что делают другие нации — карта перестаёт быть "мёртвой" между ходами игрока.
 
 **Что сделать:**

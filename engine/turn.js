@@ -566,6 +566,11 @@ function maybeSpawnCharacter() {
 // ──────────────────────────────────────────────────────────────
 
 async function processAINations() {
+  // Шаг 51: очищаем старые индикаторы AI-действий — перед сбором нового пула.
+  if (typeof window !== 'undefined' && typeof window.clearAIIndicators === 'function') {
+    try { window.clearAIIndicators(); } catch (e) { console.warn('[ai_indicators] clear:', e); }
+  }
+
   // Обновляем кэш дипломатических расстояний
   if (typeof refreshDiploDistances === 'function') {
     try { refreshDiploDistances(); } catch (e) { console.warn('[diplo_range]', e); }
@@ -715,6 +720,11 @@ async function processAINations() {
   }
 
   console.log(`[ai_nations] ход ${currentTurn}: warAI(Haiku):${fromWarAI} cache(phi4):${fromCache} fallback(OU):${fromFallback} tier3:${tier3.length}`);
+
+  // Шаг 51: отрисовываем собранные за ход AI-индикаторы на карте.
+  if (typeof window !== 'undefined' && typeof window.renderAIIndicators === 'function') {
+    try { window.renderAIIndicators(); } catch (e) { console.warn('[ai_indicators] render:', e); }
+  }
 
   // ── Анти-сноуболл ─────────────────────────────────────────────────
   if (typeof processConquestFatigue === 'function') {
@@ -1091,6 +1101,26 @@ function applyFallbackDecision(nationId) {
   const _rec = (action, detail) => {
     if (typeof addMemoryEvent === 'function')
       addMemoryEvent(nationId, 'decision', `${action}${detail ? ': ' + detail : ''}`, [], 'fallback');
+    // Шаг 51: регистрируем действие AI-нации для индикаторов на карте.
+    // По умолчанию привязываем к столичному региону; для 'build' и
+    // 'move_army' — к конкретному из деталей (если удастся распарсить).
+    if (action && action !== 'wait' &&
+        typeof window !== 'undefined' &&
+        typeof window.recordAIAction === 'function') {
+      let regionId = (nation.regions && nation.regions[0]) || null;
+      if (action === 'build' && typeof detail === 'string') {
+        const m = detail.match(/\sв\s+([a-zA-Z0-9_\-]+)/);
+        if (m) regionId = m[1];
+      } else if (action === 'move_army' && typeof detail === 'string') {
+        const m = detail.match(/→\s*([a-zA-Z0-9_\-]+)/);
+        if (m) regionId = m[1];
+      }
+      if (regionId) {
+        try {
+          window.recordAIAction({ nationId, action, regionId, detail: detail || '' });
+        } catch (_) {}
+      }
+    }
   };
 
   const ou = _tickOU(nationId, nation);

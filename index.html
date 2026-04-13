@@ -3930,6 +3930,49 @@
     }
 
     /* ══════════════════════════════════════════
+       ИНДИКАТОРЫ ДЕЙСТВИЙ AI-НАЦИЙ (Шаг 51 arma.md)
+
+       Над регионами, где AI-нация выполнила действие на этом
+       ходу, показывается маленький цветной кружок с иконкой
+       действия. Цвет нации задаётся через CSS-переменную --nc,
+       в tooltip — имя нации, тип действия и регион.
+       См. ui/map_ai_indicators.js.
+    ══════════════════════════════════════════ */
+    .ai-indicator-divicon {
+      background: transparent !important;
+      border: none !important;
+      pointer-events: none;
+    }
+    .ai-indicator {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--nc, #888);
+      opacity: 0.75;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      line-height: 1;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+      animation: ai-appear 0.4s ease-out;
+      pointer-events: auto;
+      cursor: help;
+      transform: translate(-50%, -50%);
+      transform-origin: center center;
+      transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+    }
+    .ai-indicator:hover {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.2);
+    }
+    @keyframes ai-appear {
+      from { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+      to   { transform: translate(-50%, -50%) scale(1); opacity: 0.75; }
+    }
+
+    /* ══════════════════════════════════════════
        РЕЗУЛЬТАТ БИТВЫ (#battle-result-overlay)
     ══════════════════════════════════════════ */
     #battle-result-overlay {
@@ -9607,6 +9650,7 @@
   <script src="ui/map_armies.js"></script>
   <script src="ui/map_events.js"></script>
   <script src="ui/map_event_feed.js"></script>
+  <script src="ui/map_ai_indicators.js"></script>
   <script src="ui/region_build_tab.js"></script>
   <script src="ui/diplomacy_tab.js"></script>
   <script src="ui/diplo_graph.js"></script>
