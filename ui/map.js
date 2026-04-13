@@ -266,6 +266,105 @@ function initLeafletMap() {
     },
   });
   new tradeToggleControl().addTo(leafletMap);
+
+  // Шаг 48 — создаём SVG pane для fog-of-war хэтчинга
+  _ensureFogOverlayPane();
+}
+
+// ──────────────────────────────────────────────────────────────
+// Шаг 48 — SVG оверлей "туман войны" с pattern hatching
+// ──────────────────────────────────────────────────────────────
+let _fogOverlayPane = null;
+let _fogOverlaySvg  = null;
+
+function _ensureFogOverlayPane() {
+  if (!leafletMap) return;
+  if (_fogOverlayPane) return;
+  try {
+    const pane = leafletMap.createPane('fogOverlayPane');
+    pane.style.zIndex = 410;
+    pane.style.pointerEvents = 'none';
+    _fogOverlayPane = pane;
+  } catch (e) {
+    console.warn('[Шаг 48] fog pane create failed', e);
+  }
+}
+
+function _ensureFogPattern() {
+  if (!svgTradeRenderer || !svgTradeRenderer._container) return;
+  const svg = svgTradeRenderer._container;
+  if (svg.querySelector && svg.querySelector('#fog-hatch-pattern')) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  let defs = svg.querySelector && svg.querySelector('defs');
+  if (!defs) {
+    defs = document.createElementNS(NS, 'defs');
+    svg.insertBefore(defs, svg.firstChild);
+  }
+  const pattern = document.createElementNS(NS, 'pattern');
+  pattern.setAttribute('id', 'fog-hatch-pattern');
+  pattern.setAttribute('width', '8');
+  pattern.setAttribute('height', '8');
+  pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+  pattern.setAttribute('patternTransform', 'rotate(45)');
+  const rect = document.createElementNS(NS, 'rect');
+  rect.setAttribute('width', '8');
+  rect.setAttribute('height', '8');
+  rect.setAttribute('fill', 'rgba(10,8,4,0.35)');
+  pattern.appendChild(rect);
+  const line = document.createElementNS(NS, 'line');
+  line.setAttribute('x1', '0');
+  line.setAttribute('y1', '0');
+  line.setAttribute('x2', '0');
+  line.setAttribute('y2', '8');
+  line.setAttribute('stroke', 'rgba(0,0,0,0.55)');
+  line.setAttribute('stroke-width', '2');
+  pattern.appendChild(line);
+  defs.appendChild(pattern);
+}
+
+let _fogPolygons = {};
+function refreshFogOverlay() {
+  if (!leafletMap) return;
+  _ensureFogOverlayPane();
+  // Убираем старые
+  for (const poly of Object.values(_fogPolygons)) {
+    try { if (leafletMap.hasLayer(poly)) leafletMap.removeLayer(poly); } catch (_) {}
+  }
+  _fogPolygons = {};
+
+  // Рендерим полупрозрачные полигоны SVG над регионами intel=0
+  for (const [regionId, mapData] of Object.entries(MAP_REGIONS)) {
+    if (!mapData?.coords || mapData.coords.length < 3) continue;
+    if (NON_PLAYABLE_TYPES.has(mapData.mapType)) continue;
+    const intel = getIntelLevel(regionId);
+    if (intel !== 0) continue;
+    const coords = mapData.coords.length <= 60
+      ? smoothChaikin(mapData.coords, 2)
+      : mapData.coords;
+    const poly = L.polygon(coords, {
+      pane: 'fogOverlayPane',
+      renderer: svgTradeRenderer,
+      stroke: false,
+      weight: 0,
+      fillColor: '#0a0804',
+      fillOpacity: 0.35,
+      interactive: false,
+    });
+    poly.addTo(leafletMap);
+    // Пробуем подменить fill на pattern — если pattern недоступен, остаётся
+    // запасной тёмный fill, что всё равно визуально притеняет регион.
+    _ensureFogPattern();
+    try {
+      if (poly._path) {
+        poly._path.setAttribute('fill', 'url(#fog-hatch-pattern)');
+        poly._path.setAttribute('fill-opacity', '1');
+      }
+    } catch (_) {}
+    _fogPolygons[regionId] = poly;
+  }
+}
+if (typeof window !== 'undefined') {
+  window.refreshFogOverlay = refreshFogOverlay;
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -311,6 +410,149 @@ function addBaseTileLayer() {
 
 // Типы регионов, не являющихся игровыми территориями
 const NON_PLAYABLE_TYPES = new Set(['Ocean', 'Strait', 'Lake', 'Impassible']);
+
+// ──────────────────────────────────────────────────────────────
+// Шаг 48 — ТУМАН ВОЙНЫ (РАЗВЕДКА)
+// ──────────────────────────────────────────────────────────────
+// Возвращает уровень разведданных для региона с точки зрения игрока:
+//   2 — полная информация (свои регионы / союзники / соседи игрока)
+//   1 — частичная (регионы в 2 перехода от игрока, торговые партнёры)
+//   0 — минимум (все остальные далёкие регионы)
+function getIntelLevel(regionId) {
+  try {
+    const playerId = GAME_STATE?.player_nation;
+    if (!playerId) return 2; // до инициализации игрока показываем всё
+    const mapData  = MAP_REGIONS[regionId];
+    if (!mapData) return 0;
+    const gameRegion = GAME_STATE.regions?.[regionId];
+    const ownerId   = gameRegion ? gameRegion.nation : mapData.nation;
+
+    // (a) свой регион → полная информация
+    if (ownerId === playerId) return 2;
+
+    // Кэш соседей игрока
+    if (!_fogIntelCache || _fogIntelCache.turn !== GAME_STATE.turn
+        || _fogIntelCache.playerId !== playerId) {
+      _rebuildFogIntelCache(playerId);
+    }
+    const cache = _fogIntelCache;
+
+    // (b) союзники / военные альянсы / брачный союз / оборонительный союз
+    if (cache.allies.has(ownerId)) return 2;
+    // (c) соседние регионы — граничат с регионом игрока
+    if (cache.neighborRegions.has(regionId)) return 2;
+
+    // (d) регионы в 2 перехода → частичная
+    if (cache.secondRingRegions.has(regionId)) return 1;
+    // (e) торговые партнёры → частичная
+    if (cache.tradePartners.has(ownerId)) return 1;
+
+    // (f) всё остальное — минимум
+    return 0;
+  } catch (e) {
+    console.warn('[getIntelLevel] error', e);
+    return 2;
+  }
+}
+
+// Кэш обхода графа соседей (пересчитывается 1 раз за ход)
+let _fogIntelCache = null;
+function _rebuildFogIntelCache(playerId) {
+  const ownRegions = new Set();
+  for (const [rid, gr] of Object.entries(GAME_STATE.regions || {})) {
+    if (gr?.nation === playerId) ownRegions.add(rid);
+  }
+  // BFS по connections на 2 перехода
+  const neighborRegions   = new Set(); // в 1 переходе
+  const secondRingRegions = new Set(); // в 2 переходах
+  for (const rid of ownRegions) {
+    const md = MAP_REGIONS[rid];
+    for (const nid of (md?.connections || [])) {
+      if (!ownRegions.has(nid)) neighborRegions.add(nid);
+    }
+  }
+  for (const rid of neighborRegions) {
+    const md = MAP_REGIONS[rid];
+    for (const nid of (md?.connections || [])) {
+      if (!ownRegions.has(nid) && !neighborRegions.has(nid)) secondRingRegions.add(nid);
+    }
+  }
+
+  // Союзники: активные defensive_alliance / military_alliance / marriage_alliance
+  const allies = new Set();
+  const tradePartners = new Set();
+  const diplomacy = GAME_STATE.diplomacy;
+  if (diplomacy?.treaties) {
+    for (const t of diplomacy.treaties) {
+      if (t.status !== 'active') continue;
+      if (!Array.isArray(t.parties) || !t.parties.includes(playerId)) continue;
+      const other = t.parties.find(p => p !== playerId);
+      if (!other) continue;
+      if (t.type === 'defensive_alliance'
+          || t.type === 'military_alliance'
+          || t.type === 'marriage_alliance') {
+        allies.add(other);
+      }
+      if (t.type === 'trade_agreement' || t.type === 'trade_pact'
+          || t.type === 'commerce_treaty') {
+        tradePartners.add(other);
+      }
+    }
+  }
+  // Также экономические торговые маршруты игрока
+  const playerNation = GAME_STATE.nations?.[playerId];
+  const tradeRoutes  = playerNation?.economy?.trade_routes || [];
+  for (const partnerId of tradeRoutes) {
+    // trade_routes может содержать regionId или nationId — пытаемся оба варианта
+    const mapped = MAP_REGIONS[partnerId];
+    if (mapped) {
+      // это регион — добавляем его хозяина
+      const gr = GAME_STATE.regions?.[partnerId];
+      if (gr?.nation && gr.nation !== playerId) tradePartners.add(gr.nation);
+    } else if (GAME_STATE.nations?.[partnerId]) {
+      tradePartners.add(partnerId);
+    }
+  }
+
+  _fogIntelCache = {
+    turn: GAME_STATE.turn,
+    playerId,
+    ownRegions,
+    neighborRegions,
+    secondRingRegions,
+    allies,
+    tradePartners,
+  };
+}
+
+// Текстовая метка уровня разведки
+function getIntelLabel(level) {
+  if (level >= 2) return { text: 'полная',    icon: '🔍', hint: 'Свой регион, союзник или сосед' };
+  if (level >= 1) return { text: 'частичная', icon: '🔍', hint: 'Торговый партнёр или регион в 2 перехода' };
+  return           { text: 'нет данных', icon: '🌫', hint: 'Далёкий регион — отправьте разведчика или установите торговлю' };
+}
+
+// Приблизительная оценка числа (для intel=1 показывает диапазон ~X-Y)
+function roughEstimate(num) {
+  const n = Math.max(0, Math.round(+num || 0));
+  if (n === 0) return '0';
+  // Округляем до 2 значащих цифр, формируем диапазон ±30%
+  const magnitude = Math.pow(10, Math.max(0, Math.floor(Math.log10(n)) - 1));
+  const center = Math.round(n / magnitude) * magnitude;
+  const low  = Math.max(0, Math.round(center * 0.7));
+  const high = Math.round(center * 1.3);
+  const fmt = (v) => v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1) + 'k' : '' + v;
+  return `~${fmt(low)}–${fmt(high)}`;
+}
+
+// Инвалидировать кэш извне (например, после смены хода)
+function invalidateFogIntelCache() { _fogIntelCache = null; }
+if (typeof window !== 'undefined') {
+  window.getIntelLevel          = getIntelLevel;
+  window.getIntelLabel          = getIntelLabel;
+  window.roughEstimate          = roughEstimate;
+  window.invalidateFogIntelCache = invalidateFogIntelCache;
+}
 
 // Стили для не-игровых типов регионов
 const NON_PLAYABLE_STYLES = {
@@ -369,8 +611,9 @@ function renderRegionPolygons() {
       ? smoothChaikin(mapData.coords, 2)
       : mapData.coords;
 
+    const intelLevel = getIntelLevel(regionId);
     const polygon = L.polygon(coords, {
-      ...buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor, occupierColor),
+      ...buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor, occupierColor, intelLevel),
       renderer: canvasRenderer,
     });
 
@@ -409,18 +652,41 @@ function renderRegionPolygons() {
  * @param {boolean}     isSelected
  * @param {string|null} originalColor  — цвет оригинального владельца (оккупация)
  * @param {string|null} occupierColor  — цвет оккупанта (для границы)
+ * @param {number}      intelLevel     — Шаг 48: уровень разведки (0/1/2)
  */
-function buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor = null, occupierColor = null) {
+function buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor = null, occupierColor = null, intelLevel = 2) {
   // Оккупированный регион: показываем цвет оригинального владельца (светлее),
   // а толстую штрихованную границу — в цвете захватчика
   if (originalColor && occupierColor && !isSelected) {
     return {
       fillColor:   originalColor,   // оригинальный владелец виден как фон
-      fillOpacity: 0.45,            // чуть прозрачнее обычного
+      fillOpacity: intelLevel === 0 ? 0.35 : 0.45,
       color:       occupierColor,   // граница = цвет захватчика
       weight:      2.5,
       opacity:     1.0,
       dashArray:   '8 4',           // штриховая граница — признак оккупации
+    };
+  }
+
+  // Шаг 48: туман войны — далёкие регионы приглушаются
+  if (!isSelected && intelLevel === 0) {
+    return {
+      color:        'rgba(40,30,15,0.55)',
+      weight:       0.8,
+      fillColor:    color,
+      fillOpacity:  0.45,            // притемнение как в спеке
+      opacity:      0.85,
+      dashArray:    '3 3',           // лёгкий штрих-намёк на хэтчинг
+    };
+  }
+  if (!isSelected && intelLevel === 1) {
+    return {
+      color:        'rgba(60,45,20,0.50)',
+      weight:       0.9,
+      fillColor:    color,
+      fillOpacity:  0.58,
+      opacity:      1.0,
+      dashArray:    null,
     };
   }
 
@@ -444,19 +710,27 @@ function buildTooltipContent(regionId, mapData, nationId) {
   const nation = GAME_STATE.nations[displayNatId];
   const nationName  = nation ? nation.name : 'Независимые';
   const nationColor = nation ? nation.color : '#A8A898';
-  const pop = gameRegion ? (gameRegion.population || 0).toLocaleString() : '?';
 
-  // Оккупация
+  // Шаг 48: фильтрация данных по уровню разведки
+  const intel = (typeof getIntelLevel === 'function') ? getIntelLevel(regionId) : 2;
+  const popRaw = gameRegion ? (gameRegion.population || 0) : 0;
+  const population = intel >= 1 ? popRaw.toLocaleString() : '???';
+  const garrisonRaw = gameRegion ? (gameRegion.garrison || 0) : 0;
+  const garrisonStr = intel >= 2
+    ? garrisonRaw.toLocaleString()
+    : (intel >= 1 ? roughEstimate(garrisonRaw) : '???');
+
+  // Оккупация (известна только при intel >= 1)
   let occupyStr = '';
-  if (isOccupied) {
+  if (isOccupied && intel >= 1) {
     const occNation = GAME_STATE.nations[gameRegion.occupied_by];
     const occColor  = occNation?.color ?? '#f44336';
     occupyStr = `<div class="rt-occupied" style="color:${occColor}">⚔️ Оккупировано: ${occNation?.name ?? gameRegion.occupied_by}</div>`;
   }
 
-  // Индикатор крепости
+  // Индикатор крепости — известен только при intel >= 1
   let fortStr = '';
-  if ((gameRegion?.fortress_level ?? 0) > 0) {
+  if (intel >= 1 && (gameRegion?.fortress_level ?? 0) > 0) {
     const lvl = gameRegion.fortress_level;
     const lvlLabels = ['','Частокол','Деревянные стены','Каменные стены','Цитадель','Неприступная крепость'];
     const conserved = gameRegion.fortress_conserved ? ' (законсервирована)' : '';
@@ -465,15 +739,15 @@ function buildTooltipContent(regionId, mapData, nationId) {
 
   // Блокировка линией крепостей для армии игрока
   let blockStr = '';
-  if (typeof _isFortressLineBlocked === 'function' && GAME_STATE.player_nation) {
+  if (intel >= 1 && typeof _isFortressLineBlocked === 'function' && GAME_STATE.player_nation) {
     if (_isFortressLineBlocked(regionId, GAME_STATE.player_nation)) {
       blockStr = `<div class="rt-blocked">⛔ Заблокировано линией крепостей</div>`;
     }
   }
 
-  // B4: военная сила нации в регионе
+  // B4: военная сила нации в регионе (нации показываем только при intel >= 2)
   let milStr = '';
-  if (nation) {
+  if (nation && intel >= 2) {
     const mil = nation.military;
     const total = (mil?.infantry || 0) + (mil?.cavalry || 0) + (mil?.archers || 0);
     if (total > 0) {
@@ -482,11 +756,18 @@ function buildTooltipContent(regionId, mapData, nationId) {
     }
   }
 
+  // Шаг 48: индикатор разведки
+  const intelMeta = (typeof getIntelLabel === 'function') ? getIntelLabel(intel)
+                  : { text: 'полная', icon: '🔍', hint: '' };
+  const intelClass = `rt-intel rt-intel--${intel}`;
+  const intelStr = `<div class="${intelClass}" title="${intelMeta.hint}">${intelMeta.icon} Разведка: ${intelMeta.text}</div>`;
+
   return `
     <div class="rt-name">${mapData.name}</div>
     <div class="rt-nation" style="color:${nationColor}">${nationName}</div>
-    <div class="rt-pop">👥 ${pop}</div>
-    ${milStr}${occupyStr}${fortStr}${blockStr}
+    <div class="rt-pop">👥 ${population}</div>
+    <div class="rt-garr">⚔ Гарнизон: ${garrisonStr}</div>
+    ${milStr}${occupyStr}${fortStr}${blockStr}${intelStr}
   `;
 }
 
@@ -515,7 +796,8 @@ function onRegionClick(regionId) {
     const prevColor = prevNation ? prevNation.color : '#A8A898';
     const prevIsPlayer = (prevNationId === GAME_STATE.player_nation);
     const [origC, occC] = _regionOccupationColors(selectedRegionId);
-    regionLayers[selectedRegionId].setStyle(buildPolygonStyle(prevColor, prevIsPlayer, false, origC, occC));
+    const prevIntel = (typeof getIntelLevel === 'function') ? getIntelLevel(selectedRegionId) : 2;
+    regionLayers[selectedRegionId].setStyle(buildPolygonStyle(prevColor, prevIsPlayer, false, origC, occC, prevIntel));
   }
 
   if (selectedRegionId === regionId) {
@@ -560,7 +842,8 @@ function onRegionHover(e, regionId, entering, color, isPlayerRegion) {
     layer.bringToFront();
   } else {
     const [origC, occC] = _regionOccupationColors(regionId);
-    layer.setStyle(buildPolygonStyle(color, isPlayerRegion, false, origC, occC));
+    const intelLevel = (typeof getIntelLevel === 'function') ? getIntelLevel(regionId) : 2;
+    layer.setStyle(buildPolygonStyle(color, isPlayerRegion, false, origC, occC, intelLevel));
   }
 }
 
@@ -1009,31 +1292,47 @@ function showRegionInfo(regionId) {
     const nationColor = nation ? nation.color : '#A8A898';
     const isPlayer    = nationId === GAME_STATE.player_nation;
 
-    const productionLines = Object.entries(gameData.production || {}).map(([good, amount]) => {
-      const g = GOODS[good];
-      return `<span class="prod-item">${g ? g.icon : '📦'} ${g ? g.name : good}: ${Math.round(amount).toLocaleString()}</span>`;
-    }).join('');
+    // Шаг 48: уровень разведданных
+    const intelLevel = (typeof getIntelLevel === 'function') ? getIntelLevel(regionId) : 2;
+    const intelMeta  = (typeof getIntelLabel === 'function') ? getIntelLabel(intelLevel)
+                     : { text: 'полная', icon: '🔍', hint: '' };
 
-    const buildings = (gameData.buildings || []).map(b =>
-      `<span class="building-tag">🏛 ${b.replace(/_/g, ' ')}</span>`
-    ).join('');
+    // Шаг 48: полные детали только при intelLevel >= 2
+    const productionLines = intelLevel >= 2
+      ? Object.entries(gameData.production || {}).map(([good, amount]) => {
+          const g = GOODS[good];
+          return `<span class="prod-item">${g ? g.icon : '📦'} ${g ? g.name : good}: ${Math.round(amount).toLocaleString()}</span>`;
+        }).join('')
+      : '';
 
-    // ── Блок культуры ──
+    const buildings = intelLevel >= 2
+      ? (gameData.buildings || []).map(b =>
+          `<span class="building-tag">🏛 ${b.replace(/_/g, ' ')}</span>`
+        ).join('')
+      : '';
+
+    // ── Блок культуры ── (только при полной разведке)
     let cultureHtml = '';
-    try { cultureHtml = renderRegionCultureBlock(regionId, gameData.population || 0); }
-    catch (e) { console.warn('[showRegionInfo] culture block error:', e); }
+    if (intelLevel >= 2) {
+      try { cultureHtml = renderRegionCultureBlock(regionId, gameData.population || 0); }
+      catch (e) { console.warn('[showRegionInfo] culture block error:', e); }
+    }
 
     // ── Блок религии ──
     let religionHtml = '';
-    try {
-      if (typeof renderRegionReligionBlock === 'function')
-        religionHtml = renderRegionReligionBlock(regionId, gameData.population || 0);
-    } catch (e) { console.warn('[showRegionInfo] religion block error:', e); }
+    if (intelLevel >= 2) {
+      try {
+        if (typeof renderRegionReligionBlock === 'function')
+          religionHtml = renderRegionReligionBlock(regionId, gameData.population || 0);
+      } catch (e) { console.warn('[showRegionInfo] religion block error:', e); }
+    }
 
     // ── Блок социальной структуры ──
     let socialStructureHtml = '';
-    try { socialStructureHtml = renderRegionSocialStructure(regionId, gameData); }
-    catch (e) { console.warn('[showRegionInfo] social structure error:', e); }
+    if (intelLevel >= 2) {
+      try { socialStructureHtml = renderRegionSocialStructure(regionId, gameData); }
+      catch (e) { console.warn('[showRegionInfo] social structure error:', e); }
+    }
 
     // ── Вкладка строительства ──
     let buildTabHtml = '';
@@ -1077,13 +1376,21 @@ function showRegionInfo(regionId) {
     }
 
     // ── Ключевые цифры: население, оценка дохода, гарнизон ──
-    const popNum   = Math.round(gameData.population || 0);
-    const fert     = Math.max(0, Math.min(1, gameData.fertility || 0));
-    const garrison = Math.round(gameData.garrison || 0);
+    const popNumRaw   = Math.round(gameData.population || 0);
+    const fert        = Math.max(0, Math.min(1, gameData.fertility || 0));
+    const garrisonRaw = Math.round(gameData.garrison || 0);
     // Простая оценка дохода региона: pop × fertility × базовая ставка
     const nationTaxRate = (nation?.economy?.tax_rate ?? 0.10);
-    const goldPerTurn   = Math.round(popNum * fert * nationTaxRate * 0.05);
-    const goldSign      = goldPerTurn >= 0 ? '+' : '';
+    const goldPerTurnRaw = Math.round(popNumRaw * fert * nationTaxRate * 0.05);
+
+    // Шаг 48: маскировка значений по уровню разведки
+    const popNum    = intelLevel >= 1 ? popNumRaw.toLocaleString() : '???';
+    const garrison  = intelLevel >= 2
+      ? garrisonRaw.toLocaleString()
+      : (intelLevel >= 1 ? roughEstimate(garrisonRaw) : '???');
+    const goldPerTurn = intelLevel >= 2
+      ? (goldPerTurnRaw >= 0 ? '+' : '') + goldPerTurnRaw.toLocaleString()
+      : '—';
 
     // Цвет прогресс-бара плодородия
     const fertPct   = Math.round(fert * 100);
@@ -1091,10 +1398,10 @@ function showRegionInfo(regionId) {
                     : fertPct >= 40 ? '#c9a227'
                     : '#b35a1f';
 
-    // Стабильность/happiness бары (если есть)
+    // Стабильность/happiness бары (если есть) — только при полной разведке
     let stabilityHtml = '';
     const stability = gameData.stability;
-    if (typeof stability === 'number') {
+    if (intelLevel >= 2 && typeof stability === 'number') {
       const stabPct   = Math.max(0, Math.min(100, Math.round(stability)));
       const stabColor = stabPct >= 70 ? '#4caf50' : stabPct >= 40 ? '#c9a227' : '#b35a1f';
       stabilityHtml = `
@@ -1134,18 +1441,22 @@ function showRegionInfo(regionId) {
         </div>
       </div>
       <div class="ri-key-stats">
-        <div class="ri-key-stat">
-          <span class="ri-key-num">${popNum.toLocaleString()}</span>
+        <div class="ri-key-stat${intelLevel < 1 ? ' ri-stat--hidden' : ''}">
+          <span class="ri-key-num">${popNum}</span>
           <span class="ri-key-lbl">👥 Население</span>
         </div>
-        <div class="ri-key-stat">
-          <span class="ri-key-num">${goldSign}${goldPerTurn.toLocaleString()}</span>
+        <div class="ri-key-stat${intelLevel < 2 ? ' ri-stat--hidden' : ''}">
+          <span class="ri-key-num">${goldPerTurn}</span>
           <span class="ri-key-lbl">💰 /ход</span>
         </div>
-        <div class="ri-key-stat">
-          <span class="ri-key-num">${garrison.toLocaleString()}</span>
+        <div class="ri-key-stat${intelLevel < 2 ? ' ri-stat--blurred' : ''}">
+          <span class="ri-key-num">${garrison}</span>
           <span class="ri-key-lbl">⚔ Гарнизон</span>
         </div>
+      </div>
+      <div class="ri-intel ri-intel--${intelLevel}" title="${intelMeta.hint}">
+        ${intelMeta.icon} Разведка: ${intelMeta.text}
+        ${intelLevel < 2 ? `<span class="ri-intel-hint">— ${intelMeta.hint}</span>` : ''}
       </div>
       <div class="ri-tabs">
         <button class="ri-tab${curTab === 'info'  ? ' ri-tab--active' : ''}" data-tab="info"
@@ -1158,13 +1469,13 @@ function showRegionInfo(regionId) {
       </div>
       <div id="region-tab-info" class="region-info-body ri-tab-content${curTab !== 'info' ? ' hidden' : ''}">
         <div class="region-info-desc">${mapData.description}</div>
-        <div class="ri-bar-row">
+        ${intelLevel >= 2 ? `<div class="ri-bar-row">
           <span class="ri-bar-lbl">🌿 Плодородие</span>
           <div class="ri-bar-track">
             <div class="ri-bar-fill" style="width:${fertPct}%; background:${fertColor}"></div>
           </div>
           <span class="ri-bar-val">${fertPct}%</span>
-        </div>
+        </div>` : ''}
         ${stabilityHtml}
         <div class="region-stats">
           <div class="region-stat">🏔 Тип: <strong>${getTerrainName(gameData.terrain)}</strong></div>
@@ -1227,8 +1538,10 @@ function closeRegionInfo() {
     const nationId = gameRegion ? gameRegion.nation : MAP_REGIONS[selectedRegionId]?.nation;
     const nation = GAME_STATE.nations[nationId];
     const color = nation ? nation.color : '#A8A898';
+    const [origC, occC] = _regionOccupationColors(selectedRegionId);
+    const intelLevel = (typeof getIntelLevel === 'function') ? getIntelLevel(selectedRegionId) : 2;
     regionLayers[selectedRegionId].setStyle(
-      buildPolygonStyle(color, nationId === GAME_STATE.player_nation, false)
+      buildPolygonStyle(color, nationId === GAME_STATE.player_nation, false, origC, occC, intelLevel)
     );
   }
   selectedRegionId = null;
@@ -2029,6 +2342,9 @@ function refreshRegionStyles() {
   // интервал.
   let _hadMissingRenderer = false;
 
+  // Шаг 48: инвалидируем кэш разведки (новый ход / смена владельцев)
+  try { invalidateFogIntelCache(); } catch (_) {}
+
   for (const [regionId, layer] of Object.entries(regionLayers)) {
     const mapData = MAP_REGIONS[regionId];
     // Не-игровые регионы не меняют стиль
@@ -2050,7 +2366,8 @@ function refreshRegionStyles() {
     const isPlayer = (nationId === GAME_STATE.player_nation);
     const isSelected = (regionId === selectedRegionId);
     const [origC, occC] = _regionOccupationColors(regionId);
-    layer.setStyle(buildPolygonStyle(color, isPlayer, isSelected, origC, occC));
+    const intelLevel = getIntelLevel(regionId);
+    layer.setStyle(buildPolygonStyle(color, isPlayer, isSelected, origC, occC, intelLevel));
 
     if (layer.getTooltip && layer.getTooltip()) {
       layer.setTooltipContent(buildTooltipContent(regionId, mapData, nationId));
@@ -2065,6 +2382,10 @@ function refreshRegionStyles() {
       if (leafletMap) refreshRegionStyles();
     }, 120);
   }
+
+  // Шаг 48: обновляем слой тумана войны (SVG хэтчинг для intel=0)
+  try { refreshFogOverlay(); }
+  catch (e) { console.warn('[Шаг 48] refreshFogOverlay', e); }
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -2313,7 +2634,8 @@ function _restorePoliticalStyle(regionId) {
   const isPlayer     = (nationId === GAME_STATE.player_nation);
   const isSelected   = (selectedRegionId === regionId);
   const [origC, occC] = _regionOccupationColors(regionId);
-  layer.setStyle(buildPolygonStyle(color, isPlayer, isSelected, origC, occC));
+  const intelLevel = (typeof getIntelLevel === 'function') ? getIntelLevel(regionId) : 2;
+  layer.setStyle(buildPolygonStyle(color, isPlayer, isSelected, origC, occC, intelLevel));
 }
 
 /**

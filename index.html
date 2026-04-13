@@ -811,6 +811,32 @@
     .rt-fort     { font-size: 10px; color: #ff8a65; margin-top: 2px; }
     .rt-blocked  { font-size: 10px; color: #f44336; margin-top: 3px; font-weight: 600; }
     .rt-occupied { font-size: 10px; margin-top: 3px; font-weight: 600; }
+    .rt-garr     { font-size: 10px; color: #c39454; margin-top: 2px; }
+    /* Шаг 48 — индикатор разведданных в тултипе */
+    .rt-intel    { font-size: 9px; margin-top: 4px; padding-top: 3px; border-top: 1px dashed rgba(107,79,26,0.5); color: #bfa878; font-style: italic; }
+    .rt-intel--0 { color: #7a6a48; }
+    .rt-intel--1 { color: #c9a566; }
+    .rt-intel--2 { color: #8ec07c; }
+
+    /* Шаг 48 — индикатор разведки в панели региона */
+    .ri-intel {
+      display: block;
+      margin: 6px 10px 8px;
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 3px;
+      border: 1px solid rgba(107,79,26,0.5);
+      background: rgba(25,20,12,0.5);
+      color: #c9a566;
+      font-family: 'Georgia', serif;
+    }
+    .ri-intel--0 { color: #a08868; border-color: rgba(80,60,30,0.6); background: rgba(30,22,12,0.6); }
+    .ri-intel--1 { color: #d4a853; }
+    .ri-intel--2 { color: #8ec07c; border-color: rgba(80,120,60,0.5); }
+    .ri-intel-hint { color: #8a7553; font-style: italic; margin-left: 4px; }
+    .ri-stat--hidden { opacity: 0.55; filter: saturate(0.4); }
+    .ri-stat--blurred .ri-key-num { filter: blur(0px); letter-spacing: 0.04em; }
+    .ri-stat--blurred { opacity: 0.8; }
 
     /* Подписи наций рендерятся через SVG overlay в map.js (Imperator Rome стиль).
        DOM-маркеры отключены: весь рендеринг через <svg> поверх карты. */
