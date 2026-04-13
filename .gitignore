@@ -2,6 +2,11 @@ node_modules/
 package-lock.json
 data/backups/
 
+# Тяжёлые ассеты (JPG) — скачиваются через assets/download.sh, не хранятся в git
+assets/portraits/**/*.jpg
+assets/textures/*.jpg
+assets/backgrounds/*.jpg
+
 # Локальные AI модели (большие файлы, не коммитить)
 models/
 *.gguf
