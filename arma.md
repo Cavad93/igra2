@@ -4338,3 +4338,267 @@ const CULTURE_GROUPS = {
 
 ---
 
+## БЛОК AD — Иконки строительства на карте (Шаг 65)
+
+---
+
+### Шаг 65 — Маркеры строительства: визуальный индикатор активных проектов на регионе
+
+**Цель:** показывать прямо на карте, что в регионе идёт строительство. Маленькая иконка с прогресс-баром появляется в центре региона пока проект активен. Это устраняет проблему «действия не видно на карте».
+
+**Что сделать:**
+
+1. Создать SVG-иконку строительства `assets/icons/construction.svg`:
+   ```svg
+   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round">
+     <!-- Молот -->
+     <rect x="2" y="14" width="8" height="4" rx="1"/>
+     <line x1="6" y1="14" x2="13" y2="7"/>
+     <rect x="11" y="4" width="6" height="4" rx="1"
+           transform="rotate(45 14 6)"/>
+     <!-- Уголки строит. площадки -->
+     <polyline points="18,18 22,18 22,22"/>
+     <polyline points="18,2  22,2  22,6"/>
+   </svg>
+   ```
+
+2. Функция `addConstructionMarker(regionId, projectName, progress, total)`:
+   ```js
+   // js/construction_markers.js
+   const constructionMarkers = {};   // regionId → L.marker
+
+   export function addConstructionMarker(regionId, projectName, progress, total) {
+     removeConstructionMarker(regionId);   // убрать старый если был
+
+     const pct = Math.round((progress / total) * 100);
+     const html = `
+       <div class="constr-marker" title="${projectName}">
+         <img src="assets/icons/construction.svg"
+              class="constr-marker__icon" width="14" height="14">
+         <div class="constr-marker__bar">
+           <div class="constr-marker__fill" style="width:${pct}%"></div>
+         </div>
+       </div>
+     `;
+
+     const divIcon = L.divIcon({
+       className: '',
+       html,
+       iconSize:   [36, 24],
+       iconAnchor: [18, 12],
+     });
+
+     const [lat, lng] = getRegionCenter(regionId);
+     // Сместить чуть вниз-вправо чтобы не перекрывать название региона
+     const marker = L.marker([lat - 0.3, lng + 0.5], { icon: divIcon, zIndexOffset: 50 });
+     marker.addTo(leafletMap);
+     constructionMarkers[regionId] = marker;
+   }
+
+   export function removeConstructionMarker(regionId) {
+     constructionMarkers[regionId]?.remove();
+     delete constructionMarkers[regionId];
+   }
+
+   export function updateConstructionMarker(regionId, progress, total) {
+     const marker = constructionMarkers[regionId];
+     if (!marker) return;
+     const pct = Math.round((progress / total) * 100);
+     marker.getElement()?.querySelector('.constr-marker__fill')
+           ?.style.setProperty('width', `${pct}%`);
+   }
+   ```
+   CSS:
+   ```css
+   .constr-marker {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     gap: 2px;
+     background: rgba(10,8,4,0.8);
+     border: 1px solid rgba(200,160,60,0.5);
+     border-radius: 3px;
+     padding: 2px 4px;
+   }
+   .constr-marker__icon {
+     filter: invert(1) sepia(1) saturate(2) hue-rotate(5deg);
+     opacity: 0.9;
+   }
+   .constr-marker__bar {
+     width: 28px; height: 3px;
+     background: rgba(255,255,255,0.12);
+     border-radius: 2px;
+     overflow: hidden;
+   }
+   .constr-marker__fill {
+     height: 100%;
+     background: rgba(200,160,60,0.8);
+     border-radius: 2px;
+     transition: width 0.4s ease;
+   }
+   ```
+
+3. Вызывать маркеры строительства при загрузке игры:
+   ```js
+   function refreshConstructionMarkers() {
+     // Сначала убрать все старые
+     for (const regionId of Object.keys(constructionMarkers)) {
+       removeConstructionMarker(regionId);
+     }
+     // Добавить для регионов с активным строительством
+     for (const region of gameState.regions) {
+       if (region.buildQueue?.length > 0) {
+         const project = region.buildQueue[0];
+         addConstructionMarker(region.id, project.name,
+                               project.progress, project.total);
+       }
+     }
+   }
+   ```
+
+4. Обновлять прогресс после каждого хода:
+   ```js
+   function onTurnEnd() {
+     // ... остальная логика хода ...
+     for (const region of gameState.regions) {
+       if (region.buildQueue?.length > 0) {
+         const project = region.buildQueue[0];
+         project.progress++;
+         if (project.progress >= project.total) {
+           region.buildQueue.shift();    // проект завершён
+           removeConstructionMarker(region.id);
+           showToast(`Построено: ${project.name} в ${region.name}`, 'success');
+           // Добавить следующий проект из очереди если есть
+           if (region.buildQueue.length > 0) {
+             const next = region.buildQueue[0];
+             addConstructionMarker(region.id, next.name, next.progress, next.total);
+           }
+         } else {
+           updateConstructionMarker(region.id, project.progress, project.total);
+         }
+       }
+     }
+   }
+   ```
+
+**Какие файлы затрагиваются:**
+- `assets/icons/construction.svg` — новый SVG, коммитится в git
+- `js/construction_markers.js` — новый файл
+- `js/game.js` — `onTurnEnd` вызывает `updateConstructionMarker`
+- `ui/styles.css` — `.constr-marker` и дочерние
+
+**Тест Шага 65:**
+- В регионе с активным строительством виден маленький маркер с молотом.
+- Прогресс-бар заполняется с каждым ходом.
+- После завершения строительства маркер исчезает, тост появляется.
+- При перезагрузке маркеры строительства восстанавливаются.
+- Маркер не мешает кликать на регион (не перехватывает события).
+
+---
+
+## БЛОК AE — Торговые пути на карте (Шаг 66)
+
+---
+
+### Шаг 66 — Визуализация торговых путей: анимированные линии между регионами
+
+**Цель:** отображать активные торговые связи как тонкие пунктирные линии между регионами. Линии анимированы (бегущий пунктир показывает направление торговли). При клике на линию открывается информация о торговом договоре.
+
+**Что сделать:**
+
+1. Нарисовать торговый путь как `L.polyline` с кастомным SVG-паттерном:
+   ```js
+   // js/trade_routes.js
+   const tradeLines = {};   // routeId → { line, decorator }
+
+   export function addTradeRoute(routeId, fromRegionId, toRegionId, goodsLabel, income) {
+     const from = getRegionCenter(fromRegionId);
+     const to   = getRegionCenter(toRegionId);
+
+     const line = L.polyline([from, to], {
+       color:     'rgba(200,170,90,0.5)',
+       weight:    2,
+       dashArray: '6 4',
+       dashOffset: '0',
+       className: 'trade-route-line',
+     });
+     line.addTo(leafletMap);
+
+     // Подсказка при наведении
+     line.bindTooltip(`${goodsLabel} · +${income} зол./ход`, {
+       sticky: true,
+       className: 'trade-tooltip',
+     });
+
+     tradeLines[routeId] = line;
+   }
+
+   export function removeTradeRoute(routeId) {
+     tradeLines[routeId]?.remove();
+     delete tradeLines[routeId];
+   }
+   ```
+
+2. CSS-анимация бегущего пунктира:
+   ```css
+   .trade-route-line {
+     animation: tradeFlow 1.8s linear infinite;
+   }
+   @keyframes tradeFlow {
+     to { stroke-dashoffset: -20; }
+   }
+
+   .trade-tooltip {
+     background: rgba(10,8,4,0.9);
+     border: 1px solid rgba(200,170,90,0.4);
+     color: #f0e8c8;
+     font-size: 12px;
+     padding: 4px 8px;
+     border-radius: 4px;
+   }
+   ```
+   Leaflet использует SVG для полилиний — `stroke-dashoffset` анимируется напрямую через CSS класс.
+
+3. При загрузке игры отрисовать все активные торговые пути:
+   ```js
+   function renderAllTradeRoutes() {
+     for (const routeId of Object.keys(tradeLines)) {
+       removeTradeRoute(routeId);
+     }
+     for (const route of gameState.tradeRoutes ?? []) {
+       if (route.active) {
+         addTradeRoute(route.id, route.fromRegion, route.toRegion,
+                       route.goods, route.income);
+       }
+     }
+   }
+   ```
+
+4. Переключатель слоя в интерфейсе — кнопка «Торговля» в панели режимов карты (подключается к системе из Шага 34):
+   ```js
+   registerMapMode('trade', {
+     label: 'Торговля',
+     icon:  'assets/icons/coin.svg',
+     onEnable:  renderAllTradeRoutes,
+     onDisable: () => {
+       for (const routeId of Object.keys(tradeLines)) removeTradeRoute(routeId);
+     },
+   });
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/trade_routes.js` — новый файл
+- `js/game.js` — вызов `renderAllTradeRoutes` при старте и после хода
+- `ui/styles.css` — `.trade-route-line`, анимация `tradeFlow`, `.trade-tooltip`
+- `js/map_modes.js` — регистрация режима `'trade'`
+
+**Тест Шага 66:**
+- В режиме «Торговля» между торгующими регионами видны жёлто-золотые пунктиры.
+- Пунктир анимирован — бежит в сторону получателя.
+- Наведение мышью на линию показывает тултип с товаром и доходом.
+- Выключение режима «Торговля» убирает все линии с карты.
+- При отмене торгового договора линия исчезает после следующего хода.
+
+---
+
