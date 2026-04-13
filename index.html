@@ -676,6 +676,47 @@
     .toast.danger   { border-left-color: #f44336; background: rgba(30, 10, 8, 0.97); }
     .toast.success  { border-left-color: #4caf50; }
 
+    /* ══════════════════════════════════════════════════
+       Шаг 35 — Визуальный "пульс" для критических событий
+       ══════════════════════════════════════════════════ */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.1s;
+    }
+    body.pulse-war::after {
+      background: radial-gradient(ellipse at center,
+        transparent 40%,
+        rgba(200, 30, 30, 0.18) 100%);
+      animation: pulse-edge 2s ease-out forwards;
+    }
+    body.pulse-gold::after {
+      background: radial-gradient(ellipse at center,
+        transparent 40%,
+        rgba(212, 168, 83, 0.2) 100%);
+      animation: pulse-edge 1.5s ease-out forwards;
+    }
+    body.pulse-warning::after {
+      background: radial-gradient(ellipse at center,
+        transparent 40%,
+        rgba(255, 200, 60, 0.18) 100%);
+      animation: pulse-edge 1.5s ease-out forwards;
+    }
+    body.pulse-dark::after {
+      background: radial-gradient(ellipse at center,
+        transparent 40%,
+        rgba(20, 20, 20, 0.35) 100%);
+      animation: pulse-edge 2s ease-out forwards;
+    }
+    @keyframes pulse-edge {
+      0%   { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
     /* Скроллбар webkit */
     #left-panel::-webkit-scrollbar,
     #left-panel-content::-webkit-scrollbar,
@@ -8731,6 +8772,7 @@
 
   <script src="ui/log.js"></script>
   <script src="ui/toast.js"></script>
+  <script src="ui/pulse.js"></script>
   <script src="ui/panel_resize.js"></script>
   <script src="engine/pops.js"></script>
   <script src="engine/land_capacity.js"></script>
