@@ -933,9 +933,127 @@
     }
     #region-info.hidden { display: none; }
 
-    /* Шапка и табы — не скроллятся */
+    /* Шапка, ключевые цифры, табы и футер — не скроллятся */
     .region-info-header { flex-shrink: 0; }
+    .ri-key-stats       { flex-shrink: 0; }
     .ri-tabs            { flex-shrink: 0; }
+    .ri-footer          { flex-shrink: 0; }
+
+    /* Анимация появления панели региона */
+    #region-info.ri-entering {
+      animation: ri-slide-in 0.2s ease-out forwards;
+    }
+    @keyframes ri-slide-in {
+      from { opacity: 0; transform: translateX(20px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Цветная полоса нации на шапке */
+    .ri-nation-stripe {
+      height: 3px;
+      width: 100%;
+      border-radius: 0;
+    }
+
+    /* Блок ключевых цифр */
+    .ri-key-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+      padding: 10px 6px 10px;
+      background: rgba(20, 12, 4, 0.85);
+      border-bottom: 1px solid var(--border-gold);
+    }
+    .ri-key-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 4px;
+      border-right: 1px solid rgba(107, 79, 26, 0.25);
+    }
+    .ri-key-stat:last-child { border-right: none; }
+    .ri-key-num {
+      font-size: 18px;
+      font-family: 'Cinzel', serif;
+      color: var(--text-gold);
+      font-weight: bold;
+      line-height: 1.1;
+    }
+    .ri-key-lbl {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 3px;
+      white-space: nowrap;
+    }
+
+    /* Прогресс-бары в панели региона */
+    .ri-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0;
+      font-size: 11px;
+    }
+    .ri-bar-lbl {
+      flex-shrink: 0;
+      width: 92px;
+      color: var(--text-light);
+    }
+    .ri-bar-track {
+      flex: 1;
+      height: 8px;
+      background: rgba(20, 12, 4, 0.8);
+      border: 1px solid rgba(107, 79, 26, 0.4);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .ri-bar-fill {
+      height: 100%;
+      transition: width 0.25s ease-out;
+    }
+    .ri-bar-val {
+      flex-shrink: 0;
+      width: 36px;
+      text-align: right;
+      color: var(--text-dim);
+      font-family: sans-serif;
+      font-weight: bold;
+    }
+
+    /* Футер с кнопками действий */
+    .ri-footer {
+      display: flex;
+      gap: 6px;
+      padding: 8px 10px;
+      background: rgba(20, 12, 4, 0.9);
+      border-top: 1px solid var(--border-gold);
+    }
+    .ri-action-btn {
+      flex: 1;
+      padding: 7px 8px;
+      background: rgba(40, 28, 8, 0.6);
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+      color: var(--text-light);
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .ri-action-btn:hover {
+      background: rgba(107, 79, 26, 0.35);
+      color: var(--text-gold);
+    }
+    .ri-action-btn.primary {
+      background: linear-gradient(135deg, rgba(107, 79, 26, 0.55), rgba(40, 28, 8, 0.8));
+      color: var(--text-gold);
+      font-weight: bold;
+    }
+    .ri-action-btn.primary:hover {
+      background: linear-gradient(135deg, rgba(127, 99, 46, 0.75), rgba(60, 40, 12, 0.9));
+    }
 
     /* Контент вкладок — скроллится */
     #region-tab-info,
@@ -957,11 +1075,17 @@
 
     .region-info-header {
       display: flex;
-      align-items: center;
-      padding: 8px 10px;
-      gap: 8px;
+      flex-direction: column;
+      padding: 0;
+      gap: 0;
       background: rgba(40,25,8,0.8);
-      border-bottom: 1px solid var(--border-gold);
+      border-bottom: 2px solid var(--border-gold);
+    }
+    .region-info-header-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px 10px;
     }
     .region-info-name {
       font-size: 14px;

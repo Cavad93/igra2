@@ -1040,11 +1040,76 @@ function showRegionInfo(regionId) {
         </div>`;
     }
 
+    // ── Ключевые цифры: население, оценка дохода, гарнизон ──
+    const popNum   = Math.round(gameData.population || 0);
+    const fert     = Math.max(0, Math.min(1, gameData.fertility || 0));
+    const garrison = Math.round(gameData.garrison || 0);
+    // Простая оценка дохода региона: pop × fertility × базовая ставка
+    const nationTaxRate = (nation?.economy?.tax_rate ?? 0.10);
+    const goldPerTurn   = Math.round(popNum * fert * nationTaxRate * 0.05);
+    const goldSign      = goldPerTurn >= 0 ? '+' : '';
+
+    // Цвет прогресс-бара плодородия
+    const fertPct   = Math.round(fert * 100);
+    const fertColor = fertPct >= 70 ? '#4caf50'
+                    : fertPct >= 40 ? '#c9a227'
+                    : '#b35a1f';
+
+    // Стабильность/happiness бары (если есть)
+    let stabilityHtml = '';
+    const stability = gameData.stability;
+    if (typeof stability === 'number') {
+      const stabPct   = Math.max(0, Math.min(100, Math.round(stability)));
+      const stabColor = stabPct >= 70 ? '#4caf50' : stabPct >= 40 ? '#c9a227' : '#b35a1f';
+      stabilityHtml = `
+        <div class="ri-bar-row">
+          <span class="ri-bar-lbl">🛡 Стабильность</span>
+          <div class="ri-bar-track">
+            <div class="ri-bar-fill" style="width:${stabPct}%; background:${stabColor}"></div>
+          </div>
+          <span class="ri-bar-val">${stabPct}%</span>
+        </div>`;
+    }
+
+    // Кнопки футера (только для регионов игрока)
+    let footerHtml = '';
+    if (nationId === GAME_STATE.player_nation) {
+      const hasArmy = (GAME_STATE.armies ?? []).some(a =>
+        a.position === regionId && a.nation === GAME_STATE.player_nation && a.state !== 'disbanded'
+      );
+      const selectArmyBtn = hasArmy
+        ? `<button class="ri-action-btn" onclick="selectArmy((GAME_STATE.armies ?? []).find(a => a.position === '${regionId}' && a.nation === GAME_STATE.player_nation && a.state !== 'disbanded')?.id)">🛡 Армия</button>`
+        : '';
+      footerHtml = `
+        <div class="ri-footer">
+          <button class="ri-action-btn primary" onclick="showAssembleArmyDialog('${regionId}');closeRegionInfo();">⚔ Собрать армию</button>
+          <button class="ri-action-btn" onclick="switchRegionTab('build')">🏗 Построить</button>
+          ${selectArmyBtn}
+        </div>`;
+    }
+
     panel.innerHTML = `
-      <div class="region-info-header" style="border-left: 4px solid ${nationColor}">
-        <span class="region-info-name">${mapData.name}</span>
-        <span class="region-info-nation" style="color:${nationColor}">${nationName}</span>
-        <button class="region-info-close" onclick="closeRegionInfo()">✕</button>
+      <div class="region-info-header" style="background: linear-gradient(135deg, ${nationColor}33 0%, rgba(13,10,5,0.0) 60%); border-bottom-color: ${nationColor}66;">
+        <div class="ri-nation-stripe" style="background: ${nationColor}"></div>
+        <div class="region-info-header-row">
+          <span class="region-info-name">${mapData.name}</span>
+          <span class="region-info-nation" style="color:${nationColor}">${nationName}</span>
+          <button class="region-info-close" onclick="closeRegionInfo()">✕</button>
+        </div>
+      </div>
+      <div class="ri-key-stats">
+        <div class="ri-key-stat">
+          <span class="ri-key-num">${popNum.toLocaleString()}</span>
+          <span class="ri-key-lbl">👥 Население</span>
+        </div>
+        <div class="ri-key-stat">
+          <span class="ri-key-num">${goldSign}${goldPerTurn.toLocaleString()}</span>
+          <span class="ri-key-lbl">💰 /ход</span>
+        </div>
+        <div class="ri-key-stat">
+          <span class="ri-key-num">${garrison.toLocaleString()}</span>
+          <span class="ri-key-lbl">⚔ Гарнизон</span>
+        </div>
       </div>
       <div class="ri-tabs">
         <button class="ri-tab${curTab === 'info'  ? ' ri-tab--active' : ''}" data-tab="info"
@@ -1056,10 +1121,15 @@ function showRegionInfo(regionId) {
       </div>
       <div id="region-tab-info" class="region-info-body${curTab !== 'info' ? ' hidden' : ''}">
         <div class="region-info-desc">${mapData.description}</div>
+        <div class="ri-bar-row">
+          <span class="ri-bar-lbl">🌿 Плодородие</span>
+          <div class="ri-bar-track">
+            <div class="ri-bar-fill" style="width:${fertPct}%; background:${fertColor}"></div>
+          </div>
+          <span class="ri-bar-val">${fertPct}%</span>
+        </div>
+        ${stabilityHtml}
         <div class="region-stats">
-          <div class="region-stat">👥 Нас.: <strong>${(gameData.population || 0).toLocaleString()}</strong></div>
-          <div class="region-stat">🌿 Плодородие: <strong>${Math.round((gameData.fertility || 0) * 100)}%</strong></div>
-          <div class="region-stat">⚔️ Гарнизон: <strong>${(gameData.garrison || 0).toLocaleString()}</strong></div>
           <div class="region-stat">🏔 Тип: <strong>${getTerrainName(gameData.terrain)}</strong></div>
         </div>
         ${(() => {
@@ -1072,13 +1142,6 @@ function showRegionInfo(regionId) {
         ${socialStructureHtml}
         ${productionLines ? `<div class="region-production"><div class="section-label">Производство:</div>${productionLines}</div>` : ''}
         ${buildings ? `<div class="region-buildings"><div class="section-label">Постройки:</div>${buildings}</div>` : ''}
-        ${nationId === GAME_STATE.player_nation ? `
-          <div class="region-army-actions" style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
-            <button class="army-btn" onclick="showAssembleArmyDialog('${regionId}');closeRegionInfo();">⚔️ Собрать армию</button>
-            ${(GAME_STATE.armies ?? []).some(a => a.position === regionId && a.nation === GAME_STATE.player_nation && a.state !== 'disbanded')
-              ? `<button class="army-btn" onclick="selectArmy((GAME_STATE.armies ?? []).find(a => a.position === '${regionId}' && a.nation === GAME_STATE.player_nation && a.state !== 'disbanded')?.id)">🛡 Выбрать армию</button>`
-              : ''}
-          </div>` : ''}
       </div>
       <div id="region-tab-build" class="region-tab-build${curTab !== 'build' ? ' hidden' : ''}">
         ${buildTabHtml}
@@ -1086,13 +1149,17 @@ function showRegionInfo(regionId) {
       ${!isPlayer ? `<div id="region-tab-diplomacy" class="region-tab-diplomacy${curTab !== 'diplomacy' ? ' hidden' : ''}">
         ${diplTabHtml}
       </div>` : ''}
+      ${footerHtml}
     `;
   } catch (e) {
     console.error('[showRegionInfo] Error:', e);
     panel.innerHTML = `
       <div class="region-info-header">
-        <span class="region-info-name">${mapData.name}</span>
-        <button class="region-info-close" onclick="closeRegionInfo()">✕</button>
+        <div class="ri-nation-stripe" style="background: #A8A898"></div>
+        <div class="region-info-header-row">
+          <span class="region-info-name">${mapData.name}</span>
+          <button class="region-info-close" onclick="closeRegionInfo()">✕</button>
+        </div>
       </div>
       <div class="region-info-body">
         <div class="region-stat">👥 Нас.: <strong>${(gameData.population || 0).toLocaleString()}</strong></div>
@@ -1102,6 +1169,11 @@ function showRegionInfo(regionId) {
   }
 
   panel.classList.remove('hidden');
+  // Анимация slide-in при появлении
+  panel.classList.remove('ri-entering');
+  // force reflow, чтобы анимация перезапускалась на повторных кликах
+  void panel.offsetWidth;
+  panel.classList.add('ri-entering');
 }
 
 function closeRegionInfo() {
