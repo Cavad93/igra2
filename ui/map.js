@@ -788,6 +788,10 @@ function onRegionClick(regionId) {
   // Режим выбора цели движения армии — перехватываем клик
   if (typeof handleRegionClickForArmy === 'function' && handleRegionClickForArmy(regionId)) return;
 
+  // Шаг 53 (arma.md): режим сравнения регионов. Если первый регион уже
+  // закреплён (pinnedRegionId) — открываем панель сравнения вместо popup.
+  if (typeof handleRegionClickForCompare === 'function' && handleRegionClickForCompare(regionId)) return;
+
   // Снимаем выделение с предыдущего
   if (selectedRegionId && regionLayers[selectedRegionId]) {
     const prev = GAME_STATE.regions[selectedRegionId];
@@ -1414,8 +1418,11 @@ function showRegionInfo(regionId) {
         </div>`;
     }
 
-    // Кнопки футера (только для регионов игрока)
+    // Кнопки футера
     let footerHtml = '';
+    // Шаг 53 (arma.md): кнопка "⚖ Сравнить" — доступна для всех регионов
+    const isPinned = (typeof getPinnedRegionId === 'function') && getPinnedRegionId() === regionId;
+    const compareBtn = `<button class="ri-action-btn ri-compare-btn${isPinned ? ' ri-compare-active' : ''}" data-region-id="${regionId}" onclick="pinRegionForCompare('${regionId}')">${isPinned ? '⚖ Сравнивается...' : '⚖ Сравнить'}</button>`;
     if (nationId === GAME_STATE.player_nation) {
       const hasArmy = (GAME_STATE.armies ?? []).some(a =>
         a.position === regionId && a.nation === GAME_STATE.player_nation && a.state !== 'disbanded'
@@ -1428,6 +1435,12 @@ function showRegionInfo(regionId) {
           <button class="ri-action-btn primary" onclick="showAssembleArmyDialog('${regionId}');closeRegionInfo();">⚔ Собрать армию</button>
           <button class="ri-action-btn" onclick="switchRegionTab('build')">🏗 Построить</button>
           ${selectArmyBtn}
+          ${compareBtn}
+        </div>`;
+    } else {
+      footerHtml = `
+        <div class="ri-footer">
+          ${compareBtn}
         </div>`;
     }
 

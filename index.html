@@ -723,6 +723,126 @@
     }
 
     /* ══════════════════════════════════════════════════
+       Шаг 53 (arma.md) — Режим сравнения регионов
+       ══════════════════════════════════════════════════ */
+    #compare-panel {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 580px;
+      z-index: 8600;
+      background: rgba(13, 10, 5, 0.97);
+      border: 1px solid var(--border-gold);
+      border-radius: 6px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7),
+                  0 0 0 1px rgba(212, 168, 83, 0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: var(--text-light);
+      font-size: 13px;
+      padding: 14px 16px 12px;
+    }
+    #compare-panel.hidden { display: none; }
+    #compare-panel .cp-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid rgba(107, 79, 26, 0.35);
+      font-weight: 600;
+      color: var(--border-gold);
+    }
+    #compare-panel .cp-title { flex: 1 1 auto; }
+    #compare-panel .cp-reset-btn,
+    #compare-panel .cp-close-btn {
+      padding: 4px 10px;
+      background: rgba(107, 79, 26, 0.3);
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+      color: var(--text-light);
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #compare-panel .cp-reset-btn:hover,
+    #compare-panel .cp-close-btn:hover {
+      background: rgba(212, 168, 83, 0.25);
+    }
+    #compare-panel .cp-body {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+    }
+    #compare-panel .cp-col {
+      flex: 1 1 50%;
+      width: 50%;
+      padding: 0 10px;
+      min-width: 0;
+    }
+    #compare-panel .cp-divider {
+      width: 1px;
+      background: rgba(107, 79, 26, 0.35);
+      margin: 0 4px;
+    }
+    #compare-panel .cp-col-header {
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(107, 79, 26, 0.35);
+    }
+    #compare-panel .cp-col-name {
+      font-weight: 600;
+      color: var(--text-light);
+      font-size: 14px;
+    }
+    #compare-panel .cp-col-nation {
+      font-size: 11px;
+      opacity: 0.85;
+    }
+    #compare-panel .cp-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 6px;
+      border-bottom: 1px solid rgba(107, 79, 26, 0.12);
+      font-size: 12px;
+      transition: background 0.15s;
+    }
+    #compare-panel .cp-row:last-child { border-bottom: none; }
+    #compare-panel .cp-row-lbl { color: var(--text-dim); }
+    #compare-panel .cp-row-val {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      color: var(--text-light);
+    }
+    #compare-panel .cp-row.cp-winner {
+      background: rgba(76, 175, 80, 0.12);
+    }
+    #compare-panel .cp-row.cp-winner .cp-row-val {
+      color: #4caf50;
+    }
+    #compare-panel .cp-row.cp-loser .cp-row-val {
+      color: #7a6a55;
+      opacity: 0.75;
+    }
+    #compare-panel .cp-arrow {
+      display: inline-block;
+      min-width: 10px;
+      text-align: center;
+      margin-left: 4px;
+    }
+    /* Кнопка "⚖ Сравнить" в popup региона */
+    .ri-action-btn.ri-compare-btn.ri-compare-active {
+      animation: ri-compare-pulse 1.1s ease-in-out infinite;
+      border-color: #4caf50;
+      color: #4caf50;
+    }
+    @keyframes ri-compare-pulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.45; }
+    }
+
+    /* ══════════════════════════════════════════════════
        Шаг 27 — Toast-уведомления
        ══════════════════════════════════════════════════ */
     #toast-container {
@@ -9129,6 +9249,20 @@
   <!-- Шаг 27: контейнер для toast-уведомлений -->
   <div id="toast-container"></div>
 
+  <!-- Шаг 53 (arma.md): панель сравнения двух регионов -->
+  <div id="compare-panel" class="hidden">
+    <div class="cp-header">
+      <span class="cp-title">⚖ Сравнение регионов</span>
+      <button type="button" class="cp-reset-btn" onclick="closeCompare()">Сбросить</button>
+      <button type="button" class="cp-close-btn" onclick="closeCompare()">✕</button>
+    </div>
+    <div class="cp-body">
+      <div class="cp-col" id="cp-left"></div>
+      <div class="cp-divider"></div>
+      <div class="cp-col" id="cp-right"></div>
+    </div>
+  </div>
+
   <!-- Шаг 52: визуальная карточка итога хода -->
   <div id="turn-summary-card" class="hidden">
     <div class="tsc-header">
@@ -9767,6 +9901,7 @@
   <script src="ui/map_event_feed.js"></script>
   <script src="ui/map_ai_indicators.js"></script>
   <script src="ui/turn_summary_card.js"></script>
+  <script src="ui/region_compare.js"></script>
   <script src="ui/region_build_tab.js"></script>
   <script src="ui/diplomacy_tab.js"></script>
   <script src="ui/diplo_graph.js"></script>

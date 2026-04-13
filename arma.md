@@ -2383,6 +2383,8 @@ textures/
 
 ### Шаг 53 — Режим сравнения регионов
 
+> **Статус:** ✅ **ВЫПОЛНЕНО** — файл `ui/region_compare.js` (`pinRegionForCompare` / `renderComparePanel` / `closeCompare` / `handleRegionClickForCompare` / `getPinnedRegionId`), DOM `#compare-panel` + CSS (`.cp-*`, `@keyframes ri-compare-pulse`) в `index.html`, интеграция в `ui/map.js` (кнопка `.ri-compare-btn` в `.ri-footer` + перехват клика в `onRegionClick` после army-handler и до `showRegionInfo`), тесты `tests/test_arma_stage53.mjs` (71 passed). Не реализовывать повторно.
+
 **Цель:** быстро сравнить два региона рядом — без переключения между ними вручную.
 
 **Что сделать:**
