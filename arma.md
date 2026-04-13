@@ -6743,3 +6743,378 @@ const CULTURE_GROUPS = {
 
 ---
 
+## БЛОК AT — Иконки-вкладки боковых панелей (Шаг 81)
+
+---
+
+### Шаг 81 — Иконки-вкладки: замена текстовых кнопок на SVG-иконки с тултипами
+
+**Цель:** заменить текстовые кнопки вкладок боковой панели на компактные иконки (24×24 px). При наведении — тултип с именем вкладки и горячей клавишей. Активная вкладка подсвечена золотым. Экономит место и выглядит профессионально.
+
+**Что сделать:**
+
+1. Конфигурация вкладок — `PANEL_TABS` в `ui/tabs.js`:
+   ```js
+   export const PANEL_TABS = [
+     {
+       id:     'economy',
+       label:  'Экономика',
+       icon:   'assets/icons/coin.svg',
+       hotkey: 'e',
+     },
+     {
+       id:     'military',
+       label:  'Армия',
+       icon:   'assets/icons/generic_sword.svg',
+       hotkey: 'm',
+     },
+     {
+       id:     'court',
+       label:  'Двор',
+       icon:   'assets/icons/scroll.svg',
+       hotkey: 'c',
+     },
+     {
+       id:     'diplomacy',
+       label:  'Дипломатия',
+       icon:   'assets/icons/owl_athena.svg',
+       hotkey: 'd',
+     },
+     {
+       id:     'log',
+       label:  'Журнал',
+       icon:   'assets/icons/star.svg',
+       hotkey: 'l',
+     },
+   ];
+   ```
+
+2. Функция `renderTabBar(containerId, tabs, onSwitch)`:
+   ```js
+   import { getKey } from '../js/hotkeys.js';
+
+   export function renderTabBar(containerId, tabs, onSwitch) {
+     const container = document.getElementById(containerId);
+     container.innerHTML = '';
+     container.className = 'tab-bar';
+
+     for (const tab of tabs) {
+       const btn = document.createElement('button');
+       btn.className  = 'tab-bar__btn';
+       btn.dataset.tab = tab.id;
+       btn.title      = `${tab.label} [${getKey(tab.hotkey) ?? tab.hotkey}]`;
+
+       const img = document.createElement('img');
+       img.src    = tab.icon;
+       img.width  = 20;
+       img.height = 20;
+       img.alt    = tab.label;
+       btn.appendChild(img);
+
+       btn.addEventListener('click', () => {
+         setActiveTab(containerId, tab.id);
+         onSwitch(tab.id);
+       });
+
+       container.appendChild(btn);
+     }
+   }
+
+   export function setActiveTab(containerId, tabId) {
+     const container = document.getElementById(containerId);
+     container.querySelectorAll('.tab-bar__btn').forEach(btn => {
+       btn.classList.toggle('tab-bar__btn--active', btn.dataset.tab === tabId);
+     });
+   }
+   ```
+
+3. CSS иконок-вкладок:
+   ```css
+   .tab-bar {
+     display: flex;
+     flex-direction: column;   /* вертикальная полоса слева */
+     gap: 4px;
+     padding: 8px 4px;
+     background: rgba(0,0,0,0.3);
+     border-right: 1px solid rgba(200,170,90,0.12);
+   }
+
+   .tab-bar__btn {
+     width: 36px;
+     height: 36px;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     background: none;
+     border: none;
+     border-radius: 6px;
+     cursor: pointer;
+     transition: background 0.15s;
+   }
+   .tab-bar__btn:hover {
+     background: rgba(200,170,90,0.12);
+   }
+   .tab-bar__btn--active {
+     background: rgba(200,170,90,0.18);
+     box-shadow: inset 0 0 0 1px rgba(200,170,90,0.4);
+   }
+   .tab-bar__btn img {
+     filter: invert(1);
+     opacity: 0.55;
+     transition: opacity 0.15s;
+   }
+   .tab-bar__btn:hover img,
+   .tab-bar__btn--active img {
+     opacity: 0.9;
+     filter: invert(1) sepia(1) saturate(2) hue-rotate(5deg);  /* золотой тон */
+   }
+   ```
+
+4. Подключить к панели при инициализации:
+   ```js
+   import { renderTabBar, setActiveTab } from './ui/tabs.js';
+   import { PANEL_TABS } from './ui/tabs.js';
+
+   renderTabBar('left-tab-bar', PANEL_TABS, (tabId) => {
+     // Скрыть все панели
+     document.querySelectorAll('.tab-panel').forEach(p => { p.hidden = true; });
+     // Показать нужную
+     document.getElementById(`panel-${tabId}`).hidden = false;
+   });
+
+   // Начальная активная вкладка
+   setActiveTab('left-tab-bar', 'economy');
+   document.getElementById('panel-economy').hidden = false;
+   ```
+
+5. Бейдж уведомлений на иконке вкладки (например, новые события в журнале):
+   ```js
+   export function setTabBadge(containerId, tabId, count) {
+     const container = document.getElementById(containerId);
+     const btn = container.querySelector(`[data-tab="${tabId}"]`);
+     if (!btn) return;
+
+     // Удалить старый бейдж
+     btn.querySelector('.tab-badge')?.remove();
+
+     if (count > 0) {
+       const badge = document.createElement('span');
+       badge.className   = 'tab-badge';
+       badge.textContent = count > 9 ? '9+' : String(count);
+       btn.appendChild(badge);
+     }
+   }
+   ```
+   CSS:
+   ```css
+   .tab-bar__btn { position: relative; }
+   .tab-badge {
+     position: absolute;
+     top: 2px; right: 2px;
+     min-width: 14px; height: 14px;
+     background: rgba(220,60,60,0.9);
+     border-radius: 7px;
+     font-size: 9px;
+     color: #fff;
+     display: flex; align-items: center; justify-content: center;
+     padding: 0 2px;
+     pointer-events: none;
+   }
+   ```
+
+**Какие файлы затрагиваются:**
+- `ui/tabs.js` — новый файл, `renderTabBar`, `setActiveTab`, `setTabBadge`
+- `index.html` — `#left-tab-bar`, контейнеры `.tab-panel`
+- `ui/styles.css` — `.tab-bar`, `.tab-bar__btn`, `.tab-badge`
+- `js/game.js` — вызов `renderTabBar` при инициализации
+
+**Тест Шага 81:**
+- Боковая панель содержит вертикальную колонку иконок без текста.
+- При наведении — тултип с именем вкладки и горячей клавишей.
+- Активная вкладка подсвечена золотым цветом.
+- Бейдж на иконке «Журнал» показывает число непрочитанных событий.
+- Горячая клавиша `e` переключает на вкладку «Экономика».
+
+---
+
+## БЛОК AU — Выдвижной журнал (Шаг 82)
+
+---
+
+### Шаг 82 — Выдвижной лог-ящик: журнал событий поверх карты
+
+**Цель:** журнал событий открывается как выдвижной drawer снизу экрана (не занимает место в боковой панели). Открывается горячей клавишей `L` или кликом по иконке. Поддерживает прокрутку, поиск по тексту, фильтры по типу.
+
+**Что сделать:**
+
+1. HTML drawer в `index.html`:
+   ```html
+   <div id="log-drawer" class="log-drawer" aria-hidden="true">
+     <div class="log-drawer__handle" id="log-drawer-handle">
+       <span>Журнал событий</span>
+       <div class="log-drawer__controls">
+         <input id="log-search" type="search" placeholder="Поиск..." class="log-search">
+         <button id="log-drawer-close" class="log-drawer__close">×</button>
+       </div>
+     </div>
+     <div class="log-drawer__filters">
+       <button class="ld-filter is-active" data-type="all">Все</button>
+       <button class="ld-filter" data-type="war">Война</button>
+       <button class="ld-filter" data-type="diplo">Дипломатия</button>
+       <button class="ld-filter" data-type="eco">Экономика</button>
+       <button class="ld-filter" data-type="char">Персонажи</button>
+     </div>
+     <div class="log-drawer__list" id="log-drawer-list"></div>
+   </div>
+   ```
+
+2. CSS drawer:
+   ```css
+   .log-drawer {
+     position: fixed;
+     left: 0;
+     right: 0;
+     bottom: 28px;   /* выше статус-бара */
+     height: 260px;
+     background: rgba(8,5,2,0.96);
+     border-top: 1px solid rgba(200,170,90,0.25);
+     z-index: 600;
+     transform: translateY(100%);
+     transition: transform 0.3s ease;
+     display: flex;
+     flex-direction: column;
+   }
+   .log-drawer.is-open {
+     transform: translateY(0);
+   }
+
+   .log-drawer__handle {
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+     padding: 6px 14px;
+     border-bottom: 1px solid rgba(200,170,90,0.12);
+     font-size: 13px;
+     font-weight: 600;
+     color: rgba(200,170,90,0.7);
+     flex-shrink: 0;
+   }
+   .log-drawer__controls { display: flex; align-items: center; gap: 8px; }
+   .log-search {
+     background: rgba(255,255,255,0.05);
+     border: 1px solid rgba(200,170,90,0.2);
+     border-radius: 4px;
+     padding: 3px 8px;
+     color: #ddd;
+     font-size: 12px;
+     width: 160px;
+   }
+   .log-drawer__close {
+     background: none; border: none; color: #aaa;
+     cursor: pointer; font-size: 18px;
+   }
+
+   .log-drawer__filters {
+     display: flex;
+     gap: 4px;
+     padding: 5px 14px;
+     border-bottom: 1px solid rgba(200,170,90,0.08);
+     flex-shrink: 0;
+   }
+   .ld-filter {
+     padding: 2px 10px;
+     border-radius: 12px;
+     border: 1px solid rgba(200,170,90,0.2);
+     background: none;
+     color: rgba(255,255,255,0.5);
+     font-size: 11px;
+     cursor: pointer;
+   }
+   .ld-filter.is-active {
+     background: rgba(200,170,90,0.12);
+     color: #f0e8c8;
+     border-color: rgba(200,170,90,0.4);
+   }
+
+   .log-drawer__list {
+     overflow-y: auto;
+     flex: 1;
+     padding: 4px 0;
+   }
+   ```
+
+3. Синхронизировать содержимое с лентой событий (Шаг 68). Оба используют общий массив `events`:
+   ```js
+   // js/log_drawer.js
+   import { events } from './event_feed.js';   // общий массив
+
+   export function toggleLogDrawer() {
+     const drawer = document.getElementById('log-drawer');
+     const isOpen = drawer.classList.toggle('is-open');
+     drawer.setAttribute('aria-hidden', String(!isOpen));
+
+     if (isOpen) {
+       refreshLogDrawer();
+       // Сбросить бейдж на иконке
+       setTabBadge('left-tab-bar', 'log', 0);
+       logBadgeCount = 0;
+     }
+   }
+
+   export function refreshLogDrawer(filter = 'all', search = '') {
+     const list = document.getElementById('log-drawer-list');
+     list.innerHTML = '';
+
+     const filtered = events.filter(ev => {
+       if (filter !== 'all' && ev.type !== filter) return false;
+       if (search && !ev.text.toLowerCase().includes(search.toLowerCase())) return false;
+       return true;
+     });
+
+     for (const ev of filtered) {
+       const item = document.createElement('div');
+       item.className = `ld-item ld-item--${ev.type}`;
+       item.innerHTML = `
+         <span class="ld-item__turn">Ход ${ev.turn}</span>
+         <span class="ld-item__text">${ev.text}</span>
+       `;
+       list.appendChild(item);
+     }
+   }
+   ```
+
+4. Подключить фильтры и поиск:
+   ```js
+   let activeFilter = 'all';
+
+   document.querySelector('.log-drawer__filters').addEventListener('click', e => {
+     if (!e.target.matches('.ld-filter')) return;
+     document.querySelectorAll('.ld-filter').forEach(b => b.classList.remove('is-active'));
+     e.target.classList.add('is-active');
+     activeFilter = e.target.dataset.type;
+     refreshLogDrawer(activeFilter, document.getElementById('log-search').value);
+   });
+
+   document.getElementById('log-search').addEventListener('input', e => {
+     refreshLogDrawer(activeFilter, e.target.value);
+   });
+
+   document.getElementById('log-drawer-close').addEventListener('click', toggleLogDrawer);
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/log_drawer.js` — новый файл, `toggleLogDrawer`, `refreshLogDrawer`
+- `js/event_feed.js` — экспортировать `events` (Шаг 68)
+- `index.html` — `#log-drawer`
+- `ui/styles.css` — `.log-drawer`, `.ld-item`, `.ld-filter`
+- `js/hotkeys.js` — `l` → `toggleLogDrawer`
+
+**Тест Шага 82:**
+- Клавиша `L` открывает и закрывает журнал с анимацией снизу.
+- Журнал показывает все события в обратном хронологическом порядке.
+- Поиск по тексту работает в реальном времени.
+- Фильтр «Война» показывает только военные события.
+- Бейдж на иконке вкладки сбрасывается при открытии журнала.
+
+---
+
