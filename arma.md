@@ -6099,3 +6099,327 @@ const CULTURE_GROUPS = {
 
 ---
 
+## БЛОК AP — Горячие клавиши (Шаг 77)
+
+---
+
+### Шаг 77 — Горячие клавиши: полное управление с клавиатуры
+
+**Цель:** добавить систему горячих клавиш для всех основных действий. Клавиши отображаются в подсказках кнопок. Пользователь может переназначить их в настройках. Реализация — централизованный реестр без хардкода в обработчиках.
+
+**Что сделать:**
+
+1. Реестр горячих клавиш `js/hotkeys.js`:
+   ```js
+   // Дефолтные привязки
+   const DEFAULT_HOTKEYS = {
+     'end-turn':       'Enter',
+     'open-diplomacy': 'd',
+     'open-court':     'c',
+     'open-economy':   'e',
+     'open-log':       'l',
+     'toggle-fog':     'f',
+     'mode-trade':     't',
+     'mode-compare':   'x',
+     'close-modal':    'Escape',
+     'next-army':      'Tab',
+     'zoom-in':        '+',
+     'zoom-out':       '-',
+   };
+
+   let hotkeys = { ...DEFAULT_HOTKEYS };
+
+   // Загрузить пользовательские переназначения
+   try {
+     const saved = JSON.parse(localStorage.getItem('hotkeys') ?? '{}');
+     Object.assign(hotkeys, saved);
+   } catch { /* ignore */ }
+
+   // Реестр обработчиков: action → callback
+   const handlers = {};
+
+   export function registerHotkey(action, callback) {
+     handlers[action] = callback;
+   }
+
+   export function bindKey(action, key) {
+     hotkeys[action] = key;
+     localStorage.setItem('hotkeys', JSON.stringify(hotkeys));
+   }
+
+   export function getKey(action) {
+     return hotkeys[action] ?? '';
+   }
+
+   // Единый глобальный обработчик
+   document.addEventListener('keydown', e => {
+     // Не срабатывать внутри полей ввода
+     if (e.target.matches('input, textarea, select')) return;
+
+     for (const [action, key] of Object.entries(hotkeys)) {
+       if (e.key === key && handlers[action]) {
+         e.preventDefault();
+         handlers[action](e);
+         return;
+       }
+     }
+   });
+   ```
+
+2. Регистрация действий при инициализации игры:
+   ```js
+   import { registerHotkey } from './hotkeys.js';
+
+   registerHotkey('end-turn',       () => document.getElementById('end-turn-btn').click());
+   registerHotkey('open-diplomacy', () => activateTab('diplomacy'));
+   registerHotkey('open-court',     () => activateTab('court'));
+   registerHotkey('open-economy',   () => activateTab('economy'));
+   registerHotkey('open-log',       () => toggleLogDrawer());
+   registerHotkey('toggle-fog',     () => toggleFog(!fogEnabled));
+   registerHotkey('mode-trade',     () => toggleMapMode('trade'));
+   registerHotkey('mode-compare',   () => toggleMapMode('compare'));
+   registerHotkey('close-modal',    () => closeTopModal());
+   registerHotkey('next-army',      () => selectNextArmy());
+   registerHotkey('zoom-in',        () => leafletMap.zoomIn());
+   registerHotkey('zoom-out',       () => leafletMap.zoomOut());
+   ```
+
+3. Показывать горячую клавишу в `title` кнопок:
+   ```js
+   import { getKey } from './hotkeys.js';
+
+   // При рендере кнопок добавлять подсказку
+   function setButtonHint(buttonId, action, label) {
+     const btn = document.getElementById(buttonId);
+     if (!btn) return;
+     const key = getKey(action);
+     btn.title = key ? `${label} [${key}]` : label;
+   }
+
+   setButtonHint('end-turn-btn',   'end-turn',       'Конец хода');
+   setButtonHint('diplo-tab-btn',  'open-diplomacy', 'Дипломатия');
+   // и т.д.
+   ```
+
+4. Экран переназначения клавиш в настройках:
+   ```js
+   function renderHotkeySettings() {
+     const container = document.getElementById('hotkey-settings');
+     const LABELS = {
+       'end-turn':       'Конец хода',
+       'open-diplomacy': 'Дипломатия',
+       'open-court':     'Двор',
+       'open-economy':   'Экономика',
+       'open-log':       'Журнал',
+       'toggle-fog':     'Туман войны',
+       'mode-trade':     'Торговые пути',
+       'mode-compare':   'Сравнение',
+       'close-modal':    'Закрыть окно',
+       'next-army':      'Следующая армия',
+     };
+
+     container.innerHTML = Object.entries(LABELS).map(([action, label]) => `
+       <div class="hotkey-row">
+         <span class="hotkey-row__label">${label}</span>
+         <kbd class="hotkey-row__key" data-action="${action}"
+              tabindex="0">${getKey(action)}</kbd>
+       </div>
+     `).join('');
+
+     // Клик на kbd → ввести новую клавишу
+     container.addEventListener('click', e => {
+       const kbd = e.target.closest('.hotkey-row__key');
+       if (!kbd) return;
+       kbd.textContent = '...';
+       kbd.classList.add('is-listening');
+       document.addEventListener('keydown', function capture(ev) {
+         ev.preventDefault();
+         bindKey(kbd.dataset.action, ev.key);
+         kbd.textContent = ev.key;
+         kbd.classList.remove('is-listening');
+         document.removeEventListener('keydown', capture);
+       }, { once: true });
+     });
+   }
+   ```
+   CSS:
+   ```css
+   .hotkey-row {
+     display: flex; align-items: center; justify-content: space-between;
+     padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+   }
+   .hotkey-row__label { font-size: 13px; }
+   .hotkey-row__key {
+     min-width: 32px; text-align: center;
+     padding: 2px 8px;
+     background: rgba(200,170,90,0.1);
+     border: 1px solid rgba(200,170,90,0.35);
+     border-radius: 4px;
+     font-size: 12px; font-family: monospace;
+     cursor: pointer; color: #f0e8c8;
+   }
+   .hotkey-row__key.is-listening {
+     border-color: rgba(100,150,255,0.7);
+     background: rgba(100,150,255,0.1);
+   }
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/hotkeys.js` — новый файл, централизованный реестр
+- `js/game.js` — `registerHotkey` вызовы для всех действий
+- `index.html` — `#hotkey-settings`
+- `ui/styles.css` — `.hotkey-row`, `.hotkey-row__key`
+
+**Тест Шага 77:**
+- `Enter` завершает ход.
+- `d` открывает вкладку дипломатии.
+- `Escape` закрывает открытый модал.
+- `Tab` переключает между армиями.
+- Переназначение в настройках: клик на клавишу → нажать новую → сохраняется в localStorage.
+- Горячие клавиши не срабатывают при вводе в текстовое поле.
+
+---
+
+## БЛОК AQ — Контекстное меню правой кнопкой (Шаг 78)
+
+---
+
+### Шаг 78 — Контекстное меню: правый клик на регион или армию
+
+**Цель:** правый клик на регион или маркер армии открывает контекстное меню с быстрыми действиями. Это устраняет необходимость открывать popup и искать кнопку — самые нужные действия в одном клике.
+
+**Что сделать:**
+
+1. HTML контекстного меню (один элемент, переиспользуется):
+   ```html
+   <ul id="context-menu" class="context-menu" hidden></ul>
+   ```
+
+2. Функция `showContextMenu(x, y, items)`:
+   ```js
+   // js/context_menu.js
+   export function showContextMenu(x, y, items) {
+     const menu = document.getElementById('context-menu');
+     menu.innerHTML = items.map(item =>
+       item.divider
+         ? `<li class="context-menu__divider"></li>`
+         : `<li class="context-menu__item ${item.disabled ? 'is-disabled' : ''}"
+                data-action="${item.action}"
+                data-payload='${JSON.stringify(item.payload ?? {})}'>
+              ${item.icon ? `<img src="${item.icon}" width="14" height="14">` : ''}
+              <span>${item.label}</span>
+              ${item.key ? `<kbd>${item.key}</kbd>` : ''}
+            </li>`
+     ).join('');
+
+     // Позиционировать, не выходя за края
+     const w = 180;
+     const left = Math.min(x, window.innerWidth  - w - 8);
+     const top  = Math.min(y, window.innerHeight - menu.offsetHeight - 8);
+     menu.style.left = `${left}px`;
+     menu.style.top  = `${top}px`;
+     menu.hidden = false;
+
+     // Закрыть при клике вне меню
+     setTimeout(() => {
+       document.addEventListener('click', closeContextMenu, { once: true });
+       document.addEventListener('keydown', e => {
+         if (e.key === 'Escape') closeContextMenu();
+       }, { once: true });
+     }, 0);
+   }
+
+   export function closeContextMenu() {
+     document.getElementById('context-menu').hidden = true;
+   }
+   ```
+
+3. CSS контекстного меню:
+   ```css
+   .context-menu {
+     position: fixed;
+     z-index: 2000;
+     background: rgba(12,8,4,0.97);
+     border: 1px solid rgba(200,170,90,0.3);
+     border-radius: 6px;
+     padding: 4px 0;
+     min-width: 170px;
+     box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+     list-style: none; margin: 0;
+     font-size: 13px;
+   }
+   .context-menu__item {
+     display: flex; align-items: center; gap: 8px;
+     padding: 7px 14px;
+     cursor: pointer; color: #ddd;
+     transition: background 0.1s;
+   }
+   .context-menu__item:hover    { background: rgba(200,170,90,0.12); color: #f0e8c8; }
+   .context-menu__item.is-disabled { opacity: 0.4; pointer-events: none; }
+   .context-menu__item img      { filter: invert(1); opacity: 0.7; flex-shrink: 0; }
+   .context-menu__item kbd      { margin-left: auto; font-size: 10px; opacity: 0.5; }
+   .context-menu__divider       { height: 1px; background: rgba(200,170,90,0.12); margin: 4px 0; }
+   ```
+
+4. Контекстное меню для региона (правый клик на полигон):
+   ```js
+   layer.on('contextmenu', e => {
+     L.DomEvent.preventDefault(e);
+     const regionId  = layer._regionId;
+     const region    = getRegionData(regionId);
+     const isOwned   = region.ownerNationId === gameState.playerNation;
+
+     showContextMenu(e.originalEvent.clientX, e.originalEvent.clientY, [
+       { label: region.name, disabled: true },
+       { divider: true },
+       { label: 'Открыть регион',  action: 'open-region',  payload: { regionId },
+         icon: 'assets/icons/generic_sword.svg' },
+       { label: 'Строительство',   action: 'open-build',   payload: { regionId },
+         icon: 'assets/icons/construction.svg',
+         disabled: !isOwned },
+       { label: 'Набор войск',     action: 'recruit',      payload: { regionId },
+         icon: 'assets/icons/roman_eagle.svg',
+         disabled: !isOwned },
+       { divider: true },
+       { label: 'Послать армию сюда', action: 'move-army', payload: { targetId: regionId },
+         icon: 'assets/icons/nomadic_bow.svg',
+         disabled: !selectedArmyId },
+     ]);
+   });
+   ```
+
+5. Обработчик кликов на пункты меню:
+   ```js
+   document.getElementById('context-menu').addEventListener('click', e => {
+     const item = e.target.closest('.context-menu__item');
+     if (!item || item.classList.contains('is-disabled')) return;
+
+     const action  = item.dataset.action;
+     const payload = JSON.parse(item.dataset.payload ?? '{}');
+
+     closeContextMenu();
+
+     switch (action) {
+       case 'open-region':  openRegionPopup(payload.regionId); break;
+       case 'open-build':   openBuildMenu(payload.regionId);   break;
+       case 'recruit':      openRecruitMenu(payload.regionId); break;
+       case 'move-army':    planRouteTo(payload.targetId);     break;
+     }
+   });
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/context_menu.js` — новый файл
+- `js/map.js` — `contextmenu` обработчик на регионы и маркеры армий
+- `index.html` — `#context-menu`
+- `ui/styles.css` — `.context-menu` и дочерние классы
+
+**Тест Шага 78:**
+- Правый клик на регион открывает меню с именем региона и набором действий.
+- Пункт «Послать армию сюда» отключён если нет выбранной армии.
+- Клик вне меню или `Escape` закрывают его.
+- Меню не выходит за края экрана при клике у правого/нижнего края.
+- Клик на пункт выполняет нужное действие.
+
+---
+
