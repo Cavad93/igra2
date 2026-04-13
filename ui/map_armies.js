@@ -30,6 +30,125 @@ function initArmyLayers() {
   armyPathsLayer    = L.layerGroup().addTo(leafletMap);
   siegeMarkersLayer = L.layerGroup().addTo(leafletMap);
   armyMarkersLayer  = L.layerGroup().addTo(leafletMap); // поверх путей
+  // Шаг 40: слой маркеров строительства (под маркерами армий)
+  initBuildMarkersLayer();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// Шаг 40 — Прогресс строительства на карте (Build Progress Markers)
+// ══════════════════════════════════════════════════════════════════════
+
+let buildMarkersLayer = null;
+const buildMarkers = {};   // regionId → L.Marker
+
+function initBuildMarkersLayer() {
+  if (!leafletMap || buildMarkersLayer) return;
+  buildMarkersLayer = L.layerGroup().addTo(leafletMap);
+}
+
+/**
+ * Склонение слова "ход" по числу: 1 ход, 2 хода, 5 ходов.
+ */
+function _bpmTurnsWord(n) {
+  const abs  = Math.abs(n);
+  const n10  = abs % 10;
+  const n100 = abs % 100;
+  if (n10 === 1 && n100 !== 11) return 'ход';
+  if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return 'хода';
+  return 'ходов';
+}
+
+/**
+ * Выбирает активную запись строительства из очереди региона:
+ * ту, у которой меньше всего turns_left (самая близкая к завершению).
+ */
+function _pickActiveBuildEntry(region) {
+  const q = region && region.construction_queue;
+  if (!q || !q.length) return null;
+  let best = q[0];
+  for (const e of q) {
+    if ((e.turns_left ?? 0) < (best.turns_left ?? 0)) best = e;
+  }
+  return best;
+}
+
+/**
+ * Создаёт L.divIcon маркера прогресса строительства.
+ * Размер: 48×32 px, полоска 44×3 px золотого цвета.
+ */
+function createBuildProgressIcon(entry) {
+  const total = Math.max(1, Number(entry.turns_total) || 1);
+  const left  = Math.max(0, Number(entry.turns_left)  || 0);
+  const pct   = Math.max(0, Math.min(100, Math.round((1 - left / total) * 100)));
+  const turns = left;
+
+  const bDef = (typeof BUILDINGS !== 'undefined') ? BUILDINGS[entry.building_id] : null;
+  const icon = (bDef && bDef.icon) ? bDef.icon : '🏗';
+
+  const html = `
+    <div class="build-progress-marker" title="${bDef?.name ?? 'Строительство'}: ${pct}%">
+      🏗
+      <div class="bpm-bar">
+        <div class="bpm-fill" style="width: ${pct}%"></div>
+      </div>
+      <span class="bpm-turns">${turns} ${_bpmTurnsWord(turns)}</span>
+    </div>`;
+
+  return L.divIcon({
+    html,
+    className: '',
+    iconSize:   [48, 32],
+    iconAnchor: [24, 16],
+  });
+}
+
+/**
+ * Полная перерисовка маркеров строительства на карте.
+ * - Находит все регионы с активным construction_queue
+ * - Удаляет старые маркеры, добавляет новые (словарь buildMarkers: regionId → marker)
+ * - Регионы без очереди (завершённое строительство) — маркер удаляется
+ *
+ * Вызывается после каждого хода из renderAll() в engine/turn.js.
+ */
+function renderBuildMarkers() {
+  if (!leafletMap) return;
+  if (!buildMarkersLayer) initBuildMarkersLayer();
+
+  const regions = (typeof GAME_STATE !== 'undefined' && GAME_STATE && GAME_STATE.regions) || {};
+  const seen = new Set();
+
+  for (const rid of Object.keys(regions)) {
+    const region = regions[rid];
+    const entry  = _pickActiveBuildEntry(region);
+    if (!entry) continue;
+
+    const center = _regionCenter(rid);
+    if (!center) continue;
+
+    seen.add(rid);
+
+    // При обновлении — удаляем старый маркер этого региона, добавляем новый
+    if (buildMarkers[rid]) {
+      try { buildMarkersLayer.removeLayer(buildMarkers[rid]); } catch (_) {}
+      delete buildMarkers[rid];
+    }
+
+    const icon = createBuildProgressIcon(entry);
+    // Небольшое смещение к северу, чтобы не перекрывать имя региона/армии
+    const pos  = [center[0] + 0.20, center[1]];
+    const m    = L.marker(pos, { icon, zIndexOffset: 700, interactive: false });
+    m._regionId = rid;
+    m.addTo(buildMarkersLayer);
+    buildMarkers[rid] = m;
+  }
+
+  // Завершённое строительство → маркер удаляется
+  for (const rid of Object.keys(buildMarkers)) {
+    if (!seen.has(rid)) {
+      try { buildMarkersLayer.removeLayer(buildMarkers[rid]); } catch (_) {}
+      delete buildMarkers[rid];
+    }
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -213,6 +332,9 @@ function renderAllArmies() {
   for (const siege of (GAME_STATE.sieges ?? [])) {
     if (siege.status === 'active') _renderSiegeIndicator(siege);
   }
+
+  // Шаг 40: прогресс строительства на карте
+  try { renderBuildMarkers(); } catch (_) {}
 }
 
 // ── Маркер армии ──────────────────────────────────────────────────────

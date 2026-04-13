@@ -3451,6 +3451,46 @@
     .siege-ring-svg { position: absolute; top:0; left:0; }
     .siege-ring-icon { position: absolute; top:50%; left:50%; transform: translate(-50%,-50%); font-size: 11px; line-height: 1; }
 
+    /* ══════════════════════════════════════════════════
+       Шаг 40 — Прогресс строительства на карте
+    ══════════════════════════════════════════════════ */
+    .build-progress-marker {
+      width: 48px;
+      height: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.72);
+      border: 1px solid rgba(255, 215, 0, 0.55);
+      border-radius: 3px;
+      font-size: 14px;
+      line-height: 1;
+      color: #fff;
+      pointer-events: none;
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+    }
+    .bpm-bar {
+      width: 44px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 2px;
+    }
+    .bpm-fill {
+      height: 100%;
+      background: #ffd700;
+      transition: width 0.4s ease;
+    }
+    .bpm-turns {
+      font-size: 9px;
+      color: #ffd700;
+      margin-top: 1px;
+      font-family: 'Georgia', serif;
+      white-space: nowrap;
+    }
+
     /* ══════════════════════════════════════════
        РЕЗУЛЬТАТ БИТВЫ (#battle-result-overlay)
     ══════════════════════════════════════════ */

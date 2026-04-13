@@ -2257,6 +2257,8 @@ function renderAll() {
   try { if (typeof refreshPopulationTab === 'function') refreshPopulationTab(); } catch (e) {}
   try { if (typeof refreshEconomyTab    === 'function') refreshEconomyTab();    } catch (e) {}
   try { if (typeof renderAllArmies      === 'function') renderAllArmies();      } catch (e) {}
+  // Шаг 40: обновить маркеры прогресса строительства на карте
+  try { if (typeof renderBuildMarkers   === 'function') renderBuildMarkers();   } catch (e) {}
   // ECO_009: обновить торговые маршруты если панель открыта
   try {
     if (typeof showTradeRoutes !== 'undefined' && showTradeRoutes) {
