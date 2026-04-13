@@ -3885,6 +3885,50 @@
       filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
     }
 
+    /* ══════════════════════════════════════════════════
+       Шаг 50 — Лента событий на карте (Event Feed)
+
+       L.divIcon с баббл-иконкой над регионом. slideup → idle →
+       fadeout. Максимум 5 одновременных бабблов; остальные ждут
+       в очереди (см. ui/map_event_feed.js). pointer-events:none —
+       клики идут в regionLayers под бабблом.
+    ══════════════════════════════════════════════════ */
+    .event-feed-divicon {
+      /* Leaflet по-умолчанию добавляет background и border для
+         .leaflet-div-icon; сбрасываем, чтобы отображался только
+         наш .event-feed-marker. */
+      background: transparent !important;
+      border: none !important;
+      pointer-events: none;
+    }
+    .event-feed-marker {
+      background: rgba(13, 10, 5, 0.88);
+      border: 1px solid var(--border-gold, #a68a4a);
+      border-radius: 12px;
+      padding: 3px 8px;
+      font-size: 11px;
+      color: var(--text-light, #e8dcb8);
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      animation: event-bubble 2.6s forwards;
+      pointer-events: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      /* Центрируем баббл над точкой региона (L.divIcon
+         ставит iconAnchor в (0,0)). */
+      transform: translate(-50%, -100%);
+      transform-origin: bottom center;
+    }
+    .event-feed-marker .event-feed-icon { font-size: 13px; line-height: 1; }
+    .event-feed-marker .event-feed-text { line-height: 1.2; }
+    @keyframes event-bubble {
+      0%   { opacity: 0; transform: translate(-50%, calc(-100% + 8px)); }
+      15%  { opacity: 1; transform: translate(-50%, -100%); }
+      75%  { opacity: 1; transform: translate(-50%, -100%); }
+      100% { opacity: 0; transform: translate(-50%, calc(-100% - 6px)); }
+    }
+
     /* ══════════════════════════════════════════
        РЕЗУЛЬТАТ БИТВЫ (#battle-result-overlay)
     ══════════════════════════════════════════ */
@@ -9562,6 +9606,7 @@
   <script src="ui/map.js"></script>
   <script src="ui/map_armies.js"></script>
   <script src="ui/map_events.js"></script>
+  <script src="ui/map_event_feed.js"></script>
   <script src="ui/region_build_tab.js"></script>
   <script src="ui/diplomacy_tab.js"></script>
   <script src="ui/diplo_graph.js"></script>
