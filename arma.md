@@ -3943,7 +3943,398 @@ const CULTURE_GROUPS = {
 
 ---
 
+## БЛОК AB — Механика персонажей и делегирования (Шаг 63)
 
+---
 
+### Шаг 63 — Система персонажей: придворные посты, атрибуты, делегирование задач
 
+**Цель:** переработать взаимодействие с персонажами. Вместо простого списка — полноценный двор с должностями. У каждого персонажа есть атрибуты (Дипломатия, Военное дело, Управление, Интриги). Назначение на должность даёт пассивный бонус. Делегирование — явное действие с визуальным подтверждением.
+
+**Что сделать:**
+
+1. Структура данных персонажа (расширить существующий объект `char`):
+   ```js
+   // Пример объекта персонажа
+   {
+     id:         'char_001',
+     name:       'Клеарх Афинский',
+     nationId:   'athens',
+     age:        42,
+     traits:     ['brave', 'ambitious'],   // до 3 черт
+     attrs: {
+       diplomacy:  8,   // 1–20
+       martial:    14,
+       stewardship: 6,
+       intrigue:   11,
+     },
+     postId:     'general',   // текущая должность или null
+     tasks:      [],          // делегированные задачи
+   }
+   ```
+
+2. Структура придворных должностей `COURT_POSTS` в `data/court.js`:
+   ```js
+   export const COURT_POSTS = {
+     ruler: {
+       label:   'Правитель',
+       icon:    'crown',
+       maxSlots: 1,
+       bonus:   null,   // особый пост, не назначается
+     },
+     general: {
+       label:   'Полководец',
+       icon:    'sword',
+       maxSlots: 2,
+       bonus:   { type: 'martial_bonus', value: '+15% атака армий' },
+       requires: { martial: 10 },
+     },
+     chancellor: {
+       label:   'Канцлер',
+       icon:    'scroll',
+       maxSlots: 1,
+       bonus:   { type: 'diplo_bonus', value: '+20% к дипломатии' },
+       requires: { diplomacy: 8 },
+     },
+     treasurer: {
+       label:   'Казначей',
+       icon:    'coin',
+       maxSlots: 1,
+       bonus:   { type: 'income_pct', value: '+10% доход' },
+       requires: { stewardship: 8 },
+     },
+     spymaster: {
+       label:   'Шпионмейстер',
+       icon:    'eye',
+       maxSlots: 1,
+       bonus:   { type: 'intrigue_bonus', value: '+25% успех интриг' },
+       requires: { intrigue: 10 },
+     },
+     advisor: {
+       label:   'Советник',
+       icon:    'star',
+       maxSlots: 3,
+       bonus:   { type: 'research_pct', value: '+5% скорость исследований' },
+       requires: {},
+     },
+   };
+   ```
+
+3. UI придворного экрана — `ui/court.js`. Рендерить сетку должностей с портретами:
+   ```js
+   export function renderCourt(nationId, chars, assignedPosts) {
+     const grid = document.createElement('div');
+     grid.className = 'court-grid';
+
+     for (const [postId, post] of Object.entries(COURT_POSTS)) {
+       if (postId === 'ruler') continue;
+
+       for (let slot = 0; slot < post.maxSlots; slot++) {
+         const assignedChar = assignedPosts[`${postId}_${slot}`] ?? null;
+         const cell = document.createElement('div');
+         cell.className = 'court-cell';
+         cell.dataset.postId = postId;
+         cell.dataset.slot   = slot;
+
+         cell.appendChild(renderCourtSlot(post, assignedChar, nationId));
+
+         const label = document.createElement('div');
+         label.className = 'court-cell__label';
+         label.textContent = post.label;
+         cell.appendChild(label);
+
+         if (post.bonus) {
+           const bonus = document.createElement('div');
+           bonus.className = 'court-cell__bonus';
+           bonus.textContent = post.bonus.value;
+           cell.appendChild(bonus);
+         }
+
+         grid.appendChild(cell);
+       }
+     }
+     return grid;
+   }
+   ```
+   CSS:
+   ```css
+   .court-grid {
+     display: grid;
+     grid-template-columns: repeat(3, 1fr);
+     gap: 12px;
+     padding: 12px;
+   }
+   .court-cell {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     gap: 4px;
+     padding: 8px;
+     background: rgba(255,255,255,0.04);
+     border-radius: 6px;
+     border: 1px solid rgba(200,170,90,0.15);
+     cursor: pointer;
+     transition: background 0.15s;
+   }
+   .court-cell:hover { background: rgba(255,255,255,0.08); }
+   .court-cell__label { font-size: 11px; opacity: 0.7; text-align: center; }
+   .court-cell__bonus { font-size: 10px; color: rgba(200,170,90,0.8); text-align: center; }
+   ```
+
+4. Панель делегирования — открывается при клике на должность, показывает список доступных персонажей:
+   ```js
+   function openAssignPanel(postId, slot) {
+     const panel = document.getElementById('assign-panel');
+     const post  = COURT_POSTS[postId];
+
+     panel.querySelector('.assign-panel__title').textContent =
+       `Назначить ${post.label}`;
+
+     const list = panel.querySelector('.assign-panel__list');
+     list.innerHTML = '';
+
+     // Показать только подходящих кандидатов
+     const eligible = getAllChars().filter(char => {
+       if (char.postId && char.postId !== `${postId}_${slot}`) return false;
+       for (const [attr, min] of Object.entries(post.requires ?? {})) {
+         if ((char.attrs[attr] ?? 0) < min) return false;
+       }
+       return true;
+     });
+
+     for (const char of eligible) {
+       const row = document.createElement('div');
+       row.className = 'assign-row';
+       row.appendChild(renderPortrait(char, char.nationId, 40));
+
+       row.insertAdjacentHTML('beforeend', `
+         <div class="assign-row__info">
+           <span class="assign-row__name">${char.name}</span>
+           <span class="assign-row__attrs">
+             Д:${char.attrs.diplomacy}
+             В:${char.attrs.martial}
+             У:${char.attrs.stewardship}
+             И:${char.attrs.intrigue}
+           </span>
+         </div>
+         <button class="assign-row__btn">Назначить</button>
+       `);
+
+       row.querySelector('.assign-row__btn').addEventListener('click', () => {
+         assignToPost(char.id, postId, slot);
+         panel.hidden = true;
+       });
+
+       list.appendChild(row);
+     }
+
+     panel.hidden = false;
+   }
+   ```
+
+5. Функция делегирования задачи персонажу — с явным тостом-подтверждением (использует систему тостов из Шага 29):
+   ```js
+   function delegateTask(charId, taskType, targetId) {
+     const char = getChar(charId);
+     if (!char) return;
+
+     char.tasks.push({ type: taskType, targetId, startTurn: gameState.turn });
+
+     showToast(`${char.name} получил задание: ${TASK_LABELS[taskType]}`, 'success');
+     refreshCourtUI();
+   }
+   ```
+
+**Какие файлы затрагиваются:**
+- `data/court.js` — новый файл `COURT_POSTS`
+- `ui/court.js` — `renderCourt`, `openAssignPanel`
+- `ui/portrait.js` — переиспользуется (Шаг 57)
+- `js/chars.js` — расширить структуру `char`, добавить `assignToPost`, `delegateTask`
+- `index.html` — `#assign-panel`, `#court-screen`
+- `ui/styles.css` — `.court-grid`, `.court-cell`, `.assign-row`
+
+**Тест Шага 63:**
+- Открыть экран двора — видна сетка должностей 3×N.
+- Клик на пустую должность — открывается список кандидатов с атрибутами.
+- Персонаж с `martial < 10` не появляется в кандидатах на Полководца.
+- После назначения — портрет появляется в слоте должности.
+- Тост «Имя получил задание» появляется при делегировании.
+
+---
+
+## БЛОК AC — Движущиеся маркеры армий на карте (Шаг 64)
+
+---
+
+### Шаг 64 — Анимированные маркеры армий: движение по карте, иконка культурной группы
+
+**Цель:** игрок должен видеть армии как отдельные объекты на карте, которые анимированно движутся из региона в регион при отдаче приказа. Маркер содержит иконку культурной группы нации, число юнитов и полосу здоровья. Движение — CSS-анимация по промежуточным точкам маршрута.
+
+**Что сделать:**
+
+1. Структура данных армии:
+   ```js
+   {
+     id:       'army_001',
+     nationId: 'athens',
+     regionId: 'attica',           // текущий регион
+     targetId: 'boeotia',          // цель движения или null
+     units:    1200,
+     strength: 85,                 // % здоровья (0-100)
+     route:    ['attica','megara','boeotia'],  // промежуточные регионы
+     moveProgress: 0,              // 0-1 внутри текущего сегмента
+   }
+   ```
+
+2. Создать маркер армии как Leaflet `L.marker` с кастомным `divIcon`:
+   ```js
+   // js/army_markers.js
+   import { getNationIconPath } from '../data/culture_groups.js';
+
+   const armyMarkers = {};   // armyId → L.marker
+
+   export function createArmyMarker(army) {
+     const iconPath = getNationIconPath(army.nationId);
+     const strengthColor = army.strength > 60 ? '#7cba5a'
+                         : army.strength > 30 ? '#e0b030'
+                         :                      '#cc4444';
+
+     const html = `
+       <div class="army-marker" data-army-id="${army.id}">
+         <img src="${iconPath}" class="army-marker__icon" width="16" height="16">
+         <span class="army-marker__units">${formatUnits(army.units)}</span>
+         <div class="army-marker__hp">
+           <div class="army-marker__hp-fill"
+                style="width:${army.strength}%;background:${strengthColor}"></div>
+         </div>
+       </div>
+     `;
+
+     const divIcon = L.divIcon({
+       className: '',
+       html,
+       iconSize:   [48, 36],
+       iconAnchor: [24, 36],
+     });
+
+     const [lat, lng] = getRegionCenter(army.regionId);
+     const marker = L.marker([lat, lng], { icon: divIcon, zIndexOffset: 100 });
+     marker.addTo(leafletMap);
+     armyMarkers[army.id] = marker;
+     return marker;
+   }
+
+   function formatUnits(n) {
+     return n >= 1000 ? `${(n/1000).toFixed(1)}k` : String(n);
+   }
+   ```
+   CSS:
+   ```css
+   .army-marker {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     gap: 2px;
+     background: rgba(10,8,4,0.85);
+     border: 1px solid rgba(200,170,90,0.5);
+     border-radius: 4px;
+     padding: 3px 5px;
+     font-size: 10px;
+     color: #f0e8c8;
+     white-space: nowrap;
+     pointer-events: auto;
+     cursor: pointer;
+   }
+   .army-marker__icon { filter: invert(1) sepia(1) saturate(1.5); }
+   .army-marker__hp {
+     width: 36px; height: 3px;
+     background: rgba(255,255,255,0.15);
+     border-radius: 2px;
+     overflow: hidden;
+   }
+   .army-marker__hp-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+   ```
+
+3. Анимация движения армии между регионами (покадровая через `requestAnimationFrame`):
+   ```js
+   export function animateArmyMove(armyId, fromLatLng, toLatLng, durationMs = 1200) {
+     const marker = armyMarkers[armyId];
+     if (!marker) return;
+
+     const start = performance.now();
+     const [fLat, fLng] = [fromLatLng.lat, fromLatLng.lng];
+     const [tLat, tLng] = [toLatLng.lat,  toLatLng.lng];
+
+     function frame(now) {
+       const t = Math.min((now - start) / durationMs, 1);
+       const ease = t < 0.5 ? 2*t*t : -1 + (4-2*t)*t;   // easeInOut
+
+       marker.setLatLng([
+         fLat + (tLat - fLat) * ease,
+         fLng + (tLng - fLng) * ease,
+       ]);
+
+       if (t < 1) requestAnimationFrame(frame);
+     }
+     requestAnimationFrame(frame);
+   }
+   ```
+
+4. Вызов при обработке хода — если армия движется, анимировать переход:
+   ```js
+   function processMoveOrders() {
+     for (const army of gameState.armies) {
+       if (!army.targetId) continue;
+
+       const from = getRegionCenter(army.regionId);
+       const to   = getRegionCenter(army.targetId);
+
+       animateArmyMove(army.id,
+         { lat: from[0], lng: from[1] },
+         { lat: to[0],   lng: to[1] },
+         1000
+       );
+
+       // После анимации обновить regionId
+       setTimeout(() => {
+         army.regionId = army.targetId;
+         army.targetId = null;
+         updateArmyMarker(army);
+       }, 1050);
+     }
+   }
+   ```
+
+5. Обновление маркера при изменении силы армии:
+   ```js
+   export function updateArmyMarker(army) {
+     const marker = armyMarkers[army.id];
+     if (!marker) return;
+
+     const iconPath = getNationIconPath(army.nationId);
+     const strengthColor = army.strength > 60 ? '#7cba5a'
+                         : army.strength > 30 ? '#e0b030' : '#cc4444';
+     marker.getElement()?.querySelector('.army-marker__hp-fill')
+       ?.style.setProperty('width', `${army.strength}%`);
+     marker.getElement()?.querySelector('.army-marker__hp-fill')
+       ?.style.setProperty('background', strengthColor);
+     marker.getElement()?.querySelector('.army-marker__units')
+       ?.textContent = formatUnits(army.units);
+   }
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/army_markers.js` — новый файл, `createArmyMarker`, `animateArmyMove`, `updateArmyMarker`
+- `js/game.js` — `processMoveOrders`, вызов анимаций после хода
+- `data/culture_groups.js` — `getNationIconPath` (уже в Шаге 60)
+- `ui/styles.css` — `.army-marker` и дочерние классы
+
+**Тест Шага 64:**
+- После отдачи приказа «двигаться» маркер армии плавно перемещается в новый регион за ~1 с.
+- Иконка армии соответствует культурной группе нации (сова для греков, орёл для римлян).
+- Полоса здоровья меняет цвет: зелёный > жёлтый > красный.
+- Маркеры разных наций отображаются одновременно без перекрытий при зуме.
+- После перезагрузки маркеры восстанавливаются на правильных позициях.
+
+---
 
