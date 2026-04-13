@@ -2475,6 +2475,8 @@ textures/
 
 ### Шаг 54 — Asset pipeline: структура папок, манифест, скрипт загрузки
 
+> **Статус:** ✅ **ВЫПОЛНЕНО** — файл `assets/download.sh` (идемпотентный fetch через curl/wget с SKIP для уже скачанных, Met Museum CC0 + Wikimedia PD, graceful-degradation при 403/сети), папки `assets/portraits/{greek,roman,celtic,persian,egyptian,indian,east_asian,nomadic,iberian,african}`, `assets/textures`, `assets/backgrounds`, `assets/borders`, `assets/icons`, `assets/portraits/placeholder.svg` (процедурный fallback-портрет в стиле фаюмского), `.gitignore` блокирует `assets/portraits/**/*.jpg` / `assets/textures/*.jpg` / `assets/backgrounds/*.jpg`, `assets/manifest.json` (валидный JSON), тесты `tests/test_arma_stage54.mjs` (37 passed). Не реализовывать повторно.
+
 **Цель:** создать в репозитории систему хранения CC0-изображений с манифестом лицензий и скриптом автоматической загрузки. Изображений много — хранить их в git нецелесообразно (вес), поэтому в репозитории хранится только манифест и лёгкие SVG. Тяжёлые JPG загружаются скриптом.
 
 ---
