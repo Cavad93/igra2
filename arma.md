@@ -2996,6 +2996,200 @@ const CULTURE_GROUPS = {
 
 ---
 
+## БЛОК V — Аватары персонажей (Шаг 57)
+
+---
+
+### Шаг 57 — Портреты персонажей: char-card, модал, придворные слоты, советники
+
+**Цель:** вывести CC0-портрет в каждом месте, где отображается персонаж. Источник портрета — `getPortraitForCharacter(char, nationId)` из Шага 55. Все четыре точки отображения: карточка в списке, детальный модал, слот в суде, чип советника.
+
+**Что сделать:**
+
+1. **Утилита `renderPortrait(char, nationId, sizePx)`** — общая для всех четырёх мест:
+   ```js
+   // ui/portrait.js
+   import { getPortraitForCharacter } from '../data/culture_groups.js';
+
+   export function renderPortrait(char, nationId, sizePx = 48) {
+     const src  = getPortraitForCharacter(char, nationId);
+     const fall = `assets/portraits/placeholder.svg`;
+
+     const img = document.createElement('img');
+     img.className   = 'char-portrait';
+     img.src         = src;
+     img.width       = sizePx;
+     img.height      = sizePx;
+     img.alt         = char.name ?? '';
+     img.loading     = 'lazy';
+     img.draggable   = false;
+
+     // Деградация: если JPG не скачан — показать SVG-заглушку
+     img.onerror = () => { img.src = fall; };
+
+     return img;
+   }
+   ```
+
+2. **Карточка персонажа `.char-card`** — портрет слева, текст справа:
+   ```js
+   // ui/char_list.js
+   import { renderPortrait } from './portrait.js';
+
+   function buildCharCard(char, nationId) {
+     const card = document.createElement('div');
+     card.className = 'char-card';
+     card.dataset.charId = char.id;
+
+     const portrait = renderPortrait(char, nationId, 48);
+     portrait.classList.add('char-card__portrait');
+
+     const info = document.createElement('div');
+     info.className = 'char-card__info';
+     info.innerHTML = `
+       <span class="char-card__name">${char.name}</span>
+       <span class="char-card__role">${char.role ?? ''}</span>
+     `;
+
+     card.appendChild(portrait);
+     card.appendChild(info);
+     return card;
+   }
+   ```
+   CSS:
+   ```css
+   .char-card {
+     display: flex;
+     align-items: center;
+     gap: 10px;
+     padding: 6px 8px;
+     border-radius: 4px;
+     cursor: pointer;
+   }
+   .char-card:hover { background: rgba(255,255,255,0.06); }
+
+   .char-card__portrait {
+     width: 48px;
+     height: 48px;
+     border-radius: 50%;
+     object-fit: cover;
+     object-position: center top;   /* Фаюмские портреты — лицо в верхней части */
+     border: 2px solid rgba(200,170,90,0.5);
+     flex-shrink: 0;
+   }
+
+   .char-card__name  { display: block; font-weight: 600; font-size: 13px; }
+   .char-card__role  { display: block; font-size: 11px; opacity: 0.65; }
+   ```
+
+3. **Детальный модал `.char-detail`** — крупный портрет, 96px:
+   ```js
+   function openCharDetail(char, nationId) {
+     const modal = document.getElementById('char-detail-modal');
+
+     // Заменить портрет в модале
+     const wrap = modal.querySelector('.char-detail__portrait-wrap');
+     wrap.innerHTML = '';
+     wrap.appendChild(renderPortrait(char, nationId, 96));
+
+     modal.querySelector('.char-detail__name').textContent = char.name;
+     // ... остальные поля
+     modal.classList.add('is-open');
+   }
+   ```
+   CSS:
+   ```css
+   .char-detail__portrait-wrap img {
+     width: 96px;
+     height: 96px;
+     border-radius: 6px;
+     object-fit: cover;
+     object-position: center top;
+     border: 2px solid rgba(200,170,90,0.6);
+     box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+   }
+   ```
+
+4. **Придворный слот `.position-slot`** — 56px, показывает портрет занятого поста:
+   ```js
+   function renderCourtSlot(position, char, nationId) {
+     const slot = document.createElement('div');
+     slot.className = 'position-slot';
+     slot.title = position.label;
+
+     if (char) {
+       slot.appendChild(renderPortrait(char, nationId, 56));
+       slot.classList.add('position-slot--filled');
+     } else {
+       slot.innerHTML = `<span class="position-slot__empty">—</span>`;
+     }
+     return slot;
+   }
+   ```
+   CSS:
+   ```css
+   .position-slot {
+     width: 56px; height: 56px;
+     border-radius: 50%;
+     border: 2px dashed rgba(200,170,90,0.3);
+     display: flex; align-items: center; justify-content: center;
+     overflow: hidden;
+   }
+   .position-slot--filled { border-style: solid; border-color: rgba(200,170,90,0.6); }
+   .position-slot img     { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+   ```
+
+5. **Чип советника `.advisor-chip`** — компактный вариант, 32px, с именем:
+   ```js
+   function renderAdvisorChip(char, nationId) {
+     const chip = document.createElement('div');
+     chip.className = 'advisor-chip';
+
+     chip.appendChild(renderPortrait(char, nationId, 32));
+
+     const name = document.createElement('span');
+     name.textContent = char.name;
+     chip.appendChild(name);
+     return chip;
+   }
+   ```
+   CSS:
+   ```css
+   .advisor-chip {
+     display: inline-flex;
+     align-items: center;
+     gap: 6px;
+     background: rgba(255,255,255,0.05);
+     border: 1px solid rgba(200,170,90,0.3);
+     border-radius: 20px;
+     padding: 2px 8px 2px 2px;
+     font-size: 12px;
+   }
+   .advisor-chip img {
+     width: 32px; height: 32px;
+     border-radius: 50%;
+     object-fit: cover;
+     object-position: top;
+   }
+   ```
+
+**Какие файлы затрагиваются:**
+- `ui/portrait.js` — новый файл, утилита `renderPortrait`
+- `ui/char_list.js` — `buildCharCard` использует `renderPortrait`
+- `ui/char_detail.js` (или модал в `index.html`) — `openCharDetail`
+- `ui/court.js` — `renderCourtSlot`
+- `ui/advisors.js` — `renderAdvisorChip`
+- `ui/styles.css` — CSS для всех четырёх компонентов
+
+**Тест Шага 57:**
+- Карточка персонажа греческой нации показывает один из четырёх фаюмских портретов.
+- Один и тот же персонаж всегда получает один и тот же портрет (перезагрузка не меняет).
+- При удалённом JPG отображается `placeholder.svg` без ошибок в консоли.
+- Модал показывает крупный портрет 96px без пикселизации.
+- Придворный незанятый слот показывает прочерк `—`, занятый — портрет с золотой рамкой.
+
+---
+
 
 
 
