@@ -7495,3 +7495,373 @@ const CULTURE_GROUPS = {
 
 ---
 
+## БЛОК AX — Режимы карты (Шаг 85)
+
+---
+
+### Шаг 85 — Режимы карты: политический, военный, экономический, культурный
+
+**Цель:** кнопки переключения режимов карты в левом нижнем углу. Каждый режим перекрашивает регионы по разному атрибуту: политический — по нации, военный — по силе армии, экономический — по доходу, культурный — по культурной группе. Легенда показывается рядом.
+
+**Что сделать:**
+
+1. Конфигурация режимов в `js/map_modes.js`:
+   ```js
+   export const MAP_MODES = {
+     political: {
+       label: 'Политический',
+       icon:  'assets/icons/scroll.svg',
+       key:   'p',
+       colorFn: (region) => gameState.nationColors[region.ownerNationId] ?? '#555',
+       legend: null,   // цвет нации, не шкала
+     },
+     military: {
+       label: 'Военный',
+       icon:  'assets/icons/generic_sword.svg',
+       key:   'q',
+       colorFn: (region) => {
+         const strength = region.garrison ?? 0;
+         if (strength === 0)   return '#2a2a2a';
+         if (strength < 500)   return '#3a5a3a';
+         if (strength < 2000)  return '#4a8a4a';
+         if (strength < 5000)  return '#60aa60';
+         return '#88cc88';
+       },
+       legend: [
+         { label: 'Нет войск',  color: '#2a2a2a' },
+         { label: '< 500',      color: '#3a5a3a' },
+         { label: '500–2k',     color: '#4a8a4a' },
+         { label: '2k–5k',      color: '#60aa60' },
+         { label: '5k+',        color: '#88cc88' },
+       ],
+     },
+     economic: {
+       label: 'Экономический',
+       icon:  'assets/icons/coin.svg',
+       key:   'w',
+       colorFn: (region) => {
+         const income = region.income ?? 0;
+         if (income === 0)   return '#2a2020';
+         if (income < 10)    return '#4a3010';
+         if (income < 30)    return '#7a5020';
+         if (income < 60)    return '#aa7030';
+         return '#c89040';
+       },
+       legend: [
+         { label: 'Нет дохода', color: '#2a2020' },
+         { label: '< 10 зол.', color: '#4a3010' },
+         { label: '10–30',     color: '#7a5020' },
+         { label: '30–60',     color: '#aa7030' },
+         { label: '60+ зол.',  color: '#c89040' },
+       ],
+     },
+     culture: {
+       label: 'Культурный',
+       icon:  'assets/icons/owl_athena.svg',
+       key:   'u',
+       colorFn: (region) => {
+         const CULTURE_COLORS = {
+           greek:         '#4a7aaa',
+           roman:         '#aa4a4a',
+           carthaginian:  '#7a4a2a',
+           egyptian:      '#aaaa4a',
+           persian:       '#8a4a8a',
+           celtic:        '#4a8a5a',
+           indian:        '#aa8a4a',
+           east_asian:    '#4a8aaa',
+           nomadic:       '#8a7a4a',
+           generic:       '#555555',
+         };
+         const group = getCultureGroup(region.ownerNationId);
+         return CULTURE_COLORS[group.groupId] ?? '#555';
+       },
+       legend: [
+         { label: 'Эллины',    color: '#4a7aaa' },
+         { label: 'Рим',       color: '#aa4a4a' },
+         { label: 'Карфаген',  color: '#7a4a2a' },
+         { label: 'Египет',    color: '#aaaa4a' },
+         { label: 'Персия',    color: '#8a4a8a' },
+         { label: 'Кельты',    color: '#4a8a5a' },
+         { label: 'Индия',     color: '#aa8a4a' },
+         { label: 'Восток',    color: '#4a8aaa' },
+         { label: 'Кочевники', color: '#8a7a4a' },
+       ],
+     },
+   };
+   ```
+
+2. Функции переключения режима:
+   ```js
+   let activeMode = 'political';
+
+   export function setMapMode(modeId) {
+     activeMode = modeId;
+     const mode = MAP_MODES[modeId];
+     if (!mode) return;
+
+     // Перекрасить все регионы
+     for (const region of gameState.regions) {
+       const layer = regionLayers[region.id];
+       if (layer) {
+         layer.setStyle({
+           fillColor:   mode.colorFn(region),
+           fillOpacity: 0.55,
+         });
+       }
+     }
+
+     renderModeLegend(mode);
+     updateStatusMode(mode.label);
+     eventBus.emit('mapModeChanged', { modeId, label: mode.label });
+   }
+
+   function renderModeLegend(mode) {
+     const container = document.getElementById('map-legend');
+     if (!mode.legend) { container.hidden = true; return; }
+
+     container.innerHTML = mode.legend.map(item => `
+       <div class="legend-item">
+         <span class="legend-item__swatch" style="background:${item.color}"></span>
+         <span class="legend-item__label">${item.label}</span>
+       </div>
+     `).join('');
+
+     container.hidden = false;
+   }
+   ```
+
+3. HTML кнопок режимов в `index.html`:
+   ```html
+   <div id="map-mode-bar" class="map-mode-bar">
+     <!-- Генерируется из JS -->
+   </div>
+   <div id="map-legend" class="map-legend" hidden></div>
+   ```
+
+4. Рендер кнопок режимов:
+   ```js
+   function renderMapModeBar() {
+     const bar = document.getElementById('map-mode-bar');
+     bar.innerHTML = Object.entries(MAP_MODES).map(([id, mode]) => `
+       <button class="mmb-btn ${id === activeMode ? 'is-active' : ''}"
+               data-mode="${id}"
+               title="${mode.label} [${mode.key}]">
+         <img src="${mode.icon}" width="16" height="16" alt="${mode.label}">
+       </button>
+     `).join('');
+
+     bar.addEventListener('click', e => {
+       const btn = e.target.closest('.mmb-btn');
+       if (!btn) return;
+       document.querySelectorAll('.mmb-btn').forEach(b =>
+         b.classList.toggle('is-active', b === btn));
+       setMapMode(btn.dataset.mode);
+     });
+   }
+   ```
+
+5. CSS кнопок и легенды:
+   ```css
+   .map-mode-bar {
+     position: fixed;
+     left: 12px;
+     bottom: 40px;
+     display: flex;
+     flex-direction: column;
+     gap: 4px;
+     z-index: 500;
+   }
+   .mmb-btn {
+     width: 34px; height: 34px;
+     background: rgba(8,5,2,0.9);
+     border: 1px solid rgba(200,170,90,0.25);
+     border-radius: 6px;
+     cursor: pointer;
+     display: flex; align-items: center; justify-content: center;
+     transition: background 0.15s;
+   }
+   .mmb-btn:hover  { background: rgba(200,170,90,0.12); }
+   .mmb-btn.is-active {
+     background: rgba(200,170,90,0.2);
+     border-color: rgba(200,170,90,0.6);
+   }
+   .mmb-btn img { filter: invert(1); opacity: 0.6; }
+   .mmb-btn.is-active img { opacity: 0.9; }
+
+   .map-legend {
+     position: fixed;
+     left: 54px;
+     bottom: 40px;
+     background: rgba(8,5,2,0.9);
+     border: 1px solid rgba(200,170,90,0.2);
+     border-radius: 6px;
+     padding: 8px 10px;
+     z-index: 500;
+     font-size: 11px;
+   }
+   .legend-item { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+   .legend-item__swatch {
+     width: 12px; height: 12px;
+     border-radius: 2px;
+     flex-shrink: 0;
+   }
+   .legend-item__label { color: rgba(220,210,180,0.8); }
+   ```
+
+**Какие файлы затрагиваются:**
+- `js/map_modes.js` — расширить `MAP_MODES`, `setMapMode`, `renderModeLegend`
+- `index.html` — `#map-mode-bar`, `#map-legend`
+- `ui/styles.css` — `.map-mode-bar`, `.mmb-btn`, `.map-legend`
+- `js/hotkeys.js` — горячие клавиши `p`, `q`, `w`, `u` для режимов
+
+**Тест Шага 85:**
+- Кнопки режимов видны в левом нижнем углу.
+- Клик «Экономический» перекрашивает регионы по доходу с появлением легенды.
+- Клик «Культурный» показывает 9 цветов культурных групп.
+- Горячая клавиша `p` возвращает политический режим.
+- При смене режима цвет обновляется без мерцания.
+
+---
+
+## БЛОК AY — Итоговая интеграция UI (Шаг 86)
+
+---
+
+### Шаг 86 — Итоговая интеграция: порядок инициализации всех систем
+
+**Цель:** описать правильный порядок вызовов при старте игры. Все системы из Шагов 54–85 взаимозависимы — некоторые должны загружаться строго после других. Этот шаг — финальный «монтажный лист» инициализации.
+
+**Что сделать:**
+
+Главный файл `js/main.js` — точка входа:
+
+```js
+import { loadSavedRegionColors }    from './game.js';
+import { initLeafletMap }           from './map.js';
+import { applyNationTheme }         from './ui/panels.js';
+import { initSplash }               from './ui/splash.js';
+import { applySeason }              from './seasons.js';
+import { applyFogOfWar }            from './fog_of_war.js';
+import { applyZoomLevel }           from './zoom_layers.js';
+import { renderMapModeBar, setMapMode } from './map_modes.js';
+import { renderTabBar }             from './ui/tabs.js';
+import { PANEL_TABS }               from './ui/tabs.js';
+import { updateStatusBar }          from './status_bar.js';
+import { updateResourceStrip }      from './resource_strip.js';
+import { refreshConstructionMarkers } from './construction_markers.js';
+import { renderAllTradeRoutes }     from './trade_routes.js';
+import { renderCourt }              from './ui/court.js';
+import { registerHotkey }           from './hotkeys.js';
+import { toggleLogDrawer }          from './log_drawer.js';
+import { toggleSearch }             from './search.js';
+
+async function main() {
+  // ── Шаг 1: загрузить сохранение ─────────────────────────────
+  await loadGameState();
+
+  // ── Шаг 2: показать splash (асинхронно, не блокирует) ───────
+  initSplash(gameState.playerNation);
+
+  // ── Шаг 3: карта ────────────────────────────────────────────
+  loadSavedRegionColors();
+  initLeafletMap();
+
+  // Восстановить цвета регионов с тремя задержками
+  setTimeout(refreshRegionStyles, 300);
+  setTimeout(refreshRegionStyles, 800);
+  setTimeout(refreshRegionStyles, 1500);
+
+  // ── Шаг 4: тема нации ───────────────────────────────────────
+  applyNationTheme(gameState.playerNation);
+
+  // ── Шаг 5: сезон ────────────────────────────────────────────
+  applySeason(gameState.turn);
+
+  // ── Шаг 6: режим карты ──────────────────────────────────────
+  renderMapModeBar();
+  setMapMode('political');
+
+  // ── Шаг 7: туман войны ──────────────────────────────────────
+  applyFogOfWar(gameState.playerNation);
+
+  // ── Шаг 8: маркеры на карте ─────────────────────────────────
+  for (const army of gameState.armies) createArmyMarker(army);
+  refreshConstructionMarkers();
+  renderAllTradeRoutes();
+
+  // ── Шаг 9: UI-компоненты ────────────────────────────────────
+  renderTabBar('left-tab-bar', PANEL_TABS, switchPanel);
+  updateStatusBar();
+  updateResourceStrip();
+
+  // ── Шаг 10: горячие клавиши ─────────────────────────────────
+  registerHotkey('end-turn',       () => document.getElementById('end-turn-btn').click());
+  registerHotkey('open-diplomacy', () => switchPanel('diplomacy'));
+  registerHotkey('open-court',     () => switchPanel('court'));
+  registerHotkey('open-economy',   () => switchPanel('economy'));
+  registerHotkey('open-log',       () => toggleLogDrawer());
+  registerHotkey('search',         () => toggleSearch());
+  registerHotkey('toggle-fog',     () => toggleFog(!fogEnabled));
+  registerHotkey('mode-political', () => setMapMode('political'));
+  registerHotkey('mode-military',  () => setMapMode('military'));
+  registerHotkey('mode-economic',  () => setMapMode('economic'));
+  registerHotkey('mode-culture',   () => setMapMode('culture'));
+  registerHotkey('close-modal',    () => closeTopModal());
+  registerHotkey('zoom-in',        () => leafletMap.zoomIn());
+  registerHotkey('zoom-out',       () => leafletMap.zoomOut());
+
+  // ── Шаг 11: подписка на события Leaflet ─────────────────────
+  leafletMap.on('zoomend', () => {
+    applyZoomLevel(leafletMap.getZoom());
+    const label = leafletMap.getZoom() <= 4 ? 'Стратегический'
+                : leafletMap.getZoom() <= 6 ? 'Тактический' : 'Детальный';
+    updateStatusZoom(label);
+  });
+
+  // ── Шаг 12: подписка на игровые события ─────────────────────
+  eventBus.on('turnEnd', onTurnEnd);
+  eventBus.on('armyMoved', () => applyFogOfWar(gameState.playerNation));
+  eventBus.on('playerNationChanged', ({ nationId }) => applyNationTheme(nationId));
+}
+
+function onTurnEnd() {
+  recordResourceHistory();
+  applySeason(gameState.turn);
+  applyFogOfWar(gameState.playerNation);
+  refreshConstructionMarkers();
+  updateStatusBar();
+  updateResourceStrip();
+  const events = collectTurnEvents();
+  const delta  = computeResourceDelta();
+  showTurnSummary(events, delta);
+  const aiActions = collectAIActions();
+  showAITurnActions(aiActions);
+}
+
+main().catch(console.error);
+```
+
+**Зависимости инициализации (порядок важен):**
+
+| # | Система | Зависит от |
+|---|---------|-----------|
+| 1 | `loadGameState` | — |
+| 2 | `initSplash` | `gameState.playerNation` |
+| 3 | `loadSavedRegionColors` + `initLeafletMap` | `gameState` |
+| 4 | `applyNationTheme` | `initLeafletMap` (DOM панелей) |
+| 5 | `applySeason` | `gameState.turn` |
+| 6 | `renderMapModeBar` | `initLeafletMap` |
+| 7 | `applyFogOfWar` | `initLeafletMap` + `gameState.regions` |
+| 8 | маркеры на карте | `initLeafletMap` + `applyFogOfWar` |
+| 9 | UI-компоненты | DOM готов |
+| 10 | горячие клавиши | все предыдущие системы зарегистрированы |
+
+**Тест Шага 86:**
+- Игра запускается без ошибок в консоли.
+- Splash показывается, карта загружается, цвета регионов восстанавливаются.
+- Все горячие клавиши работают после полной загрузки.
+- `main()` завершается без `undefined is not a function` ошибок.
+- При перезагрузке все состояния (цвета, туман, сезон, ресурсы) восстанавливаются корректно.
+
+---
+
