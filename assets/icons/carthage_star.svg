@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="currentColor">
+  <!-- arma.md Шаг 68 — Звезда Танит: восьмилучевая + треугольник -->
+  <!-- Восьмилучевая звезда (две квадратных, повёрнутых на 45°) -->
+  <g stroke="currentColor" stroke-width="1" stroke-linejoin="miter">
+    <polygon points="16,2 19,13 30,16 19,19 16,30 13,19 2,16 13,13" fill="currentColor"/>
+    <polygon points="16,6 23,9 26,16 23,23 16,26 9,23 6,16 9,9" fill="none" opacity="0.55"/>
+  </g>
+  <!-- Знак Танит: треугольник с горизонтальной чертой и кругом сверху -->
+  <polygon points="11,28 21,28 16,20" fill="none" stroke="currentColor" stroke-width="1.2"/>
+  <line x1="9" y1="20" x2="23" y2="20" stroke="currentColor" stroke-width="1.2"/>
+  <circle cx="16" cy="17" r="1.5" fill="currentColor"/>
+</svg>
