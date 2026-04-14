@@ -3310,6 +3310,8 @@ const CULTURE_GROUPS = {
 
 ### Шаг 58 — Фон splash-экрана: историческая фреска с культурным тинтом
 
+> **Статус:** ✅ **ВЫПОЛНЕНО** — файл `ui/splash.js` (`initSplash` / `showSplashStartButton` / `hideSplashWithAnimation` / `resolveSplashBgId`), интеграция в `index.html` (`#splash-screen.splash` + `.splash__bg` + `.splash__vignette` + `.splash__content` + `#splash-start-btn.splash__btn`, CSS `--splash-bg` в `:root`, CSS-классы `.splash__title` с `clamp()`, `.splash--hiding` + `@keyframes splashFade 0.6s`, вызов `initSplash(GAME_STATE.player_nation)` после `initGame().then(...)` + `showSplashStartButton()` вместо авто-скрытия), `assets/manifest.json` уже содержит `splash_pompeii`/`splash_alexander`/`splash_battle` (Шаг 54), тесты `tests/test_arma_stage58.mjs` (50 passed). Не реализовывать повторно.
+
 **Цель:** показывать при загрузке игры полноэкранный splash с исторической фреской, логотипом и кнопкой «Начать». Фон — CC0-изображение из `assets/backgrounds/`, конкретный файл определяется `splash_bg` культурной группы текущего игрока (или последней выбранной нации). Поверх фрески — полупрозрачный цветной тинт, виньетка и оверлей для читаемости текста.
 
 **Что сделать:**

@@ -18,29 +18,64 @@
 
   <style>
     /* ══════════════════════════════════════════════════
-       D3: ЭКРАН ЗАГРУЗКИ
+       D3: ЭКРАН ЗАГРУЗКИ + Шаг 58: фреска splash-screen
     ══════════════════════════════════════════════════ */
-    #splash-screen {
+    #splash-screen,
+    .splash {
       position: fixed; inset: 0; z-index: 99999;
       background: #080603;
       display: flex; align-items: center; justify-content: center;
       transition: opacity 0.5s ease;
+      overflow: hidden;
     }
+    /* Шаг 58 — слой исторической фрески */
+    .splash__bg {
+      position: absolute;
+      inset: 0;
+      background-image: var(--splash-bg);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      filter: sepia(0.25) brightness(0.55);
+      transition: background-image 0.4s ease;
+      z-index: 0;
+    }
+    /* Шаг 58 — виньетка по краям */
+    .splash__vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        ellipse at center,
+        transparent 35%,
+        rgba(0,0,0,0.85) 100%
+      );
+      z-index: 1;
+      pointer-events: none;
+    }
+    .splash__content,
     #splash-inner {
+      position: relative;
+      z-index: 2;
       text-align: center; color: #d4a853;
     }
-    #splash-title {
+    #splash-title,
+    .splash__title {
       font-family: 'Cinzel', 'Georgia', serif;
-      font-size: 42px; font-weight: 900;
-      letter-spacing: 0.12em;
+      font-size: clamp(2.4rem, 8vw, 5.5rem);
+      font-weight: 900;
+      letter-spacing: 0.15em;
       color: #d4a853;
-      text-shadow: 0 0 30px rgba(212,168,83,0.4);
-      margin-bottom: 6px;
+      text-shadow: 0 2px 18px rgba(0,0,0,0.85), 0 0 30px rgba(212,168,83,0.4);
+      margin: 0 0 6px;
     }
-    #splash-subtitle {
+    #splash-subtitle,
+    .splash__subtitle {
       font-family: 'Cinzel', serif;
-      font-size: 14px; letter-spacing: 0.25em;
-      color: #7a5a28; margin-bottom: 40px;
+      font-size: clamp(0.9rem, 1.8vw, 1.4rem);
+      letter-spacing: 0.25em;
+      color: #b08a40;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.75);
+      margin: 0 0 40px;
     }
     #splash-bar-wrap {
       width: 260px; height: 3px;
@@ -56,7 +91,36 @@
     }
     #splash-status {
       font-size: 11px; letter-spacing: 0.1em;
-      color: #5a4520; font-family: 'Georgia', serif;
+      color: #b08a40; font-family: 'Georgia', serif;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.75);
+    }
+    /* Шаг 58 — кнопка «Начать игру» */
+    .splash__btn {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 14px 48px;
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      letter-spacing: 0.18em;
+      background: rgba(200,170,90,0.15);
+      border: 1px solid rgba(200,170,90,0.7);
+      color: #f0e8c8;
+      border-radius: 4px;
+      cursor: pointer;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.75);
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    }
+    .splash__btn:hover {
+      background: rgba(200,170,90,0.32);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.55);
+    }
+    /* Шаг 58 — анимация исчезновения splash при старте */
+    .splash--hiding {
+      animation: splashFade 0.6s ease forwards;
+    }
+    @keyframes splashFade {
+      to { opacity: 0; pointer-events: none; }
     }
 
     /* ══════════════════════════════════════════════════
@@ -87,6 +151,8 @@
       --panel-texture: url('assets/textures/greek_vase.jpg');
       --panel-tint:    rgba(26, 18, 8, 0.85);
       --panel-radius:  6px;
+      /* ── Шаг 58 — фон splash, переопределяется initSplash() по культуре ── */
+      --splash-bg:     url('assets/backgrounds/splash_pompeii.jpg');
     }
 
     html, body {
@@ -9379,13 +9445,16 @@
   <!-- Шаг 30: контекстное меню правой кнопки мыши (на регионе карты) -->
   <div id="ctx-menu"></div>
 
-  <!-- D3: экран загрузки -->
-  <div id="splash-screen">
-    <div id="splash-inner">
-      <div id="splash-title">Ancient Strategy</div>
-      <div id="splash-subtitle">Сиракузы · 301 BC</div>
+  <!-- D3: экран загрузки + Шаг 58: фреска -->
+  <div id="splash-screen" class="splash">
+    <div class="splash__bg"></div>
+    <div class="splash__vignette"></div>
+    <div id="splash-inner" class="splash__content">
+      <h1 id="splash-title" class="splash__title">IGRA²</h1>
+      <p  id="splash-subtitle" class="splash__subtitle">Стратегия древнего мира</p>
       <div id="splash-bar-wrap"><div id="splash-bar-fill"></div></div>
       <div id="splash-status">Загрузка...</div>
+      <button id="splash-start-btn" class="splash__btn" style="display:none;">Начать игру</button>
     </div>
   </div>
   <div id="app">
@@ -10005,6 +10074,7 @@
   <script src="ui/diplomacy_tab.js"></script>
   <script src="ui/diplo_graph.js"></script>
   <script src="ui/portrait.js"></script>
+  <script src="ui/splash.js"></script>
   <script src="ui/panels.js"></script>
   <script src="ui/government_tab.js"></script>
   <script src="ui/population_tab.js"></script>
@@ -10048,9 +10118,20 @@
     }
     function _splashHide() {
       if (!_splash) return;
+      // Шаг 58 — плавная анимация splashFade через ui/splash.js
+      if (typeof hideSplashWithAnimation === 'function') {
+        hideSplashWithAnimation();
+        return;
+      }
       _splash.style.opacity = '0';
       setTimeout(() => { _splash.style.display = 'none'; }, 500);
     }
+
+    // Шаг 58 — инициализируем splash с fallback-фоном
+    // (фреска уточнится после initGame, когда станет известна нация игрока).
+    try {
+      if (typeof initSplash === 'function') initSplash(null);
+    } catch (e) { console.error('[initSplash] error:', e); }
 
     _splashProgress(10, 'Инициализация...');
     initGame().then(() => {
@@ -10066,7 +10147,22 @@
           applyNationTheme(GAME_STATE.player_nation);
         }
       } catch (e) { console.error('[applyNationTheme] error:', e); }
-      setTimeout(_splashHide, 300);
+      // Шаг 58 — обновить фреску splash под культуру нации игрока
+      try {
+        if (typeof initSplash === 'function' && GAME_STATE && GAME_STATE.player_nation) {
+          initSplash(GAME_STATE.player_nation);
+        }
+      } catch (e) { console.error('[initSplash] error:', e); }
+      // Шаг 58 — показать кнопку «Начать игру» вместо авто-скрытия
+      try {
+        if (typeof showSplashStartButton === 'function') {
+          showSplashStartButton();
+        } else {
+          setTimeout(_splashHide, 300);
+        }
+      } catch (e) {
+        setTimeout(_splashHide, 300);
+      }
     }).catch(e => {
       console.error('[initGame] Критическая ошибка:', e);
       _splashProgress(100, 'Ошибка инициализации');
