@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"
+     viewBox="0 0 60 60" fill="none">
+  <!-- arma.md Шаг 59 — Кельтский узел / плетение -->
+  <rect width="60" height="60" fill="none"/>
+  <rect x="1" y="1" width="58" height="58"
+        stroke="rgba(130,150,90,0.5)" stroke-width="1" fill="none"/>
+  <!-- Переплетённая синусоида по верху -->
+  <path d="M 4 12 Q 12 4, 20 12 T 36 12 T 52 12"
+        stroke="rgba(130,150,90,0.45)" stroke-width="1.4" fill="none"/>
+  <path d="M 4 48 Q 12 56, 20 48 T 36 48 T 52 48"
+        stroke="rgba(130,150,90,0.45)" stroke-width="1.4" fill="none"/>
+  <!-- Кольца в средней зоне -->
+  <circle cx="15" cy="30" r="4" stroke="rgba(130,150,90,0.4)" stroke-width="1.2" fill="none"/>
+  <circle cx="30" cy="30" r="4" stroke="rgba(130,150,90,0.4)" stroke-width="1.2" fill="none"/>
+  <circle cx="45" cy="30" r="4" stroke="rgba(130,150,90,0.4)" stroke-width="1.2" fill="none"/>
+</svg>

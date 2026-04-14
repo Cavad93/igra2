@@ -151,6 +151,8 @@
       --panel-texture: url('assets/textures/greek_vase.jpg');
       --panel-tint:    rgba(26, 18, 8, 0.85);
       --panel-radius:  6px;
+      /* ── Шаг 59 — Декоративная SVG-рамка панели ── */
+      --panel-border-svg: url('assets/icons/meander_gold.svg');
       /* ── Шаг 58 — фон splash, переопределяется initSplash() по культуре ── */
       --splash-bg:     url('assets/backgrounds/splash_pompeii.jpg');
     }
@@ -516,6 +518,64 @@
     #right-panel > * {
       position: relative;
       z-index: 1;
+    }
+
+    /* ══════════════════════════════════════════════════
+       Шаг 59 — Декоративная SVG-рамка (угловой орнамент)
+       ════════════════════════════════════════════════════
+       border-image несовместим с border-radius, поэтому
+       углы рисуются через псевдоэлемент ::after с четырьмя
+       background-image (по одному на каждый угол). Рамка
+       полупрозрачная, pointer-events:none; border-radius
+       панели сохраняется. Вариация по культуре — через
+       CSS-переменную --panel-border-svg, которую меняет
+       applyNationTheme (ui/panels.js). */
+    #left-panel::after,
+    #right-panel::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--panel-radius);
+      background-image:
+        var(--panel-border-svg),
+        var(--panel-border-svg),
+        var(--panel-border-svg),
+        var(--panel-border-svg);
+      background-position:
+        0 0,
+        100% 0,
+        0 100%,
+        100% 100%;
+      background-size: 40px 40px;
+      background-repeat: no-repeat;
+      opacity: 0.55;
+      pointer-events: none;
+      z-index: 2;
+    }
+    /* Рамка на карточках событий / модальных окнах (если класс есть) */
+    .event-card,
+    .modal-box,
+    .char-detail-box {
+      position: relative;
+    }
+    .event-card::after,
+    .modal-box::after,
+    .char-detail-box::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background-image:
+        var(--panel-border-svg),
+        var(--panel-border-svg),
+        var(--panel-border-svg),
+        var(--panel-border-svg);
+      background-position: 0 0, 100% 0, 0 100%, 100% 100%;
+      background-size: 28px 28px;
+      background-repeat: no-repeat;
+      opacity: 0.5;
+      pointer-events: none;
+      z-index: 2;
     }
 
     /* Шаг 23 — иконки-вкладки левой панели */

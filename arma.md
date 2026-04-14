@@ -3483,6 +3483,8 @@ const CULTURE_GROUPS = {
 
 ### Шаг 59 — Декоративные рамки: SVG meander как CSS border-image
 
+> **Статус:** ✅ **ВЫПОЛНЕНО** — файлы `assets/icons/meander_gold.svg`, `meander_dark.svg`, `egyptian_border.svg`, `celtic_border.svg` + `:root { --panel-border-svg }` + `#left-panel::after / #right-panel::after` в `index.html` + `applyNationTheme` в `ui/panels.js` (сеттит `--panel-border-svg` по `group.border`), тесты `tests/test_arma_stage59.mjs` (51 passed). border-image заменён на background-image в ::after — совместимо с `border-radius`. Не реализовывать повторно.
+
 **Цель:** добавить тонкую декоративную рамку вокруг ключевых UI-блоков (панелей, модалов, карточек событий). Рамка — SVG с орнаментом культурной группы, применяется через `border-image`. Разные группы — разные орнаменты. SVG хранятся в `assets/icons/` и коммитятся в git (они маленькие).
 
 **Что сделать:**

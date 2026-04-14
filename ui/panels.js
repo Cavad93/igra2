@@ -2610,6 +2610,13 @@ function applyNationTheme(nationId) {
     root.style.setProperty('--panel-tint', group.panel_tint);
   }
 
+  // ── Шаг 59 — Декоративная SVG-рамка ─────────────────────────
+  // Каждая культурная группа определяет свой border (id SVG в
+  // assets/icons/). Если значение не задано — fallback к meander_dark.
+  const borderId   = group.border || 'meander_dark';
+  const borderPath = `assets/icons/${borderId}.svg`;
+  root.style.setProperty('--panel-border-svg', `url('${borderPath}')`);
+
   // Предзагрузка текстуры (только при смене темы, не каждый вызов)
   if (_currentThemeNation !== nationId) {
     preloadTexture(texturePath);
