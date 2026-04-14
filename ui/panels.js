@@ -2533,3 +2533,74 @@ function _actionLabel(action) {
   };
   return labels[action] ?? action;
 }
+
+// ══════════════════════════════════════════════════════════════
+// Шаг 56 — Культурная текстура боковых панелей
+// ══════════════════════════════════════════════════════════════
+//
+// applyNationTheme(nationId) берёт текущую культурную группу из
+// data/culture_groups.js и переключает CSS-переменные --panel-texture
+// и --panel-tint. Всё рисование делает CSS (::before на панелях),
+// JS только меняет строки переменных.
+//
+// preloadTexture(path) добавляет <link rel="preload" as="image">
+// в <head>, чтобы браузер начал подтягивать JPG параллельно.
+//
+// Функции идемпотентны: повторный вызов с той же нацией не делает
+// лишней работы (кэш _currentThemeNation).
+
+let _currentThemeNation = null;
+
+function preloadTexture(texturePath) {
+  if (typeof document === 'undefined' || !texturePath) return;
+  // Не дублируем preload — если уже есть линк на тот же URL, выходим.
+  const existing = document.head.querySelector(
+    `link[rel="preload"][as="image"][href="${texturePath}"]`
+  );
+  if (existing) return;
+  const link = document.createElement('link');
+  link.rel  = 'preload';
+  link.as   = 'image';
+  link.href = texturePath;
+  document.head.appendChild(link);
+}
+
+function applyNationTheme(nationId) {
+  if (typeof document === 'undefined') return;
+  // getCultureGroup определён в data/culture_groups.js (Шаг 55).
+  if (typeof getCultureGroup !== 'function') return;
+
+  const group = getCultureGroup(nationId);
+  if (!group) return;
+
+  const root = document.documentElement;
+  if (!root || !root.style) return;
+
+  // Текстура: имя файла из group.texture, папка assets/textures/
+  const texturePath = `assets/textures/${group.texture}.jpg`;
+  root.style.setProperty('--panel-texture', `url('${texturePath}')`);
+
+  // Тинт (полупрозрачный цвет поверх текстуры)
+  if (group.panel_tint) {
+    root.style.setProperty('--panel-tint', group.panel_tint);
+  }
+
+  // Предзагрузка текстуры (только при смене темы, не каждый вызов)
+  if (_currentThemeNation !== nationId) {
+    preloadTexture(texturePath);
+    _currentThemeNation = nationId;
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.applyNationTheme = applyNationTheme;
+  window.preloadTexture   = preloadTexture;
+}
+
+// Экспорт для Node-тестов
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = Object.assign(module.exports || {}, {
+    applyNationTheme,
+    preloadTexture,
+  });
+}

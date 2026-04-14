@@ -2998,6 +2998,8 @@ const CULTURE_GROUPS = {
 
 ### Шаг 56 — Фон панелей: культурная текстура через CSS-переменные
 
+> **Статус:** ✅ **ВЫПОЛНЕНО** — `index.html` (`--panel-texture`/`--panel-tint`/`--panel-radius` в `:root`, `#left-panel::before`/`#right-panel::before` c `background-image: var(--panel-texture)`, `inset:0`, `opacity:0.07`, `pointer-events:none`, `z-index:0`; `#left-panel > */#right-panel > *` с `position:relative; z-index:1`) + `ui/panels.js` (`applyNationTheme(nationId)` + `preloadTexture(path)` + экспорт в `window`) + вызов `applyNationTheme(GAME_STATE.player_nation)` после `initGame().then(...)`; тесты `tests/test_arma_stage56.mjs` (48 passed). Не реализовывать повторно.
+
 **Цель:** применить текстуру (`texture`) и тинт (`panel_tint`) из культурной группы текущего игрока к боковым панелям. Панели должны выглядеть как выдержанный пергамент, папирус или керамика — в зависимости от нации. Контент панелей не должен деградировать: текстура накладывается псевдоэлементом `::before`, не касаясь дочерних элементов.
 
 **Что сделать:**

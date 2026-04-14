@@ -83,6 +83,10 @@
       --panel-w:      260px;
       --header-h:     42px;
       --footer-h:     32px;  /* Шаг 25: одна строка (лог свёрнут, ввод всегда виден) */
+      /* ── Шаг 56 — Культурная текстура панелей ── */
+      --panel-texture: url('assets/textures/greek_vase.jpg');
+      --panel-tint:    rgba(26, 18, 8, 0.85);
+      --panel-radius:  6px;
     }
 
     html, body {
@@ -413,6 +417,40 @@
       overflow: hidden;
     }
     #right-panel { border-left:  2px solid var(--border-gold); }
+
+    /* ══════════════════════════════════════════════════
+       Шаг 56 — Культурная текстура на боковых панелях
+       ════════════════════════════════════════════════════
+       Текстура из assets/textures/<culture>.jpg накладывается
+       псевдоэлементом ::before, чтобы не ломать layout и
+       не затрагивать дочерние элементы. Полупрозрачный
+       тинт (--panel-tint) задаёт цвет панели ниже текстуры;
+       если JPG ещё не скачан — панель остаётся читаемой
+       за счёт этого тинта (CSS-деградация, без JS-fallback). */
+    #left-panel,
+    #right-panel {
+      position: relative;
+      background-color: var(--panel-tint);
+      border-radius: var(--panel-radius);
+    }
+    #left-panel::before,
+    #right-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: var(--panel-texture);
+      background-size: 320px auto;
+      background-repeat: repeat;
+      opacity: 0.07;
+      pointer-events: none;
+      z-index: 0;
+    }
+    /* Весь контент панели должен лежать поверх псевдоэлемента */
+    #left-panel > *,
+    #right-panel > * {
+      position: relative;
+      z-index: 1;
+    }
 
     /* Шаг 23 — иконки-вкладки левой панели */
     #left-nav {
@@ -9961,6 +9999,12 @@
       renderNationLegend();
       _splashProgress(95, 'Готово');
       initAPIKey();
+      // Шаг 56 — применить культурную тему панелей для нации игрока
+      try {
+        if (typeof applyNationTheme === 'function' && GAME_STATE && GAME_STATE.player_nation) {
+          applyNationTheme(GAME_STATE.player_nation);
+        }
+      } catch (e) { console.error('[applyNationTheme] error:', e); }
       setTimeout(_splashHide, 300);
     }).catch(e => {
       console.error('[initGame] Критическая ошибка:', e);
