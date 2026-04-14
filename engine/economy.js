@@ -324,6 +324,22 @@ function routeProductionToLocalStockpiles(nationId, allProduced) {
       }
     }
 
+    // Специализация региона (этап 3, docs/economic2.md) — накопительный
+    // бонус к эффективности топ-товара. Применяется ДО расчёта overflow,
+    // чтобы прирост попал в local_stockpile и отразился в ёмкости.
+    if (typeof getRegionSpecBonus === 'function') {
+      for (const good of Object.keys(prodThisTick)) {
+        const mult = getRegionSpecBonus(rid, good);
+        if (mult > 1.0) {
+          const delta = prodThisTick[good] * (mult - 1);
+          if (delta > 0) {
+            prodThisTick[good] += delta;
+            ls[good] = (ls[good] || 0) + delta;
+          }
+        }
+      }
+    }
+
     // Запоминаем для расчёта региональных цен и ёмкости
     region._production_last_tick = prodThisTick;
 

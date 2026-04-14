@@ -116,11 +116,60 @@ GAME_STATE.economy_ext = {
 
 ---
 
-## Улучшение 3: Специализация региона
+## Улучшение 3: Специализация региона ✅ ВЫПОЛНЕНО (этап 3)
 
 **Суть:** Регион производящий один товар 10+ ходов без перебоев получает +5% эффективности (до +25%). Сброс при смене или дефиците.
 **Сложность:** Средняя — новое поле в регионе.
 **Файлы:** `engine/economy_ext.js`, `engine/economy.js`
+
+**Что сделано в этапе 3:**
+- В `engine/economy_ext.js` добавлены константы
+  `SPEC_STREAK_WINDOW = 10`, `SPEC_STEP_BONUS = 0.05`, `SPEC_MAX_BONUS = 0.25`,
+  `SPEC_EPS = 0.01` (порог «реального» производства).
+- `updateRegionSpecialization()` — проходит по всем регионам,
+  определяет топ-товар тика из `region._production_last_tick`, инкрементирует
+  `streak` при совпадении с предыдущим топом, сбрасывает до 1 при смене,
+  удаляет запись полностью при «дефиците» (нет производства или < EPS).
+  Пересчитывает `bonus = 1 + min(0.25, floor(streak/10) × 0.05)`.
+  Структура записи: `region_specialization[rid] = { good, streak, bonus }`
+  — полностью совпадает с контрактом, ожидаемым этапом 8
+  (`ui/economy_tab.js`).
+- `getRegionSpecBonus(regionId, good)` — возвращает `bonus` (≥1.0), если
+  `good === spec.good`, иначе `1.0`.
+- В `engine/economy.js → routeProductionToLocalStockpiles()` после сборки
+  `prodThisTick` для региона, но ДО расчёта `overflow`, применяется
+  `getRegionSpecBonus(rid, good)` к каждому товару: добавочная величина
+  `prod × (mult − 1)` заливается и в `prodThisTick[good]`, и в
+  `region.local_stockpile[good]`. Это гарантирует, что бонус влияет и на
+  ёмкость `capacity = produced × 3`, и на последующий overflow в
+  `nation.economy.stockpile`.
+- `updateRegionSpecialization()` вызывается из `runEconomyExtTick()` сразу
+  после `detectMonopolies()`. Один тик задержки между расчётом бонуса и
+  применением к производству — задуманный (бонус, начисленный в тике N,
+  действует начиная с тика N+1).
+- Логи: сообщения о каждом повышении порога (+5%, +10%, …, +25%), о смене
+  топ-товара (только если прежний бонус был > 1.0) и о полной утрате
+  специализации при дефиците.
+- Все функции и константы экспортированы в `window` для инспекции и
+  сохранения/загрузки.
+
+**Тесты этапа 3 (`tests/eco_stage3_specialization_test.cjs`, все зелёные — 33/33):**
+- `initEconomyExt()` создаёт `region_specialization` как пустой объект ✓
+- Первый тик создаёт запись `{good, streak=1, bonus=1.0}` ✓
+- Через 10 ходов `bonus=1.05`, через 20 → `1.10`, через 50 → `1.25` ✓
+- После 100 ходов `bonus` не превышает `SPEC_MAX_BONUS=0.25` ✓
+- Смена топ-товара сбрасывает streak в 1 и bonus в 1.0 ✓
+- «Дефицит» (пустой `_production_last_tick` или значения < `SPEC_EPS`)
+  удаляет запись ✓
+- `getRegionSpecBonus(rid, 'wheat')` отдаёт бонус для совпадающего товара
+  и 1.0 для всех остальных (и для неизвестных регионов) ✓
+- Регионы независимы (streak у r1 и r2 ведётся отдельно) ✓
+- После дефицита восстановление идёт с `streak=1` ✓
+- Все функции/константы экспортированы в `window` ✓
+- `runEconomyExtTick()` не падает и корректно вызывает
+  `updateRegionSpecialization()` ✓
+
+**НЕ повторять в новых сессиях.**
 
 ---
 
@@ -640,9 +689,9 @@ console.log('Tech drift:', ext.tech_drift);
 
 | Этап | Что реализуется | Улучшение | Файлы |
 |------|-----------------|-----------|-------|
-| 1 | Каркас `economy_ext.js` + торговый баланс | 1 | economy_ext.js, treasury-panel.js |
-| 2 | Монопольный бонус к цене и дипломатии | 2 | economy_ext.js, economy_tab.js |
-| 3 | Специализация региона (+5% за 10 ходов) | 3 | economy_ext.js, economy.js |
+| 1 ✅ | Каркас `economy_ext.js` + торговый баланс | 1 | economy_ext.js, treasury-panel.js |
+| 2 ✅ | Монопольный бонус к цене и дипломатии | 2 | economy_ext.js, economy_tab.js |
+| 3 ✅ | Специализация региона (+5% за 10 ходов) | 3 | economy_ext.js, economy.js |
 | 4 | Инфляция от переполненной казны | 4 | economy_ext.js, market.js |
 | 5 | Экономические циклы (бум/спад) | 5 | economy_ext.js, economy.js |
 | 6 | Штраф армии при недофинансировании | 6 | economy_ext.js, combat.js |

@@ -4,7 +4,7 @@
 // План «Улучшения экономики» (docs/economic2.md) — 8 улучшений:
 //   1. Торговый баланс (видимость)                ← этап 1 ✔
 //   2. Монопольный бонус к цене/дипломатии        ← этап 2 ✔
-//   3. Специализация региона                      ← этап 3
+//   3. Специализация региона                      ← этап 3 ✔
 //   4. Инфляция от переполненной казны            ← этап 4
 //   5. Экономические циклы (бум / спад)            ← этап 5
 //   6. Усталость армии от недофинансирования       ← этап 6
@@ -28,6 +28,16 @@
 //                                 всеми торговыми партнёрами
 //                                 монополиста, корректно снимая бонус
 //                                 при потере монополии.
+//
+// Этап 3 (специализация региона) реализован в этом файле:
+//   • updateRegionSpecialization() — раз в тик сканирует _production_last_tick
+//                                    всех регионов, увеличивает streak для
+//                                    топ-товара и пересчитывает bonus.
+//   • getRegionSpecBonus(rid, good) — множитель эффективности производства
+//                                     специализированного товара в регионе
+//                                     (1.00–1.25). Применяется в
+//                                     routeProductionToLocalStockpiles
+//                                     (engine/economy.js).
 //
 // Загружается ПОСЛЕ engine/economy.js и ДО engine/turn.js в index.html.
 // ══════════════════════════════════════════════════════════════
@@ -308,6 +318,119 @@ function _applyMonopolyDiplomacyDelta(newMono) {
   }
 }
 
+// ══════════════════════════════════════════════════════════════
+// ЭТАП 3 — СПЕЦИАЛИЗАЦИЯ РЕГИОНА
+//
+// Регион, производящий один и тот же «ведущий» товар N ходов подряд
+// без перебоев, получает накопительный +5% к эффективности ЭТОГО
+// товара за каждые SPEC_STREAK_WINDOW ходов streak'а, до SPEC_MAX_BONUS.
+//
+// Данные хранятся в
+//   GAME_STATE.economy_ext.region_specialization[regionId] = {
+//     good:   'wheat',     // топ-товар региона в прошедшем тике
+//     streak: 12,          // сколько тиков подряд он оставался топом
+//     bonus:  1.05,        // мультипликатор эффективности (1.0–1.25)
+//   }
+//
+// Сброс:
+//   • «Смена» — топ-товар этого тика отличается от spec.good
+//     → streak=1, bonus=1.00
+//   • «Дефицит» — в этом тике регион вообще ничего не произвёл
+//     (нет позиций в _production_last_tick или все < EPS)
+//     → запись удаляется полностью
+//
+// Применение:
+//   getRegionSpecBonus(rid, good) возвращает bonus (≥1.0) если good ===
+//   spec.good, иначе 1.0. Используется в
+//   engine/economy.js → routeProductionToLocalStockpiles, где
+//   специализированный товар получает прирост перед подсчётом overflow.
+// ══════════════════════════════════════════════════════════════
+
+const SPEC_STREAK_WINDOW = 10;    // один «шаг» бонуса — 10 ходов streak'а
+const SPEC_STEP_BONUS    = 0.05;  // +5% за шаг
+const SPEC_MAX_BONUS     = 0.25;  // потолок +25%
+const SPEC_EPS           = 0.01;  // порог «реального» производства
+
+// ──────────────────────────────────────────────────────────────
+// updateRegionSpecialization()
+//
+// Проходит по всем регионам, определяет топ-товар текущего тика
+// из region._production_last_tick и обновляет запись специализации.
+// ──────────────────────────────────────────────────────────────
+function updateRegionSpecialization() {
+  const ext = GAME_STATE?.economy_ext;
+  if (!ext) return;
+  if (!ext.region_specialization) ext.region_specialization = {};
+  const spec = ext.region_specialization;
+
+  const regions = GAME_STATE?.regions || {};
+  for (const rid of Object.keys(regions)) {
+    const region = regions[rid];
+    const prod   = region?._production_last_tick || {};
+
+    // Ищем топ-товар тика.
+    let topGood = null;
+    let topAmt  = 0;
+    for (const [g, a] of Object.entries(prod)) {
+      const v = Number(a) || 0;
+      if (v > topAmt) { topGood = g; topAmt = v; }
+    }
+
+    // Дефицит / полное отсутствие производства — сбросить запись.
+    if (!topGood || topAmt < SPEC_EPS) {
+      if (spec[rid]) {
+        // Логируем только значимые потери (streak достиг бонуса).
+        const prev = spec[rid];
+        if ((prev.bonus || 1.0) > 1.0) {
+          addEconomicEvent(
+            `⚙ Регион '${rid}' утратил специализацию (${prev.good}): производство остановлено.`
+          );
+        }
+        delete spec[rid];
+      }
+      continue;
+    }
+
+    const cur = spec[rid];
+    if (cur && cur.good === topGood) {
+      cur.streak = (Number(cur.streak) || 0) + 1;
+    } else {
+      if (cur && (cur.bonus || 1.0) > 1.0) {
+        addEconomicEvent(
+          `⚙ Регион '${rid}' сменил специализацию: ${cur.good} → ${topGood}.`
+        );
+      }
+      spec[rid] = { good: topGood, streak: 1, bonus: 1.0 };
+    }
+
+    const entry = spec[rid];
+    const steps = Math.floor(entry.streak / SPEC_STREAK_WINDOW);
+    const newBonus = 1.0 + Math.min(SPEC_MAX_BONUS, steps * SPEC_STEP_BONUS);
+
+    // Лог только на моментах повышения порога.
+    if (newBonus > (entry.bonus || 1.0) + 1e-9) {
+      addEconomicEvent(
+        `⚙ Регион '${rid}' (${entry.good}) — специализация +${Math.round((newBonus - 1) * 100)}% (streak=${entry.streak}).`
+      );
+    }
+    entry.bonus = newBonus;
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// getRegionSpecBonus(regionId, good)
+//
+// Множитель эффективности производства для указанного региона/товара.
+// Возвращает bonus (≥1.0) только если good совпадает со специализацией
+// региона; иначе 1.0.
+// ──────────────────────────────────────────────────────────────
+function getRegionSpecBonus(regionId, good) {
+  const entry = GAME_STATE?.economy_ext?.region_specialization?.[regionId];
+  if (!entry || entry.good !== good) return 1.0;
+  const b = Number(entry.bonus);
+  return (isFinite(b) && b > 1.0) ? b : 1.0;
+}
+
 // ──────────────────────────────────────────────────────────────
 // addEconomicEvent — общий логгер будущих экономических событий.
 // ──────────────────────────────────────────────────────────────
@@ -336,8 +459,12 @@ function runEconomyExtTick() {
   // уже завершена торговля — бонус применяется в следующем тике).
   try { detectMonopolies(); } catch (e) { console.warn('[economy_ext:mono]', e); }
 
-  // Этапы 3–8 подключатся здесь в будущих сессиях:
-  //   try { updateSpecialization(); } catch (e) { console.warn('[economy_ext:spec]', e); }
+  // Этап 3 — обновление специализации регионов. Бонус, рассчитанный
+  // здесь, будет применён к производству СЛЕДУЮЩЕГО тика через
+  // getRegionSpecBonus() в routeProductionToLocalStockpiles().
+  try { updateRegionSpecialization(); } catch (e) { console.warn('[economy_ext:spec]', e); }
+
+  // Этапы 4–8 подключатся здесь в будущих сессиях:
   //   try { updateInflation();      } catch (e) { console.warn('[economy_ext:infl]', e); }
   //   try { updateEconomicCycle();  } catch (e) { console.warn('[economy_ext:cycle]', e); }
   //   try { updateTechDrift();      } catch (e) { console.warn('[economy_ext:tech]', e); }
@@ -355,4 +482,11 @@ if (typeof window !== 'undefined') {
   window.getMonopolyPriceMult = getMonopolyPriceMult;
   window.MONOPOLY_PRICE_BONUS     = MONOPOLY_PRICE_BONUS;
   window.MONOPOLY_DIPLOMACY_BONUS = MONOPOLY_DIPLOMACY_BONUS;
+
+  // Этап 3 — специализация региона.
+  window.updateRegionSpecialization = updateRegionSpecialization;
+  window.getRegionSpecBonus         = getRegionSpecBonus;
+  window.SPEC_STREAK_WINDOW = SPEC_STREAK_WINDOW;
+  window.SPEC_STEP_BONUS    = SPEC_STEP_BONUS;
+  window.SPEC_MAX_BONUS     = SPEC_MAX_BONUS;
 }
