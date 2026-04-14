@@ -882,6 +882,16 @@ function _eRender() {
             <div style="font-size:16px;font-family:'Cinzel',serif;color:${_C.ivory};letter-spacing:.8px">Экономический обзор</div>
             <div style="font-size:10px;color:${_C.ivoryDim};margin-top:2px">${name} · Ход ${window.GAME_STATE?.turn || 1}</div>
           </div>
+          ${(() => {
+            // Этап 7 — уровень технологического дрейфа (ремёсла).
+            const td = window.GAME_STATE?.economy_ext?.tech_drift;
+            const b  = Number(td?.bonus) || 0;
+            if (b < 0.01) {
+              return `<div title="Базовый уровень ремёсел — бонус к производству зданий начнёт расти после ${window.TECH_DRIFT_INTERVAL || 120} ходов" style="font-size:10px;color:${_C.ivoryFade};padding:4px 8px;border:1px solid ${_C.border};border-radius:6px">⚒ Ремёсла: базовый</div>`;
+            }
+            const pct = Math.round(b * 100);
+            return `<div title="Технологический дрейф: +${pct}% к производству всех зданий. Растёт на +2% каждые ${window.TECH_DRIFT_INTERVAL || 120} ходов, потолок +${Math.round((window.TECH_DRIFT_MAX || 0.20)*100)}%." style="font-size:10px;color:#aacc66;padding:4px 8px;border:1px solid rgba(170,204,102,0.35);border-radius:6px;background:rgba(100,150,50,0.08)">⚒ Ремёсла: +${pct}%</div>`;
+          })()}
           <button onclick="hideEconomyOverlay()" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid ${_C.border};color:${_C.ivoryDim};font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1" onmouseover="this.style.background='rgba(224,85,85,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">✕</button>
         </div>
 

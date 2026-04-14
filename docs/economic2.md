@@ -360,11 +360,73 @@ GAME_STATE.economy_ext = {
 
 ---
 
-## Улучшение 7: Рост производительности со временем
+## Улучшение 7: Рост производительности со временем ✅ ВЫПОЛНЕНО (этап 7)
 
 **Суть:** Каждые 120 ходов (10 лет) — пассивный прирост +2% к эффективности всех зданий (до +20% за 100 лет). Отражает развитие ремёсел.
 **Сложность:** Низкая — глобальный мультипликатор.
-**Файлы:** `engine/economy_ext.js`
+**Файлы:** `engine/economy_ext.js`, `engine/economy.js`, `ui/economy_react.jsx`
+
+**Что сделано в этапе 7:**
+- В `engine/economy_ext.js` добавлены константы
+  `TECH_DRIFT_INTERVAL = 120`, `TECH_DRIFT_STEP = 0.02`,
+  `TECH_DRIFT_MAX = 0.20`.
+- `updateTechDrift()` — раз в тик проверяет `turn − last_tick ≥
+  TECH_DRIFT_INTERVAL` и докидывает `+2%` к `tech_drift.bonus`, пока
+  не упрётся в потолок. Цикл `while` «догоняет» пропущенные
+  интервалы (важно после загрузки старого сейва, где прошло
+  несколько полных интервалов сразу). При достижении потолка
+  `last_tick` корректно нормализуется, чтобы не генерировать
+  повторные логи.
+- `getTechDriftMult()` — глобальный множитель `1.0…1.20`. Возвращает
+  `1.0` если `GAME_STATE` отсутствует, `tech_drift.bonus < 0` или NaN.
+- `renderTechDrift()` — HTML-блок для UI (отдельный класс
+  `eco-tech-none` при базовом уровне и `eco-tech-level` при активном
+  бонусе).
+- Вызов `updateTechDrift()` добавлен в `runEconomyExtTick()` после
+  `updateArmyFunding()`.
+- В `engine/economy.js → routeProductionToLocalStockpiles()` после
+  заливки регионального `bldByRegion[rid]` в `prodThisTick` и `ls`
+  прибавляется технологический прирост: `delta = amt × (techMult − 1)`
+  по каждому товару зданий. Это гарантирует, что бонус идёт ТОЛЬКО
+  к организованному производству (зданиям), не затрагивая
+  неорганизованную часть, и учитывается в `overflow` через
+  обновлённый `capacity = produced × 3`.
+- В `ui/economy_react.jsx → _eRender()` в шапке экономического
+  обзора добавлен бейдж «⚒ Ремёсла: +X%» с тултипом, описывающим
+  формулу дрейфа. При `bonus < 0.01` выводится «⚒ Ремёсла: базовый».
+- Все функции и константы экспортированы в `window` для инспекции
+  и save/load (`updateTechDrift`, `getTechDriftMult`,
+  `renderTechDrift`, `TECH_DRIFT_INTERVAL`, `TECH_DRIFT_STEP`,
+  `TECH_DRIFT_MAX`).
+
+**Тесты этапа 7 (`tests/eco_stage7_tech_drift_test.cjs`, 44/44 зелёные):**
+- Экспорты и константы на месте (120 / 0.02 / 0.20) ✓
+- `updateTechDrift()` лениво создаёт `tech_drift = {bonus:0,last_tick:0}` ✓
+- `turn < 120` — `bonus` остаётся 0 ✓
+- `turn = 120` → `bonus = 0.02`, `last_tick = 120`,
+  `getTechDriftMult() = 1.02` ✓
+- `turn = 240` → `bonus = 0.04`, `last_tick = 240` ✓
+- 5 циклов (по 120 ходов каждый) → `bonus = 0.10`, mult = 1.10 ✓
+- `turn = 1200+` — `bonus` не превышает `TECH_DRIFT_MAX = 0.20`,
+  mult = 1.20; дальнейшие тики не двигают значение ✓
+- `getTechDriftMult()` возвращает 1.0 для `GAME_STATE = null` и для
+  отсутствующего `tech_drift` ✓
+- Интеграция: `runEconomyExtTick()` на `turn=120` повышает bonus
+  до 0.02 без падений ✓
+- `renderTechDrift()` — «базовый» при bonus < 0.01 и `+X%` +
+  класс `eco-tech-level` при активном бонусе ✓
+- «Догоняющие» шаги: `turn=360` с `last_tick=0` за один вызов
+  повышает bonus до 0.06, `last_tick=360` ✓
+- Save/load: JSON-сериализация `tech_drift` сохраняет `bonus` и
+  `last_tick`; после восстановления mult корректен ✓
+- Патч `engine/economy.js` содержит блок «Этап 7» и прибавляет
+  `delta = amt × (mult − 1)` в `prodThisTick` и `local_stockpile` ✓
+- Симуляция: при `bonus = 0.10` производство здания `wheat: 100`
+  становится 110, `iron: 50` → 55 (как в `prodThisTick`, так и в
+  `local_stockpile`) ✓
+- Существующие тесты этапов 3/4/5/6 остаются зелёными ✓
+
+**НЕ повторять в новых сессиях.**
 
 ---
 
@@ -856,9 +918,9 @@ console.log('Tech drift:', ext.tech_drift);
 | 2 ✅ | Монопольный бонус к цене и дипломатии | 2 | economy_ext.js, economy_tab.js |
 | 3 ✅ | Специализация региона (+5% за 10 ходов) | 3 | economy_ext.js, economy.js |
 | 4 ✅ | Инфляция от переполненной казны | 4 | economy_ext.js, buildings.js, treasury-panel.js |
-| 5 | Экономические циклы (бум/спад) | 5 | economy_ext.js, economy.js |
-| 6 | Штраф армии при недофинансировании | 6 | economy_ext.js, combat.js |
-| 7 | Технологический дрейф (+2% за 10 лет) | 7 | economy_ext.js, economy.js |
+| 5 ✅ | Экономические циклы (бум/спад) | 5 | economy_ext.js, economy.js |
+| 6 ✅ | Штраф армии при недофинансировании | 6 | economy_ext.js, combat.js |
+| 7 ✅ | Технологический дрейф (+2% за 10 лет) | 7 | economy_ext.js, economy.js |
 | 8 | Тултипы эффективности в UI | 8 | economy_tab.js |
 | 9 | Итоговый блок казны со всеми бонусами | — | treasury-panel.js |
 | 10 | Финальное тестирование | — | все файлы |

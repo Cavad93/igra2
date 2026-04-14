@@ -8,7 +8,7 @@
 //   4. Инфляция от переполненной казны            ← этап 4 ✔
 //   5. Экономические циклы (бум / спад)            ← этап 5 ✔
 //   6. Усталость армии от недофинансирования       ← этап 6 ✔
-//   7. Рост производительности со временем        ← этап 7
+//   7. Рост производительности со временем        ← этап 7 ✔
 //   8. Тултипы эффективности производства         ← этап 8
 //
 // Этап 1 реализован в этом файле:
@@ -846,6 +846,97 @@ function updateArmyFunding() {
   }
 }
 
+// ══════════════════════════════════════════════════════════════
+// ЭТАП 7 — РОСТ ПРОИЗВОДИТЕЛЬНОСТИ СО ВРЕМЕНЕМ (ТЕХНОЛОГИЧЕСКИЙ ДРЕЙФ)
+//
+// Каждые TECH_DRIFT_INTERVAL (120 ходов = 10 лет) нация-мир получает
+// +2% к эффективности ВСЕХ зданий, до потолка +20% (5 шагов × 120 ходов
+// = 600 ходов / 50 лет игры). Глобальный, не привязан к отдельной нации —
+// моделирует совершенствование ремёсел и технологий.
+//
+// Данные: GAME_STATE.economy_ext.tech_drift = { bonus, last_tick }
+//   • bonus     — текущий глобальный мультипликатор (0.0–0.20)
+//   • last_tick — ход, на котором последний раз применили инкремент
+//
+// Применение: getTechDriftMult() → 1.0 + bonus. Используется в
+// engine/economy.js → routeProductionToLocalStockpiles() — бонус
+// прибавляется к зданиям по каждому региону (НЕ к неорганизованному
+// производству, что логично: организованные мастерские впитывают
+// технологический прогресс первыми).
+// ══════════════════════════════════════════════════════════════
+
+const TECH_DRIFT_INTERVAL = 120;   // раз в 120 ходов (≈10 лет)
+const TECH_DRIFT_STEP     = 0.02;  // +2% за шаг
+const TECH_DRIFT_MAX      = 0.20;  // потолок +20%
+
+// ──────────────────────────────────────────────────────────────
+// updateTechDrift()
+//
+// Раз в тик проверяет turn − last_tick ≥ TECH_DRIFT_INTERVAL и
+// прибавляет TECH_DRIFT_STEP к tech_drift.bonus (с clamp до MAX).
+// Инициализирует запись при первом вызове. Логирует каждое
+// срабатывание через addEconomicEvent().
+//
+// Замечание: last_tick может сдвигаться на несколько интервалов
+// сразу, если тиков прошло больше одного TECH_DRIFT_INTERVAL
+// (например, после загрузки старого сейва). Обрабатываем это
+// в цикле, чтобы «догнать» пропущенные шаги.
+// ──────────────────────────────────────────────────────────────
+function updateTechDrift() {
+  const ext = GAME_STATE?.economy_ext;
+  if (!ext) return;
+  if (!ext.tech_drift) ext.tech_drift = { bonus: 0, last_tick: 0 };
+  const td = ext.tech_drift;
+
+  const turn = Number(GAME_STATE?.turn) || 0;
+  if (!Number.isFinite(td.last_tick)) td.last_tick = 0;
+  if (!Number.isFinite(td.bonus))     td.bonus     = 0;
+
+  // Пока не упёрлись в потолок и прошёл целый интервал — докидываем шаги.
+  while (td.bonus + 1e-9 < TECH_DRIFT_MAX && (turn - td.last_tick) >= TECH_DRIFT_INTERVAL) {
+    td.bonus = Math.min(TECH_DRIFT_MAX, td.bonus + TECH_DRIFT_STEP);
+    td.last_tick += TECH_DRIFT_INTERVAL;
+    addEconomicEvent(
+      `⚒ Ремёсла развились. Производительность зданий: +${Math.round(td.bonus * 100)}%.`
+    );
+  }
+  // Если упёрлись в потолок — сдвигаем last_tick так, чтобы не логировать больше.
+  if (td.bonus + 1e-9 >= TECH_DRIFT_MAX) {
+    td.bonus = TECH_DRIFT_MAX;
+    // Не даём last_tick уехать далеко за turn — фиксируем последний разумный шаг.
+    if (turn - td.last_tick >= TECH_DRIFT_INTERVAL) {
+      td.last_tick = turn - (turn - td.last_tick) % TECH_DRIFT_INTERVAL;
+    }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// getTechDriftMult()
+//
+// Глобальный множитель производительности зданий. В начале игры = 1.0;
+// постепенно растёт до 1.20. Используется в
+// engine/economy.js → routeProductionToLocalStockpiles() как третий
+// этап обработки (после spec-бонуса и cycle-мультипликатора).
+// ──────────────────────────────────────────────────────────────
+function getTechDriftMult() {
+  const b = Number(GAME_STATE?.economy_ext?.tech_drift?.bonus);
+  if (!Number.isFinite(b) || b <= 0) return 1.0;
+  return 1.0 + Math.min(TECH_DRIFT_MAX, b);
+}
+
+// ──────────────────────────────────────────────────────────────
+// renderTechDrift() — короткий HTML-блок для ui/economy_tab.js.
+// ──────────────────────────────────────────────────────────────
+function renderTechDrift() {
+  const td = GAME_STATE?.economy_ext?.tech_drift;
+  const b  = Number(td?.bonus) || 0;
+  if (b < 0.01) {
+    return '<div class="eco-tech-none" style="font-size:11px;color:#888;">⚒ Уровень ремёсел: базовый</div>';
+  }
+  const pct = Math.round(b * 100);
+  return `<div class="eco-tech-level" style="font-size:11px;color:#aacc66;">⚒ Уровень ремёсел: +${pct}% к производству зданий</div>`;
+}
+
 // ──────────────────────────────────────────────────────────────
 // addEconomicEvent — общий логгер будущих экономических событий.
 // ──────────────────────────────────────────────────────────────
@@ -897,8 +988,10 @@ function runEconomyExtTick() {
   // для UI-вывода (badge в казне).
   try { updateArmyFunding(); } catch (e) { console.warn('[economy_ext:army_fund]', e); }
 
-  // Этапы 7–8 подключатся здесь в будущих сессиях:
-  //   try { updateTechDrift();      } catch (e) { console.warn('[economy_ext:tech]', e); }
+  // Этап 7 — технологический дрейф: +2% к производству зданий каждые
+  // 120 ходов (до потолка +20%). Применяется в
+  // routeProductionToLocalStockpiles() через getTechDriftMult().
+  try { updateTechDrift(); } catch (e) { console.warn('[economy_ext:tech]', e); }
 }
 
 // Экспорт в window для инспекции из консоли (браузер) и для save/load.
@@ -944,4 +1037,12 @@ if (typeof window !== 'undefined') {
   window.updateArmyFunding       = updateArmyFunding;
   window.ARMY_UNDERFUND_THRESHOLD = ARMY_UNDERFUND_THRESHOLD;
   window.ARMY_UNDERFUND_PENALTY   = ARMY_UNDERFUND_PENALTY;
+
+  // Этап 7 — технологический дрейф (рост производительности зданий).
+  window.updateTechDrift    = updateTechDrift;
+  window.getTechDriftMult   = getTechDriftMult;
+  window.renderTechDrift    = renderTechDrift;
+  window.TECH_DRIFT_INTERVAL = TECH_DRIFT_INTERVAL;
+  window.TECH_DRIFT_STEP     = TECH_DRIFT_STEP;
+  window.TECH_DRIFT_MAX      = TECH_DRIFT_MAX;
 }

@@ -314,6 +314,25 @@ function routeProductionToLocalStockpiles(nationId, allProduced) {
       prodThisTick[good]   = (prodThisTick[good]   || 0) + amt;
     }
 
+    // Этап 7: технологический дрейф — глобальный +X% к зданиям
+    // (docs/economic2.md Улучшение 7). НЕ затрагивает неорганизованное
+    // производство — технологический прогресс впитывают только
+    // организованные мастерские. Прирост считается от bldByRegion[rid]
+    // (исходного объёма зданий региона) и добавляется и в prodThisTick,
+    // и в local_stockpile ДО расчёта overflow.
+    if (typeof getTechDriftMult === 'function') {
+      const techMult = getTechDriftMult();
+      if (techMult > 1.0) {
+        for (const [good, amt] of Object.entries(bldByRegion[rid] || {})) {
+          const delta = amt * (techMult - 1);
+          if (delta > 0) {
+            ls[good]           = (ls[good]           || 0) + delta;
+            prodThisTick[good] = (prodThisTick[good] || 0) + delta;
+          }
+        }
+      }
+    }
+
     // Доля неорганизованного производства пропорционально населению
     const popShare = (region.population || 0) / totalRegionPop;
     for (const [good, unorgAmt] of Object.entries(unorgTotal)) {
