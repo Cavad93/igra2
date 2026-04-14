@@ -5,8 +5,8 @@
 //   1. Торговый баланс (видимость)                ← этап 1 ✔
 //   2. Монопольный бонус к цене/дипломатии        ← этап 2 ✔
 //   3. Специализация региона                      ← этап 3 ✔
-//   4. Инфляция от переполненной казны            ← этап 4
-//   5. Экономические циклы (бум / спад)            ← этап 5
+//   4. Инфляция от переполненной казны            ← этап 4 ✔
+//   5. Экономические циклы (бум / спад)            ← этап 5 ✔
 //   6. Усталость армии от недофинансирования       ← этап 6
 //   7. Рост производительности со временем        ← этап 7
 //   8. Тултипы эффективности производства         ← этап 8
@@ -552,6 +552,147 @@ function getInflationMult(nationId) {
   return 1.0 + Math.min(INFLATION_MAX, v);
 }
 
+// ══════════════════════════════════════════════════════════════
+// ЭТАП 5 — ЭКОНОМИЧЕСКИЕ ЦИКЛЫ (БУМ / СПАД)
+//
+// Раз в 48–72 хода случайный глобальный сдвиг для продовольствия:
+//   • boom       (20%): +15% к производству зерна и другой еды
+//   • recession  (20%): −18% к производству
+//   • normal     (60%): без изменений
+// Длительность активного цикла 6–12 ходов.
+//
+// Хранение: GAME_STATE.economy_ext.economic_cycle = {
+//   current:         'boom' | 'normal' | 'recession',
+//   turns_left:      0..12,
+//   next_check_turn: turn ≥ которого делается новая проверка,
+// }
+//
+// Применение:
+//   getCycleMult(good) — возвращает 1.0 для не-food и для normal,
+//   иначе мультипликатор активного цикла. Используется в
+//   engine/economy.js → routeProductionToLocalStockpiles().
+// ══════════════════════════════════════════════════════════════
+
+const CYCLE_GOODS = ['wheat', 'barley', 'olives', 'grapes', 'fish'];
+
+const CYCLE_TYPES = {
+  boom: {
+    label: 'Урожайный год',
+    mult:  1.15,
+    desc:  '+15% к производству зерна и продовольствия',
+  },
+  recession: {
+    label: 'Неурожайный год',
+    mult:  0.82,
+    desc:  '−18% к производству зерна и продовольствия',
+  },
+  normal: {
+    label: 'Нормальный год',
+    mult:  1.0,
+    desc:  '',
+  },
+};
+
+const CYCLE_CHECK_MIN = 48;     // мин. интервал между проверками
+const CYCLE_CHECK_RANGE = 24;   // диапазон случайной задержки (48..71)
+const CYCLE_DUR_MIN  = 6;       // мин. длина активного цикла
+const CYCLE_DUR_RANGE = 7;      // случайная добавка (6..12)
+const CYCLE_BOOM_PROB = 0.20;
+const CYCLE_RECESSION_PROB = 0.20;
+
+// ──────────────────────────────────────────────────────────────
+// updateEconomicCycle()
+//
+// Раз в тик:
+//   1) Если активен ненормальный цикл — уменьшает turns_left.
+//      При обнулении возвращает state в 'normal'.
+//   2) Если turn ≥ next_check_turn — делает roll:
+//      20% boom, 20% recession, 60% normal. При активации задаёт
+//      случайную длительность 6–12 ходов и логгирует событие.
+//      Следующая проверка отложена на 48–71 ходов вперёд.
+//
+// Последовательность защищена: новая проверка не делается, пока
+// длится активный цикл.
+// ──────────────────────────────────────────────────────────────
+function updateEconomicCycle() {
+  const ext = GAME_STATE?.economy_ext;
+  if (!ext) return;
+  if (!ext.economic_cycle) {
+    ext.economic_cycle = { current: 'normal', turns_left: 0, next_check_turn: CYCLE_CHECK_MIN };
+  }
+  const cycle = ext.economic_cycle;
+  const turn  = Number(GAME_STATE?.turn) || 0;
+
+  // 1) Активный цикл — отсчёт ходов до завершения.
+  if (cycle.current && cycle.current !== 'normal' && (cycle.turns_left || 0) > 0) {
+    cycle.turns_left = (Number(cycle.turns_left) || 0) - 1;
+    if (cycle.turns_left <= 0) {
+      const prev = cycle.current;
+      addEconomicEvent(`📅 ${CYCLE_TYPES[prev]?.label || prev} завершился.`);
+      cycle.current = 'normal';
+      cycle.turns_left = 0;
+      // Следующая проверка — через стандартный интервал.
+      cycle.next_check_turn = turn + CYCLE_CHECK_MIN + Math.floor(Math.random() * CYCLE_CHECK_RANGE);
+    }
+    return;
+  }
+
+  // 2) Ждём очередную проверку.
+  if (turn < (Number(cycle.next_check_turn) || 0)) return;
+
+  // Сдвигаем след. проверку даже если выпал normal.
+  cycle.next_check_turn = turn + CYCLE_CHECK_MIN + Math.floor(Math.random() * CYCLE_CHECK_RANGE);
+
+  const roll = Math.random();
+  if (roll < CYCLE_BOOM_PROB) {
+    cycle.current    = 'boom';
+    cycle.turns_left = CYCLE_DUR_MIN + Math.floor(Math.random() * CYCLE_DUR_RANGE);
+    addEconomicEvent(`🌾 ${CYCLE_TYPES.boom.label}! ${CYCLE_TYPES.boom.desc} (${cycle.turns_left} ходов).`);
+  } else if (roll < CYCLE_BOOM_PROB + CYCLE_RECESSION_PROB) {
+    cycle.current    = 'recession';
+    cycle.turns_left = CYCLE_DUR_MIN + Math.floor(Math.random() * CYCLE_DUR_RANGE);
+    addEconomicEvent(`🌧 ${CYCLE_TYPES.recession.label}! ${CYCLE_TYPES.recession.desc} (${cycle.turns_left} ходов).`);
+  } else {
+    // Нормальный год — без события, просто фиксируем перенос проверки.
+    cycle.current    = 'normal';
+    cycle.turns_left = 0;
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// getCycleMult(good)
+//
+// Множитель производства для указанного товара с учётом текущего
+// глобального экономического цикла. Возвращает:
+//   • 1.0   — для товаров не из CYCLE_GOODS и для normal-цикла;
+//   • 1.15  — boom + продовольствие;
+//   • 0.82  — recession + продовольствие.
+// ──────────────────────────────────────────────────────────────
+function getCycleMult(good) {
+  const cycle = GAME_STATE?.economy_ext?.economic_cycle;
+  if (!cycle || !cycle.current || cycle.current === 'normal') return 1.0;
+  if (!CYCLE_GOODS.includes(good)) return 1.0;
+  const def = CYCLE_TYPES[cycle.current];
+  return def ? Number(def.mult) || 1.0 : 1.0;
+}
+
+// ──────────────────────────────────────────────────────────────
+// getEconomicCycleBanner() — HTML-блок для UI-вкладки экономики.
+// Возвращает пустую строку, если активен normal-цикл.
+// ──────────────────────────────────────────────────────────────
+function getEconomicCycleBanner() {
+  const cycle = GAME_STATE?.economy_ext?.economic_cycle;
+  if (!cycle || cycle.current === 'normal') return '';
+  const info = CYCLE_TYPES[cycle.current];
+  if (!info) return '';
+  const color = cycle.current === 'boom' ? '#44cc44' : '#cc6644';
+  const left  = Number(cycle.turns_left) || 0;
+  return `<div class="eco-cycle-banner" style="border-left:3px solid ${color};padding:6px 10px;margin:6px 0;background:rgba(0,0,0,0.2);">
+    <strong>${info.label}</strong> — ещё ${left} ходов<br>
+    <small>${info.desc}</small>
+  </div>`;
+}
+
 // ──────────────────────────────────────────────────────────────
 // addEconomicEvent — общий логгер будущих экономических событий.
 // ──────────────────────────────────────────────────────────────
@@ -591,8 +732,12 @@ function runEconomyExtTick() {
   // уровни). Мировой рынок (внешние цены) остаётся незатронутым.
   try { updateInflation(); } catch (e) { console.warn('[economy_ext:infl]', e); }
 
-  // Этапы 5–8 подключатся здесь в будущих сессиях:
-  //   try { updateEconomicCycle();  } catch (e) { console.warn('[economy_ext:cycle]', e); }
+  // Этап 5 — глобальный экономический цикл (бум/спад). Активный цикл
+  // умножает производство продовольствия (CYCLE_GOODS) в
+  // routeProductionToLocalStockpiles() через getCycleMult().
+  try { updateEconomicCycle(); } catch (e) { console.warn('[economy_ext:cycle]', e); }
+
+  // Этапы 6–8 подключатся здесь в будущих сессиях:
   //   try { updateTechDrift();      } catch (e) { console.warn('[economy_ext:tech]', e); }
 }
 
@@ -624,4 +769,11 @@ if (typeof window !== 'undefined') {
   window.INFLATION_STEP          = INFLATION_STEP;
   window.INFLATION_STEP_FAST     = INFLATION_STEP_FAST;
   window.INFLATION_MAX           = INFLATION_MAX;
+
+  // Этап 5 — экономические циклы.
+  window.updateEconomicCycle    = updateEconomicCycle;
+  window.getCycleMult           = getCycleMult;
+  window.getEconomicCycleBanner = getEconomicCycleBanner;
+  window.CYCLE_GOODS            = CYCLE_GOODS;
+  window.CYCLE_TYPES            = CYCLE_TYPES;
 }

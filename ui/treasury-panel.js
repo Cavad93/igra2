@@ -261,10 +261,12 @@ function _tpRenderTradeBalance() {
   if (!nId) return '';
 
   const b = calcTradeBalance(nId);
-  // Если за тик не было никакой торговой активности и нет инфляции —
-  // не захламляем панель.
+  // Если за тик не было никакой торговой активности, нет инфляции и
+  // не активен экономический цикл — не захламляем панель.
   const hasInflation = Number(GAME_STATE?.economy_ext?.inflation?.[nId]) >= 0.005;
-  if (!b.gross_exports && !b.imports && !b.port_duties && !b.tariff_income && !hasInflation) return '';
+  const cycCur = GAME_STATE?.economy_ext?.economic_cycle?.current;
+  const hasCycle = cycCur && cycCur !== 'normal';
+  if (!b.gross_exports && !b.imports && !b.port_duties && !b.tariff_income && !hasInflation && !hasCycle) return '';
 
   const netClass = b.net >= 0 ? 'tp-val-pos' : 'tp-val-neg';
   const netSign  = b.net >= 0 ? '+' : '';
@@ -296,6 +298,28 @@ function _tpRenderTradeBalance() {
       </div>
       ${_tpRenderMonopolies()}
       ${_tpRenderInflation()}
+      ${_tpRenderEconomicCycle()}
+    </div>`;
+}
+
+// ─── Этап 5 — Экономический цикл (бум / спад) ─────────────────────
+//   Показывает активный глобальный цикл (урожайный/неурожайный год)
+//   с числом оставшихся ходов. В nominal-режиме блок не выводится.
+function _tpRenderEconomicCycle() {
+  const cycle = GAME_STATE?.economy_ext?.economic_cycle;
+  if (!cycle || !cycle.current || cycle.current === 'normal') return '';
+  const types = (typeof CYCLE_TYPES !== 'undefined') ? CYCLE_TYPES : null;
+  if (!types || !types[cycle.current]) return '';
+  const info = types[cycle.current];
+  const left = Number(cycle.turns_left) || 0;
+  const isBoom = cycle.current === 'boom';
+  const col = isBoom ? '#44cc44' : '#cc6644';
+  const icon = isBoom ? '🌾' : '🌧';
+  const cls = isBoom ? 'tp-val-pos' : 'tp-val-neg';
+  return `
+    <div class="tp-trade-row tp-trade-cycle" style="border-left:2px solid ${col};padding-left:6px">
+      <span class="tp-trade-label">${icon} ${info.label} (ещё ${left} ходов)</span>
+      <span class="tp-trade-value ${cls}">${info.desc || ''}</span>
     </div>`;
 }
 

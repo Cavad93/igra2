@@ -340,6 +340,27 @@ function routeProductionToLocalStockpiles(nationId, allProduced) {
       }
     }
 
+    // Глобальный экономический цикл (этап 5, docs/economic2.md) —
+    // бум/спад влияет на CYCLE_GOODS (зерно, ячмень, оливки, виноград,
+    // рыба). Может УВЕЛИЧИВАТЬ (boom ×1.15) или УМЕНЬШАТЬ (recession
+    // ×0.82) производство. Изменения учитываются в local_stockpile
+    // ДО расчёта overflow.
+    if (typeof getCycleMult === 'function') {
+      for (const good of Object.keys(prodThisTick)) {
+        const cmult = getCycleMult(good);
+        if (cmult !== 1.0) {
+          const delta = prodThisTick[good] * (cmult - 1);
+          if (delta !== 0) {
+            // Не уходим в отрицательный сток.
+            const newProd = Math.max(0, prodThisTick[good] + delta);
+            const newLs   = Math.max(0, (ls[good] || 0) + delta);
+            prodThisTick[good] = newProd;
+            ls[good] = newLs;
+          }
+        }
+      }
+    }
+
     // Запоминаем для расчёта региональных цен и ёмкости
     region._production_last_tick = prodThisTick;
 

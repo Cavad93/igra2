@@ -223,11 +223,68 @@ GAME_STATE.economy_ext = {
 
 ---
 
-## Улучшение 5: Экономические циклы
+## Улучшение 5: Экономические циклы ✅ ВЫПОЛНЕНО (этап 5)
 
-**Суть:** Раз в 48–72 хода — рандомный глобальный сдвиг: урожайный год (+15% зерно) или голодный (−15%). Длится 6–12 ходов.
+**Суть:** Раз в 48–72 хода — рандомный глобальный сдвиг: урожайный год (+15% зерно) или голодный (−18%). Длится 6–12 ходов.
 **Сложность:** Низкая — один таймер и мультипликатор.
-**Файлы:** `engine/economy_ext.js`
+**Файлы:** `engine/economy_ext.js`, `engine/economy.js`, `ui/treasury-panel.js`, `index.html`
+
+**Что сделано в этапе 5:**
+- В `engine/economy_ext.js` добавлены константы `CYCLE_GOODS` (`wheat`,
+  `barley`, `olives`, `grapes`, `fish`), `CYCLE_TYPES`
+  (boom ×1.15, recession ×0.82, normal ×1.0), параметры периодичности
+  `CYCLE_CHECK_MIN=48`, `CYCLE_CHECK_RANGE=24`, длительности
+  `CYCLE_DUR_MIN=6`, `CYCLE_DUR_RANGE=7` и вероятности
+  `CYCLE_BOOM_PROB=0.20`, `CYCLE_RECESSION_PROB=0.20`.
+- `updateEconomicCycle()` — раз в тик: если активен ненормальный
+  цикл, отсчитывает `turns_left` до 0 и возвращает state в `'normal'`,
+  логгируя завершение. Если `turn ≥ next_check_turn` — делает roll:
+  20% boom / 20% recession / 60% normal. При активации задаёт длину
+  6–12 ходов случайно. `next_check_turn` отложен на 48–71 ход вперёд
+  даже при нормальном исходе. Гарантия: новая проверка не делается
+  пока длится активный цикл.
+- `getCycleMult(good)` — 1.0 для `normal` и не-food-товаров; иначе
+  мультипликатор активного цикла (1.15 / 0.82). Используется в
+  `engine/economy.js → routeProductionToLocalStockpiles()` сразу после
+  бонуса специализации (этап 3): прибавка/вычет идёт в `prodThisTick`
+  и `local_stockpile`, поэтому корректно влияет на ёмкость и overflow.
+- `getEconomicCycleBanner()` — HTML-блок для UI (пустая строка для
+  normal). Возвращает баннер с названием цикла, числом оставшихся
+  ходов и описанием.
+- В `ui/treasury-panel.js → _tpRenderEconomicCycle()` добавлен блок
+  активного цикла внутри панели «Торговый баланс за ход». Условие
+  показа `tp-trade-balance` расширено, чтобы блок появлялся даже без
+  торговой активности при активном цикле. CSS-класс `.tp-trade-cycle`
+  в `index.html` (зелёная рамка для бума, оранжевая для спада).
+- Вызывается из `runEconomyExtTick()` после `updateInflation()`.
+- Все функции и константы экспортированы в `window` для инспекции и
+  save/load (`updateEconomicCycle`, `getCycleMult`,
+  `getEconomicCycleBanner`, `CYCLE_GOODS`, `CYCLE_TYPES`).
+
+**Тесты этапа 5 (`tests/eco_stage5_cycles_test.cjs`, 53/53 зелёные):**
+- `initEconomyExt()` создаёт `economic_cycle` с дефолтным состоянием
+  `current=normal, turns_left=0, next_check_turn=48` ✓
+- Все экспорты на месте; `CYCLE_TYPES.boom.mult=1.15`,
+  `recession.mult=0.82` ✓
+- При `turn < next_check_turn` ничего не происходит ✓
+- При `turn ≥ 48` и roll < 0.20 → активируется boom с длительностью
+  в `[6,12]` ✓
+- `getCycleMult('wheat'|'barley'|'fish') = 1.15` при boom ✓
+- `getCycleMult('iron'|'timber'|'horses') = 1.0` (не-food) ✓
+- `turns_left` уменьшается каждый ход; при обнулении `current →
+  normal`, лог завершения, `next_check_turn` сдвинут вперёд ✓
+- Roll ∈ [0.20; 0.40) → recession; `getCycleMult('wheat')=0.82` ✓
+- Roll ≥ 0.40 → остаёмся в normal, `next_check_turn` всё равно
+  сдвигается в окно `[turn+48; turn+72)` ✓
+- `getEconomicCycleBanner()` — пустая строка для normal,
+  непустая HTML-строка с `eco-cycle-banner`, названием цикла и числом
+  оставшихся ходов при активном цикле ✓
+- `runEconomyExtTick()` интегрирует `updateEconomicCycle()` без
+  падений ✓
+- Полный жизненный цикл: boom (6 ходов) → normal → recession ✓
+- 7 значений random для длительности → все 7 длин ∈ `[6,12]` ✓
+
+**НЕ повторять в новых сессиях.**
 
 ---
 
