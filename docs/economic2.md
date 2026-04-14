@@ -430,11 +430,74 @@ GAME_STATE.economy_ext = {
 
 ---
 
-## Улучшение 8: Тултип неорганизованного производства
+## Улучшение 8: Тултип неорганизованного производства ✅ ВЫПОЛНЕНО (этап 8)
 
 **Суть:** В экономической вкладке показывать "65% эффективность (нет зданий)" чтобы игрок понимал почему производство низкое.
 **Сложность:** Минимальная — только UI.
-**Файлы:** `ui/economy_tab.js`
+**Файлы:** `engine/economy_ext.js`, `ui/economy_react.jsx`, `index.html`
+
+**Что сделано в этапе 8:**
+- В `engine/economy_ext.js` добавлены:
+  - Константа `UNORGANIZED_PENALTY = 0.35` (= 1 − `SUBSISTENCE_FACTOR`
+    из `engine/economy.js`).
+  - `hasRegionBuildings(region)` — true, если в регионе есть хотя
+    бы один `building_slot` со `status='active'`. Поддержана
+    legacy-форма `{ type: ... }` из исходной спецификации.
+  - `renderRegionProductionEfficiency(regionId)` — собирает
+    HTML-блок с активными бонусами/штрафами по приоритету:
+    1) «⚠ Неорганизованное производство: −35% эффективность»
+       при `!hasRegionBuildings(region)`;
+    2) «⚙ Специализация (товар, streak ходов): +X%» из
+       `economy_ext.region_specialization[regionId]` (Этап 3);
+    3) «⚒ Уровень ремёсел: +X%» из `getTechDriftMult()` (Этап 7);
+    4) «🌾/🌧 Экономический цикл: ±X% к зерну» из
+       `economy_ext.economic_cycle.current` (Этап 5).
+    Возвращает пустую строку, если нечего показать (защищает UI
+    от лишних пустых блоков).
+  - Обе функции и `UNORGANIZED_PENALTY` экспортированы в `window`
+    для инспекции и save/load.
+- В `ui/economy_react.jsx → _eRenderM_Region()` над таблицей
+  товаров выбранного региона вставлен блок
+  `renderRegionProductionEfficiency(selReg.rid)` в шапке
+  правой колонки рядом с названием области. Вызов защищён
+  через `typeof` — старые сейвы без `economy_ext` не падают.
+- В `index.html` добавлены CSS-стили для блока тултипов:
+  `.eco-eff-block`, `.eco-eff-row`, `.eco-eff-warn`,
+  `.eco-eff-pos`, `.eco-eff-neg`, `.eco-eff-hint` — с
+  цветовой дифференциацией (оранжевое предупреждение,
+  зелёные бонусы, красный отрицательный штраф цикла).
+
+**Тесты этапа 8 (`tests/eco_stage8_production_tooltips_test.cjs`, 42/42 зелёные):**
+- Экспорты `hasRegionBuildings`, `renderRegionProductionEfficiency`
+  и константа `UNORGANIZED_PENALTY = 0.35` на месте ✓
+- `hasRegionBuildings` корректно распознаёт `null`, `undefined`,
+  пустой объект, `building_slots=null`, пустой массив и массив
+  только строящихся слотов как «нет зданий» ✓
+- `hasRegionBuildings` возвращает `true` для массива с хотя бы
+  одним `status='active'`; поддерживает legacy-форму `{type}` ✓
+- Регион без зданий показывает строку «Неорганизованное
+  производство: −35% эффективность» с классом `eco-eff-warn`,
+  обёрнутую в `eco-eff-block`, с подсказкой `eco-eff-hint` ✓
+- Регион с активным зданием БЕЗ прочих бонусов возвращает
+  пустую строку ✓
+- Спец-бонус (streak=12, bonus=1.05, good=wheat) показывается
+  с именем «Пшеница», числом ходов и `+5%`, класс `eco-eff-pos` ✓
+- `bonus=1.0` НЕ выводит строку специализации ✓
+- Tech-drift `bonus=0.08` выводит «⚒ Уровень ремёсел: +8%» ✓
+- `tech_drift.bonus=0` НЕ выводит строку ремёсел ✓
+- `economic_cycle.current='boom'` выводит `+15% к зерну` с
+  эмоджи 🌾 и классом `eco-eff-pos` ✓
+- `economic_cycle.current='recession'` выводит `−18%` с
+  эмоджи 🌧 и классом `eco-eff-neg` ✓
+- `current='normal'` НЕ выводит строку цикла ✓
+- Комбинация (нет зданий + spec + tech + boom) → 4 строки,
+  все четыре блока одновременно ✓
+- Неизвестный regionId → пустая строка ✓
+- `GAME_STATE = null` → пустая строка (нет `TypeError`) ✓
+- Все бонусы на нулевом/базовом уровне → пустая строка ✓
+- Существующие тесты этапов 3/4/5/6/7 остаются зелёными ✓
+
+**НЕ повторять в новых сессиях.**
 
 ---
 
@@ -921,7 +984,7 @@ console.log('Tech drift:', ext.tech_drift);
 | 5 ✅ | Экономические циклы (бум/спад) | 5 | economy_ext.js, economy.js |
 | 6 ✅ | Штраф армии при недофинансировании | 6 | economy_ext.js, combat.js |
 | 7 ✅ | Технологический дрейф (+2% за 10 лет) | 7 | economy_ext.js, economy.js |
-| 8 | Тултипы эффективности в UI | 8 | economy_tab.js |
+| 8 ✅ | Тултипы эффективности в UI | 8 | economy_ext.js, economy_react.jsx, index.html |
 | 9 | Итоговый блок казны со всеми бонусами | — | treasury-panel.js |
 | 10 | Финальное тестирование | — | все файлы |
 

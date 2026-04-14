@@ -713,6 +713,11 @@ function _eRenderM_Region() {
     goodsHtml = `${header}<div>${rows}</div>`;
   }
 
+  // Этап 8 — тултип эффективности выбранного региона
+  const effHtml = (typeof renderRegionProductionEfficiency === 'function')
+    ? renderRegionProductionEfficiency(selReg?.rid)
+    : '';
+
   return `<div style="display:grid;grid-template-columns:200px 1fr;gap:10px">
     <div style="max-height:480px;overflow-y:auto">
       <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:${_C.ivoryFade};margin-bottom:4px;padding:0 4px">Регионы</div>
@@ -722,6 +727,7 @@ function _eRenderM_Region() {
       <div style="padding:10px 14px;border-bottom:1px solid ${_C.border}">
         <div style="font-size:13px;font-family:'Cinzel',serif;color:${_C.gold}">${selReg?.name || selId}</div>
         <div style="font-size:9px;color:${_C.ivoryFade};margin-top:2px">Область: ${selReg?.tag || '—'}</div>
+        ${effHtml}
       </div>
       <div style="max-height:420px;overflow-y:auto">${goodsHtml}</div>
     </div>

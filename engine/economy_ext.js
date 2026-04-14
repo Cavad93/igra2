@@ -937,6 +937,128 @@ function renderTechDrift() {
   return `<div class="eco-tech-level" style="font-size:11px;color:#aacc66;">⚒ Уровень ремёсел: +${pct}% к производству зданий</div>`;
 }
 
+// ══════════════════════════════════════════════════════════════
+// ЭТАП 8 — тултипы эффективности производства.
+// ══════════════════════════════════════════════════════════════
+//
+// Задача — объяснить игроку почему производство региона такое,
+// какое оно есть. Возвращаем HTML-блок со строками активных
+// бонусов/штрафов:
+//   • «Неорганизованное производство: −35% эффективность»
+//     (если в регионе нет ни одного активного здания)
+//   • «Специализация (good, N ходов): +X%»  (Этап 3)
+//   • «Уровень ремёсел: +X%»                 (Этап 7)
+//   • «Экономический цикл: ±X% к зерну»      (Этап 5)
+//
+// Числа согласованы с движком:
+//   — SUBSISTENCE_FACTOR = 0.65 (см. engine/economy.js), поэтому
+//     штраф неорганизованного производства = 1 − 0.65 = 0.35 (35%).
+//   — Спец-бонус читается напрямую из economy_ext.region_specialization.
+//   — Tech-дрейф — глобальный, одинаковый для всех регионов.
+//   — Цикл — глобальный, но применяется только к CYCLE_GOODS.
+//
+// Если активных бонусов/штрафов нет — возвращается пустая строка
+// (чтобы не плодить лишних блоков в UI).
+// ──────────────────────────────────────────────────────────────
+
+// Процент неэффективности неорганизованного производства:
+// 1 − SUBSISTENCE_FACTOR (0.65) = 0.35 (то есть −35%).
+const UNORGANIZED_PENALTY = 0.35;
+
+// ──────────────────────────────────────────────────────────────
+// hasRegionBuildings(region) — true, если в регионе есть хотя бы
+// один активный build-slot. Используется для решения, показывать
+// ли предупреждение «−35% эффективность».
+// ──────────────────────────────────────────────────────────────
+function hasRegionBuildings(region) {
+  if (!region) return false;
+  const slots = region.building_slots;
+  if (!slots) return false;
+  const arr = Array.isArray(slots) ? slots : Object.values(slots);
+  for (const slot of arr) {
+    if (!slot) continue;
+    // В реальной игре используются статусы 'active' / 'building' / ...
+    // Считаем регион «организованным», если есть хоть один слот
+    // со статусом active (production идёт) либо с явно назначенным
+    // building_id в активной стадии. Для обратной совместимости
+    // c планом из economic2.md также принимаем поле slot.type.
+    if (slot.status === 'active') return true;
+    if (slot.type && slot.status === undefined) return true;
+  }
+  return false;
+}
+
+// ──────────────────────────────────────────────────────────────
+// renderRegionProductionEfficiency(regionId)
+//   Строит HTML-блок с активными бонусами/штрафами для данного
+//   региона. Возвращает '' если отображать нечего.
+// ──────────────────────────────────────────────────────────────
+function renderRegionProductionEfficiency(regionId) {
+  if (typeof GAME_STATE === 'undefined' || !GAME_STATE) return '';
+  const region = GAME_STATE.regions?.[regionId];
+  if (!region) return '';
+
+  const ext    = GAME_STATE.economy_ext || {};
+  const rows   = [];
+
+  // 1) Неорганизованное производство.
+  if (!hasRegionBuildings(region)) {
+    const pct = Math.round(UNORGANIZED_PENALTY * 100);
+    rows.push(
+      `<div class="eco-eff-row eco-eff-warn">` +
+        `⚠ Неорганизованное производство: −${pct}% эффективность` +
+        `<span class="eco-eff-hint">Постройте здания для полной отдачи</span>` +
+      `</div>`
+    );
+  }
+
+  // 2) Специализация региона (Этап 3).
+  const spec = ext.region_specialization?.[regionId];
+  const specBonus = Number(spec?.bonus) || 1.0;
+  if (spec && specBonus > 1.0 + 1e-9) {
+    const goodDef = typeof GOODS !== 'undefined' ? GOODS[spec.good] : null;
+    const goodLabel = goodDef?.name || spec.good;
+    const streak = Number(spec.streak) || 0;
+    const pct    = Math.round((specBonus - 1) * 100);
+    rows.push(
+      `<div class="eco-eff-row eco-eff-pos">` +
+        `⚙ Специализация (${goodLabel}, ${streak} ходов): +${pct}%` +
+      `</div>`
+    );
+  }
+
+  // 3) Глобальный технологический дрейф (Этап 7).
+  const techMult = typeof getTechDriftMult === 'function' ? getTechDriftMult() : 1.0;
+  if (techMult > 1.0 + 1e-9) {
+    const pct = Math.round((techMult - 1) * 100);
+    rows.push(
+      `<div class="eco-eff-row eco-eff-pos">` +
+        `⚒ Уровень ремёсел: +${pct}%` +
+      `</div>`
+    );
+  }
+
+  // 4) Глобальный экономический цикл (Этап 5). Применяется только
+  // к CYCLE_GOODS, поэтому показываем пояснение «к зерну».
+  const cycle = ext.economic_cycle;
+  if (cycle && cycle.current && cycle.current !== 'normal') {
+    const isBoom = cycle.current === 'boom';
+    const mult   = (typeof CYCLE_TYPES !== 'undefined' && CYCLE_TYPES[cycle.current]?.mult) || 1.0;
+    const pct    = Math.round((mult - 1) * 100);
+    const sign   = pct > 0 ? '+' : '';
+    const icon   = isBoom ? '🌾' : '🌧';
+    const cls    = isBoom ? 'eco-eff-pos' : 'eco-eff-neg';
+    rows.push(
+      `<div class="eco-eff-row ${cls}">` +
+        `${icon} Экономический цикл: ${sign}${pct}% к зерну` +
+      `</div>`
+    );
+  }
+
+  if (rows.length === 0) return '';
+  return `<div class="eco-eff-block">${rows.join('')}</div>`;
+}
+
 // ──────────────────────────────────────────────────────────────
 // addEconomicEvent — общий логгер будущих экономических событий.
 // ──────────────────────────────────────────────────────────────
@@ -1045,4 +1167,9 @@ if (typeof window !== 'undefined') {
   window.TECH_DRIFT_INTERVAL = TECH_DRIFT_INTERVAL;
   window.TECH_DRIFT_STEP     = TECH_DRIFT_STEP;
   window.TECH_DRIFT_MAX      = TECH_DRIFT_MAX;
+
+  // Этап 8 — тултипы эффективности производства.
+  window.hasRegionBuildings             = hasRegionBuildings;
+  window.renderRegionProductionEfficiency = renderRegionProductionEfficiency;
+  window.UNORGANIZED_PENALTY            = UNORGANIZED_PENALTY;
 }
