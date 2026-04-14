@@ -528,8 +528,14 @@ function processTrade(nationId) {
       const isPrefGood = prefGoods.includes(good);
       const prefBonus = isPrefGood ? 0.20 : 0.0; // +20% к прибыли для приоритетных товаров
 
+      // ECO_EXT этап 2 — монопольный бонус к цене продажи.
+      // Если nationId — единственный производитель стратегического good,
+      // цена продажи растёт на +20% (MONOPOLY_PRICE_BONUS в economy_ext.js).
+      const monopolyMult = (typeof getMonopolyPriceMult === 'function')
+        ? getMonopolyPriceMult(nationId, good) : 1.0;
+
       const grossProfit = tradeVolume * mkt.price * 0.05 * (1 + prefBonus)
-                        * (1 - CONFIG.BALANCE.PIRACY_BASE);
+                        * (1 - CONFIG.BALANCE.PIRACY_BASE) * monopolyMult;
       const tariffAmount = grossProfit * tariffRate;
       const netProfit = grossProfit - tariffAmount;
 

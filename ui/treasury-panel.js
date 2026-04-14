@@ -292,6 +292,30 @@ function _tpRenderTradeBalance() {
         <span class="tp-trade-label">Сальдо</span>
         <span class="tp-trade-value ${netClass}">${netSign}${b.net.toLocaleString()} ₴</span>
       </div>
+      ${_tpRenderMonopolies()}
+    </div>`;
+}
+
+// ─── Этап 2 — Монопольный бонус ────────────────────────────────────
+//   Показывает товары, по которым игрок является монополистом
+//   (единственный производитель стратегического good).
+//   Бонус: +20% цена продажи и +5 к отношениям с торговыми партнёрами.
+function _tpRenderMonopolies() {
+  const ext = GAME_STATE?.economy_ext;
+  if (!ext || !ext.monopolies) return '';
+  const nId = GAME_STATE?.player_nation;
+  if (!nId) return '';
+
+  const myGoods = Object.entries(ext.monopolies)
+    .filter(([, owner]) => owner === nId)
+    .map(([good]) => good);
+  if (myGoods.length === 0) return '';
+
+  const goodLabel = (g) => (typeof GOODS !== 'undefined' && GOODS[g]?.name) || g;
+  return `
+    <div class="tp-trade-row tp-trade-mono">
+      <span class="tp-trade-label">⭐ Монополия (+20% продажа, +5 отношения)</span>
+      <span class="tp-trade-value tp-val-pos">${myGoods.map(goodLabel).join(', ')}</span>
     </div>`;
 }
 
