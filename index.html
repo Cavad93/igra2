@@ -10240,6 +10240,27 @@
       setTimeout(() => { _splash.style.display = 'none'; }, 500);
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // Шаг 61 (arma.md) — Итоговая интеграция: монтажный лист инициализации
+    // ═══════════════════════════════════════════════════════════════════
+    // Порядок строгий (см. arma.md Шаг 61: «Зависимости инициализации»):
+    //  1. initSplash(null)                 — fallback-фон сразу, без нации
+    //  2. initGame()                       — загружает save, нации, карту,
+    //                                        вызывает renderAll()
+    //                                        (renderMap → applySeasonVisual
+    //                                         → renderAllArmies → renderBuildMarkers)
+    //  3. initAllSenates / renderNationLegend / initAPIKey
+    //  4. applyNationTheme(player_nation)  — Шаг 56 (текстура + рамка)
+    //  5. initSplash(player_nation)        — Шаг 58 (культурная фреска)
+    //  6. updateNationHeader(player_nation) — Шаг 60 (иконка + имя)
+    //  7. setMapMode('political')          — Шаг 29 (стартовый режим)
+    //  8. showSplashStartButton / _splashHide
+    // Туман войны (Шаг 48) применяется автоматически внутри refreshRegionStyles
+    // на основе getIntelLevel для player_nation.
+    // Горячие клавиши (Шаг 28) регистрируются через document.addEventListener
+    // ниже в этом файле — вызов независим от initGame.
+    // ═══════════════════════════════════════════════════════════════════
+
     // Шаг 58 — инициализируем splash с fallback-фоном
     // (фреска уточнится после initGame, когда станет известна нация игрока).
     try {
@@ -10266,6 +10287,19 @@
           initSplash(GAME_STATE.player_nation);
         }
       } catch (e) { console.error('[initSplash] error:', e); }
+      // Шаг 60 — заголовок нации в топ-баре (иконка + имя)
+      try {
+        if (typeof updateNationHeader === 'function' && GAME_STATE && GAME_STATE.player_nation) {
+          const pn = GAME_STATE.nations && GAME_STATE.nations[GAME_STATE.player_nation];
+          updateNationHeader(GAME_STATE.player_nation, pn && pn.name);
+        }
+      } catch (e) { console.error('[updateNationHeader] error:', e); }
+      // Шаг 29 / Шаг 61 — стартовый режим карты: политический
+      try {
+        if (typeof setMapMode === 'function') {
+          setMapMode('political');
+        }
+      } catch (e) { console.error('[setMapMode] error:', e); }
       // Шаг 58 — показать кнопку «Начать игру» вместо авто-скрытия
       try {
         if (typeof showSplashStartButton === 'function') {

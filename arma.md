@@ -3758,6 +3758,8 @@ const CULTURE_GROUPS = {
 
 ### Шаг 61 — Итоговая интеграция: порядок инициализации всех систем
 
+> **Статус:** ✅ **ВЫПОЛНЕНО** — финальный «монтажный лист» инициализации зафиксирован в `index.html` (блок-комментарий «Шаг 61 … монтажный лист инициализации» перед `initGame().then(...)`). Порядок: `initSplash(null)` → `initGame()` → `initAllSenates()` → `renderNationLegend()` → `initAPIKey()` → `applyNationTheme(player)` (Шаг 56: `--panel-texture`/`--panel-tint`/`--panel-border-svg` + вызов `updateNationHeader` внутри, Шаги 59/60) → `initSplash(player)` (Шаг 58) → `updateNationHeader(player, name)` (Шаг 60, повторный вызов — идемпотентный) → `setMapMode('political')` (Шаг 29) → `showSplashStartButton()`. Все вызовы в `try/catch` (5 блоков). `initGame()` в `engine/turn.js` вызывает `renderAll()`, который параллельно инициализирует `renderMap` / `applySeasonVisual` / `renderLeftPanel` / `renderAllArmies` / `renderBuildMarkers`. Горячие клавиши (Шаг 28) регистрируются независимо через `document.addEventListener('keydown', ...)`. Туман войны (Шаг 48) применяется автоматически в `refreshRegionStyles` по `getIntelLevel`. Проект использует inline-скрипты в `index.html`, а не `js/main.js` (ES-модульный вариант из спецификации — эталонный псевдокод). Тесты `tests/test_arma_stage61.mjs` (40 passed). Не реализовывать повторно.
+
 **Цель:** описать правильный порядок вызовов при старте игры. Все системы из Шагов 54–60 взаимозависимы — некоторые должны загружаться строго после других. Этот шаг — финальный «монтажный лист» инициализации.
 
 **Что сделать:**
