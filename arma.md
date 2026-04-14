@@ -3902,6 +3902,8 @@ main().catch(console.error);
 
 ### Шаг 62 — Инфраструктура архива: папки, .gitignore, manifest.json, download.sh
 
+> **Статус:** ✅ **ВЫПОЛНЕНО** — инфраструктура архива реализована в рамках Шага 54 (commits `a7bec6f` + `73b4809`): `assets/manifest.json` (50 ассетов, валидный JSON), `assets/download.sh` (идемпотентный, парсит манифест через node, создаёт все папки `portraits/{greek,roman,carthaginian,egyptian,persian,celtic,indian,east_asian,nomadic,iberian,african}` + `textures/` + `backgrounds/` + `borders/` + `icons/`), `assets/README.md`, `.gitignore` (`assets/portraits/**/*.jpg`, `assets/textures/*.jpg`, `assets/backgrounds/*.jpg`), 14 SVG-файлов в `assets/icons/`. Все 4 теста Шага 62 проходят: `bash assets/download.sh` завершается без error-exit (47 ok, warn'ы по сетевым 403 допустимы), `node -e "require('./assets/manifest.json')"` парсит 50 записей, `git ls-files assets/ | grep '\.jpg'` пусто, SVG-файлы в `assets/icons/` присутствуют в git. Не реализовывать повторно.
+
 **Цель:** создать в репозитории каркас архива ассетов. JPG-файлы не хранятся в git (они тяжёлые и не нужны разработчику без запуска). Хранятся только: манифест с URL, скрипт загрузки, SVG-файлы. Команда `bash assets/download.sh` воспроизводимо скачивает всё на любой машине.
 
 **Что сделать:**
