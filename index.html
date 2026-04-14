@@ -329,6 +329,54 @@
       color: var(--text-gold);
     }
 
+    /* ─────────────────────────────────────────────────
+       Шаг 60 (arma.md) — Заголовок текущей нации игрока
+       ───────────────────────────────────────────────── */
+    #nation-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px;
+      margin-left: 8px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(200, 170, 90, 0.35);
+      border-radius: 0 0 6px 6px;
+      height: 32px;
+    }
+    .nation-icon {
+      width: 24px;
+      height: 24px;
+      /* Делает монохромный SVG золотистым (currentColor → tinted) */
+      filter: invert(1) sepia(1) saturate(2) hue-rotate(5deg);
+      opacity: 0.9;
+    }
+    .nation-name {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: #f0e8c8;
+    }
+    /* Иконка нации в строке списка дипломатии */
+    .diplo-row__icon {
+      width: 20px;
+      height: 20px;
+      filter: invert(1) sepia(0.6) saturate(1.5);
+      opacity: 0.85;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+    /* Иконка культурной группы внутри маркера армии */
+    .army-marker__culture {
+      position: absolute;
+      right: -4px;
+      bottom: -4px;
+      width: 12px;
+      height: 12px;
+      pointer-events: none;
+      filter: invert(1) sepia(0.8) saturate(1.5) drop-shadow(0 0 1px #000);
+      opacity: 0.95;
+    }
+
     /* Шаг 22 — Модальное окно настроек */
     #settings-modal {
       display: none;
@@ -9542,6 +9590,11 @@
       <button id="search-btn" onclick="toggleSearchPanel()" title="Поиск [/]">🔍</button>
       <!-- Шаг 22: Иконка настроек (API ключи и пр.) -->
       <button id="settings-btn" onclick="toggleSettingsModal()" title="Настройки">⚙</button>
+      <!-- Шаг 60 (arma.md) — Иконка и имя текущей нации игрока -->
+      <div id="nation-header" title="Активная нация">
+        <img id="nation-icon" class="nation-icon" src="" alt="" width="28" height="28">
+        <span id="nation-name" class="nation-name"></span>
+      </div>
     </header>
 
     <!-- Шаг 49 (arma.md) — Граф дипломатических отношений -->

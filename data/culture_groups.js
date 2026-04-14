@@ -209,6 +209,18 @@ function getCultureGroup(nationId) {
 }
 
 /**
+ * Возвращает путь к SVG-иконке культурной группы нации (Шаг 60).
+ * Используется в заголовке нации, в окне дипломатии и на маркерах армий.
+ * @param {string} nationId
+ * @returns {string} путь вида 'assets/icons/owl_athena.svg'
+ */
+function getNationIconPath(nationId) {
+  const group = getCultureGroup(nationId);
+  const iconId = (group && group.icon) || 'generic_sword';
+  return `assets/icons/${iconId}.svg`;
+}
+
+/**
  * Детерминированный 32-битный хэш строки (FNV/Daniel-J-Bernstein-style).
  * Один и тот же id всегда даёт одно и то же число.
  */
@@ -245,6 +257,7 @@ if (typeof module !== 'undefined' && module.exports) {
     NATION_CULTURE_GROUPS,
     getCultureGroup,
     getPortraitForCharacter,
+    getNationIconPath,
     hashCode,
   };
 }

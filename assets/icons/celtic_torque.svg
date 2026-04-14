@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="currentColor">
+  <!-- Кельтский торк: круговой узел -->
+  <!-- Внешнее кольцо -->
+  <circle cx="16" cy="16" r="11" stroke-width="2" fill="none"/>
+  <!-- Внутреннее кольцо -->
+  <circle cx="16" cy="16" r="7" stroke-width="1.2" fill="none" opacity="0.6"/>
+  <!-- Концы торка с шариками -->
+  <circle cx="11" cy="26" r="2" fill="currentColor"/>
+  <circle cx="21" cy="26" r="2" fill="currentColor"/>
+  <!-- Кельтский трискелион внутри -->
+  <path d="M16,11 Q19,14 16,17 Q13,14 16,11 Z" fill="currentColor" opacity="0.85"/>
+  <path d="M19,17 Q19,20 16,21 Q15,18 19,17 Z" fill="currentColor" opacity="0.85"/>
+  <path d="M13,17 Q13,20 16,21 Q17,18 13,17 Z" fill="currentColor" opacity="0.85"/>
+</svg>

@@ -250,11 +250,18 @@ function _dpNationRow(n, playerNationId) {
   };
   const badge = TIER_BADGE[tier] ?? TIER_BADGE[3];
 
+  // Шаг 60 — иконка культурной группы рядом с флагом
+  const cultureIconPath = (typeof getNationIconPath === 'function')
+    ? getNationIconPath(n.id) : '';
+  const cultureIconHtml = cultureIconPath
+    ? `<img class="diplo-row__icon" src="${cultureIconPath}" alt="" width="20" height="20">`
+    : '';
+
   return `
     <div class="dp-nation-card${active ? ' dp-nation-card--active' : ''}${tier === 3 ? ' dp-nation-card--far' : ''}"
       onclick="dpSelectNation('${n.id}')">
       <div class="dp-nation-avatar" style="background:${rel.color ?? '#9e9e9e'}22; border-color:${rel.color ?? '#9e9e9e'}55">
-        ${n.flag}
+        ${cultureIconHtml}${n.flag}
       </div>
       <div class="dp-nation-meta">
         <div class="dp-nation-nm">

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="currentColor">
+  <!-- Орёл легиона SPQR (стилизованный) -->
+  <!-- Голова -->
+  <circle cx="16" cy="7" r="2.5" fill="currentColor"/>
+  <!-- Клюв -->
+  <polygon points="18,7 21,8 18,9" fill="currentColor"/>
+  <!-- Тело -->
+  <path d="M14,9 L18,9 L19,18 L13,18 Z" fill="currentColor"/>
+  <!-- Крылья распахнутые -->
+  <path d="M14,10 Q4,8 2,18 Q8,14 14,16 Z" fill="currentColor" opacity="0.85"/>
+  <path d="M18,10 Q28,8 30,18 Q24,14 18,16 Z" fill="currentColor" opacity="0.85"/>
+  <!-- Хвост -->
+  <polygon points="13,18 19,18 17,24 15,24" fill="currentColor"/>
+  <!-- Лапы -->
+  <line x1="14" y1="24" x2="13" y2="28" stroke="currentColor" stroke-width="1.2"/>
+  <line x1="18" y1="24" x2="19" y2="28" stroke="currentColor" stroke-width="1.2"/>
+  <!-- Подставка SPQR -->
+  <line x1="6" y1="29" x2="26" y2="29" stroke="currentColor" stroke-width="1.5"/>
+</svg>

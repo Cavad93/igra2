@@ -233,6 +233,13 @@ function createArmyIcon(army, nationColor, opts = {}) {
   const selCls    = opts.selected ? ' army-selected' : '';
   const playerCls = opts.isPlayer ? ' army-marker--player' : '';
 
+  // Шаг 60 — иконка культурной группы нации в углу маркера
+  const cultureIconPath = (typeof getNationIconPath === 'function' && army?.nation)
+    ? getNationIconPath(army.nation) : '';
+  const cultureIconHtml = cultureIconPath
+    ? `<img class="army-marker__culture" src="${cultureIconPath}" alt="" width="12" height="12">`
+    : '';
+
   const html = `
     <div class="army-marker${selCls}${playerCls}"
          style="--nc: ${nationColor}; width:${size}px; height:${size}px">
@@ -243,6 +250,7 @@ function createArmyIcon(army, nationColor, opts = {}) {
               fill="#ffffff" stroke="rgba(0,0,0,0.8)" stroke-width="0.5"
               transform="translate(6 6) scale(0.5)"/>
       </svg>
+      ${cultureIconHtml}
       <span class="army-count">${formatArmySize(total)}</span>
     </div>`;
 

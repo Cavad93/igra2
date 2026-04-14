@@ -3613,6 +3613,8 @@ const CULTURE_GROUPS = {
 
 ### Шаг 60 — Иконки наций: культурный символ в заголовке, на карте и в дипломатии
 
+> **Статус:** ✅ **ВЫПОЛНЕНО** — 10 SVG-иконок в `assets/icons/` (`owl_athena`, `roman_eagle`, `carthage_horse`, `egyptian_eye`, `persian_faravahar`, `celtic_torque`, `indian_lotus`, `east_asian_dragon`, `nomadic_bow`, `generic_sword`), `getNationIconPath` в `data/culture_groups.js`, `#nation-header` в `index.html` (внутри `#top-bar`), `updateNationHeader` + интеграция в `applyNationTheme` (`ui/panels.js`), иконка культурной группы в `.dp-nation-card` (`ui/diplomacy_tab.js`) и в маркере армии (`ui/map_armies.js`, класс `.army-marker__culture`). Тесты `tests/test_arma_stage60.mjs` (109 passed). Имена иконок соответствуют существующему `culture_groups.icon` (`carthage_horse`/`egyptian_eye`), а не дословно из примеров. Не реализовывать повторно.
+
 **Цель:** у каждой культурной группы — своя иконка-символ (SVG). Иконка используется в трёх местах: заголовок активной нации (правый верхний угол), дипломатическое окно (флаг-маркер нации), маркер армии на карте. Иконки — маленькие CC0 SVG, хранятся в `assets/icons/`.
 
 **Что сделать:**

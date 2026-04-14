@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="currentColor">
+  <!-- Восточный дракон (упрощённый изогнутый силуэт) -->
+  <!-- Тело змейкой -->
+  <path d="M3,20 Q8,10 14,16 Q20,22 26,12 L29,14 Q22,26 14,20 Q8,14 5,22 Z"
+        fill="currentColor"/>
+  <!-- Голова -->
+  <circle cx="27" cy="10" r="2.5" fill="currentColor"/>
+  <!-- Рога -->
+  <line x1="27" y1="8" x2="26" y2="4" stroke="currentColor" stroke-width="1.2"/>
+  <line x1="28" y1="8" x2="29" y2="4" stroke="currentColor" stroke-width="1.2"/>
+  <!-- Глаз -->
+  <circle cx="28" cy="10" r="0.6" fill="#000" opacity="0.6"/>
+  <!-- Усы -->
+  <path d="M27,12 Q24,14 24,17" stroke="currentColor" stroke-width="0.8" fill="none"/>
+  <path d="M28,12 Q30,15 28,18" stroke="currentColor" stroke-width="0.8" fill="none"/>
+  <!-- Чешуйки (точки) -->
+  <circle cx="10" cy="17" r="0.6" fill="#000" opacity="0.4"/>
+  <circle cx="14" cy="19" r="0.6" fill="#000" opacity="0.4"/>
+  <circle cx="18" cy="18" r="0.6" fill="#000" opacity="0.4"/>
+  <!-- Хвост -->
+  <path d="M3,20 L1,24 L4,23 Z" fill="currentColor"/>
+</svg>

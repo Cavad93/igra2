@@ -2617,11 +2617,50 @@ function applyNationTheme(nationId) {
   const borderPath = `assets/icons/${borderId}.svg`;
   root.style.setProperty('--panel-border-svg', `url('${borderPath}')`);
 
+  // ── Шаг 60 — Иконка нации в шапке и CSS-переменная ─────────
+  // Каждая культурная группа определяет свой icon (id SVG). Если
+  // значение не задано — fallback к generic_sword.
+  const iconId   = group.icon || 'generic_sword';
+  const iconPath = `assets/icons/${iconId}.svg`;
+  root.style.setProperty('--nation-icon-svg', `url('${iconPath}')`);
+
+  // Обновить заголовок нации в #top-bar (если DOM смонтирован)
+  if (typeof updateNationHeader === 'function') {
+    const nationName = (typeof GAME_STATE !== 'undefined'
+      && GAME_STATE && GAME_STATE.nations && GAME_STATE.nations[nationId]
+      && GAME_STATE.nations[nationId].name) || '';
+    updateNationHeader(nationId, nationName);
+  }
+
   // Предзагрузка текстуры (только при смене темы, не каждый вызов)
   if (_currentThemeNation !== nationId) {
     preloadTexture(texturePath);
     _currentThemeNation = nationId;
   }
+}
+
+// ══════════════════════════════════════════════════════════════
+// Шаг 60 — Иконка нации в правом углу #top-bar
+// ══════════════════════════════════════════════════════════════
+//
+// updateNationHeader(nationId, nationName) — обновляет <img> и <span>
+// в #nation-header. Берёт путь к SVG из getNationIconPath() (Шаг 60).
+// Безопасно вызывать до построения DOM — функция тогда тихо выходит.
+
+function updateNationHeader(nationId, nationName) {
+  if (typeof document === 'undefined') return;
+  if (typeof getNationIconPath !== 'function') return;
+  const iconEl = document.getElementById('nation-icon');
+  const nameEl = document.getElementById('nation-name');
+  if (!iconEl || !nameEl) return;
+  const path = getNationIconPath(nationId);
+  iconEl.src = path;
+  iconEl.alt = nationName || nationId || '';
+  nameEl.textContent = nationName || '';
+}
+
+if (typeof window !== 'undefined') {
+  window.updateNationHeader = updateNationHeader;
 }
 
 if (typeof window !== 'undefined') {
@@ -2634,5 +2673,6 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = Object.assign(module.exports || {}, {
     applyNationTheme,
     preloadTexture,
+    updateNationHeader,
   });
 }
