@@ -261,18 +261,10 @@ function _tpRenderTradeBalance() {
   if (!nId) return '';
 
   const b = calcTradeBalance(nId);
-  // Если за тик не было никакой торговой активности, нет инфляции и
-  // не активен экономический цикл — не захламляем панель.
-  const hasInflation = Number(GAME_STATE?.economy_ext?.inflation?.[nId]) >= 0.005;
-  const cycCur = GAME_STATE?.economy_ext?.economic_cycle?.current;
-  const hasCycle = cycCur && cycCur !== 'normal';
-  // Этап 6 — если армия недофинансирована, показываем панель даже
-  // при отсутствии торговой активности (игроку надо увидеть штраф).
-  const armyFundRatio = (typeof getArmyFundingRatio === 'function')
-    ? getArmyFundingRatio(nId) : 1.0;
-  const hasArmyWarn = armyFundRatio < 0.80;
-  if (!b.gross_exports && !b.imports && !b.port_duties && !b.tariff_income
-      && !hasInflation && !hasCycle && !hasArmyWarn) return '';
+  // Этап 9: инфляция/цикл/армия/монополии вынесены в
+  // _tpRenderEconomyExtSummary() как отдельный итоговый блок.
+  // Если нет торговой активности — не захламляем панель.
+  if (!b.gross_exports && !b.imports && !b.port_duties && !b.tariff_income) return '';
 
   const netClass = b.net >= 0 ? 'tp-val-pos' : 'tp-val-neg';
   const netSign  = b.net >= 0 ? '+' : '';
@@ -302,11 +294,79 @@ function _tpRenderTradeBalance() {
         <span class="tp-trade-label">Сальдо</span>
         <span class="tp-trade-value ${netClass}">${netSign}${b.net.toLocaleString()} ₴</span>
       </div>
-      ${_tpRenderMonopolies()}
-      ${_tpRenderInflation()}
-      ${_tpRenderEconomicCycle()}
-      ${_tpRenderArmyFunding()}
     </div>`;
+}
+
+// ─── Этап 9 — Единый итоговый блок экономики ─────────────────────
+//   Собирает активные предупреждения/бонусы из economy_ext в один
+//   компактный блок над графиком казны:
+//     • торговый баланс (реиспользует _tpRenderTradeBalance)
+//     • инфляция       (.tp-eco-warn)
+//     • штраф армии    (.tp-eco-warn)
+//     • монополии      (.tp-eco-bonus)
+//     • эконом. цикл   (.tp-eco-cycle)
+//   Возвращает пустую строку, если нечего показать.
+function _tpRenderEconomyExtSummary() {
+  if (typeof GAME_STATE === 'undefined' || !GAME_STATE) return '';
+  const nId = GAME_STATE.player_nation;
+  if (!nId) return '';
+
+  const parts = [];
+  const ext = GAME_STATE.economy_ext || {};
+
+  // Инфляция
+  const infl = Number(ext.inflation?.[nId]) || 0;
+  if (infl >= 0.01) {
+    const pct = Math.round(infl * 100);
+    const col = infl < 0.10 ? '#ccaa00' : infl < 0.20 ? '#cc7700' : '#cc2200';
+    parts.push(`<div class="tp-eco-warn" style="border-left-color:${col}">
+      ⚠ Инфляция: +${pct}% к ценам покупки
+    </div>`);
+  }
+
+  // Армия недофинансирована
+  if (typeof getArmyFundingRatio === 'function') {
+    const ratio = getArmyFundingRatio(nId);
+    if (ratio < 0.80) {
+      const mult = (typeof getArmyCombatMult === 'function')
+        ? getArmyCombatMult(nId) : 1.0;
+      const pen = Math.round((1 - mult) * 100);
+      parts.push(`<div class="tp-eco-warn" style="border-left-color:#cc4444">
+        ⚔ Армия: ${Math.round(ratio * 100)}% финансирования → −${pen}% в бою
+      </div>`);
+    }
+  }
+
+  // Монополии игрока
+  const monos = Object.entries(ext.monopolies || {})
+    .filter(([, owner]) => owner === nId)
+    .map(([g]) => g);
+  if (monos.length > 0) {
+    const goodLabel = (g) =>
+      (typeof GOODS !== 'undefined' && GOODS[g]?.name) || g;
+    parts.push(`<div class="tp-eco-bonus">
+      ⭐ Монополии: ${monos.map(goodLabel).join(', ')} (+20% цена продажи)
+    </div>`);
+  }
+
+  // Экономический цикл
+  const cycle = ext.economic_cycle;
+  if (cycle && cycle.current && cycle.current !== 'normal') {
+    const types = (typeof CYCLE_TYPES !== 'undefined') ? CYCLE_TYPES : null;
+    const info = types?.[cycle.current];
+    const col = cycle.current === 'boom' ? '#44cc44' : '#cc6644';
+    const label = info?.label || cycle.current;
+    const left = Number(cycle.turns_left) || 0;
+    parts.push(`<div class="tp-eco-cycle" style="border-left-color:${col}">
+      ${label} — ещё ${left} ходов
+    </div>`);
+  }
+
+  if (parts.length === 0) return '';
+  return `<div class="tp-eco-summary">${parts.join('')}</div>`;
+}
+if (typeof window !== 'undefined') {
+  window._tpRenderEconomyExtSummary = _tpRenderEconomyExtSummary;
 }
 
 // ─── Этап 6 — Усталость армии от недофинансирования ───────────────
@@ -1009,6 +1069,8 @@ function _tpRender() {
         </div>
         <div id="tp-advisor-panel" class="tp-advisor-panel tp-hidden"></div>
       </div>
+
+      ${_tpRenderEconomyExtSummary()}
 
       <div class="tp-chart-section">
         ${_tpRenderChart()}
