@@ -1289,6 +1289,483 @@
       "type": "Sculpture (marble)",
       "license": "CC0 1.0",
       "attribution": "The Cleveland Museum of Art, 1952.260"
+    },
+    {
+      "id": "egyptian/cma130133",
+      "group": "portraits",
+      "filename": "assets/portraits/egyptian/cma130133.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1952.513/1952.513_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 130133",
+      "description": "Голова Аменхотепа III в синей короне, Новое царство"
+    },
+    {
+      "id": "egyptian/cma136482",
+      "group": "portraits",
+      "filename": "assets/portraits/egyptian/cma136482.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1960.56/1960.56_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 136482",
+      "description": "Статуя Аменемхата III, XII династия, Среднее царство"
+    },
+    {
+      "id": "egyptian/cma101365",
+      "group": "portraits",
+      "filename": "assets/portraits/egyptian/cma101365.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1920.1978/1920.1978_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 101365",
+      "description": "Наофорная статуя финансиста XXVII династии"
+    },
+    {
+      "id": "egyptian/cma149594",
+      "group": "portraits",
+      "filename": "assets/portraits/egyptian/cma149594.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1979.2/1979.2_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 149594",
+      "description": "Голова царя Усеркафа, V династия, Древнее царство"
+    },
+    {
+      "id": "egyptian/cma145925",
+      "group": "portraits",
+      "filename": "assets/portraits/egyptian/cma145925.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1971.137/1971.137_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 145925",
+      "description": "Фаюмский портрет юной девушки, Римский Египет"
+    },
+    {
+      "id": "persian/cma123022",
+      "group": "portraits",
+      "filename": "assets/portraits/persian/cma123022.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1943.279/1943.279_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 123022",
+      "description": "Фрагмент стены дворца Ксеркса, Персеполь, Ахемениды"
+    },
+    {
+      "id": "persian/cma136287",
+      "group": "portraits",
+      "filename": "assets/portraits/persian/cma136287.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1960.175/1960.175_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 136287",
+      "description": "Мидский охотник-лев, Ахемениды"
+    },
+    {
+      "id": "persian/cma137336",
+      "group": "portraits",
+      "filename": "assets/portraits/persian/cma137336.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1962.26/1962.26_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 137336",
+      "description": "Голова льва, Ахеменидская Персия"
+    },
+    {
+      "id": "persian/cma136657",
+      "group": "portraits",
+      "filename": "assets/portraits/persian/cma136657.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1961.199/1961.199_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 136657",
+      "description": "Навершие в форме головы горного козла, Ахемениды"
+    },
+    {
+      "id": "persian/cma139447",
+      "group": "portraits",
+      "filename": "assets/portraits/persian/cma139447.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1963.258/1963.258_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 139447",
+      "description": "Сасанидский царь на охоте на львов"
+    },
+    {
+      "id": "persian/cma138361",
+      "group": "portraits",
+      "filename": "assets/portraits/persian/cma138361.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1962.294/1962.294_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 138361",
+      "description": "Сосуд с богиней Анахитой, Сасаниды"
+    },
+    {
+      "id": "persian/cma138362",
+      "group": "portraits",
+      "filename": "assets/portraits/persian/cma138362.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1962.295/1962.295_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 138362",
+      "description": "Блюдо: богиня Анахита, Сасаниды"
+    },
+    {
+      "id": "persian/cma141156",
+      "group": "portraits",
+      "filename": "assets/portraits/persian/cma141156.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1964.41/1964.41_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 141156",
+      "description": "Ритон в форме коня, Сасанидская империя"
+    },
+    {
+      "id": "carthaginian/cma98310",
+      "group": "portraits",
+      "filename": "assets/portraits/carthaginian/cma98310.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1917.980.b/1917.980.b_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 98310",
+      "description": "Тетрадрахма Сикуло-Пунической чеканки: Конь (реверс)"
+    },
+    {
+      "id": "carthaginian/cma98308",
+      "group": "portraits",
+      "filename": "assets/portraits/carthaginian/cma98308.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1917.980/1917.980_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 98308",
+      "description": "Тетрадрахма: Голова Танит-Персефоны (аверс)"
+    },
+    {
+      "id": "carthaginian/cma98309",
+      "group": "portraits",
+      "filename": "assets/portraits/carthaginian/cma98309.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1917.980.a/1917.980.a_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 98309",
+      "description": "Тетрадрахма Сикуло-Пунической чеканки: Танит"
+    },
+    {
+      "id": "carthaginian/cma144162",
+      "group": "portraits",
+      "filename": "assets/portraits/carthaginian/cma144162.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1968.48/1968.48_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 144162",
+      "description": "Финикийская пластина из слоновой кости: Корова с теленком (Нимруд)"
+    },
+    {
+      "id": "carthaginian/cma144137",
+      "group": "portraits",
+      "filename": "assets/portraits/carthaginian/cma144137.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1968.46/1968.46_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 144137",
+      "description": "Финикийская пластина: Крылатый сфинкс (Нимруд)"
+    },
+    {
+      "id": "carthaginian/cma144170",
+      "group": "portraits",
+      "filename": "assets/portraits/carthaginian/cma144170.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1968.49/1968.49_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 144170",
+      "description": "Финикийская пластина: Пасущийся олень (Нимруд)"
+    },
+    {
+      "id": "carthaginian/cma144148",
+      "group": "portraits",
+      "filename": "assets/portraits/carthaginian/cma144148.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1968.47/1968.47_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 144148",
+      "description": "Финикийская пластина: Сфинксы с головой барана (Нимруд)"
+    },
+    {
+      "id": "carthaginian/cma111499",
+      "group": "portraits",
+      "filename": "assets/portraits/carthaginian/cma111499.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1929.978/1929.978_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 111499",
+      "description": "Чёрнофигурная ойнохоя: Европа на быке (Греко-финикийская)"
+    },
+    {
+      "id": "celtic/cma144339",
+      "group": "portraits",
+      "filename": "assets/portraits/celtic/cma144339.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1969.150/1969.150_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 144339",
+      "description": "Статер Тасциована: скрещенные венки, Катувелауны"
+    },
+    {
+      "id": "celtic/cma144888",
+      "group": "portraits",
+      "filename": "assets/portraits/celtic/cma144888.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1970.105/1970.105_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 144888",
+      "description": "Кельтская фибула (тип Ла Тен), Польша (?)"
+    },
+    {
+      "id": "celtic/cma144323",
+      "group": "portraits",
+      "filename": "assets/portraits/celtic/cma144323.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1969.145/1969.145_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 144323",
+      "description": "Кельтский статер: Конь (реверс), Англия"
+    },
+    {
+      "id": "celtic/cma111705",
+      "group": "portraits",
+      "filename": "assets/portraits/celtic/cma111705.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1930.232/1930.232_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 111705",
+      "description": "Декоративная брошь, Галло-римская / Романо-британская"
+    },
+    {
+      "id": "celtic/cma111703",
+      "group": "portraits",
+      "filename": "assets/portraits/celtic/cma111703.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1930.230/1930.230_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 111703",
+      "description": "Декоративная брошь (Галло-римская, миграционный период)"
+    },
+    {
+      "id": "celtic/cma111707",
+      "group": "portraits",
+      "filename": "assets/portraits/celtic/cma111707.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1930.234/1930.234_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 111707",
+      "description": "Декоративная брошь (Галло-римская)"
+    },
+    {
+      "id": "celtic/cma111706",
+      "group": "portraits",
+      "filename": "assets/portraits/celtic/cma111706.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1930.233/1930.233_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 111706",
+      "description": "Декоративная брошь (Галло-римская)"
+    },
+    {
+      "id": "celtic/cma111704",
+      "group": "portraits",
+      "filename": "assets/portraits/celtic/cma111704.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1930.231/1930.231_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 111704",
+      "description": "Декоративная брошь (Галло-римская)"
+    },
+    {
+      "id": "celtic/cma156288",
+      "group": "portraits",
+      "filename": "assets/portraits/celtic/cma156288.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1992.124/1992.124_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 156288",
+      "description": "Глобулярный горшок, Галло-римская керамика (Рейн-Кёльн)"
+    },
+    {
+      "id": "nomadic/cma153314",
+      "group": "portraits",
+      "filename": "assets/portraits/nomadic/cma153314.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1986.26/1986.26_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 153314",
+      "description": "Вой волка, Южная Сибирь (деревянная скульптура)"
+    },
+    {
+      "id": "nomadic/cma154261",
+      "group": "portraits",
+      "filename": "assets/portraits/nomadic/cma154261.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1988.71/1988.71_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 154261",
+      "description": "Пояс с бегущими животными, Кобанская культура"
+    },
+    {
+      "id": "nomadic/cma138614",
+      "group": "portraits",
+      "filename": "assets/portraits/nomadic/cma138614.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1962.46/1962.46_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 138614",
+      "description": "Навершие шеста в виде дикого осла, Ордос, Хань"
+    },
+    {
+      "id": "nomadic/cma129223",
+      "group": "portraits",
+      "filename": "assets/portraits/nomadic/cma129223.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1952.115/1952.115_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 129223",
+      "description": "Пряжка с животными, Ордос, Западная Хань"
+    },
+    {
+      "id": "nomadic/cma135558",
+      "group": "portraits",
+      "filename": "assets/portraits/nomadic/cma135558.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1958.79/1958.79_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 135558",
+      "description": "Фигурка коня, Ордос, Хань"
+    },
+    {
+      "id": "east_asian/cma151403",
+      "group": "portraits",
+      "filename": "assets/portraits/east_asian/cma151403.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1983.24/1983.24_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 151403",
+      "description": "Придворная дама в высоком головном уборе, Тан"
+    },
+    {
+      "id": "east_asian/cma151414",
+      "group": "portraits",
+      "filename": "assets/portraits/east_asian/cma151414.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1983.25/1983.25_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 151414",
+      "description": "Придворная дама с высоким шиньоном, Тан"
+    },
+    {
+      "id": "east_asian/cma137280",
+      "group": "portraits",
+      "filename": "assets/portraits/east_asian/cma137280.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1962.216/1962.216_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 137280",
+      "description": "Придворный чиновник, гробница, Северная Вэй"
+    },
+    {
+      "id": "east_asian/cma132819",
+      "group": "portraits",
+      "filename": "assets/portraits/east_asian/cma132819.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1955.295/1955.295_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 132819",
+      "description": "Лошадь, Тан, провинция Хэнань"
+    },
+    {
+      "id": "east_asian/cma145350",
+      "group": "portraits",
+      "filename": "assets/portraits/east_asian/cma145350.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1970.58/1970.58_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 145350",
+      "description": "Конюх, гробничная фигура, Суй-Тан"
+    },
+    {
+      "id": "east_asian/cma145339",
+      "group": "portraits",
+      "filename": "assets/portraits/east_asian/cma145339.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1970.57/1970.57_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 145339",
+      "description": "Верблюд с всадником, Суй-Тан"
+    },
+    {
+      "id": "east_asian/cma140232",
+      "group": "portraits",
+      "filename": "assets/portraits/east_asian/cma140232.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1964.216/1964.216_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 140232",
+      "description": "Танцующая фигура в стиле Хань"
+    },
+    {
+      "id": "east_asian/cma153596",
+      "group": "portraits",
+      "filename": "assets/portraits/east_asian/cma153596.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1987.13/1987.13_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 153596",
+      "description": "Женщина, держащая цветы сливы, Тан"
+    },
+    {
+      "id": "generic/cma107057",
+      "group": "portraits",
+      "filename": "assets/portraits/generic/cma107057.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1928.858/1928.858_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, 1928.858",
+      "description": "Универсальное лицо: мраморная голова (CMA)"
+    },
+    {
+      "id": "generic/cma104604",
+      "group": "portraits",
+      "filename": "assets/portraits/generic/cma104604.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1924.538/1924.538_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, 1924.538",
+      "description": "Универсальное лицо: мраморная голова (CMA)"
+    },
+    {
+      "id": "generic/cma119018",
+      "group": "portraits",
+      "filename": "assets/portraits/generic/cma119018.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1938.426/1938.426_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, 1938.426",
+      "description": "Универсальное лицо: мраморная голова (CMA)"
+    },
+    {
+      "id": "generic/cma110525",
+      "group": "portraits",
+      "filename": "assets/portraits/generic/cma110525.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1929.440/1929.440_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, 1929.440",
+      "description": "Универсальное лицо: мраморная голова (CMA)"
+    },
+    {
+      "id": "generic/cma108313",
+      "group": "portraits",
+      "filename": "assets/portraits/generic/cma108313.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1925.944/1925.944_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, 1925.944",
+      "description": "Универсальное лицо: римский бюст (CMA)"
+    },
+    {
+      "id": "generic/cma108314",
+      "group": "portraits",
+      "filename": "assets/portraits/generic/cma108314.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1925.945/1925.945_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, 1925.945",
+      "description": "Универсальное лицо: римский бюст (CMA)"
+    },
+    {
+      "id": "egyptian/met244464",
+      "group": "portraits",
+      "filename": "assets/portraits/egyptian/met244464.jpg",
+      "source": "https://images.metmuseum.org/CRDImages/gr/web-large/DP20099.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Metropolitan Museum of Art, object 244464",
+      "description": "Бронзовая портретная голова фараона (Met Museum)"
+    },
+    {
+      "id": "egyptian/met549358",
+      "group": "portraits",
+      "filename": "assets/portraits/egyptian/met549358.jpg",
+      "source": "https://images.metmuseum.org/CRDImages/eg/web-large/LC-11_150_30_EGDP026440.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Metropolitan Museum of Art, object 549358",
+      "description": "Плакетка: царь в красной короне (Met Museum)"
+    },
+    {
+      "id": "egyptian/met543869",
+      "group": "portraits",
+      "filename": "assets/portraits/egyptian/met543869.jpg",
+      "source": "https://images.metmuseum.org/CRDImages/eg/web-large/DT256965.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Metropolitan Museum of Art, object 543869",
+      "description": "Статуя коленопреклонённого пленника (Met Museum)"
+    },
+    {
+      "id": "egyptian/met544864",
+      "group": "portraits",
+      "filename": "assets/portraits/egyptian/met544864.jpg",
+      "source": "https://images.metmuseum.org/CRDImages/eg/web-large/DP243443.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Metropolitan Museum of Art, object 544864",
+      "description": "Статуэтка богини-гиппопотама Таурт (Met Museum)"
     }
   ]
 }
