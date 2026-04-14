@@ -56,7 +56,7 @@
     #splash-inner {
       position: relative;
       z-index: 2;
-      text-align: center; color: #d4a853;
+      text-align: center; color: var(--gold);
     }
     #splash-title,
     .splash__title {
@@ -64,7 +64,7 @@
       font-size: clamp(2.4rem, 8vw, 5.5rem);
       font-weight: 900;
       letter-spacing: 0.15em;
-      color: #d4a853;
+      color: var(--gold);
       text-shadow: 0 2px 18px rgba(0,0,0,0.85), 0 0 30px rgba(212,168,83,0.4);
       margin: 0 0 6px;
     }
@@ -85,7 +85,7 @@
     }
     #splash-bar-fill {
       height: 100%; width: 0%;
-      background: linear-gradient(90deg, #7a5a18, #d4a853);
+      background: linear-gradient(90deg, #7a5a18, var(--gold));
       border-radius: 2px;
       transition: width 0.4s ease;
     }
@@ -142,7 +142,7 @@
       --border-gold:    #7a6030;   /* золотой бордюр (только важные края)  */
 
       /* ── АКЦЕНТ 1: Античное золото (приглушённое) ── */
-      --gold:           #c9a961;   /* основное золото — не #FFD700!        */
+      --gold:           #c9a961;   /* основное золото — приглушённое       */
       --gold-dim:       #8a6e3a;   /* приглушённое золото                  */
       --gold-bright:    #e8c97a;   /* подсветка при hover                  */
 
@@ -203,7 +203,7 @@
     /* Верхняя строка */
     #top-bar {
       height: var(--header-h);
-      background: linear-gradient(to bottom, #2a1a08, #1a1208);
+      background: linear-gradient(to bottom, var(--bg-panel), var(--bg-panel));
       border-bottom: 2px solid var(--border-gold);
       display: flex;
       align-items: center;
@@ -222,13 +222,13 @@
     #game-title {
       font-size: 18px;
       font-weight: bold;
-      color: var(--accent);
+      color: var(--gold-bright);
       letter-spacing: 3px;
-      text-shadow: 0 0 12px rgba(255,215,0,0.4);
+      text-shadow: 0 0 12px rgba(232,201,122,0.4);
     }
 
     #end-turn-btn {
-      background: linear-gradient(to bottom, #5a3010, #3a1a08);
+      background: linear-gradient(to bottom, var(--bronze-dark), var(--bg-section));
       color: var(--text-gold);
       border: 1px solid var(--border-gold);
       padding: 6px 18px;
@@ -240,10 +240,10 @@
       letter-spacing: 0.5px;
     }
     #end-turn-btn:hover:not(:disabled) {
-      background: linear-gradient(to bottom, #7a4018, #5a2a10);
-      border-color: var(--accent);
-      color: var(--accent);
-      box-shadow: 0 0 8px rgba(255,215,0,0.3);
+      background: linear-gradient(to bottom, var(--bronze), var(--bronze-dark));
+      border-color: var(--gold);
+      color: var(--gold-bright);
+      box-shadow: 0 0 8px rgba(201,169,97,0.3);
     }
     #end-turn-btn:disabled {
       opacity: 0.5;
@@ -289,8 +289,8 @@
       min-width: 0;
       opacity: 0.9;
     }
-    #resource-bar .res-delta.positive { color: #4CAF50; }
-    #resource-bar .res-delta.negative { color: #f44336; }
+    #resource-bar .res-delta.positive { color: var(--positive); }
+    #resource-bar .res-delta.negative { color: var(--negative); }
     #resource-bar .res-delta:empty { display: none; }
 
     /* Шаг 46 — Спарклайн тренда в ресурс-баре */
@@ -407,7 +407,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.72);
+      background: var(--bg-overlay);
       z-index: 9500;
       align-items: center;
       justify-content: center;
@@ -419,7 +419,7 @@
     #settings-modal .sm-box {
       width: 400px;
       max-height: 80vh;
-      background: linear-gradient(to bottom, #2a1a08, #1a1208);
+      background: linear-gradient(to bottom, var(--bg-panel), var(--bg-panel));
       border: 2px solid var(--border-gold);
       border-radius: 4px;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
@@ -753,9 +753,9 @@
     }
     #status-bar > span { white-space: nowrap; }
     .sb-sep { margin: 0 8px; opacity: 0.3; }
-    #sb-ai.ready   { color: #4caf50; }
-    #sb-ai.busy    { color: #ff9800; }
-    #sb-ai.error   { color: #f44336; }
+    #sb-ai.ready   { color: var(--positive); }
+    #sb-ai.busy    { color: var(--warning); }
+    #sb-ai.error   { color: var(--negative); }
 
     /* ══════════════════════════════════════════════════
        Шаг 34 — Панель поиска по игре
@@ -910,21 +910,21 @@
     #turn-summary-card .tsc-delta-row:last-child { border-bottom: none; }
     #turn-summary-card .tsc-delta-label { color: var(--text-light); }
     #turn-summary-card .tsc-delta-val   { font-variant-numeric: tabular-nums; font-weight: 600; }
-    #turn-summary-card .tsc-delta-pos { color: #4caf50; }
-    #turn-summary-card .tsc-delta-neg { color: #f44336; }
+    #turn-summary-card .tsc-delta-pos { color: var(--positive); }
+    #turn-summary-card .tsc-delta-neg { color: var(--negative); }
     #turn-summary-card .tsc-alerts:empty { display: none; }
     #turn-summary-card .tsc-alert {
       margin-top: 6px;
       padding: 5px 8px;
       font-size: 11px;
       border-radius: 3px;
-      background: rgba(244, 67, 54, 0.12);
-      border-left: 2px solid #f44336;
+      background: rgba(139,32,32,0.12);
+      border-left: 2px solid var(--negative);
       color: #ffcdd2;
     }
     #turn-summary-card .tsc-alert-warning {
       background: rgba(255, 152, 0, 0.12);
-      border-left-color: #ff9800;
+      border-left-color: var(--warning);
       color: #ffe0b2;
     }
     #turn-summary-card .tsc-footer {
@@ -1053,10 +1053,10 @@
       color: var(--text-light);
     }
     #compare-panel .cp-row.cp-winner {
-      background: rgba(76, 175, 80, 0.12);
+      background: rgba(58,107,58,0.12);
     }
     #compare-panel .cp-row.cp-winner .cp-row-val {
-      color: #4caf50;
+      color: var(--positive);
     }
     #compare-panel .cp-row.cp-loser .cp-row-val {
       color: #7a6a55;
@@ -1071,8 +1071,8 @@
     /* Кнопка "⚖ Сравнить" в popup региона */
     .ri-action-btn.ri-compare-btn.ri-compare-active {
       animation: ri-compare-pulse 1.1s ease-in-out infinite;
-      border-color: #4caf50;
-      color: #4caf50;
+      border-color: var(--positive);
+      color: var(--positive);
     }
     @keyframes ri-compare-pulse {
       0%, 100% { opacity: 1; }
@@ -1140,9 +1140,9 @@
     }
     .toast .toast-close:hover { opacity: 1; }
     .toast.info     { border-left-color: var(--border-gold); }
-    .toast.warning  { border-left-color: #ff9800; }
-    .toast.danger   { border-left-color: #f44336; background: rgba(30, 10, 8, 0.97); }
-    .toast.success  { border-left-color: #4caf50; }
+    .toast.warning  { border-left-color: var(--warning); }
+    .toast.danger   { border-left-color: var(--negative); background: rgba(30, 10, 8, 0.97); }
+    .toast.success  { border-left-color: var(--positive); }
 
     /* ══════════════════════════════════════════════════
        Шаг 35 — Визуальный "пульс" для критических событий
@@ -1218,7 +1218,7 @@
     .leaflet-container {
       width: 100% !important;
       height: 100% !important;
-      background: #1a3a5c !important;
+      background: var(--sea) !important;
       font-family: 'Cinzel', 'Georgia', serif;
     }
 
@@ -1232,7 +1232,7 @@
     }
     .leaflet-control-zoom a:hover {
       background: rgba(42,32,16,0.95) !important;
-      color: var(--accent) !important;
+      color: var(--gold-bright) !important;
     }
 
     /* Атрибуция CAWM */
@@ -1249,9 +1249,9 @@
     /* Тултип региона */
     .leaflet-tooltip.region-tooltip {
       background: rgba(13,10,5,0.95);
-      border: 1px solid var(--border-gold, #6b4f1a);
+      border: 1px solid var(--border-gold, var(--border-main));
       border-radius: 3px;
-      color: #f0d8a0;
+      color: var(--text-primary);
       padding: 5px 8px;
       font-family: 'Georgia', serif;
       font-size: 11px;
@@ -1261,12 +1261,12 @@
     .leaflet-tooltip.region-tooltip::before {
       border-top-color: rgba(107,79,26,0.8);
     }
-    .rt-name    { font-size: 13px; font-weight: bold; color: #d4a853; font-family: 'Cinzel','Georgia',serif; letter-spacing: 0.03em; }
+    .rt-name    { font-size: 13px; font-weight: bold; color: var(--gold); font-family: 'Cinzel','Georgia',serif; letter-spacing: 0.03em; }
     .rt-nation  { font-size: 10px; margin-top: 1px; }
-    .rt-pop     { font-size: 10px; color: #8a6e3a; margin-top: 2px; }
+    .rt-pop     { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
     .rt-mil     { font-size: 10px; color: #cc9944; margin-top: 2px; }
     .rt-fort     { font-size: 10px; color: #ff8a65; margin-top: 2px; }
-    .rt-blocked  { font-size: 10px; color: #f44336; margin-top: 3px; font-weight: 600; }
+    .rt-blocked  { font-size: 10px; color: var(--negative); margin-top: 3px; font-weight: 600; }
     .rt-occupied { font-size: 10px; margin-top: 3px; font-weight: 600; }
     .rt-garr     { font-size: 10px; color: #c39454; margin-top: 2px; }
     /* Шаг 48 — индикатор разведданных в тултипе */
@@ -1288,7 +1288,7 @@
       font-family: 'Georgia', serif;
     }
     .ri-intel--0 { color: #a08868; border-color: rgba(80,60,30,0.6); background: rgba(30,22,12,0.6); }
-    .ri-intel--1 { color: #d4a853; }
+    .ri-intel--1 { color: var(--gold); }
     .ri-intel--2 { color: #8ec07c; border-color: rgba(80,120,60,0.5); }
     .ri-intel-hint { color: #8a7553; font-style: italic; margin-left: 4px; }
     .ri-stat--hidden { opacity: 0.55; filter: saturate(0.4); }
@@ -1303,7 +1303,7 @@
     /* Кнопка показа ID регионов */
     .region-id-toggle-btn {
       background: rgba(20,16,10,0.85) !important;
-      color: #d4a853 !important;
+      color: var(--gold) !important;
       border: 1px solid #6a4e23 !important;
       font-weight: bold;
       font-size: 12px;
@@ -1318,7 +1318,7 @@
     /* Кнопка торговых маршрутов */
     .trade-routes-toggle-btn {
       background: rgba(20,16,10,0.85) !important;
-      color: #d4a853 !important;
+      color: var(--gold) !important;
       border: 1px solid #6a4e23 !important;
       font-size: 10px;
       padding: 2px 5px;
@@ -1343,7 +1343,7 @@
     .trade-route-path.grain   { stroke: #a5d6a7; }
     .trade-route-path.metal   { stroke: #b0bec5; }
     .trade-route-path.luxury  { stroke: #ce93d8; }
-    .trade-route-path.general { stroke: #d4a853; }
+    .trade-route-path.general { stroke: var(--gold); }
     .trade-route-path.world   { stroke: #64b5f6; animation-duration: 1.5s; opacity: 0.55; }
     @keyframes tradeFlow {
       from { stroke-dashoffset: 0;   }
@@ -1356,22 +1356,22 @@
 
     /* Разбивка производства (ECO_006) */
     .prod-breakdown       { margin-top: 8px; border-top: 1px solid #444; padding-top: 6px; }
-    .prod-breakdown-title { font-size: 11px; font-weight: bold; color: #d4a853; margin-bottom: 4px; }
+    .prod-breakdown-title { font-size: 11px; font-weight: bold; color: var(--gold); margin-bottom: 4px; }
     .prod-row  { font-size: 11px; margin: 3px 0; }
     .prod-bar  { height: 6px; background: #333; border-radius: 3px; margin-top: 2px; }
     .prod-bar div { height: 100%; border-radius: 3px; }
-    .prod-hint { font-size: 10px; color: #4CAF50; margin-top: 4px; font-style: italic; }
+    .prod-hint { font-size: 10px; color: var(--positive); margin-top: 4px; font-style: italic; }
 
     /* Панель балансировки развития (ECO_005) */
     .balance-panel  { padding: 8px; background: #111; border-radius: 4px; margin: 6px 0; }
-    .balance-title  { font-size: 11px; font-weight: bold; color: #d4a853; margin-bottom: 4px; }
+    .balance-title  { font-size: 11px; font-weight: bold; color: var(--gold); margin-bottom: 4px; }
     .balance-row    { display:flex; align-items:center; gap:8px; margin:3px 0; font-size:11px; }
     .balance-row > span:first-child { width: 80px; flex-shrink:0; }
     .balance-bar    { flex:1; height:8px; background:#333; border-radius:4px; }
     .bar-fill       { height:100%; border-radius:4px; }
     .bar-fill.trade { background:#2196F3; }
-    .bar-fill.agri  { background:#4CAF50; }
-    .bar-fill.mil   { background:#F44336; }
+    .bar-fill.agri  { background:var(--positive); }
+    .bar-fill.mil   { background:var(--negative); }
     .balance-hint   { font-size:10px; color:#9E9E9E; margin-top:6px; font-style:italic; }
 
     /* Панель мирового рынка (ECO_004) */
@@ -1379,14 +1379,14 @@
     .wm-good  { margin: 3px 0; }
     .wm-bar   { height: 4px; background: #333; border-radius: 2px; margin-top: 2px; }
     .wm-bar div { height: 100%; background: #2196F3; border-radius: 2px; }
-    .no-access  { border-left: 3px solid #F44336; color: #9E9E9E; }
-    .has-access { border-left: 3px solid #4CAF50; }
+    .no-access  { border-left: 3px solid var(--negative); color: #9E9E9E; }
+    .has-access { border-left: 3px solid var(--positive); }
 
     /* Диагностика дефицита бюджета */
     .deficit-diagnostics { margin-top: 8px; border-top: 1px solid #444; padding-top: 6px; }
     .deficit-title { font-size: 11px; font-weight: bold; color: #FFC107; margin-bottom: 4px; }
     .deficit-item { font-size: 11px; padding: 2px 0; }
-    .deficit-item.high { color: #F44336; }
+    .deficit-item.high { color: var(--negative); }
     .deficit-item.med  { color: #FFC107; }
     .deficit-item.low  { color: #9E9E9E; }
 
@@ -1803,7 +1803,7 @@
       border-radius: 50%;
       flex-shrink: 0;
       position: relative;
-      box-shadow: 0 0 6px rgba(0,0,0,0.5), inset 0 0 0 2px rgba(255,215,0,0.2);
+      box-shadow: 0 0 6px rgba(0,0,0,0.5), inset 0 0 0 2px rgba(232,201,122,0.2);
     }
     .culture-pie-center {
       position: absolute;
@@ -1950,7 +1950,7 @@
       font-size: 9px;
     }
     .rel-official-mark {
-      color: #d4a853;
+      color: var(--gold);
       font-size: 8px;
     }
     /* Fervor dots */
@@ -2520,11 +2520,11 @@
     }
     .diplo-nation-chip:hover { background: rgba(139,90,43,.35); }
     .diplo-nation-chip--war {
-      background: rgba(244,67,54,.15);
-      border-color: rgba(244,67,54,.4);
+      background: rgba(139,32,32,.15);
+      border-color: rgba(139,32,32,.4);
       color: #ef9a9a;
     }
-    .diplo-nation-chip--war:hover { background: rgba(244,67,54,.28); }
+    .diplo-nation-chip--war:hover { background: rgba(139,32,32,.28); }
 
     /* ── Блок «все отношения» ── */
     .diplo-rels-list { display: flex; flex-direction: column; gap: 3px; }
@@ -2736,7 +2736,7 @@
     .log-icon { flex-shrink: 0; font-size: 10px; opacity: 0.8; }
     .log-text  { color: var(--text-light); }
 
-    .log-turn     .log-text { color: var(--accent); font-weight: bold; }
+    .log-turn     .log-text { color: var(--gold-bright); font-weight: bold; }
     .log-danger   .log-text { color: #ef5350; }
     .log-warning  .log-text { color: var(--warning); }
     .log-good     .log-text { color: var(--positive); }
@@ -2759,7 +2759,7 @@
       box-shadow: 0 8px 40px rgba(0,0,0,.8);
     }
     .manifest-header { margin-bottom: 16px; }
-    .manifest-title { font-size: 16px; color: var(--accent); font-weight: bold; }
+    .manifest-title { font-size: 16px; color: var(--gold-bright); font-weight: bold; }
     .manifest-subtitle { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
     .manifest-option {
       display: flex; align-items: center; gap: 8px;
@@ -2849,7 +2849,7 @@
       padding: 6px 8px; background: rgba(255,255,255,.03);
       border-radius: 4px; border: 1px solid rgba(255,255,255,.07);
     }
-    .testament-goal-row.testament-done { border-color: rgba(76,175,80,.3); background: rgba(76,175,80,.07); }
+    .testament-goal-row.testament-done { border-color: rgba(58,107,58,.3); background: rgba(58,107,58,.07); }
     .testament-goal-text { flex: 1; font-size: 13px; color: var(--text-light); }
     .testament-goal-status { font-size: 14px; }
     .testament-add-btn, .testament-remove-btn {
@@ -3015,7 +3015,7 @@
     }
     #api-key-section .ak-status {
       font-size: 10px;
-      color: #4caf50;
+      color: var(--positive);
       text-align: center;
     }
     #api-key-section .ak-btn {
@@ -3159,14 +3159,14 @@
     }
     #command-input::placeholder { color: var(--text-dim); }
     #command-input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 6px rgba(255,215,0,0.2);
+      border-color: var(--gold-bright);
+      box-shadow: 0 0 6px rgba(232,201,122,0.2);
     }
 
     #send-btn {
       height: 30px;
       padding: 0 14px;
-      background: linear-gradient(to bottom, #5a3010, #3a1a08);
+      background: linear-gradient(to bottom, var(--bronze-dark), var(--bg-section));
       border: 1px solid var(--border-gold);
       color: var(--text-gold);
       cursor: pointer;
@@ -3177,8 +3177,8 @@
       transition: all 0.2s;
     }
     #send-btn:hover:not(:disabled) {
-      background: linear-gradient(to bottom, #7a4018, #5a2a10);
-      color: var(--accent);
+      background: linear-gradient(to bottom, var(--bronze), var(--bronze-dark));
+      color: var(--gold-bright);
     }
     #send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -3258,7 +3258,7 @@
     }
     .stat-label { font-size: 11px; color: var(--text-dim); flex: 1; }
     .stat-value { font-size: 11px; color: var(--text-light); font-weight: bold; }
-    .stat-value.gold     { color: var(--accent); }
+    .stat-value.gold     { color: var(--gold-bright); }
     .stat-value.positive { color: var(--positive); }
     .stat-value.negative { color: var(--negative); }
 
@@ -3293,12 +3293,12 @@
 
     .legitimacy-fill { background: linear-gradient(to right, #9C27B0, #E040FB); }
     .happiness-fill  { /* задаётся inline */ }
-    .morale-fill     { background: linear-gradient(to right, #B71C1C, #F44336); }
+    .morale-fill     { background: linear-gradient(to right, #B71C1C, var(--negative)); }
     .loyalty-fill    { background: linear-gradient(to right, #1B5E20, #43A047); }
 
     /* Правитель */
     .ruler-section { text-align: center; }
-    .ruler-name { font-size: 15px; color: var(--accent); font-weight: bold; margin-bottom: 2px; }
+    .ruler-name { font-size: 15px; color: var(--gold-bright); font-weight: bold; margin-bottom: 2px; }
     .ruler-sub  { font-size: 10px; color: var(--text-dim); margin-bottom: 6px; }
     .legitimacy-bar { gap: 0; }
     .legitimacy-bar .stat-label { text-align: left; min-width: 70px; }
@@ -3432,7 +3432,7 @@
     .culture-name { font-size: 11px; font-weight: bold; margin-bottom: 2px; }
     .culture-group { font-size: 9px; color: var(--text-dim); font-weight: normal; }
     .culture-mutation-status { font-size: 9px; margin-bottom: 6px; }
-    .mutation-ready { color: #4CAF50; }
+    .mutation-ready { color: var(--positive); }
     .mutation-cooldown { color: var(--text-dim); }
     .traditions-list { display: flex; flex-direction: column; gap: 3px; }
     .tradition-item {
@@ -3444,12 +3444,12 @@
     .tradition-icon { font-size: 11px; flex-shrink: 0; }
     .tradition-name { font-size: 10px; font-weight: 500; flex-shrink: 0; }
     .tradition-bonus { font-size: 8px; color: var(--text-dim); width: 100%; }
-    .bonus-positive { color: #4CAF50; }
-    .bonus-negative { color: #f44336; }
+    .bonus-positive { color: var(--positive); }
+    .bonus-negative { color: var(--negative); }
 
     /* Законы */
     .laws-count {
-      background: var(--accent);
+      background: var(--gold-bright);
       color: var(--bg-deep);
       border-radius: 10px;
       padding: 0 5px;
@@ -3484,7 +3484,7 @@
     }
     .char-card:hover {
       background: #302010;
-      border-color: var(--accent);
+      border-color: var(--gold-bright);
     }
 
     .char-portrait {
@@ -3621,7 +3621,7 @@
       transition: background 0.15s;
     }
     .position-slot:hover { background: rgba(60,40,12,0.5); }
-    .position-slot.filled { border-color: var(--accent); }
+    .position-slot.filled { border-color: var(--gold-bright); }
     .pos-role-icon {
       font-size: 20px;
       flex-shrink: 0;
@@ -3646,7 +3646,7 @@
     .pos-holder.empty { color: var(--text-dim); font-style: italic; }
     .pos-bonus {
       font-size: 9px;
-      color: var(--positive, #4CAF50);
+      color: var(--positive, var(--positive));
       margin-top: 1px;
     }
     .pos-assign-btn {
@@ -3663,7 +3663,7 @@
     }
     .pos-assign-btn:hover {
       color: var(--text-gold);
-      border-color: var(--accent);
+      border-color: var(--gold-bright);
       background: rgba(107,79,26,0.25);
     }
 
@@ -3697,7 +3697,7 @@
     }
     .advisor-chip:hover {
       background: rgba(60,40,12,0.6);
-      border-color: var(--accent);
+      border-color: var(--gold-bright);
     }
     .adv-avatar { font-size: 13px; }
     .adv-name {
@@ -3707,7 +3707,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .adv-skill { color: var(--accent); font-weight: bold; }
+    .adv-skill { color: var(--gold-bright); font-weight: bold; }
 
     /* Модал назначения */
     #assign-modal-overlay {
@@ -3741,7 +3741,7 @@
     .assign-modal-title {
       flex: 1;
       font-size: 14px;
-      color: var(--accent);
+      color: var(--gold-bright);
       font-weight: bold;
     }
     .assign-modal-sub {
@@ -3770,13 +3770,13 @@
     .assign-cand-meta { font-size: 10px; color: var(--text-dim); }
     .assign-cand-skill {
       font-size: 11px;
-      color: var(--accent);
+      color: var(--gold-bright);
       font-weight: bold;
       padding: 0 6px;
     }
     .assign-cand-btn {
       background: rgba(107,79,26,0.4);
-      border: 1px solid var(--accent);
+      border: 1px solid var(--gold-bright);
       color: var(--text-gold);
       padding: 4px 10px;
       border-radius: 3px;
@@ -3788,7 +3788,7 @@
       background: rgba(150,120,50,0.6);
     }
     .assign-cand-btn.unassign {
-      border-color: rgba(244,67,54,0.5);
+      border-color: rgba(139,32,32,0.5);
       color: #ef9a9a;
     }
     .assign-cand-empty {
@@ -3830,7 +3830,7 @@
       margin-bottom: 12px;
     }
     .char-detail-portrait { font-size: 40px; }
-    .char-detail-name { font-size: 18px; color: var(--accent); font-weight: bold; }
+    .char-detail-name { font-size: 18px; color: var(--gold-bright); font-weight: bold; }
     .char-detail-role { font-size: 12px; color: var(--text-dim); }
 
     .close-btn {
@@ -3889,8 +3889,8 @@
       border-radius: 2px;
       font-size: 10px;
     }
-    .tag.want { background: rgba(76,175,80,0.15); border: 1px solid rgba(76,175,80,0.4); color: #a5d6a7; }
-    .tag.fear { background: rgba(244,67,54,0.15); border: 1px solid rgba(244,67,54,0.4); color: #ef9a9a; }
+    .tag.want { background: rgba(58,107,58,0.15); border: 1px solid rgba(58,107,58,0.4); color: #a5d6a7; }
+    .tag.fear { background: rgba(139,32,32,0.15); border: 1px solid rgba(139,32,32,0.4); color: #ef9a9a; }
 
     .char-history { font-size: 11px; }
     .history-entry {
@@ -3910,7 +3910,7 @@
     }
     .voting-title {
       font-size: 18px;
-      color: var(--accent);
+      color: var(--gold-bright);
       font-weight: bold;
       margin-bottom: 10px;
     }
@@ -3951,17 +3951,17 @@
     }
     .vote-result.passed {
       color: var(--positive);
-      background: rgba(76,175,80,0.1);
+      background: rgba(58,107,58,0.1);
       border: 1px solid var(--positive);
     }
     .vote-result.failed {
       color: var(--negative);
-      background: rgba(244,67,54,0.1);
+      background: rgba(139,32,32,0.1);
       border: 1px solid var(--negative);
     }
 
     .vote-senate-note { font-size:11px;color:#88ccff;margin-bottom:8px;padding:4px 8px;background:rgba(100,180,255,0.08);border-radius:3px; }
-    .vote-veto { font-size:12px;color:#FF9800;font-weight:bold;margin:8px 0;padding:5px;background:rgba(255,152,0,0.1);border-radius:3px; }
+    .vote-veto { font-size:12px;color:var(--warning);font-weight:bold;margin:8px 0;padding:5px;background:rgba(255,152,0,0.1);border-radius:3px; }
 
     .voting-btns { text-align: right; }
     .voting-btns button {
@@ -3974,7 +3974,7 @@
       font-size: 13px;
       border-radius: 2px;
     }
-    .voting-btns button:hover { border-color: var(--accent); color: var(--accent); }
+    .voting-btns button:hover { border-color: var(--gold-bright); color: var(--gold-bright); }
 
     /* SVG-стили удалены — используется Leaflet */
 
@@ -3997,7 +3997,7 @@
     }
     #generate-chars-btn:hover:not(:disabled) {
       background: linear-gradient(to bottom, #5a3510, #3a2008);
-      border-color: var(--accent);
+      border-color: var(--gold-bright);
     }
     #generate-chars-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -4061,12 +4061,12 @@
     }
     .mm-btn:hover {
       background: rgba(42,32,16,0.95);
-      border-color: var(--accent);
+      border-color: var(--gold-bright);
     }
     .mm-btn.active {
       background: rgba(107,79,26,0.5);
-      border-color: var(--accent);
-      color: var(--accent);
+      border-color: var(--gold-bright);
+      color: var(--gold-bright);
     }
     /* Плавный переход цветов при смене режимов */
     .leaflet-interactive {
@@ -4135,7 +4135,7 @@
     }
     .zoom-garrison-num {
       font-size: 11px;
-      color: #ffd700;
+      color: var(--gold-bright);
       background: rgba(13,10,5,0.85);
       border: 1px solid rgba(200,170,100,0.45);
       border-radius: 3px;
@@ -4204,7 +4204,7 @@
     ══════════════════════════════════════════════════ */
     #gov-overlay {
       position: fixed; inset: 0;
-      background: rgba(0,0,0,0.72);
+      background: var(--bg-overlay);
       display: flex; align-items: center; justify-content: center;
       z-index: 1000;
     }
@@ -4224,7 +4224,7 @@
       background: rgba(139,69,19,0.15);
       flex-shrink: 0;
     }
-    .gov-panel-title { color: var(--accent); font-size: 14px; letter-spacing: 1px; font-weight: bold; }
+    .gov-panel-title { color: var(--gold-bright); font-size: 14px; letter-spacing: 1px; font-weight: bold; }
     .gov-close-btn {
       background: none; border: 1px solid var(--border-gold); color: var(--text-gold);
       width: 22px; height: 22px; border-radius: 2px; cursor: pointer; font-size: 11px;
@@ -4244,7 +4244,7 @@
       color: var(--text-gold); font-size: 11px; cursor: pointer;
       text-align: left; margin-top: 6px; letter-spacing: 0.5px;
     }
-    .gov-open-btn:hover { background: linear-gradient(to bottom, #4a3010, #32180a); border-color: var(--accent); }
+    .gov-open-btn:hover { background: linear-gradient(to bottom, #4a3010, #32180a); border-color: var(--gold-bright); }
 
     /* Секции внутри оверлея */
     .gov-section {
@@ -4304,7 +4304,7 @@
     }
 
     .army-marker--player .army-marker__star {
-      stroke: #ffd700;
+      stroke: var(--gold-bright);
       stroke-width: 1.2;
     }
 
@@ -4358,8 +4358,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 0, 0, 0.72);
-      border: 1px solid rgba(255, 215, 0, 0.55);
+      background: var(--bg-overlay);
+      border: 1px solid rgba(232,201,122,0.55);
       border-radius: 3px;
       font-size: 14px;
       line-height: 1;
@@ -4377,12 +4377,12 @@
     }
     .bpm-fill {
       height: 100%;
-      background: #ffd700;
+      background: var(--gold-bright);
       transition: width 0.4s ease;
     }
     .bpm-turns {
       font-size: 9px;
-      color: #ffd700;
+      color: var(--gold-bright);
       margin-top: 1px;
       font-family: 'Georgia', serif;
       white-space: nowrap;
@@ -4540,8 +4540,8 @@
       animation: br-shockwave 0.7s ease-out forwards;
     }
     @keyframes br-shockwave {
-      0%   { transform: scale(1);   border-color: rgba(255,215,0,0.9); opacity: 1; }
-      100% { transform: scale(28);  border-color: rgba(255,215,0,0);   opacity: 0; }
+      0%   { transform: scale(1);   border-color: rgba(232,201,122,0.9); opacity: 1; }
+      100% { transform: scale(28);  border-color: rgba(232,201,122,0);   opacity: 0; }
     }
 
     /* Стороны */
@@ -4567,7 +4567,7 @@
 
     .br-faction-banner {
       background: rgba(0,0,0,0.55);
-      border: 1px solid rgba(255,215,0,0.25);
+      border: 1px solid rgba(232,201,122,0.25);
       border-radius: 10px;
       padding: 16px 20px;
       text-align: center;
@@ -4576,17 +4576,17 @@
       width: 100%;
     }
     .br-faction--winner .br-faction-banner {
-      border-color: rgba(255,215,0,0.7);
-      box-shadow: 0 0 32px rgba(255,215,0,0.25), 0 4px 24px rgba(0,0,0,0.5);
+      border-color: rgba(232,201,122,0.7);
+      box-shadow: 0 0 32px rgba(232,201,122,0.25), 0 4px 24px rgba(0,0,0,0.5);
       animation: br-winner-pulse 2s ease-in-out infinite alternate;
     }
     @keyframes br-winner-pulse {
-      from { box-shadow: 0 0 20px rgba(255,215,0,0.2), 0 4px 24px rgba(0,0,0,0.5); }
-      to   { box-shadow: 0 0 48px rgba(255,215,0,0.5), 0 4px 24px rgba(0,0,0,0.5); }
+      from { box-shadow: 0 0 20px rgba(232,201,122,0.2), 0 4px 24px rgba(0,0,0,0.5); }
+      to   { box-shadow: 0 0 48px rgba(232,201,122,0.5), 0 4px 24px rgba(0,0,0,0.5); }
     }
     .br-faction-flag   { font-size: 54px; line-height: 1; margin-bottom: 6px; }
     .br-faction-name   { font-size: 16px; font-weight: bold; color: #fff; margin-bottom: 2px; }
-    .br-faction-cmd    { font-size: 11px; color: rgba(255,215,0,0.7); margin-bottom: 6px; }
+    .br-faction-cmd    { font-size: 11px; color: rgba(232,201,122,0.7); margin-bottom: 6px; }
     .br-faction-troops { font-size: 18px; letter-spacing: 2px; margin-bottom: 4px; }
     .br-faction-count  { font-size: 12px; color: rgba(255,255,255,0.5); }
 
@@ -4598,7 +4598,7 @@
       transition: opacity 0.4s, transform 0.4s cubic-bezier(.22,.68,0,1.5);
     }
     .br-badge--visible { opacity: 1 !important; transform: scale(1) !important; }
-    .br-winner-badge { background: rgba(255,215,0,0.2); border: 1px solid rgba(255,215,0,0.6); color: #ffd700; }
+    .br-winner-badge { background: rgba(232,201,122,0.2); border: 1px solid rgba(232,201,122,0.6); color: var(--gold-bright); }
     .br-loser-badge  { background: rgba(200,50,50,0.2); border: 1px solid rgba(200,50,50,0.5); color: #ef9a9a; }
 
     /* Потери */
@@ -4632,9 +4632,9 @@
     @keyframes br-clash-pop { 0%{transform:scale(0.5)} 100%{transform:scale(1)} }
 
     .br-dominance-badge {
-      background: rgba(255,215,0,0.12); border: 1px solid rgba(255,215,0,0.4);
+      background: rgba(232,201,122,0.12); border: 1px solid rgba(232,201,122,0.4);
       border-radius: 4px; padding: 6px 14px;
-      font-size: 13px; color: #ffd700; letter-spacing: 1px;
+      font-size: 13px; color: var(--gold-bright); letter-spacing: 1px;
       display: flex; align-items: center; gap: 6px;
       opacity: 0; transform: scale(0.8);
       transition: opacity 0.4s, transform 0.4s cubic-bezier(.22,.68,0,1.4);
@@ -4647,7 +4647,7 @@
       display: flex; align-items: center; gap: 16px;
       padding: 12px 28px;
       background: rgba(0,0,0,0.82);
-      border-top: 2px solid rgba(255,215,0,0.15);
+      border-top: 2px solid rgba(232,201,122,0.15);
       transform: translateY(100%);
       transition: transform 0.5s cubic-bezier(.22,.68,0,1.2);
       backdrop-filter: blur(6px);
@@ -4657,10 +4657,10 @@
       font-size: 20px; font-weight: bold; letter-spacing: 3px;
       flex-shrink: 0;
     }
-    .br-victory .br-result-text { color: #ffd700; text-shadow: 0 0 16px rgba(255,215,0,0.5); }
+    .br-victory .br-result-text { color: var(--gold-bright); text-shadow: 0 0 16px rgba(232,201,122,0.5); }
     .br-defeat  .br-result-text { color: #ef5350; text-shadow: 0 0 16px rgba(239,83,80,0.5); }
     .br-captured {
-      font-size: 13px; color: #ff9800; flex-shrink: 0;
+      font-size: 13px; color: var(--warning); flex-shrink: 0;
     }
     .br-progress-wrap {
       flex: 1; height: 3px; background: rgba(255,255,255,0.1);
@@ -4668,12 +4668,12 @@
     }
     .br-progress-bar { height: 100%; background: var(--gold); width: 100%; }
     .br-close-btn {
-      background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.35);
+      background: rgba(232,201,122,0.1); border: 1px solid rgba(232,201,122,0.35);
       color: rgba(255,255,255,0.7); padding: 7px 18px; border-radius: 4px;
       cursor: pointer; font-size: 12px; flex-shrink: 0;
       transition: background 0.15s, color 0.15s;
     }
-    .br-close-btn:hover { background: rgba(255,215,0,0.22); color: #fff; }
+    .br-close-btn:hover { background: rgba(232,201,122,0.22); color: #fff; }
 
     /* Тряска экрана */
     @keyframes br-shake {
@@ -4695,7 +4695,7 @@
       position: absolute; bottom: 16px; right: 16px;
       z-index: 820;
       width: 320px; max-width: 96vw;
-      background: linear-gradient(160deg, #1a0a0a 0%, #1a1208 60%, #0d0a05 100%);
+      background: linear-gradient(160deg, #1a0a0a 0%, var(--bg-panel) 60%, var(--bg-deep) 100%);
       border: 1px solid #8B2020;
       border-radius: 8px;
       box-shadow: 0 6px 32px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,80,80,0.08);
@@ -4710,9 +4710,9 @@
       border-bottom: 1px solid #3a1a1a;
     }
     .sp-header-title { flex:1; font-size: 13px; font-weight: 700; color: #ff8a65; letter-spacing: .4px; }
-    .sp-header-sub { font-size: 10px; color: #8a6e3a; }
+    .sp-header-sub { font-size: 10px; color: var(--text-dim); }
     .sp-close {
-      background: none; border: none; color: #8a6e3a; cursor: pointer;
+      background: none; border: none; color: var(--text-dim); cursor: pointer;
       font-size: 16px; line-height: 1; padding: 0 2px;
       transition: color .2s;
     }
@@ -4825,7 +4825,7 @@
     /* Бары гарнизона/морали/снабжения */
     .sp-bars { padding: 0 14px 10px; display: flex; flex-direction: column; gap: 5px; }
     .sp-bar-row { display: flex; align-items: center; gap: 6px; font-size: 11px; }
-    .sp-bar-label { width: 74px; color: #8a6e3a; }
+    .sp-bar-label { width: 74px; color: var(--text-dim); }
     .sp-bar-track {
       flex: 1; height: 7px; background: #1a1010; border-radius: 4px;
       overflow: hidden; border: 1px solid #2a1a1a;
@@ -4837,7 +4837,7 @@
       transition: width .9s ease;
     }
     .sp-bar-val { width: 60px; text-align: right; color: #c8a060; font-size: 10px; }
-    .sp-warn { color: #f44336; font-size: 10px; font-weight: 700; animation: sp-warn-blink 1s step-end infinite; }
+    .sp-warn { color: var(--negative); font-size: 10px; font-weight: 700; animation: sp-warn-blink 1s step-end infinite; }
     @keyframes sp-warn-blink { 50% { opacity: 0; } }
 
     /* Нижняя полоса с кнопками */
@@ -4850,10 +4850,10 @@
       flex: 1; min-width: 80px;
       padding: 6px 10px; border-radius: 4px;
       font-size: 11px; font-weight: 600; cursor: pointer;
-      border: 1px solid #4a3a1a; background: #1a1208; color: #c8a060;
+      border: 1px solid #4a3a1a; background: var(--bg-panel); color: #c8a060;
       transition: background .2s, color .2s;
     }
-    .sp-btn:hover:not(:disabled) { background: #2a1e0e; color: #ffd700; }
+    .sp-btn:hover:not(:disabled) { background: #2a1e0e; color: var(--gold-bright); }
     .sp-btn:disabled { opacity: .4; cursor: not-allowed; }
 
     #sp-storm-btn {
@@ -4940,7 +4940,7 @@
     .army-panel-footer { font-size: 10px; color: var(--text-secondary); margin-bottom: 6px; }
     .army-panel-actions { display: flex; gap: 6px; flex-wrap: wrap; }
     .army-panel-npc-cmd {
-      font-size: 11px; color: #ff9800;
+      font-size: 11px; color: var(--warning);
       background: rgba(255,152,0,0.1);
       border: 1px solid rgba(255,152,0,0.3);
       border-radius: 4px;
@@ -4959,7 +4959,7 @@
     }
     .army-cap-bar { height: 100%; border-radius: 3px; transition: width .3s, background .3s; }
     .army-cap-nums { white-space: nowrap; min-width: 80px; text-align: right; }
-    .army-cap-over { color: #f44336; font-weight: bold; white-space: nowrap; }
+    .army-cap-over { color: var(--negative); font-weight: bold; white-space: nowrap; }
     .army-btn {
       padding: 4px 10px; font-size: 11px; cursor: pointer;
       border: 1px solid var(--border-gold); border-radius: 3px;
@@ -4973,10 +4973,10 @@
     .army-btn--assign { padding: 2px 7px; font-size: 10px; margin-left: auto; }
 
     /* Командующий — расширенный блок */
-    .army-panel-cmd--empty { display: flex; align-items: center; gap: 8px; color: #f44336; }
+    .army-panel-cmd--empty { display: flex; align-items: center; gap: 8px; color: var(--negative); }
     .cmd-row-top   { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
     .cmd-name      { flex: 1; font-size: 11px; }
-    .cmd-stars     { font-size: 13px; color: #FFD700; letter-spacing: 1px; cursor: default; }
+    .cmd-stars     { font-size: 13px; color: var(--gold-bright); letter-spacing: 1px; cursor: default; }
     .cmd-row-stats { font-size: 10px; color: var(--text-secondary); margin-bottom: 4px; }
     .cmd-skills-row { display: flex; flex-wrap: wrap; gap: 4px; }
     .cmd-skill-badge {
@@ -4993,31 +4993,31 @@
     }
     .mmb-inner {
       display: flex; align-items: center; gap: 10px;
-      background: rgba(10,8,5,0.92); border: 1px solid #FFD700;
+      background: rgba(10,8,5,0.92); border: 1px solid var(--gold-bright);
       border-radius: 6px; padding: 8px 14px;
       box-shadow: 0 2px 16px rgba(0,0,0,0.7);
       font-size: 12px; color: #fff;
     }
     .mmb-pulse {
       width: 10px; height: 10px; border-radius: 50%;
-      background: #FFD700;
-      box-shadow: 0 0 0 0 rgba(255,215,0,0.7);
+      background: var(--gold-bright);
+      box-shadow: 0 0 0 0 rgba(232,201,122,0.7);
       animation: mmb-pulse-anim 1.2s infinite;
       flex-shrink: 0;
     }
     @keyframes mmb-pulse-anim {
-      0%   { box-shadow: 0 0 0 0 rgba(255,215,0,0.7); }
-      70%  { box-shadow: 0 0 0 8px rgba(255,215,0,0); }
-      100% { box-shadow: 0 0 0 0 rgba(255,215,0,0); }
+      0%   { box-shadow: 0 0 0 0 rgba(232,201,122,0.7); }
+      70%  { box-shadow: 0 0 0 8px rgba(232,201,122,0); }
+      100% { box-shadow: 0 0 0 0 rgba(232,201,122,0); }
     }
-    .mmb-text b { color: #FFD700; }
+    .mmb-text b { color: var(--gold-bright); }
     .mmb-cancel {
       padding: 3px 9px; font-size: 11px; cursor: pointer;
-      border: 1px solid #f44336; border-radius: 3px;
-      background: rgba(244,67,54,0.2); color: #ef9a9a;
+      border: 1px solid var(--negative); border-radius: 3px;
+      background: rgba(139,32,32,0.2); color: #ef9a9a;
       transition: background .15s; flex-shrink: 0;
     }
-    .mmb-cancel:hover { background: rgba(244,67,54,0.4); }
+    .mmb-cancel:hover { background: rgba(139,32,32,0.4); }
 
     /* Picker командующего */
     #cmd-picker-overlay {
@@ -5056,7 +5056,7 @@
     .cmd-pick-top { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
     .cmd-pick-name { font-size: 12px; font-weight: 700; color: var(--text-primary); }
     .cmd-pick-role { font-size: 10px; color: #888; margin-left: 5px; }
-    .cmd-pick-stars { font-size: 14px; color: #FFD700; flex-shrink: 0; }
+    .cmd-pick-stars { font-size: 14px; color: var(--gold-bright); flex-shrink: 0; }
     .cmd-archetype {
       font-size: 9px; padding: 1px 5px; border-radius: 8px;
       background: rgba(33,150,243,0.2); border: 1px solid rgba(33,150,243,0.4);
@@ -5117,8 +5117,8 @@
       font-size: 12px; padding: 0 2px;
     }
     .order-badge { font-size: 10px; padding: 1px 5px; border-radius: 3px; }
-    .order-badge.done   { background: rgba(76,175,80,0.25); color: #4CAF50; }
-    .order-badge.fail   { background: rgba(244,67,54,0.25); color: #f44336; }
+    .order-badge.done   { background: rgba(58,107,58,0.25); color: var(--positive); }
+    .order-badge.fail   { background: rgba(139,32,32,0.25); color: var(--negative); }
     .order-badge.cancel { background: rgba(150,150,150,0.2); color: #aaa; }
     .order-meta   { font-size: 10px; color: #aaa; margin-bottom: 4px; }
     .order-progress-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
@@ -5158,7 +5158,7 @@
     /* Заголовок правительства */
     .gov-header { margin-bottom: 10px; }
     .gov-type-badge {
-      font-size: 16px; color: var(--accent); font-weight: bold;
+      font-size: 16px; color: var(--gold-bright); font-weight: bold;
       letter-spacing: 1px; margin-bottom: 8px;
     }
     .gov-metrics { display: flex; flex-direction: column; gap: 5px; }
@@ -5169,13 +5169,13 @@
 
     /* Баннер перехода */
     .gov-transition-banner {
-      background: rgba(255,152,0,0.1); border: 1px solid #FF9800;
+      background: rgba(255,152,0,0.1); border: 1px solid var(--warning);
       border-radius: 3px; padding: 10px; margin-bottom: 8px;
     }
-    .transition-title  { color: #FF9800; font-weight: bold; font-size: 12px; }
+    .transition-title  { color: var(--warning); font-weight: bold; font-size: 12px; }
     .transition-route  { color: var(--text-light); font-size: 13px; margin: 3px 0; }
     .transition-meta   { color: var(--text-dim); font-size: 11px; }
-    .transition-warning{ color: #FF9800; font-size: 11px; margin-top: 4px; }
+    .transition-warning{ color: var(--warning); font-size: 11px; margin-top: 4px; }
 
     /* Правитель */
     .gov-ruler-card, .gov-council-card, .gov-deity-card {
@@ -5183,9 +5183,9 @@
     }
     .gov-ruler-portrait { font-size: 28px; flex-shrink: 0; }
     .gov-ruler-info { flex: 1; }
-    .gov-ruler-name { color: var(--accent); font-size: 14px; font-weight: bold; }
+    .gov-ruler-name { color: var(--gold-bright); font-size: 14px; font-weight: bold; }
     .gov-ruler-role { color: var(--text-dim); font-size: 11px; margin-bottom: 5px; }
-    .gov-council-name, .gov-deity-title { color: var(--accent); font-size: 13px; font-weight: bold; }
+    .gov-council-name, .gov-deity-title { color: var(--gold-bright); font-size: 13px; font-weight: bold; }
     .gov-council-meta, .gov-council-note, .gov-deity-proxy, .gov-deity-note {
       color: var(--text-dim); font-size: 11px; margin-top: 3px;
     }
@@ -5201,7 +5201,7 @@
     .gov-power-val { font-weight: bold; min-width: 45px; text-align: right; }
     .gov-power-decay { color: var(--text-dim); font-size: 10px; }
     .gov-power-restore { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
-    .gov-power-warning { color: #FF9800; font-size: 11px; margin-top: 5px; }
+    .gov-power-warning { color: var(--warning); font-size: 11px; margin-top: 5px; }
 
     /* Институты */
     .gov-institution {
@@ -5218,8 +5218,8 @@
 
     /* Теги */
     .gov-tag { background: rgba(255,255,255,0.07); color: var(--text-dim); font-size: 10px; padding: 1px 5px; border-radius: 2px; }
-    .gov-tag.green { background: rgba(76,175,80,0.15); color: #81C784; }
-    .gov-tag.red   { background: rgba(244,67,54,0.15); color: #EF9A9A; }
+    .gov-tag.green { background: rgba(58,107,58,0.15); color: #81C784; }
+    .gov-tag.red   { background: rgba(139,32,32,0.15); color: #EF9A9A; }
 
     /* Фракции */
     .gov-factions { margin-top: 6px; }
@@ -5238,7 +5238,7 @@
     .gov-election-count{ font-size: 16px; font-weight: bold; }
     .gov-election-meta, .gov-election-offices { color: var(--text-dim); font-size: 10px; margin-top: 3px; }
     .gov-heir, .gov-heir-none { font-size: 11px; color: var(--text-light); margin-bottom: 4px; }
-    .gov-heir-none { color: #FF9800; }
+    .gov-heir-none { color: var(--warning); }
     .gov-claim-types { font-size: 10px; }
 
     /* Заговоры */
@@ -5249,17 +5249,17 @@
       background: rgba(212,168,83,0.1); border: 1px solid var(--border-gold);
       color: var(--text-gold); font-size: 10px; padding: 2px 7px; border-radius: 2px; cursor: pointer;
     }
-    .gov-sp-btn.red { border-color: #f44336; color: #EF9A9A; background: rgba(244,67,54,0.1); }
+    .gov-sp-btn.red { border-color: var(--negative); color: #EF9A9A; background: rgba(139,32,32,0.1); }
     .gov-sp-btn:hover { background: rgba(212,168,83,0.2); }
 
     /* Обнаруженные заговоры */
-    .gov-detected-conspiracy { border: 1px solid rgba(244,67,54,0.4); border-radius: 4px; padding: 8px; margin-top: 8px; background: rgba(244,67,54,0.05); }
+    .gov-detected-conspiracy { border: 1px solid rgba(139,32,32,0.4); border-radius: 4px; padding: 8px; margin-top: 8px; background: rgba(139,32,32,0.05); }
     .gov-consp-header { font-size: 12px; margin-bottom: 4px; }
-    .gov-consp-stage { font-size: 10px; color: #f44336; margin-left: 6px; padding: 1px 5px; border: 1px solid #f44336; border-radius: 10px; }
+    .gov-consp-stage { font-size: 10px; color: var(--negative); margin-left: 6px; padding: 1px 5px; border: 1px solid var(--negative); border-radius: 10px; }
     .gov-consp-desc, .gov-consp-members { font-size: 11px; margin-bottom: 3px; }
     .gov-consp-actions { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
-    .gov-consp-action-btn { background: rgba(244,67,54,0.1); border: 1px solid rgba(244,67,54,0.4); color: #EF9A9A; font-size: 11px; padding: 4px 8px; border-radius: 3px; cursor: pointer; text-align: left; }
-    .gov-consp-action-btn:hover { background: rgba(244,67,54,0.2); }
+    .gov-consp-action-btn { background: rgba(139,32,32,0.1); border: 1px solid rgba(139,32,32,0.4); color: #EF9A9A; font-size: 11px; padding: 4px 8px; border-radius: 3px; cursor: pointer; text-align: left; }
+    .gov-consp-action-btn:hover { background: rgba(139,32,32,0.2); }
 
     /* Конституция */
     .gov-constitution-grid { display: flex; flex-direction: column; gap: 4px; }
@@ -5289,13 +5289,13 @@
     }
     .gov-reform-btn {
       background: linear-gradient(to bottom, #3a2508, #251505);
-      border: 1px solid var(--border-gold); color: var(--accent);
+      border: 1px solid var(--border-gold); color: var(--gold-bright);
       font-size: 11px; padding: 5px 10px; border-radius: 2px; cursor: pointer; white-space: nowrap;
     }
     .gov-reform-btn:hover { background: linear-gradient(to bottom, #4a3010, #32180a); }
     .gov-reform-status { font-size: 11px; margin-top: 5px; }
-    .gov-reform-status.positive { color: #4CAF50; }
-    .gov-reform-status.error    { color: #f44336; }
+    .gov-reform-status.positive { color: var(--positive); }
+    .gov-reform-status.error    { color: var(--negative); }
     .dim { color: var(--text-dim); }
 
     /* ── КНОПКА ВХОДА В ЗАЛ (для всех типов правления) ─────────── */
@@ -5432,7 +5432,7 @@
     }
     .senator-neg-portrait { font-size: 32px; line-height: 1; }
     .senator-neg-info { flex: 1; }
-    .senator-neg-name { color: var(--accent); font-size: 14px; font-weight: bold; }
+    .senator-neg-name { color: var(--gold-bright); font-size: 14px; font-weight: bold; }
     .senator-neg-faction { color: var(--text-dim); font-size: 11px; margin-top: 2px; }
     .senator-neg-close {
       background: none; border: none; color: var(--text-dim);
@@ -5445,8 +5445,8 @@
     .senator-neg-section-title { font-size: 10px; color: var(--text-gold); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
     .senator-neg-tags { display: flex; flex-wrap: wrap; gap: 4px; }
     .senator-neg-tag { font-size: 10px; padding: 2px 6px; border-radius: 2px; }
-    .senator-neg-tag.want { background: rgba(76,175,80,0.15); color: #81C784; }
-    .senator-neg-tag.fear { background: rgba(244,67,54,0.15); color: #EF9A9A; }
+    .senator-neg-tag.want { background: rgba(58,107,58,0.15); color: #81C784; }
+    .senator-neg-tag.fear { background: rgba(139,32,32,0.15); color: #EF9A9A; }
     .senator-neg-disp-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
     .senator-neg-disp-label { font-size: 11px; color: var(--text-dim); }
     .senator-neg-disp-bar {
@@ -5467,16 +5467,16 @@
     .senator-action-title { font-weight: bold; display: block; margin-bottom: 2px; }
     .senator-action-cost { font-size: 9px; color: var(--text-dim); display: block; }
     .senator-action-chance { font-size: 9px; display: block; margin-top: 2px; }
-    .senator-action-chance.good  { color: #4CAF50; }
-    .senator-action-chance.ok    { color: #FF9800; }
-    .senator-action-chance.risky { color: #f44336; }
+    .senator-action-chance.good  { color: var(--positive); }
+    .senator-action-chance.ok    { color: var(--warning); }
+    .senator-action-chance.risky { color: var(--negative); }
     .senator-neg-result {
       padding: 8px 10px; border-radius: 4px; font-size: 12px; margin-top: 4px;
       border-left: 3px solid;
     }
-    .senator-neg-result.success { background: rgba(76,175,80,0.1); border-color: #4CAF50; color: #A5D6A7; }
-    .senator-neg-result.fail    { background: rgba(244,67,54,0.1); border-color: #f44336; color: #EF9A9A; }
-    .senator-neg-result.partial { background: rgba(255,152,0,0.1); border-color: #FF9800; color: #FFCC80; }
+    .senator-neg-result.success { background: rgba(58,107,58,0.1); border-color: var(--positive); color: #A5D6A7; }
+    .senator-neg-result.fail    { background: rgba(139,32,32,0.1); border-color: var(--negative); color: #EF9A9A; }
+    .senator-neg-result.partial { background: rgba(255,152,0,0.1); border-color: var(--warning); color: #FFCC80; }
 
     /* ── СВОБОДНЫЙ ДИАЛОГ ──────────────────────────────────────────── */
     .dlg-section {
@@ -5513,9 +5513,9 @@
     .dlg-msg-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.7; }
     .dlg-msg-text  { font-size: 12px; line-height: 1.4; padding: 5px 8px; border-radius: 4px; }
 
-    .dlg-player .dlg-msg-label { color: #FFD700; text-align: right; }
+    .dlg-player .dlg-msg-label { color: var(--gold-bright); text-align: right; }
     .dlg-player .dlg-msg-text  {
-      background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.2);
+      background: rgba(232,201,122,0.08); border: 1px solid rgba(232,201,122,0.2);
       color: var(--text-light); align-self: flex-end; max-width: 85%;
     }
     .dlg-char .dlg-msg-label { color: #88ccff; }
@@ -5524,7 +5524,7 @@
       color: var(--text-light); align-self: flex-start; max-width: 85%;
     }
     .dlg-blocked .dlg-msg-text {
-      background: rgba(244,67,54,0.08); border-color: rgba(244,67,54,0.3);
+      background: rgba(139,32,32,0.08); border-color: rgba(139,32,32,0.3);
       color: #EF9A9A;
     }
 
@@ -5536,18 +5536,18 @@
       padding: 6px 8px; resize: none; font-family: inherit;
       transition: border-color 0.2s;
     }
-    .dlg-input:focus { outline: none; border-color: var(--accent); }
+    .dlg-input:focus { outline: none; border-color: var(--gold-bright); }
     .dlg-input:disabled { opacity: 0.5; }
     .dlg-send-btn {
       background: rgba(212,168,83,0.15); border: 1px solid var(--border-gold);
-      color: var(--accent); border-radius: 4px; padding: 6px 10px;
+      color: var(--gold-bright); border-radius: 4px; padding: 6px 10px;
       cursor: pointer; font-size: 14px; transition: background 0.2s;
       flex-shrink: 0;
     }
     .dlg-send-btn:hover { background: rgba(212,168,83,0.25); }
 
     .dlg-status { font-size: 10px; color: #aaa; margin-top: 5px; min-height: 14px; }
-    .dlg-thinking { color: #FFD700; animation: dlg-pulse 1s infinite; }
+    .dlg-thinking { color: var(--gold-bright); animation: dlg-pulse 1s infinite; }
     .dlg-effects  { color: #81C784; }
     @keyframes dlg-pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 
@@ -5569,8 +5569,8 @@
     .senate-senator-card:hover { background: rgba(255,255,255,0.09); }
     .senate-senator-materialized { border-color: rgba(100,180,255,0.2); }
     .senate-senator-ghost { border-style: dashed; }
-    .senate-senator-leader { border-color: rgba(255,215,0,0.35); background: rgba(255,215,0,0.06); }
-    .senate-senator-leader:hover { background: rgba(255,215,0,0.12); }
+    .senate-senator-leader { border-color: rgba(232,201,122,0.35); background: rgba(232,201,122,0.06); }
+    .senate-senator-leader:hover { background: rgba(232,201,122,0.12); }
     .senate-leader-badge { font-size: 12px; vertical-align: super; }
     .senate-senator-portrait { font-size: 20px; flex-shrink: 0; position: relative; }
     .senate-senator-info { flex: 1; min-width: 0; }
@@ -5580,7 +5580,7 @@
     .senate-tag-dim { opacity: 0.6; }
     .senate-senator-faction { font-size: 10px; margin-top: 2px; }
     .senate-senator-loyalty { font-size: 12px; font-weight: bold; flex-shrink: 0; }
-    .senate-faction-leader { font-size: 10px; color: #FFD700; margin-left: 6px; opacity: 0.85; }
+    .senate-faction-leader { font-size: 10px; color: var(--gold-bright); margin-left: 6px; opacity: 0.85; }
 
     /* ══ ФОРМА СОСТАВЛЕНИЯ ЗАКОНА ════════════════════════════════════ */
     .senate-law-form {
@@ -5593,11 +5593,11 @@
       overflow-y: auto;
     }
     .slf-title {
-      font-size: 15px; font-weight: bold; color: #d4a853;
+      font-size: 15px; font-weight: bold; color: var(--gold);
       margin-bottom: 4px;
     }
     .slf-subtitle {
-      font-size: 11px; color: #8a6e3a; margin-bottom: 14px;
+      font-size: 11px; color: var(--text-dim); margin-bottom: 14px;
     }
     .slf-label {
       display: block; font-size: 11px; color: #b0904a;
@@ -5607,13 +5607,13 @@
     .slf-input, .slf-textarea, .slf-select {
       width: 100%; background: rgba(0,0,0,0.4);
       border: 1px solid rgba(180,140,60,0.3); border-radius: 4px;
-      color: #f0d8a0; font-family: inherit; font-size: 12px;
+      color: var(--text-primary); font-family: inherit; font-size: 12px;
       padding: 7px 10px; resize: vertical;
     }
     .slf-input:focus, .slf-textarea:focus, .slf-select:focus {
       outline: none; border-color: rgba(212,168,83,0.6);
     }
-    .slf-input-error { border-color: #f44336 !important; animation: inputShake 0.4s; }
+    .slf-input-error { border-color: var(--negative) !important; animation: inputShake 0.4s; }
     @keyframes inputShake {
       0%,100% { transform: translateX(0); }
       25% { transform: translateX(-6px); } 75% { transform: translateX(6px); }
@@ -5628,7 +5628,7 @@
     .slf-btn-submit {
       padding: 7px 18px; background: rgba(212,168,83,0.15);
       border: 1px solid rgba(212,168,83,0.5); border-radius: 4px;
-      color: #d4a853; cursor: pointer; font-size: 12px; font-weight: bold;
+      color: var(--gold); cursor: pointer; font-size: 12px; font-weight: bold;
     }
     .slf-btn-submit:hover { background: rgba(212,168,83,0.25); }
 
@@ -5643,7 +5643,7 @@
       display: flex; flex-direction: column; gap: 0;
     }
     .debate-chamber-title {
-      font-size: 13px; font-weight: bold; color: #d4a853;
+      font-size: 13px; font-weight: bold; color: var(--gold);
       text-align: center; letter-spacing: 0.08em; margin-bottom: 8px;
     }
     .debate-law-header {
@@ -5651,7 +5651,7 @@
       border-radius: 6px; padding: 8px 12px; margin-bottom: 10px;
     }
     .debate-law-name {
-      font-size: 13px; font-weight: bold; color: #f0d8a0;
+      font-size: 13px; font-weight: bold; color: var(--text-primary);
     }
     .debate-law-text {
       font-size: 11px; color: #8a7a5a; margin-top: 4px; line-height: 1.5;
@@ -5674,7 +5674,7 @@
     .debate-resonance-note {
       font-size: 11px; color: #78b87a;
       background: rgba(100,180,100,0.07);
-      border-left: 2px solid #4caf50;
+      border-left: 2px solid var(--positive);
       padding: 4px 8px; border-radius: 0 3px 3px 0;
       animation: speechSlide 0.35s ease-out both;
     }
@@ -5695,22 +5695,22 @@
       border: 1px solid rgba(212,168,83,0.25);
     }
     .debate-speech-for {
-      background: rgba(76,175,80,0.07);
-      border: 1px solid rgba(76,175,80,0.2);
+      background: rgba(58,107,58,0.07);
+      border: 1px solid rgba(58,107,58,0.2);
     }
     .debate-speech-against {
-      background: rgba(244,67,54,0.07);
-      border: 1px solid rgba(244,67,54,0.2);
+      background: rgba(139,32,32,0.07);
+      border: 1px solid rgba(139,32,32,0.2);
     }
     .debate-portrait {
       font-size: 22px; flex-shrink: 0; margin-top: 1px;
     }
     .debate-speech-body { flex: 1; min-width: 0; }
     .debate-speech-name {
-      font-size: 12px; font-weight: bold; color: #d4a853; margin-bottom: 2px;
+      font-size: 12px; font-weight: bold; color: var(--gold); margin-bottom: 2px;
     }
     .debate-speech-faction {
-      font-size: 10px; color: #8a6e3a; font-weight: normal;
+      font-size: 10px; color: var(--text-dim); font-weight: normal;
       margin-left: 5px;
     }
     .debate-speech-text {
@@ -5722,8 +5722,8 @@
       border-radius: 3px; align-self: center; flex-shrink: 0;
       letter-spacing: 0.05em;
     }
-    .dv-for    { background: rgba(76,175,80,0.3); color: #81c784; border: 1px solid #4caf50; }
-    .dv-against{ background: rgba(244,67,54,0.3); color: #e57373; border: 1px solid #f44336; }
+    .dv-for    { background: rgba(58,107,58,0.3); color: #81c784; border: 1px solid var(--positive); }
+    .dv-against{ background: rgba(139,32,32,0.3); color: #e57373; border: 1px solid var(--negative); }
 
     /* Счётчики голосов */
     .debate-vote-counters {
@@ -5757,19 +5757,19 @@
     }
     .debate-verdict-pass {
       color: #81c784;
-      background: rgba(76,175,80,0.12);
-      border: 1px solid rgba(76,175,80,0.4);
+      background: rgba(58,107,58,0.12);
+      border: 1px solid rgba(58,107,58,0.4);
     }
     .debate-verdict-fail {
       color: #ef5350;
-      background: rgba(244,67,54,0.12);
-      border: 1px solid rgba(244,67,54,0.4);
+      background: rgba(139,32,32,0.12);
+      border: 1px solid rgba(139,32,32,0.4);
     }
     .debate-accept-btn {
       padding: 9px 28px;
       background: rgba(180,140,60,0.15);
       border: 1px solid rgba(180,140,60,0.45);
-      border-radius: 5px; color: #d4a853;
+      border-radius: 5px; color: var(--gold);
       cursor: pointer; font-size: 12px; font-family: inherit;
     }
     .debate-accept-btn:hover { background: rgba(180,140,60,0.28); }
@@ -5778,11 +5778,11 @@
     .debate-dramatic-event {
       display: flex; align-items: flex-start; gap: 10px;
       padding: 10px 14px; border-radius: 6px; margin: 6px 0;
-      font-size: 12px; color: #f0d8a0;
+      font-size: 12px; color: var(--text-primary);
       animation: verdictAppear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
     }
     .dbe-scandal {
-      background: rgba(244,67,54,0.14); border: 1px solid rgba(244,67,54,0.45);
+      background: rgba(139,32,32,0.14); border: 1px solid rgba(139,32,32,0.45);
     }
     .dbe-walkout {
       background: rgba(255,152,0,0.12); border: 1px solid rgba(255,152,0,0.4);
@@ -5803,11 +5803,11 @@
       border-radius: 5px;
     }
     .hall-throne-portrait { font-size: 36px; }
-    .hall-throne-name { color: #f44336; font-weight: bold; font-size: 13px; }
+    .hall-throne-name { color: var(--negative); font-weight: bold; font-size: 13px; }
     .hall-throne-title { color: var(--text-dim); font-size: 10px; margin-top: 2px; }
     .hall-throne-power { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
     .hall-throne-power-bar { flex: 1; height: 5px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
-    .hall-throne-power-fill { height: 100%; background: #f44336; border-radius: 2px; }
+    .hall-throne-power-fill { height: 100%; background: var(--negative); border-radius: 2px; }
     .hall-throne-label { font-size: 9px; color: var(--text-dim); }
     .hall-inner-circle {
       font-size: 10px; color: var(--text-dim); text-transform: uppercase;
@@ -5828,15 +5828,15 @@
 
     /* ── ЗАЛ ОЛИГАРХИИ — торговый совет ─────────────────────────── */
     .hall-oligarchy .senator-card        { border-color: rgba(0,120,50,0.25); }
-    .hall-oligarchy .senator-card:hover  { border-color: #4CAF50; }
+    .hall-oligarchy .senator-card:hover  { border-color: var(--positive); }
     .hall-wealth-bar {
-      height: 3px; border-radius: 1px; background: rgba(76,175,80,0.15); overflow: hidden; margin-top: 3px;
+      height: 3px; border-radius: 1px; background: rgba(58,107,58,0.15); overflow: hidden; margin-top: 3px;
     }
-    .hall-wealth-fill { height: 100%; background: #4CAF50; border-radius: 1px; }
+    .hall-wealth-fill { height: 100%; background: var(--positive); border-radius: 1px; }
     .hall-wealth-label { font-size: 9px; color: #81C784; }
     .hall-council-table {
       display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; padding: 8px;
-      background: rgba(0,80,30,0.08); border: 1px solid rgba(76,175,80,0.15);
+      background: rgba(0,80,30,0.08); border: 1px solid rgba(58,107,58,0.15);
       border-radius: 5px; margin-bottom: 8px;
     }
     .hall-influence-ring {
@@ -5870,7 +5870,7 @@
     .hall-tribal .senator-card        { border-color: rgba(101,67,33,0.4); }
     .hall-tribal .senator-card:hover  { border-color: #8D6E63; }
     .hall-honor-bar { height: 3px; border-radius: 1px; background: rgba(255,165,0,0.15); overflow: hidden; margin-top: 3px; }
-    .hall-honor-fill { height: 100%; background: #FF9800; border-radius: 1px; }
+    .hall-honor-fill { height: 100%; background: var(--warning); border-radius: 1px; }
     .hall-honor-label { font-size: 9px; color: #FFCC80; }
     .hall-campfire {
       text-align: center; font-size: 22px; margin-bottom: 6px; letter-spacing: 8px;
@@ -5883,11 +5883,11 @@
 
     /* ── ЗАЛ ТЕОКРАТИИ — жреческий синод ────────────────────────── */
     .hall-theocracy .senator-card       { border-color: rgba(220,200,100,0.25); }
-    .hall-theocracy .senator-card:hover { border-color: #FFD700; }
-    .hall-priest-rank { font-size: 9px; color: #FFD700; margin-bottom: 2px; }
+    .hall-theocracy .senator-card:hover { border-color: var(--gold-bright); }
+    .hall-priest-rank { font-size: 9px; color: var(--gold-bright); margin-bottom: 2px; }
     .hall-synod-altar {
       text-align: center; font-size: 20px; letter-spacing: 6px;
-      margin-bottom: 8px; color: #FFD700; opacity: 0.6;
+      margin-bottom: 8px; color: var(--gold-bright); opacity: 0.6;
     }
 
     /* ── КАСТОМНЫЙ ЗАЛ — строитель ──────────────────────────────── */
@@ -5909,7 +5909,7 @@
     .custom-hall-actor-row { display: flex; gap: 4px; align-items: center; }
     .custom-hall-actor-input { flex: 1; }
     .custom-hall-actor-remove {
-      background: none; border: none; color: #f44336; cursor: pointer; font-size: 13px; padding: 2px 5px;
+      background: none; border: none; color: var(--negative); cursor: pointer; font-size: 13px; padding: 2px 5px;
     }
     .custom-hall-add-btn {
       background: none; border: 1px dashed rgba(212,168,83,0.3);
@@ -5924,7 +5924,7 @@
     }
     .custom-hall-save-btn:hover { opacity: 0.85; }
     .custom-hall-actors-display { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 5px; }
-    .positive { color: #4CAF50; }
+    .positive { color: var(--positive); }
 
     /* ═══════════════════════════════════════════════
        ЛОГ — ФИЛЬТРЫ
@@ -5935,7 +5935,7 @@
       color: var(--text-dim); font-size: 10px; padding: 1px 5px;
       border-radius: 3px; cursor: pointer; margin-left: 2px;
     }
-    .log-filter-btn.active { background: var(--border-gold); color: #1a1208; font-weight: bold; }
+    .log-filter-btn.active { background: var(--border-gold); color: var(--bg-panel); font-weight: bold; }
     .log-filter-btn:hover  { opacity: 0.8; }
     .btn-icon { background: transparent; border: none; cursor: pointer; font-size: 14px; margin-left: auto; }
 
@@ -5954,11 +5954,11 @@
     .ec-description { color: var(--text-dim); margin-bottom: 16px; line-height: 1.4; }
     .ec-choices { display: flex; flex-direction: column; gap: 10px; }
     .ec-choice-btn {
-      background: rgba(255,215,0,0.08); border: 1px solid var(--border-gold);
+      background: rgba(232,201,122,0.08); border: 1px solid var(--border-gold);
       color: var(--text-main); padding: 10px 14px; border-radius: 5px;
       cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 3px;
     }
-    .ec-choice-btn:hover { background: rgba(255,215,0,0.18); }
+    .ec-choice-btn:hover { background: rgba(232,201,122,0.18); }
     .ec-choice-desc { font-size: 11px; color: var(--text-dim); }
 
     /* ═══════════════════════════════════════════════
@@ -5983,11 +5983,11 @@
     }
     .spark-bar { flex: 1; min-height: 2px; border-radius: 2px 2px 0 0; }
     .ts-close-btn {
-      width: 100%; background: rgba(255,215,0,0.1); border: 1px solid var(--border-gold);
+      width: 100%; background: rgba(232,201,122,0.1); border: 1px solid var(--border-gold);
       color: var(--text-main); padding: 7px; border-radius: 4px; cursor: pointer; font-size: 13px;
     }
-    .ts-close-btn:hover { background: rgba(255,215,0,0.2); }
-    .negative { color: #f44336; }
+    .ts-close-btn:hover { background: rgba(232,201,122,0.2); }
+    .negative { color: var(--negative); }
 
     /* ═══════════════════════════════════════════════
        ПАНЕЛЬ МИРНЫХ ПЕРЕГОВОРОВ
@@ -5997,14 +5997,14 @@
       display: none; align-items: center; justify-content: center; z-index: 1100;
     }
     #peace-offer-box {
-      background: linear-gradient(160deg, #0d0a05 0%, #1c1308 60%, #110e06 100%);
+      background: linear-gradient(160deg, var(--bg-deep) 0%, #1c1308 60%, #110e06 100%);
       border: 1px solid var(--border-gold); border-radius: 10px;
       padding: 0; width: 420px; max-width: 95vw; max-height: 90vh;
       overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.7);
     }
     .po-header {
       display: flex; align-items: center; gap: 10px;
-      padding: 14px 16px 10px; border-bottom: 1px solid rgba(255,215,0,0.2);
+      padding: 14px 16px 10px; border-bottom: 1px solid rgba(232,201,122,0.2);
     }
     .po-icon   { font-size: 28px; }
     .po-title  { font-size: 16px; font-weight: bold; color: var(--gold); }
@@ -6020,11 +6020,11 @@
     .po-option {
       display: flex; align-items: flex-start; gap: 12px;
       width: 100%; padding: 12px 16px; text-align: left;
-      background: rgba(255,215,0,0.04); border: none;
-      border-top: 1px solid rgba(255,215,0,0.10);
+      background: rgba(232,201,122,0.04); border: none;
+      border-top: 1px solid rgba(232,201,122,0.10);
       color: var(--text-main); cursor: pointer; transition: background 0.15s;
     }
-    .po-option:hover { background: rgba(255,215,0,0.10); }
+    .po-option:hover { background: rgba(232,201,122,0.10); }
     .po-option--danger { border-left: 3px solid #c0392b; }
     .po-option--danger:hover { background: rgba(192,57,43,0.12); }
     .po-option--vassal { border-left: 3px solid #8e44ad; }
@@ -6052,10 +6052,10 @@
     .eg-desc  { color: var(--text-dim); margin-bottom: 10px; line-height: 1.5; }
     .eg-turn  { font-size: 12px; color: var(--text-dim); margin-bottom: 20px; }
     .eg-restart-btn {
-      background: rgba(255,215,0,0.15); border: 1px solid var(--border-gold);
+      background: rgba(232,201,122,0.15); border: 1px solid var(--border-gold);
       color: var(--text-main); padding: 10px 24px; border-radius: 5px; cursor: pointer; font-size: 14px;
     }
-    .eg-restart-btn:hover { background: rgba(255,215,0,0.25); }
+    .eg-restart-btn:hover { background: rgba(232,201,122,0.25); }
 
     /* ═══════════════════════════════════════════════
        ИНИЦИАТИВЫ ПЕРСОНАЖЕЙ
@@ -6068,7 +6068,7 @@
     }
     .ci-title   { font-size: 13px; font-weight: bold; color: var(--gold); margin-bottom: 8px; }
     .ci-count   { background: #c0392b; color: #fff; border-radius: 10px; padding: 1px 6px; font-size: 11px; }
-    .ci-item    { background: rgba(255,215,0,0.05); border: 1px solid rgba(255,215,0,0.2); border-radius: 4px; padding: 8px; margin-bottom: 7px; }
+    .ci-item    { background: rgba(232,201,122,0.05); border: 1px solid rgba(232,201,122,0.2); border-radius: 4px; padding: 8px; margin-bottom: 7px; }
     .ci-header  { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
     .ci-portrait{ font-size: 18px; }
     .ci-name    { font-weight: bold; font-size: 12px; flex: 1; }
@@ -6077,8 +6077,8 @@
     .ci-buttons { display: flex; gap: 6px; }
     .ci-btn     { flex: 1; font-size: 11px; padding: 4px 6px; border-radius: 3px; cursor: pointer;
                   border: 1px solid var(--border-gold); background: transparent; color: var(--text-main); }
-    .ci-btn.accept { border-color: #4CAF50; }
-    .ci-btn.reject { border-color: #f44336; }
+    .ci-btn.accept { border-color: var(--positive); }
+    .ci-btn.reject { border-color: var(--negative); }
     .ci-btn:hover  { opacity: 0.8; }
     #char-initiatives-badge {
       display: none; background: #c0392b; color: #fff;
@@ -6092,7 +6092,7 @@
     .gov-consp-row {
       display: grid; grid-template-columns: 28px 1fr auto auto auto;
       align-items: center; gap: 6px;
-      padding: 6px 0; border-bottom: 1px solid rgba(255,215,0,0.1);
+      padding: 6px 0; border-bottom: 1px solid rgba(232,201,122,0.1);
     }
     .gov-consp-portrait { font-size: 18px; }
     .gov-consp-name     { font-weight: bold; font-size: 13px; }
@@ -6101,7 +6101,7 @@
     .gov-consp-actions  { display: flex; gap: 4px; }
     .gov-consp-btn {
       font-size: 11px; padding: 3px 7px; border-radius: 3px; cursor: pointer;
-      background: rgba(255,215,0,0.08); border: 1px solid var(--border-gold); color: var(--text-main);
+      background: rgba(232,201,122,0.08); border: 1px solid var(--border-gold); color: var(--text-main);
     }
     .gov-consp-btn.danger { border-color: #c0392b; }
     .gov-consp-btn:hover  { opacity: 0.8; }
@@ -6115,7 +6115,7 @@
       display: none; align-items: center; justify-content: center;
     }
     .akm-box {
-      background: linear-gradient(160deg, #0d0a05 0%, #1c1308 60%, #110e06 100%);
+      background: linear-gradient(160deg, var(--bg-deep) 0%, #1c1308 60%, #110e06 100%);
       border: 1px solid var(--border-light);
       border-radius: 8px;
       padding: 38px 44px;
@@ -6128,7 +6128,7 @@
       filter: drop-shadow(0 0 14px rgba(212,168,83,0.45));
     }
     .akm-title {
-      font-size: 19px; color: var(--accent);
+      font-size: 19px; color: var(--gold-bright);
       letter-spacing: 2px; margin-bottom: 14px; font-weight: bold;
     }
     .akm-desc {
@@ -6148,12 +6148,12 @@
       outline: none;
       transition: border-color 0.2s;
     }
-    .akm-input:focus { border-color: var(--accent); }
+    .akm-input:focus { border-color: var(--gold-bright); }
     .akm-error {
-      color: #f44336; font-size: 12px;
+      color: var(--negative); font-size: 12px;
       margin-bottom: 10px; text-align: left;
       padding: 4px 6px;
-      background: rgba(244,67,54,0.08);
+      background: rgba(139,32,32,0.08);
       border-radius: 3px;
       display: none;
     }
@@ -6162,7 +6162,7 @@
       background: linear-gradient(to bottom, #3a2508, #221508);
       border: 1px solid var(--border-gold);
       border-radius: 4px;
-      color: var(--accent);
+      color: var(--gold-bright);
       font-size: 14px; font-family: inherit;
       padding: 12px; cursor: pointer;
       letter-spacing: 1px; margin-bottom: 16px;
@@ -6170,7 +6170,7 @@
     }
     .akm-btn:hover:not(:disabled) {
       background: linear-gradient(to bottom, #4a3010, #32180a);
-      border-color: var(--accent);
+      border-color: var(--gold-bright);
     }
     .akm-btn:disabled { opacity: 0.45; cursor: default; }
     .akm-footer { font-size: 11px; color: var(--text-dim); }
@@ -6178,9 +6178,9 @@
     .akm-key-section { display: flex; flex-direction: column; gap: 4px; }
     .akm-key-label { font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .akm-key-badge { font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 3px; }
-    .akm-badge-groq { background: rgba(0,200,100,.2); color: #4caf50; border: 1px solid rgba(0,200,100,.3); }
+    .akm-badge-groq { background: rgba(0,200,100,.2); color: var(--positive); border: 1px solid rgba(0,200,100,.3); }
     .akm-badge-anthropic { background: rgba(180,120,50,.2); color: var(--text-gold); border: 1px solid rgba(180,120,50,.3); }
-    .akm-key-tag { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: rgba(76,175,80,.15); color: #81c784; border: 1px solid rgba(76,175,80,.2); }
+    .akm-key-tag { font-size: 10px; padding: 1px 5px; border-radius: 3px; background: rgba(58,107,58,.15); color: #81c784; border: 1px solid rgba(58,107,58,.2); }
     .akm-tag-optional { background: rgba(100,100,100,.15); color: #888; border-color: rgba(100,100,100,.2); }
     .akm-key-hint { font-size: 10px; color: var(--text-dim); }
     .akm-key-hint a { color: var(--text-gold); }
@@ -6321,9 +6321,9 @@
       cursor: pointer;
       /* Трёхзонный градиент: зел (0–50%) / жёл (50–73%) / красн (73–100%) */
       background: linear-gradient(to right,
-        #4caf50 0%, #4caf50 50%,
-        #ff9800 50%, #ff9800 73%,
-        #f44336 73%, #f44336 100%);
+        var(--positive) 0%, var(--positive) 50%,
+        var(--warning) 50%, var(--warning) 73%,
+        var(--negative) 73%, var(--negative) 100%);
     }
     .tp-slider::-webkit-slider-thumb {
       -webkit-appearance: none; appearance: none;
@@ -6349,9 +6349,9 @@
     /* Слайдер расходов: красн(50–75%) / зел(75–125%) / жёлт(125–150%) */
     .tp-exp-slider {
       background: linear-gradient(to right,
-        #f44336 0%, #f44336 25%,
-        #4caf50 25%, #4caf50 75%,
-        #ff9800 75%, #ff9800 100%);
+        var(--negative) 0%, var(--negative) 25%,
+        var(--positive) 25%, var(--positive) 75%,
+        var(--warning) 75%, var(--warning) 100%);
     }
 
     /* Строки доходов/расходов */
@@ -6501,7 +6501,7 @@
       flex-shrink: 0;
       padding: 10px 14px;
       border-top: 1px solid var(--border-gold);
-      background: linear-gradient(to bottom, #14100a, #0d0a05);
+      background: linear-gradient(to bottom, #14100a, var(--bg-deep));
     }
 
     /* Кнопка применить */
@@ -6509,7 +6509,7 @@
       display: block; width: 100%;
       padding: 9px 0;
       background: linear-gradient(to bottom, #2a4a1a, #1a3010);
-      border: 1px solid #4caf50; color: #4caf50;
+      border: 1px solid var(--positive); color: var(--positive);
       font-size: 13px; font-weight: bold; cursor: pointer;
       letter-spacing: 0.5px;
       transition: background 0.15s, opacity 0.15s;
@@ -6531,7 +6531,7 @@
     }
     .tp-bal-neg {
       color: #f55;
-      text-shadow: 0 0 14px rgba(244,67,54,0.7), 0 0 5px rgba(244,67,54,0.45);
+      text-shadow: 0 0 14px rgba(139,32,32,0.7), 0 0 5px rgba(139,32,32,0.45);
       animation: tp-pulse-neg 1.8s ease-in-out infinite;
     }
     @keyframes tp-pulse-neg {
@@ -6615,8 +6615,8 @@
       font-size: 11px; color: var(--text-light);
     }
     .tp-loan-stat span { font-weight: bold; }
-    .tp-loan-stat.warn span { color: #ff9800; }
-    .tp-loan-stat.danger span { color: #f44336; }
+    .tp-loan-stat.warn span { color: var(--warning); }
+    .tp-loan-stat.danger span { color: var(--negative); }
     .tp-loan-bar-wrap {
       height: 6px; background: rgba(255,255,255,0.08);
       border-radius: 3px; margin-bottom: 10px; overflow: hidden;
@@ -6648,14 +6648,14 @@
       color: var(--text-light); font-size: 11px; padding: 4px 6px;
     }
     .tp-loan-btn {
-      background: rgba(26,74,26,0.7); border: 1px solid #4caf50;
+      background: rgba(26,74,26,0.7); border: 1px solid var(--positive);
       color: #a5d6a7; font-size: 11px; padding: 5px 12px;
       cursor: pointer; white-space: nowrap;
     }
     .tp-loan-btn:hover:not(:disabled) { background: rgba(46,94,46,0.9); }
     .tp-loan-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .tp-loan-btn.danger {
-      background: rgba(80,20,20,0.7); border-color: #f44336; color: #ef9a9a;
+      background: rgba(80,20,20,0.7); border-color: var(--negative); color: #ef9a9a;
     }
     .tp-loan-btn.danger:hover { background: rgba(100,30,30,0.9); }
     .tp-loan-preview {
@@ -6671,7 +6671,7 @@
 
     /* Внутренний контейнер */
     .pop-oi {
-      background: linear-gradient(165deg,#0e0b08 0%,#1a1208 60%,#0d0a05 100%);
+      background: linear-gradient(165deg,#0e0b08 0%,var(--bg-panel) 60%,var(--bg-deep) 100%);
       border: 1px solid rgba(212,175,55,0.25);
       border-radius: 10px;
       width: 820px; max-width: 98vw;
@@ -6740,8 +6740,8 @@
       font-family: sans-serif; letter-spacing: .3px; white-space: nowrap;
       border: 1px solid transparent;
     }
-    .pop-pill.good { background: rgba(76,175,80,.12); border-color: rgba(76,175,80,.3); color: #81C784; }
-    .pop-pill.bad  { background: rgba(244,67,54,.12);  border-color: rgba(244,67,54,.3);  color: #EF9A9A; }
+    .pop-pill.good { background: rgba(58,107,58,.12); border-color: rgba(58,107,58,.3); color: #81C784; }
+    .pop-pill.bad  { background: rgba(139,32,32,.12);  border-color: rgba(139,32,32,.3);  color: #EF9A9A; }
 
     /* ── Section header ── */
     .pop-sh {
@@ -6860,7 +6860,7 @@
       transition: all .15s; font-family: inherit;
     }
     .adm-law-btn:hover  { background: rgba(212,175,55,.14); border-color: rgba(212,175,55,.35); color: var(--text-light); }
-    .adm-law-btn.active { background: rgba(212,175,55,.22); border-color: #d4a853; color: var(--text-gold); font-weight: 600; }
+    .adm-law-btn.active { background: rgba(212,175,55,.22); border-color: var(--gold); color: var(--text-gold); font-weight: 600; }
 
     /* ── Мини-бар возрастного состава класса ── */
     .cls-age-block {
@@ -6878,8 +6878,8 @@
     }
     .cls-age-seg { height: 100%; transition: width .4s; }
     .cls-age-seg--child { background: linear-gradient(90deg,#42a5f5,#64b5f6); }
-    .cls-age-seg--adult { background: linear-gradient(90deg,#4caf50,#81c784); }
-    .cls-age-seg--elder { background: linear-gradient(90deg,#ff9800,#ffb74d); }
+    .cls-age-seg--adult { background: linear-gradient(90deg,var(--positive),#81c784); }
+    .cls-age-seg--elder { background: linear-gradient(90deg,var(--warning),#ffb74d); }
 
     .cls-age-row {
       display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
@@ -6979,7 +6979,7 @@
       color: rgba(255,255,255,.5);
     }
     .cid-cls-sep  { color: rgba(255,255,255,.2); }
-    .cid-cls-inc  { color: var(--positive, #4CAF50); font-weight: 600; }
+    .cid-cls-inc  { color: var(--positive, var(--positive)); font-weight: 600; }
     .cid-cls-percap { color: rgba(255,255,255,.45); }
     /* Population share mini-bar */
     .cid-cls-popbar {
@@ -6989,7 +6989,7 @@
     .cid-cls-popfill { height: 100%; border-radius: 2px; transition: width .5s ease; }
     /* per-type income in battery label */
     .cid-batt-typeinc {
-      font-size: 10px; color: var(--positive, #4CAF50); margin-left: 6px;
+      font-size: 10px; color: var(--positive, var(--positive)); margin-left: 6px;
     }
     .cid-batt-none {
       font-size: 11px; color: rgba(255,255,255,.25); padding: 6px 0 2px;
@@ -7007,7 +7007,7 @@
     }
     .cid-batt-fill { height: 100%; border-radius: 4px; transition: width .5s ease; }
     .cid-batt-ready {
-      font-size: 10px; color: #4CAF50; margin-top: 3px; text-align: right;
+      font-size: 10px; color: var(--positive); margin-top: 3px; text-align: right;
     }
     .cid-empty {
       padding: 18px; text-align: center; font-size: 12px; color: rgba(255,255,255,.3);
@@ -7053,7 +7053,7 @@
     }
     .pop-cp {
       display: block; font-family: sans-serif; font-size: 13px;
-      font-weight: bold; color: var(--accent); letter-spacing: .5px; margin-top: 1px;
+      font-weight: bold; color: var(--gold-bright); letter-spacing: .5px; margin-top: 1px;
     }
 
     /* Card visual (donut + badge) */
@@ -7086,7 +7086,7 @@
     }
     .pop-spills { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
     .pop-sp   { font-size: 9px; padding: 2px 6px; border-radius: 10px; font-family: sans-serif; }
-    .pop-sp.b { background: rgba(244,67,54,.15);  color: #EF9A9A; border: 1px solid rgba(244,67,54,.2); }
+    .pop-sp.b { background: rgba(139,32,32,.15);  color: #EF9A9A; border: 1px solid rgba(139,32,32,.2); }
     .pop-sp.s { background: rgba(255,152,0,.15);  color: #FFCC80; border: 1px solid rgba(255,152,0,.2); }
     .pop-sp.l { background: rgba(156,39,176,.15); color: #CE93D8; border: 1px solid rgba(156,39,176,.2); }
 
@@ -7150,7 +7150,7 @@
       left: 0;
       width: 0;
       height: 2px;
-      background: var(--accent);
+      background: var(--gold-bright);
       transition: left 0.25s cubic-bezier(.4,0,.2,1),
                   width 0.25s cubic-bezier(.4,0,.2,1);
       border-radius: 1px 1px 0 0;
@@ -7218,8 +7218,8 @@
     .ri-dipl-send-btn {
       margin-top: 4px;
       padding: 7px 10px;
-      background: rgba(76,175,80,.2);
-      border: 1px solid rgba(76,175,80,.5);
+      background: rgba(58,107,58,.2);
+      border: 1px solid rgba(58,107,58,.5);
       border-radius: 4px;
       color: #81c784;
       font-family: inherit;
@@ -7227,7 +7227,7 @@
       cursor: pointer;
       transition: background .15s;
     }
-    .ri-dipl-send-btn:hover { background: rgba(76,175,80,.35); }
+    .ri-dipl-send-btn:hover { background: rgba(58,107,58,.35); }
 
     /* ── Строительная вкладка ── */
     .rbt-wrap { padding: 6px 7px; }
@@ -7443,7 +7443,7 @@
     .rbt-bc-cost--red         { color: #ef9a9a; }   /* нельзя: казна < cost */
 
     /* Карточка: цветная левая полоса по уровню доступности */
-    .rbt-bcard--green  { border-left: 3px solid #4caf50; }
+    .rbt-bcard--green  { border-left: 3px solid var(--positive); }
     .rbt-bcard--yellow { border-left: 3px solid #fdd835; }
     .rbt-bcard--red    { border-left: 3px solid #e53935; }
 
@@ -7495,7 +7495,7 @@
       border-radius: 3px;
       transition: width .3s ease;
     }
-    .rbt-land-fill--green  { background: linear-gradient(90deg, #2e7d32, #4caf50); }
+    .rbt-land-fill--green  { background: linear-gradient(90deg, #2e7d32, var(--positive)); }
     .rbt-land-fill--yellow { background: linear-gradient(90deg, #f57f17, #fdd835); }
     .rbt-land-fill--red    { background: linear-gradient(90deg, #b71c1c, #e53935); }
 
@@ -7637,7 +7637,7 @@
     .rbt-recruit-info {
       grid-column: 1 / -1;
       font-size: 10px;
-      color: #ff9800;
+      color: var(--warning);
       background: rgba(255,152,0,.08);
       border-left: 2px solid rgba(255,152,0,.4);
       padding: 2px 6px;
@@ -7645,13 +7645,13 @@
       border-radius: 2px;
     }
     .rbt-recruit-info--paused  { color: var(--text-dim); background: none; border-color: var(--border); }
-    .rbt-recruit-info--deficit { border-color: rgba(244,67,54,.4); background: rgba(244,67,54,.06); }
+    .rbt-recruit-info--deficit { border-color: rgba(139,32,32,.4); background: rgba(139,32,32,.06); }
     .rbt-recruit-prod  { font-weight: 500; }
     .rbt-recruit-last  { margin-left: 6px; color: var(--text-dim); }
     .rbt-recruit-res   { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
     .rbt-recruit-warn  { margin-top: 2px; color: #ef9a9a; font-size: 10px; }
     .rbt-res-tag       { font-size: 10px; color: var(--text-secondary); background: rgba(255,255,255,.05); border-radius: 3px; padding: 1px 4px; }
-    .rbt-res-tag--miss { color: #ef9a9a; background: rgba(244,67,54,.12); }
+    .rbt-res-tag--miss { color: #ef9a9a; background: rgba(139,32,32,.12); }
 
     /* Прогресс-полоска в строке очереди */
     .rbt-ac-prog { height: 2px; background: rgba(107,79,26,.3); border-radius: 1px; margin-top: 2px; }
@@ -8137,7 +8137,7 @@
       width: min(1020px, 97vw);
       height: min(86vh, 800px);
       background: linear-gradient(160deg, #1c1408 0%, #120e06 55%, #0f0b04 100%);
-      border: 1px solid #6b4f1a;
+      border: 1px solid var(--border-main);
       box-shadow:
         0 0 0 1px rgba(212,168,83,.08),
         0 20px 60px rgba(0,0,0,.85),
@@ -8322,12 +8322,12 @@
       font-weight: 500;
     }
     .dp-treaties-count {
-      background: rgba(76,175,80,.25);
+      background: rgba(58,107,58,.25);
       color: #81c784;
       font-size: 9px;
       border-radius: 8px;
       padding: 0 5px;
-      border: 1px solid rgba(76,175,80,.3);
+      border: 1px solid rgba(58,107,58,.3);
     }
     .dp-nation-rel-bar {
       height: 3px;
@@ -8349,7 +8349,7 @@
       vertical-align: middle;
       white-space: nowrap;
     }
-    .dp-tier-1 { background: rgba(76,175,80,.2);  color: #81c784; border: 1px solid rgba(76,175,80,.35); }
+    .dp-tier-1 { background: rgba(58,107,58,.2);  color: #81c784; border: 1px solid rgba(58,107,58,.35); }
     .dp-tier-2 { background: rgba(255,193,7,.15); color: #ffd54f; border: 1px solid rgba(255,193,7,.3);  }
     .dp-tier-3 { background: rgba(158,158,158,.1);color: #757575; border: 1px solid rgba(158,158,158,.2);}
     .dp-nation-card--far { opacity: 0.55; filter: grayscale(0.4); }
@@ -8416,8 +8416,8 @@
     .dp-active-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
     .dp-active-tag {
       font-size: 10px;
-      background: rgba(76,175,80,.1);
-      border: 1px solid rgba(76,175,80,.3);
+      background: rgba(58,107,58,.1);
+      border: 1px solid rgba(58,107,58,.3);
       border-radius: 3px;
       padding: 2px 7px;
       color: #81c784;
@@ -8893,13 +8893,13 @@
     .dp-arc-name { font-size: 13px; color: var(--text-light); font-weight: bold; }
     .dp-arc-nation { font-size: 11px; color: var(--text-dim); }
     .dp-arc-desc { font-size: 10px; color: var(--text-dim); margin-top: 4px; line-height: 1.4; }
-    .dp-arc-notes { font-size: 11px; color: var(--accent); margin-top: 4px; font-style: italic; }
+    .dp-arc-notes { font-size: 11px; color: var(--gold-bright); margin-top: 4px; font-style: italic; }
     .dp-arc-meta { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
     .dp-arc-status { font-size: 11px; font-weight: 500; }
     .dp-arc-active   { color: #81c784; }
     .dp-arc-expired  { color: var(--text-dim); }
     .dp-arc-broken   { color: #ef9a9a; }
-    .dp-arc-rejected { color: #ff9800; }
+    .dp-arc-rejected { color: var(--warning); }
     .dp-arc-pending  { color: #ffc107; }
     .dp-arc-turn { font-size: 10px; color: var(--text-dim); }
     .dp-arc-break {
@@ -8942,7 +8942,7 @@
       position: relative;
       width: min(1080px, 98vw);
       height: min(90vh, 860px);
-      background: linear-gradient(160deg, #1a1208 0%, #100d05 50%, #0d0a03 100%);
+      background: linear-gradient(160deg, var(--bg-panel) 0%, #100d05 50%, #0d0a03 100%);
       border: 1px solid #7a5a20;
       border-radius: 6px;
       box-shadow:
@@ -9008,8 +9008,8 @@
       color: #ffe082;
     }
     .dp-cm-phase-badge--final {
-      background: rgba(76,175,80,.12);
-      border: 1px solid rgba(76,175,80,.3);
+      background: rgba(58,107,58,.12);
+      border: 1px solid rgba(58,107,58,.3);
       color: #a5d6a7;
     }
     .dp-cm-hdr-rel {
@@ -9346,8 +9346,8 @@
     }
     .dp-cm-edit-msg--sys {
       align-self: center;
-      background: rgba(76,175,80,.06);
-      border: 1px solid rgba(76,175,80,.2);
+      background: rgba(58,107,58,.06);
+      border: 1px solid rgba(58,107,58,.2);
       color: #a5d6a7;
       font-size: 11px;
       text-align: center;
@@ -9397,9 +9397,9 @@
 
     /* Кнопка ПОДПИСАТЬ */
     .dp-cm-sign-bar {
-      border-top: 1px solid rgba(76,175,80,.3);
+      border-top: 1px solid rgba(58,107,58,.3);
       padding: 14px 20px;
-      background: rgba(76,175,80,.04);
+      background: rgba(58,107,58,.04);
       display: flex;
       align-items: center;
       gap: 14px;
@@ -9407,8 +9407,8 @@
     }
     .dp-cm-sign-status { flex: 1; font-size: 12px; color: var(--text-dim); line-height: 1.4; }
     .dp-cm-sign-btn {
-      background: linear-gradient(135deg, rgba(76,175,80,.55), rgba(40,110,45,.4));
-      border: 1px solid rgba(76,175,80,.6);
+      background: linear-gradient(135deg, rgba(58,107,58,.55), rgba(40,110,45,.4));
+      border: 1px solid rgba(58,107,58,.6);
       border-radius: 5px;
       color: #c8e6c9;
       font-size: 14px;
@@ -9419,11 +9419,11 @@
       letter-spacing: 0.06em;
       white-space: nowrap;
       transition: all .15s;
-      box-shadow: 0 0 16px rgba(76,175,80,.12);
+      box-shadow: 0 0 16px rgba(58,107,58,.12);
     }
     .dp-cm-sign-btn:hover {
-      background: linear-gradient(135deg, rgba(76,175,80,.75), rgba(40,110,45,.6));
-      box-shadow: 0 0 24px rgba(76,175,80,.22);
+      background: linear-gradient(135deg, rgba(58,107,58,.75), rgba(40,110,45,.6));
+      box-shadow: 0 0 24px rgba(58,107,58,.22);
     }
     .dp-cm-sign-btn:disabled { opacity: .4; cursor: not-allowed; }
 
@@ -9558,7 +9558,7 @@
     .tup-form-btn { font-size: 10px; padding: 2px 5px; background: #1a1a1a;
       border: 1px solid #3a3a3a; color: #999; border-radius: 2px; cursor: pointer; }
     .tup-form-btn:hover  { background: #252525; }
-    .tup-form-btn.active { border-color: #c8a000; color: #ffd700; }
+    .tup-form-btn.active { border-color: #c8a000; color: var(--gold-bright); }
     #tup-reserve-btn button { width: 100%; margin-top: 6px; padding: 4px;
       background: #1a1a1a; border: 1px solid #444; color: #bbb;
       border-radius: 2px; cursor: pointer; font-size: 11px; }
@@ -9589,7 +9589,7 @@
     }
     #diplo-graph-overlay .dg-header h2 {
       margin: 0;
-      color: var(--accent);
+      color: var(--gold-bright);
       font-family: serif;
       font-size: 20px;
       letter-spacing: 0.5px;
@@ -9607,8 +9607,8 @@
     }
     #diplo-graph-overlay .dg-header button:hover {
       background: rgba(42,32,16,0.95);
-      border-color: var(--accent);
-      color: var(--accent);
+      border-color: var(--gold-bright);
+      color: var(--gold-bright);
     }
     #diplo-graph-svg {
       flex: 1;
@@ -9821,7 +9821,7 @@
               <svg class="sp-ring-svg" width="110" height="110" viewBox="0 0 110 110">
                 <circle class="sp-ring-track" cx="55" cy="55" r="44"/>
                 <circle id="sp-ring" class="sp-ring-fill" cx="55" cy="55" r="44"
-                        stroke="#f44336" stroke-dasharray="276.46" stroke-dashoffset="276.46"/>
+                        stroke="var(--negative)" stroke-dasharray="276.46" stroke-dashoffset="276.46"/>
               </svg>
               <div class="sp-ring-center">
                 <div id="sp-fort-flame" style="display:none">🔥</div>

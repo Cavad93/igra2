@@ -2412,8 +2412,8 @@ function renderMap() {
       console.error('Leaflet не загружен. Проверьте интернет-соединение.');
       const container = document.getElementById('map-container');
       if (container) {
-        container.style.background = '#1a3a5c';
-        container.innerHTML = '<div style="color:#d4a853;padding:20px;text-align:center;padding-top:40px">⚠ Карта недоступна — нет подключения к интернету.<br>Загрузка Leaflet не удалась.</div>';
+        container.style.background = '#0f1a24';
+        container.innerHTML = '<div style="color:#c9a961;padding:20px;text-align:center;padding-top:40px">⚠ Карта недоступна — нет подключения к интернету.<br>Загрузка Leaflet не удалась.</div>';
       }
       return;
     }
