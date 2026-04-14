@@ -104,28 +104,101 @@
       "id": "splash_pompeii",
       "group": "backgrounds",
       "filename": "assets/backgrounds/splash_pompeii.jpg",
-      "source": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Fresco_from_the_House_of_Julia_Felix,_Pompeii_depicting_scenes_from_the_Forum_market.JPG",
-      "license": "Public Domain",
-      "attribution": "Fresco from the House of Julia Felix, Pompeii. Wikimedia Commons",
-      "description": "Помпейская фреска, рынок, I в. н.э."
+      "source": "https://images.metmuseum.org/CRDImages/gr/original/DP141474.jpg",
+      "source_page": "https://www.metmuseum.org/art/collection/search/247008",
+      "license": "CC0 1.0",
+      "attribution": "The Metropolitan Museum of Art, object 247008 — Wall painting from the west wall of Room L of the Villa of P. Fannius Synistor at Boscoreale (Roman, ca. 50–40 BCE)",
+      "description": "Римская фреска второго стиля из виллы Фанния Синистора в Боскореале — splash для эллинской группы"
     },
     {
       "id": "splash_alexander",
       "group": "backgrounds",
       "filename": "assets/backgrounds/splash_alexander.jpg",
-      "source": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Alexander_%28Battle_of_Issus%29_Mosaic.jpg",
-      "license": "Public Domain",
-      "attribution": "Alexander Mosaic (Battle of Issus). Wikimedia Commons",
-      "description": "Мозаика Александра, Помпеи, ок. 100 до н.э."
+      "source": "https://openaccess-cdn.clevelandart.org/1987.65/1987.65_web.jpg",
+      "source_page": "https://clevelandart.org/art/1987.65",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 1987.65 — Mosaic of Tigress and Cubs (Eastern Roman Empire, 300s CE)",
+      "description": "Позднеримская мозаика с тигрицей и детёнышами — splash для римской группы"
     },
     {
       "id": "splash_battle",
       "group": "backgrounds",
       "filename": "assets/backgrounds/splash_battle.jpg",
-      "source": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Alexander_%28Battle_of_Issus%29_Mosaic.jpg",
-      "license": "Public Domain",
-      "attribution": "Alexander Mosaic (Battle of Issus). Wikimedia Commons",
-      "description": "Мозаика Александра (общий план)"
+      "source": "https://openaccess-cdn.clevelandart.org/1929.979/1929.979_web.jpg",
+      "source_page": "https://clevelandart.org/art/1929.979",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 1929.979 — Black-Figure Neck-Amphora: Departing Warrior with Chariot / Battling Warriors (Greek, Attic, c. 520–510 BCE)",
+      "description": "Чернофигурная амфора с батальной сценой — generic fallback splash"
+    },
+    {
+      "id": "splash_carthage",
+      "group": "backgrounds",
+      "filename": "assets/backgrounds/splash_carthage.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/2008.349/2008.349_web.jpg",
+      "source_page": "https://clevelandart.org/art/2008.349",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 2008.349 — Hannibal Swearing Eternal Enmity toward Rome",
+      "description": "Драматичная историческая сцена клятвы Ганнибала — splash для карфагенской группы"
+    },
+    {
+      "id": "splash_nome_gods",
+      "group": "backgrounds",
+      "filename": "assets/backgrounds/splash_nome_gods.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1961.205/1961.205_web.jpg",
+      "source_page": "https://clevelandart.org/art/1961.205",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 1961.205 — Nome Gods Bearing Offerings",
+      "description": "Египетский храмовый рельеф ном-богов — splash для египетской группы"
+    },
+    {
+      "id": "splash_persepolis",
+      "group": "backgrounds",
+      "filename": "assets/backgrounds/splash_persepolis.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1943.279/1943.279_web.jpg",
+      "source_page": "https://clevelandart.org/art/1943.279",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 1943.279 — Fragment of a Wall Decoration from the Palace of Xerxes, Persepolis (Achaemenid, 550–330 BCE)",
+      "description": "Ахеменидский рельеф из дворца Ксеркса в Персеполе — splash для персидской группы"
+    },
+    {
+      "id": "splash_celtic_head",
+      "group": "backgrounds",
+      "filename": "assets/backgrounds/splash_celtic_head.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1955.555/1955.555_web.jpg",
+      "source_page": "https://clevelandart.org/art/1955.555",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 1955.555 — Celtic Head (Romano-British, Migration period, 2nd–3rd centuries)",
+      "description": "Кельтская голова (Romano-British, II–III вв.) — splash для кельтской группы"
+    },
+    {
+      "id": "splash_gandhara_stupa",
+      "group": "backgrounds",
+      "filename": "assets/backgrounds/splash_gandhara_stupa.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1930.328/1930.328_web.jpg",
+      "source_page": "https://clevelandart.org/art/1930.328",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 1930.328 — Foreigners and Non-Buddhists Drink, Dance, and Play Music, from a Buddhist Stupa Site (Gandhara, c. 100 CE)",
+      "description": "Гандхарский рельеф со сценой пиршества у ступы — splash для индийской группы"
+    },
+    {
+      "id": "splash_night_white",
+      "group": "backgrounds",
+      "filename": "assets/backgrounds/splash_night_white.jpg",
+      "source": "https://images.metmuseum.org/CRDImages/as/original/DP153705.jpg",
+      "source_page": "https://www.metmuseum.org/art/collection/search/39901",
+      "license": "CC0 1.0",
+      "attribution": "The Metropolitan Museum of Art, object 39901 — Night-Shining White, Han Gan, Tang dynasty (ca. 750)",
+      "description": "Китайская живопись тушью по бумаге «Night-Shining White» — splash для восточноазиатской группы"
+    },
+    {
+      "id": "splash_scythian_stag",
+      "group": "backgrounds",
+      "filename": "assets/backgrounds/splash_scythian_stag.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1985.77/1985.77_web.jpg",
+      "source_page": "https://clevelandart.org/art/1985.77",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 1985.77 — Stag Plaque (Scythian, 6th–4th centuries BCE)",
+      "description": "Скифская золотая пластина с оленем — splash для кочевой группы"
     },
     {
       "id": "roman/met254473",

@@ -284,26 +284,28 @@ if (splashMod && splashMod.initSplash) {
   check(/assets\/backgrounds\//.test(bgAthens),
     '[14d] --splash-bg содержит путь assets/backgrounds/');
 
-  // [15] null → fallback splash_pompeii
+  // [15] null → группа "generic" → splash_battle (Шаг 67: каждая группа имеет
+  //       уникальный splash, generic теперь splash_battle).
   _props = {};
   splashMod.initSplash(null);
   const bgNull = _props['--splash-bg'] || '';
-  check(/splash_pompeii/.test(bgNull),
-    '[15a] initSplash(null) → fallback splash_pompeii');
+  check(/splash_battle/.test(bgNull),
+    '[15a] initSplash(null) → generic → splash_battle (обновлено Шагом 67)');
 
-  // Проверка: римская группа тоже splash_pompeii
+  // Проверка: римская группа → splash_alexander (обновлено в Шаге 67 — уникальный
+  // splash для каждой из 10 культурных групп)
   _props = {};
   splashMod.initSplash('rome');
   const bgRome = _props['--splash-bg'] || '';
-  check(/splash_pompeii/.test(bgRome),
-    '[15b] initSplash("rome") → splash_pompeii');
+  check(/splash_alexander/.test(bgRome),
+    '[15b] initSplash("rome") → splash_alexander (обновлено Шагом 67)');
 
-  // Проверка: персидская группа splash_battle
+  // Проверка: персидская группа → splash_persepolis (Шаг 67)
   _props = {};
   splashMod.initSplash('persis');
   const bgPersis = _props['--splash-bg'] || '';
-  check(/splash_battle/.test(bgPersis),
-    '[15c] initSplash("persis") → splash_battle');
+  check(/splash_persepolis/.test(bgPersis),
+    '[15c] initSplash("persis") → splash_persepolis (обновлено Шагом 67)');
 }
 
 // ═══════════════════════════════════════════════════════════════

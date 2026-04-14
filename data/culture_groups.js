@@ -57,7 +57,7 @@ const NATION_CULTURE_GROUPS = {
     panel_tint: 'rgba(50,20,10,0.85)',
     border: 'meander_dark',
     icon: 'roman_eagle',
-    splash_bg: 'splash_pompeii',
+    splash_bg: 'splash_alexander',
   },
 
   // ── КАРФАГЕНСКАЯ / ФИНИКИЙСКАЯ / ПУНИЙСКАЯ
@@ -76,7 +76,7 @@ const NATION_CULTURE_GROUPS = {
     panel_tint: 'rgba(40,20,30,0.85)',
     border: 'egyptian_border',
     icon: 'carthage_horse',
-    splash_bg: 'splash_battle',
+    splash_bg: 'splash_carthage',
   },
 
   // ── ЕГИПЕТСКАЯ / НУБИЙСКАЯ
@@ -92,7 +92,7 @@ const NATION_CULTURE_GROUPS = {
     panel_tint: 'rgba(60,45,10,0.85)',
     border: 'egyptian_border',
     icon: 'egyptian_eye',
-    splash_bg: 'splash_pompeii',
+    splash_bg: 'splash_nome_gods',
   },
 
   // ── ПЕРСИДСКАЯ / БЛИЖНЕВОСТОЧНАЯ / ИРАНСКАЯ
@@ -109,7 +109,7 @@ const NATION_CULTURE_GROUPS = {
     panel_tint: 'rgba(35,25,45,0.85)',
     border: 'meander_dark',
     icon: 'persian_faravahar',
-    splash_bg: 'splash_battle',
+    splash_bg: 'splash_persepolis',
   },
 
   // ── КЕЛЬТСКАЯ / ГЕРМАНСКАЯ
@@ -132,7 +132,7 @@ const NATION_CULTURE_GROUPS = {
     panel_tint: 'rgba(20,35,20,0.85)',
     border: 'celtic_border',
     icon: 'celtic_torque',
-    splash_bg: 'splash_battle',
+    splash_bg: 'splash_celtic_head',
   },
 
   // ── ИНДИЙСКАЯ / ЮЖНОАЗИАТСКАЯ
@@ -152,7 +152,7 @@ const NATION_CULTURE_GROUPS = {
     panel_tint: 'rgba(55,30,10,0.85)',
     border: 'meander_dark',
     icon: 'indian_lotus',
-    splash_bg: 'splash_battle',
+    splash_bg: 'splash_gandhara_stupa',
   },
 
   // ── ВОСТОЧНОАЗИАТСКАЯ (Китай, Корея, Япония)
@@ -171,7 +171,7 @@ const NATION_CULTURE_GROUPS = {
     panel_tint: 'rgba(50,15,15,0.85)',
     border: 'meander_dark',
     icon: 'east_asian_dragon',
-    splash_bg: 'splash_battle',
+    splash_bg: 'splash_night_white',
   },
 
   // ── СКИФСКАЯ / КОЧЕВАЯ / СТЕПНАЯ
@@ -187,7 +187,7 @@ const NATION_CULTURE_GROUPS = {
     panel_tint: 'rgba(35,30,15,0.85)',
     border: 'meander_dark',
     icon: 'nomadic_bow',
-    splash_bg: 'splash_battle',
+    splash_bg: 'splash_scythian_stag',
   },
 
   // ── ОБЩАЯ (для всех остальных, малых и неизвестных наций)
@@ -199,7 +199,7 @@ const NATION_CULTURE_GROUPS = {
     panel_tint: 'rgba(26,18,8,0.85)',
     border: 'meander_dark',
     icon: 'generic_sword',
-    splash_bg: 'splash_pompeii',
+    splash_bg: 'splash_battle',
   },
 };
 
