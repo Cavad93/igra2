@@ -4528,7 +4528,9 @@ generic        10           × 8          = 80
 
 ---
 
-### Шаг 73 — Процедурный SVG-портрет: уникальное лицо из хэша персонажа
+### Шаг 73 — Процедурный SVG-портрет: уникальное лицо из хэша персонажа ✅ ВЫПОЛНЕНО
+
+> **Статус:** ✅ **ВЫПОЛНЕНО** — файлы `js/rng.js` (seededRNG/mulberry32), `ui/portrait_svg.js` (generatePortraitSVG/generatePortraitDataURL + SKIN_PALETTES), обновлённый `ui/portrait.js` (onerror → buildGeneratedPortraitUrl, window.__renderPortraitFallback), минималистичный `assets/portraits/placeholder.svg`. Подключено в `index.html` до `ui/portrait.js`. Тесты `tests/test_arma_stage73.mjs` (39 passed). Не реализовывать повторно.
 
 **Цель:** для персонажей чьи портреты не загружены (первый запуск, офлайн, малые нации) — генерировать SVG-лицо прямо в браузере из `char.id`. Каждый персонаж получает уникальное лицо: форма, цвет кожи, цвет волос — всё детерминированно.
 

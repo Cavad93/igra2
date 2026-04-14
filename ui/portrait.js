@@ -28,6 +28,33 @@
   const FALLBACK = 'assets/portraits/placeholder.svg';
 
   /**
+   * Шаг 73 — построить data:URL с процедурным SVG-лицом персонажа.
+   * Используется как fallback, когда JPG не загружен. Если генератор
+   * недоступен (ранняя загрузка / sandbox) — возвращаем статичный FALLBACK.
+   */
+  function buildGeneratedPortraitUrl(char, nationId, sizePx) {
+    const hasGen = (typeof generatePortraitDataURL === 'function')
+      || (typeof window !== 'undefined' && typeof window.generatePortraitDataURL === 'function');
+    if (!hasGen) return FALLBACK;
+    try {
+      const gen = (typeof generatePortraitDataURL === 'function')
+        ? generatePortraitDataURL
+        : window.generatePortraitDataURL;
+      let groupId = 'generic';
+      if (typeof getCultureGroup === 'function') {
+        try {
+          const g = getCultureGroup(nationId);
+          if (g && g.groupId) groupId = g.groupId;
+        } catch (_) { /* ignore */ }
+      }
+      const id = (char && char.id != null) ? char.id : (char && char.name) || '';
+      return gen(id, groupId, sizePx || 96);
+    } catch (_) {
+      return FALLBACK;
+    }
+  }
+
+  /**
    * Получить {src, filter} портрета.
    *  - Шаг 55: getPortraitForCharacter() возвращает путь к JPG.
    *  - Шаг 72: getPortraitInfoForCharacter() добавляет CSS-фильтр,
@@ -92,10 +119,12 @@
     img.draggable = false;
     if (filter) img.style.filter = filter;          // Шаг 72
 
-    // Деградация: если JPG не скачан — показать SVG-заглушку без фильтра
+    // Деградация: если JPG не скачан — показать процедурный SVG-портрет
+    // (Шаг 73). Если генератор по какой-то причине недоступен, остаётся
+    // статичный assets/portraits/placeholder.svg.
     img.onerror = function () {
       img.onerror = null;
-      img.src = FALLBACK;
+      img.src = buildGeneratedPortraitUrl(char, nationId, size);
       img.style.filter = '';                        // Шаг 72: убрать фильтр у SVG
     };
 
@@ -122,13 +151,31 @@
     // Шаг 72: CSS-фильтр применяется inline. При onerror фильтр сбрасывается,
     // чтобы SVG-заглушка рендерилась без искажений.
     const styleAttr = filter ? ` style="filter:${escapeHtml(filter)}"` : '';
-    return `<img class="${cls}" src="${escapeHtml(src)}" width="${size}" height="${size}" alt="${alt}" loading="lazy" draggable="false"${styleAttr} onerror="this.onerror=null;this.src='${FALLBACK}';this.style.filter='';">`;
+    // Шаг 73: onerror пытается сначала получить процедурный SVG-портрет через
+    // window.__renderPortraitFallback(charId, nationId, size); если функция
+    // недоступна или вернёт пустую строку — остаётся статичный placeholder.svg.
+    const charIdAttr = escapeHtml((char && char.id != null) ? String(char.id) : '');
+    const natAttr    = escapeHtml(nationId == null ? '' : String(nationId));
+    const onerr =
+      "this.onerror=null;" +
+      "var u='';try{u=(window.__renderPortraitFallback&&" +
+      "window.__renderPortraitFallback('" + charIdAttr + "','" + natAttr + "'," + size + "))||'';}catch(e){}" +
+      "this.src=u||'" + FALLBACK + "';" +
+      "this.style.filter='';";
+    return `<img class="${cls}" src="${escapeHtml(src)}" width="${size}" height="${size}" alt="${alt}" loading="lazy" draggable="false"${styleAttr} onerror="${onerr}">`;
   }
 
   // Экспорт в глобальную область
   if (typeof window !== 'undefined') {
     window.renderPortrait     = renderPortrait;
     window.renderPortraitHTML = renderPortraitHTML;
+    // Шаг 73: фоллбэк для inline onerror в renderPortraitHTML.
+    // Получает id/nation/size как строки (HTML attribute) и возвращает
+    // data:URL процедурного SVG-лица или '' если генератор недоступен.
+    window.__renderPortraitFallback = function (charId, nationId, size) {
+      const sz = Number(size) || 48;
+      return buildGeneratedPortraitUrl({ id: charId }, nationId, sz);
+    };
   }
 
   // CommonJS-экспорт для Node-тестов
