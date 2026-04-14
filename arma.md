@@ -4130,6 +4130,8 @@ curl "https://collectionapi.metmuseum.org/public/collection/v1/search\
 
 ### Шаг 66 — Фоновые текстуры панелей: вазы, папирус, ткань
 
+> **Статус:** ✅ **ВЫПОЛНЕНО** — в `assets/manifest.json` 5 текстур с `"group": "textures"`: `greek_vase` (Met 254944, чернофигурная амфора), `linen` (Met 254896, краснофигурный лекиф — нейтральный фон), `papyrus` (CMA 1921.1032 «Book of the Dead of Hori», ок. 1069–945 до н.э.), `roman_mosaic` (CMA 1918.403 «Mosaic Pavement», 1–100 н.э., геометрический паттерн), `persian_textile` (CMA 1982.22 «Fragment with Mounted Hunter», Иран, аббасидский/буидский период). Все источники CC0, все JPG > 100 KB после `bash assets/download.sh` (5/5 в `assets/textures/`). CSS-подключение — переменная `--panel-texture` + `#left-panel::before`/`#right-panel::before` с `background-size: 320px auto; background-repeat: repeat; opacity: 0.07` (текст читается). `applyNationTheme` в `ui/panels.js` маппит `group.texture` → `assets/textures/<id>.jpg`. Тесты `tests/test_arma_stage66.mjs` (56 passed). Не реализовывать повторно.
+
 **Цель:** собрать 4–5 фоновых текстур для панелей разных культурных групп. Текстуры должны быть достаточно нейтральными (не мешать читать текст), исторически аутентичными и CC0.
 
 **Источники текстур:**

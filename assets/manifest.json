@@ -71,7 +71,34 @@
       "source": "https://collectionapi.metmuseum.org/api/collection/v1/iiif/254896/1866772/main-image",
       "license": "CC0 1.0",
       "attribution": "The Metropolitan Museum of Art, object 254896, Berlin Painter",
-      "description": "Краснофигурный лекиф, 500-490 до н.э."
+      "description": "Краснофигурный лекиф, 500-490 до н.э. (используется как нейтральный фон)"
+    },
+    {
+      "id": "papyrus",
+      "group": "textures",
+      "filename": "assets/textures/papyrus.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1921.1032/1921.1032_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 1921.1032 — Book of the Dead of Hori",
+      "description": "Папирус с иероглифами, ок. 1069–945 до н.э. (для египетской/карфагенской групп)"
+    },
+    {
+      "id": "roman_mosaic",
+      "group": "textures",
+      "filename": "assets/textures/roman_mosaic.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1918.403/1918.403_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 1918.403 — Mosaic Pavement",
+      "description": "Римская мозаичная плитка, 1–100 н.э., геометрический паттерн (для римской группы)"
+    },
+    {
+      "id": "persian_textile",
+      "group": "textures",
+      "filename": "assets/textures/persian_textile.jpg",
+      "source": "https://openaccess-cdn.clevelandart.org/1982.22/1982.22_web.jpg",
+      "license": "CC0 1.0",
+      "attribution": "The Cleveland Museum of Art, object 1982.22 — Fragment with Mounted Hunter Spearing Animals (Iran)",
+      "description": "Иранский текстиль с конным охотником, аббасидский/буидский период (для персидской группы)"
     },
     {
       "id": "splash_pompeii",
