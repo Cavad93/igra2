@@ -3114,6 +3114,8 @@ const CULTURE_GROUPS = {
 
 ### Шаг 57 — Портреты персонажей: char-card, модал, придворные слоты, советники
 
+> **Статус:** ✅ **ВЫПОЛНЕНО** — файл `ui/portrait.js` (renderPortrait + renderPortraitHTML с graceful fallback на `placeholder.svg`), интеграция в `ui/panels.js` (renderCharacterCard 48px, showCharacterDetail 96px, position-slot 56px, renderAdvisorChip 32px, assign-cand 40px), CSS-классы в `index.html` (`char-card__portrait` / `char-detail__portrait` / `position-slot__portrait` / `advisor-chip__portrait` / `assign-cand__portrait`), тесты `tests/test_arma_stage57.mjs` (54 passed). Не реализовывать повторно.
+
 **Цель:** вывести CC0-портрет в каждом месте, где отображается персонаж. Источник портрета — `getPortraitForCharacter(char, nationId)` из Шага 55. Все четыре точки отображения: карточка в списке, детальный модал, слот в суде, чип советника.
 
 **Что сделать:**

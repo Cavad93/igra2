@@ -2076,14 +2076,20 @@ function renderRightPanel() {
                       ? `${Math.abs(GAME_STATE.year)} ${GAME_STATE.year < 0 ? 'BC' : 'AD'}`
                       : '301 BC';
 
+  const nationIdForPortraits = GAME_STATE.player_nation;
   const slotsHtml = COURT_POSITIONS.map(p => {
     const charId = positions[p.id];
     const char   = charId ? characters.find(c => c.id === charId) : null;
     const filled = !!char;
+    // Шаг 57 — портрет занятого поста (CC0 JPG, 56px), вакантный слот
+    // показывает иконку роли.
+    const slotPortrait = filled && typeof renderPortraitHTML === 'function'
+      ? renderPortraitHTML(char, nationIdForPortraits, 56, 'position-slot__portrait')
+      : `<div class="pos-role-icon">${p.icon}</div>`;
     return `
       <div class="position-slot ${filled ? 'filled' : ''}" data-role="${p.id}"
            onclick="if(event.target.tagName!=='BUTTON'){${filled ? `showCharacterDetail('${char.id}')` : `openAssignModal('${p.id}')`}}">
-        <div class="pos-role-icon">${p.icon}</div>
+        ${slotPortrait}
         <div class="pos-info">
           <div class="pos-title">${p.title}</div>
           <div class="pos-holder ${filled ? '' : 'empty'}" id="pos-${p.id}">
@@ -2098,7 +2104,7 @@ function renderRightPanel() {
 
   const advisorsHtml = freeChars.length === 0
     ? '<div class="no-data" style="font-size:10px;color:var(--text-dim);padding:4px;">Нет свободных персонажей</div>'
-    : freeChars.map(renderAdvisorChip).join('');
+    : freeChars.map(c => renderAdvisorChip(c, nationIdForPortraits)).join('');
 
   panel.innerHTML = `
     <div class="court-header">
@@ -2122,7 +2128,7 @@ function renderRightPanel() {
 }
 
 // Чип советника без должности
-function renderAdvisorChip(char) {
+function renderAdvisorChip(char, nationId) {
   const traits = char.traits || {};
   // Главный навык — наибольшее значение среди черт (визуально)
   const skillEntries = [
@@ -2134,10 +2140,14 @@ function renderAdvisorChip(char) {
   skillEntries.sort((a, b) => b[1] - a[1]);
   const [icon, val] = skillEntries[0];
   const skillVal = Math.round(val / 10);
-  const portrait = char.portrait || '👤';
+  // Шаг 57 — CC0-портрет 32px вместо эмодзи.
+  const nid = nationId || (typeof GAME_STATE !== 'undefined' ? GAME_STATE.player_nation : '');
+  const portrait = typeof renderPortraitHTML === 'function'
+    ? renderPortraitHTML(char, nid, 32, 'advisor-chip__portrait')
+    : `<span class="adv-avatar">${char.portrait || '👤'}</span>`;
   return `
     <div class="advisor-chip" onclick="showCharacterDetail('${char.id}')" title="${char.name} — ${getRoleLabel(char.role)}">
-      <span class="adv-avatar">${portrait}</span>
+      ${portrait}
       <span class="adv-name">${char.name}</span>
       <span class="adv-skill">${icon}${skillVal}</span>
     </div>
@@ -2161,14 +2171,18 @@ function openAssignModal(roleId) {
     .map(c => ({ char: c, score: _candidateScore(c, posDef) }))
     .sort((a, b) => b.score - a.score);
 
+  const nationIdCand = GAME_STATE.player_nation;
   const candHtml = candidates.length === 0
     ? '<div class="assign-cand-empty">Нет доступных персонажей</div>'
     : candidates.map(({ char, score }) => {
         const isCurrent = char.id === currentId;
-        const portrait  = char.portrait || '👤';
+        // Шаг 57 — CC0-портрет 40px в списке кандидатов.
+        const portrait = typeof renderPortraitHTML === 'function'
+          ? renderPortraitHTML(char, nationIdCand, 40, 'assign-cand__portrait')
+          : `<div class="assign-cand-portrait">${char.portrait || '👤'}</div>`;
         return `
           <div class="assign-cand">
-            <div class="assign-cand-portrait">${portrait}</div>
+            ${portrait}
             <div class="assign-cand-info">
               <div class="assign-cand-name">${char.name}</div>
               <div class="assign-cand-meta">${getRoleLabel(char.role)} · ${char.age} лет</div>
@@ -2239,10 +2253,15 @@ function renderCharacterCard(char) {
                        char.traits.loyalty > 30 ? '#FF9800' : '#f44336';
   const moodIcon = getMoodIcon(char.traits.loyalty, char.traits.ambition);
   const roleLabel = getRoleLabel(char.role);
+  // Шаг 57 — CC0-портрет 48px в карточке персонажа.
+  const nid = (typeof GAME_STATE !== 'undefined') ? GAME_STATE.player_nation : '';
+  const portraitHtml = typeof renderPortraitHTML === 'function'
+    ? renderPortraitHTML(char, nid, 48, 'char-card__portrait')
+    : `<div class="char-portrait">${char.portrait || '👤'}</div>`;
 
   return `
     <div class="char-card" onclick="showCharacterDetail('${char.id}')" title="${char.description}">
-      <div class="char-portrait">${char.portrait || '👤'}</div>
+      ${portraitHtml}
       <div class="char-info">
         <div class="char-name">${char.name}</div>
         <div class="char-role">${roleLabel} · ${char.age} лет</div>
@@ -2269,10 +2288,16 @@ function showCharacterDetail(charId) {
   const overlay = document.getElementById('char-overlay');
   if (!overlay) return;
 
+  // Шаг 57 — крупный CC0-портрет 96px.
+  const nidDetail = GAME_STATE.player_nation;
+  const detailPortrait = typeof renderPortraitHTML === 'function'
+    ? renderPortraitHTML(char, nidDetail, 96, 'char-detail__portrait')
+    : `<span class="char-detail-portrait">${char.portrait || '👤'}</span>`;
+
   overlay.innerHTML = `
     <div class="char-detail-box">
       <div class="char-detail-header">
-        <span class="char-detail-portrait">${char.portrait || '👤'}</span>
+        <div class="char-detail__portrait-wrap">${detailPortrait}</div>
         <div>
           <div class="char-detail-name">${char.name}</div>
           <div class="char-detail-role">${getRoleLabel(char.role)} · ${char.age} лет · ❤️ ${char.health}/100</div>
