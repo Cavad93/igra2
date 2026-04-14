@@ -288,11 +288,75 @@ GAME_STATE.economy_ext = {
 
 ---
 
-## Улучшение 6: Усталость армии от недофинансирования
+## Улучшение 6: Усталость армии от недофинансирования ✅ ВЫПОЛНЕНО (этап 6)
 
 **Суть:** Если расходы на армию < 80% нормы → боевая эффективность ×0.85. Связь экономики и военной силы.
 **Сложность:** Низкая — одна строка в боевой формуле.
-**Файлы:** `engine/economy_ext.js`, `engine/armies.js` или `engine/combat.js`
+**Файлы:** `engine/economy_ext.js`, `engine/battle.js`, `ui/treasury-panel.js`
+
+**Что сделано в этапе 6:**
+- В `engine/economy_ext.js` добавлены константы
+  `ARMY_UNDERFUND_THRESHOLD = 0.80` и `ARMY_UNDERFUND_PENALTY = 0.85`.
+- `calcNormalArmyExpense(nationId)` — нормальный upkeep без ползунка.
+  Сначала пытается взять кэшированное значение из
+  `nation.economy._expense_breakdown.army_base` (заполняется в
+  `engine/economy.js → updateTreasury()`), а при его отсутствии
+  пересобирает по `CONFIG.BALANCE.INFANTRY_UPKEEP / CAVALRY_UPKEEP /
+  MERCENARY_UPKEEP`. Fallback-коэффициенты (2/4/3) используются только
+  в Node-стабах.
+- `getArmyFundingRatio(nationId)` — отношение фактически выплаченных
+  военных расходов текущего тика (`army_infantry + army_cavalry +
+  army_mercenaries` из `_expense_breakdown`) к `army_base`. Результат
+  clamped в `[0, 1]`. Если у нации нет армии — возвращает 1.0
+  (штраф невозможен).
+- `getArmyCombatMult(nationId)` — `1.0` при `ratio ≥ 0.80`, иначе
+  линейная интерполяция от `ARMY_UNDERFUND_PENALTY = 0.85` при
+  `ratio = 0` до `1.0` при `ratio = 0.80` по формуле
+  `0.85 + 0.15 × (ratio / 0.80)`.
+- `updateArmyFunding()` — раз в тик пересчитывает `ratio/mult` для всех
+  наций и кладёт в `nation.economy._army_funding = { ratio, mult }`
+  (используется UI и консольной инспекцией). Для игрока логирует
+  появление и снятие штрафа через `addEconomicEvent()`.
+- Вызов `updateArmyFunding()` добавлен в `runEconomyExtTick()` после
+  `updateEconomicCycle()`.
+- В `engine/battle.js → calculateMilitaryStrength()` после культурных
+  бонусов итоговая сила умножается на `getArmyCombatMult(opts.nationId)`.
+  Это работает и для атакующего, и для защитника, так как `nationId`
+  уже передаётся в `calculateMilitaryStrength()` в обоих вызовах из
+  `resolveBattle()`.
+- В `ui/treasury-panel.js → _tpRenderArmyFunding()` добавлен блок
+  предупреждения «⚔ Армия недофинансирована: X% нормы / Боевой штраф:
+  −Y%» внутри панели «Торговый баланс за ход». Условие показа
+  расширено так, что блок выводится даже без торговой активности, если
+  `ratio < 0.80`. Цвет рамки меняется с оранжевого на красный при
+  `ratio < 0.40`.
+- Все функции и константы экспортированы в `window` для инспекции и
+  save/load (`calcNormalArmyExpense`, `getArmyFundingRatio`,
+  `getArmyCombatMult`, `updateArmyFunding`,
+  `ARMY_UNDERFUND_THRESHOLD`, `ARMY_UNDERFUND_PENALTY`).
+
+**Тесты этапа 6 (`tests/eco_stage6_army_funding_test.cjs`, 33/33 зелёные):**
+- `calcNormalArmyExpense` / `getArmyFundingRatio` / `getArmyCombatMult`
+  / `updateArmyFunding` экспортированы; константы = 0.80 / 0.85 ✓
+- `calcNormalArmyExpense()` берёт `army_base` из breakdown ✓
+- Fallback без breakdown считает по ставкам CONFIG.BALANCE ✓
+- Неизвестная нация → 0 (calcNormal) / 1.0 (ratio/mult) ✓
+- `expense_levels.army = 1.0` → ratio = 1.0, mult = 1.0 ✓
+- `expense_levels.army = 0.5` → ratio ≈ 0.5, штраф активен,
+  mult ≈ 0.944 (линейная интерполяция) ✓
+- `actualPaidMult = 0` → ratio = 0, mult = `ARMY_UNDERFUND_PENALTY` = 0.85 ✓
+- На пороге `ratio = 0.80` штрафа нет (mult = 1.0) ✓
+- `lvl = 1.20` → ratio capped в 1.0 (переплата не даёт бонуса) ✓
+- Нация без армии: `ratio = 1.0`, `mult = 1.0` ✓
+- `updateArmyFunding()` кладёт `{ratio, mult}` в
+  `economy._army_funding` ✓
+- `runEconomyExtTick()` не падает и вызывает `updateArmyFunding()` ✓
+- `calculateMilitaryStrength()` при `ratio = 0` даёт ровно 85%
+  силы относительно `ratio = 1.0` (проверено vm-загрузкой функции
+  из `engine/battle.js`) ✓
+- Существующие тесты этапов 3/4/5 остаются зелёными ✓
+
+**НЕ повторять в новых сессиях.**
 
 ---
 

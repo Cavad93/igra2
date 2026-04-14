@@ -129,6 +129,18 @@ function calculateMilitaryStrength(nation, opts = {}) {
     }
   }
 
+  // Этап 6 (economy_ext) — штраф за недофинансирование армии.
+  // Линейное снижение силы от 1.00 до 0.85 при ratio < 0.80.
+  if (typeof getArmyCombatMult === 'function') {
+    const nationId = opts.nationId;
+    if (nationId) {
+      const fundMult = getArmyCombatMult(nationId);
+      if (Number.isFinite(fundMult) && fundMult > 0) {
+        strength *= fundMult;
+      }
+    }
+  }
+
   return Math.max(1, strength);
 }
 

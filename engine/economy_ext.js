@@ -7,7 +7,7 @@
 //   3. Специализация региона                      ← этап 3 ✔
 //   4. Инфляция от переполненной казны            ← этап 4 ✔
 //   5. Экономические циклы (бум / спад)            ← этап 5 ✔
-//   6. Усталость армии от недофинансирования       ← этап 6
+//   6. Усталость армии от недофинансирования       ← этап 6 ✔
 //   7. Рост производительности со временем        ← этап 7
 //   8. Тултипы эффективности производства         ← этап 8
 //
@@ -693,6 +693,159 @@ function getEconomicCycleBanner() {
   </div>`;
 }
 
+// ══════════════════════════════════════════════════════════════
+// ЭТАП 6 — УСТАЛОСТЬ АРМИИ ОТ НЕДОФИНАНСИРОВАНИЯ
+//
+// Если расходы на армию (эффективные, после ползунка expense_levels.army)
+// падают ниже 80% от номинального значения (base upkeep по INFANTRY/
+// CAVALRY/MERCENARY_UPKEEP), боевая эффективность нации линейно
+// снижается до минимального уровня ARMY_UNDERFUND_PENALTY (0.85 при
+// ratio = 0). При ratio ≥ 0.80 штрафа нет.
+//
+// Данные для ratio берутся из GAME_STATE.nations[id].economy._expense_breakdown,
+// который заполняется в engine/economy.js → updateTreasury():
+//   army_base                                — нормальный upkeep без ползунка
+//   army_infantry + army_cavalry + army_mercenaries — фактически выплаченное
+//
+// Нормализация:
+//   ratio = actualExpense / normalExpense ∈ [0, 1]
+// Таким образом:
+//   • expense_levels.army = 1.0 и полная выплата → ratio = 1.0, mult = 1.0
+//   • expense_levels.army = 0.5 и полная выплата → ratio = 0.5, mult ∈ [0.85, 1.0]
+//   • expense_levels.army = 0.0 → ratio = 0, mult = 0.85 (максимальный штраф)
+//
+// Применение: calculateMilitaryStrength() (engine/battle.js) умножает
+// итоговую силу нации на getArmyCombatMult(nationId) перед броском.
+//
+// UI: _tpRenderArmyFunding() в ui/treasury-panel.js добавляет
+// предупреждение в панели «Торговый баланс за ход», когда ratio < 0.80.
+// ══════════════════════════════════════════════════════════════
+
+const ARMY_UNDERFUND_THRESHOLD = 0.80;  // ниже 80% от нормы — штраф
+const ARMY_UNDERFUND_PENALTY   = 0.85;  // мин. множитель боевой силы
+
+// ──────────────────────────────────────────────────────────────
+// calcNormalArmyExpense(nationId)
+//
+// Нормальный upkeep по текущему составу армии без учёта ползунка.
+// Использует CONFIG.BALANCE.*_UPKEEP — ровно то же, что
+// engine/economy.js → updateTreasury() до умножения на armyLvl.
+// Fallback: если CONFIG недоступен (Node-stubs тесты) — плоские
+// весовые коэффициенты (infantry 2, cavalry 4, mercenaries 3).
+// ──────────────────────────────────────────────────────────────
+function calcNormalArmyExpense(nationId) {
+  const nation = GAME_STATE?.nations?.[nationId];
+  if (!nation) return 0;
+  const mil = nation.military || {};
+
+  // Сначала пробуем уже вычисленный кэш из expense_breakdown —
+  // там лежит base, подсчитанный в тот же тик.
+  const eb = nation.economy?._expense_breakdown || {};
+  const cachedBase = Number(eb.army_base);
+  if (Number.isFinite(cachedBase) && cachedBase >= 0 && (eb.army_infantry != null)) {
+    return cachedBase;
+  }
+
+  // Fallback: пересобираем вручную по CONFIG.BALANCE.
+  const cfg = (typeof CONFIG !== 'undefined') ? CONFIG?.BALANCE : null;
+  const infRate  = cfg?.INFANTRY_UPKEEP  ?? 2;
+  const cavRate  = cfg?.CAVALRY_UPKEEP   ?? 4;
+  const mercRate = cfg?.MERCENARY_UPKEEP ?? 3;
+  const inf  = Number(mil.infantry)    || 0;
+  const cav  = Number(mil.cavalry)     || 0;
+  const merc = Number(mil.mercenaries) || 0;
+  return inf * infRate + cav * cavRate + merc * mercRate;
+}
+
+// ──────────────────────────────────────────────────────────────
+// getArmyFundingRatio(nationId)
+//
+// Возвращает долю фактически выплаченных военных расходов от
+// нормального upkeep [0, 1]. 1.0 — полное финансирование,
+// 0.0 — полностью прекращено.
+// ──────────────────────────────────────────────────────────────
+function getArmyFundingRatio(nationId) {
+  const nation = GAME_STATE?.nations?.[nationId];
+  if (!nation) return 1.0;
+
+  const normalExpense = calcNormalArmyExpense(nationId);
+  if (!(normalExpense > 0)) return 1.0;  // нет армии — нет штрафа
+
+  // Актуальные выплаты текущего тика (effArmy*).
+  const eb = nation.economy?._expense_breakdown || {};
+  let actualExpense;
+  if (eb.army_infantry != null || eb.army_cavalry != null || eb.army_mercenaries != null) {
+    actualExpense =
+      (Number(eb.army_infantry)    || 0) +
+      (Number(eb.army_cavalry)     || 0) +
+      (Number(eb.army_mercenaries) || 0);
+  } else {
+    // До первого запуска updateTreasury() — считаем нормой.
+    const lvl = Number(nation.economy?.expense_levels?.army);
+    const armyLvl = Number.isFinite(lvl) ? Math.max(0, Math.min(1.5, lvl)) : 1.0;
+    actualExpense = normalExpense * armyLvl;
+  }
+
+  const ratio = actualExpense / normalExpense;
+  if (!Number.isFinite(ratio) || ratio < 0) return 0;
+  return Math.min(1.0, ratio);
+}
+
+// ──────────────────────────────────────────────────────────────
+// getArmyCombatMult(nationId)
+//
+// Множитель силы армии в бою. 1.0 если финансирование ≥ 80%,
+// линейно падает до ARMY_UNDERFUND_PENALTY = 0.85 при ratio = 0.
+// ──────────────────────────────────────────────────────────────
+function getArmyCombatMult(nationId) {
+  const ratio = getArmyFundingRatio(nationId);
+  if (ratio >= ARMY_UNDERFUND_THRESHOLD) return 1.0;
+  // Линейная интерполяция: ratio=0 → PENALTY, ratio=THRESHOLD → 1.0
+  const t = ratio / ARMY_UNDERFUND_THRESHOLD;
+  return ARMY_UNDERFUND_PENALTY + (1.0 - ARMY_UNDERFUND_PENALTY) * t;
+}
+
+// ──────────────────────────────────────────────────────────────
+// updateArmyFunding()
+//
+// Раз в тик считает ratio/mult для всех наций и кэширует результат
+// в nation.economy._army_funding = { ratio, mult }. Используется UI
+// (treasury-panel) и облегчает инспекцию из консоли. Логирует
+// появление/снятие штрафа у игрока.
+// ──────────────────────────────────────────────────────────────
+function updateArmyFunding() {
+  const nations = GAME_STATE?.nations;
+  if (!nations) return;
+
+  const playerId = GAME_STATE.player_nation;
+  for (const nId of Object.keys(nations)) {
+    const nation = nations[nId];
+    if (!nation || !nation.economy) continue;
+
+    const ratio = getArmyFundingRatio(nId);
+    const mult  = getArmyCombatMult(nId);
+
+    const prev = nation.economy._army_funding || null;
+    nation.economy._army_funding = {
+      ratio: Number(ratio.toFixed(3)),
+      mult:  Number(mult.toFixed(3)),
+    };
+
+    // Логи только для игрока и только при переходах порога.
+    if (nId === playerId) {
+      const prevUnder = !!(prev && prev.ratio < ARMY_UNDERFUND_THRESHOLD);
+      const curUnder  = ratio < ARMY_UNDERFUND_THRESHOLD;
+      if (curUnder && !prevUnder) {
+        addEconomicEvent(
+          `⚔ Армия недофинансирована: ${Math.round(ratio * 100)}% нормы — боевая сила ×${mult.toFixed(2)}.`
+        );
+      } else if (!curUnder && prevUnder) {
+        addEconomicEvent('⚔ Армия вновь полностью финансируется — штраф снят.');
+      }
+    }
+  }
+}
+
 // ──────────────────────────────────────────────────────────────
 // addEconomicEvent — общий логгер будущих экономических событий.
 // ──────────────────────────────────────────────────────────────
@@ -737,7 +890,14 @@ function runEconomyExtTick() {
   // routeProductionToLocalStockpiles() через getCycleMult().
   try { updateEconomicCycle(); } catch (e) { console.warn('[economy_ext:cycle]', e); }
 
-  // Этапы 6–8 подключатся здесь в будущих сессиях:
+  // Этап 6 — усталость армии от недофинансирования. Сам штраф не
+  // накапливается и считается «на лету» через getArmyCombatMult(nationId)
+  // в calculateMilitaryStrength() (engine/battle.js), поэтому здесь
+  // достаточно пересчитать и закэшировать ratio/mult на каждого игрока
+  // для UI-вывода (badge в казне).
+  try { updateArmyFunding(); } catch (e) { console.warn('[economy_ext:army_fund]', e); }
+
+  // Этапы 7–8 подключатся здесь в будущих сессиях:
   //   try { updateTechDrift();      } catch (e) { console.warn('[economy_ext:tech]', e); }
 }
 
@@ -776,4 +936,12 @@ if (typeof window !== 'undefined') {
   window.getEconomicCycleBanner = getEconomicCycleBanner;
   window.CYCLE_GOODS            = CYCLE_GOODS;
   window.CYCLE_TYPES            = CYCLE_TYPES;
+
+  // Этап 6 — усталость армии от недофинансирования.
+  window.calcNormalArmyExpense   = calcNormalArmyExpense;
+  window.getArmyFundingRatio     = getArmyFundingRatio;
+  window.getArmyCombatMult       = getArmyCombatMult;
+  window.updateArmyFunding       = updateArmyFunding;
+  window.ARMY_UNDERFUND_THRESHOLD = ARMY_UNDERFUND_THRESHOLD;
+  window.ARMY_UNDERFUND_PENALTY   = ARMY_UNDERFUND_PENALTY;
 }

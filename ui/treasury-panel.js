@@ -266,7 +266,13 @@ function _tpRenderTradeBalance() {
   const hasInflation = Number(GAME_STATE?.economy_ext?.inflation?.[nId]) >= 0.005;
   const cycCur = GAME_STATE?.economy_ext?.economic_cycle?.current;
   const hasCycle = cycCur && cycCur !== 'normal';
-  if (!b.gross_exports && !b.imports && !b.port_duties && !b.tariff_income && !hasInflation && !hasCycle) return '';
+  // Этап 6 — если армия недофинансирована, показываем панель даже
+  // при отсутствии торговой активности (игроку надо увидеть штраф).
+  const armyFundRatio = (typeof getArmyFundingRatio === 'function')
+    ? getArmyFundingRatio(nId) : 1.0;
+  const hasArmyWarn = armyFundRatio < 0.80;
+  if (!b.gross_exports && !b.imports && !b.port_duties && !b.tariff_income
+      && !hasInflation && !hasCycle && !hasArmyWarn) return '';
 
   const netClass = b.net >= 0 ? 'tp-val-pos' : 'tp-val-neg';
   const netSign  = b.net >= 0 ? '+' : '';
@@ -299,6 +305,28 @@ function _tpRenderTradeBalance() {
       ${_tpRenderMonopolies()}
       ${_tpRenderInflation()}
       ${_tpRenderEconomicCycle()}
+      ${_tpRenderArmyFunding()}
+    </div>`;
+}
+
+// ─── Этап 6 — Усталость армии от недофинансирования ───────────────
+//   Показывает предупреждение, если расходы на армию ниже 80%
+//   нормы. Штраф к боевой силе линейно растёт до 15% при ratio = 0.
+function _tpRenderArmyFunding() {
+  if (typeof getArmyFundingRatio !== 'function') return '';
+  const nId = GAME_STATE?.player_nation;
+  if (!nId) return '';
+  const ratio = getArmyFundingRatio(nId);
+  if (ratio >= 0.80) return '';
+  const mult = (typeof getArmyCombatMult === 'function')
+    ? getArmyCombatMult(nId) : 1.0;
+  const pct      = Math.round(ratio * 100);
+  const penalty  = Math.round((1 - mult) * 100);
+  const col = ratio < 0.40 ? '#cc2200' : '#cc6644';
+  return `
+    <div class="tp-trade-row tp-army-warn" style="border-left:2px solid ${col};padding-left:6px">
+      <span class="tp-trade-label">⚔ Армия недофинансирована (${pct}% нормы)</span>
+      <span class="tp-trade-value tp-val-neg">Боевой штраф: −${penalty}%</span>
     </div>`;
 }
 
