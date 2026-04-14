@@ -28,18 +28,34 @@
   const FALLBACK = 'assets/portraits/placeholder.svg';
 
   /**
-   * Получить src портрета через getPortraitForCharacter из Шага 55.
-   * Если функция недоступна (sandbox / ранняя загрузка), возвращает fallback.
+   * Получить {src, filter} портрета.
+   *  - Шаг 55: getPortraitForCharacter() возвращает путь к JPG.
+   *  - Шаг 72: getPortraitInfoForCharacter() добавляет CSS-фильтр,
+   *    детерминированный отдельным хэшем (char.id + '_filter').
+   * Если функции недоступны (sandbox / ранняя загрузка), возвращаем fallback.
    */
-  function resolvePortraitSrc(char, nationId) {
+  function resolvePortraitInfo(char, nationId) {
+    if (typeof getPortraitInfoForCharacter === 'function') {
+      try {
+        const info = getPortraitInfoForCharacter(char, nationId);
+        if (info && typeof info.src === 'string') {
+          return { src: info.src, filter: info.filter || '' };
+        }
+      } catch (_) { /* fallthrough */ }
+    }
     if (typeof getPortraitForCharacter === 'function') {
       try {
-        return getPortraitForCharacter(char, nationId);
-      } catch (_) {
-        return FALLBACK;
-      }
+        return { src: getPortraitForCharacter(char, nationId), filter: '' };
+      } catch (_) { /* fallthrough */ }
     }
-    return FALLBACK;
+    return { src: FALLBACK, filter: '' };
+  }
+
+  /**
+   * Backward-совместимая точка: только src.
+   */
+  function resolvePortraitSrc(char, nationId) {
+    return resolvePortraitInfo(char, nationId).src;
   }
 
   /**
@@ -64,7 +80,7 @@
    */
   function renderPortrait(char, nationId, sizePx) {
     const size = Number.isFinite(sizePx) ? sizePx : 48;
-    const src  = resolvePortraitSrc(char, nationId);
+    const { src, filter } = resolvePortraitInfo(char, nationId);
 
     const img = document.createElement('img');
     img.className = 'char-portrait';
@@ -74,13 +90,13 @@
     img.alt       = (char && char.name) ? char.name : '';
     img.loading   = 'lazy';
     img.draggable = false;
+    if (filter) img.style.filter = filter;          // Шаг 72
 
-    // Деградация: если JPG не скачан — показать SVG-заглушку
+    // Деградация: если JPG не скачан — показать SVG-заглушку без фильтра
     img.onerror = function () {
-      // Обнуляем onerror чтобы избежать бесконечного цикла, если и SVG
-      // недоступен.
       img.onerror = null;
       img.src = FALLBACK;
+      img.style.filter = '';                        // Шаг 72: убрать фильтр у SVG
     };
 
     return img;
@@ -100,10 +116,13 @@
    */
   function renderPortraitHTML(char, nationId, sizePx, extraClass) {
     const size = Number.isFinite(sizePx) ? sizePx : 48;
-    const src  = resolvePortraitSrc(char, nationId);
+    const { src, filter } = resolvePortraitInfo(char, nationId);
     const cls  = 'char-portrait' + (extraClass ? ' ' + extraClass : '');
     const alt  = escapeHtml((char && char.name) || '');
-    return `<img class="${cls}" src="${escapeHtml(src)}" width="${size}" height="${size}" alt="${alt}" loading="lazy" draggable="false" onerror="this.onerror=null;this.src='${FALLBACK}';">`;
+    // Шаг 72: CSS-фильтр применяется inline. При onerror фильтр сбрасывается,
+    // чтобы SVG-заглушка рендерилась без искажений.
+    const styleAttr = filter ? ` style="filter:${escapeHtml(filter)}"` : '';
+    return `<img class="${cls}" src="${escapeHtml(src)}" width="${size}" height="${size}" alt="${alt}" loading="lazy" draggable="false"${styleAttr} onerror="this.onerror=null;this.src='${FALLBACK}';this.style.filter='';">`;
   }
 
   // Экспорт в глобальную область

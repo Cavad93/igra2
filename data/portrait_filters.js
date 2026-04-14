@@ -1,0 +1,45 @@
+// ============================================================================
+//  arma.md Шаг 72 — CSS-вариации: умножаем пул портретов в 8 раз
+//
+//  Каждый персонаж получает один CSS-фильтр из массива ниже. Выбор фильтра
+//  детерминирован: hashCode(char.id + '_filter') % PORTRAIT_FILTERS.length.
+//  Индекс фильтра НЕ коррелирует с индексом исходного файла — используется
+//  отдельный хэш, так что два персонажа, получившие один и тот же JPG,
+//  с высокой вероятностью получат разные фильтры.
+//
+//  PORTRAIT_FILTERS[0] = '' (пустая строка) — оригинал без изменений.
+//  Остальные семь — сдвиги оттенка, насыщенности, яркости и сепии так,
+//  чтобы лицо оставалось узнаваемым, но «разного» персонажа.
+// ============================================================================
+
+const PORTRAIT_FILTERS = [
+  '',                                                   // 0 — оригинал
+  'hue-rotate(20deg) brightness(1.05)',                 // 1 — теплее
+  'hue-rotate(-15deg) saturate(0.85)',                  // 2 — холоднее
+  'sepia(0.35) contrast(1.1)',                          // 3 — состаренный
+  'hue-rotate(10deg) brightness(0.90) contrast(1.05)',  // 4 — темнее
+  'saturate(1.4) brightness(1.08)',                     // 5 — насыщеннее
+  'hue-rotate(-25deg) brightness(0.93)',                // 6 — синеватый
+  'sepia(0.15) hue-rotate(8deg) saturate(1.2)',         // 7 — золотистый
+];
+
+/**
+ * Возвращает CSS-фильтр по индексу персонажа.
+ * Безопасный доступ: при любом числе вернёт строку (не undefined).
+ * @param {number} idx
+ * @returns {string}
+ */
+function getPortraitFilter(idx) {
+  if (!Number.isFinite(idx)) return '';
+  const i = ((idx % PORTRAIT_FILTERS.length) + PORTRAIT_FILTERS.length) % PORTRAIT_FILTERS.length;
+  return PORTRAIT_FILTERS[i] || '';
+}
+
+// ── Экспорт ────────────────────────────────────────────────────────────────
+if (typeof window !== 'undefined') {
+  window.PORTRAIT_FILTERS = PORTRAIT_FILTERS;
+  window.getPortraitFilter = getPortraitFilter;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { PORTRAIT_FILTERS, getPortraitFilter };
+}
