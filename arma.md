@@ -3902,7 +3902,7 @@ main().catch(console.error);
 
 ### Шаг 62 — Инфраструктура архива: папки, .gitignore, manifest.json, download.sh
 
-> **Статус:** ✅ **ВЫПОЛНЕНО** — инфраструктура архива реализована в рамках Шага 54 (commits `a7bec6f` + `73b4809`): `assets/manifest.json` (50 ассетов, валидный JSON), `assets/download.sh` (идемпотентный, парсит манифест через node, создаёт все папки `portraits/{greek,roman,carthaginian,egyptian,persian,celtic,indian,east_asian,nomadic,iberian,african}` + `textures/` + `backgrounds/` + `borders/` + `icons/`), `assets/README.md`, `.gitignore` (`assets/portraits/**/*.jpg`, `assets/textures/*.jpg`, `assets/backgrounds/*.jpg`), 14 SVG-файлов в `assets/icons/`. Все 4 теста Шага 62 проходят: `bash assets/download.sh` завершается без error-exit (47 ok, warn'ы по сетевым 403 допустимы), `node -e "require('./assets/manifest.json')"` парсит 50 записей, `git ls-files assets/ | grep '\.jpg'` пусто, SVG-файлы в `assets/icons/` присутствуют в git. Не реализовывать повторно.
+> **Статус:** ✅ **ВЫПОЛНЕНО** — инфраструктура архива реализована в рамках Шага 54 (commits `a7bec6f` + `73b4809`): `assets/manifest.json` (валидный JSON), `assets/download.sh` (идемпотентный, парсит манифест через node, создаёт все папки `portraits/{greek,roman,carthaginian,egyptian,persian,celtic,indian,east_asian,nomadic,iberian,african}` + `textures/` + `backgrounds/` + `borders/` + `icons/`), `assets/README.md`, `.gitignore` (`assets/portraits/**/*.jpg`, `assets/textures/*.jpg`, `assets/backgrounds/*.jpg`), 14 SVG-файлов в `assets/icons/`. Все 4 теста Шага 62 проходят: `bash assets/download.sh` завершается без error-exit (ok-записи, warn'ы по сетевым 403 допустимы), `node -e "require('./assets/manifest.json')"` парсит записи, `git ls-files assets/ | grep '\.jpg'` пусто, SVG-файлы в `assets/icons/` присутствуют в git. Не реализовывать повторно.
 
 **Цель:** создать в репозитории каркас архива ассетов. JPG-файлы не хранятся в git (они тяжёлые и не нужны разработчику без запуска). Хранятся только: манифест с URL, скрипт загрузки, SVG-файлы. Команда `bash assets/download.sh` воспроизводимо скачивает всё на любой машине.
 
@@ -3994,6 +3994,8 @@ main().catch(console.error);
 
 ### Шаг 63 — Греческие и римские портреты: Фаюмская коллекция Met Museum
 
+> **Статус:** ✅ **ВЫПОЛНЕНО** — commit `73b4809` (Шаг 54: расширение CC0-коллекции). Все 6 Фаюмских портретов в `assets/manifest.json`: `greek/woman_red`, `greek/man_bearded`, `greek/man_thinface`, `greek/woman_wreath` (Met 547860/547856/547858/547861), `roman/roman_youth` (Met 547768), `egyptian/mummy_youth` (Met 547697). Все JPG > 100 KB после `download.sh`. Не реализовывать повторно.
+
 **Цель:** добавить в манифест 6 портретов из Фаюмской коллекции Метрополитен-музея (CC0). Это основа для греческой, римской и египетской культурных групп. Все портреты — реалистичные энкаустические картины I–III вв. н.э.
 
 **Добавить в `assets/manifest.json`:**
@@ -4029,6 +4031,8 @@ curl "https://collectionapi.metmuseum.org/public/collection/v1/search\
 ---
 
 ### Шаг 64 — Персидские, карфагенские и ближневосточные портреты
+
+> **Статус:** ✅ **ВЫПОЛНЕНО** — commit `73b4809` (Шаг 54) добавил 6 персидских ассетов (`persian/cma136826`, `cma113908`, `cma113910`, `cma137194`, `cma123945`, `cma141487` — Cleveland Museum of Art CC0: Achaemenid и Sasanian рельефы, кирпичи, изделия). Для карфагенской группы — 2 финикийских ассета из CMA CC0 (`carthaginian/cma125560` «Dish with Tambourine Players» Phoenicia, `carthaginian/cma144115` «Decorative Plaque: Man and Griffin» Nimrud) добавлены вместе со Шагом 65. `assets/portraits/placeholder.svg` — на месте в git. Не реализовывать повторно.
 
 **Цель:** найти CC0-изображения подходящие для персидской и карфагенской культурных групп. Прямых фаюмских портретов для них нет, поэтому используем: рельефы, терракотовые бюсты, мозаики — всё из Met CC0 или Wikimedia PD.
 
@@ -4077,6 +4081,14 @@ curl "https://collectionapi.metmuseum.org/public/collection/v1/search\
 ---
 
 ### Шаг 65 — Кельтские, индийские и восточноазиатские портреты
+
+> **Статус:** ✅ **ВЫПОЛНЕНО** — в `assets/manifest.json` добавлены CC0-портреты (17 новых записей):
+> - **indian** (10): 6 × Cleveland Museum of Art (`indian/cma147010` Standing Buddha Gandhara, `cma141937` Bodhisattva Gandhara, `cma151938` Head of Bodhisattva Mathura Kushan, `cma152487` Head of Avalokiteshvara Gandhara Kushan, `cma154768` Miniature Head Mathura, `cma139731` Head of Buddha Mathura) + 4 × Met Museum (`indian/met38780` Head of Bodhisattva, `met38779` Head of Buddha, `met38799` Head of Male, `met38800` Head of Bearded Brahman — все Gandhara).
+> - **celtic** (1): `celtic/cma133163` «Celtic Head» (Cleveland Museum of Art, Northern England Romano-British, CC0).
+> - **east_asian** (4): 3 × CMA Han dynasty Sichuan «Female Figure of Court Entertainer Dancing» (`east_asian/cma540825` full figure, `cma541307` head, `cma541305` body) + Met 42178 `east_asian/met42178` «Female Dancer» Western Han (все CC0).
+> - **carthaginian** (2): см. Шаг 64.
+>
+> `data/culture_groups.js` обновлён — `portrait_pool` для `indian`, `celtic`, `east_asian`, `carthaginian` теперь ссылается на реальные файлы этих групп (ранее был fallback на `greek/*` и `egyptian/*`). `getCultureGroup('maurya_empire').portrait_pool` → 10 элементов; `getPortraitForCharacter` детерминирован. После `bash assets/download.sh` — 9 подпапок `assets/portraits/*/` содержат ≥1 JPG (greek 11, roman 17, egyptian 6, persian 6, nomadic 5, indian 10, celtic 1, east_asian 4, carthaginian 2). `wc -l assets/manifest.json` = 816 строк (>100). Все 17 новых URL отдают 200 OK (CMA + Met Museum). Тесты Шага 55: 146 passed. Не реализовывать повторно.
 
 **Цель:** подобрать CC0-изображения для трёх оставшихся культурных групп — кельтской, индийской и восточноазиатской. Для каждой группы нужно минимум 2 разных изображения (мужское + женское или молодой + зрелый).
 
