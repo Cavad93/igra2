@@ -398,6 +398,35 @@ const ACHIEVEMENTS_LIST = [
     desc: 'Торговый доход > 200 000 монет.',
     check: (n, gs) => (n.economy?.income_per_turn ?? 0) > 200000,
   },
+  {
+    id: 'millennium',
+    name: 'Тысячелетнее царство',
+    icon: '⏳',
+    desc: 'Пережить 500 ходов.',
+    check: (n, gs) => (gs.turn ?? 0) >= 500,
+  },
+  {
+    id: 'immortal_legacy',
+    name: 'Вечное наследие',
+    icon: '🏺',
+    desc: 'Разблокировать 25 достижений.',
+    check: (n, gs) => {
+      if (typeof getAchievementCount !== 'function') return false;
+      const nid = _getNationId(n, gs);
+      return nid ? getAchievementCount(nid) >= 25 : false;
+    },
+  },
+  {
+    id: 'grand_vision',
+    name: 'Великая мечта',
+    icon: '✦',
+    desc: 'Достичь индекса величия 700.',
+    check: (n, gs) => {
+      if (typeof calcGrandeur !== 'function') return false;
+      const nid = _getNationId(n, gs);
+      return nid ? calcGrandeur(nid) >= 700 : false;
+    },
+  },
 ];
 
 // ──────────────────────────────────────────────────────────────
