@@ -1000,7 +1000,88 @@ CSS:
 
 ---
 
-## Этап 10 — Финальное тестирование и коммит
+## Этап 10 — Финальное тестирование и коммит ✅ ВЫПОЛНЕНО (этап 10)
+
+**Что сделано в этапе 10:**
+- Создан `tests/eco_stage10_final_integration_test.cjs` — финальный
+  Node-stub интеграционный тест, запускающийся через `vm.createContext`
+  над `engine/economy_ext.js` и извлечённой из `ui/treasury-panel.js`
+  функцией `_tpRenderEconomyExtSummary()`. Реализует ВЕСЬ чеклист
+  этапа 10 и дополнительные кросс-проверки между улучшениями 1–8.
+- Проверено: все 21 функция расширения экспортированы в `window`
+  (`initEconomyExt`, `calcTradeBalance`, `runEconomyExtTick`,
+  `detectMonopolies`, `getMonopolyPriceMult`,
+  `updateRegionSpecialization`, `getRegionSpecBonus`,
+  `updateInflation`, `getInflationMult`, `updateEconomicCycle`,
+  `getCycleMult`, `getEconomicCycleBanner`, `calcNormalArmyExpense`,
+  `getArmyFundingRatio`, `getArmyCombatMult`, `updateArmyFunding`,
+  `updateTechDrift`, `getTechDriftMult`, `renderTechDrift`,
+  `hasRegionBuildings`, `renderRegionProductionEfficiency`).
+- Проверено: 5 последовательных вызовов `runEconomyExtTick()` проходят
+  без `TypeError` / `ReferenceError`, `trade_history` заполняется
+  корректно и при прогоне 35 тиков длина массива не превышает 24
+  (фактический лимит в коде = 12 — стабильный верхний предел).
+- Проверено: после 40 тиков при `treasury = 50× income` инфляция обеих
+  наций упирается в `INFLATION_MAX = 0.25`, `getInflationMult()`
+  возвращает ≤ 1.25.
+- Проверено: `economic_cycle.current ∈ {normal, boom, recession}`,
+  `turns_left` и `next_check_turn` — числа; `getCycleMult('iron')=1.0`.
+- Проверено: `tech_drift.bonus` лежит в `[0, 0.20]`, за 2000 ходов
+  достигает потолка; `getTechDriftMult()` = 1.0 в начале игры,
+  1.10 после 5 циклов (turn=600), 1.20 на потолке.
+- Проверено: save/load (JSON round-trip) полностью сохраняет
+  `economy_ext` (monopolies, region_specialization, inflation,
+  tech_drift, trade_history). После восстановления все геттеры
+  (`getInflationMult`, `getTechDriftMult`, `getMonopolyPriceMult`,
+  `getRegionSpecBonus`) возвращают корректные значения, следующий
+  `runEconomyExtTick()` после load не падает, `initEconomyExt()`
+  идемпотентен.
+- Проверено: `_tpRenderEconomyExtSummary()` не падает ни на чистом
+  состоянии, ни на «максимуме нагрузок» (одновременно инфляция +
+  монополии + boom-цикл + недофинансированная армия).
+- Проверено: кросс-связи улучшений работают совместно:
+  `detectMonopolies()` фиксирует монополию rome на iron →
+  `getMonopolyPriceMult('rome','iron')=1.20`; 11 тиков подряд производства
+  wheat в r1 дают `region_specialization.r1.bonus ≥ 1.05`; нулевая
+  оплата армии → `_army_funding.ratio < 0.80`,
+  `getArmyCombatMult('rome')=0.85`.
+- Итог: **88 проверок — все зелёные**. Тесты этапов 3/4/5/6/7/8/9
+  продолжают проходить (7/7 файлов OK).
+
+**Тесты этапа 10 (`tests/eco_stage10_final_integration_test.cjs`, 88/88 зелёные):**
+- Экспорт всех функций (обязательный список из чеклиста + полный список) ✓
+- 5 тиков `runEconomyExtTick()` без исключений и без
+  TypeError/ReferenceError в warn-логах ✓
+- Структура `economy_ext` полная (`region_specialization`, `inflation`,
+  `economic_cycle`, `monopolies`, `trade_history`, `tech_drift`) ✓
+- `trade_history` содержит записи после тиков и ограничен сверху ✓
+- Каждая запись `trade_history` содержит `balance_by_nation.<nation>.net`
+  как число ✓
+- `inflation[nation]` ∈ [0, 0.25] для всех наций, достигает потолка
+  при ratio=50× ✓
+- `getInflationMult(rome)` ≤ 1.25 ✓
+- `economic_cycle.current` — валидная строка, `getCycleMult('iron')=1.0` ✓
+- `tech_drift.bonus` ∈ [0, 0.20], достигает потолка за 2000 ходов,
+  `getTechDriftMult()` = 1.0/1.10/1.20 на ключевых точках ✓
+- JSON round-trip сохраняет `economy_ext` полностью (monopolies,
+  specialization, inflation, tech_drift, trade_history) ✓
+- `initEconomyExt()` идемпотентен после load ✓
+- Тик после save/load не падает ✓
+- `_tpRenderEconomyExtSummary()` не кидает ошибок ни на чистом
+  состоянии, ни на максимуме нагрузок; выводит блок `tp-eco-summary`
+  с инфляцией+монополиями при комбинированном состоянии ✓
+- `detectMonopolies()` → корректный бонус цены монополиста +
+  1.0 для всех остальных ✓
+- `updateRegionSpecialization()` за 11 тиков даёт `bonus ≥ 1.05`,
+  `getRegionSpecBonus` работает только для совпадающего товара ✓
+- `updateArmyFunding()` кэширует `ratio/mult` в
+  `economy._army_funding`, штраф = 0.85 при нулевой оплате ✓
+
+**НЕ повторять в новых сессиях.**
+
+---
+
+## Этап 10 — Финальное тестирование и коммит (первоначальная спецификация)
 
 **Цель:** убедиться что все 8 улучшений работают вместе и не ломают базовую экономику.
 
@@ -1058,7 +1139,7 @@ console.log('Tech drift:', ext.tech_drift);
 | 7 ✅ | Технологический дрейф (+2% за 10 лет) | 7 | economy_ext.js, economy.js |
 | 8 ✅ | Тултипы эффективности в UI | 8 | economy_ext.js, economy_react.jsx, index.html |
 | 9 ✅ | Итоговый блок казны со всеми бонусами | — | treasury-panel.js, index.html |
-| 10 | Финальное тестирование | — | все файлы |
+| 10 ✅ | Финальное тестирование | — | tests/eco_stage10_final_integration_test.cjs |
 
 ## Правила для каждой сессии
 
