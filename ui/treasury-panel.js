@@ -251,6 +251,50 @@ function _tpSlider(group) {
 }
 
 // Колонка доходов (перерисовывается при движении слайдера)
+// ── Торговый баланс (Улучшение 1 из docs/economic2.md) ──────
+//   Показывает раздельно валовой экспорт / импорт / таможню и
+//   итоговый нетто-баланс торговли. Данные берём из
+//   calcTradeBalance() в engine/economy_ext.js.
+function _tpRenderTradeBalance() {
+  if (typeof calcTradeBalance !== 'function') return '';
+  const nId = GAME_STATE?.player_nation;
+  if (!nId) return '';
+
+  const b = calcTradeBalance(nId);
+  // Если за тик не было никакой торговой активности — не захламляем панель.
+  if (!b.gross_exports && !b.imports && !b.port_duties && !b.tariff_income) return '';
+
+  const netClass = b.net >= 0 ? 'tp-val-pos' : 'tp-val-neg';
+  const netSign  = b.net >= 0 ? '+' : '';
+
+  return `
+    <div class="tp-trade-balance">
+      <div class="tp-trade-balance-title">Торговый баланс за ход</div>
+      <div class="tp-trade-row">
+        <span class="tp-trade-label">↗ Экспорт (валовый)</span>
+        <span class="tp-trade-value tp-val-pos">+${b.gross_exports.toLocaleString()} ₴</span>
+      </div>
+      <div class="tp-trade-row">
+        <span class="tp-trade-label">↙ Импорт (мир. рынок)</span>
+        <span class="tp-trade-value tp-val-neg">−${b.imports.toLocaleString()} ₴</span>
+      </div>
+      ${b.port_duties ? `
+      <div class="tp-trade-row">
+        <span class="tp-trade-label">⚓ Порт. пошлины</span>
+        <span class="tp-trade-value tp-val-pos">+${b.port_duties.toLocaleString()} ₴</span>
+      </div>` : ''}
+      ${b.tariff_income ? `
+      <div class="tp-trade-row">
+        <span class="tp-trade-label">⚖ Таможня</span>
+        <span class="tp-trade-value tp-val-pos">+${b.tariff_income.toLocaleString()} ₴</span>
+      </div>` : ''}
+      <div class="tp-trade-row tp-trade-net">
+        <span class="tp-trade-label">Сальдо</span>
+        <span class="tp-trade-value ${netClass}">${netSign}${b.net.toLocaleString()} ₴</span>
+      </div>
+    </div>`;
+}
+
 function _tpRenderIncome() {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const inc    = nation.economy._income_breakdown || {};
@@ -276,6 +320,7 @@ function _tpRenderIncome() {
       <span class="tp-item-label">🚢 Торговля</span>
       <span class="tp-item-value">${tradeProfit.toLocaleString()} ₴</span>
     </div>
+    ${_tpRenderTradeBalance()}
     <div class="tp-row-item">
       <span class="tp-item-label">⚓ Портовые пошлины</span>
       <span class="tp-item-value">${portDuties.toLocaleString()} ₴</span>

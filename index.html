@@ -6348,6 +6348,31 @@
       border-top: 1px solid rgba(107,79,26,0.4);
       padding-top: 5px; margin-top: 6px;
     }
+
+    /* Торговый баланс (economic2.md — этап 1) */
+    .tp-trade-balance {
+      margin: 6px 0 8px;
+      padding: 6px 8px;
+      background: rgba(107,79,26,0.08);
+      border-left: 2px solid rgba(107,79,26,0.5);
+      border-radius: 2px;
+    }
+    .tp-trade-balance-title {
+      font-size: 10px; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .tp-trade-row {
+      display: flex; justify-content: space-between;
+      align-items: center; margin: 2px 0;
+    }
+    .tp-trade-label { font-size: 11px; color: var(--text-dim); }
+    .tp-trade-value { font-size: 11px; font-weight: bold; }
+    .tp-trade-net {
+      border-top: 1px solid rgba(107,79,26,0.3);
+      padding-top: 3px; margin-top: 4px;
+    }
+    .tp-trade-net .tp-trade-label { color: var(--text-light); font-weight: bold; }
     .tp-row-total .tp-item-label { color: var(--text-light); font-weight: bold; }
     .tp-row-total .tp-item-value { font-size: 12px; }
 
@@ -10155,6 +10180,7 @@
   <script src="engine/market.js"></script>
   <script src="engine/provinces.js"></script>
   <script src="engine/economy.js"></script>
+  <script src="engine/economy_ext.js"></script>
   <script src="engine/loans.js"></script>
   <script src="engine/demography.js"></script>
   <script src="engine/age_demographics.js"></script>

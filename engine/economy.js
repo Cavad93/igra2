@@ -1226,6 +1226,11 @@ function runEconomyTick() {
     applyActiveLaws(nationId);
   }
   _checkEconomicEventTriggers();
+
+  // Расширения экономики (docs/economic2.md) — этапы 1–8.
+  if (typeof runEconomyExtTick === 'function') {
+    try { runEconomyExtTick(); } catch (e) { console.warn('[economy_ext]', e); }
+  }
 }
 
 // ──────────────────────────────────────────────────────────────

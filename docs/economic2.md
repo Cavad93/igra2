@@ -66,11 +66,24 @@ GAME_STATE.economy_ext = {
 
 ---
 
-## Улучшение 1: Торговый баланс (видимость)
+## Улучшение 1: Торговый баланс (видимость) ✅ ВЫПОЛНЕНО (этап 1)
 
 **Суть:** Показать игроку сколько золота приходит и уходит через торговлю за ход.
 **Сложность:** Только UI — логика уже есть в market.js.
 **Файлы:** `ui/treasury-panel.js`, `engine/economy_ext.js`
+
+**Что сделано в этапе 1:**
+- Создан `engine/economy_ext.js` с каркасом `GAME_STATE.economy_ext`
+  (region_specialization / inflation / economic_cycle / monopolies / trade_history).
+- `initEconomyExt()` — идемпотентная инициализация всех полей расширения.
+- `calcTradeBalance(nationId)` — считает `{ income, expense, net, gross_exports, imports, port_duties, tariff_income }` из уже существующих данных (`_income_breakdown` + `market._world_bought_tick`).
+- `runEconomyExtTick()` — точка входа расширения; вызывается в конце `runEconomyTick()` (engine/economy.js).
+- `_ecoExtRecordTradeHistory()` — пишет баланс по всем нациям в `economy_ext.trade_history` (ограничено 12 записями).
+- `addEconomicEvent(text)` — общий логгер для этапов 2–8.
+- Подключён скрипт в `index.html` ПОСЛЕ `engine/economy.js`.
+- В `ui/treasury-panel.js` добавлен блок «Торговый баланс за ход» (`_tpRenderTradeBalance()`) с раздельным показом экспорта/импорта/пошлин и итогового сальдо. CSS-стили в `index.html`.
+
+**НЕ повторять в новых сессиях.**
 
 ---
 
