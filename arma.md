@@ -4261,6 +4261,8 @@ border_meander_dark.svg  — меандровый орнамент, тёмный
 
 ### Шаг 69 — Met Museum: Фаюмские портреты (40–50 лиц, греческая/римская/египетская группы)
 
+> **Статус:** ✅ **ВЫПОЛНЕНО** — в `assets/manifest.json` добавлены новые Фаюмские / античные портреты (7 в `greek/` + 4 в `egyptian/`): `greek/met547857` (Portrait of a man with a mole on his nose, Fayum A.D. 130–150, Met 547857, encaustic on limewood), `greek/met547859` (Portrait of an elderly lady with a gold wreath, Fayum A.D. 100–125, Met 547859), `greek/cma125224`, `greek/cma109561`, `greek/cma128277`, `greek/cma109043`, `greek/cma97197`, `egyptian/cma145924` (Funerary Portrait of a Woman, Fayum c. 138–92 CE, CMA 1971.136, encaustic on wood), `egyptian/cma148794`, `egyptian/cma94114`, `egyptian/cma98299`. Все источники CC0 (Metropolitan Museum of Art и The Cleveland Museum of Art), все JPG скачиваются через `assets/download.sh`. Проверка после `bash assets/download.sh`: `ls assets/portraits/greek/` = **18** ≥ 15 ✓, `ls assets/portraits/roman/` = **17** ≥ 8 ✓, `ls assets/portraits/egyptian/` = **10** ≥ 8 ✓, `file assets/portraits/{greek,roman,egyptian}/*.jpg | grep -v JPEG` — пусто ✓. Met API в 2026 резко сократил выдачу по полнотекстовому поиску `fayum|mummy portrait|encaustic`, поэтому пул дополнен из второго CC0-источника (CMA). Не реализовывать повторно.
+
 **Цель:** систематически собрать все доступные Фаюмские портреты из Met Museum с лицензией CC0. Это лучший источник реалистичных античных лиц — энкаустическая живопись I–III вв. н.э., высокое качество сканирования.
 
 **Скрипт поиска через Met API:**
