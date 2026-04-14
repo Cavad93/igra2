@@ -431,6 +431,127 @@ function getRegionSpecBonus(regionId, good) {
   return (isFinite(b) && b > 1.0) ? b : 1.0;
 }
 
+// ══════════════════════════════════════════════════════════════
+// ЭТАП 4 — ИНФЛЯЦИЯ ОТ ПЕРЕПОЛНЕННОЙ КАЗНЫ
+//
+// Суть: казна, превышающая TREASURY_HOARD_RATIO × месячный доход,
+// разгоняет ВНУТРЕННИЕ цены закупок на +1% за тик вплоть до
+// INFLATION_MAX (25%). Если казна возвращается ниже порога, инфляция
+// рассасывается на −1%/тик и постепенно обнуляется. Это мотивирует
+// игрока тратить накопления на армию, стройки и займы, а не
+// «сидеть на золоте». Дизайн-аналогия: Victoria/Paradox-подход к
+// национальным запасам денег (см. Paradox forums — liquidity crisis).
+//
+// Хранение:
+//   GAME_STATE.economy_ext.inflation = { nationId: 0.0–0.25 }
+//
+// Где применяется:
+//   • getInflationMult(nationId) → 1 + inflation[nId] (clamp 1.0–1.25).
+//     Используется в engine/buildings.js → procureCapitalInputs() для
+//     всех «внутренних» закупок (из региональных / провинциальных
+//     складов). Мировой рынок НЕ инфлируется — он внешний.
+//   • В казне выводится предупреждение с текущим процентом.
+//
+// Формула:
+//   ratio = treasury / max(1, income_per_turn)
+//   target_infl =
+//       0                         if ratio <  TREASURY_HOARD_RATIO (3×)
+//       INFLATION_STEP × step     if TREASURY_HOARD_RATIO ≤ ratio < 6×
+//       INFLATION_STEP × step × 2 if ratio ≥ 6×   (ускорение)
+//   cur_infl += sign(target_infl − cur_infl) × INFLATION_STEP
+//   cur_infl = clamp(0, INFLATION_MAX)
+// ══════════════════════════════════════════════════════════════
+
+const TREASURY_HOARD_RATIO = 3;      // казна > 3× мес. дохода → инфляция
+const TREASURY_CRITICAL_RATIO = 6;   // > 6× → ускоренное накопление
+const INFLATION_STEP       = 0.01;   // ±1% за ход
+const INFLATION_STEP_FAST  = 0.02;   // +2% за ход при ratio ≥ 6×
+const INFLATION_MAX        = 0.25;   // потолок +25%
+const INFLATION_EPS        = 1e-4;
+
+// ──────────────────────────────────────────────────────────────
+// updateInflation()
+//
+// Раз в тик пересчитывает инфляцию для КАЖДОЙ нации:
+//   • ratio = treasury / income_per_turn
+//   • при ratio ≥ 3 — растёт (шаг 1% или 2% при ratio ≥ 6)
+//   • при ratio <  3 — рассасывается (−1%/ход)
+//   • clamp 0…INFLATION_MAX
+//
+// Логируются только значимые переходы: появление инфляции,
+// достижение/снятие максимума и полное обнуление — чтобы не
+// заливать event log.
+// ──────────────────────────────────────────────────────────────
+function updateInflation() {
+  const ext = GAME_STATE?.economy_ext;
+  if (!ext) return;
+  if (!ext.inflation) ext.inflation = {};
+
+  const nations = GAME_STATE?.nations || {};
+  for (const [nId, nation] of Object.entries(nations)) {
+    const eco = nation?.economy;
+    if (!eco) continue;
+
+    const treasury = Number(eco.treasury) || 0;
+    const income   = Number(
+      eco._income_breakdown?.total ?? eco.income_per_turn ?? 0,
+    ) || 0;
+
+    const prev = Number(ext.inflation[nId]) || 0;
+    let next   = prev;
+
+    // Если дохода нет — инфляция не должна срываться в бесконечность.
+    // Без базы для сравнения считаем ratio = 0 и постепенно снижаем.
+    const ratio = income > 0 ? treasury / income : 0;
+
+    if (ratio >= TREASURY_HOARD_RATIO && treasury > 0) {
+      const step = (ratio >= TREASURY_CRITICAL_RATIO)
+        ? INFLATION_STEP_FAST
+        : INFLATION_STEP;
+      next = Math.min(INFLATION_MAX, prev + step);
+    } else {
+      // Казна под контролем — инфляция рассасывается.
+      next = Math.max(0, prev - INFLATION_STEP);
+      if (next < INFLATION_EPS) next = 0;
+    }
+
+    // Лог значимых переходов (только для игрока, чтобы не шуметь).
+    const isPlayer = (nId === GAME_STATE.player_nation);
+    if (isPlayer) {
+      if (prev < INFLATION_EPS && next >= INFLATION_STEP - INFLATION_EPS) {
+        addEconomicEvent(
+          `💰 Инфляция: казна переполнена (${Math.round(ratio * 10) / 10}× мес. дохода). +${Math.round(next * 100)}% к внутренним ценам.`,
+        );
+      } else if (prev < INFLATION_MAX - INFLATION_EPS && next >= INFLATION_MAX - INFLATION_EPS) {
+        addEconomicEvent(
+          `💰 Инфляция достигла потолка: +${Math.round(INFLATION_MAX * 100)}% к внутренним ценам.`,
+        );
+      } else if (prev > INFLATION_EPS && next === 0) {
+        addEconomicEvent('💰 Инфляция рассосалась — внутренние цены вернулись к норме.');
+      }
+    }
+
+    if (next === 0) delete ext.inflation[nId];
+    else ext.inflation[nId] = Math.round(next * 10000) / 10000;
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// getInflationMult(nationId)
+//
+// Возвращает множитель к ВНУТРЕННИМ ценам закупок для указанной нации.
+// Диапазон: 1.00 … 1.25.
+// Используется в engine/buildings.js → procureCapitalInputs() для
+// расчёта оплаты из local/province рынков.
+// ──────────────────────────────────────────────────────────────
+function getInflationMult(nationId) {
+  const ext = GAME_STATE?.economy_ext;
+  if (!ext || !ext.inflation) return 1.0;
+  const v = Number(ext.inflation[nationId]) || 0;
+  if (!isFinite(v) || v <= 0) return 1.0;
+  return 1.0 + Math.min(INFLATION_MAX, v);
+}
+
 // ──────────────────────────────────────────────────────────────
 // addEconomicEvent — общий логгер будущих экономических событий.
 // ──────────────────────────────────────────────────────────────
@@ -464,8 +585,13 @@ function runEconomyExtTick() {
   // getRegionSpecBonus() в routeProductionToLocalStockpiles().
   try { updateRegionSpecialization(); } catch (e) { console.warn('[economy_ext:spec]', e); }
 
-  // Этапы 4–8 подключатся здесь в будущих сессиях:
-  //   try { updateInflation();      } catch (e) { console.warn('[economy_ext:infl]', e); }
+  // Этап 4 — инфляция от переполненной казны. Пересчитываем для всех
+  // наций, затем getInflationMult() применяется к внутренним закупкам
+  // в engine/buildings.js → procureCapitalInputs() (прово- и местный
+  // уровни). Мировой рынок (внешние цены) остаётся незатронутым.
+  try { updateInflation(); } catch (e) { console.warn('[economy_ext:infl]', e); }
+
+  // Этапы 5–8 подключатся здесь в будущих сессиях:
   //   try { updateEconomicCycle();  } catch (e) { console.warn('[economy_ext:cycle]', e); }
   //   try { updateTechDrift();      } catch (e) { console.warn('[economy_ext:tech]', e); }
 }
@@ -489,4 +615,13 @@ if (typeof window !== 'undefined') {
   window.SPEC_STREAK_WINDOW = SPEC_STREAK_WINDOW;
   window.SPEC_STEP_BONUS    = SPEC_STEP_BONUS;
   window.SPEC_MAX_BONUS     = SPEC_MAX_BONUS;
+
+  // Этап 4 — инфляция от переполненной казны.
+  window.updateInflation   = updateInflation;
+  window.getInflationMult  = getInflationMult;
+  window.TREASURY_HOARD_RATIO    = TREASURY_HOARD_RATIO;
+  window.TREASURY_CRITICAL_RATIO = TREASURY_CRITICAL_RATIO;
+  window.INFLATION_STEP          = INFLATION_STEP;
+  window.INFLATION_STEP_FAST     = INFLATION_STEP_FAST;
+  window.INFLATION_MAX           = INFLATION_MAX;
 }

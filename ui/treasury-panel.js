@@ -261,8 +261,10 @@ function _tpRenderTradeBalance() {
   if (!nId) return '';
 
   const b = calcTradeBalance(nId);
-  // Если за тик не было никакой торговой активности — не захламляем панель.
-  if (!b.gross_exports && !b.imports && !b.port_duties && !b.tariff_income) return '';
+  // Если за тик не было никакой торговой активности и нет инфляции —
+  // не захламляем панель.
+  const hasInflation = Number(GAME_STATE?.economy_ext?.inflation?.[nId]) >= 0.005;
+  if (!b.gross_exports && !b.imports && !b.port_duties && !b.tariff_income && !hasInflation) return '';
 
   const netClass = b.net >= 0 ? 'tp-val-pos' : 'tp-val-neg';
   const netSign  = b.net >= 0 ? '+' : '';
@@ -293,6 +295,29 @@ function _tpRenderTradeBalance() {
         <span class="tp-trade-value ${netClass}">${netSign}${b.net.toLocaleString()} ₴</span>
       </div>
       ${_tpRenderMonopolies()}
+      ${_tpRenderInflation()}
+    </div>`;
+}
+
+// ─── Этап 4 — Инфляция от переполненной казны ─────────────────────
+//   Показывает текущий уровень инфляции игрока: +X% к внутренним
+//   закупкам. Появляется, когда казна > 3× мес. дохода и рассасывается
+//   при нормализации.
+function _tpRenderInflation() {
+  const ext = GAME_STATE?.economy_ext;
+  if (!ext || !ext.inflation) return '';
+  const nId = GAME_STATE?.player_nation;
+  if (!nId) return '';
+
+  const infl = Number(ext.inflation[nId]) || 0;
+  if (infl < 0.005) return '';
+
+  const pct = Math.round(infl * 100);
+  const col = infl < 0.10 ? '#ccaa00' : infl < 0.20 ? '#cc7700' : '#cc2200';
+  return `
+    <div class="tp-trade-row tp-trade-infl" style="border-left:2px solid ${col};padding-left:6px">
+      <span class="tp-trade-label">💰 Инфляция (казна переполнена)</span>
+      <span class="tp-trade-value tp-val-neg">+${pct}% к закупкам</span>
     </div>`;
 }
 

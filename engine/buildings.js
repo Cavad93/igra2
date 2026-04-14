@@ -2050,7 +2050,12 @@ function procureCapitalInputs(nationId) {
                 // Транспортные расходы: базовая провинциальная надбавка × access price_modifier
                 const provBaseCost  = _PROVINCE_TRANSPORT_BASE - (prov.has_roads ? _PROVINCE_ROAD_DISCOUNT : 0);
                 const provTotalCost = provBaseCost * (provAccess.price_modifier ?? 1.0);
-                const provPayment   = fromProv * (GAME_STATE.market[buyGood]?.price || 0) * provTotalCost;
+                // Этап 4 (economic2.md): внутренняя инфляция от переполненной
+                // казны применяется к провинциальным закупкам (это «внутренний»
+                // рынок нации). Мировой рынок остаётся незатронутым.
+                const inflMult = (typeof getInflationMult === 'function')
+                  ? getInflationMult(nationId) : 1.0;
+                const provPayment   = fromProv * (GAME_STATE.market[buyGood]?.price || 0) * provTotalCost * inflMult;
                 nation.economy.treasury = (nation.economy.treasury || 0) - provPayment;
 
                 slot._capital_stock[buyGood] = (slot._capital_stock[buyGood] || 0) + fromProv;

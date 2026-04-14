@@ -173,11 +173,53 @@ GAME_STATE.economy_ext = {
 
 ---
 
-## Улучшение 4: Инфляция от переполненной казны
+## Улучшение 4: Инфляция от переполненной казны ✅ ВЫПОЛНЕНО (этап 4)
 
 **Суть:** Казна > 3× месячного дохода → внутренние цены растут +1–2%/ход (до +25%). Мотивирует тратить деньги на развитие.
 **Сложность:** Средняя — мультипликатор цен.
-**Файлы:** `engine/economy_ext.js`, `engine/market.js`
+**Файлы:** `engine/economy_ext.js`, `engine/buildings.js`, `ui/treasury-panel.js`, `index.html`
+
+**Что сделано в этапе 4:**
+- В `engine/economy_ext.js` добавлены константы `TREASURY_HOARD_RATIO = 3`,
+  `TREASURY_CRITICAL_RATIO = 6`, `INFLATION_STEP = 0.01`,
+  `INFLATION_STEP_FAST = 0.02`, `INFLATION_MAX = 0.25`.
+- `updateInflation()` — раз в тик для каждой нации считает
+  `ratio = treasury / income_per_turn`. При `ratio ≥ 3` инфляция растёт
+  на +1%/ход; при `ratio ≥ 6` на +2%/ход (fast path). При нормализации
+  казны (`ratio < 3`) — рассасывается на −1%/ход и удаляется из
+  `economy_ext.inflation` при достижении нуля. Значения clamped до
+  `INFLATION_MAX`. Логирует значимые переходы: появление, достижение
+  потолка, полное снятие.
+- `getInflationMult(nationId)` — возвращает `1 + inflation[nId]` в
+  диапазоне 1.00–1.25.
+- Вызывается из `runEconomyExtTick()` после `updateRegionSpecialization()`.
+- В `engine/buildings.js → procureCapitalInputs()` провинциальный
+  уровень снабжения умножает `provPayment` на `getInflationMult(nationId)`.
+  Мировой рынок (внешний) НЕ затрагивается — это «защитный клапан» от
+  внутренней инфляции.
+- В `ui/treasury-panel.js → _tpRenderInflation()` добавлен блок
+  предупреждения «💰 Инфляция (казна переполнена): +X% к закупкам»
+  внутри панели торгового баланса. Условие показа `tp-trade-balance`
+  расширено, чтобы блок выводился даже без торговой активности, если
+  инфляция ≥ 0.5%. CSS-класс `.tp-trade-infl` в `index.html`.
+- Все функции и константы экспортированы в `window` для инспекции и
+  save/load.
+
+**Тесты этапа 4 (`tests/eco_stage4_inflation_test.cjs`, 27/27 зелёные):**
+- `initEconomyExt()` создаёт `inflation` как объект ✓
+- Все константы выставлены (3, 6, 0.01, 0.02, 0.25) ✓
+- `ratio < 3` — инфляция остаётся 0 ✓
+- `ratio = 4` — инфляция растёт на +1% за тик (0.01, 0.02, …) ✓
+- `ratio ≥ 6` — инфляция растёт на +2% за тик (0.02, 0.04, …) ✓
+- Инфляция clamped до `INFLATION_MAX` = 0.25 ✓
+- При нормализации казны рассасывается на −1%/ход ✓
+- Полное обнуление удаляет запись нации из `inflation` ✓
+- `getInflationMult()` = 1.0 для нации без инфляции и для неизвестной ✓
+- Инфляции двух наций независимы (rome slow, egypt fast) ✓
+- `income_per_turn = 0` не ломает расчёт (рассасывание продолжается) ✓
+- `runEconomyExtTick()` интегрирует `updateInflation()` без падений ✓
+
+**НЕ повторять в новых сессиях.**
 
 ---
 
@@ -692,7 +734,7 @@ console.log('Tech drift:', ext.tech_drift);
 | 1 ✅ | Каркас `economy_ext.js` + торговый баланс | 1 | economy_ext.js, treasury-panel.js |
 | 2 ✅ | Монопольный бонус к цене и дипломатии | 2 | economy_ext.js, economy_tab.js |
 | 3 ✅ | Специализация региона (+5% за 10 ходов) | 3 | economy_ext.js, economy.js |
-| 4 | Инфляция от переполненной казны | 4 | economy_ext.js, market.js |
+| 4 ✅ | Инфляция от переполненной казны | 4 | economy_ext.js, buildings.js, treasury-panel.js |
 | 5 | Экономические циклы (бум/спад) | 5 | economy_ext.js, economy.js |
 | 6 | Штраф армии при недофинансировании | 6 | economy_ext.js, combat.js |
 | 7 | Технологический дрейф (+2% за 10 лет) | 7 | economy_ext.js, economy.js |
