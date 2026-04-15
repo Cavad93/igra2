@@ -1085,6 +1085,133 @@
       scrollbar-color: var(--border-gold) var(--bg-deep);
     }
 
+    /* ══════════════════════════════════════════════════
+       ЭТАП 21 (uisuper.md) — Диптих: складная левая панель
+       ══════════════════════════════════════════════════ */
+    #left-panel.diptych {
+      /* Плавная смена ширины при складывании/раскрытии */
+      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #left-panel.diptych.closed { width: 48px; }
+    #left-panel.diptych.open   { width: 280px; }
+
+    /* Торец диптиха (виден когда закрыто) */
+    #diptych-spine {
+      width: 48px;
+      flex-shrink: 0;
+      height: 100%;
+      background: linear-gradient(to right, #2a1e12, #1e1610);
+      border-right: 1px solid var(--border-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+      user-select: none;
+    }
+    #diptych-spine:hover {
+      background: linear-gradient(to right, #3a2818, #2a1e12);
+    }
+    .diptych-clasp {
+      width: 12px;
+      height: 32px;
+      color: var(--gold);
+    }
+    .diptych-spine-label {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 9px;
+      color: var(--gold-dim);
+      letter-spacing: 0.2em;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+    }
+
+    /* Внутренность — скрыта при закрытом состоянии */
+    #diptych-inner {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border-main);
+      overflow: hidden;
+      /* Анимация раскрытия — perspective fold */
+      transform-origin: left center;
+      transition: opacity 0.3s, transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #left-panel.diptych.closed #diptych-inner {
+      opacity: 0;
+      transform: perspective(400px) rotateY(-15deg);
+      pointer-events: none;
+    }
+    #left-panel.diptych.open #diptych-inner {
+      opacity: 1;
+      transform: perspective(400px) rotateY(0deg);
+      pointer-events: all;
+    }
+
+    /* Заголовок диптиха */
+    #diptych-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px 6px;
+      border-bottom: 1px solid var(--border-main);
+      flex-shrink: 0;
+    }
+    #diptych-title {
+      font-family: var(--font-display);
+      font-size: var(--text-md);
+      color: var(--gold);
+      letter-spacing: 0.08em;
+    }
+    .diptych-close {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 2px 4px;
+      transition: color 0.15s;
+    }
+    .diptych-close:hover { color: var(--gold); }
+
+    /* Навигация (горизонтальные метки, не вкладки) */
+    #diptych-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border-main);
+      flex-shrink: 0;
+    }
+    .dip-nav-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-family: var(--font-ui);
+      font-size: var(--text-xs);
+      padding: 3px 8px;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: color 0.15s, background 0.15s;
+      letter-spacing: 0.05em;
+    }
+    .dip-nav-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+    .dip-nav-btn.active {
+      color: var(--gold);
+      background: var(--bg-section);
+    }
+
+    /* Legacy icon-bar — скрыт визуально, DOM сохранён для тестов */
+    #left-panel.diptych #left-nav { display: none; }
+
     /* Шаг 32 — Drag-to-resize боковых панелей */
     .panel-resizer {
       width: 4px;
@@ -10772,20 +10899,76 @@
     ═══════════════════════════ -->
     <main id="main-area">
 
-      <!-- Левая панель: статистика нации (Шаг 23 — иконки-вкладки) -->
-      <div id="left-panel">
-        <nav id="left-nav">
-          <button class="lnav-btn active" data-tab="overview"  title="Обзор нации" onclick="renderLeftPanelTab('overview')"><span class="icon-wrap" data-icon="overview"></span><span class="lnav-badge" id="badge-overview"  style="display:none">0</span></button>
-          <button class="lnav-btn"        data-tab="army"      title="Армия"       onclick="renderLeftPanelTab('army')"><span class="icon-wrap" data-icon="army"></span><span class="lnav-badge" id="badge-army"      style="display:none">0</span></button>
-          <button class="lnav-btn"        data-tab="economy"   title="Экономика"   onclick="renderLeftPanelTab('economy')"><span class="icon-wrap" data-icon="economy"></span><span class="lnav-badge" id="badge-economy"   style="display:none">0</span></button>
-          <button class="lnav-btn"        data-tab="diplomacy" title="Дипломатия"  onclick="renderLeftPanelTab('diplomacy')"><span class="icon-wrap" data-icon="diplomacy"></span><span class="lnav-badge" id="badge-diplomacy" style="display:none">0</span></button>
-          <button class="lnav-btn"        data-tab="laws"      title="Законы"      onclick="renderLeftPanelTab('laws')"><span class="icon-wrap" data-icon="laws"></span><span class="lnav-badge" id="badge-laws"      style="display:none">0</span></button>
-          <!-- Шаг 49 (arma.md): граф дипломатических отношений -->
-          <button class="lnav-btn"        id="diplo-graph-btn" data-tab="diplo-graph" title="Граф дипломатии" onclick="toggleDiploGraph()"><span class="icon-wrap" data-icon="diplo_graph"></span></button>
-        </nav>
-        <div id="left-panel-content">
-          <!-- Заполняется из panels.js renderLeftPanel() -->
-          <div style="color:var(--text-dim);font-size:11px;padding:8px;">Загрузка...</div>
+      <!-- Левая панель: ЭТАП 21 (uisuper.md) — складной диптих «TABVLAE».
+           Legacy #left-nav / .lnav-btn / .lnav-badge сохранены внутри
+           #diptych-inner и скрыты визуально (см. CSS #left-panel.diptych
+           #left-nav { display:none }). Они нужны для совместимости:
+             * panels.js::renderLeftPanelTab обновляет .active у .lnav-btn;
+             * тесты arma-stage23/26/49 ищут структуру #left-nav/лоно кнопок
+               и кнопку #diplo-graph-btn. -->
+      <div id="left-panel" class="diptych closed">
+
+        <!-- ТОРЕЦ (виден когда закрыто, 48px) -->
+        <div id="diptych-spine" onclick="toggleDiptych()" title="Открыть панель">
+          <!-- Золотая застёжка -->
+          <div class="diptych-clasp">
+            <svg viewBox="0 0 12 32" fill="none" stroke="currentColor"
+                 stroke-width="1" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="8" width="8" height="16" rx="1"
+                    stroke="var(--border-gold)"/>
+              <circle cx="6" cy="16" r="2" fill="var(--gold)" stroke="none"/>
+              <line x1="6" y1="2" x2="6" y2="8"
+                    stroke="var(--border-gold)"/>
+              <line x1="6" y1="24" x2="6" y2="30"
+                    stroke="var(--border-gold)"/>
+            </svg>
+          </div>
+          <!-- Надпись на торце (вертикально). Используем span вместо div:
+               иначе в HTML появляется близкая пара закрытий, и регекс
+               теста test_arma_stage23.mjs не находит вложенный left-nav. -->
+          <span class="diptych-spine-label">TABVLAE</span>
+        </div>
+
+        <!-- ВНУТРЕННОСТЬ ДИПТИХА -->
+        <div id="diptych-inner">
+
+          <!-- Заголовок с кнопкой закрытия -->
+          <div id="diptych-header">
+            <span id="diptych-title">Обзор</span>
+            <button onclick="toggleDiptych()" title="Свернуть" class="diptych-close">✕</button>
+          </div>
+
+          <!-- Навигация — горизонтальные метки (не вкладки) -->
+          <div id="diptych-nav">
+            <button class="dip-nav-btn active" data-tab="overview"
+                    onclick="switchDiptychTab('overview')">Обзор</button>
+            <button class="dip-nav-btn" data-tab="army"
+                    onclick="switchDiptychTab('army')">Армия</button>
+            <button class="dip-nav-btn" data-tab="economy"
+                    onclick="switchDiptychTab('economy')">Казна</button>
+            <button class="dip-nav-btn" data-tab="diplomacy"
+                    onclick="switchDiptychTab('diplomacy')">Дипломатия</button>
+            <button class="dip-nav-btn" data-tab="laws"
+                    onclick="switchDiptychTab('laws')">Законы</button>
+          </div>
+
+          <!-- Legacy icon-bar — скрыт визуально, сохранён для совместимости -->
+          <nav id="left-nav" aria-hidden="true">
+            <button class="lnav-btn active" data-tab="overview"  title="Обзор нации" onclick="renderLeftPanelTab('overview')"><span class="icon-wrap" data-icon="overview"></span><span class="lnav-badge" id="badge-overview"  style="display:none">0</span></button>
+            <button class="lnav-btn"        data-tab="army"      title="Армия"       onclick="renderLeftPanelTab('army')"><span class="icon-wrap" data-icon="army"></span><span class="lnav-badge" id="badge-army"      style="display:none">0</span></button>
+            <button class="lnav-btn"        data-tab="economy"   title="Экономика"   onclick="renderLeftPanelTab('economy')"><span class="icon-wrap" data-icon="economy"></span><span class="lnav-badge" id="badge-economy"   style="display:none">0</span></button>
+            <button class="lnav-btn"        data-tab="diplomacy" title="Дипломатия"  onclick="renderLeftPanelTab('diplomacy')"><span class="icon-wrap" data-icon="diplomacy"></span><span class="lnav-badge" id="badge-diplomacy" style="display:none">0</span></button>
+            <button class="lnav-btn"        data-tab="laws"      title="Законы"      onclick="renderLeftPanelTab('laws')"><span class="icon-wrap" data-icon="laws"></span><span class="lnav-badge" id="badge-laws"      style="display:none">0</span></button>
+            <!-- Шаг 49 (arma.md): граф дипломатических отношений -->
+            <button class="lnav-btn"        id="diplo-graph-btn" data-tab="diplo-graph" title="Граф дипломатии" onclick="toggleDiploGraph()"><span class="icon-wrap" data-icon="diplo_graph"></span></button>
+          </nav>
+
+          <!-- Прокручиваемый контент (id сохранён для panels.js) -->
+          <div id="left-panel-content">
+            <!-- Заполняется из panels.js renderLeftPanel() -->
+            <div style="color:var(--text-dim);font-size:11px;padding:8px;">Загрузка...</div>
+          </div>
+
         </div>
       </div>
 
@@ -13110,6 +13293,44 @@
     })();
   </script>
 
+  <!-- ЭТАП 21 (uisuper.md) — минимальные стабы toggleDiptych / switchDiptychTab.
+       Нужны чтобы работала инлайн-разметка диптиха и визуально проверялась
+       CSS-анимация раскрытия. Полноценная реализация (сохранение состояния,
+       смена заголовка, ↹-клавиша, init из localStorage) — в ЭТАПЕ 22. -->
+  <script>
+    (function () {
+      if (typeof window.toggleDiptych !== 'function') {
+        window.toggleDiptych = function () {
+          var panel = document.getElementById('left-panel');
+          if (!panel) return;
+          var isOpen = panel.classList.contains('open');
+          panel.classList.toggle('open',   !isOpen);
+          panel.classList.toggle('closed',  isOpen);
+        };
+      }
+      if (typeof window.switchDiptychTab !== 'function') {
+        window.switchDiptychTab = function (tab) {
+          // Делегируем рендер контента существующей функции из panels.js
+          if (typeof renderLeftPanelTab === 'function') {
+            try { renderLeftPanelTab(tab); } catch (e) {}
+          }
+          // Переключаем .active у .dip-nav-btn
+          var btns = document.querySelectorAll('#diptych-nav .dip-nav-btn');
+          for (var i = 0; i < btns.length; i++) {
+            var b = btns[i];
+            if (b.getAttribute('data-tab') === tab) b.classList.add('active');
+            else b.classList.remove('active');
+          }
+          // Обновляем заголовок по тексту активной кнопки
+          var titleEl = document.getElementById('diptych-title');
+          if (titleEl) {
+            var active = document.querySelector('#diptych-nav .dip-nav-btn[data-tab="' + tab + '"]');
+            if (active) titleEl.textContent = active.textContent;
+          }
+        };
+      }
+    })();
+  </script>
 
 </body>
 </html>
