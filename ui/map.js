@@ -671,31 +671,38 @@ function tabulaRegionColor(rawHex) {
     _tabulaColorCache.set(key, pair);
     return pair;
   }
-  // uisuper hot-fix #1 (v2): саму палитру в data/nations.js менять
-  // нельзя (170+ наций, культурная авторская задумка), но многие
-  // соседние нации там имеют близкие hue/saturation (Сиракузы,
-  // Карфаген, Сиканы, Сикелы — все H≈30–45°, S≈15–40%). Чтобы они
-  // визуально различались на карте:
-  //   1) буст насыщенности до min 0.55 (но не выше 0.85 — не хотим
-  //      неоновых тонов, которые ломают Tabula-вайб)
-  //   2) hue-spread ±30° на основе детерминированного хэша hex —
-  //      соседние похожие тона раздвигаются на разные hue, но один
-  //      и тот же nation.color всегда даёт один результат (кэш
-  //      по исходному hex)
-  //   3) clamp L в диапазон 0.42–0.68 — чтобы не было пересвеченных
-  //      и почти-чёрных регионов
-  const [h0, s0, l0] = hexToHsl(rawHex);
-  // Хэш входного hex → сдвиг hue ±30°
-  let hash = 0;
+  // uisuper hot-fix #1 (v4): палитра в data/nations.js кластеризована
+  // по культурно-климатическим зонам. Предыдущие попытки:
+  //   v1: десатурация 0.4→0.15 (не помогло, исходные цвета близкие)
+  //   v2: hue-shift ±30° через слабый multiplicative hash
+  //       (коллизии: Карфаген/Элимия d=5.4)
+  //   v3: 18×4 = 72 дискретных якоря + FNV-1a
+  //       (216 пар identical, 64 из 72 слотов использованы,
+  //        в среднем 2.7 нации на слот)
+  //
+  // v4: непрерывное HSL-распределение через FNV-1a 32-bit.
+  //   • H: 12 bit хэша → 4096 позиций по 0..360°
+  //   • S: следующие 8 bit → 0.58..0.90
+  //   • L: следующие 8 bit → 0.42..0.70
+  // Эффективная ёмкость ≈ 4096×256×256 ≈ 268M комбинаций.
+  // Для 170 наций вероятность коллизии по birthday-парадоксу <0.01%.
+  //
+  // Авторский nation.color не сохраняется (Rome уже не «красный»):
+  // используется только как entropy source для детерминированного
+  // хэша → один и тот же hex всегда даёт один результат, кэш по key.
+  let hash = 2166136261; // FNV offset basis
   for (let i = 0; i < rawHex.length; i++) {
-    hash = ((hash * 131) + rawHex.charCodeAt(i)) >>> 0;
+    hash ^= rawHex.charCodeAt(i);
+    hash = Math.imul(hash, 16777619) >>> 0; // FNV prime
   }
-  const hueShift = ((hash % 61) - 30);  // -30..+30
-  const adjH = h0 + hueShift;
-  const adjS = Math.min(0.85, Math.max(0.55, s0 * 1.45));
-  const adjL = Math.min(0.68, Math.max(0.42, l0));
+  const h01 = ( hash        & 0xFFF) / 4096; // 0..1
+  const s01 = ((hash >>> 12) & 0xFF)  / 256; // 0..1
+  const l01 = ((hash >>> 20) & 0xFF)  / 256; // 0..1
+  const adjH = h01 * 360;                    // 0..360°
+  const adjS = 0.58 + s01 * 0.32;            // 0.58..0.90
+  const adjL = 0.42 + l01 * 0.28;            // 0.42..0.70
   const fill   = hslToHex(adjH, adjS, adjL);
-  const border = darkenColor(fill, 0.50);
+  const border = darkenColor(fill, 0.55);
   const pair = { fill, border };
   _tabulaColorCache.set(key, pair);
   return pair;
