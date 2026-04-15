@@ -311,24 +311,28 @@ function _ensureFogPattern() {
     defs = document.createElementNS(NS, 'defs');
     svg.insertBefore(defs, svg.firstChild);
   }
+  // uisuper hot-fix #3: штриховка fog-of-war была слишком контрастной
+  // (rgba 0.35 фон + 0.55 линии width=2, шаг 8px) и визуально портила
+  // карту. Делаем её заметно мягче: шаг 14px, полупрозрачный фон,
+  // тонкая едва видимая диагональная линия.
   const pattern = document.createElementNS(NS, 'pattern');
   pattern.setAttribute('id', 'fog-hatch-pattern');
-  pattern.setAttribute('width', '8');
-  pattern.setAttribute('height', '8');
+  pattern.setAttribute('width', '14');
+  pattern.setAttribute('height', '14');
   pattern.setAttribute('patternUnits', 'userSpaceOnUse');
   pattern.setAttribute('patternTransform', 'rotate(45)');
   const rect = document.createElementNS(NS, 'rect');
-  rect.setAttribute('width', '8');
-  rect.setAttribute('height', '8');
-  rect.setAttribute('fill', 'rgba(10,8,4,0.35)');
+  rect.setAttribute('width', '14');
+  rect.setAttribute('height', '14');
+  rect.setAttribute('fill', 'rgba(10,8,4,0.10)');
   pattern.appendChild(rect);
   const line = document.createElementNS(NS, 'line');
   line.setAttribute('x1', '0');
   line.setAttribute('y1', '0');
   line.setAttribute('x2', '0');
-  line.setAttribute('y2', '8');
-  line.setAttribute('stroke', 'rgba(0,0,0,0.55)');
-  line.setAttribute('stroke-width', '2');
+  line.setAttribute('y2', '14');
+  line.setAttribute('stroke', 'rgba(0,0,0,0.18)');
+  line.setAttribute('stroke-width', '0.7');
   pattern.appendChild(line);
   defs.appendChild(pattern);
 }
@@ -358,7 +362,10 @@ function refreshFogOverlay() {
       stroke: false,
       weight: 0,
       fillColor: '#0a0804',
-      fillOpacity: 0.35,
+      // uisuper hot-fix #3: fog overlay opacity 0.35→0.15 — туман
+      // обозначает неизведанные регионы, но не должен перекрывать
+      // цвет фракций.
+      fillOpacity: 0.15,
       interactive: false,
     });
     poly.addTo(leafletMap);
@@ -664,8 +671,12 @@ function tabulaRegionColor(rawHex) {
     _tabulaColorCache.set(key, pair);
     return pair;
   }
-  const fill   = desaturateColor(rawHex, 0.4);
-  const border = darkenColor(fill, 0.5);
+  // uisuper hot-fix #1: десатурация снижена с 0.4 до 0.15 — иначе все
+  // 50+ наций сливались в один охристый тон и визуально различались
+  // только при клике. 0.15 даёт заметные цвета фракций и сохраняет
+  // общий «пергаментный» вайб Tabula Peutingeriana.
+  const fill   = desaturateColor(rawHex, 0.15);
+  const border = darkenColor(fill, 0.45);
   const pair = { fill, border };
   _tabulaColorCache.set(key, pair);
   return pair;
@@ -785,14 +796,16 @@ function buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor = nu
     };
   }
 
-  // Шаг 48: туман войны — далёкие регионы приглушаются
+  // Шаг 48 + uisuper hot-fix #1: туман войны — далёкие регионы
+  // приглушаются МЕНЬШЕ, чем раньше, чтобы nation color оставался
+  // читаемым (иначе весь мир выглядит одноцветным охристым полотном).
   if (!isSelected && intelLevel === 0) {
     return {
       color:        'rgba(40,30,15,0.60)',
       weight:       0.8,
       fillColor:    tabFill,
-      fillOpacity:  0.50,
-      opacity:      0.85,
+      fillOpacity:  0.70,
+      opacity:      0.90,
       dashArray:    '3 3',
     };
   }
@@ -801,7 +814,7 @@ function buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor = nu
       color:        'rgba(60,45,20,0.55)',
       weight:       0.9,
       fillColor:    tabFill,
-      fillOpacity:  0.62,
+      fillOpacity:  0.78,
       opacity:      1.0,
       dashArray:    null,
     };
@@ -810,10 +823,12 @@ function buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor = nu
   return {
     // Этап 17 — выделение = палитровое золото (--gold #c9a961),
     // обычная граница — тонкая тёмная умбра.
+    // uisuper hot-fix #1: базовая fillOpacity поднята 0.70→0.85 —
+    // nation colors теперь явно читаются.
     color:        isSelected ? '#c9a961' : tabBorder,
     weight:       isSelected ? 2.5 : 1.0,
     fillColor:    tabFill,
-    fillOpacity:  isSelected ? 0.82 : 0.70,
+    fillOpacity:  isSelected ? 0.92 : 0.85,
     opacity:      1.0,
     dashArray:    null,
   };
@@ -2374,8 +2389,17 @@ let _cityLabelMarkers = [];
 
 function renderCityLabels() {
   if (!leafletMap) return;
+  // uisuper hot-fix #2: curved SVG-надписи наций уже «встроены» в
+  // территории через _updateNationLabelVisibility. Плавающие divIcon-
+  // подписи столиц дублировали имена наций и визуально ложились
+  // поверх них («КАРФАГЕН» дважды: curved на Африке + floating
+  // прямоугольник). Функция оставлена как no-op для обратной
+  // совместимости вызовов из renderAll() / turn.js. При желании
+  // её можно вернуть селективно (только для небольших столиц, чьё
+  // название не совпадает с nation.name).
   clearCityLabels();
-
+  return;
+  // eslint-disable-next-line no-unreachable
   const nations = GAME_STATE?.nations ?? {};
   const playerId = GAME_STATE?.player_nation;
 

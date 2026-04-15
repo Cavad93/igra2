@@ -113,7 +113,14 @@
       transition: opacity 0.5s ease;
       overflow: hidden;
     }
-    /* Шаг 58 — слой исторической фрески */
+    /* Шаг 58 — слой исторической фрески.
+       uisuper hot-fix #6: фреска не должна быть видна на старте —
+       эффект должен быть «мозаика собирается → проявляется фреска».
+       Раньше .splash__bg рендерилась мгновенно, а canvas с мозаикой
+       только начинал накладывать тессеры, из-за чего в первые
+       секунды видно финальное фото. Делаем fade-in через keyframes
+       splash-bg-fade (9с: 0→0 первые 3с, затем плавное 0→1 до 9с).
+       К этому моменту мозаика уже собрала большинство тайлов. */
     .splash__bg {
       position: absolute;
       inset: 0;
@@ -122,8 +129,14 @@
       background-position: center;
       background-repeat: no-repeat;
       filter: sepia(0.25) brightness(0.55);
-      transition: background-image 0.4s ease;
       z-index: 0;
+      opacity: 0;
+      animation: splash-bg-fade 9s ease-out forwards;
+    }
+    @keyframes splash-bg-fade {
+      0%   { opacity: 0; }
+      33%  { opacity: 0; }
+      100% { opacity: 1; }
     }
     /* Шаг 58 — виньетка по краям */
     .splash__vignette {
@@ -466,24 +479,36 @@
       text-shadow: 0 0 12px rgba(232,201,122,0.4);
     }
 
-    /* Этап 11 — Клепсидра (кнопка конца хода) */
+    /* Этап 11 — Клепсидра (кнопка конца хода)
+       uisuper hot-fix #5: раньше кнопка была крошечной (40×66) и
+       рисовалась только outline-ами --bronze (#8c6e4f) — на тёмном
+       фоне она была практически неразличима. Увеличиваем размер,
+       даём полупрозрачную подложку, золотой drop-shadow. */
     #end-turn-btn {
-      /* Позиция в правом верхнем углу */
       position: fixed;
       top: 12px;
       right: 16px;
-      z-index: 20;
+      z-index: 25;
 
-      /* Внешний вид */
-      background: none;
-      border: none;
+      background: radial-gradient(
+        ellipse at center,
+        rgba(60,40,12,0.7) 30%,
+        rgba(40,25,8,0.45) 70%,
+        transparent 100%
+      );
+      border: 1px solid var(--gold-bright);
       cursor: pointer;
-      padding: 4px;
-      border-radius: 4px;
-      transition: filter 0.2s, transform 0.15s;
+      padding: 6px 8px;
+      border-radius: 6px;
+      transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
+      filter: drop-shadow(0 0 6px rgba(232,201,122,0.45));
+      box-shadow: 0 0 12px rgba(201,169,97,0.35),
+                  inset 0 0 8px rgba(232,201,122,0.15);
 
-      width: 40px;
-      height: 66px;
+      width: 56px;
+      height: 84px;
+      /* Золото вместо бронзы — видно на любом фоне */
+      color: var(--gold-bright);
     }
 
     #end-turn-btn:hover:not(:disabled) {
@@ -503,8 +528,11 @@
       height: 100%;
     }
 
+    /* uisuper hot-fix #5: золотая рамка вместо бронзовой —
+       клепсидра должна быть заметно видна на любом фоне. */
     .clepsy-frame {
-      stroke: var(--bronze);
+      stroke: var(--gold-bright);
+      stroke-width: 2;
     }
 
     /* Вода — по умолчанию синевато-прозрачная */
@@ -3275,6 +3303,27 @@
       margin-bottom: 4px;
       border-bottom: 1px solid var(--border-gold);
       padding-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    /* uisuper hot-fix #4: кнопка свёртывания лога в expanded-состоянии */
+    .log-collapse-btn {
+      margin-left: auto;
+      background: none;
+      border: 1px solid var(--border-gold);
+      color: var(--text-dim);
+      font-size: 10px;
+      padding: 1px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      transition: all 0.12s;
+    }
+    .log-collapse-btn:hover {
+      color: var(--gold-bright);
+      border-color: var(--gold-bright);
+      background: rgba(107,79,26,0.3);
     }
 
     #log-entries {
@@ -5022,9 +5071,28 @@
       bottom: 20px;
       right: 20px;
       z-index: 10;
-      width: 130px;
-      height: 130px;
+      width: 150px;
+      height: 164px;
       pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    /* uisuper hot-fix #7: подпись над розой ветров — чтобы игрок
+       сразу понял, что это селектор режима карты. */
+    #wind-rose .wr-caption {
+      font-family: var(--font-display);
+      font-size: 10px;
+      color: var(--gold-bright);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      padding: 2px 8px;
+      background: rgba(20,14,6,0.7);
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+      margin-bottom: 4px;
+      pointer-events: none;
+      white-space: nowrap;
     }
 
     #wind-rose-svg {
@@ -5068,10 +5136,11 @@
 
     .wr-label {
       font-family: var(--font-display);
-      font-size: 9px;
-      fill: var(--text-dim);
+      font-size: 8px;
+      fill: var(--gold-bright);
       pointer-events: none;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
+      font-weight: 700;
     }
 
     .wr-notch {
@@ -10988,10 +11057,12 @@
             <button class="mm-btn"        data-mode="population" title="Население [4]"    onclick="setMapMode('population')"><span class="icon-wrap" data-icon="population"></span></button>
           </div>
 
-          <!-- ЭТАП 19 (uisuper.md): Роза ветров — SVG в правом нижнем углу карты.
-               Четыре лепестка соответствуют режимам карты (N=политика, E=экономика,
-               S=военный, W=население). Логика переключения подключается в этапе 20. -->
+          <!-- ЭТАП 19/20 (uisuper.md) + hot-fix #7: Роза ветров = селектор режима карты.
+               Над SVG добавлена подпись «РЕЖИМ КАРТЫ», каждый лепесток содержит
+               SVG <title> для native-tooltip, буквенные метки заменены на короткие
+               русские слова (ПОЛИТ/ЭКОН/ВОЙ/НАР). -->
           <div id="wind-rose" role="group" aria-label="Режим карты">
+            <div class="wr-caption">Режим карты</div>
             <svg id="wind-rose-svg" viewBox="-60 -60 120 120"
                  xmlns="http://www.w3.org/2000/svg">
 
@@ -11005,8 +11076,10 @@
                     class="wr-petal active" data-mode="political"
                     onclick="setMapMode('political')"
                     role="button" tabindex="0"
-                    aria-label="Политический режим [1]"/>
-              <text x="0" y="-48" class="wr-label" text-anchor="middle">П</text>
+                    aria-label="Политический режим [1]">
+                <title>Политический режим [1] — цвета фракций</title>
+              </path>
+              <text x="0" y="-48" class="wr-label" text-anchor="middle">ПОЛИТ</text>
 
               <!-- Лепесток Восток: Экономика -->
               <path id="wr-economy"
@@ -11014,8 +11087,10 @@
                     class="wr-petal" data-mode="economy"
                     onclick="setMapMode('economy')"
                     role="button" tabindex="0"
-                    aria-label="Режим экономики [2]"/>
-              <text x="50" y="4" class="wr-label" text-anchor="start">Э</text>
+                    aria-label="Режим экономики [2]">
+                <title>Режим экономики [2] — богатство регионов</title>
+              </path>
+              <text x="50" y="4" class="wr-label" text-anchor="start">ЭКОН</text>
 
               <!-- Лепесток Юг: Военный -->
               <path id="wr-military"
@@ -11023,8 +11098,10 @@
                     class="wr-petal" data-mode="military"
                     onclick="setMapMode('military')"
                     role="button" tabindex="0"
-                    aria-label="Военный режим [3]"/>
-              <text x="0" y="56" class="wr-label" text-anchor="middle">В</text>
+                    aria-label="Военный режим [3]">
+                <title>Военный режим [3] — дислокация армий</title>
+              </path>
+              <text x="0" y="56" class="wr-label" text-anchor="middle">ВОЙ</text>
 
               <!-- Лепесток Запад: Население -->
               <path id="wr-population"
@@ -11032,8 +11109,10 @@
                     class="wr-petal" data-mode="population"
                     onclick="setMapMode('population')"
                     role="button" tabindex="0"
-                    aria-label="Режим населения [4]"/>
-              <text x="-50" y="4" class="wr-label" text-anchor="end">Н</text>
+                    aria-label="Режим населения [4]">
+                <title>Режим населения [4] — плотность населения</title>
+              </path>
+              <text x="-50" y="4" class="wr-label" text-anchor="end">НАР</text>
 
               <!-- Диагональные засечки (декор) -->
               <line x1="-6" y1="-6" x2="-14" y2="-14" class="wr-notch"/>
@@ -11173,6 +11252,11 @@
           <button class="log-filter-btn"        data-filter="character" onclick="setLogFilter('character')"><span class="icon-wrap" data-icon="population"></span></button>
           <button class="log-filter-btn"        data-filter="law"     onclick="setLogFilter('law')"><span class="icon-wrap" data-icon="laws"></span></button>
           <button class="btn-icon" onclick="showTurnSummary()" title="Итоги хода"><span class="icon-wrap" data-icon="orders"></span></button>
+          <!-- uisuper hot-fix #4: кнопка свёртывания лога. Раньше
+               в expanded-состоянии не было способа вернуться к
+               свёрнутой полосе — только F5. -->
+          <button class="log-collapse-btn" onclick="toggleLog()"
+                  title="Свернуть хроники" aria-label="Свернуть">▼</button>
         </div>
         <div id="log-entries"></div>
       </div>
@@ -11573,7 +11657,7 @@
   <script src="engine/achievements.js"></script>
   <script src="ai/chronicle.js"></script>
   <script src="engine/turn.js"></script>
-  <script src="ui/map.js?v=courtboard"></script>
+  <script src="ui/map.js?v=visualfix7"></script>
   <script src="ui/map_armies.js"></script>
   <script src="ui/map_events.js"></script>
   <script src="ui/map_event_feed.js"></script>
@@ -11588,7 +11672,7 @@
   <script src="ui/portrait_svg.js"></script>
   <script src="ui/portrait.js"></script>
   <script src="ui/splash.js"></script>
-  <script src="ui/panels.js?v=courtboard"></script>
+  <script src="ui/panels.js?v=visualfix7"></script>
   <script src="ui/aqueduct.js"></script>
   <script src="ui/government_tab.js"></script>
   <script src="ui/population_tab.js"></script>
