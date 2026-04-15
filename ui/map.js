@@ -660,41 +660,47 @@ function darkenColor(hex, amount = 0.3) {
  * Маппинг: сырой hex → {fill, border}.
  */
 const _tabulaColorCache = new Map();
-function tabulaRegionColor(rawHex) {
-  const key = (typeof rawHex === 'string') ? rawHex.toLowerCase() : '';
+function tabulaRegionColor(rawHex, nationId) {
+  // uisuper hot-fix #1 (v5): КРИТИЧНО. Предыдущие версии v2–v4
+  // хэшировали nation.color (hex), но в renderRegionPolygons
+  // подставляется blendColor из getProvinceBlendColor — это
+  // линейный blend двух ведущих наций провинции. Разные регионы
+  // одной нации в одной провинции получают РАЗНЫЕ blend-hex →
+  // РАЗНЫЕ хэши → РАЗНЫЕ цвета. И наоборот, все регионы одной
+  // провинции получают ОДИН blend-hex → ОДИН цвет, независимо от
+  // того, каким нациям они фактически принадлежат. Катастрофа:
+  // Сицилия (3 нации в одной провинции) вся одного цвета, но
+  // при этом на обзоре каждый регион разноцветный как мозаика.
+  //
+  // v5: хэш-ключ — nation_id (стабильный per-nation идентификатор),
+  // а не hex цвета. Все регионы нации X → точно один цвет. Разные
+  // нации → гарантированно разные цвета. Блэнд-hex провинций для
+  // раскраски игнорируется (остаётся для других визуализаций).
+  // Fallback на rawHex только если nationId не передан (legacy).
+  const key = (typeof nationId === 'string' && nationId.length > 0)
+              ? ('n:' + nationId.toLowerCase())
+              : (typeof rawHex === 'string' ? rawHex.toLowerCase() : '');
   if (_tabulaColorCache.has(key)) return _tabulaColorCache.get(key);
+
   // Нейтральные регионы — охристый пергамент.
   const NEUTRAL_FILL   = '#c8a96e';
   const NEUTRAL_BORDER = '#6b4f2a';
-  if (!key || key === '#a8a898' || key === '#aaaaaa') {
+  if (!key || key === '#a8a898' || key === '#aaaaaa'
+      || key === 'n:neutral' || key === 'n:ocean'
+      || key === 'n:rebels' || key === 'n:unowned') {
     const pair = { fill: NEUTRAL_FILL, border: NEUTRAL_BORDER };
     _tabulaColorCache.set(key, pair);
     return pair;
   }
-  // uisuper hot-fix #1 (v4): палитра в data/nations.js кластеризована
-  // по культурно-климатическим зонам. Предыдущие попытки:
-  //   v1: десатурация 0.4→0.15 (не помогло, исходные цвета близкие)
-  //   v2: hue-shift ±30° через слабый multiplicative hash
-  //       (коллизии: Карфаген/Элимия d=5.4)
-  //   v3: 18×4 = 72 дискретных якоря + FNV-1a
-  //       (216 пар identical, 64 из 72 слотов использованы,
-  //        в среднем 2.7 нации на слот)
-  //
-  // v4: непрерывное HSL-распределение через FNV-1a 32-bit.
-  //   • H: 12 bit хэша → 4096 позиций по 0..360°
-  //   • S: следующие 8 bit → 0.58..0.90
-  //   • L: следующие 8 bit → 0.42..0.70
-  // Эффективная ёмкость ≈ 4096×256×256 ≈ 268M комбинаций.
-  // Для 170 наций вероятность коллизии по birthday-парадоксу <0.01%.
-  //
-  // Авторский nation.color не сохраняется (Rome уже не «красный»):
-  // используется только как entropy source для детерминированного
-  // хэша → один и тот же hex всегда даёт один результат, кэш по key.
+
+  // FNV-1a 32-bit hash на entropy source (nationId string или hex)
+  const hashInput = key.startsWith('n:') ? key.slice(2) : key;
   let hash = 2166136261; // FNV offset basis
-  for (let i = 0; i < rawHex.length; i++) {
-    hash ^= rawHex.charCodeAt(i);
+  for (let i = 0; i < hashInput.length; i++) {
+    hash ^= hashInput.charCodeAt(i);
     hash = Math.imul(hash, 16777619) >>> 0; // FNV prime
   }
+  // Три битовых среза → H/S/L (эффективная ёмкость ≈ 268M комбинаций)
   const h01 = ( hash        & 0xFFF) / 4096; // 0..1
   const s01 = ((hash >>> 12) & 0xFF)  / 256; // 0..1
   const l01 = ((hash >>> 20) & 0xFF)  / 256; // 0..1
@@ -758,8 +764,9 @@ function renderRegionPolygons() {
       : mapData.coords;
 
     const intelLevel = getIntelLevel(regionId);
+    const occupierNationId = gameRegion?.occupied_by ?? null;
     const polygon = L.polygon(coords, {
-      ...buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor, occupierColor, intelLevel),
+      ...buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor, occupierColor, intelLevel, nationId, originalNationId, occupierNationId),
       renderer: canvasRenderer,
     });
 
@@ -800,18 +807,20 @@ function renderRegionPolygons() {
  * @param {string|null} occupierColor  — цвет оккупанта (для границы)
  * @param {number}      intelLevel     — Шаг 48: уровень разведки (0/1/2)
  */
-function buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor = null, occupierColor = null, intelLevel = 2) {
-  // Этап 17 (Tabula Peutingeriana) — все цвета нации приглушаются
-  // (desaturate 40%), границы — тёмная умбра (darken 50%).
-  const tab       = tabulaRegionColor(color);
+function buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor = null, occupierColor = null, intelLevel = 2, nationId = null, originalNationId = null, occupierNationId = null) {
+  // Этап 17 (Tabula Peutingeriana) + uisuper hot-fix #1 v5:
+  // tabulaRegionColor теперь хэширует nationId (не hex), чтобы все
+  // регионы одной нации получали один цвет. Передаём nationId явно;
+  // fallback на color-hex сохранён для legacy-вызовов.
+  const tab       = tabulaRegionColor(color, nationId);
   const tabFill   = tab.fill;
   const tabBorder = tab.border;
 
   // Оккупированный регион: показываем цвет оригинального владельца (светлее),
   // а толстую штрихованную границу — в цвете захватчика.
   if (originalColor && occupierColor && !isSelected) {
-    const origTab = tabulaRegionColor(originalColor);
-    const occTab  = tabulaRegionColor(occupierColor);
+    const origTab = tabulaRegionColor(originalColor, originalNationId);
+    const occTab  = tabulaRegionColor(occupierColor, occupierNationId);
     return {
       fillColor:   origTab.fill,      // оригинальный владелец виден как фон
       fillOpacity: intelLevel === 0 ? 0.40 : 0.55,
@@ -961,7 +970,9 @@ function onRegionClick(regionId) {
     const prevIsPlayer = (prevNationId === GAME_STATE.player_nation);
     const [origC, occC] = _regionOccupationColors(selectedRegionId);
     const prevIntel = (typeof getIntelLevel === 'function') ? getIntelLevel(selectedRegionId) : 2;
-    regionLayers[selectedRegionId].setStyle(buildPolygonStyle(prevColor, prevIsPlayer, false, origC, occC, prevIntel));
+    const prevOrigNat = prev?.original_nation ?? null;
+    const prevOccNat  = prev?.occupied_by ?? null;
+    regionLayers[selectedRegionId].setStyle(buildPolygonStyle(prevColor, prevIsPlayer, false, origC, occC, prevIntel, prevNationId, prevOrigNat, prevOccNat));
   }
 
   if (selectedRegionId === regionId) {
@@ -979,7 +990,7 @@ function onRegionClick(regionId) {
     const nationId = gameRegion ? gameRegion.nation : MAP_REGIONS[regionId]?.nation;
     const nation = GAME_STATE.nations[nationId];
     const color = nation ? nation.color : '#A8A898';
-    layer.setStyle(buildPolygonStyle(color, nationId === GAME_STATE.player_nation, true));
+    layer.setStyle(buildPolygonStyle(color, nationId === GAME_STATE.player_nation, true, null, null, 2, nationId));
     layer.bringToFront();
   }
 
@@ -1009,7 +1020,12 @@ function onRegionHover(e, regionId, entering, color, isPlayerRegion) {
   } else {
     const [origC, occC] = _regionOccupationColors(regionId);
     const intelLevel = (typeof getIntelLevel === 'function') ? getIntelLevel(regionId) : 2;
-    layer.setStyle(buildPolygonStyle(color, isPlayerRegion, false, origC, occC, intelLevel));
+    // v5: достаём nationId чтобы tabulaRegionColor хэшировал по нации
+    const gr = GAME_STATE.regions?.[regionId];
+    const nid = gr ? gr.nation : MAP_REGIONS[regionId]?.nation;
+    const orig = gr?.original_nation ?? null;
+    const occ  = gr?.occupied_by ?? null;
+    layer.setStyle(buildPolygonStyle(color, isPlayerRegion, false, origC, occC, intelLevel, nid, orig, occ));
   }
 }
 
@@ -1715,8 +1731,10 @@ function closeRegionInfo() {
     const color = nation ? nation.color : '#A8A898';
     const [origC, occC] = _regionOccupationColors(selectedRegionId);
     const intelLevel = (typeof getIntelLevel === 'function') ? getIntelLevel(selectedRegionId) : 2;
+    const origNat = gameRegion?.original_nation ?? null;
+    const occNat  = gameRegion?.occupied_by ?? null;
     regionLayers[selectedRegionId].setStyle(
-      buildPolygonStyle(color, nationId === GAME_STATE.player_nation, false, origC, occC, intelLevel)
+      buildPolygonStyle(color, nationId === GAME_STATE.player_nation, false, origC, occC, intelLevel, nationId, origNat, occNat)
     );
   }
   selectedRegionId = null;
@@ -2796,7 +2814,9 @@ function refreshRegionStyles() {
     const isSelected = (regionId === selectedRegionId);
     const [origC, occC] = _regionOccupationColors(regionId);
     const intelLevel = getIntelLevel(regionId);
-    layer.setStyle(buildPolygonStyle(color, isPlayer, isSelected, origC, occC, intelLevel));
+    const origNat = gameRegion?.original_nation ?? null;
+    const occNat  = gameRegion?.occupied_by ?? null;
+    layer.setStyle(buildPolygonStyle(color, isPlayer, isSelected, origC, occC, intelLevel, nationId, origNat, occNat));
 
     if (layer.getTooltip && layer.getTooltip()) {
       layer.setTooltipContent(buildTooltipContent(regionId, mapData, nationId));
@@ -3064,7 +3084,9 @@ function _restorePoliticalStyle(regionId) {
   const isSelected   = (selectedRegionId === regionId);
   const [origC, occC] = _regionOccupationColors(regionId);
   const intelLevel = (typeof getIntelLevel === 'function') ? getIntelLevel(regionId) : 2;
-  layer.setStyle(buildPolygonStyle(color, isPlayer, isSelected, origC, occC, intelLevel));
+  const origNat = gameRegion?.original_nation ?? null;
+  const occNat  = gameRegion?.occupied_by ?? null;
+  layer.setStyle(buildPolygonStyle(color, isPlayer, isSelected, origC, occC, intelLevel, nationId, origNat, occNat));
 }
 
 // ══════════════════════════════════════════════════════════════
