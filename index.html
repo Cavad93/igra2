@@ -1622,6 +1622,8 @@
       overflow: hidden;
       /* Leaflet требует явный height */
       min-height: 0;
+      /* Этап 17 (Tabula Peutingeriana) — фон = тёмный базальт (море) */
+      background: var(--sea);
     }
 
     /* Leaflet перекрывает стандартные стили — сбрасываем */
@@ -1632,18 +1634,28 @@
       font-family: var(--font-display);
     }
 
-    /* Кнопки зума в стиле игры */
+    /* Этап 17 — кнопки зума в палитре пергамента */
+    .leaflet-control-zoom {
+      border: 1px solid var(--border-main) !important;
+      border-radius: 2px !important;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.55) !important;
+    }
     .leaflet-control-zoom a {
-      background: rgba(26,18,8,0.92) !important;
-      color: var(--text-gold) !important;
-      border-color: var(--border-gold) !important;
+      background: var(--bg-panel) !important;
+      color: var(--text-secondary) !important;
+      border-bottom-color: var(--border-main) !important;
       font-size: 16px !important;
       font-weight: normal !important;
     }
     .leaflet-control-zoom a:hover {
-      background: rgba(42,32,16,0.95) !important;
-      color: var(--gold-bright) !important;
+      background: var(--bg-hover) !important;
+      color: var(--gold) !important;
     }
+
+    /* Этап 17 — регионы как рельефный пергамент. Полигоны рендерятся
+       Canvas-рендерером, поэтому per-polygon CSS-классы не работают;
+       рельефность достигается за счёт тёмных границ (darkenColor 50%)
+       и охристой палитры fill в buildPolygonStyle(). */
 
     /* Атрибуция CAWM */
     .leaflet-control-attribution {

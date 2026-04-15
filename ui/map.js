@@ -113,6 +113,11 @@ function initLeafletMap() {
   const container = document.getElementById('map-container');
   if (!container) return;
 
+  // Этап 17 (Tabula Peutingeriana) — фон карты = цвет моря.
+  // Принудительно устанавливаем тёмно-базальтовый фон, чтобы Leaflet
+  // не подсвечивал области вне полигонов нейтрально-серым цветом.
+  try { container.style.background = '#0f1a24'; } catch (_) {}
+
   // Canvas-рендерер: критично для производительности с 2800+ полигонами
   canvasRenderer = L.canvas({ padding: 0.5, tolerance: 4 });
   // SVG-рендерер (Шаг 42) — только для линий торговых маршрутов.
@@ -164,6 +169,9 @@ function initLeafletMap() {
   }).addAttribution(
     '© <a href="https://cawm.lib.uiowa.edu/" target="_blank">CAWM</a> · CC BY 4.0'
   ).addTo(leafletMap);
+
+  // Этап 17 — фон Leaflet-контейнера принудительно = цвет моря.
+  try { leafletMap.getContainer().style.background = '#0f1a24'; } catch (_) {}
 
   // Базовый слой — тайлы древнего мира CAWM
   addBaseTileLayer();
@@ -554,13 +562,111 @@ if (typeof window !== 'undefined') {
   window.invalidateFogIntelCache = invalidateFogIntelCache;
 }
 
-// Стили для не-игровых типов регионов
+// Стили для не-игровых типов регионов.
+// Этап 17 (Tabula Peutingeriana) — цвета моря/озёр приглушённее, без
+// насыщенной синевы; непроходимые области — тёплая умбра.
 const NON_PLAYABLE_STYLES = {
-  Ocean:      { color: 'none', weight: 0, fillColor: '#2a5a7c', fillOpacity: 0.18, interactive: false },
-  Strait:     { color: 'none', weight: 0, fillColor: '#2a5a8c', fillOpacity: 0.22, interactive: false },
-  Lake:       { color: 'rgba(70,120,190,0.3)', weight: 0.5, fillColor: '#4a8ab8', fillOpacity: 0.40, interactive: false },
-  Impassible: { color: 'rgba(50,35,20,0.30)', weight: 0.5, fillColor: '#5a4e3a', fillOpacity: 0.50, interactive: false },
+  Ocean:      { color: 'none', weight: 0, fillColor: '#14202c', fillOpacity: 0.55, interactive: false },
+  Strait:     { color: 'none', weight: 0, fillColor: '#16263a', fillOpacity: 0.60, interactive: false },
+  Lake:       { color: 'rgba(40,60,90,0.35)', weight: 0.5, fillColor: '#1c3045', fillOpacity: 0.75, interactive: false },
+  Impassible: { color: 'rgba(60,42,22,0.35)', weight: 0.5, fillColor: '#5a4a32', fillOpacity: 0.55, interactive: false },
 };
+
+// ──────────────────────────────────────────────────────────────
+// Этап 17 — цветовые хелперы (HSL-манипуляции)
+// ──────────────────────────────────────────────────────────────
+
+/** Hex → HSL [h:0..360, s:0..1, l:0..1] */
+function hexToHsl(hex) {
+  if (typeof hex !== 'string') return [0, 0, 0.5];
+  let h = hex.trim();
+  if (h.startsWith('#')) h = h.slice(1);
+  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+  if (h.length !== 6) return [0, 0, 0.5];
+  const r = parseInt(h.slice(0, 2), 16) / 255;
+  const g = parseInt(h.slice(2, 4), 16) / 255;
+  const b = parseInt(h.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let hh = 0, s = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: hh = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: hh = (b - r) / d + 2; break;
+      case b: hh = (r - g) / d + 4; break;
+    }
+    hh *= 60;
+  }
+  return [hh, s, l];
+}
+
+/** HSL → Hex */
+function hslToHex(hDeg, s, l) {
+  const h = ((hDeg % 360) + 360) % 360 / 360;
+  s = Math.max(0, Math.min(1, s));
+  l = Math.max(0, Math.min(1, l));
+  let r, g, b;
+  if (s === 0) {
+    r = g = b = l;
+  } else {
+    const hue2rgb = (p, q, t) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1 / 3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1 / 3);
+  }
+  const toHex = (x) => {
+    const v = Math.round(x * 255);
+    return (v < 16 ? '0' : '') + v.toString(16);
+  };
+  return '#' + toHex(r) + toHex(g) + toHex(b);
+}
+
+/** Снизить насыщенность цвета (amount = 0..1). */
+function desaturateColor(hex, amount = 0.4) {
+  const [h, s, l] = hexToHsl(hex);
+  return hslToHex(h, s * (1 - amount), l);
+}
+
+/** Затемнить цвет (amount = 0..1). */
+function darkenColor(hex, amount = 0.3) {
+  const [h, s, l] = hexToHsl(hex);
+  return hslToHex(h, s, l * (1 - amount));
+}
+
+/**
+ * Этап 17 — кэш приглушённых цветов наций.
+ * Маппинг: сырой hex → {fill, border}.
+ */
+const _tabulaColorCache = new Map();
+function tabulaRegionColor(rawHex) {
+  const key = (typeof rawHex === 'string') ? rawHex.toLowerCase() : '';
+  if (_tabulaColorCache.has(key)) return _tabulaColorCache.get(key);
+  // Нейтральные регионы — охристый пергамент.
+  const NEUTRAL_FILL   = '#c8a96e';
+  const NEUTRAL_BORDER = '#6b4f2a';
+  if (!key || key === '#a8a898' || key === '#aaaaaa') {
+    const pair = { fill: NEUTRAL_FILL, border: NEUTRAL_BORDER };
+    _tabulaColorCache.set(key, pair);
+    return pair;
+  }
+  const fill   = desaturateColor(rawHex, 0.4);
+  const border = darkenColor(fill, 0.5);
+  const pair = { fill, border };
+  _tabulaColorCache.set(key, pair);
+  return pair;
+}
 
 function renderRegionPolygons() {
   // Удаляем старые слои
@@ -655,46 +761,56 @@ function renderRegionPolygons() {
  * @param {number}      intelLevel     — Шаг 48: уровень разведки (0/1/2)
  */
 function buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor = null, occupierColor = null, intelLevel = 2) {
+  // Этап 17 (Tabula Peutingeriana) — все цвета нации приглушаются
+  // (desaturate 40%), границы — тёмная умбра (darken 50%).
+  const tab       = tabulaRegionColor(color);
+  const tabFill   = tab.fill;
+  const tabBorder = tab.border;
+
   // Оккупированный регион: показываем цвет оригинального владельца (светлее),
-  // а толстую штрихованную границу — в цвете захватчика
+  // а толстую штрихованную границу — в цвете захватчика.
   if (originalColor && occupierColor && !isSelected) {
+    const origTab = tabulaRegionColor(originalColor);
+    const occTab  = tabulaRegionColor(occupierColor);
     return {
-      fillColor:   originalColor,   // оригинальный владелец виден как фон
-      fillOpacity: intelLevel === 0 ? 0.35 : 0.45,
-      color:       occupierColor,   // граница = цвет захватчика
+      fillColor:   origTab.fill,      // оригинальный владелец виден как фон
+      fillOpacity: intelLevel === 0 ? 0.40 : 0.55,
+      color:       occTab.border,     // граница = тёмный цвет захватчика
       weight:      2.5,
       opacity:     1.0,
-      dashArray:   '8 4',           // штриховая граница — признак оккупации
+      dashArray:   '8 4',             // штриховая граница — признак оккупации
     };
   }
 
   // Шаг 48: туман войны — далёкие регионы приглушаются
   if (!isSelected && intelLevel === 0) {
     return {
-      color:        'rgba(40,30,15,0.55)',
+      color:        'rgba(40,30,15,0.60)',
       weight:       0.8,
-      fillColor:    color,
-      fillOpacity:  0.45,            // притемнение как в спеке
+      fillColor:    tabFill,
+      fillOpacity:  0.50,
       opacity:      0.85,
-      dashArray:    '3 3',           // лёгкий штрих-намёк на хэтчинг
+      dashArray:    '3 3',
     };
   }
   if (!isSelected && intelLevel === 1) {
     return {
-      color:        'rgba(60,45,20,0.50)',
+      color:        'rgba(60,45,20,0.55)',
       weight:       0.9,
-      fillColor:    color,
-      fillOpacity:  0.58,
+      fillColor:    tabFill,
+      fillOpacity:  0.62,
       opacity:      1.0,
       dashArray:    null,
     };
   }
 
   return {
-    color:        isSelected ? '#FFD700' : 'rgba(70,50,25,0.45)',
-    weight:       isSelected ? 3.0 : 1.0,
-    fillColor:    color,
-    fillOpacity:  isSelected ? 0.78 : 0.70,
+    // Этап 17 — выделение = палитровое золото (--gold #c9a961),
+    // обычная граница — тонкая тёмная умбра.
+    color:        isSelected ? '#c9a961' : tabBorder,
+    weight:       isSelected ? 2.5 : 1.0,
+    fillColor:    tabFill,
+    fillOpacity:  isSelected ? 0.82 : 0.70,
     opacity:      1.0,
     dashArray:    null,
   };
@@ -838,10 +954,12 @@ function onRegionHover(e, regionId, entering, color, isPlayerRegion) {
   if (!layer) return;
 
   if (entering) {
+    // Этап 17 — при наведении: золотой бордюр (палитра --gold),
+    // слегка увеличенная непрозрачность заливки.
     layer.setStyle({
-      fillOpacity: 0.80,
+      fillOpacity: 0.85,
       weight: isPlayerRegion ? 2.5 : 2.0,
-      color: 'rgba(200,170,100,0.8)',
+      color: '#c9a961',
     });
     layer.bringToFront();
   } else {
