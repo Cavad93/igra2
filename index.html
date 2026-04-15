@@ -3232,80 +3232,142 @@
     #event-log.collapsed #log-entries { display: none; }
     #event-log.expanded  #log-collapsed { display: none; }
 
+    /* ── uisuper Этап 25: ВОЩЁНАЯ ТАБЛИЧКА ── */
+
+    /* Полоска — 32px в свёрнутом состоянии (#log-strip заменяет #log-collapsed).
+       Визуально — тёмное вощёное дерево со слабым градиентом. */
+    #log-strip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      height: 32px;
+      color: var(--text-light);
+      background: linear-gradient(to right, #2a1e12, #1e1610, #2a1e12);
+      border-bottom: 1px solid var(--border-main);
+      cursor: pointer;
+      overflow: hidden;
+    }
+    /* Точки-нотификации по категориям */
+    #log-dots {
+      display: flex;
+      gap: 5px;
+      flex-shrink: 0;
+      align-items: center;
+    }
+    .log-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--border-main);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .log-dot.active[data-filter="danger"] {
+      background: var(--negative);
+      box-shadow: 0 0 4px rgba(139,32,32,0.6);
+    }
+    .log-dot.active[data-filter="economy"] {
+      background: var(--gold);
+      box-shadow: 0 0 4px rgba(201,169,97,0.5);
+    }
+    .log-dot.active[data-filter="character"] {
+      background: #a5d6a7;
+      box-shadow: 0 0 4px rgba(165,214,167,0.4);
+    }
+    .log-dot.pulse {
+      animation: logDotPulse 0.5s ease-in-out 0s 4;
+    }
+    @keyframes logDotPulse {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.6); }
+    }
+
+    /* Последняя запись в полоске — стиль манускрипта */
+    #log-last-entry {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-secondary);
+      font-family: var(--font-lore);
+      font-size: var(--text-sm);
+      line-height: var(--leading-loose);
+      font-style: italic;
+    }
+
+    /* Шаг 24 compat: #log-collapsed (структура сохранена для проверок) */
     #log-collapsed {
       display: flex;
       align-items: center;
       gap: 8px;
       padding: 0 10px;
       height: 32px;
-      font-size: 11px;
-      color: var(--text-light);
     }
-    #log-last-entry {
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: var(--text-light);
-      font-family: var(--font-lore);
-      font-size: var(--text-sm);
-      line-height: var(--leading-loose);
-    }
-    #log-counters {
-      display: flex;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-    .log-cnt {
-      font-size: 11px;
-      color: var(--text-dim);
-      padding: 2px 6px;
-      border-radius: 3px;
-      background: rgba(0,0,0,0.2);
-    }
-    .log-cnt b { color: var(--text-light); font-weight: bold; }
-    .log-cnt.pulse {
-      animation: logCntPulse 0.5s ease-in-out 0s 4;
-      color: #ef5350;
-    }
-    @keyframes logCntPulse {
-      0%, 100% { background: rgba(0,0,0,0.2); }
-      50%      { background: rgba(229,57,53,0.6); }
-    }
+
     #log-expand-btn {
       flex-shrink: 0;
-      height: 24px;
+      height: 22px;
       padding: 0 10px;
-      background: rgba(139,69,19,0.2);
+      background: none;
       border: 1px solid var(--border-gold);
-      color: var(--text-light);
+      color: var(--gold-dim);
       cursor: pointer;
-      font-family: inherit;
-      font-size: 11px;
-      border-radius: 3px;
+      font-family: var(--font-ui);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      border-radius: 2px;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
     }
-    #log-expand-btn:hover { background: rgba(139,69,19,0.4); }
-    #log-expand-btn.open  { background: rgba(139,69,19,0.45); }
+    #log-expand-btn:hover { color: var(--gold); border-color: var(--gold); background: rgba(201,169,97,0.08); }
+    #log-expand-btn.open  { color: var(--gold); border-color: var(--gold); background: rgba(201,169,97,0.12); }
 
-    #event-log.expanded .log-title,
-    #event-log.expanded #log-entries {
-      padding-left: 8px;
-      padding-right: 8px;
+    /* ── ТЕЛО ТАБЛИЧКИ — вощёное дерево с «строками манускрипта» ── */
+    #log-body {
+      background-color: #1e1a13;
+      background-image:
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0px,
+          transparent 18px,
+          rgba(201,169,97,0.05) 18px,
+          rgba(201,169,97,0.05) 19px
+        ),
+        linear-gradient(to bottom, #1e1a13 0%, #191610 100%);
+      border-top: 1px solid var(--border-gold);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      /* Внутренняя «тень воска» — лёгкое затемнение по краям */
+      box-shadow: inset 0 1px 0 rgba(201,169,97,0.08),
+                  inset 0 -6px 12px rgba(0,0,0,0.35);
     }
-    #event-log.expanded .log-title { padding-top: 6px; }
+    /* Показывается только когда лог раскрыт */
+    #event-log.collapsed #log-body { display: none; }
+
+    #event-log.expanded #log-body .log-title,
+    #event-log.expanded #log-body #log-entries {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+    #event-log.expanded #log-body .log-title { padding-top: 6px; }
 
     .log-title {
       font-family: var(--font-display);
       font-size: var(--text-md);
-      color: var(--text-dim);
+      color: var(--gold);
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       margin-bottom: 4px;
-      border-bottom: 1px solid var(--border-gold);
-      padding-bottom: 3px;
+      border-bottom: 1px solid var(--border-main);
+      padding-bottom: 4px;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .log-filters {
+      display: flex;
+      gap: 3px;
     }
     /* uisuper hot-fix #4: кнопка свёртывания лога в expanded-состоянии */
     .log-collapse-btn {
@@ -11232,34 +11294,40 @@
          НИЖНЯЯ СТРОКА: ЛОГ + ВВОД
     ═══════════════════════════ -->
     <footer id="bottom-area">
-      <!-- Лог событий — Шаг 24: drawer (свёрнутый/развёрнутый) -->
-      <div id="event-log" class="collapsed">
-        <!-- Свёрнутый вид: одна строка 32px -->
-        <div id="log-collapsed">
-          <span id="log-last-entry">—</span>
-          <div id="log-counters">
-            <span class="log-cnt" data-filter="danger"><span class="icon-wrap" data-icon="warning"></span> <b>0</b></span>
-            <span class="log-cnt" data-filter="economy"><span class="icon-wrap" data-icon="gold"></span> <b>0</b></span>
-            <span class="log-cnt" data-filter="character"><span class="icon-wrap" data-icon="population"></span> <b>0</b></span>
+      <!-- Лог событий — uisuper Этап 25: «Вощёная табличка» -->
+      <div id="event-log" class="collapsed" role="log" aria-label="Хроники">
+        <!-- Полоска (strip) — видна в свёрнутом состоянии, играет роль #log-collapsed -->
+        <div id="log-strip" onclick="toggleLog()">
+          <!-- Нотификации-точки по категориям -->
+          <div id="log-dots">
+            <span class="log-dot" data-filter="danger"    title="Опасность"></span>
+            <span class="log-dot" data-filter="economy"   title="Экономика"></span>
+            <span class="log-dot" data-filter="character" title="Персонажи"></span>
           </div>
-          <button id="log-expand-btn" onclick="toggleLog()">▲ Хроники</button>
+          <!-- Последняя запись (одна строка, стиль манускрипта) -->
+          <span id="log-last-entry">—</span>
+          <!-- Кнопка раскрытия -->
+          <button id="log-expand-btn" onclick="toggleLog()" tabindex="-1">▲ Хроники</button>
         </div>
-        <!-- Развёрнутый вид: заголовок + список -->
-        <div class="log-title">
-          <span class="icon-wrap" data-icon="chronicle"></span> Хроники
-          <button class="log-filter-btn active" data-filter="all"     onclick="setLogFilter('all')">Все</button>
-          <button class="log-filter-btn"        data-filter="danger"  onclick="setLogFilter('danger')"><span class="icon-wrap" data-icon="warning"></span></button>
-          <button class="log-filter-btn"        data-filter="economy" onclick="setLogFilter('economy')"><span class="icon-wrap" data-icon="gold"></span></button>
-          <button class="log-filter-btn"        data-filter="character" onclick="setLogFilter('character')"><span class="icon-wrap" data-icon="population"></span></button>
-          <button class="log-filter-btn"        data-filter="law"     onclick="setLogFilter('law')"><span class="icon-wrap" data-icon="laws"></span></button>
-          <button class="btn-icon" onclick="showTurnSummary()" title="Итоги хода"><span class="icon-wrap" data-icon="orders"></span></button>
-          <!-- uisuper hot-fix #4: кнопка свёртывания лога. Раньше
-               в expanded-состоянии не было способа вернуться к
-               свёрнутой полосе — только F5. -->
-          <button class="log-collapse-btn" onclick="toggleLog()"
-                  title="Свернуть хроники" aria-label="Свернуть">▼</button>
+
+        <!-- Тело таблички — раскрывается снизу (expanded) -->
+        <div id="log-body">
+          <div class="log-title">
+            <span class="icon-wrap" data-icon="chronicle"></span> Хроники
+            <div class="log-filters">
+              <button class="log-filter-btn active" data-filter="all"       onclick="setLogFilter('all')">Все</button>
+              <button class="log-filter-btn"        data-filter="danger"    onclick="setLogFilter('danger')"><span class="icon-wrap" data-icon="warning"></span></button>
+              <button class="log-filter-btn"        data-filter="economy"   onclick="setLogFilter('economy')"><span class="icon-wrap" data-icon="gold"></span></button>
+              <button class="log-filter-btn"        data-filter="character" onclick="setLogFilter('character')"><span class="icon-wrap" data-icon="population"></span></button>
+              <button class="log-filter-btn"        data-filter="law"       onclick="setLogFilter('law')"><span class="icon-wrap" data-icon="laws"></span></button>
+            </div>
+            <button class="btn-icon" onclick="showTurnSummary()" title="Итоги хода" style="margin-left:auto"><span class="icon-wrap" data-icon="orders"></span></button>
+            <!-- кнопка свёртывания таблички -->
+            <button class="log-collapse-btn" onclick="toggleLog()"
+                    title="Свернуть хроники" aria-label="Свернуть">▼</button>
+          </div>
+          <div id="log-entries"></div>
         </div>
-        <div id="log-entries"></div>
       </div>
 
       <!-- Шаг 25: Строка ввода команды — всегда видна -->

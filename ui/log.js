@@ -54,7 +54,8 @@ function addEventLog(message, type = 'info') {
   renderLog();
 }
 
-// Шаг 24 — обновить свёрнутый вид (последнее событие + счётчики)
+// Шаг 24 / uisuper Этап 25 — обновить свёрнутый вид
+// (последнее событие, счётчики старого вида, точки-нотификации новой таблички)
 function updateLogCollapsed(lastEntry) {
   if (typeof document === 'undefined') return;
 
@@ -66,7 +67,7 @@ function updateLogCollapsed(lastEntry) {
     lastEl.setAttribute('data-type', lastEntry.type);
   }
 
-  // Счётчики
+  // === Старый вид — счётчики #log-counters (Шаг 24, backward compat) ===
   const countersEl = document.getElementById('log-counters');
   if (countersEl) {
     countersEl.querySelectorAll('.log-cnt').forEach(cnt => {
@@ -80,11 +81,31 @@ function updateLogCollapsed(lastEntry) {
       const dangerCnt = countersEl.querySelector('.log-cnt[data-filter="danger"]');
       if (dangerCnt) {
         dangerCnt.classList.remove('pulse');
-        // reflow чтобы перезапустить CSS-анимацию
-        // eslint-disable-next-line no-unused-expressions
         void dangerCnt.offsetWidth;
         dangerCnt.classList.add('pulse');
         setTimeout(() => dangerCnt.classList.remove('pulse'), 2000);
+      }
+    }
+  }
+
+  // === Новый вид — точки-нотификации #log-dots (uisuper Этап 25) ===
+  const dotsEl = document.getElementById('log-dots');
+  if (dotsEl) {
+    dotsEl.querySelectorAll('.log-dot').forEach(dot => {
+      const f = dot.getAttribute('data-filter');
+      const n = _LOG_COUNTERS[f] ?? 0;
+      if (n > 0) dot.classList.add('active');
+      else       dot.classList.remove('active');
+    });
+
+    // Импульс для последней категории
+    if (lastEntry && _LOG_COUNTERS[lastEntry.type] !== undefined) {
+      const dot = dotsEl.querySelector(`.log-dot[data-filter="${lastEntry.type}"]`);
+      if (dot) {
+        dot.classList.remove('pulse');
+        void dot.offsetWidth;
+        dot.classList.add('pulse');
+        setTimeout(() => dot.classList.remove('pulse'), 2000);
       }
     }
   }
