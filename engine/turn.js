@@ -64,14 +64,20 @@ async function processTurn() {
   } catch (_) {}
 
   const btn = document.getElementById('end-turn-btn');
-  const _setStep = (label) => {
-    if (btn) btn.textContent = `⏳ ${label}`;
-    console.time(`[turn] ${label}`);
-  };
-  const _endStep = (label) => console.timeEnd(`[turn] ${label}`);
+  // uisuper Этап 12: клепсидра-кнопка содержит SVG — textContent-подписи заменены
+  // на console.time (таймеры шагов). Внешнее состояние показывается через disabled/flip.
+  const _setStep = (label) => { console.time(`[turn] ${label}`); };
+  const _endStep = (label) => { try { console.timeEnd(`[turn] ${label}`); } catch (_) {} };
 
   if (btn) btn.disabled = true;
   _setStep('Ход идёт...');
+
+  // uisuper Этап 12 — анимация переворота клепсидры перед расчётом хода
+  try {
+    if (typeof window !== 'undefined' && window.Clepsydra && typeof window.Clepsydra.flip === 'function') {
+      await new Promise(resolve => window.Clepsydra.flip(resolve));
+    }
+  } catch (e) { console.warn('[clepsydra_flip]', e); }
 
   try {
     // Инициализируем поля у всех наций перед обработкой
@@ -362,8 +368,13 @@ async function processTurn() {
     _endStep('Ход идёт...');
     if (btn) {
       btn.disabled = false;
-      btn.textContent = '⚔ Следующий ход';
     }
+    // uisuper Этап 12 — новый ход: сброс состояния «готов» клепсидры
+    try {
+      if (typeof window !== 'undefined' && window.Clepsydra && typeof window.Clepsydra.setReady === 'function') {
+        window.Clepsydra.setReady(false);
+      }
+    } catch (_) {}
   }
 }
 
