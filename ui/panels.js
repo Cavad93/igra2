@@ -269,6 +269,10 @@ if (typeof window !== 'undefined') {
 // renderLeftPanel внутри одного хода не затирали показанную дельту.
 const _resourceBarPrev = { gold: null, troops: null, food: null, pop: null, _turn: null };
 
+// Шаг 16 (uisuper) — последние зафиксированные дельты для аквидукта.
+// Пересчитываются только при смене хода, чтобы частицы не «мигали» в рамках одного хода.
+const _aquaLastDelta = { gold: 0, troops: 0, food: 0, pop: 0 };
+
 function _formatResBarNum(n) {
   if (n === null || n === undefined || Number.isNaN(n)) return '—';
   const v = Math.round(n);
@@ -359,6 +363,7 @@ function updateResourceBar(state) {
   if (prevTurn === null) {
     for (const key of ['gold', 'troops', 'food', 'pop']) {
       _resourceBarPrev[key] = values[key];
+      _aquaLastDelta[key]   = 0;
     }
     _resourceBarPrev._turn = currentTurn;
     // Очистить badge-и на первой отрисовке
@@ -368,7 +373,11 @@ function updateResourceBar(state) {
     }
   } else if (prevTurn !== currentTurn) {
     for (const key of ['gold', 'troops', 'food', 'pop']) {
+      const prevVal = _resourceBarPrev[key];
       _applyResourceDelta(key, values[key]);
+      _aquaLastDelta[key] = (typeof prevVal === 'number')
+        ? (values[key] - prevVal)
+        : 0;
       _resourceBarPrev[key] = values[key];
     }
     _resourceBarPrev._turn = currentTurn;
@@ -377,6 +386,22 @@ function updateResourceBar(state) {
 
   // Шаг 46 — спарклайны трендов ресурсов
   try { _renderResourceSparklines(state); } catch (e) { /* noop в тестах */ }
+
+  // ЭТАП 16 (uisuper) — подкормить радиальный аквидукт свежими цифрами.
+  try {
+    if (typeof window !== 'undefined' && window.AquaWidget) {
+      window.AquaWidget.update({
+        gold:        values.gold,
+        troops:      values.troops,
+        food:        values.food,
+        pop:         values.pop,
+        deltaGold:   _aquaLastDelta.gold,
+        deltaTroops: _aquaLastDelta.troops,
+        deltaFood:   _aquaLastDelta.food,
+        deltaPop:    _aquaLastDelta.pop,
+      });
+    }
+  } catch (e) { /* noop в тестах */ }
 }
 
 // ──────────────────────────────────────────────────────────────
