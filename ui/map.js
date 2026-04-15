@@ -2164,9 +2164,26 @@ function renderNationLabels() {
 
 // Пересчитывает подписи в SVG при каждом изменении зума/пана
 // Curved text вдоль медиальной оси территории (Imperator Rome / EU4 стиль)
+//
+// uisuper Этап 20 (hot-fix LOD) — фильтры:
+//   1) MIN_PX_AREA зависит от zoom (strategic → мягко, detailed → агрессивно)
+//   2) Greedy overlap culling: сортировка уже по площади desc, первая
+//      принятая рамка «забивает» место, пересекающиеся — отклоняются.
+//   3) Экспортируем список принятых AABB в window._nationLabelBBoxes,
+//      чтобы renderCityLabels мог избежать наложения на надписи наций.
+
+// Локальный axis-aligned bbox overlap test
+function _aabbOverlap(a, b) {
+  return !(a.x2 < b.x1 || b.x2 < a.x1 || a.y2 < b.y1 || b.y2 < a.y1);
+}
+
+// Экспорт принятых bbox'ов надписей наций (для city label culling)
+let _nationLabelBBoxes = [];
+
 function _updateNationLabelVisibility() {
   if (!_nationSvg || !_nationSvgGroup) return;
   _nationSvgGroup.innerHTML = '';
+  _nationLabelBBoxes = [];
 
   // Очищаем старые spine-пути из defs
   const defs = _nationSvg.querySelector('defs');
@@ -2174,9 +2191,20 @@ function _updateNationLabelVisibility() {
 
   const mapSize  = leafletMap.getSize();
   const FONT_FAM = 'Cinzel, Palatino, Georgia, serif';
-  const MIN_PX_AREA = 450;
+  // uisuper Этап 20 (hot-fix LOD): динамический порог площади кластера
+  // — на обзорных зумах пропускаем только крупные территории.
+  const _z = leafletMap.getZoom();
+  const MIN_PX_AREA = _z < 4   ? 9000
+                    : _z < 5   ? 4500
+                    : _z < 6   ? 2200
+                    : _z < 7   ? 900
+                    :            450;
   const MIN_FONT = 8;
+  // Максимум надписей наций одновременно — защита «в глубину».
+  const MAX_NATION_LABELS = _z < 4 ? 12 : _z < 5 ? 22 : _z < 6 ? 32 : 60;
   let spIdx = 0;
+  // Список принятых рамок для greedy overlap culling
+  const acceptedBBoxes = [];
 
   for (const d of nationLabelData) {
     // ── 1. Все вершины кластера → пиксели ──
@@ -2248,6 +2276,29 @@ function _updateNationLabelVisibility() {
     spacing = Math.min(spacing, fontSize * 0.6); // max 0.6em
     const spacingEm = spacing / fontSize;
 
+    // ── 5b. Overlap culling (greedy, AABB) ───────────────────────
+    // Центр надписи = середина spine; ширина ≈ baseW + spacing*(n-1);
+    // высота ≈ fontSize*1.4. Если новая рамка пересекает уже принятую
+    // — пропускаем. Поскольку nationLabelData отсортирован по площади
+    // desc, крупные нации «выигрывают» место.
+    const _midIdx = Math.floor(spine.length / 2);
+    const _midPt  = spine[_midIdx] || { x: rs.cx, y: rs.cy };
+    const _labelW = baseW + Math.max(0, spacing * Math.max(0, d.name.length - 1));
+    const _labelH = fontSize * 1.4;
+    const _bbox = {
+      x1: _midPt.x - _labelW / 2 - 4,
+      y1: _midPt.y - _labelH / 2 - 2,
+      x2: _midPt.x + _labelW / 2 + 4,
+      y2: _midPt.y + _labelH / 2 + 2,
+    };
+    let _overlap = false;
+    for (let i = 0; i < acceptedBBoxes.length; i++) {
+      if (_aabbOverlap(acceptedBBoxes[i], _bbox)) { _overlap = true; break; }
+    }
+    if (_overlap) continue;
+    if (acceptedBBoxes.length >= MAX_NATION_LABELS) continue;
+    acceptedBBoxes.push(_bbox);
+
     // ── 6. SVG path (spine) + textPath ──
     const pid = `np${spIdx++}`;
     const pathD = _spineToSVGPath(spine);
@@ -2280,6 +2331,19 @@ function _updateNationLabelVisibility() {
     textEl.appendChild(tpEl);
     _nationSvgGroup.appendChild(textEl);
   }
+
+  // Экспортируем принятые рамки для city label culling
+  _nationLabelBBoxes = acceptedBBoxes;
+  if (typeof window !== 'undefined') window._nationLabelBBoxes = acceptedBBoxes;
+
+  // uisuper Этап 20 (hot-fix LOD): после перерасчёта надписей наций
+  // обновляем и видимость подписей столиц (они тоже зависят от zoom
+  // и не должны пересекаться с уже принятыми curved-надписями).
+  try {
+    if (typeof _applyCityLabelVisibility === 'function') {
+      _applyCityLabelVisibility();
+    }
+  } catch (_) { /* noop */ }
 }
 
 function scheduleNationLabelUpdate() {
@@ -2291,8 +2355,21 @@ function scheduleNationLabelUpdate() {
 // ГОРОДА / СТОЛИЦЫ — uisuper Этап 18
 // Помечаем столицы наций мелкими «греческими» подписями Cinzel.
 // Столица игрока — увеличенная, золотом; остальные — приглушённые.
+//
+// uisuper Этап 20 (hot-fix LOD): маркеры хранят метаданные (rank,
+// isPlayer, nation name length) и не удаляются при зуме. Видимость
+// переключает _applyCityLabelVisibility() — её вызывают из
+// _updateNationLabelVisibility (которое уже подписано на zoom/pan).
+// Алгоритм:
+//   strategic (z<4)      : все столицы скрыты (видны только надписи наций)
+//   regional  (4≤z<6)    : топ-N по числу регионов нации + игрок
+//   almostDet (6≤z<6.5)  : топ-2N + игрок
+//   detailed  (z≥6.5)    : все
+// Плюс greedy overlap test против _nationLabelBBoxes — чтобы столица
+// не легла поверх curved-надписи нации.
 // ──────────────────────────────────────────────────────────────
 
+// Метаданные: { marker, lat, lng, rank, isPlayer, nameLen, name }
 let _cityLabelMarkers = [];
 
 function renderCityLabels() {
@@ -2302,6 +2379,8 @@ function renderCityLabels() {
   const nations = GAME_STATE?.nations ?? {};
   const playerId = GAME_STATE?.player_nation;
 
+  // Ранг = число регионов нации (больше = важнее)
+  const entries = [];
   for (const [nationId, nation] of Object.entries(nations)) {
     if (!nation) continue;
     const capitalRegion = nation.capital_region ?? nation.regions?.[0];
@@ -2309,34 +2388,132 @@ function renderCityLabels() {
     const md = MAP_REGIONS?.[capitalRegion];
     if (!md || !md.center) continue;
 
-    const isCapital = true; // капитал нации
-    const isPlayer  = nationId === playerId;
-    const name      = nation.capital_name || nation.name || nationId;
+    const isPlayer = nationId === playerId;
+    const name     = nation.capital_name || nation.name || nationId;
+    const rank     = Array.isArray(nation.regions) ? nation.regions.length : 1;
+    entries.push({ nationId, name, md, isPlayer, rank });
+  }
+  // Крупные нации первыми — для greedy ordering
+  entries.sort((a, b) => (b.isPlayer - a.isPlayer) || (b.rank - a.rank));
 
-    const cls = 'city-label'
-              + (isCapital ? ' capital' : '')
-              + (isPlayer  ? ' player'  : '');
-
+  for (const e of entries) {
+    const cls = 'city-label capital' + (e.isPlayer ? ' player' : '');
     const icon = L.divIcon({
       className: '',
-      html: `<div class="${cls}">${_escapeHtml(String(name))}</div>`,
+      html: `<div class="${cls}">${_escapeHtml(String(e.name))}</div>`,
       iconSize: null,
       iconAnchor: [0, 0],
     });
-    const marker = L.marker(md.center, {
+    const marker = L.marker(e.md.center, {
       icon,
       interactive: false,
       keyboard:    false,
       zIndexOffset: 800,
     });
     marker.addTo(leafletMap);
-    _cityLabelMarkers.push(marker);
+    _cityLabelMarkers.push({
+      marker,
+      lat:     e.md.center[0],
+      lng:     e.md.center[1],
+      rank:    e.rank,
+      isPlayer:e.isPlayer,
+      nameLen: String(e.name).length,
+      name:    e.name,
+    });
+  }
+
+  // Применяем LOD-фильтрацию сразу (без ожидания zoom-событий)
+  _applyCityLabelVisibility();
+}
+
+/**
+ * uisuper Этап 20 (hot-fix LOD) — переключает видимость маркеров
+ * столиц по текущему zoom и перекрытиям с надписями наций.
+ * Вызывается из _updateNationLabelVisibility (после перерасчёта
+ * _nationLabelBBoxes) и в конце renderCityLabels.
+ */
+function _applyCityLabelVisibility() {
+  if (!leafletMap || !_cityLabelMarkers.length) return;
+  const z = leafletMap.getZoom();
+
+  // Лимит видимых столиц (не считая игрока, он всегда виден если z>=4)
+  const maxVisible = z < 4   ? 0
+                   : z < 5   ? 6
+                   : z < 6   ? 12
+                   : z < 6.5 ? 20
+                   :           999;
+  // На detailed-уровне отключаем overlap-culling полностью — игрок
+  // специально приблизил карту, чтобы видеть все столицы.
+  const skipOverlap = z >= 6.5;
+
+  // entries уже были отсортированы по (isPlayer, rank desc), но у нас
+  // сейчас _cityLabelMarkers в том же порядке.
+  let shown = 0;
+  // Источник рамок надписей наций — локальная переменная, но для
+  // тестов/отладки разрешаем переопределение через window.
+  const _srcBBoxes = (typeof window !== 'undefined' && Array.isArray(window._nationLabelBBoxes))
+                   ? window._nationLabelBBoxes
+                   : _nationLabelBBoxes;
+  const acceptedBBoxes = Array.isArray(_srcBBoxes) ? _srcBBoxes.slice() : [];
+
+  for (const meta of _cityLabelMarkers) {
+    const m = meta.marker;
+    // Переводим lat/lng в пиксели текущего viewport
+    let px;
+    try {
+      px = leafletMap.latLngToContainerPoint([meta.lat, meta.lng]);
+    } catch (_) { px = null; }
+
+    let visible = false;
+
+    // Игрок виден всегда (если не strategic) — его мы тоже проверяем
+    // на overlap, но при коллизии предпочтём скрыть чужие столицы,
+    // а маркер игрока не скрываем — только если z>=4.
+    const isPlayerVisible = meta.isPlayer && z >= 4;
+
+    if (px && (isPlayerVisible || shown < maxVisible)) {
+      // Приблизительный bbox надписи города: ширина ≈ nameLen*6 (px),
+      // высота ≈ 16 (для .city-label.capital). Для игрока увеличиваем.
+      const charW = meta.isPlayer ? 9 : 6;
+      const labelH = meta.isPlayer ? 22 : 16;
+      const labelW = Math.max(24, meta.nameLen * charW);
+      const bbox = {
+        x1: px.x - labelW / 2 - 2,
+        y1: px.y - labelH / 2 - 1,
+        x2: px.x + labelW / 2 + 2,
+        y2: px.y + labelH / 2 + 1,
+      };
+
+      let overlap = false;
+      if (!meta.isPlayer && !skipOverlap) {
+        // Non-player: отказываем при любом пересечении
+        for (let i = 0; i < acceptedBBoxes.length; i++) {
+          if (_aabbOverlap(acceptedBBoxes[i], bbox)) { overlap = true; break; }
+        }
+      }
+
+      if (!overlap) {
+        visible = true;
+        acceptedBBoxes.push(bbox);
+        if (!meta.isPlayer) shown++;
+      }
+    }
+
+    // Переключаем display стиля root-элемента иконки
+    try {
+      const el = m.getElement && m.getElement();
+      if (el) el.style.display = visible ? '' : 'none';
+      else m.setOpacity(visible ? 1 : 0);
+    } catch (_) {
+      try { m.setOpacity(visible ? 1 : 0); } catch (__) {}
+    }
   }
 }
 
 function clearCityLabels() {
   if (!leafletMap) { _cityLabelMarkers = []; return; }
-  for (const m of _cityLabelMarkers) {
+  for (const meta of _cityLabelMarkers) {
+    const m = meta && meta.marker ? meta.marker : meta;
     try { if (leafletMap.hasLayer(m)) leafletMap.removeLayer(m); } catch (_) {}
   }
   _cityLabelMarkers = [];
@@ -2350,8 +2527,9 @@ function _escapeHtml(s) {
 
 // Экспорт в window для вызова из turn.js/renderAll
 if (typeof window !== 'undefined') {
-  window.renderCityLabels = renderCityLabels;
-  window.clearCityLabels  = clearCityLabels;
+  window.renderCityLabels          = renderCityLabels;
+  window.clearCityLabels           = clearCityLabels;
+  window._applyCityLabelVisibility = _applyCityLabelVisibility;
 }
 
 // ──────────────────────────────────────────────────────────────
