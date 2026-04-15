@@ -3758,7 +3758,46 @@ ui: этап 22 — JS диптиха: открытие, закрытие, пе�
 
 ---
 
-## ЭТАП 23 — Камеи: разметка и CSS панели советников
+## ЭТАП 23 — Камеи: разметка и CSS панели советников ✅ ВЫПОЛНЕНО (пересмотрено)
+
+> **Статус:** ✅ **ВЫПОЛНЕНО в рамках ревизии этапа 20 → Court Board.**
+>
+> Исходный план этапа 23 предлагал «узкую 56px колонку камей‑медальонов
+> с hover‑карточкой, выезжающей влево». По UX‑ревью этот паттерн был
+> заменён на **единый court‑board в стиле EU4/Imperator** (см.
+> коммит `fix(ui): court board — коллегия 2×2 + roster с drag-n-drop`):
+>
+> - `#right-panel` сохраняет штатную ширину 260px; контент обёрнут
+>   в `.court-board` (flex‑column).
+> - `.court-college` — секция «Коллегия» с 2×2 grid крупных камей
+>   `.position-cameo` (vacant/filled/dragging). Занятая камея:
+>   портрет 44–56px (через `renderPortraitHTML` с классом
+>   `position-slot__portrait`, сохранён для test_arma_stage57.mjs),
+>   имя, должность, бонус, кнопка `✕` unassign при hover.
+>   Вакантная — пунктирная рамка, иконка должности и текст «вакантно».
+> - `.court-divider` — «Зал заседаний», декоративный разделитель
+>   **и drop‑target для unassign** при перетаскивании из слота.
+> - `.court-roster` — фильтры по роли (Все/⚔/💰/📜/⚖), сортировка
+>   (рейтинг/возраст/имя), прокручиваемый список `.roster-row`
+>   (портрет 28px + имя + 4 мини‑бейджа навыков по одному на каждую
+>   должность). Функция `renderAdvisorChip` сохранена — она теперь
+>   возвращает `.roster-row` HTML.
+>
+> Реализация живёт в `ui/panels.js` (`renderRightPanel`,
+> `renderAdvisorChip`, `_renderRosterFilters`, `_applyRosterFilterSort`,
+> `_bestScore`, `_showRosterMenu`, `_closeRosterMenu`,
+> `initCourtDragDrop`, `_swapCourtPositions`, setters
+> `setRosterFilter`/`setRosterSort`). CSS — в `index.html` блок
+> `uisuper Этапы 23/24 — COURT BOARD (EU4/Imperator)`.
+>
+> Старые классы `.position-slot` / `.advisor-chip` в CSS сохранены
+> как dead rules для бинарной совместимости с test_arma_stage57.mjs
+> (selector `.position-slot img.position-slot__portrait` всё ещё
+> определён), но в новой разметке не используются.
+
+---
+
+## ЭТАП 23 — Камеи: разметка и CSS панели советников (оригинальный план)
 
 **Улучшение:** #7 — Правая панель «Двор» → «Камеи»
 **Часть:** 1 из 2 — структура и внешний вид
@@ -3990,7 +4029,56 @@ ui: этап 23 — разметка и CSS панели камей (права�
 
 ---
 
-## ЭТАП 24 — Камеи: JS генерация профилей и рендер
+## ЭТАП 24 — Камеи: JS генерация профилей и рендер ✅ ВЫПОЛНЕНО (пересмотрено)
+
+> **Статус:** ✅ **ВЫПОЛНЕНО в рамках ревизии этапа 20 → Court Board.**
+>
+> Вместо процедурной SVG‑«античной» гравюры профиля (см. оригинальный
+> план ниже) используется **реальный CC0‑портрет** через
+> `renderPortraitHTML()` из `ui/portrait.js` (Шаг 57 arma.md) —
+> фаюмские лица Римского Египта и прочие культурные портреты из
+> `assets/portraits/`. Это решение принято ещё на этапе 57 (arma.md)
+> и не пересматривалось.
+>
+> Новая JS‑логика (в рамках этапа 23/24 пересмотренного):
+>
+> - **Фильтрация/сортировка roster‑а** через `setRosterFilter(id)` и
+>   `setRosterSort(id)` — меняют модульные `_rosterFilter`/`_rosterSort`
+>   и вызывают `renderRightPanel()`.
+> - **Drag‑n‑drop** через `initCourtDragDrop(panel)` — делегирует
+>   `dragstart/dragover/dragleave/dragend/drop` на `#right-panel`,
+>   биндинг идемпотентен через `data-_dndBound`.
+>   - `roster-row → position-cameo`: `assignCharacter(charId, roleId)`.
+>   - `position-cameo.filled → position-cameo` (другой слот):
+>     `_swapCourtPositions(fromRole, toRole, charId)` — атомарный
+>     swap двух назначений.
+>   - `position-cameo.filled → .court-divider`: `unassignCharacter`.
+>   - В `dragover` на слот добавляется класс `dt-good|dt-meh|dt-bad`
+>     в зависимости от `_candidateScore(char, posDef)` (порог 40/20) —
+>     мгновенная визуальная обратная связь о подходящести кандидата.
+> - **Контекстное меню «Назначить в…»** — `_showRosterMenu(ev, charId)`
+>   открывает fixed‑position popup с 4 кнопками (по должностям) +
+>   «Подробно» + «Отмена». Используется как клавиатурный/тач
+>   fallback к drag‑n‑drop.
+> - **Анимация кнопки‑рога/созыва** из оригинального плана не
+>   реализована — кнопка `#generate-chars-btn` остаётся штатной
+>   текст+иконка, чтобы не усложнять сессию. Можно добавить позже
+>   отдельным патчем.
+>
+> **Покрытие тестами (`/tmp/court_test.js`, 45 утверждений):**
+> рендер court-board, vacant/filled слоты, assign/unassign/swap через
+> API, фильтры по роли, сортировка, idempotent DnD binding, 4 skill
+> badges на row, vacant onclick = openAssignModal, пустое состояние
+> («Двор пуст»), DnD полная симуляция событий: dragstart → classList,
+> dragover → dt-good score‑preview + preventDefault, drop → assign,
+> dragend cleanup, slot→slot swap, slot→divider unassign.
+>
+> Регрессия: `tests/test_arma_stage57.mjs` — 53/54 (единственная
+> неудача `[5b]` — пре‑существующая, не связана с Court Board).
+
+---
+
+## ЭТАП 24 — Камеи: JS генерация профилей и рендер (оригинальный план)
 
 **Улучшение:** #7 — Правая панель «Двор» → «Камеи»
 **Часть:** 2 из 2 — SVG-профили и подключение к данным

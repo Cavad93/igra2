@@ -2087,6 +2087,42 @@ function _candidateScore(char, posDef) {
   return Math.round(score);
 }
 
+// ──────────────────────────────────────────────────────────────
+// uisuper Этапы 23/24 — COURT BOARD (EU4/Imperator)
+// Единый паттерн: коллегия (2×2 крупных камей) сверху + «Зал
+// заседаний» (divider, drop-target для unassign) + roster со
+// всеми свободными персонажами снизу. Drag-n-drop между roster
+// и слотами, swap слот↔слот, score-preview при hover.
+// Заменяет старые .position-slot/.advisor-chip; функции
+// renderAdvisorChip и переменная slotsHtml сохранены как
+// helper'ы внутри renderRightPanel для совместимости с
+// test_arma_stage57.mjs.
+// ──────────────────────────────────────────────────────────────
+
+// Состояние фильтра/сортировки roster-а (модульные переменные —
+// сохраняются между перерисовками)
+let _rosterFilter = 'all';  // 'all' | 'general' | 'merchant' | 'advisor' | 'priest'
+let _rosterSort   = 'score'; // 'score' | 'age' | 'name'
+
+// Состояние drag-n-drop
+let _dndCharId    = null;
+let _dndFromRole  = null;  // если тянем из заполненного слота
+
+// Безопасное экранирование (текстовый контент)
+function _courtEscHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+// Экранирование для атрибутов title (двойные кавычки ломают разметку)
+function _courtEscAttr(s) {
+  return String(s ?? '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+// Экранирование для inline-onclick с ' (одинарные кавычки ломают JS)
+function _courtEscJs(s) {
+  return String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
 function renderRightPanel() {
   const panel = document.getElementById('right-panel');
   if (!panel || !GAME_STATE) return;
@@ -2106,82 +2142,387 @@ function renderRightPanel() {
                       : '301 BC';
 
   const nationIdForPortraits = GAME_STATE.player_nation;
+
+  // ─── Slotы коллегии (Шаг 57: используем renderPortraitHTML) ───
+  // Переменная slotsHtml/паттерн сохранены для test_arma_stage57.mjs.
   const slotsHtml = COURT_POSITIONS.map(p => {
     const charId = positions[p.id];
     const char   = charId ? characters.find(c => c.id === charId) : null;
     const filled = !!char;
-    // Шаг 57 — портрет занятого поста (CC0 JPG, 56px), вакантный слот
-    // показывает иконку роли.
-    const slotPortrait = filled && typeof renderPortraitHTML === 'function'
-      ? renderPortraitHTML(char, nationIdForPortraits, 56, 'position-slot__portrait')
-      : `<div class="pos-role-icon">${_posIconHtml(p.icon)}</div>`;
-    return `
-      <div class="position-slot ${filled ? 'filled' : ''}" data-role="${p.id}"
-           onclick="if(event.target.tagName!=='BUTTON'){${filled ? `showCharacterDetail('${char.id}')` : `openAssignModal('${p.id}')`}}">
-        ${slotPortrait}
-        <div class="pos-info">
-          <div class="pos-title">${p.title}</div>
-          <div class="pos-holder ${filled ? '' : 'empty'}" id="pos-${p.id}">
-            ${filled ? char.name : '— вакантно —'}
-          </div>
-          ${filled ? `<div class="pos-bonus">${p.bonus}</div>` : ''}
+    if (filled) {
+      const portrait = typeof renderPortraitHTML === 'function'
+        ? renderPortraitHTML(char, nationIdForPortraits, 56, 'position-slot__portrait')
+        : `<div class="pos-role-icon">${_posIconHtml(p.icon)}</div>`;
+      const cidJs = _courtEscJs(char.id);
+      const cnEsc = _courtEscHtml(char.name);
+      const cnAttr = _courtEscAttr(char.name);
+      return `
+        <div class="position-cameo filled" data-role="${p.id}" data-char-id="${_courtEscAttr(char.id)}"
+             draggable="true"
+             onclick="if(event.target.closest('.cameo-unassign'))return; showCharacterDetail('${cidJs}')"
+             title="${cnAttr} — ${_courtEscAttr(p.title)}">
+          <button class="cameo-unassign"
+                  onclick="event.stopPropagation(); unassignCharacter('${p.id}')"
+                  title="Снять с должности">✕</button>
+          ${portrait}
+          <div class="cameo-name">${cnEsc}</div>
+          <div class="cameo-title">${p.title}</div>
+          <div class="cameo-bonus">${p.bonus}</div>
         </div>
-        <button class="pos-assign-btn" onclick="event.stopPropagation();openAssignModal('${p.id}')" title="Назначить">↔</button>
-      </div>
-    `;
+      `;
+    } else {
+      return `
+        <div class="position-cameo vacant" data-role="${p.id}"
+             onclick="openAssignModal('${p.id}')"
+             title="${_courtEscAttr(p.title)}: ${_courtEscAttr(p.bonus)}">
+          <div class="cameo-icon">${_posIconHtml(p.icon)}</div>
+          <div class="cameo-title">${p.title}</div>
+          <div class="cameo-label">— вакантно —</div>
+          <div class="cameo-bonus">${p.bonus}</div>
+        </div>
+      `;
+    }
   }).join('');
 
-  const advisorsHtml = freeChars.length === 0
-    ? '<div class="no-data" style="font-size:10px;color:var(--text-dim);padding:4px;">Нет свободных персонажей</div>'
-    : freeChars.map(c => renderAdvisorChip(c, nationIdForPortraits)).join('');
+  // ─── Фильтры и сортировка roster-а ───
+  const filtersHtml = _renderRosterFilters(freeChars);
+
+  // ─── Отфильтрованный/отсортированный список ───
+  const displayChars = _applyRosterFilterSort(freeChars);
+  const advisorsHtml = displayChars.length === 0
+    ? '<div class="roster-empty">Нет подходящих персонажей</div>'
+    : displayChars.map(c => renderAdvisorChip(c, nationIdForPortraits)).join('');
 
   panel.innerHTML = `
-    <div class="court-header">
-      <span class="court-title"><span class="icon-wrap" data-icon="court"></span> Двор ${rulerName}</span>
-      <span class="court-era">${capital} · ${year}</span>
+    <div class="court-board">
+      <div class="court-header">
+        <span class="court-title"><span class="icon-wrap" data-icon="court"></span> Двор ${_courtEscHtml(rulerName)}</span>
+        <span class="court-era">${_courtEscHtml(capital)} · ${_courtEscHtml(year)}</span>
+      </div>
+
+      <button id="generate-chars-btn" onclick="handleGenerateChars()">
+        <span class="icon-wrap" data-icon="ai"></span> Созвать советников (AI)
+      </button>
+
+      ${characters.length === 0
+        ? '<div class="no-data" style="margin-top:8px;">Двор пуст. Созовите советников или введите команду.</div>'
+        : `
+          <section class="court-college">
+            <div class="court-section-title">Коллегия</div>
+            <div class="college-grid">${slotsHtml}</div>
+          </section>
+
+          <div class="court-divider" data-dt="unassign">
+            <span>Зал заседаний</span>
+          </div>
+
+          <section class="court-roster">
+            ${filtersHtml}
+            <div class="roster-list">${advisorsHtml}</div>
+          </section>
+        `
+      }
     </div>
-
-    <button id="generate-chars-btn" onclick="handleGenerateChars()">
-      <span class="icon-wrap" data-icon="ai"></span> Созвать советников (AI)
-    </button>
-
-    ${characters.length === 0
-      ? '<div class="no-data" style="margin-top:8px;">Двор пуст. Введите команду для генерации персонажей.</div>'
-      : `
-        <div id="positions-list">${slotsHtml}</div>
-        <div class="court-section-title">Советники</div>
-        <div id="free-advisors">${advisorsHtml}</div>
-      `
-    }
   `;
+
+  // Проставляем drag-n-drop биндинги (идемпотентно)
+  initCourtDragDrop(panel);
 }
 
-// Чип советника без должности
+/**
+ * renderAdvisorChip — строка roster-а (сохранённое имя для
+ * совместимости с test_arma_stage57.mjs). Использует
+ * renderPortraitHTML(char, nid, 32, 'advisor-chip__portrait').
+ * Выводит новый `.roster-row` HTML с портретом, именем и
+ * четырьмя мини-бейджами навыков (по одному на каждую должность).
+ */
 function renderAdvisorChip(char, nationId) {
   const traits = char.traits || {};
-  // Главный навык — наибольшее значение среди черт (визуально)
-  const skillEntries = [
-    ['army',      traits.ambition || 0],
-    ['army',      traits.caution  || 0],
-    ['gold',      traits.greed    || 0],
-    ['laws',      traits.piety    || 0],
-  ];
-  skillEntries.sort((a, b) => b[1] - a[1]);
-  const [iconName, val] = skillEntries[0];
-  const iconHtml = '<span class="icon-wrap" data-icon="'+iconName+'"></span>';
-  const skillVal = Math.round(val / 10);
-  // Шаг 57 — CC0-портрет 32px вместо эмодзи.
   const nid = nationId || (typeof GAME_STATE !== 'undefined' ? GAME_STATE.player_nation : '');
+  // Шаг 57 — CC0-портрет 32px через renderPortraitHTML.
   const portrait = typeof renderPortraitHTML === 'function'
     ? renderPortraitHTML(char, nid, 32, 'advisor-chip__portrait')
     : `<span class="adv-avatar">${char.portrait || '👤'}</span>`;
+
+  // Четыре бейджа — по одному на каждую должность (один взгляд = весь
+  // профиль кандидата)
+  const skillsHtml = COURT_POSITIONS.map(p => {
+    const raw = traits[p.skill] || 0;
+    const val = Math.round(raw / 10);
+    return `<span class="r-skill" title="${_courtEscAttr(p.title)}: ${raw}">` +
+           `<span class="icon-wrap" data-icon="${p.icon}"></span>${val}</span>`;
+  }).join('');
+
+  const cidJs   = _courtEscJs(char.id);
+  const cidAttr = _courtEscAttr(char.id);
+  const nameEsc = _courtEscHtml(char.name);
+  const nameAtr = _courtEscAttr(char.name);
+  const role    = getRoleLabel(char.role);
+
   return `
-    <div class="advisor-chip" onclick="showCharacterDetail('${char.id}')" title="${char.name} — ${getRoleLabel(char.role)}">
+    <div class="roster-row" data-char-id="${cidAttr}" draggable="true"
+         onclick="if(event.target.closest('.roster-menu-btn'))return; showCharacterDetail('${cidJs}')"
+         title="${nameAtr} — ${_courtEscAttr(role)}">
       ${portrait}
-      <span class="adv-name">${char.name}</span>
-      <span class="adv-skill">${iconHtml}${skillVal}</span>
+      <div class="roster-info">
+        <div class="roster-name">${nameEsc}</div>
+        <div class="roster-meta">${skillsHtml}</div>
+      </div>
+      <button class="roster-menu-btn"
+              onclick="event.stopPropagation(); _showRosterMenu(event, '${cidJs}')"
+              title="Назначить в…">⋮</button>
     </div>
   `;
+}
+
+// ─── Roster: фильтры и сортировка ──────────────────────────────
+
+function _renderRosterFilters(freeChars) {
+  const counts = { all: freeChars.length, general: 0, merchant: 0, advisor: 0, priest: 0 };
+  for (const c of freeChars) {
+    if (counts[c.role] !== undefined) counts[c.role]++;
+  }
+  // Карта: filter id → иконка должности (для визуальной идентификации)
+  const filters = [
+    { id: 'all',      label: 'Все', icon: null },
+    { id: 'general',  label: '',    icon: 'army'      },
+    { id: 'merchant', label: '',    icon: 'gold'      },
+    { id: 'advisor',  label: '',    icon: 'diplomacy' },
+    { id: 'priest',   label: '',    icon: 'laws'      },
+  ];
+  const filterHtml = filters.map(f => {
+    const icon = f.icon
+      ? `<span class="icon-wrap" data-icon="${f.icon}"></span>`
+      : '';
+    const lbl = f.label;
+    return `<button class="roster-filter-btn ${_rosterFilter === f.id ? 'active' : ''}"
+            onclick="setRosterFilter('${f.id}')"
+            title="${_courtEscAttr(f.id)}">${icon}${lbl}·<b>${counts[f.id] ?? 0}</b></button>`;
+  }).join('');
+  const sorts = [
+    { id: 'score', label: 'рейтинг' },
+    { id: 'age',   label: 'возраст' },
+    { id: 'name',  label: 'имя' },
+  ];
+  const sortHtml = sorts.map(s => `
+    <button class="roster-sort-btn ${_rosterSort === s.id ? 'active' : ''}"
+            onclick="setRosterSort('${s.id}')">${s.label}</button>
+  `).join('');
+  return `
+    <div class="roster-filters">${filterHtml}</div>
+    <div class="roster-sort">Сорт:&nbsp;${sortHtml}</div>
+  `;
+}
+
+function _applyRosterFilterSort(freeChars) {
+  // Filter by role
+  let list = _rosterFilter === 'all'
+    ? freeChars.slice()
+    : freeChars.filter(c => c.role === _rosterFilter);
+  // Sort
+  if (_rosterSort === 'score') {
+    list.sort((a, b) => _bestScore(b) - _bestScore(a));
+  } else if (_rosterSort === 'age') {
+    list.sort((a, b) => (a.age || 0) - (b.age || 0));
+  } else if (_rosterSort === 'name') {
+    list.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+  }
+  return list;
+}
+
+function _bestScore(char) {
+  let best = -Infinity;
+  for (const p of COURT_POSITIONS) {
+    const s = _candidateScore(char, p);
+    if (s > best) best = s;
+  }
+  return Number.isFinite(best) ? best : 0;
+}
+
+function setRosterFilter(id) {
+  _rosterFilter = id;
+  renderRightPanel();
+}
+
+function setRosterSort(id) {
+  _rosterSort = id;
+  renderRightPanel();
+}
+
+// ─── Всплывающее меню «Назначить в…» ───────────────────────────
+
+function _showRosterMenu(ev, charId) {
+  _closeRosterMenu();
+  const menu = document.createElement('div');
+  menu.className = 'roster-menu';
+  // Позиционируем: выносим слева от курсора, чтобы не уйти за правый край
+  const x = Math.max(8, (ev.clientX || 0) - 150);
+  const y = Math.min(window.innerHeight - 180, (ev.clientY || 0));
+  menu.style.left = x + 'px';
+  menu.style.top  = y + 'px';
+  const cidJs = _courtEscJs(charId);
+  menu.innerHTML =
+    `<div class="rm-title">Назначить в…</div>` +
+    COURT_POSITIONS.map(p =>
+      `<button onclick="assignCharacter('${cidJs}','${p.id}'); _closeRosterMenu()">` +
+      `<span class="icon-wrap" data-icon="${p.icon}"></span> ${p.title}</button>`
+    ).join('') +
+    `<button class="rm-sep" onclick="showCharacterDetail('${cidJs}'); _closeRosterMenu()">Подробно</button>` +
+    `<button onclick="_closeRosterMenu()">Отмена</button>`;
+  document.body.appendChild(menu);
+  // Инициализируем svg-иконки (MutationObserver их подхватит, но на
+  // всякий случай запустим initIconWraps для свежего узла)
+  if (typeof window.initIconWraps === 'function') {
+    window.initIconWraps(menu);
+  }
+  // Закрытие по клику вне меню — со следующего тика, чтобы не
+  // перехватить свой же onclick
+  setTimeout(() => {
+    document.addEventListener('click', _closeRosterMenuOutside, { once: true, capture: true });
+  }, 0);
+}
+
+function _closeRosterMenu() {
+  document.querySelectorAll('.roster-menu').forEach(m => m.remove());
+}
+
+function _closeRosterMenuOutside(ev) {
+  if (ev.target && ev.target.closest && ev.target.closest('.roster-menu')) {
+    // Клик внутри меню — переустанавливаем listener
+    setTimeout(() => {
+      document.addEventListener('click', _closeRosterMenuOutside, { once: true, capture: true });
+    }, 0);
+    return;
+  }
+  _closeRosterMenu();
+}
+
+// ─── Drag-n-drop ───────────────────────────────────────────────
+
+/**
+ * initCourtDragDrop — навешивает delegated drag/drop listeners
+ * на #right-panel. Идемпотентно: повторный вызов ничего не
+ * делает (флаг data-_dndBound).
+ */
+function initCourtDragDrop(panel) {
+  if (!panel || panel.dataset._dndBound === '1') return;
+  panel.dataset._dndBound = '1';
+
+  panel.addEventListener('dragstart', (e) => {
+    const row  = e.target.closest && e.target.closest('.roster-row');
+    const slot = e.target.closest && e.target.closest('.position-cameo.filled');
+    if (row) {
+      _dndCharId   = row.dataset.charId;
+      _dndFromRole = null;
+      row.classList.add('dragging');
+    } else if (slot) {
+      _dndCharId   = slot.dataset.charId;
+      _dndFromRole = slot.dataset.role;
+      slot.classList.add('dragging');
+    } else {
+      return;
+    }
+    try {
+      e.dataTransfer.setData('text/plain', String(_dndCharId));
+      e.dataTransfer.effectAllowed = 'move';
+    } catch (_) {}
+  });
+
+  panel.addEventListener('dragend', () => {
+    _dndCharId = null;
+    _dndFromRole = null;
+    panel.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+    panel.querySelectorAll('.dt-good,.dt-meh,.dt-bad').forEach(el => {
+      el.classList.remove('dt-good','dt-meh','dt-bad');
+    });
+    panel.querySelectorAll('.dt-unassign').forEach(el => el.classList.remove('dt-unassign'));
+  });
+
+  panel.addEventListener('dragover', (e) => {
+    if (!_dndCharId) return;
+    const slot = e.target.closest && e.target.closest('.position-cameo');
+    const div  = e.target.closest && e.target.closest('.court-divider');
+    if (slot) {
+      e.preventDefault();
+      try { e.dataTransfer.dropEffect = 'move'; } catch (_) {}
+      if (!slot.classList.contains('dt-good') &&
+          !slot.classList.contains('dt-meh') &&
+          !slot.classList.contains('dt-bad')) {
+        const nation = GAME_STATE.nations[GAME_STATE.player_nation];
+        const char   = (nation.characters || []).find(c => c.id === _dndCharId);
+        const posDef = COURT_POSITIONS.find(p => p.id === slot.dataset.role);
+        if (char && posDef) {
+          const score = _candidateScore(char, posDef);
+          const cls = score >= 40 ? 'dt-good' : score >= 20 ? 'dt-meh' : 'dt-bad';
+          slot.classList.add(cls);
+        }
+      }
+    } else if (div && _dndFromRole) {
+      // Drag из слота на divider = snять с должности
+      e.preventDefault();
+      try { e.dataTransfer.dropEffect = 'move'; } catch (_) {}
+      div.classList.add('dt-unassign');
+    }
+  });
+
+  panel.addEventListener('dragleave', (e) => {
+    const slot = e.target.closest && e.target.closest('.position-cameo');
+    const div  = e.target.closest && e.target.closest('.court-divider');
+    if (slot) slot.classList.remove('dt-good','dt-meh','dt-bad');
+    if (div)  div.classList.remove('dt-unassign');
+  });
+
+  panel.addEventListener('drop', (e) => {
+    if (!_dndCharId) return;
+    const slot = e.target.closest && e.target.closest('.position-cameo');
+    const div  = e.target.closest && e.target.closest('.court-divider');
+    const charId    = _dndCharId;
+    const fromRole  = _dndFromRole;
+    if (slot && slot.dataset.role) {
+      e.preventDefault();
+      const targetRole = slot.dataset.role;
+      // Drop на тот же самый слот — no-op
+      if (fromRole === targetRole) return;
+      // Slot → Slot = swap (persist old holder в fromRole)
+      if (fromRole) {
+        _swapCourtPositions(fromRole, targetRole, charId);
+      } else {
+        assignCharacter(charId, targetRole);
+      }
+    } else if (div && fromRole) {
+      e.preventDefault();
+      unassignCharacter(fromRole);
+    }
+  });
+}
+
+function _swapCourtPositions(fromRole, toRole, charId) {
+  const nation = GAME_STATE.nations[GAME_STATE.player_nation];
+  const positions = _getCourtPositions(nation);
+  const otherId = positions[toRole] || null;
+  // Атомарно: source → old holder, target → dragged char
+  positions[fromRole] = otherId;
+  positions[toRole]   = charId;
+  if (typeof addEventLog === 'function') {
+    const chars = nation.characters || [];
+    const me    = chars.find(c => c.id === charId);
+    const other = otherId ? chars.find(c => c.id === otherId) : null;
+    const posTo = COURT_POSITIONS.find(p => p.id === toRole);
+    const posFr = COURT_POSITIONS.find(p => p.id === fromRole);
+    if (me && posTo)    addEventLog(`${me.name} переведён: ${posTo.title}.`, 'character');
+    if (other && posFr) addEventLog(`${other.name} переведён: ${posFr.title}.`, 'character');
+  }
+  renderRightPanel();
+}
+
+// Экспорт в window для onclick-обработчиков inline-разметки
+if (typeof window !== 'undefined') {
+  window.setRosterFilter      = setRosterFilter;
+  window.setRosterSort        = setRosterSort;
+  window._showRosterMenu      = _showRosterMenu;
+  window._closeRosterMenu     = _closeRosterMenu;
+  window.initCourtDragDrop    = initCourtDragDrop;
+  window._swapCourtPositions  = _swapCourtPositions;
 }
 
 // Модал назначения на должность

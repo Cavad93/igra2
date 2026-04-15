@@ -4139,6 +4139,367 @@
     }
     .adv-skill { color: var(--gold-bright); font-weight: bold; }
 
+    /* ══════════════════════════════════════════════════
+       uisuper Этапы 23/24 — COURT BOARD (EU4/Imperator)
+       Единый паттерн: «Коллегия» 2×2 сверху + «Зал
+       заседаний» (разделитель + drop-target unassign) +
+       «Roster» снизу с drag-n-drop, фильтрами и сортировкой.
+       Заменяет визуал старых .position-slot/.advisor-chip.
+    ══════════════════════════════════════════════════ */
+    .court-board {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      height: 100%;
+      min-height: 0;
+    }
+    .court-board .court-header {
+      text-align: center;
+      padding: 4px 0 6px;
+      border-bottom: 1px solid var(--border-gold);
+      margin-bottom: 0;
+    }
+
+    /* ── Коллегия (2×2 grid крупных камей) ── */
+    .court-college {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .college-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 6px;
+    }
+    .position-cameo {
+      position: relative;
+      background: rgba(40,25,8,0.55);
+      border: 2px solid var(--border-gold);
+      border-radius: 4px;
+      padding: 6px 4px 4px;
+      min-height: 96px;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 3px;
+      transition: border-color 0.15s, background 0.15s,
+                  box-shadow 0.15s, transform 0.12s;
+    }
+    .position-cameo:hover {
+      background: rgba(60,40,12,0.65);
+      border-color: var(--gold-bright);
+      transform: translateY(-1px);
+    }
+    .position-cameo.vacant {
+      border-style: dashed;
+      border-color: rgba(200,170,90,0.45);
+    }
+    .position-cameo.vacant .cameo-icon {
+      font-size: 22px;
+      color: var(--text-dim);
+      opacity: 0.75;
+      line-height: 1;
+      margin-top: 4px;
+    }
+    .position-cameo .cameo-title {
+      font-size: 9px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      text-align: center;
+      line-height: 1.1;
+    }
+    .position-cameo.vacant .cameo-label {
+      font-size: 9px;
+      color: var(--text-dim);
+      font-style: italic;
+      text-align: center;
+    }
+    .position-cameo .cameo-bonus {
+      font-size: 8px;
+      color: var(--positive, #7fd97f);
+      text-align: center;
+      margin-top: auto;
+      line-height: 1.2;
+    }
+    .position-cameo.filled {
+      background: rgba(50,30,10,0.72);
+      border-color: var(--gold-bright);
+    }
+    .position-cameo.filled img.position-slot__portrait {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center top;
+      border: 2px solid var(--gold-bright);
+      background: rgba(40,25,8,0.4);
+      margin-top: 2px;
+    }
+    .position-cameo .cameo-name {
+      font-size: 10px;
+      color: var(--text-gold);
+      font-family: var(--font-display);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      text-align: center;
+      line-height: 1.1;
+    }
+    .position-cameo .cameo-unassign {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 16px;
+      height: 16px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(200,170,90,0.4);
+      border-radius: 50%;
+      color: var(--text-dim);
+      font-size: 9px;
+      line-height: 1;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      z-index: 2;
+    }
+    .position-cameo.filled:hover .cameo-unassign { display: flex; }
+    .position-cameo.filled .cameo-unassign:hover {
+      color: #f87171;
+      border-color: #f87171;
+    }
+    /* Drag-hover score feedback */
+    .position-cameo.dt-good {
+      box-shadow: 0 0 0 2px #4ade80, 0 0 12px rgba(74,222,128,0.5);
+      border-color: #4ade80 !important;
+    }
+    .position-cameo.dt-meh {
+      box-shadow: 0 0 0 2px #facc15, 0 0 10px rgba(250,204,21,0.4);
+      border-color: #facc15 !important;
+    }
+    .position-cameo.dt-bad {
+      box-shadow: 0 0 0 2px #ef4444, 0 0 10px rgba(239,68,68,0.4);
+      border-color: #ef4444 !important;
+    }
+    .position-cameo.dragging { opacity: 0.45; }
+
+    /* ── Зал заседаний (divider + drop-target unassign) ── */
+    .court-divider {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 4px 0;
+      color: var(--text-dim);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 2px 0;
+      user-select: none;
+      transition: color 0.15s;
+    }
+    .court-divider::before,
+    .court-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right,
+        transparent, var(--border-gold), transparent);
+      transition: background 0.15s;
+    }
+    .court-divider.dt-unassign {
+      color: #f87171;
+    }
+    .court-divider.dt-unassign::before,
+    .court-divider.dt-unassign::after {
+      background: linear-gradient(to right,
+        transparent, #f87171, transparent);
+    }
+
+    /* ── Roster (реестр свободных персонажей) ── */
+    .court-roster {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-height: 0;
+    }
+    .roster-filters {
+      display: flex;
+      gap: 3px;
+      flex-wrap: wrap;
+    }
+    .roster-filter-btn {
+      background: none;
+      border: 1px solid var(--border-gold);
+      color: var(--text-dim);
+      border-radius: 10px;
+      padding: 1px 7px;
+      font-size: 9px;
+      cursor: pointer;
+      transition: all 0.12s;
+      font-family: var(--font-ui);
+      line-height: 1.3;
+    }
+    .roster-filter-btn:hover {
+      border-color: var(--gold-bright);
+      color: var(--text-gold);
+    }
+    .roster-filter-btn.active {
+      background: rgba(107,79,26,0.35);
+      border-color: var(--gold-bright);
+      color: var(--text-gold);
+    }
+    .roster-filter-btn b { font-weight: normal; opacity: 0.7; }
+    .roster-sort {
+      display: flex;
+      gap: 6px;
+      font-size: 9px;
+      color: var(--text-dim);
+      align-items: center;
+    }
+    .roster-sort-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 9px;
+      padding: 0;
+      font-family: var(--font-ui);
+    }
+    .roster-sort-btn.active {
+      color: var(--text-gold);
+      text-decoration: underline;
+    }
+    .roster-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-height: 0;
+      padding-right: 2px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-gold) transparent;
+    }
+    .roster-row {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 6px;
+      align-items: center;
+      background: rgba(40,25,8,0.45);
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+      padding: 4px 6px;
+      cursor: grab;
+      transition: background 0.12s, border-color 0.12s, transform 0.12s;
+    }
+    .roster-row:hover {
+      background: rgba(60,40,12,0.65);
+      border-color: var(--gold-bright);
+    }
+    .roster-row:active { cursor: grabbing; }
+    .roster-row.dragging { opacity: 0.4; }
+    .roster-row img.advisor-chip__portrait {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center top;
+      border: 1px solid rgba(200,170,90,0.5);
+      background: rgba(40,25,8,0.4);
+    }
+    .roster-row .roster-info { min-width: 0; }
+    .roster-row .roster-name {
+      font-size: 11px;
+      color: var(--text-gold);
+      font-family: var(--font-display);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+    }
+    .roster-row .roster-meta {
+      font-size: 9px;
+      color: var(--text-dim);
+      display: flex;
+      gap: 4px;
+      flex-wrap: nowrap;
+      overflow: hidden;
+    }
+    .roster-row .r-skill {
+      display: inline-flex;
+      align-items: center;
+      gap: 1px;
+      font-size: 9px;
+      color: var(--text-dim);
+    }
+    .roster-row .r-skill .icon-wrap {
+      width: 10px;
+      height: 10px;
+    }
+    .roster-row .roster-menu-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+    }
+    .roster-row .roster-menu-btn:hover { color: var(--text-gold); }
+    .roster-empty {
+      font-size: 10px;
+      color: var(--text-dim);
+      font-style: italic;
+      text-align: center;
+      padding: 10px 4px;
+    }
+
+    /* Всплывающее меню roster-строки (назначение в…) */
+    .roster-menu {
+      position: fixed;
+      z-index: 1500;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 140px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    }
+    .roster-menu .rm-title {
+      font-size: 9px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 6px;
+      border-bottom: 1px solid rgba(107,79,26,0.4);
+      margin-bottom: 2px;
+    }
+    .roster-menu button {
+      background: none;
+      border: none;
+      color: var(--text-gold);
+      text-align: left;
+      font-size: 11px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 2px;
+      font-family: var(--font-display);
+    }
+    .roster-menu button:hover { background: rgba(107,79,26,0.35); }
+    .roster-menu button.rm-sep { border-top: 1px solid rgba(107,79,26,0.4); margin-top: 2px; padding-top: 6px; }
+
     /* Модал назначения */
     #assign-modal-overlay {
       display: none;
