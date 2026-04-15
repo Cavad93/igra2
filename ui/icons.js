@@ -175,11 +175,12 @@ function icon(name, cls = '') {
   return svg.replace('<svg ', `<svg class="icon ${cls ? cls : ''}" `);
 }
 
-// Глобальная экспозиция для окружения, где файл подключён как модуль
-// (type="module") — стадия 6 и далее будут обращаться к window.icon().
+// Глобальная экспозиция. Файл подключается в index.html как обычный
+// <script src="ui/icons.js"> — чтобы работало и при открытии index.html
+// по file:// (где ES-модули блокируются CORS). `export` ниже удалён
+// намеренно: под file:// инструкция `export` в классическом скрипте
+// была бы SyntaxError.
 if (typeof window !== 'undefined') {
   window.ICONS = ICONS;
-  window.icon = icon;
+  window.icon  = icon;
 }
-
-export { ICONS, icon };

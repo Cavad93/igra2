@@ -14,16 +14,20 @@
   <!-- Pixi.js v8 — battle map renderer -->
   <script src="https://cdn.jsdelivr.net/npm/pixi.js@8.17.1/dist/pixi.min.js"></script>
 
-  <!-- Этап 6 — SVG-глифарий (монетный штамп) -->
-  <script type="module">
-    // Мост: пробрасываем ES-модуль в window для не-module кода
-    import { icon, ICONS } from './ui/icons.js';
-    window.icon = icon;
-    window.ICONS = ICONS;
-    window._iconReady = true;
-
-    // Подмена .icon-wrap[data-icon="name"] на реальный SVG
+  <!-- Этап 6 — SVG-глифарий (монетный штамп).
+       ВАЖНО: не используем <script type="module"> — под file:// браузеры
+       блокируют импорты модулей из-за CORS. window.icon / window.ICONS
+       выставляет сам ui/icons.js (см. блок <script src="ui/icons.js">
+       ниже в теле страницы). Здесь мы только определяем утилиту
+       инициализации .icon-wrap и подключаем MutationObserver. -->
+  <script>
+    // Подмена .icon-wrap[data-icon="name"] на реальный SVG.
+    // window.icon может быть ещё не определён на момент парсинга этого
+    // скрипта — он загрузится ниже через <script src="ui/icons.js">.
+    // Поэтому _bootObserver запускается строго на DOMContentLoaded,
+    // когда все классические скрипты уже выполнились.
     function initIconWraps(root) {
+      if (typeof window.icon !== 'function') return;
       const scope = root && root.querySelectorAll ? root : document;
       scope.querySelectorAll('.icon-wrap[data-icon]').forEach(el => {
         const name = el.dataset.icon;
@@ -39,6 +43,7 @@
     // MutationObserver — автоматически инициализирует новые .icon-wrap,
     // добавляемые в DOM из panels.js/diplomacy_tab.js и т.п.
     function _bootObserver() {
+      window._iconReady = (typeof window.icon === 'function');
       initIconWraps(document);
       const mo = new MutationObserver((mutations) => {
         for (const m of mutations) {
@@ -47,7 +52,7 @@
             if (node.nodeType !== 1) continue;
             if (node.matches && node.matches('.icon-wrap[data-icon]')) {
               const name = node.dataset.icon;
-              const svg = window.icon(name);
+              const svg = (typeof window.icon === 'function') ? window.icon(name) : '';
               if (svg) {
                 node.innerHTML = svg;
                 node.removeAttribute('data-icon');
@@ -10521,9 +10526,11 @@
   </script>
 
   <!-- Этап 5 (uisuper.md): SVG-глифарий «монетный штамп».
-       Подключён как модуль (файл содержит `export`), но внутри выставляет
-       window.ICONS и window.icon() для plain-script окружения (стадия 6). -->
-  <script type="module" src="ui/icons.js"></script>
+       Подключается как обычный скрипт (не type="module"), чтобы страница
+       открывалась в т.ч. по протоколу file:// — там ES-модули блокируются
+       CORS. Файл выставляет window.ICONS и window.icon() для остального
+       plain-script окружения (стадия 6 и далее). -->
+  <script src="ui/icons.js"></script>
   <script src="ui/log.js"></script>
   <script src="ui/toast.js"></script>
   <script src="ui/pulse.js"></script>
