@@ -156,7 +156,7 @@ function _dpRender() {
       <!-- ═══ ШАПКА ═══ -->
       <div class="dp-header">
         <div class="dp-header-brand">
-          <div class="dp-header-emblem">🤝</div>
+          <div class="dp-header-emblem"><span class="icon-wrap" data-icon="diplomacy"></span></div>
           <div>
             <div class="dp-header-title">Дипломатия</div>
             <div class="dp-header-sub">${playerFlag} ${playerName} · ${playerRuler}</div>
@@ -182,11 +182,11 @@ function _dpRender() {
         <nav class="dp-nav">
           <button class="dp-nav-btn${_dpTab === 'negotiations' ? ' dp-nav-btn--active' : ''}"
             onclick="dpSwitchTab('negotiations')">
-            <span class="dp-nav-icon">🏛</span> Переговоры
+            <span class="dp-nav-icon icon-wrap" data-icon="court"></span> Переговоры
           </button>
           <button class="dp-nav-btn${_dpTab === 'treaties' ? ' dp-nav-btn--active' : ''}"
             onclick="dpSwitchTab('treaties')">
-            <span class="dp-nav-icon">📜</span> Все договоры
+            <span class="dp-nav-icon icon-wrap" data-icon="laws"></span> Все договоры
           </button>
         </nav>
         <button class="dp-close" onclick="hideDiplomacyOverlay()" title="Закрыть">✕</button>

@@ -14,9 +14,82 @@
   <!-- Pixi.js v8 — battle map renderer -->
   <script src="https://cdn.jsdelivr.net/npm/pixi.js@8.17.1/dist/pixi.min.js"></script>
 
+  <!-- Этап 6 — SVG-глифарий (монетный штамп) -->
+  <script type="module">
+    // Мост: пробрасываем ES-модуль в window для не-module кода
+    import { icon, ICONS } from './ui/icons.js';
+    window.icon = icon;
+    window.ICONS = ICONS;
+    window._iconReady = true;
 
+    // Подмена .icon-wrap[data-icon="name"] на реальный SVG
+    function initIconWraps(root) {
+      const scope = root && root.querySelectorAll ? root : document;
+      scope.querySelectorAll('.icon-wrap[data-icon]').forEach(el => {
+        const name = el.dataset.icon;
+        const svg = window.icon(name);
+        if (svg) {
+          el.innerHTML = svg;
+          el.removeAttribute('data-icon');
+        }
+      });
+    }
+    window.initIconWraps = initIconWraps;
+
+    // MutationObserver — автоматически инициализирует новые .icon-wrap,
+    // добавляемые в DOM из panels.js/diplomacy_tab.js и т.п.
+    function _bootObserver() {
+      initIconWraps(document);
+      const mo = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          if (m.type !== 'childList') continue;
+          for (const node of m.addedNodes) {
+            if (node.nodeType !== 1) continue;
+            if (node.matches && node.matches('.icon-wrap[data-icon]')) {
+              const name = node.dataset.icon;
+              const svg = window.icon(name);
+              if (svg) {
+                node.innerHTML = svg;
+                node.removeAttribute('data-icon');
+              }
+            }
+            if (node.querySelectorAll) initIconWraps(node);
+          }
+        }
+      });
+      mo.observe(document.body || document.documentElement, { childList: true, subtree: true });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', _bootObserver);
+    } else {
+      _bootObserver();
+    }
+  </script>
 
   <style>
+    /* ══════════════════════════════════════════════════
+       ЭТАП 6 — SVG-иконки (монетный штамп)
+       .icon-wrap — контейнер для data-icon; .icon — сам svg
+    ══════════════════════════════════════════════════ */
+    .icon-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.2em;
+      height: 1.2em;
+      vertical-align: middle;
+      flex-shrink: 0;
+      color: currentColor;
+    }
+    .icon-wrap svg,
+    .icon {
+      width: 100%;
+      height: 100%;
+      display: block;
+      stroke: currentColor;
+      fill: none;
+    }
+
     /* ══════════════════════════════════════════════════
        D3: ЭКРАН ЗАГРУЗКИ + Шаг 58: фреска splash-screen
     ══════════════════════════════════════════════════ */
@@ -9749,21 +9822,21 @@
       <span id="game-title">ANCIENT STRATEGY</span>
       <!-- Шаг 21: Ресурс-бар — 4 ключевых показателя всегда на виду -->
       <div id="resource-bar">
-        <div class="res-item" id="res-gold"    title="Казна"       onclick="onResourceBarClick('gold')">💰 <span>—</span><span class="res-delta"></span><canvas class="res-sparkline" width="44" height="14"></canvas></div>
-        <div class="res-item" id="res-troops"  title="Войска"      onclick="onResourceBarClick('troops')">⚔ <span>—</span><span class="res-delta"></span><canvas class="res-sparkline" width="44" height="14"></canvas></div>
-        <div class="res-item" id="res-food"    title="Снабжение"   onclick="onResourceBarClick('food')">🌾 <span>—</span><span class="res-delta"></span><canvas class="res-sparkline" width="44" height="14"></canvas></div>
-        <div class="res-item" id="res-pop"     title="Население"   onclick="onResourceBarClick('pop')">👥 <span>—</span><span class="res-delta"></span><canvas class="res-sparkline" width="44" height="14"></canvas></div>
+        <div class="res-item" id="res-gold"    title="Казна"       onclick="onResourceBarClick('gold')"><span class="icon-wrap" data-icon="gold"></span> <span>—</span><span class="res-delta"></span><canvas class="res-sparkline" width="44" height="14"></canvas></div>
+        <div class="res-item" id="res-troops"  title="Войска"      onclick="onResourceBarClick('troops')"><span class="icon-wrap" data-icon="troops"></span> <span>—</span><span class="res-delta"></span><canvas class="res-sparkline" width="44" height="14"></canvas></div>
+        <div class="res-item" id="res-food"    title="Снабжение"   onclick="onResourceBarClick('food')"><span class="icon-wrap" data-icon="food"></span> <span>—</span><span class="res-delta"></span><canvas class="res-sparkline" width="44" height="14"></canvas></div>
+        <div class="res-item" id="res-pop"     title="Население"   onclick="onResourceBarClick('pop')"><span class="icon-wrap" data-icon="population"></span> <span>—</span><span class="res-delta"></span><canvas class="res-sparkline" width="44" height="14"></canvas></div>
       </div>
       <!-- Шаг 31: Индикатор прогресса хода -->
       <div id="turn-progress" title="Прогресс хода">
         <div class="tp-dots" id="tp-dots"></div>
         <span id="tp-label">0/0</span>
       </div>
-      <button id="end-turn-btn" onclick="processTurn()" title="Следующий ход [Space]">⚔ Следующий ход</button>
+      <button id="end-turn-btn" onclick="processTurn()" title="Следующий ход [Space]"><span class="icon-wrap" data-icon="end_turn"></span> Следующий ход</button>
       <!-- Шаг 34: Кнопка поиска по игре -->
-      <button id="search-btn" onclick="toggleSearchPanel()" title="Поиск [/]">🔍</button>
+      <button id="search-btn" onclick="toggleSearchPanel()" title="Поиск [/]"><span class="icon-wrap" data-icon="search"></span></button>
       <!-- Шаг 22: Иконка настроек (API ключи и пр.) -->
-      <button id="settings-btn" onclick="toggleSettingsModal()" title="Настройки">⚙</button>
+      <button id="settings-btn" onclick="toggleSettingsModal()" title="Настройки"><span class="icon-wrap" data-icon="settings"></span></button>
       <!-- Шаг 60 (arma.md) — Иконка и имя текущей нации игрока -->
       <div id="nation-header" title="Активная нация">
         <img id="nation-icon" class="nation-icon" src="" alt="" width="28" height="28">
@@ -9800,13 +9873,13 @@
       <!-- Левая панель: статистика нации (Шаг 23 — иконки-вкладки) -->
       <div id="left-panel">
         <nav id="left-nav">
-          <button class="lnav-btn active" data-tab="overview"  title="Обзор нации" onclick="renderLeftPanelTab('overview')">🗺<span class="lnav-badge" id="badge-overview"  style="display:none">0</span></button>
-          <button class="lnav-btn"        data-tab="army"      title="Армия"       onclick="renderLeftPanelTab('army')">⚔<span class="lnav-badge" id="badge-army"      style="display:none">0</span></button>
-          <button class="lnav-btn"        data-tab="economy"   title="Экономика"   onclick="renderLeftPanelTab('economy')">💰<span class="lnav-badge" id="badge-economy"   style="display:none">0</span></button>
-          <button class="lnav-btn"        data-tab="diplomacy" title="Дипломатия"  onclick="renderLeftPanelTab('diplomacy')">🤝<span class="lnav-badge" id="badge-diplomacy" style="display:none">0</span></button>
-          <button class="lnav-btn"        data-tab="laws"      title="Законы"      onclick="renderLeftPanelTab('laws')">📜<span class="lnav-badge" id="badge-laws"      style="display:none">0</span></button>
+          <button class="lnav-btn active" data-tab="overview"  title="Обзор нации" onclick="renderLeftPanelTab('overview')"><span class="icon-wrap" data-icon="overview"></span><span class="lnav-badge" id="badge-overview"  style="display:none">0</span></button>
+          <button class="lnav-btn"        data-tab="army"      title="Армия"       onclick="renderLeftPanelTab('army')"><span class="icon-wrap" data-icon="army"></span><span class="lnav-badge" id="badge-army"      style="display:none">0</span></button>
+          <button class="lnav-btn"        data-tab="economy"   title="Экономика"   onclick="renderLeftPanelTab('economy')"><span class="icon-wrap" data-icon="economy"></span><span class="lnav-badge" id="badge-economy"   style="display:none">0</span></button>
+          <button class="lnav-btn"        data-tab="diplomacy" title="Дипломатия"  onclick="renderLeftPanelTab('diplomacy')"><span class="icon-wrap" data-icon="diplomacy"></span><span class="lnav-badge" id="badge-diplomacy" style="display:none">0</span></button>
+          <button class="lnav-btn"        data-tab="laws"      title="Законы"      onclick="renderLeftPanelTab('laws')"><span class="icon-wrap" data-icon="laws"></span><span class="lnav-badge" id="badge-laws"      style="display:none">0</span></button>
           <!-- Шаг 49 (arma.md): граф дипломатических отношений -->
-          <button class="lnav-btn"        id="diplo-graph-btn" data-tab="diplo-graph" title="Граф дипломатии" onclick="toggleDiploGraph()">🕸</button>
+          <button class="lnav-btn"        id="diplo-graph-btn" data-tab="diplo-graph" title="Граф дипломатии" onclick="toggleDiploGraph()"><span class="icon-wrap" data-icon="diplo_graph"></span></button>
         </nav>
         <div id="left-panel-content">
           <!-- Заполняется из panels.js renderLeftPanel() -->
@@ -9823,10 +9896,10 @@
           <!-- Leaflet монтируется сюда в renderMap() -->
           <!-- Шаг 29: панель режимов карты -->
           <div id="map-mode-bar">
-            <button class="mm-btn active" data-mode="political" title="Политический [1]" onclick="setMapMode('political')">🗺</button>
-            <button class="mm-btn"        data-mode="economy"   title="Экономика [2]"    onclick="setMapMode('economy')">💰</button>
-            <button class="mm-btn"        data-mode="military"  title="Военный [3]"       onclick="setMapMode('military')">⚔</button>
-            <button class="mm-btn"        data-mode="population" title="Население [4]"    onclick="setMapMode('population')">👥</button>
+            <button class="mm-btn active" data-mode="political" title="Политический [1]" onclick="setMapMode('political')"><span class="icon-wrap" data-icon="overview"></span></button>
+            <button class="mm-btn"        data-mode="economy"   title="Экономика [2]"    onclick="setMapMode('economy')"><span class="icon-wrap" data-icon="economy"></span></button>
+            <button class="mm-btn"        data-mode="military"  title="Военный [3]"       onclick="setMapMode('military')"><span class="icon-wrap" data-icon="army"></span></button>
+            <button class="mm-btn"        data-mode="population" title="Население [4]"    onclick="setMapMode('population')"><span class="icon-wrap" data-icon="population"></span></button>
           </div>
           <!-- Легенда наций -->
           <div id="nation-legend">
@@ -9920,9 +9993,9 @@
 
       <!-- Правая панель: двор -->
       <div id="right-panel">
-        <div class="panel-title">👑 Двор Агафокла</div>
+        <div class="panel-title"><span class="icon-wrap" data-icon="court"></span> Двор Агафокла</div>
         <button id="generate-chars-btn" onclick="handleGenerateChars()">
-          ✨ Созвать советников (AI)
+          <span class="icon-wrap" data-icon="ai"></span> Созвать советников (AI)
         </button>
 
         <!-- Шаг 22: API ключи перенесены в модальное окно настроек (⚙ в топ-баре) -->
@@ -9943,21 +10016,21 @@
         <div id="log-collapsed">
           <span id="log-last-entry">—</span>
           <div id="log-counters">
-            <span class="log-cnt" data-filter="danger">⚠ <b>0</b></span>
-            <span class="log-cnt" data-filter="economy">💰 <b>0</b></span>
-            <span class="log-cnt" data-filter="character">👤 <b>0</b></span>
+            <span class="log-cnt" data-filter="danger"><span class="icon-wrap" data-icon="warning"></span> <b>0</b></span>
+            <span class="log-cnt" data-filter="economy"><span class="icon-wrap" data-icon="gold"></span> <b>0</b></span>
+            <span class="log-cnt" data-filter="character"><span class="icon-wrap" data-icon="population"></span> <b>0</b></span>
           </div>
           <button id="log-expand-btn" onclick="toggleLog()">▲ Хроники</button>
         </div>
         <!-- Развёрнутый вид: заголовок + список -->
         <div class="log-title">
-          ⚔ Хроники
+          <span class="icon-wrap" data-icon="chronicle"></span> Хроники
           <button class="log-filter-btn active" data-filter="all"     onclick="setLogFilter('all')">Все</button>
-          <button class="log-filter-btn"        data-filter="danger"  onclick="setLogFilter('danger')">⚠</button>
-          <button class="log-filter-btn"        data-filter="economy" onclick="setLogFilter('economy')">💰</button>
-          <button class="log-filter-btn"        data-filter="character" onclick="setLogFilter('character')">👤</button>
-          <button class="log-filter-btn"        data-filter="law"     onclick="setLogFilter('law')">📜</button>
-          <button class="btn-icon" onclick="showTurnSummary()" title="Итоги хода">📋</button>
+          <button class="log-filter-btn"        data-filter="danger"  onclick="setLogFilter('danger')"><span class="icon-wrap" data-icon="warning"></span></button>
+          <button class="log-filter-btn"        data-filter="economy" onclick="setLogFilter('economy')"><span class="icon-wrap" data-icon="gold"></span></button>
+          <button class="log-filter-btn"        data-filter="character" onclick="setLogFilter('character')"><span class="icon-wrap" data-icon="population"></span></button>
+          <button class="log-filter-btn"        data-filter="law"     onclick="setLogFilter('law')"><span class="icon-wrap" data-icon="laws"></span></button>
+          <button class="btn-icon" onclick="showTurnSummary()" title="Итоги хода"><span class="icon-wrap" data-icon="orders"></span></button>
         </div>
         <div id="log-entries"></div>
       </div>
@@ -9971,20 +10044,20 @@
           autocomplete="off"
           spellcheck="false"
         >
-        <button id="send-btn">⚔ Приказать</button>
+        <button id="send-btn"><span class="icon-wrap" data-icon="orders"></span> Приказать</button>
       </div>
 
       <!-- Шаг 25: Мини-кнопка приказов (свёрнутый orders-panel) -->
       <div id="orders-mini">
         <button id="orders-mini-btn" onclick="toggleOrdersMini()" title="Развернуть приказы">
-          📋 <span id="orders-mini-count">0</span> приказов
+          <span class="icon-wrap" data-icon="orders"></span> <span id="orders-mini-count">0</span> приказов
         </button>
       </div>
 
       <!-- Приказы и делегирование — popup, разворачивается вверх по клику на orders-mini-btn -->
       <div id="orders-panel" class="closed">
         <div class="op-hdr">
-          📋 Приказы и делегирование
+          <span class="icon-wrap" data-icon="orders"></span> Приказы и делегирование
           <span style="display:flex;gap:6px;align-items:center">
             <button class="op-new-btn" onclick="showMpOrderForm()">+ Новый приказ</button>
             <button class="op-new-btn" onclick="toggleOrdersMini()" title="Свернуть">▼</button>
@@ -10008,9 +10081,9 @@
     <div id="status-bar">
       <span id="sb-game">—</span>
       <span class="sb-sep">|</span>
-      <span id="sb-save">💾 Не сохранено</span>
+      <span id="sb-save"><span class="icon-wrap" data-icon="save"></span> Не сохранено</span>
       <span class="sb-sep">|</span>
-      <span id="sb-ai" class="ready">🤖 AI: готов</span>
+      <span id="sb-ai" class="ready"><span class="icon-wrap" data-icon="ai"></span> AI: готов</span>
       <span class="sb-sep">|</span>
       <span id="sb-fps">— fps</span>
     </div>
@@ -10533,7 +10606,7 @@
       }
 
       btn.disabled = true;
-      btn.textContent = '⏳ Генерирую...';
+      btn.innerHTML = '<span class="icon-wrap">' + (window.icon ? window.icon('end_turn') : '') + '</span> Генерирую...';
       if (typeof setAIStatus === 'function') setAIStatus('busy');
 
       try {
@@ -10544,7 +10617,7 @@
         console.error('Ошибка генерации персонажей:', err);
         addEventLog(`Ошибка генерации персонажей: ${err.message}`, 'warning');
         btn.disabled = false;
-        btn.textContent = '✨ Созвать советников (AI)';
+        btn.innerHTML = '<span class="icon-wrap">' + (window.icon ? window.icon('ai') : '') + '</span> Созвать советников (AI)';
         if (typeof setAIStatus === 'function') setAIStatus('error');
       }
     }
@@ -10827,7 +10900,7 @@
       // Всегда: Подробности
       items.push({
         label: 'Подробности',
-        icon:  '📜',
+        icon:  'laws',
         action: () => {
           if (typeof onRegionClick === 'function') {
             onRegionClick(regionId);
@@ -10852,7 +10925,7 @@
         if (hasArmyNear) {
           items.push({
             label: 'Атаковать',
-            icon:  '⚔',
+            icon:  'army',
             action: () => {
               if (typeof onRegionClick === 'function') onRegionClick(regionId);
               if (typeof showToast === 'function') showToast('Выберите армию и цель для атаки', 'info');
@@ -10867,7 +10940,7 @@
         if (!atWar) {
           items.push({
             label: 'Предложить союз',
-            icon:  '🤝',
+            icon:  'diplomacy',
             action: () => {
               if (typeof switchLeftTab === 'function') switchLeftTab('diplomacy');
               if (typeof showToast === 'function') {
@@ -10883,7 +10956,7 @@
         items.push({ sep: true });
         items.push({
           label: 'Построить',
-          icon:  '🏗',
+          icon:  'court',
           action: () => {
             if (typeof onRegionClick === 'function') onRegionClick(regionId);
             if (typeof switchRegionTab === 'function') switchRegionTab('build');
@@ -10891,7 +10964,7 @@
         });
         items.push({
           label: 'Управление',
-          icon:  '📦',
+          icon:  'orders',
           action: () => {
             if (typeof onRegionClick === 'function') onRegionClick(regionId);
           },
@@ -10928,7 +11001,8 @@
         const el = document.createElement('div');
         el.className = 'ctx-item';
         el.setAttribute('data-ctx-idx', String(idx));
-        el.innerHTML = `<span class="ctx-icon">${it.icon}</span><span class="ctx-label">${it.label}</span>`;
+        const iconSvg = (window.icon && typeof it.icon === 'string') ? window.icon(it.icon) : '';
+        el.innerHTML = `<span class="ctx-icon icon-wrap">${iconSvg || (it.icon || '')}</span><span class="ctx-label">${it.label}</span>`;
         el.addEventListener('click', (ev) => {
           ev.stopPropagation();
           try { it.action && it.action(); }
@@ -11104,12 +11178,16 @@
         el.classList.remove('ready','busy','error');
         const s = (status || 'ready').toLowerCase();
         el.classList.add(s);
+        const aiIcon = (window.icon ? window.icon('ai') : '')
+          || '<span class="icon-wrap" data-icon="ai"></span>';
         if (typeof text === 'string' && text) {
-          el.textContent = text;
+          el.innerHTML = '<span class="icon-wrap">' + aiIcon + '</span> ' + text;
         } else {
-          if (s === 'busy')       el.textContent = '🤖 AI: обрабатывает…';
-          else if (s === 'error') el.textContent = '🤖 AI: ошибка';
-          else                    el.textContent = '🤖 AI: готов';
+          let label;
+          if (s === 'busy')       label = 'AI: обрабатывает…';
+          else if (s === 'error') label = 'AI: ошибка';
+          else                    label = 'AI: готов';
+          el.innerHTML = '<span class="icon-wrap">' + aiIcon + '</span> ' + label;
         }
       }
 
@@ -11117,19 +11195,22 @@
       function _renderSaveLabel(){
         const el = _el('sb-save');
         if (!el) return;
+        const saveIcon = (window.icon ? window.icon('save') : '')
+          || '<span class="icon-wrap" data-icon="save"></span>';
+        const wrap = (label) => '<span class="icon-wrap">' + saveIcon + '</span> ' + label;
         if (_sbLastSaveTs == null) {
-          el.textContent = '💾 Не сохранено';
+          el.innerHTML = wrap('Не сохранено');
           return;
         }
         const diffMs = Date.now() - _sbLastSaveTs;
         const mins   = Math.floor(diffMs / 60000);
-        if (diffMs < 5000)       el.textContent = '💾 Сохранено только что';
-        else if (mins < 1)       el.textContent = '💾 Сохранено ' + Math.floor(diffMs/1000) + ' сек назад';
-        else if (mins === 1)     el.textContent = '💾 Сохранено 1 мин назад';
-        else if (mins < 60)      el.textContent = '💾 Сохранено ' + mins + ' мин назад';
+        if (diffMs < 5000)       el.innerHTML = wrap('Сохранено только что');
+        else if (mins < 1)       el.innerHTML = wrap('Сохранено ' + Math.floor(diffMs/1000) + ' сек назад');
+        else if (mins === 1)     el.innerHTML = wrap('Сохранено 1 мин назад');
+        else if (mins < 60)      el.innerHTML = wrap('Сохранено ' + mins + ' мин назад');
         else {
           const h = Math.floor(mins / 60);
-          el.textContent = '💾 Сохранено ' + h + ' ч назад';
+          el.innerHTML = wrap('Сохранено ' + h + ' ч назад');
         }
       }
 
@@ -11356,15 +11437,16 @@
         const parts = [];
         _flatResults = [];
 
+        const _svg = (name) => (window.icon ? window.icon(name) : '');
         if (rTake > 0) {
-          parts.push('<div class="sr-group-title">🗺 Регионы</div>');
+          parts.push('<div class="sr-group-title"><span class="icon-wrap">'+_svg('overview')+'</span> Регионы</div>');
           for (let i = 0; i < rTake; i++) {
             const it = groups.regions[i];
             const idx = _flatResults.length;
             _flatResults.push(it);
             parts.push(
               '<div class="sr-item" data-idx="'+idx+'">' +
-                '<span class="sr-icon">🗺</span>' +
+                '<span class="sr-icon icon-wrap">'+_svg('overview')+'</span>' +
                 '<span class="sr-label">'+_esc(it.label)+'</span>' +
                 (it.sub ? '<span class="sr-sub">'+_esc(it.sub)+'</span>' : '') +
               '</div>'
@@ -11372,28 +11454,28 @@
           }
         }
         if (nTake > 0) {
-          parts.push('<div class="sr-group-title">🏳 Нации</div>');
+          parts.push('<div class="sr-group-title"><span class="icon-wrap">'+_svg('diplomacy')+'</span> Нации</div>');
           for (let i = 0; i < nTake; i++) {
             const it = groups.nations[i];
             const idx = _flatResults.length;
             _flatResults.push(it);
             parts.push(
               '<div class="sr-item" data-idx="'+idx+'">' +
-                '<span class="sr-icon">🏳</span>' +
+                '<span class="sr-icon icon-wrap">'+_svg('diplomacy')+'</span>' +
                 '<span class="sr-label">'+_esc(it.label)+'</span>' +
               '</div>'
             );
           }
         }
         if (cTake > 0) {
-          parts.push('<div class="sr-group-title">👤 Персонажи</div>');
+          parts.push('<div class="sr-group-title"><span class="icon-wrap">'+_svg('population')+'</span> Персонажи</div>');
           for (let i = 0; i < cTake; i++) {
             const it = groups.characters[i];
             const idx = _flatResults.length;
             _flatResults.push(it);
             parts.push(
               '<div class="sr-item" data-idx="'+idx+'">' +
-                '<span class="sr-icon">👤</span>' +
+                '<span class="sr-icon icon-wrap">'+_svg('population')+'</span>' +
                 '<span class="sr-label">'+_esc(it.label)+'</span>' +
                 (it.sub ? '<span class="sr-sub">'+_esc(it.sub)+'</span>' : '') +
               '</div>'

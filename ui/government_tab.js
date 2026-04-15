@@ -62,7 +62,7 @@ function renderGovernmentTab(nation) {
 
   // 5. Институты — каждый адаптирован под свой type
   if (gov.institutions?.length) {
-    sections.push(`<div class="gov-section-title">🏛 Институты власти</div>`);
+    sections.push(`<div class="gov-section-title"><span class="icon-wrap" data-icon="court"></span> Институты власти</div>`);
     sections.push(gov.institutions.map(inst => renderInstitutionBlock(inst, nation)).join(''));
   }
 
@@ -569,7 +569,7 @@ function renderRulerBlock(ruler, nation) {
   }
 
   // Fallback — неизвестный тип правителя
-  return `<div class="gov-section"><div class="gov-section-title">👑 Правитель</div><div class="gov-text">${ruler.name ?? '?'}</div></div>`;
+  return `<div class="gov-section"><div class="gov-section-title"><span class="icon-wrap" data-icon="court"></span> Правитель</div><div class="gov-text">${ruler.name ?? '?'}</div></div>`;
 }
 
 function renderPersonRuler(ruler, nation) {
@@ -579,7 +579,7 @@ function renderPersonRuler(ruler, nation) {
 
   return `
     <div class="gov-section">
-      <div class="gov-section-title">👑 Правитель</div>
+      <div class="gov-section-title"><span class="icon-wrap" data-icon="court"></span> Правитель</div>
       <div class="gov-ruler-card">
         <div class="gov-ruler-portrait">${char?.portrait ?? '👤'}</div>
         <div class="gov-ruler-info">
@@ -611,7 +611,7 @@ function renderCouncilRuler(ruler, nation) {
 
   return `
     <div class="gov-section">
-      <div class="gov-section-title">🏛 Правящий орган</div>
+      <div class="gov-section-title"><span class="icon-wrap" data-icon="court"></span> Правящий орган</div>
       <div class="gov-council-card">
         <div class="gov-council-name">${ruler.name}</div>
         <div class="gov-council-meta">
@@ -984,7 +984,7 @@ function renderSuccessionBlock(succession, nation) {
 
   return `
     <div class="gov-section">
-      <div class="gov-section-title">👑 Престолонаследие</div>
+      <div class="gov-section-title"><span class="icon-wrap" data-icon="court"></span> Престолонаследие</div>
       ${heirHtml}
       ${candidatesHtml}
       ${claimTypesHtml}
@@ -1315,7 +1315,7 @@ function renderConstitutionBlock(arch, nation) {
   const powerLabels  = { Limited: 'Ограниченные', Standard: 'Стандартные', Dictatorial: 'Диктаторские' };
   return `
     <div class="gov-section">
-      <div class="gov-section-title">📜 Конституция</div>
+      <div class="gov-section-title"><span class="icon-wrap" data-icon="laws"></span> Конституция</div>
       <div class="gov-constitution-grid">
         <div class="gov-const-row"><span class="gov-metric-label">Мест в Сенате:</span><strong>${arch.senate_capacity}</strong></div>
         <div class="gov-const-row"><span class="gov-metric-label">Срок консула:</span><strong>${arch.consul_term} лет</strong></div>
@@ -2922,7 +2922,7 @@ function renderSenateLazyBlock(nationId) {
   }).join('');
 
   return `
-    <div class="gov-section-title">🏛 Сенат (${total} мест)</div>
+    <div class="gov-section-title"><span class="icon-wrap" data-icon="court"></span> Сенат (${total} мест)</div>
     <div class="senate-block">
 
       <div class="senate-mood-bar">
@@ -3407,7 +3407,7 @@ function renderOrdersSection(nation) {
 
   return `
     <div class="gov-section" id="orders-section">
-      <div class="gov-section-title">📋 Приказы и делегирование
+      <div class="gov-section-title"><span class="icon-wrap" data-icon="orders"></span> Приказы и делегирование
         <button class="orders-new-btn" onclick="showIssueOrderPanel()"
                 title="Выдать новый приказ">+ Новый приказ</button>
       </div>

@@ -1848,7 +1848,7 @@ function renderPopulationOverlay() {
 
       <!-- Header -->
       <div class="pop-hdr">
-        <span class="pop-hdr-ic">👥</span>
+        <span class="pop-hdr-ic icon-wrap" data-icon="population"></span>
         <div style="flex:1">
           <div class="pop-hdr-t">Структура общества</div>
           <div class="pop-hdr-n">${nation.name}</div>
@@ -1896,7 +1896,7 @@ function renderPopulationOverlay() {
 
       <!-- Income & Investment section -->
       <div class="pop-sh" style="margin-top:12px">
-        <span class="pop-st">💰 Доходы и инвестиции классов</span>
+        <span class="pop-st"><span class="icon-wrap" data-icon="gold"></span> Доходы и инвестиции классов</span>
         <span class="pop-hint">Прогресс накопления к следующей постройке</span>
       </div>
       ${incomeHtml}

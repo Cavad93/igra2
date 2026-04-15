@@ -49,7 +49,7 @@ function _buildLeftPanelSections(nation, nationId) {
   const ruler = `
     <!-- ПРАВИТЕЛЬ -->
     <div class="panel-section ruler-section">
-      <div class="ruler-name">⚔️ ${rulerName}</div>
+      <div class="ruler-name"><span class="icon-wrap" data-icon="court"></span> ${rulerName}</div>
       <div class="ruler-sub">${govTypeName} · ${nation.name}</div>
       <div class="grandeur-display" style="color:var(--gold,#c8a84b);font-size:12px;margin:4px 0 2px;">✦ Величие: <span id="grandeur-value">${typeof calcGrandeur === 'function' ? calcGrandeur(nationId) : 0}</span></div>
       <div id="manifest-display" style="font-style:italic;font-size:11px;color:var(--text-dim);margin:2px 0 4px;display:${GAME_STATE.player_manifest?.text ? '' : 'none'}">${GAME_STATE.player_manifest?.text ? `«${GAME_STATE.player_manifest.text}»` : ''}</div>
@@ -61,26 +61,26 @@ function _buildLeftPanelSections(nation, nationId) {
         <span class="stat-value">${(gov.legitimacy ?? 0).toFixed(1)}%</span>
       </div>
       <button class="gov-open-btn" onclick="showGovernmentOverlay()">
-        🏛 Управление государством ▸
+        <span class="icon-wrap" data-icon="court"></span> Управление государством ▸
       </button>
       <button class="gov-open-btn" style="margin-top:4px" onclick="showPopulationOverlay()">
-        👥 Структура общества ▸
+        <span class="icon-wrap" data-icon="population"></span> Структура общества ▸
       </button>
       <button class="gov-open-btn" id="eco-open-btn" style="margin-top:4px" onclick="showEconomyOverlay()">
-        💹 Экономический обзор ▸
+        <span class="icon-wrap" data-icon="economy"></span> Экономический обзор ▸
       </button>
       <button class="gov-open-btn" style="margin-top:4px" onclick="showTreasuryOverlay()">
-        💰 Казна и налоги ▸
+        <span class="icon-wrap" data-icon="gold"></span> Казна и налоги ▸
       </button>
       <button class="gov-open-btn" style="margin-top:4px" onclick="showVowsModal()">
-        ⚔️ Клятвы ▸
+        <span class="icon-wrap" data-icon="army"></span> Клятвы ▸
       </button>
       <button class="gov-open-btn" style="margin-top:4px" onclick="showChronicleModal()">
-        📖 Открыть летопись ▸
+        <span class="icon-wrap" data-icon="chronicle"></span> Открыть летопись ▸
       </button>
       ${(gov.ruler?.age ?? 0) >= 60 ? `
       <button class="gov-open-btn" style="margin-top:4px;border-color:var(--gold,#c8a84b)" onclick="showTestamentModal()">
-        📜 Завещание ▸
+        <span class="icon-wrap" data-icon="laws"></span> Завещание ▸
       </button>` : ''}
     </div>
     <!-- Динамические цели -->
@@ -90,7 +90,7 @@ function _buildLeftPanelSections(nation, nationId) {
   const treasury = `
     <!-- КАЗНА -->
     <div class="panel-section">
-      <div class="section-title">💰 Казна</div>
+      <div class="section-title"><span class="icon-wrap" data-icon="gold"></span> Казна</div>
       <div class="stat-row">
         <span class="stat-label">Монет</span>
         <span class="stat-value gold">${Math.round(economy.treasury).toLocaleString()}</span>
@@ -113,7 +113,7 @@ function _buildLeftPanelSections(nation, nationId) {
   const population = `
     <!-- НАСЕЛЕНИЕ -->
     <div class="panel-section">
-      <div class="section-title">👥 Население</div>
+      <div class="section-title"><span class="icon-wrap" data-icon="population"></span> Население</div>
       ${renderPopMiniWidget(pop)}
     </div>
   `;
@@ -121,7 +121,7 @@ function _buildLeftPanelSections(nation, nationId) {
   const army = `
     <!-- АРМИЯ -->
     <div class="panel-section">
-      <div class="section-title">⚔️ Армия</div>
+      <div class="section-title"><span class="icon-wrap" data-icon="army"></span> Армия</div>
       <div class="stat-row">
         <span class="stat-label">🗡 Пехота</span>
         <span class="stat-value">${military.infantry.toLocaleString()}</span>
@@ -177,7 +177,7 @@ function _buildLeftPanelSections(nation, nationId) {
   const diplomacy = `
     <!-- ДИПЛОМАТИЯ -->
     <div class="panel-section">
-      <div class="section-title">🤝 Дипломатия</div>
+      <div class="section-title"><span class="icon-wrap" data-icon="diplomacy"></span> Дипломатия</div>
       ${renderRelations(nation.relations)}
     </div>
   `;
@@ -185,7 +185,7 @@ function _buildLeftPanelSections(nation, nationId) {
   const laws = `
     <!-- ЗАКОНЫ -->
     <div class="panel-section">
-      <div class="section-title">📜 Законы <span class="laws-count">${(nation.active_laws || []).length}</span></div>
+      <div class="section-title"><span class="icon-wrap" data-icon="laws"></span> Законы <span class="laws-count">${(nation.active_laws || []).length}</span></div>
       ${renderLaws(nation.active_laws)}
     </div>
   `;
@@ -1825,7 +1825,7 @@ function renderRelations(relations) {
 
   return `
     <button class="diplo-open-btn" onclick="showDiplomacyOverlay()">
-      🤝 Зал переговоров ▸
+<span class="icon-wrap" data-icon="diplomacy"></span> Зал переговоров ▸
     </button>
 
     ${hasTreaties ? `
@@ -2021,11 +2021,15 @@ function renderLaws(laws) {
 
 // Шаг 43 — список должностей при дворе
 const COURT_POSITIONS = [
-  { id: 'strategos', icon: '⚔',  title: 'Стратег',   bonus: '+армия',     skill: 'ambition',   prefRole: 'general'  },
-  { id: 'treasurer', icon: '💰', title: 'Казначей',  bonus: '+доход',     skill: 'greed',      prefRole: 'merchant' },
-  { id: 'envoy',     icon: '🤝', title: 'Посол',     bonus: '+дипломатия',skill: 'caution',    prefRole: 'advisor'  },
-  { id: 'chancellor',icon: '📜', title: 'Советник',  bonus: '+политика',  skill: 'piety',      prefRole: 'priest'   },
+  { id: 'strategos', icon: 'army',      title: 'Стратег',   bonus: '+армия',     skill: 'ambition',   prefRole: 'general'  },
+  { id: 'treasurer', icon: 'gold',      title: 'Казначей',  bonus: '+доход',     skill: 'greed',      prefRole: 'merchant' },
+  { id: 'envoy',     icon: 'diplomacy', title: 'Посол',     bonus: '+дипломатия',skill: 'caution',    prefRole: 'advisor'  },
+  { id: 'chancellor',icon: 'laws',      title: 'Советник',  bonus: '+политика',  skill: 'piety',      prefRole: 'priest'   },
 ];
+// Хелпер для отрисовки иконки должности (используется в слотах/модалах).
+function _posIconHtml(name) {
+  return '<span class="icon-wrap" data-icon="'+name+'"></span>';
+}
 
 function _getCourtPositions(nation) {
   if (!nation.court_positions) {
@@ -2085,7 +2089,7 @@ function renderRightPanel() {
     // показывает иконку роли.
     const slotPortrait = filled && typeof renderPortraitHTML === 'function'
       ? renderPortraitHTML(char, nationIdForPortraits, 56, 'position-slot__portrait')
-      : `<div class="pos-role-icon">${p.icon}</div>`;
+      : `<div class="pos-role-icon">${_posIconHtml(p.icon)}</div>`;
     return `
       <div class="position-slot ${filled ? 'filled' : ''}" data-role="${p.id}"
            onclick="if(event.target.tagName!=='BUTTON'){${filled ? `showCharacterDetail('${char.id}')` : `openAssignModal('${p.id}')`}}">
@@ -2108,12 +2112,12 @@ function renderRightPanel() {
 
   panel.innerHTML = `
     <div class="court-header">
-      <span class="court-title">👑 Двор ${rulerName}</span>
+      <span class="court-title"><span class="icon-wrap" data-icon="court"></span> Двор ${rulerName}</span>
       <span class="court-era">${capital} · ${year}</span>
     </div>
 
     <button id="generate-chars-btn" onclick="handleGenerateChars()">
-      ✨ Созвать советников (AI)
+      <span class="icon-wrap" data-icon="ai"></span> Созвать советников (AI)
     </button>
 
     ${characters.length === 0
@@ -2132,13 +2136,14 @@ function renderAdvisorChip(char, nationId) {
   const traits = char.traits || {};
   // Главный навык — наибольшее значение среди черт (визуально)
   const skillEntries = [
-    ['⚔', traits.ambition || 0],
-    ['🛡', traits.caution  || 0],
-    ['💰', traits.greed    || 0],
-    ['☥', traits.piety    || 0],
+    ['army',      traits.ambition || 0],
+    ['army',      traits.caution  || 0],
+    ['gold',      traits.greed    || 0],
+    ['laws',      traits.piety    || 0],
   ];
   skillEntries.sort((a, b) => b[1] - a[1]);
-  const [icon, val] = skillEntries[0];
+  const [iconName, val] = skillEntries[0];
+  const iconHtml = '<span class="icon-wrap" data-icon="'+iconName+'"></span>';
   const skillVal = Math.round(val / 10);
   // Шаг 57 — CC0-портрет 32px вместо эмодзи.
   const nid = nationId || (typeof GAME_STATE !== 'undefined' ? GAME_STATE.player_nation : '');
@@ -2149,7 +2154,7 @@ function renderAdvisorChip(char, nationId) {
     <div class="advisor-chip" onclick="showCharacterDetail('${char.id}')" title="${char.name} — ${getRoleLabel(char.role)}">
       ${portrait}
       <span class="adv-name">${char.name}</span>
-      <span class="adv-skill">${icon}${skillVal}</span>
+      <span class="adv-skill">${iconHtml}${skillVal}</span>
     </div>
   `;
 }
@@ -2199,7 +2204,7 @@ function openAssignModal(roleId) {
   overlay.innerHTML = `
     <div class="assign-modal-box" onclick="event.stopPropagation()">
       <div class="assign-modal-header">
-        <div class="assign-modal-icon">${posDef.icon}</div>
+        <div class="assign-modal-icon">${_posIconHtml(posDef.icon)}</div>
         <div>
           <div class="assign-modal-title">${posDef.title}</div>
           <div class="assign-modal-sub">${posDef.bonus}</div>
