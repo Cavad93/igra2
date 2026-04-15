@@ -479,9 +479,15 @@ if (typeof window !== 'undefined') {
   window.SEASON_STYLES     = SEASON_STYLES;
   window.getCurrentSeason  = getCurrentSeason;
   window.applySeasonVisual = applySeasonVisual;
-  // Этап 10 (uisuper.md) — стела, верхний левый блок
-  window.updateStele       = (...a) => updateStele(...a);
-  window.toRomanYear       = (...a) => toRomanYear(...a);
+  // Этап 10 (uisuper.md) — стела, верхний левый блок.
+  // Важно: присваиваем напрямую, без обёртки-стрелки. Стрелка вида
+  //   (...a) => updateStele(...a)
+  // вызывала бы бесконечную рекурсию, потому что в top-level классическом
+  // скрипте `function updateStele` — это то же самое, что window.updateStele;
+  // перезапись window.updateStele стрелкой сделала бы идентификатор
+  // updateStele внутри стрелки ссылкой на саму стрелку.
+  window.updateStele       = updateStele;
+  window.toRomanYear       = toRomanYear;
 }
 
 function updateDateDisplay() {
