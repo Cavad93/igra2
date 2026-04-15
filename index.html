@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- DEV: отключаем кэш браузера для index.html — JS-файлы подгружаются
+       с ?v=X query-параметрами, которые бампаются при крупных обновлениях.
+       Если index.html закэширован — query-параметры тоже старые и новый
+       код не загружается. no-cache решает это. -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Ancient Strategy — Сиракузы 301 BC</title>
 
   <!-- Leaflet.js — интерактивные карты, без npm.
@@ -11383,7 +11390,7 @@
   <script src="engine/achievements.js"></script>
   <script src="ai/chronicle.js"></script>
   <script src="engine/turn.js"></script>
-  <script src="ui/map.js"></script>
+  <script src="ui/map.js?v=courtboard"></script>
   <script src="ui/map_armies.js"></script>
   <script src="ui/map_events.js"></script>
   <script src="ui/map_event_feed.js"></script>
@@ -11398,7 +11405,7 @@
   <script src="ui/portrait_svg.js"></script>
   <script src="ui/portrait.js"></script>
   <script src="ui/splash.js"></script>
-  <script src="ui/panels.js"></script>
+  <script src="ui/panels.js?v=courtboard"></script>
   <script src="ui/aqueduct.js"></script>
   <script src="ui/government_tab.js"></script>
   <script src="ui/population_tab.js"></script>
