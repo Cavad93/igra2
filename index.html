@@ -3398,17 +3398,41 @@
       line-height: var(--leading-loose);
     }
 
+    /* uisuper Этап 26 — стиль записей в манускриптной табличке */
     .log-entry {
       display: flex;
-      align-items: flex-start;
-      gap: 5px;
+      align-items: baseline;
+      gap: 6px;
       padding: 2px 0;
-      font-size: 11px;
-      line-height: 1.4;
-      border-bottom: 1px solid rgba(107,79,26,0.2);
+      font-family: var(--font-lore);
+      font-size: var(--text-xs);
+      line-height: var(--leading-loose);
+      border-bottom: 1px solid rgba(61, 48, 32, 0.3);
     }
     .log-icon { flex-shrink: 0; font-size: 10px; opacity: 0.8; }
-    .log-text  { color: var(--text-light); }
+    .log-mark {
+      flex-shrink: 0;
+      font-size: 11px;
+      width: 12px;
+      text-align: center;
+      line-height: 1;
+    }
+    .log-text  { color: var(--text-secondary); flex: 1; }
+    .log-turn-n {
+      flex-shrink: 0;
+      font-family: var(--font-data);
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0;
+    }
+    /* Новая запись — короткая золотая подсветка */
+    .log-entry.new {
+      animation: log-highlight 1.5s ease forwards;
+    }
+    @keyframes log-highlight {
+      0%   { background: rgba(201, 169, 97, 0.12); }
+      100% { background: transparent; }
+    }
 
     .log-turn     .log-text { color: var(--gold-bright); font-weight: bold; }
     .log-danger   .log-text { color: #ef5350; }

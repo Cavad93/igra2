@@ -21,6 +21,27 @@ const LOG_STYLES = {
   achievement: { icon: '🏆', cls: 'log-achievement' },
 };
 
+// uisuper Этап 26 — категорийные метки в стиле манускрипта.
+// Каждая запись в раскрытой табличке выводится со знаком-маркером:
+//   ⚠ — опасность, ◈ — экономика, ◉ — персонажи, § — законы, · — прочее.
+const LOG_CATEGORY_MARKS = {
+  danger:      { mark: '⚠', color: 'var(--negative)'    },
+  warning:     { mark: '⚠', color: 'var(--warning)'     },
+  economy:     { mark: '◈', color: 'var(--gold)'        },
+  character:   { mark: '◉', color: 'var(--bronze)'      },
+  diplomacy:   { mark: '◉', color: 'var(--bronze)'      },
+  law:         { mark: '§', color: 'var(--text-dim)'    },
+  military:    { mark: '†', color: 'var(--negative)'    },
+  turn:        { mark: '✦', color: 'var(--gold-bright)' },
+  good:        { mark: '✧', color: 'var(--positive)'    },
+  ai:          { mark: '·', color: 'var(--text-dim)'    },
+  culture:     { mark: '·', color: 'var(--text-dim)'    },
+  religion:    { mark: '·', color: 'var(--text-dim)'    },
+  achievement: { mark: '✦', color: 'var(--gold-bright)' },
+  info:        { mark: '·', color: 'var(--text-dim)'    },
+  default:     { mark: '·', color: 'var(--text-dim)'    },
+};
+
 // Шаг 24 — счётчики по категориям (для свёрнутого вида #log-collapsed)
 const _LOG_COUNTERS = { danger: 0, economy: 0, character: 0 };
 
@@ -32,6 +53,7 @@ function addEventLog(message, type = 'info') {
     message,
     type,
     timestamp: Date.now(),
+    isNew: true,  // uisuper Этап 26 — метка «новая запись», сбрасывается при раскрытии
   };
 
   // Добавляем в GAME_STATE для сохранения
@@ -111,7 +133,8 @@ function updateLogCollapsed(lastEntry) {
   }
 }
 
-// Шаг 24 — переключить свёрнутый/развёрнутый режим лога
+// Шаг 24 / uisuper Этап 26 — переключить свёрнутый/развёрнутый режим лога.
+// При раскрытии — сбрасываем точки-нотификации и метки «новая запись».
 function toggleLog() {
   if (typeof document === 'undefined') return;
   const logEl = document.getElementById('event-log');
@@ -126,6 +149,8 @@ function toggleLog() {
       btn.classList.add('open');
       btn.textContent = '▼ Хроники';
     }
+    // uisuper Этап 26 — при открытии лога гасим нотификации
+    resetLogNotifications();
   } else {
     logEl.classList.remove('expanded');
     logEl.classList.add('collapsed');
@@ -136,31 +161,89 @@ function toggleLog() {
   }
 }
 
-// Отрисовать лог
+// uisuper Этап 26 — сброс нотификаций: счётчики, точки и флаги isNew.
+function resetLogNotifications() {
+  // 1. Обнуляем счётчики
+  for (const k of Object.keys(_LOG_COUNTERS)) _LOG_COUNTERS[k] = 0;
+  // 2. Снимаем isNew с прочитанных записей, чтобы новые подсветки не стреляли повторно
+  if (typeof GAME_STATE !== 'undefined' && GAME_STATE && Array.isArray(GAME_STATE.events_log)) {
+    GAME_STATE.events_log.forEach(e => { e.isNew = false; });
+  }
+  if (typeof document === 'undefined') return;
+  // 3. Гасим точки в полоске (только если document поддерживает querySelectorAll)
+  if (typeof document.querySelectorAll === 'function') {
+    document.querySelectorAll('#log-dots .log-dot').forEach(dot => {
+      dot.classList.remove('active');
+      dot.classList.remove('pulse');
+    });
+  }
+  // 4. Старые счётчики (Шаг 24 compat) — тоже обнулим
+  if (typeof document.getElementById === 'function') {
+    const countersEl = document.getElementById('log-counters');
+    if (countersEl && typeof countersEl.querySelectorAll === 'function') {
+      countersEl.querySelectorAll('.log-cnt b').forEach(b => { b.textContent = '0'; });
+    }
+  }
+}
+
+// uisuper Этап 26 — обновить точки-нотификации по списку записей лога.
+// Экспортируется как window.updateLogDots для внешних вызовов.
+function updateLogDots(entries) {
+  if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
+  const counts = { danger: 0, economy: 0, character: 0, law: 0 };
+  (entries || []).forEach(e => {
+    if (e && e.isNew && counts[e.type] !== undefined) counts[e.type]++;
+  });
+  document.querySelectorAll('#log-dots .log-dot').forEach(dot => {
+    const f = dot.getAttribute('data-filter');
+    dot.classList.toggle('active', (counts[f] ?? 0) > 0);
+  });
+}
+
+// uisuper Этап 26 — отрисовка лога в стиле манускрипта.
+// Каждая запись: категорийная метка (⚠/◈/◉/§/·) + текст + номер хода.
 function renderLog() {
   const container = document.getElementById('log-entries');
-  if (!container || !GAME_STATE) return;
+  if (!container || typeof GAME_STATE === 'undefined' || !GAME_STATE) return;
 
   if (!GAME_STATE.events_log) GAME_STATE.events_log = [];
   const entries = GAME_STATE.events_log.slice(0, LOG_DISPLAY);
 
   container.innerHTML = entries.map(entry => {
     const style = LOG_STYLES[entry.type] || LOG_STYLES.info;
+    const cat = LOG_CATEGORY_MARKS[entry.type] || LOG_CATEGORY_MARKS.default;
+    const isNewCls = entry.isNew ? ' new' : '';
+    const turnStr = entry.turn ? `ход ${entry.turn}` : '';
     return `
-      <div class="log-entry ${style.cls}" data-type="${entry.type}">
-        <span class="log-icon">${style.icon}</span>
+      <div class="log-entry ${style.cls}${isNewCls}" data-type="${entry.type}" data-filter="${entry.type}">
+        <span class="log-mark" style="color:${cat.color}">${cat.mark}</span>
         <span class="log-text">${escapeHtml(entry.message)}</span>
+        <span class="log-turn-n">${turnStr}</span>
       </div>
     `;
   }).join('');
+
+  // Снять подсветку .new через 1.6s чтобы анимация не застревала
+  if (typeof setTimeout !== 'undefined') {
+    setTimeout(() => {
+      container.querySelectorAll('.log-entry.new').forEach(el => el.classList.remove('new'));
+    }, 1600);
+  }
+
+  // Применить текущий фильтр если есть
+  if (typeof _applyLogFilter === 'function') {
+    try { _applyLogFilter(); } catch (_) { /* ignore */ }
+  }
 }
 
 // Экспорт в глобальную область — чтобы onclick в HTML видели функции
 if (typeof window !== 'undefined') {
-  window.addEventLog      = addEventLog;
-  window.renderLog        = renderLog;
-  window.toggleLog        = toggleLog;
-  window.updateLogCollapsed = updateLogCollapsed;
+  window.addEventLog         = addEventLog;
+  window.renderLog           = renderLog;
+  window.toggleLog           = toggleLog;
+  window.updateLogCollapsed  = updateLogCollapsed;
+  window.updateLogDots       = updateLogDots;
+  window.resetLogNotifications = resetLogNotifications;
 }
 
 // Экранирование HTML для безопасного вывода
