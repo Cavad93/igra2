@@ -1344,7 +1344,7 @@ function _renderCmChatPhase(aiId, st, aiNation, playerNation) {
   if (dialogue.length === 0 && !st.isLoading) {
     msgsHtml = `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-dim);text-align:center">
       <div style="font-size:52px;opacity:.3">${aiFlag}</div>
-      <div style="font-family:'Cinzel',serif;font-size:14px">Начните переговоры</div>
+      <div style="font-family:var(--font-display);font-size:14px">Начните переговоры</div>
       <div style="font-size:11px;max-width:280px;opacity:.7">Напишите обращение к ${aiRuler} — выберите тип договора и изложите условия</div>
     </div>`;
   } else {
@@ -1402,7 +1402,7 @@ function _renderCmChatPhase(aiId, st, aiNation, playerNation) {
         border-radius: 5px;
         color: #c8e6c9;
         font-size: 12px;
-        font-family: 'Cinzel', serif;
+        font-family: var(--font-ui);
         padding: 8px 16px;
         cursor: pointer;
         white-space: nowrap;
