@@ -671,12 +671,31 @@ function tabulaRegionColor(rawHex) {
     _tabulaColorCache.set(key, pair);
     return pair;
   }
-  // uisuper hot-fix #1: десатурация снижена с 0.4 до 0.15 — иначе все
-  // 50+ наций сливались в один охристый тон и визуально различались
-  // только при клике. 0.15 даёт заметные цвета фракций и сохраняет
-  // общий «пергаментный» вайб Tabula Peutingeriana.
-  const fill   = desaturateColor(rawHex, 0.15);
-  const border = darkenColor(fill, 0.45);
+  // uisuper hot-fix #1 (v2): саму палитру в data/nations.js менять
+  // нельзя (170+ наций, культурная авторская задумка), но многие
+  // соседние нации там имеют близкие hue/saturation (Сиракузы,
+  // Карфаген, Сиканы, Сикелы — все H≈30–45°, S≈15–40%). Чтобы они
+  // визуально различались на карте:
+  //   1) буст насыщенности до min 0.55 (но не выше 0.85 — не хотим
+  //      неоновых тонов, которые ломают Tabula-вайб)
+  //   2) hue-spread ±30° на основе детерминированного хэша hex —
+  //      соседние похожие тона раздвигаются на разные hue, но один
+  //      и тот же nation.color всегда даёт один результат (кэш
+  //      по исходному hex)
+  //   3) clamp L в диапазон 0.42–0.68 — чтобы не было пересвеченных
+  //      и почти-чёрных регионов
+  const [h0, s0, l0] = hexToHsl(rawHex);
+  // Хэш входного hex → сдвиг hue ±30°
+  let hash = 0;
+  for (let i = 0; i < rawHex.length; i++) {
+    hash = ((hash * 131) + rawHex.charCodeAt(i)) >>> 0;
+  }
+  const hueShift = ((hash % 61) - 30);  // -30..+30
+  const adjH = h0 + hueShift;
+  const adjS = Math.min(0.85, Math.max(0.55, s0 * 1.45));
+  const adjL = Math.min(0.68, Math.max(0.42, l0));
+  const fill   = hslToHex(adjH, adjS, adjL);
+  const border = darkenColor(fill, 0.50);
   const pair = { fill, border };
   _tabulaColorCache.set(key, pair);
   return pair;
