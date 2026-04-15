@@ -197,6 +197,59 @@
     }
 
     /* ══════════════════════════════════════════════════
+       uisuper ЭТАП 7 — ЭКРАН ЗАГРУЗКИ: МОЗАИКА СИРАКУЗ
+       Холст поверх фрески, под текстом. Заполняется
+       тессерами в Этапе 8 (JS-анимация мозаики).
+    ══════════════════════════════════════════════════ */
+    #splash-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Canvas мозаики — занимает весь экран, между фреской и текстом */
+    #splash-mosaic {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Тёмный ореол вокруг текста чтобы читался на мозаике */
+    #splash-inner {
+      pointer-events: none;
+      filter: drop-shadow(0 0 24px var(--bg-deep));
+    }
+
+    /* Переопределение текстов: античный золотой стиль */
+    #splash-title {
+      font-family: var(--font-display);
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      color: var(--gold);
+      text-shadow: 0 0 40px rgba(201,169,97,0.5), 0 2px 18px rgba(0,0,0,0.85);
+      margin-bottom: 8px;
+    }
+    #splash-subtitle {
+      font-family: var(--font-display);
+      letter-spacing: 0.3em;
+      color: var(--gold-dim);
+      margin-bottom: 32px;
+    }
+    #splash-status {
+      font-family: var(--font-ui);
+      font-size: var(--text-xs);
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    /* Убрать старый прогресс-бар — прогресс виден через мозаику */
+    #splash-bar-wrap,
+    #splash-bar-fill { display: none !important; }
+
+    /* ══════════════════════════════════════════════════
        БАЗОВЫЙ СБРОС И ПЕРЕМЕННЫЕ
     ══════════════════════════════════════════════════ */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -9800,13 +9853,15 @@
   <!-- Шаг 30: контекстное меню правой кнопки мыши (на регионе карты) -->
   <div id="ctx-menu"></div>
 
-  <!-- D3: экран загрузки + Шаг 58: фреска -->
+  <!-- D3: экран загрузки + Шаг 58: фреска + uisuper Этап 7: мозаика Сиракуз -->
   <div id="splash-screen" class="splash">
     <div class="splash__bg"></div>
     <div class="splash__vignette"></div>
+    <!-- uisuper Этап 7: холст мозаики — заполняется через JS в Этапе 8 -->
+    <canvas id="splash-mosaic"></canvas>
     <div id="splash-inner" class="splash__content">
-      <h1 id="splash-title" class="splash__title">IGRA²</h1>
-      <p  id="splash-subtitle" class="splash__subtitle">Стратегия древнего мира</p>
+      <h1 id="splash-title" class="splash__title">ANCIENT STRATEGY</h1>
+      <p  id="splash-subtitle" class="splash__subtitle">SYRACVSAE · CCCI BC</p>
       <div id="splash-bar-wrap"><div id="splash-bar-fill"></div></div>
       <div id="splash-status">Загрузка...</div>
       <button id="splash-start-btn" class="splash__btn" style="display:none;">Начать игру</button>
