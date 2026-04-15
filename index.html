@@ -587,6 +587,84 @@
       pointer-events: none;
     }
 
+    /* ── ЭТАП 15 — РАДИАЛЬНЫЙ АКВИДУКТ РЕСУРСОВ ── */
+    #aqua-widget {
+      position: fixed;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 15;
+      width: 140px;
+      height: 140px;
+      pointer-events: none;  /* каналы перехватывают события сами */
+    }
+
+    /* Центральный медальон */
+    #aqua-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 36px; height: 36px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-gold);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold);
+      z-index: 2;
+    }
+
+    /* Каналы */
+    .aqua-channel {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      pointer-events: all;
+    }
+
+    /* Позиции каналов */
+    #aqua-gold   { top: 0; left: 50%; transform: translateX(-50%);
+                   flex-direction: column-reverse; }
+    #aqua-troops { right: 0; top: 50%; transform: translateY(-50%);
+                   flex-direction: row; }
+    #aqua-food   { bottom: 0; left: 50%; transform: translateX(-50%);
+                   flex-direction: column; }
+    #aqua-pop    { left: 0; top: 50%; transform: translateY(-50%);
+                   flex-direction: row-reverse; }
+
+    /* Canvas-поток частиц */
+    .aqua-stream {
+      display: block;
+      opacity: 0.7;
+    }
+
+    /* Метка с цифрой — скрыта, появляется при hover */
+    .aqua-label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: var(--font-data);
+      font-size: var(--text-xs);
+      opacity: 0;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .aqua-channel:hover .aqua-label {
+      opacity: 1;
+    }
+
+    .aqua-val {
+      color: var(--text-primary);
+      font-size: var(--text-sm);
+    }
+    .aqua-delta {
+      font-size: var(--text-xs);
+    }
+    .aqua-delta.positive { color: var(--positive); }
+    .aqua-delta.negative { color: var(--negative); }
+
     /* Шаг 31 — Индикатор прогресса хода */
     #turn-progress {
       display: flex;
@@ -10131,6 +10209,57 @@
       </div>
 
     </header>
+
+    <!-- Этап 15 — Радиальный виджет ресурсов «Аквидукт» (левый край экрана) -->
+    <div id="aqua-widget" aria-label="Ресурсы">
+
+      <!-- Центральный медальон -->
+      <div id="aqua-center">
+        <span class="icon-wrap" data-icon="gold"></span>
+      </div>
+
+      <!-- Четыре канала -->
+      <div class="aqua-channel" id="aqua-gold"
+           data-res="gold" data-dir="up"
+           title="Казна" onclick="onResourceBarClick('gold')">
+        <canvas class="aqua-stream" width="8" height="60"></canvas>
+        <div class="aqua-label">
+          <span class="aqua-val" id="aq-gold-val">—</span>
+          <span class="aqua-delta" id="aq-gold-delta"></span>
+        </div>
+      </div>
+
+      <div class="aqua-channel" id="aqua-troops"
+           data-res="troops" data-dir="right"
+           title="Войска" onclick="onResourceBarClick('troops')">
+        <canvas class="aqua-stream" width="60" height="8"></canvas>
+        <div class="aqua-label">
+          <span class="aqua-val" id="aq-troops-val">—</span>
+          <span class="aqua-delta" id="aq-troops-delta"></span>
+        </div>
+      </div>
+
+      <div class="aqua-channel" id="aqua-food"
+           data-res="food" data-dir="down"
+           title="Снабжение" onclick="onResourceBarClick('food')">
+        <canvas class="aqua-stream" width="8" height="60"></canvas>
+        <div class="aqua-label">
+          <span class="aqua-val" id="aq-food-val">—</span>
+          <span class="aqua-delta" id="aq-food-delta"></span>
+        </div>
+      </div>
+
+      <div class="aqua-channel" id="aqua-pop"
+           data-res="pop" data-dir="left"
+           title="Население" onclick="onResourceBarClick('pop')">
+        <canvas class="aqua-stream" width="60" height="8"></canvas>
+        <div class="aqua-label">
+          <span class="aqua-val" id="aq-pop-val">—</span>
+          <span class="aqua-delta" id="aq-pop-delta"></span>
+        </div>
+      </div>
+
+    </div>
 
     <!-- Шаг 49 (arma.md) — Граф дипломатических отношений -->
     <div id="diplo-graph-overlay" class="hidden">
