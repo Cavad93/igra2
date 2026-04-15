@@ -3177,7 +3177,6 @@
       :root { --panel-w: 0px; --footer-h: 32px; }
       #left-panel, #right-panel { display: none; }
       #input-row   { width: auto; flex: 1; }
-      #orders-mini { width: 110px; }
       .culture-window { width: 95vw; }
       #region-info { width: 92vw; right: 4vw; }
     }
@@ -3222,7 +3221,7 @@
       position: absolute;
       left: 0;
       bottom: 32px;
-      right: 580px;  /* 420px (#input-row) + 160px (#orders-mini) */
+      right: 580px;  /* ширина #input-row (вощёная дощечка, Этап 27) */
       background: var(--bg-panel);
       border-top: 2px solid var(--border-gold);
       border-right: 1px solid var(--border-gold);
@@ -3736,7 +3735,7 @@
     #ai-response {
       position: absolute;
       bottom: 32px;
-      right: 160px;        /* над #input-row */
+      right: 80px;         /* над #tablet-wrap внутри #input-row (Этап 27) */
       width: 420px;
       max-height: 240px;
       overflow-y: auto;
@@ -3830,81 +3829,117 @@
     .api-key-hint { font-size: 10px; color: var(--text-dim); }
     .api-key-hint a { color: var(--text-gold); }
 
-    /* Шаг 25 — строка ввода команды (всегда видна, прямой ребёнок #bottom-area) */
+    /* ── Шаг 27: СТРОКА КОМАНДЫ — ВОЩЁНАЯ ДОЩЕЧКА ── */
     #input-row {
-      width: 420px;
+      width: 580px;
       flex-shrink: 0;
       display: flex;
-      gap: 6px;
       align-items: center;
-      padding: 0 6px;
+      gap: 8px;
+      padding: 6px 12px;
+      background: linear-gradient(to top, #1a1610, #1e1b16);
+      border-top: 1px solid var(--border-main);
       border-right: 1px solid var(--border-gold);
-      background: var(--bg-panel);
+    }
+
+    /* Счётчик приказов */
+    .orders-counter {
+      background: none;
+      border: 1px solid var(--border-main);
+      border-radius: 3px;
+      color: var(--text-dim);
+      font-family: var(--font-data);
+      font-size: var(--text-xs);
+      padding: 3px 7px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .orders-counter:hover {
+      color: var(--gold);
+      border-color: var(--border-gold);
+    }
+    .orders-counter.open {
+      color: var(--gold);
+      border-color: var(--border-gold);
+    }
+
+    /* Обёртка дощечки */
+    #tablet-wrap {
+      flex: 1;
+      position: relative;
+      /* Имитация вощёного дерева: горизонтальные линии как прожилки */
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(201,169,97,0.02) 0px,
+          rgba(201,169,97,0.02) 1px,
+          transparent 1px,
+          transparent 14px
+        ),
+        linear-gradient(to bottom, #1e1a13, #191510);
+      border: 1px solid var(--border-main);
+      border-radius: 2px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #tablet-wrap:focus-within {
+      border-color: var(--gold);
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.4), 0 0 6px rgba(201,169,97,0.2);
     }
 
     #command-input {
-      flex: 1;
-      height: 30px;
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      font-size: var(--text-base);
+      padding: 7px 12px;
+      caret-color: var(--gold);
+    }
+
+    #command-input::placeholder {
+      color: var(--text-dim);
+      font-style: italic;
+      font-family: var(--font-display);
+      font-size: var(--text-sm);
+      letter-spacing: 0.08em;
+    }
+
+    /* Кнопка-печать */
+    #send-btn {
+      width: 36px;
+      height: 36px;
       background: var(--bg-section);
       border: 1px solid var(--border-gold);
-      border-radius: 2px;
-      color: var(--text-light);
-      padding: 0 10px;
-      font-family: inherit;
-      font-size: 12px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    #command-input::placeholder { color: var(--text-dim); }
-    #command-input:focus {
-      border-color: var(--gold-bright);
-      box-shadow: 0 0 6px rgba(232,201,122,0.2);
-    }
-
-    #send-btn {
-      height: 30px;
-      padding: 0 14px;
-      background: linear-gradient(to bottom, var(--bronze-dark), var(--bg-section));
-      border: 1px solid var(--border-gold);
-      color: var(--text-gold);
+      border-radius: 50%;
+      color: var(--gold-dim);
       cursor: pointer;
-      font-family: inherit;
-      font-size: 12px;
-      border-radius: 2px;
-      white-space: nowrap;
-      transition: all 0.2s;
-    }
-    #send-btn:hover:not(:disabled) {
-      background: linear-gradient(to bottom, var(--bronze), var(--bronze-dark));
-      color: var(--gold-bright);
-    }
-    #send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    /* Шаг 25 — мини-кнопка приказов (свёрнутый orders-panel, разворачивается ВВЕРХ) */
-    #orders-mini {
-      width: 160px;
-      flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0 6px;
-      background: var(--bg-panel);
+      flex-shrink: 0;
+      transition: color 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.1s;
+      padding: 0;
     }
-    #orders-mini-btn {
-      width: 100%;
-      height: 30px;
-      background: rgba(107,79,26,0.35);
-      border: 1px solid var(--border-gold);
-      color: var(--text-gold);
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 12px;
-      border-radius: 2px;
-      white-space: nowrap;
-      transition: background 0.2s;
+    #send-btn:hover:not(:disabled) {
+      color: var(--gold);
+      border-color: var(--gold);
+      box-shadow: 0 0 8px rgba(201,169,97,0.4);
     }
-    #orders-mini-btn:hover { background: rgba(107,79,26,0.65); }
-    #orders-mini-btn.open  { background: rgba(107,79,26,0.65); }
+    #send-btn:active {
+      transform: scale(0.92);
+    }
+    #send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    #send-btn svg {
+      width: 24px;
+      height: 24px;
+    }
 
     /* ══════════════════════════════════════════════════
        ПАНЕЛИ — ОБЩИЕ СТИЛИ
@@ -11354,23 +11389,40 @@
         </div>
       </div>
 
-      <!-- Шаг 25: Строка ввода команды — всегда видна -->
+      <!-- Шаг 27: Строка ввода команды — вощёная дощечка -->
       <div id="input-row">
-        <input
-          type="text"
-          id="command-input"
-          placeholder="Ваш приказ... (напр. «набрать 500 пехотинцев»)"
-          autocomplete="off"
-          spellcheck="false"
-        >
-        <button id="send-btn"><span class="icon-wrap" data-icon="orders"></span> Приказать</button>
-      </div>
 
-      <!-- Шаг 25: Мини-кнопка приказов (свёрнутый orders-panel) -->
-      <div id="orders-mini">
-        <button id="orders-mini-btn" onclick="toggleOrdersMini()" title="Развернуть приказы">
-          <span class="icon-wrap" data-icon="orders"></span> <span id="orders-mini-count">0</span> приказов
+        <!-- Мини-счётчик приказов (слева от поля) -->
+        <button id="orders-mini-btn" onclick="toggleOrdersMini()"
+                title="Активные приказы" class="orders-counter">
+          <span class="icon-wrap" data-icon="orders"></span>
+          <span id="orders-mini-count">0</span>
         </button>
+
+        <!-- Вощёная дощечка -->
+        <div id="tablet-wrap">
+          <input
+            type="text"
+            id="command-input"
+            placeholder="Iube, Stratege…"
+            autocomplete="off"
+            spellcheck="false"
+          >
+        </div>
+
+        <!-- Печать-кнопка -->
+        <button id="send-btn" title="Отдать приказ [Enter]" aria-label="Приказать">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Круглая печать -->
+            <circle cx="16" cy="16" r="13" stroke="currentColor" stroke-width="1.2"/>
+            <circle cx="16" cy="16" r="10" stroke="currentColor" stroke-width="0.8"
+                    stroke-dasharray="2 2"/>
+            <!-- Монограмма A (Agathokles) -->
+            <text x="16" y="20" text-anchor="middle" fill="currentColor"
+                  font-family="serif" font-size="11" font-weight="bold">A</text>
+          </svg>
+        </button>
+
       </div>
 
       <!-- Приказы и делегирование — popup, разворачивается вверх по клику на orders-mini-btn -->
