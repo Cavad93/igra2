@@ -9,7 +9,7 @@
        Без integrity= чтобы корректно загружаться с file:// -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
 
   <!-- Pixi.js v8 — battle map renderer -->
   <script src="https://cdn.jsdelivr.net/npm/pixi.js@8.17.1/dist/pixi.min.js"></script>
@@ -180,15 +180,36 @@
       --panel-border-svg: url('assets/icons/meander_gold.svg');
       /* Шаг 58 — фон splash, переопределяется initSplash() по культуре */
       --splash-bg:     url('assets/backgrounds/splash_pompeii.jpg');
+
+      /* ── ТИПОГРАФИКА ── */
+      --font-display:   'Cinzel', 'Trajan Pro', serif;      /* имена, заголовки */
+      --font-ui:        'Inter', 'Segoe UI', sans-serif;    /* интерфейс        */
+      --font-data:      'JetBrains Mono', monospace;        /* числа, данные    */
+      --font-lore:      'IM Fell English', 'Georgia', serif;/* лог, манускрипт  */
+
+      /* ── РАЗМЕРЫ ТЕКСТА ── */
+      --text-xs:   10px;   /* подписи, метки                   */
+      --text-sm:   12px;   /* вторичный текст                  */
+      --text-base: 13px;   /* основной интерфейс               */
+      --text-md:   15px;   /* заголовки секций                 */
+      --text-lg:   18px;   /* заголовки панелей                */
+      --text-xl:   24px;   /* крупные заголовки                */
+      --text-2xl:  32px;   /* только для имени игры в стеле    */
+
+      /* ── МЕЖСТРОЧНЫЙ ИНТЕРВАЛ ── */
+      --leading-tight:  1.2;
+      --leading-normal: 1.5;
+      --leading-loose:  1.8;
     }
 
     html, body {
       height: 100%;
       overflow: hidden;
-      font-family: 'Georgia', 'Times New Roman', serif;
+      font-family: var(--font-ui);
       background: var(--bg-deep);
       color: var(--text-light);
-      font-size: 13px;
+      font-size: var(--text-base);
+      line-height: var(--leading-normal);
     }
 
     /* ══════════════════════════════════════════════════
