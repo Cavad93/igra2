@@ -11866,39 +11866,20 @@
 
       function _el(id){ return document.getElementById(id); }
 
-      // Обновление левой части — дата, нация, ход
-      function updateSbGame(){
-        const span = _el('sb-game');
-        if (!span) return;
-        // Этап 10 (uisuper.md): #game-date переехал в стелу (game-month + game-year).
-        // Читаем дату прямо из стелы — формат «Ἑκατομβαιών · CCCI BC».
-        let date = '';
-        const monthEl = _el('game-month');
-        const yearEl  = _el('game-year');
-        if (monthEl || yearEl) {
-          const parts = [];
-          if (monthEl) parts.push((monthEl.textContent || '').trim());
-          if (yearEl)  parts.push((yearEl.textContent  || '').trim());
-          date = parts.filter(Boolean).join(' · ');
-        }
-        let nation = '';
-        try {
-          const gs = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
-          if (gs) {
-            const pid = gs.player_nation;
-            const nat = (gs.nations && Array.isArray(gs.nations))
-              ? gs.nations.find(n => n && n.id === pid)
-              : null;
-            if (nat && nat.name) nation = nat.name;
-            var turn = (gs.turn != null) ? ('Ход ' + gs.turn) : '';
-          }
-        } catch(_) {}
-        const parts = [];
-        if (nation) parts.push(nation);
-        if (date)   parts.push(date);
-        if (typeof turn !== 'undefined' && turn) parts.push(turn);
-        span.textContent = parts.length ? parts.join(' · ') : '—';
+      // Этап 14 — безопасное обновление DOM-элемента.
+      // Не падает, если элемент отсутствует в DOM (sb-*, старые splash-*, game-date …).
+      function safeSet(id, value, attr){
+        const el = document.getElementById(id);
+        if (!el) return;
+        el[attr || 'textContent'] = value;
       }
+      // Экспорт — используется во всём index.html для безопасных обновлений.
+      if (!window.safeSet) window.safeSet = safeSet;
+
+      // Этап 14 — обновление #sb-game отключено: данные дублируются стелой
+      // (#game-month / #game-year / #game-turn), а сам статус-бар скрыт Этапом 13.
+      // Функция оставлена как no-op ради обратной совместимости с внешними вызовами.
+      function updateSbGame(){ /* no-op: #status-bar скрыт, данные берутся со стелы */ }
 
       // AI: ready | busy | error
       function setAIStatus(status, text){
@@ -11983,29 +11964,60 @@
         }
       }
 
-      // FPS-счётчик — обновление раз в 2 сек
+      // Этап 14 — FPS-счётчик виден только в dev-режиме.
+      // Включить: в консоли браузера ввести `DEV_MODE = true` (или `window.DEV_MODE = true`).
+      // Пока DEV_MODE выключен — rAF-цикл простаивает на setTimeout'е (1 тик в секунду),
+      // чтобы не делать лишних DOM-обновлений каждый кадр. Как только DEV_MODE=true,
+      // счётчик просыпается и рисует оверлей в правом нижнем углу.
       (function fpsLoop(){
-        const el = _el('sb-fps');
-        if (!el) return;
         let frames = 0;
         let lastTs = performance.now();
+        let _devFpsEl = null;
+
+        function ensureOverlay(){
+          if (_devFpsEl && document.body.contains(_devFpsEl)) return _devFpsEl;
+          _devFpsEl = document.createElement('div');
+          _devFpsEl.id = 'dev-fps-overlay';
+          _devFpsEl.style.cssText = [
+            'position:fixed','bottom:4px','right:4px','z-index:99998',
+            'font-family:monospace','font-size:10px','color:#0f0',
+            'background:rgba(0,0,0,0.5)','padding:2px 6px','pointer-events:none'
+          ].join(';');
+          document.body.appendChild(_devFpsEl);
+          return _devFpsEl;
+        }
+
         function tick(now){
-          frames++;
-          if (now - lastTs >= 2000) {
-            const fps = Math.round((frames * 1000) / (now - lastTs));
-            el.textContent = fps + ' fps';
+          if (window.DEV_MODE) {
+            frames++;
+            if (now - lastTs >= 1000) {
+              const fps = Math.round((frames * 1000) / (now - lastTs));
+              ensureOverlay().textContent = fps + ' fps';
+              // Старый скрытый элемент обновляем для совместимости.
+              safeSet('sb-fps', fps + ' fps');
+              frames = 0;
+              lastTs = now;
+            }
+            requestAnimationFrame(tick);
+          } else {
+            // Если оверлей остался от предыдущего DEV_MODE=true — убрать.
+            if (_devFpsEl) { _devFpsEl.remove(); _devFpsEl = null; }
+            // Сбрасываем счётчики, чтобы при следующем включении DEV_MODE
+            // первое измерение было корректным.
             frames = 0;
-            lastTs = now;
+            lastTs = performance.now();
+            // Засыпаем на секунду — cheap poll на DEV_MODE без лишней нагрузки.
+            setTimeout(() => requestAnimationFrame(tick), 1000);
           }
-          requestAnimationFrame(tick);
         }
         requestAnimationFrame(tick);
       })();
 
-      // Периодическое обновление левой части
+      // Этап 14 — периодическое обновление #sb-game больше не нужно (no-op функция).
+      // Оставляем вызов для единственного начального рендера (на случай, если кто-то
+      // в будущем вернёт status-bar — достаточно убрать no-op в updateSbGame).
       function _bootGameLabel(){
         updateSbGame();
-        setInterval(updateSbGame, 3000);
       }
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', _bootGameLabel);
