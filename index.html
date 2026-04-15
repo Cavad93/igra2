@@ -386,6 +386,7 @@
       padding: 0 20px;
       border-right: 1px solid var(--border-main);
       min-width: 240px;
+      position: relative; /* Этап 13 — якорь для #save-indicator */
     }
 
     #stele-ruler {
@@ -1019,12 +1020,15 @@
     /* ══════════════════════════════════════════════════
        Шаг 33 — Строка статуса внизу
        ══════════════════════════════════════════════════ */
+    /* Этап 13 (uisuper.md): статус-бар скрыт от игрока.
+       Данные переехали в #save-indicator (стела) и #ai-dot (#top-actions).
+       JS продолжает обновлять sb-* для обратной совместимости. */
     #status-bar {
+      display: none;
       height: 22px;
       flex-shrink: 0;
       background: #0a0705;
       border-top: 1px solid rgba(107,79,26,0.3);
-      display: flex;
       align-items: center;
       gap: 0;
       padding: 0 10px;
@@ -1038,6 +1042,52 @@
     #sb-ai.ready   { color: var(--positive); }
     #sb-ai.busy    { color: var(--warning); }
     #sb-ai.error   { color: var(--negative); }
+
+    /* ── Этап 13 — Индикатор сохранения (маленькая точка на стеле) ── */
+    #save-indicator {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: transparent;
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      transition: background 0.3s, box-shadow 0.3s;
+      pointer-events: auto;
+    }
+    #save-indicator.saving {
+      background: var(--gold);
+      box-shadow: 0 0 6px rgba(201,169,97,0.8);
+      animation: save-pulse 0.6s ease-in-out 3;
+    }
+    #save-indicator.saved {
+      background: var(--gold-dim, rgba(201,169,97,0.5));
+    }
+    #save-indicator.error {
+      background: var(--negative);
+    }
+    @keyframes save-pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* ── Этап 13 — Мини-индикатор AI-статуса в правых действиях ── */
+    .ai-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      margin: 0 4px;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+    .ai-dot.ready    { background: var(--positive); }
+    .ai-dot.busy,
+    .ai-dot.thinking {
+      background: var(--gold);
+      animation: save-pulse 0.8s ease-in-out infinite;
+    }
+    .ai-dot.error    { background: var(--negative); }
 
     /* ══════════════════════════════════════════════════
        Шаг 34 — Панель поиска по игре
@@ -10008,6 +10058,8 @@
 
       <!-- ЛЕВЫЙ БЛОК: Стела — гравировка правителя и даты -->
       <div id="stele">
+        <!-- Этап 13 — индикатор статуса автосохранения -->
+        <div id="save-indicator" title="Статус сохранения"></div>
         <div id="stele-ruler">AGATHOKLES · STRATEGOS</div>
         <div id="stele-date">
           <span id="game-month">Ἑκατομβαιών</span>
@@ -10021,6 +10073,8 @@
 
       <!-- ПРАВЫЙ БЛОК: действия -->
       <div id="top-actions">
+        <!-- Этап 13 — мини-индикатор AI (временно до Этапа 23–24) -->
+        <div id="ai-dot" class="ai-dot ready" title="AI: готов"></div>
         <button id="search-btn" onclick="toggleSearchPanel()" title="Поиск [/]">
           <span class="icon-wrap" data-icon="search"></span>
         </button>
@@ -11848,21 +11902,33 @@
 
       // AI: ready | busy | error
       function setAIStatus(status, text){
-        const el = _el('sb-ai');
-        if (!el) return;
-        el.classList.remove('ready','busy','error');
         const s = (status || 'ready').toLowerCase();
-        el.classList.add(s);
-        const aiIcon = (window.icon ? window.icon('ai') : '')
-          || '<span class="icon-wrap" data-icon="ai"></span>';
-        if (typeof text === 'string' && text) {
-          el.innerHTML = '<span class="icon-wrap">' + aiIcon + '</span> ' + text;
-        } else {
-          let label;
-          if (s === 'busy')       label = 'AI: обрабатывает…';
-          else if (s === 'error') label = 'AI: ошибка';
-          else                    label = 'AI: готов';
-          el.innerHTML = '<span class="icon-wrap">' + aiIcon + '</span> ' + label;
+        const el = _el('sb-ai');
+        if (el) {
+          el.classList.remove('ready','busy','error');
+          el.classList.add(s);
+          const aiIcon = (window.icon ? window.icon('ai') : '')
+            || '<span class="icon-wrap" data-icon="ai"></span>';
+          if (typeof text === 'string' && text) {
+            el.innerHTML = '<span class="icon-wrap">' + aiIcon + '</span> ' + text;
+          } else {
+            let label;
+            if (s === 'busy')       label = 'AI: обрабатывает…';
+            else if (s === 'error') label = 'AI: ошибка';
+            else                    label = 'AI: готов';
+            el.innerHTML = '<span class="icon-wrap">' + aiIcon + '</span> ' + label;
+          }
+        }
+        // Этап 13 — обновляем мини-индикатор в #top-actions
+        const dot = _el('ai-dot');
+        if (dot) {
+          dot.className = 'ai-dot ' + s;
+          let dotTitle;
+          if (typeof text === 'string' && text) dotTitle = text;
+          else if (s === 'busy')  dotTitle = 'AI: обрабатывает…';
+          else if (s === 'error') dotTitle = 'AI: ошибка';
+          else                    dotTitle = 'AI: готов';
+          dot.title = dotTitle;
         }
       }
 
@@ -11894,6 +11960,27 @@
         _renderSaveLabel();
         if (_sbSaveTimer) clearInterval(_sbSaveTimer);
         _sbSaveTimer = setInterval(_renderSaveLabel, 15000);
+        // Этап 13 — анимируем #save-indicator (золотой пульс), затем гасим
+        updateSaveIndicator('saving');
+        setTimeout(() => updateSaveIndicator('saved'), 1800);
+      }
+
+      // Этап 13 — индикатор сохранения на стеле
+      // status: 'saving' | 'saved' | 'error'
+      function updateSaveIndicator(status){
+        const el = _el('save-indicator');
+        if (!el) return;
+        el.className = '';
+        if (status === 'saving') {
+          el.className = 'saving';
+          el.title = 'Сохранение…';
+        } else if (status === 'error') {
+          el.className = 'error';
+          el.title = 'Ошибка сохранения';
+        } else {
+          el.className = 'saved';
+          el.title = 'Сохранено';
+        }
       }
 
       // FPS-счётчик — обновление раз в 2 сек
@@ -11927,9 +12014,10 @@
       }
 
       // Экспорт
-      window.setAIStatus   = setAIStatus;
-      window.markSaved     = markSaved;
-      window.updateSbGame  = updateSbGame;
+      window.setAIStatus        = setAIStatus;
+      window.markSaved          = markSaved;
+      window.updateSbGame       = updateSbGame;
+      window.updateSaveIndicator = updateSaveIndicator;
     })();
 
     // ──────────────────────────────────────────
