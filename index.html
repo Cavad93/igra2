@@ -10312,6 +10312,10 @@
     var GAME_STATE = JSON.parse(JSON.stringify(INITIAL_GAME_STATE));
   </script>
 
+  <!-- Этап 5 (uisuper.md): SVG-глифарий «монетный штамп».
+       Подключён как модуль (файл содержит `export`), но внутри выставляет
+       window.ICONS и window.icon() для plain-script окружения (стадия 6). -->
+  <script type="module" src="ui/icons.js"></script>
   <script src="ui/log.js"></script>
   <script src="ui/toast.js"></script>
   <script src="ui/pulse.js"></script>
