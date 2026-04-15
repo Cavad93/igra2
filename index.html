@@ -10734,6 +10734,13 @@
       imgData: null,      // ImageData фрески, перемасштабированной под окно
       imgLoaded: false,   // флаг: true когда цвета сэмплированы
 
+      // Длительность автосборки мозаики (мс). Тессеры открываются
+      // по времени, независимо от реальной скорости загрузки игры —
+      // чтобы эффект сборки был визуально заметен (uisuper Этап 8 fix).
+      DURATION_MS: 20000,
+      _animStart: 0,
+      _animating: false,
+
       // Примерный силуэт Сицилии как набор относительных координат
       // (col_ratio, row_ratio) — нормализованные от 0 до 1
       // Используется только в fallback-режиме (если фреска не загрузилась)
@@ -10777,6 +10784,54 @@
         // отрисовываются fallback-цветами (силуэт Сицилии).
         // Путь фрески тот же, что использует ui/splash.js.
         this.loadImage('assets/backgrounds/splash_pompeii.jpg');
+        // Стартуем автоматическую сборку по таймеру (≈20с).
+        this.startAutoAnimate();
+      },
+
+      /**
+       * Запускает автоматическое открытие тессер по времени.
+       * Прогресс линейно растёт от 0 до 1 за DURATION_MS, независимо
+       * от реального прогресса загрузки игры — чтобы эффект сборки
+       * мозаики был заметен даже при быстрой инициализации.
+       */
+      startAutoAnimate(durationMs) {
+        if (this._animating) return;
+        if (typeof durationMs === 'number' && durationMs > 0) {
+          this.DURATION_MS = durationMs;
+        }
+        this._animating = true;
+        this._animStart = (typeof performance !== 'undefined' && performance.now)
+          ? performance.now()
+          : Date.now();
+        const tick = () => {
+          if (!this._animating) return;
+          if (!this.canvas || !this.canvas.isConnected) {
+            this._animating = false;
+            return;
+          }
+          const now = (typeof performance !== 'undefined' && performance.now)
+            ? performance.now()
+            : Date.now();
+          const p = Math.min(1, (now - this._animStart) / this.DURATION_MS);
+          this.setProgress(p);
+          if (p < 1) {
+            (typeof requestAnimationFrame === 'function'
+              ? requestAnimationFrame(tick)
+              : setTimeout(tick, 33));
+          } else {
+            this._animating = false;
+          }
+        };
+        (typeof requestAnimationFrame === 'function'
+          ? requestAnimationFrame(tick)
+          : setTimeout(tick, 33));
+      },
+
+      /**
+       * true если все тессеры открыты (мозаика полностью собрана).
+       */
+      isComplete() {
+        return this.total > 0 && this.revealed >= this.total;
       },
 
       /**
@@ -11056,8 +11111,10 @@
       const lbl = document.getElementById('splash-status');
       if (bar) bar.style.width = pct + '%';
       if (lbl) lbl.textContent = text;
-      // uisuper Этап 8 — синхронизируем прогресс мозаики
-      try { SplashMosaic.setProgress(pct / 100); } catch (_) {}
+      // uisuper Этап 8 fix: мозаика больше не привязана к реальному
+      // прогрессу загрузки — она анимируется по таймеру ≈20с через
+      // SplashMosaic.startAutoAnimate(), чтобы эффект сборки был
+      // заметен даже при быстрой инициализации игры.
     }
     function _splashHide() {
       if (!_splash) return;
@@ -11130,16 +11187,33 @@
           setMapMode('political');
         }
       } catch (e) { console.error('[setMapMode] error:', e); }
-      // Шаг 58 — показать кнопку «Начать игру» вместо авто-скрытия
-      try {
-        if (typeof showSplashStartButton === 'function') {
-          showSplashStartButton();
-        } else {
+      // Шаг 58 — показать кнопку «Начать игру» вместо авто-скрытия.
+      // uisuper Этап 8 fix: ждём, пока мозаика полностью соберётся
+      // (≈20с с момента старта splash), и только потом показываем
+      // кнопку. Если инициализация затянулась дольше мозаики — кнопка
+      // появится сразу.
+      const _revealStartBtn = () => {
+        try {
+          if (typeof showSplashStartButton === 'function') {
+            showSplashStartButton();
+          } else {
+            setTimeout(_splashHide, 300);
+          }
+        } catch (e) {
           setTimeout(_splashHide, 300);
         }
-      } catch (e) {
-        setTimeout(_splashHide, 300);
-      }
+      };
+      const _waitMosaic = () => {
+        try {
+          if (SplashMosaic && typeof SplashMosaic.isComplete === 'function'
+              && !SplashMosaic.isComplete()) {
+            setTimeout(_waitMosaic, 200);
+            return;
+          }
+        } catch (_) { /* ignore и сразу показываем кнопку */ }
+        _revealStartBtn();
+      };
+      _waitMosaic();
     }).catch(e => {
       console.error('[initGame] Критическая ошибка:', e);
       _splashProgress(100, 'Ошибка инициализации');
