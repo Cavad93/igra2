@@ -4900,7 +4900,16 @@ ui: этап 27 — разметка и CSS вощёной дощечки (ст�
 
 ---
 
-## ЭТАП 28 — Строка команды: JS гонец с ответом AI
+## ЭТАП 28 — Строка команды: JS гонец с ответом AI ✅ ВЫПОЛНЕНО
+
+> **Статус:** ✅ **ВЫПОЛНЕНО** — ветка `claude/exciting-fermat-KVLXr`.
+> Реализовано: HTML `#messenger` с SVG-гонцом и свитком добавлен в `<footer>`
+> в `index.html`; CSS анимация (left -280px → 16px, scaleX свитка) там же;
+> JS-объект `Messenger.show/dismiss` и функция `dismissMessenger()`
+> добавлены в `ui/input.js`, вызов `Messenger.show(text)` встроен
+> в `showAIResponse()`. Счётчик приказов (`updateOrdersMiniCount`
+> в `ui/government_tab.js`) теперь переключает класс `.has-orders`
+> на `#orders-mini-btn`, CSS `.orders-counter.has-orders` подсвечивает кнопку.
 
 **Улучшение:** #9 — Строка команды → «Стилус и табличка»
 **Часть:** 2 из 2 — анимация «гонца» и обновление приказов

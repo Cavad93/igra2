@@ -974,16 +974,69 @@ function showAIThinking(active) {
 
 function showAIResponse(html, type = 'info') {
   const responseDiv = document.getElementById('ai-response');
-  if (!responseDiv) return;
+  if (responseDiv) {
+    responseDiv.innerHTML = `<div class="ai-response-content ${type}">${html}</div>`;
+    responseDiv.classList.remove('hidden');
 
-  responseDiv.innerHTML = `<div class="ai-response-content ${type}">${html}</div>`;
-  responseDiv.classList.remove('hidden');
+    // Автоскрытие через 15 секунд
+    clearTimeout(responseDiv._hideTimeout);
+    responseDiv._hideTimeout = setTimeout(() => {
+      responseDiv.classList.add('hidden');
+    }, 15000);
+  }
 
-  // Автоскрытие через 15 секунд
-  clearTimeout(responseDiv._hideTimeout);
-  responseDiv._hideTimeout = setTimeout(() => {
-    responseDiv.classList.add('hidden');
-  }, 15000);
+  // Этап 28: дополнительно показать ответ в «гонце» со свитком
+  if (typeof Messenger !== 'undefined' && Messenger && typeof Messenger.show === 'function') {
+    // Вытаскиваем plain-text из HTML, чтобы свиток не содержал разметку
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const text = (tmp.textContent || tmp.innerText || '').replace(/\s+/g, ' ').trim();
+    if (text) Messenger.show(text);
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// Этап 28 — «Гонец»: анимация доставки ответа AI в свитке
+// ──────────────────────────────────────────────────────────────
+
+const Messenger = {
+  _timer: null,
+
+  show(text) {
+    const el = document.getElementById('messenger');
+    const textEl = document.getElementById('messenger-text');
+    if (!el || !textEl) return;
+
+    textEl.textContent = text;
+    el.classList.remove('hidden');
+
+    // Задержка перед появлением, чтобы CSS transition сработал
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.classList.add('visible');
+      });
+    });
+
+    // Автоматически скрыть через 12 секунд
+    clearTimeout(this._timer);
+    this._timer = setTimeout(() => this.dismiss(), 12000);
+  },
+
+  dismiss() {
+    const el = document.getElementById('messenger');
+    if (!el) return;
+    el.classList.remove('visible');
+    clearTimeout(this._timer);
+    // Скрыть из DOM после анимации
+    setTimeout(() => el.classList.add('hidden'), 600);
+  },
+};
+
+function dismissMessenger() { Messenger.dismiss(); }
+
+if (typeof window !== 'undefined') {
+  window.Messenger = Messenger;
+  window.dismissMessenger = dismissMessenger;
 }
 
 function showAPIKeyPrompt() {

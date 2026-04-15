@@ -3786,7 +3786,11 @@ function updateOrdersMiniCount() {
   const el = document.getElementById('orders-mini-count');
   if (!el) return;
   const active = typeof getActiveOrders === 'function' ? getActiveOrders() : [];
-  el.textContent = String(active.length);
+  const count = active.length;
+  el.textContent = String(count);
+  // Этап 28: подсветка кнопки-счётчика при наличии активных приказов
+  const btn = document.getElementById('orders-mini-btn');
+  if (btn) btn.classList.toggle('has-orders', count > 0);
 }
 
 /**
