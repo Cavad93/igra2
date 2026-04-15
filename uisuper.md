@@ -3605,7 +3605,22 @@ ui: этап 21 — складной диптих разметка и CSS
 
 ---
 
-## ЭТАП 22 — Диптих: JS анимации и переключение вкладок
+## ЭТАП 22 — Диптих: JS анимации и переключение вкладок ✅ ВЫПОЛНЕНО
+
+> **Статус:** ✅ **ВЫПОЛНЕНО** в ветке `claude/exciting-fermat-KVLXr`.
+> В `index.html` стаб ЭТАПА 21 заменён на полноценный контроллер `window.Diptych`
+> (методы `init`/`toggle`/`switchTab`/`isOpen`/`currentTab`). Состояние
+> `{open, tab}` сохраняется в `localStorage['diptych']` и восстанавливается
+> на `DOMContentLoaded`. При смене вкладки обновляются `.dip-nav-btn.active`
+> и `#diptych-title` (по таблице TITLES), делегируется `renderLeftPanelTab(tab)`
+> из `ui/panels.js`. Горячая клавиша `[` в `onHotkey` вызывает `toggleDiptych()`.
+> `#left-resizer` удалён из HTML (диптих сам управляет шириной через CSS
+> классы `.open`/`.closed`); `ui/panel_resize.js` безопасно тихо завершает
+> инициализацию, т.к. resizer-элемент отсутствует.
+> Пройдено 18 структурных и 18 поведенческих smoke-тестов
+> (проверка init/toggle/switchTab/localStorage persistence/реинициализация).
+> `test_arma_stage23.mjs` — 34 passed / 0 failed (legacy `#left-nav` сохранён).
+> **Не реализовывать повторно.**
 
 **Улучшение:** #6 — Левая панель → «Военный диптих»
 **Часть:** 2 из 2 — логика открытия/закрытия и совместимость с panels.js

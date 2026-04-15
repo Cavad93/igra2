@@ -11041,8 +11041,9 @@
         </div>
       </div>
 
-      <!-- Шаг 32 — Drag-to-resize: разделитель между левой панелью и картой -->
-      <div class="panel-resizer" id="left-resizer" title="Потяните, чтобы изменить ширину"></div>
+      <!-- ЭТАП 22 (uisuper.md): #left-resizer удалён — диптих сам управляет
+           своей шириной через CSS-анимацию классов .closed / .open.
+           Шаг 32 (arma.md): drag-to-resize более не актуален для левой панели. -->
 
       <!-- Центральная панель: карта -->
       <div id="center-panel">
@@ -12484,6 +12485,13 @@
         return;
       }
 
+      // ЭТАП 22 (uisuper.md) — `[` открывает/закрывает диптих
+      if (key === '[') {
+        e.preventDefault();
+        if (typeof toggleDiptych === 'function') toggleDiptych();
+        return;
+      }
+
       // Буквенные хоткеи — нормализуем регистр
       const k = key.length === 1 ? key.toLowerCase() : key;
       switch (k) {
@@ -13377,41 +13385,137 @@
     })();
   </script>
 
-  <!-- ЭТАП 21 (uisuper.md) — минимальные стабы toggleDiptych / switchDiptychTab.
-       Нужны чтобы работала инлайн-разметка диптиха и визуально проверялась
-       CSS-анимация раскрытия. Полноценная реализация (сохранение состояния,
-       смена заголовка, ↹-клавиша, init из localStorage) — в ЭТАПЕ 22. -->
+  <!-- ЭТАП 22 (uisuper.md) — полноценный контроллер диптиха.
+       Управляет раскрытием/складыванием левой панели, переключением вкладок,
+       сохраняет состояние в localStorage, инициализируется на DOMContentLoaded.
+       Совместим с renderLeftPanelTab() из ui/panels.js — при открытии и смене
+       вкладки вызывает его для реального рендера содержимого. -->
   <script>
     (function () {
-      if (typeof window.toggleDiptych !== 'function') {
-        window.toggleDiptych = function () {
+      var TITLES = {
+        overview:  'Обзор нации',
+        army:      'Армия',
+        economy:   'Казна',
+        diplomacy: 'Дипломатия',
+        laws:      'Законы',
+      };
+      var STORAGE_KEY = 'diptych';
+      var VALID_TABS = Object.keys(TITLES);
+
+      var Diptych = {
+        _open: false,
+        _tab:  'overview',
+        _inited: false,
+
+        init: function () {
+          if (this._inited) return;
+          this._inited = true;
+          // Восстановить состояние из localStorage
+          try {
+            var saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+              var s = JSON.parse(saved);
+              if (s && typeof s.open === 'boolean') this._open = s.open;
+              if (s && typeof s.tab === 'string' && VALID_TABS.indexOf(s.tab) >= 0) {
+                this._tab = s.tab;
+              }
+            }
+          } catch (e) { /* ignore corrupt json */ }
+
+          this._apply();
+          this._syncNav();
+          this._syncTitle();
+
+          // Если было открыто — отрендерить контент активной вкладки
+          if (this._open) {
+            this._renderTab(this._tab);
+          }
+        },
+
+        toggle: function () {
+          this._open = !this._open;
+          this._save();
+          this._apply();
+          if (this._open) {
+            // Рендерим контент после начала анимации открытия
+            var self = this;
+            setTimeout(function () { self._renderTab(self._tab); }, 50);
+          }
+        },
+
+        open: function () {
+          if (this._open) return;
+          this.toggle();
+        },
+
+        close: function () {
+          if (!this._open) return;
+          this.toggle();
+        },
+
+        switchTab: function (tab) {
+          if (VALID_TABS.indexOf(tab) < 0) return;
+          this._tab = tab;
+          this._save();
+          this._syncNav();
+          this._syncTitle();
+          this._renderTab(tab);
+        },
+
+        isOpen: function () { return this._open; },
+        currentTab: function () { return this._tab; },
+
+        _renderTab: function (tab) {
+          if (typeof window.renderLeftPanelTab === 'function') {
+            try { window.renderLeftPanelTab(tab); } catch (e) {}
+          }
+        },
+
+        _apply: function () {
           var panel = document.getElementById('left-panel');
           if (!panel) return;
-          var isOpen = panel.classList.contains('open');
-          panel.classList.toggle('open',   !isOpen);
-          panel.classList.toggle('closed',  isOpen);
-        };
-      }
-      if (typeof window.switchDiptychTab !== 'function') {
-        window.switchDiptychTab = function (tab) {
-          // Делегируем рендер контента существующей функции из panels.js
-          if (typeof renderLeftPanelTab === 'function') {
-            try { renderLeftPanelTab(tab); } catch (e) {}
-          }
-          // Переключаем .active у .dip-nav-btn
+          panel.classList.toggle('open',   this._open);
+          panel.classList.toggle('closed', !this._open);
+        },
+
+        _syncNav: function () {
           var btns = document.querySelectorAll('#diptych-nav .dip-nav-btn');
           for (var i = 0; i < btns.length; i++) {
             var b = btns[i];
-            if (b.getAttribute('data-tab') === tab) b.classList.add('active');
-            else b.classList.remove('active');
+            var active = (b.getAttribute('data-tab') === this._tab);
+            b.classList.toggle('active', active);
           }
-          // Обновляем заголовок по тексту активной кнопки
+        },
+
+        _syncTitle: function () {
           var titleEl = document.getElementById('diptych-title');
-          if (titleEl) {
-            var active = document.querySelector('#diptych-nav .dip-nav-btn[data-tab="' + tab + '"]');
-            if (active) titleEl.textContent = active.textContent;
-          }
-        };
+          if (!titleEl) return;
+          titleEl.textContent = TITLES[this._tab] || this._tab;
+        },
+
+        _save: function () {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+              open: this._open,
+              tab:  this._tab,
+            }));
+          } catch (e) { /* quota / private mode — ignore */ }
+        },
+      };
+
+      function toggleDiptych()        { Diptych.toggle(); }
+      function switchDiptychTab(tab)  { Diptych.switchTab(tab); }
+
+      window.Diptych           = Diptych;
+      window.toggleDiptych     = toggleDiptych;
+      window.switchDiptychTab  = switchDiptychTab;
+
+      // Инициализация после загрузки DOM (или сразу, если уже загружен)
+      function _initDiptych() { Diptych.init(); }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _initDiptych);
+      } else {
+        _initDiptych();
       }
     })();
   </script>
