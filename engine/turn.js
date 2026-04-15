@@ -383,6 +383,7 @@ function advanceDate() {
   }
   GAME_STATE.date = { year, month };
   updateDateDisplay();
+  try { updateStele(); } catch (e) { console.error('updateStele error:', e); }
 }
 
 function formatDate(date) {
@@ -478,6 +479,9 @@ if (typeof window !== 'undefined') {
   window.SEASON_STYLES     = SEASON_STYLES;
   window.getCurrentSeason  = getCurrentSeason;
   window.applySeasonVisual = applySeasonVisual;
+  // Этап 10 (uisuper.md) — стела, верхний левый блок
+  window.updateStele       = (...a) => updateStele(...a);
+  window.toRomanYear       = (...a) => toRomanYear(...a);
 }
 
 function updateDateDisplay() {
@@ -502,6 +506,96 @@ function updateDateDisplay() {
   } else {
     el.textContent = dateStr;
   }
+}
+
+// ──────────────────────────────────────────────────────────────
+// ЭТАП 10 (uisuper.md) — Стела: подключение к игровым данным
+// ──────────────────────────────────────────────────────────────
+
+// Греческие названия месяцев (аттический календарь), 12 шт. — индекс 0..11
+const GREEK_MONTHS = [
+  'Ἑκατομβαιών', 'Μεταγειτνιών', 'Βοηδρομιών',
+  'Πυανεψιών',   'Μαιμακτηριών', 'Ποσιδεών',
+  'Γαμηλιών',    'Ἀνθεστηριών',  'Ἐλαφηβολιών',
+  'Μουνιχιών',   'Θαργηλιών',    'Σκιροφοριών',
+];
+
+// Маппинг типа правительства → титул правителя (UPPERCASE, для стелы)
+const STELE_GOV_TITLES = {
+  tyranny:       'ТИРАН',
+  tyrant:        'ТИРАН',
+  monarchy:      'ЦАРЬ',
+  kingdom:       'ЦАРЬ',
+  empire:        'ИМПЕРАТОР',
+  republic:      'АРХОНТ',
+  oligarchy:     'АРХОНТ',
+  democracy:     'АРХОНТ',
+  tribal:        'ВОЖДЬ',
+  confederation: 'ВОЖДЬ',
+  theocracy:     'ВЕРХОВНЫЙ ЖРЕЦ',
+  satrapy:       'САТРАП',
+};
+
+// Конвертация года в римские цифры (до 999) + эра
+function toRomanYear(n, era) {
+  if (!(n > 0) || n > 999) return `${n} ${era}`;
+  const vals = [900, 400, 100, 90, 40, 10, 9, 5, 4, 1];
+  const syms = ['CM', 'CD', 'C', 'XC', 'XL', 'X', 'IX', 'V', 'IV', 'I'];
+  let result = '';
+  let x = n;
+  for (let i = 0; i < vals.length; i++) {
+    while (x >= vals[i]) { result += syms[i]; x -= vals[i]; }
+  }
+  return `${result} ${era}`;
+}
+
+// Обновить «Стелу» (верхний левый блок): имя правителя и дата.
+function updateStele() {
+  if (typeof document === 'undefined') return;
+  const gs = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
+  if (!gs) return;
+
+  // ── Имя и титул правителя ─────────────────────────────────────
+  try {
+    const rulerEl = document.getElementById('stele-ruler');
+    if (rulerEl) {
+      const pid    = gs.player_nation;
+      const nation = (pid && gs.nations) ? gs.nations[pid] : null;
+      const gov    = nation && nation.government ? nation.government : null;
+      const ruler  = gov && gov.ruler ? gov.ruler : null;
+
+      const rawName = (ruler && ruler.name) ? String(ruler.name) : 'STRATEGOS';
+      const name    = rawName.toUpperCase();
+
+      let title = '';
+      if (ruler && ruler.title) {
+        title = String(ruler.title).toUpperCase();
+      } else if (gov && gov.type && STELE_GOV_TITLES[gov.type]) {
+        title = STELE_GOV_TITLES[gov.type];
+      } else {
+        title = 'СТРАТЕГОС';
+      }
+
+      rulerEl.textContent = `${name} · ${title}`;
+    }
+  } catch (e) { /* no-op: стела — декоративный виджет */ }
+
+  // ── Дата: месяц и год ─────────────────────────────────────────
+  try {
+    const monthEl = document.getElementById('game-month');
+    const yearEl  = document.getElementById('game-year');
+    if (monthEl || yearEl) {
+      const date = gs.date || { year: -301, month: 1 };
+      // Игровые месяцы хранятся 1..12; стела ожидает индекс 0..11
+      const m = Math.max(1, Math.min(12, date.month ?? 1)) - 1;
+      const yearRaw = (date.year ?? -301);
+      const year = Math.abs(yearRaw);
+      const era  = yearRaw < 0 ? 'BC' : 'AD';
+
+      if (monthEl) monthEl.textContent = GREEK_MONTHS[m] || GREEK_MONTHS[0];
+      if (yearEl)  yearEl.textContent  = toRomanYear(year, era);
+    }
+  } catch (e) { /* no-op */ }
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -2419,6 +2513,8 @@ function renderAll() {
   try { renderLeftPanel(); }              catch (e) { console.error('renderLeftPanel error:', e); }
   try { renderRightPanel(); }             catch (e) { console.error('renderRightPanel error:', e); }
   try { updateDateDisplay(); }            catch (e) { console.error('updateDateDisplay error:', e); }
+  // Этап 10 (uisuper.md) — стела: имя правителя и дата
+  try { updateStele(); }                  catch (e) { console.error('updateStele error:', e); }
   // Шаг 45 — сезонный визуал (фильтр карты, оверлей, иконка в топ-баре)
   try { if (typeof applySeasonVisual === 'function') applySeasonVisual(); } catch (e) { console.error('applySeasonVisual error:', e); }
   try { renderCharInitiativesPanel(); }   catch (e) { console.error('renderCharInitiativesPanel error:', e); }

@@ -11430,9 +11430,17 @@
       function updateSbGame(){
         const span = _el('sb-game');
         if (!span) return;
+        // Этап 10 (uisuper.md): #game-date переехал в стелу (game-month + game-year).
+        // Читаем дату прямо из стелы — формат «Ἑκατομβαιών · CCCI BC».
         let date = '';
-        const dateEl = _el('game-date');
-        if (dateEl) date = (dateEl.textContent || '').trim();
+        const monthEl = _el('game-month');
+        const yearEl  = _el('game-year');
+        if (monthEl || yearEl) {
+          const parts = [];
+          if (monthEl) parts.push((monthEl.textContent || '').trim());
+          if (yearEl)  parts.push((yearEl.textContent  || '').trim());
+          date = parts.filter(Boolean).join(' · ');
+        }
         let nation = '';
         try {
           const gs = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
