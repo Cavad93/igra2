@@ -188,6 +188,9 @@ function initLeafletMap() {
   // Названия наций на карте (динамические, зум-адаптивные)
   renderNationLabels();
 
+  // uisuper Этап 18 — подписи городов-столиц (Cinzel, золотом для игрока)
+  try { renderCityLabels(); } catch (e) { console.warn('[renderCityLabels]', e); }
+
   // Слои армий и осад (поверх всего)
   if (typeof initArmyLayers === 'function') initArmyLayers();
 
@@ -2282,6 +2285,73 @@ function _updateNationLabelVisibility() {
 function scheduleNationLabelUpdate() {
   if (_labelTimerId) clearTimeout(_labelTimerId);
   _labelTimerId = setTimeout(_updateNationLabelVisibility, 80);
+}
+
+// ──────────────────────────────────────────────────────────────
+// ГОРОДА / СТОЛИЦЫ — uisuper Этап 18
+// Помечаем столицы наций мелкими «греческими» подписями Cinzel.
+// Столица игрока — увеличенная, золотом; остальные — приглушённые.
+// ──────────────────────────────────────────────────────────────
+
+let _cityLabelMarkers = [];
+
+function renderCityLabels() {
+  if (!leafletMap) return;
+  clearCityLabels();
+
+  const nations = GAME_STATE?.nations ?? {};
+  const playerId = GAME_STATE?.player_nation;
+
+  for (const [nationId, nation] of Object.entries(nations)) {
+    if (!nation) continue;
+    const capitalRegion = nation.capital_region ?? nation.regions?.[0];
+    if (!capitalRegion) continue;
+    const md = MAP_REGIONS?.[capitalRegion];
+    if (!md || !md.center) continue;
+
+    const isCapital = true; // капитал нации
+    const isPlayer  = nationId === playerId;
+    const name      = nation.capital_name || nation.name || nationId;
+
+    const cls = 'city-label'
+              + (isCapital ? ' capital' : '')
+              + (isPlayer  ? ' player'  : '');
+
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="${cls}">${_escapeHtml(String(name))}</div>`,
+      iconSize: null,
+      iconAnchor: [0, 0],
+    });
+    const marker = L.marker(md.center, {
+      icon,
+      interactive: false,
+      keyboard:    false,
+      zIndexOffset: 800,
+    });
+    marker.addTo(leafletMap);
+    _cityLabelMarkers.push(marker);
+  }
+}
+
+function clearCityLabels() {
+  if (!leafletMap) { _cityLabelMarkers = []; return; }
+  for (const m of _cityLabelMarkers) {
+    try { if (leafletMap.hasLayer(m)) leafletMap.removeLayer(m); } catch (_) {}
+  }
+  _cityLabelMarkers = [];
+}
+
+function _escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+// Экспорт в window для вызова из turn.js/renderAll
+if (typeof window !== 'undefined') {
+  window.renderCityLabels = renderCityLabels;
+  window.clearCityLabels  = clearCityLabels;
 }
 
 // ──────────────────────────────────────────────────────────────

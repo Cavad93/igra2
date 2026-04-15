@@ -408,28 +408,32 @@ function formatDate(date) {
 //   0 = Весна, 1 = Лето, 2 = Осень, 3 = Зима
 // ──────────────────────────────────────────────────────────────
 
+// uisuper Этап 18 — более тонкая сезонная тонировка карты.
+// Более низкие alpha у overlay и мягкий filter (минимум hue/saturate),
+// чтобы смена сезона выглядела как едва заметный сдвиг настроения, а не
+// резкий цветокоррекционный фильтр поверх Tabula Peutingeriana.
 const SEASON_STYLES = {
   0: { // Весна
-    overlay: 'rgba(100,180,80,0.04)',
-    filter:  'hue-rotate(8deg) saturate(1.15)',
+    overlay: 'rgba(40,80,30,0.035)',   // едва заметный зелёный
+    filter:  'hue-rotate(4deg) saturate(1.04)',
     icon:    '🌸',
     label:   'Весна',
   },
   1: { // Лето
-    overlay: 'rgba(255,200,50,0.05)',
-    filter:  'brightness(1.04) saturate(0.92)',
+    overlay: 'rgba(60,40,0,0.045)',    // охристый
+    filter:  'brightness(1.02) saturate(0.96)',
     icon:    '☀',
     label:   'Лето',
   },
   2: { // Осень
-    overlay: 'rgba(180,100,30,0.07)',
-    filter:  'hue-rotate(-12deg) sepia(0.2)',
+    overlay: 'rgba(80,30,0,0.06)',     // медный
+    filter:  'hue-rotate(-6deg) sepia(0.08)',
     icon:    '🍂',
     label:   'Осень',
   },
   3: { // Зима
-    overlay: 'rgba(180,210,240,0.06)',
-    filter:  'saturate(0.5) brightness(0.92)',
+    overlay: 'rgba(20,40,80,0.055)',   // холодный синий
+    filter:  'saturate(0.80) brightness(0.96)',
     icon:    '❄',
     label:   'Зима',
   },
@@ -2542,6 +2546,8 @@ function renderAll() {
   try { if (typeof renderAllArmies      === 'function') renderAllArmies();      } catch (e) {}
   // Шаг 40: обновить маркеры прогресса строительства на карте
   try { if (typeof renderBuildMarkers   === 'function') renderBuildMarkers();   } catch (e) {}
+  // uisuper Этап 18 — обновить подписи столиц (владелец мог смениться)
+  try { if (typeof renderCityLabels     === 'function') renderCityLabels();     } catch (e) {}
   // ECO_009: обновить торговые маршруты если панель открыта
   try {
     if (typeof showTradeRoutes !== 'undefined' && showTradeRoutes) {
