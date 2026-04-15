@@ -4512,6 +4512,79 @@
       transition: opacity 0.3s ease;
     }
 
+    /* ══════════════════════════════════════════════════
+       ЭТАП 19 (uisuper.md): РОЗА ВЕТРОВ
+       Заменяет визуально #map-mode-bar в правом нижнем углу карты.
+       Легаси-бар сохраняется в DOM для совместимости с логикой
+       setMapMode/onZoomChange, но скрыт визуально.
+    ══════════════════════════════════════════════════ */
+    #map-mode-bar {
+      display: none !important;
+    }
+
+    #wind-rose {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      z-index: 10;
+      width: 130px;
+      height: 130px;
+      pointer-events: none;
+    }
+
+    #wind-rose-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .wr-center {
+      fill: var(--bg-panel);
+      stroke: var(--border-gold);
+      stroke-width: 1;
+    }
+    .wr-center-dot {
+      fill: var(--gold);
+    }
+
+    .wr-petal {
+      fill: var(--bg-section);
+      stroke: var(--border-main);
+      stroke-width: 1;
+      cursor: pointer;
+      pointer-events: all;
+      transition: fill 0.25s, stroke 0.25s, transform 0.25s;
+      transform-origin: center;
+      transform-box: fill-box;
+    }
+
+    .wr-petal:hover {
+      fill: var(--bg-hover);
+      stroke: var(--border-light);
+    }
+
+    /* Активный лепесток */
+    .wr-petal.active {
+      fill: var(--bronze-dark);
+      stroke: var(--gold);
+      stroke-width: 1.5;
+      filter: drop-shadow(0 0 4px rgba(201,169,97,0.4));
+    }
+
+    .wr-label {
+      font-family: var(--font-display);
+      font-size: 9px;
+      fill: var(--text-dim);
+      pointer-events: none;
+      letter-spacing: 0.1em;
+    }
+
+    .wr-notch {
+      stroke: var(--border-main);
+      stroke-width: 1;
+      pointer-events: none;
+    }
+
     /* Strategic view (zoom < 4): уменьшенные маркеры армий.
        Показываем только флаг нации — .army-count прячется. */
     body.map-zoom-strategic .army-marker {
@@ -10355,12 +10428,69 @@
       <div id="center-panel">
         <div id="map-container">
           <!-- Leaflet монтируется сюда в renderMap() -->
-          <!-- Шаг 29: панель режимов карты -->
-          <div id="map-mode-bar">
+          <!-- Шаг 29 (arma): панель режимов карты — скрыта визуально с этапа 19 (uisuper),
+               оставлена в DOM для совместимости с setMapMode/onZoomChange. -->
+          <div id="map-mode-bar" aria-hidden="true">
             <button class="mm-btn active" data-mode="political" title="Политический [1]" onclick="setMapMode('political')"><span class="icon-wrap" data-icon="overview"></span></button>
             <button class="mm-btn"        data-mode="economy"   title="Экономика [2]"    onclick="setMapMode('economy')"><span class="icon-wrap" data-icon="economy"></span></button>
             <button class="mm-btn"        data-mode="military"  title="Военный [3]"       onclick="setMapMode('military')"><span class="icon-wrap" data-icon="army"></span></button>
             <button class="mm-btn"        data-mode="population" title="Население [4]"    onclick="setMapMode('population')"><span class="icon-wrap" data-icon="population"></span></button>
+          </div>
+
+          <!-- ЭТАП 19 (uisuper.md): Роза ветров — SVG в правом нижнем углу карты.
+               Четыре лепестка соответствуют режимам карты (N=политика, E=экономика,
+               S=военный, W=население). Логика переключения подключается в этапе 20. -->
+          <div id="wind-rose" role="group" aria-label="Режим карты">
+            <svg id="wind-rose-svg" viewBox="-60 -60 120 120"
+                 xmlns="http://www.w3.org/2000/svg">
+
+              <!-- Центральная точка -->
+              <circle cx="0" cy="0" r="8" class="wr-center"/>
+              <circle cx="0" cy="0" r="5" class="wr-center-dot"/>
+
+              <!-- Лепесток Север: Политика -->
+              <path id="wr-political"
+                    d="M0,0 L-10,-18 L0,-42 L10,-18 Z"
+                    class="wr-petal active" data-mode="political"
+                    onclick="setMapMode('political')"
+                    role="button" tabindex="0"
+                    aria-label="Политический режим [1]"/>
+              <text x="0" y="-48" class="wr-label" text-anchor="middle">П</text>
+
+              <!-- Лепесток Восток: Экономика -->
+              <path id="wr-economy"
+                    d="M0,0 L18,-10 L42,0 L18,10 Z"
+                    class="wr-petal" data-mode="economy"
+                    onclick="setMapMode('economy')"
+                    role="button" tabindex="0"
+                    aria-label="Режим экономики [2]"/>
+              <text x="50" y="4" class="wr-label" text-anchor="start">Э</text>
+
+              <!-- Лепесток Юг: Военный -->
+              <path id="wr-military"
+                    d="M0,0 L10,18 L0,42 L-10,18 Z"
+                    class="wr-petal" data-mode="military"
+                    onclick="setMapMode('military')"
+                    role="button" tabindex="0"
+                    aria-label="Военный режим [3]"/>
+              <text x="0" y="56" class="wr-label" text-anchor="middle">В</text>
+
+              <!-- Лепесток Запад: Население -->
+              <path id="wr-population"
+                    d="M0,0 L-18,10 L-42,0 L-18,-10 Z"
+                    class="wr-petal" data-mode="population"
+                    onclick="setMapMode('population')"
+                    role="button" tabindex="0"
+                    aria-label="Режим населения [4]"/>
+              <text x="-50" y="4" class="wr-label" text-anchor="end">Н</text>
+
+              <!-- Диагональные засечки (декор) -->
+              <line x1="-6" y1="-6" x2="-14" y2="-14" class="wr-notch"/>
+              <line x1="6"  y1="-6" x2="14"  y2="-14" class="wr-notch"/>
+              <line x1="6"  y1="6"  x2="14"  y2="14"  class="wr-notch"/>
+              <line x1="-6" y1="6"  x2="-14" y2="14"  class="wr-notch"/>
+
+            </svg>
           </div>
           <!-- Легенда наций -->
           <div id="nation-legend">
