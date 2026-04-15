@@ -187,6 +187,11 @@
       cursor: pointer;
       text-shadow: 0 1px 4px rgba(0,0,0,0.75);
       transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      /* uisuper Этап 7: родитель #splash-inner имеет pointer-events:none
+         (чтобы клики проходили сквозь текст к мозаике-фону). Это правило
+         наследуется на детей — и убивало клик по кнопке «Начать игру».
+         Возвращаем реакцию на клик явно только для самой кнопки. */
+      pointer-events: auto;
     }
     .splash__btn:hover {
       background: rgba(200,170,90,0.32);
