@@ -11540,11 +11540,18 @@
         }
       } catch (e) { console.error('[updateNationHeader] error:', e); }
       // Шаг 29 / Шаг 61 — стартовый режим карты: политический
+      // uisuper Этап 20 — WindRose.setActive вызывается внутри setMapMode
       try {
         if (typeof setMapMode === 'function') {
           setMapMode('political');
         }
       } catch (e) { console.error('[setMapMode] error:', e); }
+      // uisuper Этап 20 — keyboard navigation для лепестков розы ветров
+      try {
+        if (typeof initWindRoseKeyboard === 'function') {
+          initWindRoseKeyboard();
+        }
+      } catch (e) { console.error('[initWindRoseKeyboard] error:', e); }
       // Шаг 58 — показать кнопку «Начать игру» вместо авто-скрытия.
       // uisuper Этап 8 fix: ждём, пока мозаика полностью соберётся
       // (≈20с с момента старта splash), и только потом показываем

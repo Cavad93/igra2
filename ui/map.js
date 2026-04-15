@@ -2839,6 +2839,80 @@ function _restorePoliticalStyle(regionId) {
   layer.setStyle(buildPolygonStyle(color, isPlayer, isSelected, origC, occC, intelLevel));
 }
 
+// ══════════════════════════════════════════════════════════════
+// uisuper.md ЭТАП 20 — РОЗА ВЕТРОВ: логика переключения режимов
+// ──────────────────────────────────────────────────────────────
+// WindRose — модуль синхронизации визуального состояния лепестков
+// SVG-розы (см. разметку в index.html #wind-rose) с текущим
+// режимом карты. Вызывается из setMapMode() при каждом
+// переключении режима.
+const WindRose = {
+  _current: 'political',
+
+  // Карта: mode → id лепестка SVG
+  PETALS: {
+    political:  'wr-political',
+    economy:    'wr-economy',
+    military:   'wr-military',
+    population: 'wr-population',
+  },
+
+  /**
+   * Установить активный лепесток по режиму карты.
+   * @param {'political'|'economy'|'military'|'population'} mode
+   */
+  setActive(mode) {
+    if (!this.PETALS[mode]) return;
+    this._current = mode;
+
+    // Снять active со всех лепестков
+    const petals = document.querySelectorAll('.wr-petal');
+    if (!petals.length) return;
+    petals.forEach((p) => p.classList.remove('active'));
+
+    // Активировать нужный
+    const petal = document.getElementById(this.PETALS[mode]);
+    if (!petal) return;
+    petal.classList.add('active');
+
+    // Анимация «пульса» при активации: кратко scale(1.1) → scale(1)
+    try {
+      petal.style.transition = 'none';
+      petal.setAttribute('transform', 'scale(1.1)');
+      requestAnimationFrame(() => {
+        petal.style.transition = 'fill 0.25s, stroke 0.25s, transform 0.3s';
+        petal.setAttribute('transform', 'scale(1)');
+      });
+    } catch (e) { /* SVG transform может не поддерживаться в тестовой среде */ }
+  },
+};
+
+// Экспортируем в глобал для доступа из index.html и тестов
+window.WindRose = WindRose;
+
+/**
+ * ЭТАП 20 (uisuper.md) — инициализация keyboard navigation для
+ * лепестков розы ветров. Обрабатывает Enter/Space на focused-лепестке
+ * и вызывает setMapMode по data-mode. Вызывается из DOMContentLoaded.
+ */
+function initWindRoseKeyboard() {
+  const petals = document.querySelectorAll('.wr-petal');
+  petals.forEach((petal) => {
+    if (petal.dataset._wrKbdBound === '1') return;
+    petal.dataset._wrKbdBound = '1';
+    petal.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        const mode = petal.dataset.mode;
+        if (mode && typeof setMapMode === 'function') {
+          setMapMode(mode);
+        }
+      }
+    });
+  });
+}
+window.initWindRoseKeyboard = initWindRoseKeyboard;
+
 /**
  * Переключает режим отображения карты.
  * @param {'political'|'economy'|'military'|'population'} mode
@@ -2846,6 +2920,9 @@ function _restorePoliticalStyle(regionId) {
 function setMapMode(mode) {
   if (!window.MAP_MODES.includes(mode)) return;
   window.CURRENT_MAP_MODE = mode;
+
+  // ЭТАП 20 (uisuper.md) — синхронизация розы ветров
+  try { WindRose.setActive(mode); } catch (e) { /* noop */ }
 
   // Синхронизируем состояние кнопок
   const bar = document.getElementById('map-mode-bar');
