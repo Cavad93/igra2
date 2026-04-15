@@ -87,12 +87,13 @@
     };
     splash.addEventListener('animationend', onEnd, { once: true });
     // Страховка на случай если animationend не сработал
+    // (uisuper Этап 8: splashFade = 0.8s, запас ещё 0.2s)
     setTimeout(() => {
       if (splash.parentNode) {
         splash.style.display = 'none';
         try { splash.parentNode.removeChild(splash); } catch (_) {}
       }
-    }, 800);
+    }, 1000);
   }
 
   // Экспорт в глобальную область

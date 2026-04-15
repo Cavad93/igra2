@@ -188,9 +188,11 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 18px rgba(0,0,0,0.55);
     }
-    /* Шаг 58 — анимация исчезновения splash при старте */
+    /* Шаг 58 — анимация исчезновения splash при старте.
+       uisuper Этап 8 — длительность увеличена до 0.8s для плавного
+       растворения мозаики загрузки. */
     .splash--hiding {
-      animation: splashFade 0.6s ease forwards;
+      animation: splashFade 0.8s ease forwards;
     }
     @keyframes splashFade {
       to { opacity: 0; pointer-events: none; }
@@ -10532,6 +10534,150 @@
     // Инициализируем ввод
     initInput();
 
+    // ══════════════════════════════════════════════════
+    // uisuper ЭТАП 8 — МОЗАИКА ЗАГРУЗКИ (JS-анимация)
+    // Тессеры 6×6px с 1px зазором заполняют Canvas по
+    // мере роста прогресса загрузки. Центр экрана —
+    // силуэт Сицилии (теплее), фон — морской базальт.
+    // ══════════════════════════════════════════════════
+    const SplashMosaic = {
+      canvas: null,
+      ctx: null,
+      tiles: [],          // все тессеры в случайном порядке
+      revealed: 0,        // сколько открыто
+      total: 0,
+      TILE: 7,            // размер тессеры (6px + 1px зазор)
+      cols: 0,
+      rows: 0,
+
+      // Примерный силуэт Сицилии как набор относительных координат
+      // (col_ratio, row_ratio) — нормализованные от 0 до 1
+      SICILY_MASK: [
+        // центр и правая часть острова
+        [0.35,0.35],[0.38,0.32],[0.42,0.30],[0.46,0.29],[0.50,0.28],
+        [0.54,0.29],[0.58,0.30],[0.62,0.32],[0.65,0.35],[0.67,0.38],
+        [0.66,0.42],[0.63,0.45],[0.60,0.47],[0.56,0.48],[0.52,0.48],
+        [0.48,0.47],[0.44,0.46],[0.40,0.44],[0.37,0.41],[0.35,0.38],
+        // заполнение центра
+        [0.40,0.35],[0.44,0.33],[0.48,0.32],[0.52,0.32],[0.56,0.33],
+        [0.60,0.35],[0.62,0.38],[0.61,0.41],[0.58,0.43],[0.54,0.44],
+        [0.50,0.44],[0.46,0.43],[0.42,0.41],[0.40,0.38],
+        // Мессина (северо-восток)
+        [0.68,0.30],[0.70,0.27],[0.69,0.24],
+        // Сиракузы (юго-восток)
+        [0.65,0.48],[0.67,0.51],[0.65,0.53],
+        // западная оконечность
+        [0.32,0.37],[0.30,0.39],[0.31,0.42],
+      ],
+
+      init() {
+        this.canvas = document.getElementById('splash-mosaic');
+        if (!this.canvas) return;
+        this.ctx = this.canvas.getContext('2d');
+        this._resize();
+        this._buildTiles();
+        this._render();
+        this._onResize = () => {
+          if (!this.canvas || !this.canvas.isConnected) return;
+          this._resize();
+          this._buildTiles();
+          this._render();
+        };
+        window.addEventListener('resize', this._onResize);
+      },
+
+      _resize() {
+        this.canvas.width  = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.cols = Math.ceil(this.canvas.width  / this.TILE);
+        this.rows = Math.ceil(this.canvas.height / this.TILE);
+      },
+
+      _buildTiles() {
+        const arr = [];
+        const prevRevealedRatio = this.total > 0 ? (this.revealed / this.total) : 0;
+
+        // Строим маску острова: Set из "col,row"
+        const islandSet = new Set();
+        for (const [cr, rr] of this.SICILY_MASK) {
+          // Каждую точку маски расширяем в пятно радиусом ~3 тессеры
+          const cc = Math.round(cr * this.cols);
+          const rc = Math.round(rr * this.rows);
+          for (let dc = -3; dc <= 3; dc++) {
+            for (let dr = -3; dr <= 3; dr++) {
+              if (dc*dc + dr*dr <= 12) {
+                islandSet.add(`${cc+dc},${rc+dr}`);
+              }
+            }
+          }
+        }
+
+        for (let c = 0; c < this.cols; c++) {
+          for (let r = 0; r < this.rows; r++) {
+            arr.push({
+              x: c * this.TILE,
+              y: r * this.TILE,
+              island: islandSet.has(`${c},${r}`),
+              // Запекаем оттенок чтобы при re-render цвет не дёргался
+              shade: Math.random(),
+              visible: false,
+            });
+          }
+        }
+
+        // Перемешать случайно (Fisher–Yates)
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+
+        this.tiles = arr;
+        this.total = arr.length;
+        // Сохраняем достигнутый прогресс после resize
+        this.revealed = 0;
+        if (prevRevealedRatio > 0) {
+          const keep = Math.floor(prevRevealedRatio * this.total);
+          for (let i = 0; i < keep && i < this.total; i++) {
+            this.tiles[i].visible = true;
+          }
+          this.revealed = keep;
+        }
+      },
+
+      // progress: 0..1
+      setProgress(p) {
+        if (!this.canvas) return;
+        const clamped = Math.max(0, Math.min(1, p));
+        const target = Math.floor(clamped * this.total);
+        while (this.revealed < target && this.revealed < this.total) {
+          this.tiles[this.revealed].visible = true;
+          this.revealed++;
+        }
+        this._render();
+      },
+
+      _render() {
+        const ctx = this.ctx;
+        if (!ctx) return;
+        const S = this.TILE - 1; // размер тессеры без зазора
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        for (const t of this.tiles) {
+          if (!t.visible) continue;
+          if (t.island) {
+            // Тессеры острова — тёплый тёмный камень с золотым оттенком
+            ctx.fillStyle = `hsl(35, 20%, ${8 + t.shade * 4}%)`;
+          } else {
+            // Морские тессеры — тёмный базальт, почти чёрный
+            ctx.fillStyle = `hsl(210, 25%, ${4 + t.shade * 3}%)`;
+          }
+          ctx.fillRect(t.x, t.y, S, S);
+        }
+      },
+    };
+    // Инициализируем сразу (DOM уже готов — скрипт в конце body)
+    try { SplashMosaic.init(); } catch (e) { console.error('[SplashMosaic] init error:', e); }
+
     // D3: показать экран загрузки
     const _splash = document.getElementById('splash-screen');
     function _splashProgress(pct, text) {
@@ -10539,6 +10685,8 @@
       const lbl = document.getElementById('splash-status');
       if (bar) bar.style.width = pct + '%';
       if (lbl) lbl.textContent = text;
+      // uisuper Этап 8 — синхронизируем прогресс мозаики
+      try { SplashMosaic.setProgress(pct / 100); } catch (_) {}
     }
     function _splashHide() {
       if (!_splash) return;
