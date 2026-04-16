@@ -6973,3 +6973,2376 @@ refactor(ui): этап 43 — финальный аудит Части II, smoke
 - Ни одной функциональной регрессии — игра работает идентично
 - `docs/refactor_index.md` содержит полную карту и историю миграции
 - Открыты ворота для Части III (модули, build-step, дальнейший распил)
+
+---
+
+# ЧАСТЬ III — РАЗБИЕНИЕ `engine/turn.js`, ES-МОДУЛИ, BUILD-STEP
+
+После Части II `index.html` стал чистым каркасом. Часть III идёт дальше:
+
+1. **Направление A (этапы 44–54):** Разбить монолитный `engine/turn.js`
+   (2575 строк) на 9 логических модулей. Это безопасно — всё остаётся
+   на `window.*`, порядок `<script>` не меняется.
+
+2. **Направление B (этапы 55–66):** Убрать все inline `onclick` (73 в HTML,
+   186 в JS-шаблонах) → перейти на `addEventListener` / делегирование →
+   конвертировать все 74 файла в ES-модули (`type="module"`).
+
+3. **Направление C (этапы 67–71):** Подключить Vite — dev-сервер с HMR,
+   продакшн-сборка с tree-shaking и минификацией, code-splitting.
+
+**Порядок критичен:** A → B → C. Каждое направление опирается на предыдущее.
+
+## Золотые правила Части III
+
+1. **Один этап — один логический модуль или одна группа файлов.**
+2. **Направление A:** скрипты остаются классическими (`<script src>`),
+   публичное API через `window.*`. Вынос 1:1 без переименований.
+3. **Направление B:** `onclick` заменяется на `data-action` + делегирование
+   через `document.addEventListener('click', …)`. Только после удаления
+   всех inline-хендлеров можно переключать на `type="module"`.
+4. **Направление C:** Vite конфигурируется так чтобы `vite dev` работал
+   без изменений кода, а `vite build` выдавал один бандл + чанки.
+5. **После каждого этапа — smoke-тест.** Игра должна запускаться,
+   ход проходить, UI не ломаться.
+6. **Коммит атомарный.** Один этап = один коммит.
+
+## Карта этапов Части III
+
+| Этап | Направление | Что делается | Куда |
+|------|-------------|--------------|------|
+| 44 | A | Аудит `turn.js`, карта функций и зависимостей | `docs/refactor_turn.md` |
+| 45 | A | Дата + Сезон + Стела | `engine/date.js` |
+| 46 | A | Персонажи: старение, смерть, спавн | `engine/characters_lifecycle.js` |
+| 47 | A | Шпионаж + казус белли | `engine/espionage.js` |
+| 48 | A | OU-процесс + AI-скоринг | `engine/ai_scoring.js` |
+| 49 | A | Fallback AI-решение | `engine/ai_fallback.js` |
+| 50 | A | AI HTTP Worker + фоновый цикл | `engine/ai_worker.js` |
+| 51 | A | Случайные события | `engine/events.js` |
+| 52 | A | Сохранение/загрузка + миграции | `engine/save.js` |
+| 53 | A | Инициализация игры + renderAll | `engine/init.js` |
+| 54 | A | Финальный аудит `turn.js`, smoke-тест | — |
+| 55 | B | Аудит: граф `window.*` зависимостей | `docs/refactor_modules.md` |
+| 56 | B | Убрать onclick из `index.html` (73 шт.) | `ui/boot.js` |
+| 57 | B | Убрать onclick из `ui/panels.js` (34 шт.) | делегирование |
+| 58 | B | Убрать onclick из `ui/government_tab.js` (54 шт.) | делегирование |
+| 59 | B | Убрать onclick из `ui/diplomacy_tab.js` (26 шт.) | делегирование |
+| 60 | B | Убрать onclick из остальных 11 файлов (72 шт.) | делегирование |
+| 61 | B | Конвертировать `data/*.js` в ES-модули | export/import |
+| 62 | B | Конвертировать `engine/*.js` в ES-модули | export/import |
+| 63 | B | Конвертировать `ui/*.js` в ES-модули | export/import |
+| 64 | B | Конвертировать `ai/*.js` в ES-модули | export/import |
+| 65 | B | Единый `<script type="module" src="ui/boot.js">` | `index.html` |
+| 66 | B | Финальный аудит: 0 глобалов, 0 inline onclick | smoke-тест |
+| 67 | C | Инициализация Vite: package.json, vite.config.js | корень проекта |
+| 68 | C | Dev-сервер: `vite dev` с HMR | vite.config.js |
+| 69 | C | Продакшн-сборка: tree-shaking, минификация | `dist/` |
+| 70 | C | Code-splitting: lazy-load тяжёлых модулей | vite.config.js |
+| 71 | C | Финальный аудит Части III, полный smoke-тест | —  |
+
+---
+
+## ЭТАП 44 — Рефакторинг: аудит `engine/turn.js` и карта содержимого
+
+**Направление:** A — разбиение `engine/turn.js`
+**Часть:** 1 из 11 — только исследование, никаких правок кода
+
+---
+
+### Контекст
+
+`engine/turn.js` — 2575 строк, самый большой файл движка. Содержит
+всё: основной цикл хода, дату/сезон, стелу, старение персонажей,
+AI-решения (OU-процесс + fallback), HTTP-воркер, случайные события,
+сохранение/загрузку, инициализацию игры и renderAll.
+
+Перед разбиением нужна полная карта: кто вызывает кого, какие
+глобалы читаются/пишутся, какие DOM-элементы затрагиваются.
+
+---
+
+### Что читать / исследовать перед началом
+
+1. `wc -l engine/turn.js` — зафиксировать baseline.
+2. Выписать все `function` верхнего уровня с номерами строк.
+3. Для каждой функции: какие другие функции из `turn.js` она вызывает?
+4. Для каждой функции: какие `window.*` глобалы она читает/пишет?
+5. Для каждой функции: какие `document.getElementById` / `querySelector` она использует?
+6. Найти все `window.X = ...` экспорты в `turn.js`.
+7. Найти все места в **других файлах** (`ui/*.js`, `engine/*.js`, `ai/*.js`,
+   инлайн-`<script>` в `index.html`) где вызываются функции из `turn.js`.
+
+---
+
+### Что сделать
+
+**Шаг 44.1 — Создать `docs/refactor_turn.md`**
+
+Файл должен содержать:
+
+```markdown
+# Карта содержимого engine/turn.js (baseline перед разбиением)
+
+Зафиксировано: <дата>, коммит: <hash>
+Размер файла: <wc -l> строк.
+
+## 1. Все функции верхнего уровня
+
+| # | Строка | Имя | Экспорт window.* | Вызывается из |
+|---|--------|-----|-------------------|---------------|
+| 1 | 48 | processTurn | onclick в HTML | — |
+| 2 | 385 | advanceDate | — | processTurn |
+| … | … | … | … | … |
+
+## 2. Все константы верхнего уровня
+
+| # | Строка | Имя | Тип | Используется в |
+|---|--------|-----|-----|----------------|
+| 1 | 11 | MONTH_NAMES | const array | formatDate |
+| … | … | … | … | … |
+
+## 3. Граф вызовов (кто кого вызывает внутри turn.js)
+
+processTurn → advanceDate, agingCharacters, checkCharacterDeaths,
+  maybeSpawnCharacter, processAINations, _processEspionageTick,
+  triggerRandomEvent, _recordTurnSummary, renderAll, saveGame, …
+
+## 4. Внешние зависимости (что turn.js читает из window.*)
+
+- window.GAME_STATE (везде)
+- window.CONFIG (экономика, AI)
+- window.MAP_REGIONS (карта)
+- …
+
+## 5. Внешние вызовы (кто из других файлов вызывает функции turn.js)
+
+| Функция | Откуда вызывается |
+|---------|-------------------|
+| processTurn | index.html onclick, ui/input.js |
+| initGame | инлайн-блок C (index.html:12410) |
+| saveGame | engine/storage.js, index.html |
+| loadGame | engine/storage.js |
+| getCurrentSeason | ui/map.js |
+| … | … |
+
+## 6. План разбиения (этапы 45–53)
+
+| Этап | Функции | Целевой файл | Строк |
+|------|---------|--------------|-------|
+| 45 | advanceDate, formatDate, getCurrentSeason, applySeasonVisual, updateStele, toRomanYear + MONTH_NAMES, SEASON_STYLES, GREEK_MONTHS, STELE_GOV_TITLES | engine/date.js | ~240 |
+| 46 | agingCharacters, checkCharacterDeaths, maybeSpawnCharacter | engine/characters_lifecycle.js | ~76 |
+| 47 | _processEspionageTick, _cleanExpiredCasusBelli | engine/espionage.js | ~160 |
+| 48 | _ouNaturalMu, _ouStep, _tickOU, _softmax, _weightedPick, _findWarTarget, _findDiplomacyPartner, _findBuildTarget + _OU_THETA, _OU_SIGMA, _FALLBACK_BUILD_PRIORITY, _SUPER_OU_ACTION_MAP | engine/ai_scoring.js | ~176 |
+| 49 | applyFallbackDecision | engine/ai_fallback.js | ~410 |
+| 50 | _getAIHttpWorker, _callGroqViaWorker, startAIBackgroundLoop, stopAIBackgroundLoop, _aiBgTick, _aiBgProcess + _aiHttpWorker, _aiHttpWorkerFailed, _aiReqCounter, _aiPendingReqs, _aiPending, _aiBgRunning | engine/ai_worker.js | ~220 |
+| 51 | RANDOM_EVENTS, triggerRandomEvent, _showEventChoiceOverlay | engine/events.js | ~153 |
+| 52 | _getSaveWorker, _buildSavePayload, saveGame, loadGame, _migrateCharacterIds, _sanitizeInstitutions, _migrateSenateConfig, _migrateCharacterSenateFields + _saveWorker, _saveWorkerFailed, _saveInFlight | engine/save.js | ~244 |
+| 53 | initGame, renderAll | engine/init.js | ~264 |
+```
+
+**Шаг 44.2 — Ничего больше не менять**
+
+На этом этапе запрещено:
+- править `engine/turn.js` или любой другой файл кода;
+- создавать новые `.js` файлы.
+
+---
+
+### Проверка перед коммитом
+
+1. Файл `docs/refactor_turn.md` создан и содержит все 6 разделов.
+2. Таблица функций покрывает все `function` в `turn.js` без пропусков.
+3. Граф вызовов непустой.
+4. Список внешних вызовов содержит минимум `processTurn`, `initGame`,
+   `saveGame`, `getCurrentSeason`.
+5. `engine/turn.js` не изменён — `git diff engine/turn.js` пуст.
+
+---
+
+### Коммит
+
+```
+refactor(engine): этап 44 — аудит turn.js, карта содержимого
+```
+
+---
+
+*Следующий этап: вынос Дата + Сезон + Стела в `engine/date.js`.*
+
+---
+
+## ЭТАП 45 — Рефакторинг: вынос Дата + Сезон + Стела в `engine/date.js`
+
+**Направление:** A — разбиение `engine/turn.js`
+**Часть:** 2 из 11 — первый вынос кода
+
+---
+
+### Контекст
+
+Функции даты, сезона и стелы — самый автономный блок в `turn.js`.
+Они не вызывают другие функции из `turn.js` (кроме друг друга),
+а только читают `window.GAME_STATE` и пишут в DOM-элементы стелы.
+
+---
+
+### Что читать перед началом
+
+1. `engine/turn.js` строки 381–620 — весь блок даты/сезона/стелы.
+2. Найти все места в `turn.js` где вызываются `advanceDate()`,
+   `updateDateDisplay()`, `updateStele()`, `getCurrentSeason()`,
+   `applySeasonVisual()`.
+3. Найти в **других файлах** вызовы `window.getCurrentSeason`,
+   `window.applySeasonVisual`, `window.updateStele`, `window.toRomanYear`.
+
+---
+
+### Что сделать
+
+**Шаг 45.1 — Создать `engine/date.js`**
+
+Вырезать из `engine/turn.js` строки ~381–620 (целиком, 1:1, без изменений):
+
+```
+MONTH_NAMES          (const, ~11)
+SEASON_STYLES        (const, ~415)
+GREEK_MONTHS         (const, ~537)
+STELE_GOV_TITLES     (const, ~545)
+advanceDate          (function, ~385)
+formatDate           (function, ~400)
+getCurrentSeason     (function, ~447)
+applySeasonVisual    (function, ~466)
+updateDateDisplay    (function, ~508)
+toRomanYear          (function, ~561)
+updateStele          (function, ~574)
+```
+
+И все связанные `window.*` экспорты:
+```js
+window.SEASON_STYLES    = SEASON_STYLES;
+window.getCurrentSeason = getCurrentSeason;
+window.applySeasonVisual = applySeasonVisual;
+window.updateStele      = updateStele;
+window.toRomanYear      = toRomanYear;
+```
+
+**Шаг 45.2 — Удалить вынесенный код из `engine/turn.js`**
+
+Удалить те же строки из `turn.js`. Убедиться что `processTurn()`
+по-прежнему вызывает `advanceDate()`, `updateDateDisplay()` и т.д. —
+они теперь доступны через `window.*` из `engine/date.js`.
+
+**Шаг 45.3 — Подключить `engine/date.js` в `index.html`**
+
+Добавить `<script src="engine/date.js"></script>` **перед**
+`<script src="engine/turn.js"></script>` (чтобы функции были
+доступны к моменту исполнения `turn.js`).
+
+---
+
+### Проверка перед коммитом
+
+1. `node --check engine/date.js` — OK.
+2. `node --check engine/turn.js` — OK.
+3. `grep -n 'advanceDate\|formatDate\|getCurrentSeason\|applySeasonVisual\|updateStele\|toRomanYear' engine/turn.js`
+   — ни одного определения (`function X`), только вызовы.
+4. Игра запускается, дата и стела обновляются после хода.
+5. `wc -l engine/turn.js` — уменьшился на ~240 строк.
+
+---
+
+### Коммит
+
+```
+refactor(engine): этап 45 — вынос даты/сезона/стелы в engine/date.js
+```
+
+---
+
+*Следующий этап: вынос старения/смерти/спавна персонажей в `engine/characters_lifecycle.js`.*
+
+---
+
+## ЭТАП 46 — Рефакторинг: вынос персонажей в `engine/characters_lifecycle.js`
+
+**Направление:** A — разбиение `engine/turn.js`
+**Часть:** 3 из 11
+
+---
+
+### Контекст
+
+Три функции управления жизненным циклом персонажей (старение, смерть,
+спавн) — изолированный блок. Они вызываются только из `processTurn()`
+и не имеют зависимостей от других функций `turn.js`.
+
+---
+
+### Что читать перед началом
+
+1. `engine/turn.js` строки ~622–697.
+2. Проверить зависимости: какие `window.*` глобалы читают эти функции
+   (скорее всего `GAME_STATE`, `CONFIG`, возможно `addLog`).
+
+---
+
+### Что сделать
+
+**Шаг 46.1 — Создать `engine/characters_lifecycle.js`**
+
+Вырезать из `engine/turn.js` строки ~622–697 (1:1):
+
+```
+agingCharacters        (function)
+checkCharacterDeaths   (function)
+maybeSpawnCharacter    (function)
+```
+
+Добавить `window.*` экспорты, если их нет:
+```js
+window.agingCharacters      = agingCharacters;
+window.checkCharacterDeaths = checkCharacterDeaths;
+window.maybeSpawnCharacter  = maybeSpawnCharacter;
+```
+
+**Шаг 46.2 — Удалить из `engine/turn.js`**
+
+Удалить строки. `processTurn()` продолжает вызывать эти функции
+через `window.*`.
+
+**Шаг 46.3 — Подключить в `index.html`**
+
+Добавить `<script src="engine/characters_lifecycle.js"></script>`
+**перед** `<script src="engine/turn.js"></script>`.
+
+---
+
+### Проверка перед коммитом
+
+1. `node --check engine/characters_lifecycle.js` — OK.
+2. `node --check engine/turn.js` — OK.
+3. Игра запускается, персонажи стареют и умирают после ходов.
+4. `wc -l engine/turn.js` — уменьшился на ~76 строк.
+
+---
+
+### Коммит
+
+```
+refactor(engine): этап 46 — вынос жизненного цикла персонажей
+```
+
+---
+
+*Следующий этап: вынос шпионажа в `engine/espionage.js`.*
+
+---
+
+## ЭТАП 47 — Рефакторинг: вынос шпионажа в `engine/espionage.js`
+
+**Направление:** A — разбиение `engine/turn.js`
+**Часть:** 4 из 11
+
+---
+
+### Контекст
+
+Блок шпионажа (DIP_006) обрабатывает тик разведки для всех наций
+и очищает истёкшие казус белли. Вызывается из `processTurn()`.
+
+---
+
+### Что читать перед началом
+
+1. `engine/turn.js` строки ~873–1033.
+2. Проверить зависимости на другие функции `turn.js` и внешние модули
+   (`engine/diplomacy.js`, `engine/diplomacy_range.js`).
+
+---
+
+### Что сделать
+
+**Шаг 47.1 — Создать `engine/espionage.js`**
+
+Вырезать из `engine/turn.js` строки ~873–1033 (1:1):
+
+```
+_processEspionageTick    (function, ~160 строк)
+_cleanExpiredCasusBelli  (function)
+```
+
+Экспорты:
+```js
+window._processEspionageTick   = _processEspionageTick;
+window._cleanExpiredCasusBelli = _cleanExpiredCasusBelli;
+```
+
+**Шаг 47.2 — Удалить из `engine/turn.js`**
+
+**Шаг 47.3 — Подключить в `index.html`**
+
+Добавить `<script src="engine/espionage.js"></script>`
+перед `<script src="engine/turn.js"></script>`.
+
+---
+
+### Проверка перед коммитом
+
+1. `node --check engine/espionage.js` — OK.
+2. `node --check engine/turn.js` — OK.
+3. Игра работает, шпионаж тикает после хода.
+4. `wc -l engine/turn.js` — уменьшился на ~160 строк.
+
+---
+
+### Коммит
+
+```
+refactor(engine): этап 47 — вынос шпионажа в engine/espionage.js
+```
+
+---
+
+*Следующий этап: вынос OU-процесса и AI-скоринга в `engine/ai_scoring.js`.*
+
+---
+
+## ЭТАП 48 — Рефакторинг: вынос OU-процесса и AI-скоринга в `engine/ai_scoring.js`
+
+**Направление:** A — разбиение `engine/turn.js`
+**Часть:** 5 из 11
+
+---
+
+### Контекст
+
+Блок Ornstein-Uhlenbeck — математическое ядро AI-решений. Чистые
+функции без побочных эффектов (кроме записи в `nation.ou_x`).
+Вспомогательные функции выбора целей (`_findWarTarget` и др.)
+тоже чисто вычислительные.
+
+---
+
+### Что читать перед началом
+
+1. `engine/turn.js` строки ~1035–1210.
+2. Проверить: вызывается ли `_tickOU` из `processAINations` или
+   из `applyFallbackDecision`. Обе функции должны видеть эти хелперы.
+
+---
+
+### Что сделать
+
+**Шаг 48.1 — Создать `engine/ai_scoring.js`**
+
+Вырезать из `engine/turn.js` строки ~1035–1210 (1:1):
+
+```
+_OU_THETA, _OU_SIGMA                 (const)
+_ouNaturalMu(nation)                 (function)
+_ouStep(x, mu)                       (function)
+_tickOU(nationId, nation)            (function)
+_softmax(scoreMap, temp)             (function)
+_weightedPick(probMap)               (function)
+_findWarTarget(nationId, nation)     (function)
+_findDiplomacyPartner(…)             (function)
+_FALLBACK_BUILD_PRIORITY             (const)
+_findBuildTarget(nationId, nation)   (function)
+_SUPER_OU_ACTION_MAP                 (const)
+```
+
+Экспорты:
+```js
+window._tickOU              = _tickOU;
+window._softmax             = _softmax;
+window._weightedPick        = _weightedPick;
+window._findWarTarget       = _findWarTarget;
+window._findDiplomacyPartner = _findDiplomacyPartner;
+window._findBuildTarget     = _findBuildTarget;
+window._SUPER_OU_ACTION_MAP = _SUPER_OU_ACTION_MAP;
+```
+
+**Шаг 48.2 — Удалить из `engine/turn.js`**
+
+**Шаг 48.3 — Подключить в `index.html`**
+
+Добавить `<script src="engine/ai_scoring.js"></script>`
+перед `<script src="engine/turn.js"></script>`.
+
+---
+
+### Проверка перед коммитом
+
+1. `node --check engine/ai_scoring.js` — OK.
+2. `node --check engine/turn.js` — OK.
+3. AI-нации принимают решения после хода.
+4. `wc -l engine/turn.js` — уменьшился на ~176 строк.
+
+---
+
+### Коммит
+
+```
+refactor(engine): этап 48 — вынос OU-процесса и AI-скоринга
+```
+
+---
+
+*Следующий этап: вынос fallback AI-решения в `engine/ai_fallback.js`.*
+
+---
+
+## ЭТАП 49 — Рефакторинг: вынос fallback AI в `engine/ai_fallback.js`
+
+**Направление:** A — разбиение `engine/turn.js`
+**Часть:** 6 из 11
+
+---
+
+### Контекст
+
+`applyFallbackDecision` — самая большая функция в `turn.js` (~410 строк).
+Это один гигантский `switch` по типам AI-действий. Функция вызывается
+из `processAINations()` когда LLM-запрос не доступен или не вернул
+ответа. Зависит от хелперов из `engine/ai_scoring.js` (этап 48).
+
+---
+
+### Что читать перед началом
+
+1. `engine/turn.js` строки ~1212–1622.
+2. Проверить вызовы: `_findWarTarget`, `_findDiplomacyPartner`,
+   `_findBuildTarget` — они уже вынесены в `engine/ai_scoring.js`.
+
+---
+
+### Что сделать
+
+**Шаг 49.1 — Создать `engine/ai_fallback.js`**
+
+Вырезать из `engine/turn.js` строки ~1212–1622 (1:1):
+
+```
+applyFallbackDecision(nationId)   (function, ~410 строк)
+```
+
+Экспорт:
+```js
+window.applyFallbackDecision = applyFallbackDecision;
+```
+
+**Шаг 49.2 — Удалить из `engine/turn.js`**
+
+**Шаг 49.3 — Подключить в `index.html`**
+
+Добавить `<script src="engine/ai_fallback.js"></script>`
+**после** `engine/ai_scoring.js` и **перед** `engine/turn.js`.
+
+---
+
+### Проверка перед коммитом
+
+1. `node --check engine/ai_fallback.js` — OK.
+2. `node --check engine/turn.js` — OK.
+3. AI-нации без API-ключа принимают fallback-решения.
+4. `wc -l engine/turn.js` — уменьшился на ~410 строк.
+
+---
+
+### Коммит
+
+```
+refactor(engine): этап 49 — вынос fallback AI в engine/ai_fallback.js
+```
+
+---
+
+*Следующий этап: вынос AI HTTP Worker и фонового цикла в `engine/ai_worker.js`.*
+
+---
+
+## ЭТАП 50 — Рефакторинг: вынос AI Worker в `engine/ai_worker.js`
+
+**Направление:** A — разбиение `engine/turn.js`
+**Часть:** 7 из 11
+
+---
+
+### Контекст
+
+Блок управления Web Worker для HTTP-запросов к Groq API и фоновый
+цикл AI-решений. Содержит состояние воркера, очередь запросов,
+и async-цикл `_aiBgProcess` который обрабатывает AI-нации в фоне.
+
+---
+
+### Что читать перед началом
+
+1. `engine/turn.js` строки ~1624–1844.
+2. Проверить зависимости: `_aiBgProcess` вызывает `applyFallbackDecision`
+   (уже вынесен) и `processAINations` (останется в `turn.js`).
+3. Проверить: `_aiPending` и `_aiBgRunning` — используются ли они
+   в `processAINations`? Если да — экспортировать через `window.*`.
+
+---
+
+### Что сделать
+
+**Шаг 50.1 — Создать `engine/ai_worker.js`**
+
+Вырезать из `engine/turn.js` строки ~1624–1844 (1:1):
+
+```
+_aiHttpWorker, _aiHttpWorkerFailed, _aiReqCounter   (let)
+_aiPendingReqs                                       (const Map)
+_aiPending                                           (const Map — может быть выше, ~7)
+_aiBgRunning                                         (let — может быть выше, ~8)
+_getAIHttpWorker()                                   (function)
+_callGroqViaWorker(system, user, maxTokens)          (function)
+startAIBackgroundLoop()                              (function)
+stopAIBackgroundLoop()                               (function)
+_aiBgTick()                                          (function)
+_aiBgProcess()                                       (function)
+```
+
+Экспорты:
+```js
+window._aiPending           = _aiPending;
+window._callGroqViaWorker   = _callGroqViaWorker;
+window.startAIBackgroundLoop = startAIBackgroundLoop;
+window.stopAIBackgroundLoop  = stopAIBackgroundLoop;
+```
+
+**Шаг 50.2 — Удалить из `engine/turn.js`**
+
+**Шаг 50.3 — Подключить в `index.html`**
+
+Добавить `<script src="engine/ai_worker.js"></script>`
+после `engine/ai_fallback.js` и перед `engine/turn.js`.
+
+---
+
+### Проверка перед коммитом
+
+1. `node --check engine/ai_worker.js` — OK.
+2. `node --check engine/turn.js` — OK.
+3. AI-нации с API-ключом делают запросы через воркер.
+4. `wc -l engine/turn.js` — уменьшился на ~220 строк.
+
+---
+
+### Коммит
+
+```
+refactor(engine): этап 50 — вынос AI Worker в engine/ai_worker.js
+```
+
+---
+
+*Следующий этап: вынос случайных событий в `engine/events.js`.*
+
+---
+
+## ЭТАП 51 — Рефакторинг: вынос событий в `engine/events.js`
+
+**Направление:** A — разбиение `engine/turn.js`
+**Часть:** 8 из 11
+
+---
+
+### Контекст
+
+Массив `RANDOM_EVENTS` с определениями событий, функция `triggerRandomEvent()`
+и UI-хелпер `_showEventChoiceOverlay()`. Вызывается из `processTurn()`.
+UI-хелпер пишет в DOM (`#event-choice-overlay`).
+
+---
+
+### Что читать перед началом
+
+1. `engine/turn.js` строки ~1846–1998.
+2. Проверить DOM-зависимости `_showEventChoiceOverlay`.
+
+---
+
+### Что сделать
+
+**Шаг 51.1 — Создать `engine/events.js`**
+
+Вырезать из `engine/turn.js` строки ~1846–1998 (1:1):
+
+```
+RANDOM_EVENTS                        (const array)
+triggerRandomEvent()                  (function)
+_showEventChoiceOverlay(event, nId)   (function)
+```
+
+Экспорты:
+```js
+window.RANDOM_EVENTS           = RANDOM_EVENTS;
+window.triggerRandomEvent      = triggerRandomEvent;
+window._showEventChoiceOverlay = _showEventChoiceOverlay;
+```
+
+**Шаг 51.2 — Удалить из `engine/turn.js`**
+
+**Шаг 51.3 — Подключить в `index.html`**
+
+Добавить `<script src="engine/events.js"></script>`
+перед `<script src="engine/turn.js"></script>`.
+
+---
+
+### Проверка перед коммитом
+
+1. `node --check engine/events.js` — OK.
+2. `node --check engine/turn.js` — OK.
+3. Случайные события появляются при прохождении ходов.
+4. `wc -l engine/turn.js` — уменьшился на ~153 строк.
+
+---
+
+### Коммит
+
+```
+refactor(engine): этап 51 — вынос случайных событий в engine/events.js
+```
+
+---
+
+*Следующий этап: вынос сохранения/загрузки в `engine/save.js`.*
+
+---
+
+## ЭТАП 52 — Рефакторинг: вынос сохранения/загрузки в `engine/save.js`
+
+**Направление:** A — разбиение `engine/turn.js`
+**Часть:** 9 из 11
+
+---
+
+### Контекст
+
+Блок сохранения: Web Worker для сериализации, `_buildSavePayload()`,
+`saveGame()`, `loadGame()`, и 4 миграционные функции. `saveGame()`
+вызывается из `processTurn()` и из `engine/storage.js`.
+`loadGame()` вызывается из `initGame()` и из UI.
+
+**Важно:** `engine/storage.js` уже существует — это другой файл
+(управление localStorage). Новый `engine/save.js` — про
+сериализацию/десериализацию полного состояния.
+
+---
+
+### Что читать перед началом
+
+1. `engine/turn.js` строки ~2064–2307.
+2. Проверить зависимости `loadGame()`: вызывает ли она `renderAll()`,
+   `initGame()` или другие функции из `turn.js`?
+3. Проверить: `engine/storage.js` — не конфликтует ли имя?
+
+---
+
+### Что сделать
+
+**Шаг 52.1 — Создать `engine/save.js`**
+
+Вырезать из `engine/turn.js` строки ~2064–2307 (1:1):
+
+```
+_saveWorker, _saveWorkerFailed, _saveInFlight   (let)
+_getSaveWorker()                                (function)
+_buildSavePayload()                             (function)
+saveGame()                                      (async function)
+loadGame()                                      (async function)
+_migrateCharacterIds()                          (function)
+_sanitizeInstitutions()                         (function)
+_migrateSenateConfig()                          (function)
+_migrateCharacterSenateFields()                 (function)
+```
+
+Экспорты:
+```js
+window.saveGame  = saveGame;
+window.loadGame  = loadGame;
+```
+
+**Шаг 52.2 — Удалить из `engine/turn.js`**
+
+**Шаг 52.3 — Подключить в `index.html`**
+
+Добавить `<script src="engine/save.js"></script>`
+перед `<script src="engine/turn.js"></script>`.
+
+---
+
+### Проверка перед коммитом
+
+1. `node --check engine/save.js` — OK.
+2. `node --check engine/turn.js` — OK.
+3. Сохранение и загрузка работают (autosave + manual load).
+4. `wc -l engine/turn.js` — уменьшился на ~244 строк.
+
+---
+
+### Коммит
+
+```
+refactor(engine): этап 52 — вынос save/load в engine/save.js
+```
+
+---
+
+*Следующий этап: вынос инициализации игры в `engine/init.js`.*
+
+---
+
+## ЭТАП 53 — Рефакторинг: вынос инициализации в `engine/init.js`
+
+**Направление:** A — разбиение `engine/turn.js`
+**Часть:** 10 из 11
+
+---
+
+### Контекст
+
+`initGame()` — async-функция (~220 строк), которая создаёт начальное
+состояние игры, загружает сохранение, инициализирует карту, UI,
+AI-цикл. Вызывается из инлайн-блока C в `index.html`.
+
+`renderAll()` — функция (~44 строки), которая обновляет все UI-панели.
+Вызывается из `processTurn()`, `initGame()`, `loadGame()`.
+
+**Важно:** `initGame` должен загружаться **после** всех остальных
+модулей (date, characters_lifecycle, espionage, ai_scoring,
+ai_fallback, ai_worker, events, save), так как вызывает их функции.
+
+---
+
+### Что читать перед началом
+
+1. `engine/turn.js` строки ~2309–2575.
+2. Проверить: какие функции вызывает `initGame()` из других вынесенных
+   файлов (startAIBackgroundLoop, loadGame, renderAll, updateStele, …).
+
+---
+
+### Что сделать
+
+**Шаг 53.1 — Создать `engine/init.js`**
+
+Вырезать из `engine/turn.js` строки ~2309–2575 (1:1):
+
+```
+initGame()    (async function, ~220 строк)
+renderAll()   (function, ~44 строки)
+```
+
+Экспорты (initGame уже доступен как глобальная function declaration):
+```js
+window.initGame  = initGame;
+window.renderAll = renderAll;
+```
+
+**Шаг 53.2 — Удалить из `engine/turn.js`**
+
+**Шаг 53.3 — Подключить в `index.html`**
+
+Добавить `<script src="engine/init.js"></script>`
+**после** `<script src="engine/turn.js"></script>` (потому что
+`initGame` вызывает `processTurn`-зависимые структуры).
+
+---
+
+### Проверка перед коммитом
+
+1. `node --check engine/init.js` — OK.
+2. `node --check engine/turn.js` — OK.
+3. Игра запускается с нуля и при загрузке сохранения.
+4. `wc -l engine/turn.js` — уменьшился на ~264 строк.
+5. `turn.js` теперь содержит только `processTurn()`,
+   `processAINations()`, `_ensureNationDefaults()`,
+   `_recordTurnSummary()` и `IS_PROCESSING_TURN`.
+
+---
+
+### Коммит
+
+```
+refactor(engine): этап 53 — вынос initGame/renderAll в engine/init.js
+```
+
+---
+
+*Следующий этап: финальный аудит разбиения `turn.js`.*
+
+---
+
+## ЭТАП 54 — Рефакторинг: финальный аудит разбиения `turn.js`
+
+**Направление:** A — разбиение `engine/turn.js`
+**Часть:** 11 из 11 — верификация
+
+---
+
+### Контекст
+
+Все 9 модулей вынесены. `turn.js` должен содержать только:
+- `IS_PROCESSING_TURN` (флаг)
+- `_ensureNationDefaults(nation)` (~20 строк)
+- `processTurn()` (~330 строк)
+- `processAINations()` (~170 строк)
+- `_recordTurnSummary()` (~60 строк)
+
+Ожидаемый размер: ~580–650 строк (было 2575).
+
+---
+
+### Что сделать
+
+**Шаг 54.1 — Проверить размер**
+
+```bash
+wc -l engine/turn.js   # ожидание: ~600 строк
+```
+
+**Шаг 54.2 — Проверить синтаксис всех новых файлов**
+
+```bash
+for f in engine/date.js engine/characters_lifecycle.js \
+         engine/espionage.js engine/ai_scoring.js \
+         engine/ai_fallback.js engine/ai_worker.js \
+         engine/events.js engine/save.js engine/init.js; do
+  node --check "$f" && echo "OK: $f"
+done
+```
+
+**Шаг 54.3 — Полный smoke-тест**
+
+```
+[ ] Игра запускается без ошибок в консоли
+[ ] Стела: дата обновляется после хода
+[ ] Персонажи стареют и умирают
+[ ] AI-нации принимают решения (fallback без API-ключа)
+[ ] Случайные события появляются
+[ ] Сохранение и загрузка работают
+[ ] Все UI-панели рендерятся корректно
+```
+
+**Шаг 54.4 — Обновить `docs/refactor_turn.md`**
+
+Добавить финальные метрики:
+
+```markdown
+## После разбиения (этап 54)
+
+| Метрика | До | После | Δ |
+|---------|-----|-------|---|
+| `wc -l engine/turn.js` | 2575 | ~600 | −~1975 |
+| Файлов в `engine/` (новых) | 0 | 9 | +9 |
+```
+
+---
+
+### Проверка перед коммитом
+
+1. Все 9 новых файлов проходят `node --check`.
+2. `turn.js` содержит только 4–5 функций.
+3. Все пункты smoke-теста зелёные.
+4. `docs/refactor_turn.md` обновлён.
+
+---
+
+### Коммит
+
+```
+refactor(engine): этап 54 — финальный аудит разбиения turn.js
+```
+
+---
+
+## ИТОГ НАПРАВЛЕНИЯ A
+
+После этапов 44–54:
+- `engine/turn.js` сократился с 2575 до ~600 строк
+- 9 новых модулей в `engine/`: date, characters_lifecycle, espionage,
+  ai_scoring, ai_fallback, ai_worker, events, save, init
+- Все функции доступны через `window.*` — обратная совместимость 100%
+- Ни одной регрессии
+
+---
+
+*Следующий этап: аудит графа window.* зависимостей для перехода на ES-модули.*
+
+---
+
+## ЭТАП 55 — Модули: аудит графа `window.*` зависимостей
+
+**Направление:** B — переход на ES-модули
+**Часть:** 1 из 12 — только исследование
+
+---
+
+### Контекст
+
+Перед удалением inline `onclick` и переходом на `type="module"` нужно
+понять полный граф зависимостей между файлами. Сейчас файлы общаются
+через `window.*` — нужно знать кто что экспортирует и кто что читает,
+чтобы при переходе на `import/export` не порвать связи.
+
+---
+
+### Что исследовать
+
+1. Для каждого `.js` файла в `ui/`, `engine/`, `ai/`, `data/`, `js/`:
+   - Какие `window.X = ...` он пишет (экспорты)
+   - Какие `window.X` он читает (импорты)
+2. Построить граф: файл → зависит от → файлов.
+3. Определить порядок конвертации: файлы без зависимостей (data/*) первыми,
+   файлы-оркестраторы (turn.js, init.js, boot.js) последними.
+4. Составить список всех inline `onclick` в HTML и JS с привязкой
+   к файлу-источнику функции.
+
+---
+
+### Что сделать
+
+**Шаг 55.1 — Создать `docs/refactor_modules.md`**
+
+```markdown
+# План перехода на ES-модули
+
+## 1. Граф экспортов (window.X = ...)
+
+| Файл | Экспорты |
+|------|----------|
+| data/goods.js | GOODS |
+| engine/economy.js | calcIncome, calcExpenses, … |
+| … | … |
+
+## 2. Граф импортов (window.X чтение)
+
+| Файл | Читает из window.* |
+|------|---------------------|
+| engine/economy.js | GAME_STATE, CONFIG, GOODS, MAP_REGIONS |
+| … | … |
+
+## 3. Порядок конвертации
+
+Уровень 0 (нет зависимостей): data/*.js, config.js
+Уровень 1 (зависят от уровня 0): engine/pops.js, engine/economy.js, …
+Уровень 2: …
+Уровень N (зависят от всех): engine/init.js, ui/boot.js
+
+## 4. Inline onclick — полный реестр
+
+### В index.html (73 шт.)
+| Строка | Атрибут | Функция | Файл определения |
+|--------|---------|---------|------------------|
+| … | onclick="processTurn()" | processTurn | engine/turn.js |
+
+### В JS-шаблонах (186 шт.)
+| Файл | Кол-во | Функции |
+|------|--------|---------|
+| ui/government_tab.js | 54 | govSetupStep2, govSetupToggleInst, … |
+| ui/panels.js | 34 | … |
+| … | … | … |
+```
+
+**Шаг 55.2 — Ничего больше не менять**
+
+---
+
+### Проверка перед коммитом
+
+1. `docs/refactor_modules.md` создан с 4 разделами.
+2. Ни один `.js` или `.html` файл не изменён.
+3. Список onclick покрывает все 73 (HTML) + 186 (JS).
+
+---
+
+### Коммит
+
+```
+refactor(ui): этап 55 — аудит графа зависимостей для ES-модулей
+```
+
+---
+
+*Следующий этап: убрать onclick из `index.html`, перевести на addEventListener.*
+
+---
+
+## ЭТАП 56 — Модули: убрать onclick из `index.html`
+
+**Направление:** B — переход на ES-модули
+**Часть:** 2 из 12
+
+---
+
+### Контекст
+
+В `index.html` 73 inline `onclick` / `onkeydown` / `onchange`.
+Стратегия замены: `data-action="имяФункции"` + один делегирующий
+обработчик в `ui/boot.js`.
+
+---
+
+### Что сделать
+
+**Шаг 56.1 — Заменить все inline-хендлеры в HTML на `data-action`**
+
+Пример замены:
+```html
+<!-- было -->
+<button onclick="processTurn()">Следующий ход</button>
+
+<!-- стало -->
+<button data-action="processTurn">Следующий ход</button>
+```
+
+Для хендлеров с аргументами:
+```html
+<!-- было -->
+<button onclick="switchSettingsTab('keys')">🔑 API ключи</button>
+
+<!-- стало -->
+<button data-action="switchSettingsTab" data-arg="keys">🔑 API ключи</button>
+```
+
+Для `onclick="if(event.target===this)..."` (overlay-закрытие):
+```html
+<!-- было -->
+<div id="char-overlay" onclick="if(event.target===this)closeCharacterDetail()">
+
+<!-- стало -->
+<div id="char-overlay" data-action-self="closeCharacterDetail">
+```
+
+**Шаг 56.2 — Добавить делегирующий обработчик в `ui/boot.js`**
+
+```js
+// Делегирование кликов через data-action
+document.addEventListener('click', function(e) {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const fn = window[el.dataset.action];
+  if (typeof fn === 'function') {
+    const arg = el.dataset.arg;
+    arg !== undefined ? fn(arg) : fn();
+  }
+});
+
+// Overlay-самозакрытие через data-action-self
+document.addEventListener('click', function(e) {
+  const el = e.target;
+  if (el.dataset.actionSelf && e.target === el) {
+    const fn = window[el.dataset.actionSelf];
+    if (typeof fn === 'function') fn();
+  }
+});
+```
+
+**Шаг 56.3 — Для `onkeydown` — отдельный делегат**
+
+```js
+document.addEventListener('keydown', function(e) {
+  const el = e.target.closest('[data-keydown]');
+  if (!el) return;
+  const fn = window[el.dataset.keydown];
+  if (typeof fn === 'function') fn(e);
+});
+```
+
+---
+
+### Проверка перед коммитом
+
+1. `grep -c 'onclick=\|onchange=\|oninput=\|onkeydown=' index.html` — **0**.
+2. Все кнопки работают: processTurn, toggleSearchPanel, toggleSettingsModal,
+   switchDiptychTab, setMapMode, toggleLog, setLogFilter.
+3. Overlay-закрытие по клику на фон работает (char, settings, peace).
+4. `onkeydown` в API-key input работает.
+
+---
+
+### Коммит
+
+```
+refactor(ui): этап 56 — убрать inline onclick из index.html
+```
+
+---
+
+*Следующий этап: убрать onclick из `ui/panels.js`.*
+
+---
+
+## ЭТАП 57 — Модули: убрать onclick из `ui/panels.js`
+
+**Направление:** B — переход на ES-модули
+**Часть:** 3 из 12
+
+---
+
+### Контекст
+
+`ui/panels.js` — 34 inline `onclick` в шаблонных литералах (`innerHTML`).
+Стратегия: заменить `onclick="fn(arg)"` на `data-action="fn" data-arg="arg"`
+в генерируемом HTML. Делегирующий обработчик из этапа 56 подхватит их
+автоматически.
+
+---
+
+### Что сделать
+
+**Шаг 57.1 — Find & Replace в `ui/panels.js`**
+
+Для каждого `onclick="funcName('arg')"` в шаблонных литералах:
+```js
+// было
+`<button onclick="selectRegion('${regionId}')">...</button>`
+
+// стало
+`<button data-action="selectRegion" data-arg="${regionId}">...</button>`
+```
+
+Для onclick без аргументов:
+```js
+// было
+`<button onclick="closePanel()">✕</button>`
+
+// стало
+`<button data-action="closePanel">✕</button>`
+```
+
+Для onclick с несколькими аргументами — использовать `data-arg`
+с JSON или составным значением:
+```js
+// было
+`<button onclick="doThing('${a}','${b}')">...</button>`
+
+// стало (разделитель |)
+`<button data-action="doThing" data-arg="${a}|${b}">...</button>`
+```
+
+И обновить обработчик в `ui/boot.js` чтобы поддерживал `|`-разделитель:
+```js
+const args = el.dataset.arg?.split('|');
+args ? fn(...args) : fn();
+```
+
+**Шаг 57.2 — Убедиться что все функции доступны через `window.*`**
+
+---
+
+### Проверка перед коммитом
+
+1. `grep -c 'onclick=' ui/panels.js` — **0**.
+2. Все кнопки в панелях работают: выбор региона, детали персонажа,
+   переключение вкладок, закрытие панелей.
+3. `node --check ui/panels.js` — OK.
+
+---
+
+### Коммит
+
+```
+refactor(ui): этап 57 — убрать inline onclick из ui/panels.js
+```
+
+---
+
+*Следующий этап: убрать onclick из `ui/government_tab.js`.*
+
+---
+
+## ЭТАП 58 — Модули: убрать onclick из `ui/government_tab.js`
+
+**Направление:** B — переход на ES-модули
+**Часть:** 4 из 12
+
+---
+
+### Контекст
+
+`ui/government_tab.js` — рекордсмен: 54 inline `onclick` в шаблонах.
+Генерирует UI для настройки правительства, институтов, законов,
+назначений на должности. Та же стратегия: `data-action` + `data-arg`.
+
+---
+
+### Что сделать
+
+**Шаг 58.1 — Find & Replace все 54 onclick**
+
+Аналогично этапу 57. Каждый `onclick="fn(args)"` → `data-action="fn" data-arg="args"`.
+
+**Шаг 58.2 — Проверить что все экспортируемые функции доступны через `window.*`**
+
+Типичные функции: `govSetupStep2`, `govSetupToggleInst`, `govSetupBack`,
+`govSetupConfirm`, `assignToPosition`, `removeFromPosition`,
+`showGovernmentOverlay`, `hideGovernmentOverlay`, `showVowsModal`,
+`hideVowsModal`, `showTestamentModal`, `hideTestamentModal`.
+
+---
+
+### Проверка перед коммитом
+
+1. `grep -c 'onclick=' ui/government_tab.js` — **0**.
+2. Окно правительства открывается и работает: выбор типа,
+   институты, назначения, клятвы, завещание.
+3. `node --check ui/government_tab.js` — OK.
+
+---
+
+### Коммит
+
+```
+refactor(ui): этап 58 — убрать inline onclick из government_tab.js
+```
+
+---
+
+*Следующий этап: убрать onclick из `ui/diplomacy_tab.js`.*
+
+---
+
+## ЭТАП 59 — Модули: убрать onclick из `ui/diplomacy_tab.js`
+
+**Направление:** B — переход на ES-модули
+**Часть:** 5 из 12
+
+---
+
+### Контекст
+
+`ui/diplomacy_tab.js` — 26 inline `onclick`. Генерирует сложный
+дипломатический UI: выбор нации, переговоры, чат, мирные предложения,
+подкуп, объявление войны. Та же стратегия замены.
+
+---
+
+### Что сделать
+
+**Шаг 59.1 — Find & Replace все 26 onclick**
+
+Каждый `onclick="fn(args)"` → `data-action="fn" data-arg="args"`.
+
+**Шаг 59.2 — Проверить window.* экспорты**
+
+Типичные функции: `dpSelectNation`, `dpSwitchTab`, `dpDeclareWar`,
+`dpProposePeace`, `dpOpenPeaceForm`, `dpClosePeaceForm`,
+`dtSelectTreaty`, `dtBreakTreaty`, `dtSendMessage`, `dtClearDialogue`,
+`dpChatSend`, `dpEndNegotiations`, `dpFinalizeSend`, `dpSignTreaty`,
+`hideDiplomacyOverlay`, `showDiplomacyOverlay`, `hideDipChatModal`,
+`dpOpenPeaceChat`, `dpBribeNation`, `dpSelectCoalitionEnemy`.
+
+---
+
+### Проверка перед коммитом
+
+1. `grep -c 'onclick=' ui/diplomacy_tab.js` — **0**.
+2. Дипломатическое окно работает: выбор нации, переговоры, чат,
+   объявление войны, мирные предложения.
+3. `node --check ui/diplomacy_tab.js` — OK.
+
+---
+
+### Коммит
+
+```
+refactor(ui): этап 59 — убрать inline onclick из diplomacy_tab.js
+```
+
+---
+
+*Следующий этап: убрать onclick из остальных 11 файлов.*
+
+---
+
+## ЭТАП 60 — Модули: убрать onclick из остальных JS-файлов
+
+**Направление:** B — переход на ES-модули
+**Часть:** 6 из 12
+
+---
+
+### Контекст
+
+Оставшиеся 72 inline `onclick` распределены по 11 файлам:
+
+| Файл | Кол-во |
+|------|--------|
+| ui/map_armies.js | 15 |
+| ui/map.js | 11 |
+| ui/region_build_tab.js | 10 |
+| ui/population_tab.js | 9 |
+| ui/treasury-panel.js | 6 |
+| ui/tactical_map.js | 6 |
+| ui/peace_panel.js | 5 |
+| engine/victory.js | 4 |
+| engine/achievements.js | 3 |
+| ui/input.js | 2 |
+| ui/battle_result.js | 1 |
+
+---
+
+### Что сделать
+
+**Шаг 60.1 — Для каждого файла: Find & Replace onclick → data-action**
+
+Та же механика что в этапах 57–59.
+
+**Шаг 60.2 — Проверить window.* экспорты всех затронутых функций**
+
+---
+
+### Проверка перед коммитом
+
+1. `grep -rn 'onclick=' ui/*.js engine/*.js | wc -l` — **0**.
+2. Полный smoke-тест: армии на карте, строительство, население,
+   казначейство, тактический бой, мирные переговоры, победа,
+   достижения, ввод команд.
+3. `node --check` для всех 11 файлов — OK.
+
+---
+
+### Коммит
+
+```
+refactor(ui): этап 60 — убрать inline onclick из оставшихся JS-файлов
+```
+
+---
+
+*Следующий этап: конвертировать `data/*.js` в ES-модули.*
+
+---
+
+## ЭТАП 61 — Модули: конвертировать `data/*.js` в ES-модули
+
+**Направление:** B — переход на ES-модули
+**Часть:** 7 из 12
+
+---
+
+### Контекст
+
+Файлы данных (~28 штук) — самый простой уровень для конвертации.
+Они не имеют зависимостей друг от друга (кроме `traditions_index.js`
+который агрегирует все `traditions_*.js`).
+
+Каждый файл объявляет одну глобальную переменную (`const GOODS = …`)
+и не вызывает никаких функций. Конвертация: добавить `export` к
+объявлению, убрать `window.X = X`.
+
+---
+
+### Что сделать
+
+**Шаг 61.1 — Для каждого файла в `data/`:**
+
+```js
+// было (config.js):
+const CONFIG = { ... };
+
+// стало:
+export const CONFIG = { ... };
+```
+
+Файлы: `config.js`, `data/goods.js`, `data/chains_data.js`,
+`data/buildings.js`, `data/laws_labor.js`, `data/social_classes.js`,
+`data/map.js`, `data/nations.js`, `data/regions_data.js`,
+`data/biomes.js`, `data/region_areas.js`, `data/characters.js`,
+`data/cultures.js`, `data/portrait_filters.js`, `data/culture_groups.js`,
+`data/religions.js`, `data/dogmas.js`, `data/religion_regions.js`,
+все `data/traditions/traditions_*.js`.
+
+**Шаг 61.2 — Для `traditions_index.js`:** добавить `import` от каждого
+traditions-файла и реэкспорт.
+
+**Шаг 61.3 — Временно:** пока `engine/` и `ui/` не конвертированы,
+добавить в конец каждого файла `window.X = X;` чтобы они оставались
+доступны для неконвертированных потребителей. Эти строки будут
+удалены в этапах 62–64.
+
+---
+
+### Проверка перед коммитом
+
+1. Все файлы в `data/` содержат `export`.
+2. `node --check` (или `node --input-type=module`) — OK.
+3. Игра запускается, все данные доступны.
+
+---
+
+### Коммит
+
+```
+refactor(data): этап 61 — конвертировать data/*.js в ES-модули
+```
+
+---
+
+*Следующий этап: конвертировать `engine/*.js` в ES-модули.*
+
+---
+
+## ЭТАП 62 — Модули: конвертировать `engine/*.js` в ES-модули
+
+**Направление:** B — переход на ES-модули
+**Часть:** 8 из 12
+
+---
+
+### Контекст
+
+~23 файла в `engine/` (включая 9 новых из направления A).
+Каждый файл экспортирует функции через `window.*`.
+Конвертация: `window.X = X` → `export function X(…)`,
+добавить `import { … } from '…'` для зависимостей из `data/` и
+других `engine/` файлов.
+
+**Порядок конвертации** (по уровню зависимостей):
+1. Файлы без зависимостей от других engine: `pops.js`, `land_capacity.js`,
+   `noise.js`, `memory.js`, `fortress.js`
+2. Файлы с зависимостями от data: `economy.js`, `diplomacy.js`,
+   `buildings.js`, `market.js`, `provinces.js`
+3. Файлы с зависимостями от других engine: `battle.js`, `armies.js`,
+   `combat.js`, `siege.js`
+4. Оркестраторы: `turn.js`, `init.js`
+
+---
+
+### Что сделать
+
+**Шаг 62.1 — Для каждого файла:**
+
+1. Заменить `window.X = X` на `export { X }` или `export function X`.
+2. Добавить `import { … } from '…'` вместо чтения `window.*`.
+3. Для функций, которые вызываются из HTML через `data-action` —
+   оставить `window.X = X` **временно** (будет убрано в этапе 65).
+
+**Шаг 62.2 — Обновить `<script>` теги**
+
+Заменить `<script src="engine/X.js">` на
+`<script type="module" src="engine/X.js">` по мере конвертации.
+
+---
+
+### Проверка перед коммитом
+
+1. Все `engine/*.js` файлы содержат `export` и `import`.
+2. `grep -rn 'window\.' engine/*.js` — только `window.GAME_STATE`
+   (глобальное состояние) и `window.X` для data-action хендлеров.
+3. Игра запускается, ход проходит, все движковые системы работают.
+
+---
+
+### Коммит
+
+```
+refactor(engine): этап 62 — конвертировать engine/*.js в ES-модули
+```
+
+---
+
+*Следующий этап: конвертировать `ui/*.js` в ES-модули.*
+
+---
+
+## ЭТАП 63 — Модули: конвертировать `ui/*.js` в ES-модули
+
+**Направление:** B — переход на ES-модули
+**Часть:** 9 из 12
+
+---
+
+### Контекст
+
+~25+ файлов в `ui/` (включая 6 новых из Части II).
+UI-файлы — самые сложные для конвертации, потому что:
+1. Они импортируют из `data/`, `engine/`, других `ui/`.
+2. Многие экспортируют функции для `data-action` хендлеров.
+3. Некоторые зависят от DOM и вызывают `document.addEventListener`.
+
+**Порядок конвертации:**
+1. Утилиты: `icons.js`, `toast.js`, `pulse.js`, `log.js`
+2. Карта: `map.js`, `map_armies.js`, `map_events.js`, `map_event_feed.js`
+3. Панели: `panels.js`, `diplomacy_tab.js`, `government_tab.js`,
+   `population_tab.js`, `economy_tab.js`, `region_build_tab.js`
+4. Специальные: `splash.js`, `aqueduct.js`, `diplo_graph.js`,
+   `tactical_map.js`, `battle_map_pixi.js`
+5. Оркестраторы: `boot.js` (последний)
+
+---
+
+### Что сделать
+
+**Шаг 63.1 — Для каждого файла:**
+
+1. `window.X = X` → `export { X }` или `export function X`.
+2. Добавить `import { … } from '…'`.
+3. Для `data-action` функций: зарегистрировать в `ui/boot.js`
+   через централизованный реестр вместо `window.X`:
+   ```js
+   // ui/boot.js
+   import { processTurn } from '../engine/turn.js';
+   import { toggleSearchPanel } from './top_bar.js';
+   
+   const ACTIONS = { processTurn, toggleSearchPanel, … };
+   
+   document.addEventListener('click', e => {
+     const el = e.target.closest('[data-action]');
+     if (!el) return;
+     const fn = ACTIONS[el.dataset.action];
+     if (fn) { … }
+   });
+   ```
+
+**Шаг 63.2 — Обновить `<script>` теги в `index.html`**
+
+---
+
+### Проверка перед коммитом
+
+1. Все `ui/*.js` содержат `export` и `import`.
+2. Весь UI работает: панели, карта, дипломатия, лог, строка ввода.
+3. `grep -rn 'window\.' ui/*.js` — минимум (только `window.GAME_STATE`).
+
+---
+
+### Коммит
+
+```
+refactor(ui): этап 63 — конвертировать ui/*.js в ES-модули
+```
+
+---
+
+*Следующий этап: конвертировать `ai/*.js` в ES-модули.*
+
+---
+
+## ЭТАП 64 — Модули: конвертировать `ai/*.js` в ES-модули
+
+**Направление:** B — переход на ES-модули
+**Часть:** 10 из 12
+
+---
+
+### Контекст
+
+7 файлов в `ai/`: `prompts.js`, `parser.js`, `claude.js`,
+`diplomacy_ai.js`, `utility_ai.js`, `commander_ai.js`,
+`treaty_interpreter.js`, `chronicle.js`.
+
+AI-модули зависят от `engine/` (дипломатия, экономика, армии)
+и `data/` (нации, регионы). Конвертация аналогична предыдущим этапам.
+
+---
+
+### Что сделать
+
+**Шаг 64.1 — Для каждого файла в `ai/`:**
+
+1. `window.X = X` → `export`.
+2. Добавить `import { … } from '…'`.
+3. Обновить `<script>` теги.
+
+---
+
+### Проверка перед коммитом
+
+1. Все `ai/*.js` содержат `export` и `import`.
+2. AI-команды работают: ввод в строку команды, ответ AI,
+   дипломатический AI, AI-командир, хроника.
+3. `node --check` — OK для всех файлов.
+
+---
+
+### Коммит
+
+```
+refactor(ai): этап 64 — конвертировать ai/*.js в ES-модули
+```
+
+---
+
+*Следующий этап: единый entry-point `<script type="module">`.*
+
+---
+
+## ЭТАП 65 — Модули: единый `<script type="module" src="ui/boot.js">`
+
+**Направление:** B — переход на ES-модули
+**Часть:** 11 из 12
+
+---
+
+### Контекст
+
+После этапов 61–64 все файлы конвертированы в ES-модули.
+Осталось:
+1. Удалить все `<script src="…">` теги из `index.html` (кроме CDN-библиотек).
+2. Оставить единственный `<script type="module" src="ui/boot.js">`.
+3. `ui/boot.js` становится точкой входа — импортирует всё нужное,
+   регистрирует `data-action` обработчики, запускает `initGame()`.
+
+---
+
+### Что сделать
+
+**Шаг 65.1 — Обновить `ui/boot.js`**
+
+```js
+// ui/boot.js — единственная точка входа
+import { initGame } from '../engine/init.js';
+import { processTurn } from '../engine/turn.js';
+import { toggleSearchPanel, … } from './top_bar.js';
+import { toggleSettingsModal, … } from './settings.js';
+// … все остальные импорты
+
+// Реестр data-action функций
+const ACTIONS = {
+  processTurn,
+  toggleSearchPanel,
+  toggleSettingsModal,
+  // … полный список
+};
+
+// Делегирование кликов
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const fn = ACTIONS[el.dataset.action];
+  if (typeof fn !== 'function') return;
+  const args = el.dataset.arg?.split('|');
+  args ? fn(...args) : fn();
+});
+
+// Запуск игры
+initGame();
+```
+
+**Шаг 65.2 — Очистить `index.html`**
+
+Удалить все ~108 `<script src="…">` тегов (кроме Leaflet и PixiJS CDN).
+Удалить все инлайн `<script>` блоки (A–F).
+Оставить:
+```html
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pixi.js@8.17.1/dist/pixi.min.js"></script>
+<script type="module" src="ui/boot.js"></script>
+```
+
+**Шаг 65.3 — Удалить все оставшиеся `window.X = X` из всех файлов**
+
+После этого шага ни один файл не пишет в `window.*` (кроме
+`window.GAME_STATE` — глобальное состояние, оставить как есть).
+
+---
+
+### Проверка перед коммитом
+
+1. `index.html` содержит только 3 `<script>` тега.
+2. `grep -c '<script' index.html` — **3**.
+3. `grep -rn 'window\.' ui/ engine/ ai/ data/ | grep '= ' | wc -l` — **≤ 5**
+   (только `window.GAME_STATE` и CDN-глобалы типа `window.L`, `window.PIXI`).
+4. Игра запускается и полностью работает.
+
+---
+
+### Коммит
+
+```
+refactor(ui): этап 65 — единый entry-point, удаление script-тегов
+```
+
+---
+
+*Следующий этап: финальный аудит ES-модулей.*
+
+---
+
+## ЭТАП 66 — Модули: финальный аудит, 0 глобалов, 0 inline onclick
+
+**Направление:** B — переход на ES-модули
+**Часть:** 12 из 12 — верификация
+
+---
+
+### Контекст
+
+Все файлы конвертированы в ES-модули, все `onclick` убраны,
+единая точка входа — `ui/boot.js`. Этот этап — только проверка.
+
+---
+
+### Что сделать
+
+**Шаг 66.1 — Автоматические проверки**
+
+```bash
+# 0 inline onclick в HTML
+grep -c 'onclick=' index.html   # ожидание: 0
+
+# 0 inline onclick в JS
+grep -rn 'onclick=' ui/ engine/ ai/ | wc -l   # ожидание: 0
+
+# Минимум window.* экспортов
+grep -rn 'window\.' ui/ engine/ ai/ data/ | grep '=' | wc -l   # ≤ 5
+
+# Все файлы — модули
+grep -c 'type="module"' index.html   # ожидание: 1 (boot.js)
+
+# Размер index.html
+wc -l index.html   # ожидание: значительно меньше 3000
+```
+
+**Шаг 66.2 — Полный smoke-тест**
+
+```
+[ ] Сплэш → мозаика → fade-out
+[ ] Стела: имя, дата, ресурсы
+[ ] Клепсидра: анимация, флип
+[ ] Карта: масштаб, режимы, армии
+[ ] Левая панель: вкладки, контент
+[ ] Правая панель: советники
+[ ] Лог: записи, фильтры, раскрытие
+[ ] Строка команды: ввод, AI-ответ
+[ ] Полный ход: processTurn
+[ ] Дипломатия: переговоры, война, мир
+[ ] Сохранение/загрузка
+[ ] Горячие клавиши
+[ ] Модалки: настройки, поиск
+[ ] Тактический бой
+[ ] Ambient-слой
+```
+
+**Шаг 66.3 — Обновить `docs/refactor_modules.md`**
+
+Добавить финальные метрики.
+
+---
+
+### Проверка перед коммитом
+
+1. Все автоматические проверки зелёные.
+2. Все пункты smoke-теста зелёные.
+
+---
+
+### Коммит
+
+```
+refactor(ui): этап 66 — финальный аудит ES-модулей
+```
+
+---
+
+## ИТОГ НАПРАВЛЕНИЯ B
+
+После этапов 55–66:
+- **0** inline `onclick` в HTML и JS
+- **0** `window.X = X` экспортов (кроме `GAME_STATE`)
+- Все 74+ файла — ES-модули с `import`/`export`
+- Единая точка входа: `ui/boot.js`
+- Централизованный реестр `data-action` обработчиков
+- Полная обратная совместимость — игра работает идентично
+
+---
+
+*Следующий этап: инициализация Vite.*
+
+---
+
+## ЭТАП 67 — Vite: инициализация проекта
+
+**Направление:** C — build-step
+**Часть:** 1 из 5
+
+---
+
+### Контекст
+
+После направления B все файлы — ES-модули с единой точкой входа
+`ui/boot.js`. Vite может работать с этим as-is: в dev-режиме
+он раздаёт ES-модули напрямую (без бандлинга), а в build-режиме
+собирает оптимизированный бандл через Rollup.
+
+---
+
+### Что сделать
+
+**Шаг 67.1 — Инициализировать npm и установить Vite**
+
+```bash
+npm init -y
+npm install --save-dev vite
+```
+
+**Шаг 67.2 — Создать `vite.config.js`**
+
+```js
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  root: '.',
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+  },
+  server: {
+    open: '/index.html',
+  },
+});
+```
+
+**Шаг 67.3 — Обновить `.gitignore`**
+
+Добавить:
+```
+node_modules/
+dist/
+```
+
+**Шаг 67.4 — Добавить npm-скрипты в `package.json`**
+
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  }
+}
+```
+
+**Шаг 67.5 — Проверить что `npm run dev` запускает dev-сервер**
+
+Открыть `http://localhost:5173` — игра должна загрузиться.
+
+---
+
+### Проверка перед коммитом
+
+1. `npm run dev` — сервер стартует без ошибок.
+2. Игра загружается в браузере через dev-сервер.
+3. Hot Module Replacement работает (изменить CSS → изменения
+   применяются без перезагрузки).
+4. `.gitignore` содержит `node_modules/` и `dist/`.
+
+---
+
+### Коммит
+
+```
+build: этап 67 — инициализация Vite, package.json
+```
+
+---
+
+*Следующий этап: настройка dev-сервера с HMR.*
+
+---
+
+## ЭТАП 68 — Vite: настройка dev-сервера с HMR
+
+**Направление:** C — build-step
+**Часть:** 2 из 5
+
+---
+
+### Контекст
+
+Базовый `vite dev` уже работает (этап 67). Теперь нужно:
+1. Настроить HMR для CSS (автоматически работает через `<link>`).
+2. Настроить проксирование API-запросов к Groq/Claude если они
+   идут через отдельный бэкенд (или оставить direct CORS).
+3. Добавить алиасы путей если нужно (`@engine/`, `@ui/`, `@data/`).
+
+---
+
+### Что сделать
+
+**Шаг 68.1 — Алиасы путей (опционально)**
+
+В `vite.config.js`:
+```js
+import { resolve } from 'path';
+
+export default defineConfig({
+  resolve: {
+    alias: {
+      '@engine': resolve(__dirname, 'engine'),
+      '@ui':     resolve(__dirname, 'ui'),
+      '@data':   resolve(__dirname, 'data'),
+      '@ai':     resolve(__dirname, 'ai'),
+    },
+  },
+  // ...
+});
+```
+
+Это позволит писать `import { X } from '@engine/turn.js'`
+вместо `import { X } from '../engine/turn.js'`.
+
+**Шаг 68.2 — Проксирование API (если нужно)**
+
+```js
+server: {
+  proxy: {
+    '/api': {
+      target: 'https://api.groq.com',
+      changeOrigin: true,
+      rewrite: path => path.replace(/^\/api/, ''),
+    },
+  },
+},
+```
+
+**Шаг 68.3 — Обработка CDN-зависимостей**
+
+Leaflet и PixiJS загружаются через CDN `<script>`. Vite их не
+трогает — они остаются как есть. Но можно установить через npm
+и импортировать:
+```bash
+npm install leaflet pixi.js
+```
+```js
+import L from 'leaflet';
+import * as PIXI from 'pixi.js';
+```
+
+Это опционально — CDN тоже работает.
+
+---
+
+### Проверка перед коммитом
+
+1. `npm run dev` — сервер стартует.
+2. Изменение CSS → HMR применяет изменения без перезагрузки.
+3. Изменение JS → страница перезагружается автоматически.
+4. API-запросы к AI работают (если настроен прокси).
+
+---
+
+### Коммит
+
+```
+build: этап 68 — настройка dev-сервера, алиасы, HMR
+```
+
+---
+
+*Следующий этап: продакшн-сборка.*
+
+---
+
+## ЭТАП 69 — Vite: продакшн-сборка
+
+**Направление:** C — build-step
+**Часть:** 3 из 5
+
+---
+
+### Контекст
+
+`vite build` из коробки делает:
+- Tree-shaking (удаление неиспользуемого кода)
+- Минификация (esbuild, быстрее terser)
+- CSS-минификация
+- Source maps
+- Asset hashing (для кэширования)
+
+Нужно убедиться что сборка работает и результат корректен.
+
+---
+
+### Что сделать
+
+**Шаг 69.1 — Запустить `npm run build`**
+
+```bash
+npm run build
+```
+
+Проверить содержимое `dist/`:
+- `index.html` (с хешированными путями)
+- `assets/` (JS-бандл, CSS-бандл, шрифты, изображения)
+
+**Шаг 69.2 — Проверить через `npm run preview`**
+
+```bash
+npm run preview
+```
+
+Открыть `http://localhost:4173` — игра должна работать идентично dev-режиму.
+
+**Шаг 69.3 — Настроить source maps**
+
+В `vite.config.js`:
+```js
+build: {
+  outDir: 'dist',
+  sourcemap: true,
+  minify: 'esbuild',   // быстрая минификация
+  target: 'es2020',     // целевые браузеры
+},
+```
+
+**Шаг 69.4 — Сравнить размеры**
+
+```bash
+# До (сумма всех JS)
+find . -name '*.js' -not -path './node_modules/*' -not -path './dist/*' | xargs wc -c | tail -1
+
+# После (бандл в dist/)
+ls -lh dist/assets/*.js
+```
+
+Ожидание: бандл значительно меньше суммы исходников благодаря
+tree-shaking и минификации.
+
+---
+
+### Проверка перед коммитом
+
+1. `npm run build` завершается без ошибок.
+2. `npm run preview` — игра работает полностью.
+3. Source maps генерируются в `dist/assets/`.
+4. Размер бандла разумный (ожидание: < 500 КБ gzip).
+
+---
+
+### Коммит
+
+```
+build: этап 69 — продакшн-сборка с tree-shaking и минификацией
+```
+
+---
+
+*Следующий этап: code-splitting и lazy-load.*
+
+---
+
+## ЭТАП 70 — Vite: code-splitting и lazy-load
+
+**Направление:** C — build-step
+**Часть:** 4 из 5
+
+---
+
+### Контекст
+
+Не весь код нужен при первой загрузке. Тяжёлые модули можно
+загружать лениво (dynamic `import()`), чтобы ускорить initial load:
+
+- **Тактический бой** (~2500 строк) — нужен только при начале боя
+- **Дипломатическое окно** (~2000 строк) — только при открытии
+- **Экономический обзор** (~800 строк) — только при открытии вкладки
+- **Battle Map PixiJS** (~2500 строк) — только при тактическом бое
+
+---
+
+### Что сделать
+
+**Шаг 70.1 — Заменить статические import на dynamic import()**
+
+```js
+// было (в boot.js или panels.js):
+import { showDiplomacyOverlay } from './diplomacy_tab.js';
+
+// стало:
+async function showDiplomacyOverlay(nationId) {
+  const { showDiplomacyOverlay: show } = await import('./diplomacy_tab.js');
+  show(nationId);
+}
+```
+
+Кандидаты для lazy-load:
+- `ui/diplomacy_tab.js` → загружать при открытии дипломатии
+- `ui/tactical_map.js` + `engine/tactical_battle.js` → при начале боя
+- `ui/battle_map_pixi.js` → при начале тактического боя
+- `ui/economy_react.jsx` → при открытии экономического обзора
+- `ui/population_tab.js` → при открытии вкладки населения
+
+**Шаг 70.2 — Настроить manual chunks в `vite.config.js`**
+
+```js
+build: {
+  rollupOptions: {
+    output: {
+      manualChunks: {
+        vendor: ['leaflet', 'pixi.js'],  // если установлены через npm
+        diplomacy: ['./ui/diplomacy_tab.js'],
+        tactical: ['./ui/tactical_map.js', './engine/tactical_battle.js',
+                    './ui/battle_map_pixi.js'],
+      },
+    },
+  },
+},
+```
+
+**Шаг 70.3 — Добавить loading-индикатор**
+
+При ленивой загрузке показывать маленький спиннер:
+```js
+async function lazyLoad(importFn, loadingEl) {
+  if (loadingEl) loadingEl.style.display = 'block';
+  const mod = await importFn();
+  if (loadingEl) loadingEl.style.display = 'none';
+  return mod;
+}
+```
+
+---
+
+### Проверка перед коммитом
+
+1. `npm run build` — генерирует несколько чанков в `dist/assets/`.
+2. Основной бандл (initial load) стал меньше.
+3. Дипломатия, тактический бой, экономика подгружаются при открытии.
+4. Нет задержки > 500ms при ленивой загрузке (модули маленькие).
+5. Все функции работают после ленивой загрузки.
+
+---
+
+### Коммит
+
+```
+build: этап 70 — code-splitting, lazy-load тяжёлых модулей
+```
+
+---
+
+*Следующий этап: финальный аудит Части III.*
+
+---
+
+## ЭТАП 71 — Финальный аудит Части III
+
+**Направление:** C — build-step
+**Часть:** 5 из 5 — верификация всего
+
+---
+
+### Контекст
+
+Все три направления завершены. Этот этап — полный аудит
+и smoke-тест всей Части III (этапы 44–71).
+
+---
+
+### Что сделать
+
+**Шаг 71.1 — Метрики**
+
+```bash
+# engine/turn.js
+wc -l engine/turn.js   # ожидание: ~600 (было 2575)
+
+# index.html
+wc -l index.html        # ожидание: < 2000 (было 14042)
+grep -c '<script' index.html  # ожидание: 3 (leaflet, pixi, boot.js)
+
+# Inline onclick
+grep -rn 'onclick=' index.html ui/ engine/ ai/ | wc -l  # ожидание: 0
+
+# window.* экспорты
+grep -rn 'window\.' ui/ engine/ ai/ data/ | grep '=' | wc -l  # ожидание: ≤ 5
+
+# Бандл
+ls -lh dist/assets/*.js   # размер чанков
+npm run build 2>&1 | tail -20  # вывод сборки
+```
+
+**Шаг 71.2 — Полный smoke-тест (dev + build)**
+
+Проверить в **обоих** режимах (`npm run dev` и `npm run preview`):
+
+```
+[ ] Сплэш → мозаика → fade-out
+[ ] Стела: имя, дата обновляются
+[ ] Клепсидра: вода, пульс, флип
+[ ] Аквидукт: ресурсы, частицы
+[ ] Карта: масштаб, режимы, армии-орлы, города
+[ ] Роза ветров: переключает режимы
+[ ] Диптих: раскрытие, 5 вкладок
+[ ] Камеи: советники, hover-карточки
+[ ] Табличка-лог: записи, фильтры, раскрытие
+[ ] Строка команды: ввод, AI-ответ (гонец)
+[ ] processTurn: полный цикл хода
+[ ] Дипломатия: переговоры, война, мир (lazy-load)
+[ ] Тактический бой (lazy-load)
+[ ] Сохранение и загрузка
+[ ] Горячие клавиши: Space, Esc, /, 1-4
+[ ] Модалки: настройки, поиск, diplo-graph
+[ ] Ambient-слой: тессеры, дыхание карты
+[ ] UI-реакции: flash/shake
+[ ] HMR: изменение CSS применяется без перезагрузки
+[ ] Консоль DevTools: 0 ошибок
+```
+
+**Шаг 71.3 — Обновить документацию**
+
+Обновить `docs/refactor_turn.md` и `docs/refactor_modules.md`
+с финальными метриками.
+
+---
+
+### Проверка перед коммитом
+
+1. Все метрики соответствуют ожиданиям.
+2. Все пункты smoke-теста зелёные в обоих режимах.
+3. Документация обновлена.
+4. Все этапы 44–71 помечены как ✅ ВЫПОЛНЕНО.
+
+---
+
+### Коммит
+
+```
+build: этап 71 — финальный аудит Части III
+```
+
+---
+
+## ИТОГ ЧАСТИ III
+
+После этапов 44–71:
+
+**Направление A (turn.js):**
+- `engine/turn.js`: 2575 → ~600 строк
+- 9 новых модулей: date, characters_lifecycle, espionage, ai_scoring,
+  ai_fallback, ai_worker, events, save, init
+
+**Направление B (ES-модули):**
+- 0 inline `onclick` (было 73 в HTML + 186 в JS)
+- 0 `window.*` экспортов (было 85 в файлах + 30 в инлайн-скриптах)
+- Все 74+ файла — ES-модули с `import`/`export`
+- Единая точка входа: `ui/boot.js`
+
+**Направление C (Vite):**
+- `npm run dev` — dev-сервер с HMR
+- `npm run build` — минифицированный бандл с tree-shaking
+- Code-splitting: дипломатия, тактический бой, экономика — lazy-load
+- Source maps для отладки
+
+**Итоговые метрики:**
+
+| Метрика | Начало (до Части I) | После Части III |
+|---------|---------------------|-----------------|
+| `index.html` строк | ~14 000 | < 2 000 |
+| `<script>` тегов | 117 | 3 |
+| Inline onclick | 259 | 0 |
+| `window.*` экспортов | 115+ | ≤ 5 |
+| `engine/turn.js` строк | 2 575 | ~600 |
+| Build-step | нет | Vite (dev + prod) |
+| Модульная система | `window.*` | ES modules |
+
+Проект превратился из монолитного HTML-файла с глобалами
+в современное модульное приложение с build-pipeline.
