@@ -6527,7 +6527,7 @@ refactor(ui): этап 39 — прогресс хода → ui/turn_progress.js
 
 ---
 
-## ЭТАП 40 — Рефакторинг: вынос `initStatusBar` в `ui/status_bar.js`
+## ЭТАП 40 — Рефакторинг: вынос `initStatusBar` в `ui/status_bar.js` ✅ ВЫПОЛНЕНО
 
 **Улучшение:** Часть II — вынос JavaScript
 **Часть:** 10 из 13 — низкий риск
