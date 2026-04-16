@@ -693,6 +693,25 @@ function _applyBattleResult(attackerNationId, defenderNationId, result, opts = {
     const rName = MAP_REGIONS?.[result.capturedRegionId]?.name ?? result.capturedRegionId;
     addEventLog(`Потерян регион ${rName}! Укрепите оборону.`, 'danger');
   }
+
+  // uisuper Этап 30 — UI-реакции на ключевые исходы битвы.
+  // Триггерим реакции только если в битве участвует игрок.
+  if (isPlayerInvolved && typeof window !== 'undefined' && window.UIReactions) {
+    const playerId = GAME_STATE.player_nation;
+    const playerWon = result.winner === playerId;
+    const lostRegionAsDefender =
+      defenderNationId === playerId && !!result.capturedRegionId && !playerWon;
+    try {
+      if (lostRegionAsDefender) {
+        // Потеря региона = катастрофа (шейк + тёмно-красный flash).
+        window.UIReactions.onCatastrophe();
+      } else if (playerWon) {
+        window.UIReactions.onVictory();
+      } else {
+        window.UIReactions.onBattleStart();
+      }
+    } catch (e) { /* не ломаем бой, если UI недоступен */ }
+  }
 }
 
 // ── Этап 20: модальный выбор режима боя ─────────────────────────────

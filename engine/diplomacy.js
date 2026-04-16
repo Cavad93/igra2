@@ -1438,6 +1438,11 @@ function concludePeace(playerNationId, targetNationId, terms) {
     const tN = natTarget?.name ?? targetNationId;
     addEventLog(`📜 Мир заключён: ${pN} и ${tN}.`, 'success');
   }
+  // uisuper Этап 30 — UI-реакция на завершение войны.
+  if (typeof window !== 'undefined' && window.UIReactions
+      && typeof window.UIReactions.onPeace === 'function') {
+    try { window.UIReactions.onPeace(); } catch (e) {}
+  }
   return peaceTreaty;
 }
 

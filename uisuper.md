@@ -5350,7 +5350,23 @@ ui: этап 29 — ambient-слой: тессеры-частицы фона
 
 ---
 
-## ЭТАП 30 — Ambient: дыхание карты и финальная связка
+## ЭТАП 30 — Ambient: дыхание карты и финальная связка ✅ ВЫПОЛНЕНО
+
+> **Статус:** ✅ **ВЫПОЛНЕНО** — ветка `claude/exciting-fermat-KVLXr`.
+> CSS-анимация `map-breathe` (8s ease-in-out infinite) на `#map-container`;
+> `@keyframes ui-shake` для реакции на катастрофу; глобальный
+> `window.UIReactions` с методами `onBattleStart/onVictory/onCatastrophe/onPeace`
+> и приватным `_flash(color,duration)` (см. `index.html` после блока
+> AmbientLayer). UIReactions подключены:
+> - к бою через `_applyBattleResult()` в `engine/battle.js` — если
+>   участвует игрок, триггерит `onVictory` (победа), `onCatastrophe`
+>   (потеря региона как защитник) или `onBattleStart` (нейтральный исход);
+> - к миру через `concludePeace()` в `engine/diplomacy.js` — вызывает `onPeace()`.
+> Финальный чеклист всех 30 этапов пройден: `#FFD700`/`#4caf50`/`#f44336`/`#d4a853`
+> не встречаются в `index.html`; шрифты Inter/JetBrains Mono/IM Fell English
+> подключены; присутствуют разметочные якоря всех стадий (сплэш-мозаика,
+> стела, клепсидра, аквидукт, роза ветров, диптих, court-board, табличка-лог,
+> ambient-canvas и др.).
 
 **Улучшение:** #15 — «Живой» ambient-слой
 **Часть:** 2 из 2 — дыхание карты, переходы по событиям, финальная сборка
