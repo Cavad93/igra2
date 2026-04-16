@@ -444,3 +444,31 @@ DOM-зависимости: `#left-panel`, `#diptych-nav .dip-nav-btn`, `#diptyc
 - **Порядок `<script>` критичен**: ui/icons.js должен загрузиться до инлайн-блока A (initIconWraps), а engine/turn.js — до инлайн-блока C (вызов processTurn).
 - **`onHotkey`** привязан через `document.addEventListener('keydown', onHotkey)` внутри блока C — при выносе обеспечить аналогичную привязку.
 - Всего **108 внешних script-тегов** и **6 инлайн-блоков** (A–F).
+
+---
+
+## Состояние после этапа 36
+
+**Дата:** 2026-04-16
+
+Вынесены в `ui/styles/bottom.css` (873 строки):
+- `#ambient-canvas`, `@keyframes map-breathe`, `@keyframes ui-shake`
+- `.log-religion`
+- `#bottom-area`, `#event-log` (collapsed/expanded), `#log-strip`, `#log-dots`, `.log-dot`, `@keyframes logDotPulse`
+- `#log-last-entry`, `#log-collapsed`, `#log-expand-btn`, `#log-body`
+- `.log-title`, `.log-filters`, `.log-collapse-btn`, `#log-entries`
+- `.log-entry`, `.log-icon`, `.log-mark`, `.log-text`, `.log-turn-n`, `@keyframes log-highlight`
+- Все `.log-*` цветовые варианты (turn, danger, warning, good, economy, military, ai, law, character, diplomacy, achievement)
+- `.manifest-*`, `.dg-*`, `.vow-*`, `.chronicle-*`
+- `.legacy-*`, `.testament-*`
+- `#orders-panel`, `.op-*`, `#mp-order-form`
+- `#input-area`, `#api-key-section`, `#ai-response`, `.ai-*`, `.action-*`, `.vote-required`, `.radicalism`
+- `.positive`, `.negative`
+- `#messenger`, `#messenger-figure`, `#messenger-scroll`, `#messenger-text`, `#messenger-close`
+- `.api-key-*`
+- `#input-row`, `.orders-counter`, `#tablet-wrap`, `#command-input`, `#send-btn`
+
+Остаток `<style>` в `index.html`: строки 92–7870 (~7779 строк CSS).
+Это панели, карта, аквидукт, диптих, камеи, модалы, оверлеи — планируется к выносу в следующих этапах.
+
+Все 5 `<link rel="stylesheet">` подключены в `<head>`: base → top → splash → panels → bottom.
