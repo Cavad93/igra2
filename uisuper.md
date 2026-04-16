@@ -7561,7 +7561,7 @@ refactor(engine): этап 49 — вынос fallback AI в engine/ai_fallback.j
 
 ---
 
-## ЭТАП 50 — Рефакторинг: вынос AI Worker в `engine/ai_worker.js`
+## ЭТАП 50 — Рефакторинг: вынос AI Worker в `engine/ai_worker.js` ✅ ВЫПОЛНЕНО
 
 **Направление:** A — разбиение `engine/turn.js`
 **Часть:** 7 из 11
