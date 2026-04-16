@@ -6422,7 +6422,7 @@ refactor(ui): этап 38 — Clepsydra → ui/clepsydra.js
 
 ---
 
-## ЭТАП 39 — Рефакторинг: вынос прогресса хода в `ui/turn_progress.js`
+## ЭТАП 39 — Рефакторинг: вынос прогресса хода в `ui/turn_progress.js` ✅ ВЫПОЛНЕНО
 
 **Улучшение:** Часть II — вынос JavaScript
 **Часть:** 9 из 13 — средний риск (связка с Clepsydra и `engine/turn.js`)
