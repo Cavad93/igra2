@@ -1,0 +1,351 @@
+/* ───────────────────────────────────────────────────────────
+   top.css — стилизация верхнего ряда UI:
+   стела, топ-бар, клепсидра (#end-turn-btn), #nation-header.
+   Зависит от: base.css (переменные --bronze, --accent, font-roles).
+   Рефакторинг Части II, этап 33.
+   ─────────────────────────────────────────────────────────── */
+
+/* Верхняя строка — Этап 9: Стела */
+#top-bar {
+  height: var(--header-h);
+  background: transparent;                  /* прозрачный — карта видна под */
+  border-bottom: 1px solid var(--border-main);
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  flex-shrink: 0;
+  z-index: 10;
+  position: relative;
+  /* Тонкий градиент только в верхней части для читаемости */
+  background: linear-gradient(to bottom,
+    rgba(19,17,16,0.92) 0%,
+    rgba(19,17,16,0.60) 70%,
+    transparent 100%
+  );
+}
+
+/* ── СТЕЛА (левый блок) ── */
+#stele {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 20px;
+  border-right: 1px solid var(--border-main);
+  min-width: 240px;
+  position: relative; /* Этап 13 — якорь для #save-indicator */
+}
+
+#stele-ruler {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+}
+
+#stele-date {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  color: var(--gold-dim);
+  letter-spacing: 0.2em;
+  margin-top: 3px;
+}
+
+.stele-sep {
+  margin: 0 6px;
+  opacity: 0.5;
+}
+
+/* ── ЦЕНТР ── */
+#top-bar-center {
+  flex: 1;
+}
+
+/* ── ПРАВЫЕ ДЕЙСТВИЯ ── */
+#top-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px;
+  border-left: 1px solid var(--border-main);
+}
+
+#top-actions button {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+#top-actions button:hover {
+  color: var(--gold);
+  background: rgba(201,169,97,0.08);
+}
+
+#game-date {
+  font-size: 14px;
+  color: var(--text-gold);
+  letter-spacing: 1px;
+}
+
+#game-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--gold-bright);
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 12px rgba(232,201,122,0.4);
+}
+
+/* Этап 11 — Клепсидра (кнопка конца хода)
+   uisuper hot-fix #5: раньше кнопка была крошечной (40×66) и
+   рисовалась только outline-ами --bronze (#8c6e4f) — на тёмном
+   фоне она была практически неразличима. Увеличиваем размер,
+   даём полупрозрачную подложку, золотой drop-shadow. */
+#end-turn-btn {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 25;
+
+  background: radial-gradient(
+    ellipse at center,
+    rgba(60,40,12,0.7) 30%,
+    rgba(40,25,8,0.45) 70%,
+    transparent 100%
+  );
+  border: 1px solid var(--gold-bright);
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
+  filter: drop-shadow(0 0 6px rgba(232,201,122,0.45));
+  box-shadow: 0 0 12px rgba(201,169,97,0.35),
+              inset 0 0 8px rgba(232,201,122,0.15);
+
+  width: 56px;
+  height: 84px;
+  /* Золото вместо бронзы — видно на любом фоне */
+  color: var(--gold-bright);
+}
+
+#end-turn-btn:hover:not(:disabled) {
+  filter: drop-shadow(0 0 8px rgba(201,169,97,0.6));
+  transform: scale(1.05);
+}
+
+#end-turn-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* SVG клепсидры */
+#clepsydra-svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* uisuper hot-fix #5: золотая рамка вместо бронзовой —
+   клепсидра должна быть заметно видна на любом фоне. */
+.clepsy-frame {
+  stroke: var(--gold-bright);
+  stroke-width: 2;
+}
+
+/* Вода — по умолчанию синевато-прозрачная */
+.clepsy-water {
+  fill: rgba(30, 80, 120, 0.5);
+  stroke: none;
+  transition: fill 0.5s;
+}
+
+/* Когда ход готов завершиться — вода золотая */
+.clepsy-water.ready {
+  fill: rgba(201,169,97,0.7);
+}
+
+/* Струя воды */
+.clepsy-stream {
+  stroke: rgba(80,140,200,0.4);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+.clepsy-stream.ready {
+  stroke: rgba(201,169,97,0.6);
+}
+
+/* Анимация мерцания когда ход готов */
+@keyframes clepsydra-pulse {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(201,169,97,0.3)); }
+  50%       { filter: drop-shadow(0 0 12px rgba(201,169,97,0.8)); }
+}
+#end-turn-btn.turn-ready {
+  animation: clepsydra-pulse 2s ease-in-out infinite;
+}
+
+/* Шаг 21 — Ресурс-бар в топ-баре */
+#resource-bar {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  height: 100%;
+}
+#resource-bar .res-item {
+  padding: 0 10px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  border-left: 1px solid var(--border-gold);
+  font-size: 13px;
+  color: var(--text-light);
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+}
+#resource-bar .res-item:last-child {
+  border-right: 1px solid var(--border-gold);
+}
+#resource-bar .res-item:hover {
+  background: rgba(212,168,83,0.08);
+  color: var(--text-gold);
+}
+#resource-bar .res-item > span:first-of-type {
+  font-family: var(--font-data);
+  font-size: var(--text-sm);
+  min-width: 40px;
+  text-align: right;
+  letter-spacing: 0;
+}
+#resource-bar .res-delta {
+  font-family: var(--font-data);
+  font-size: var(--text-xs);
+  min-width: 0;
+  opacity: 0.9;
+  letter-spacing: 0;
+}
+#resource-bar .res-delta.positive { color: var(--positive); }
+#resource-bar .res-delta.negative { color: var(--negative); }
+#resource-bar .res-delta:empty { display: none; }
+
+/* Шаг 46 — Спарклайн тренда в ресурс-баре */
+#resource-bar .res-sparkline {
+  width: 44px;
+  height: 14px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 4px;
+  image-rendering: crisp-edges;
+  pointer-events: none;
+}
+
+/* ── ПРОГРЕСС ХОДА ── */
+
+/* Шаг 31 — Индикатор прогресса хода */
+#turn-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 0 10px;
+  height: 100%;
+  cursor: help;
+  user-select: none;
+  border-left: 1px solid var(--border-gold);
+}
+#turn-progress .tp-dots {
+  display: flex;
+  gap: 3px;
+}
+#turn-progress .tp-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(107, 79, 26, 0.3);
+  border: 1px solid var(--border-gold);
+  transition: background 0.2s;
+}
+#turn-progress .tp-dot.done {
+  background: var(--border-gold);
+}
+#turn-progress #tp-label {
+  font-family: var(--font-data);
+  font-size: var(--text-xs);
+  letter-spacing: 0;
+}
+
+/* ── КНОПКИ ВЕРХНЕГО РЯДА ── */
+
+/* Шаг 22 — Кнопка настроек в топ-баре */
+#settings-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 8px;
+  height: 100%;
+  transition: color 0.15s;
+  line-height: 1;
+}
+#settings-btn:hover {
+  color: var(--text-gold);
+}
+
+/* Кнопка поиска в топ-баре */
+#search-btn {
+  background: transparent;
+  border: 1px solid var(--border-gold);
+  color: var(--text-gold);
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 3px;
+  margin-right: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+#search-btn:hover {
+  background: rgba(212, 168, 83, 0.15);
+  color: #fff;
+}
+
+/* ── ЗАГОЛОВОК НАЦИИ ── */
+
+/* ─────────────────────────────────────────────────
+   Шаг 60 (arma.md) — Заголовок текущей нации игрока
+   ───────────────────────────────────────────────── */
+#nation-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  margin-left: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(200, 170, 90, 0.35);
+  border-radius: 0 0 6px 6px;
+  height: 32px;
+}
+.nation-icon {
+  width: 24px;
+  height: 24px;
+  /* Делает монохромный SVG золотистым (currentColor → tinted) */
+  filter: invert(1) sepia(1) saturate(2) hue-rotate(5deg);
+  opacity: 0.9;
+}
+.nation-name {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #f0e8c8;
+}
