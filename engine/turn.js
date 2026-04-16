@@ -2555,4 +2555,21 @@ function renderAll() {
       renderTradeRouteLines?.();
     }
   } catch (e) {}
+  // uisuper Этап 29 — Ambient: синхронизировать интенсивность с войной/миром.
+  try {
+    if (typeof window !== 'undefined' && window.AmbientLayer
+        && typeof window.AmbientLayer.setIntensity === 'function') {
+      const st = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
+      const pid = st && st.playerNationId;
+      const nat = pid && st.nations ? st.nations.find(n => n && n.id === pid) : null;
+      const warList = nat && nat.military && Array.isArray(nat.military.at_war_with)
+        ? nat.military.at_war_with : [];
+      // 0 войн → 0.3 (мир), 1 война → 0.5, 2+ → 0.7, 3+ → 0.9.
+      let intensity = 0.3;
+      if (warList.length === 1) intensity = 0.5;
+      else if (warList.length === 2) intensity = 0.7;
+      else if (warList.length >= 3) intensity = 0.9;
+      window.AmbientLayer.setIntensity(intensity);
+    }
+  } catch (e) {}
 }

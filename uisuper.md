@@ -5135,7 +5135,19 @@ ui: этап 28 — JS гонец: анимация ответа AI
 
 ---
 
-## ЭТАП 29 — Ambient-слой: тессеры-частицы фона
+## ЭТАП 29 — Ambient-слой: тессеры-частицы фона ✅ ВЫПОЛНЕНО
+
+> **Статус:** ✅ **ВЫПОЛНЕНО** — ветка `claude/exciting-fermat-KVLXr`.
+> В `index.html` добавлен `<canvas id="ambient-canvas">` как первый ребёнок
+> `#app`, CSS (`position:fixed; inset:0; z-index:0; pointer-events:none;
+> opacity:0.6`) и `#app { position:relative; z-index:1 }`. Реализован IIFE
+> `AmbientLayer` (120 частиц, object pooling, HiDPI через `devicePixelRatio`,
+> пауза при скрытой вкладке через `visibilitychange`, пульсация opacity,
+> `setIntensity(0..1)` → `speed = 0.5 + intensity*2.5`), инициализация на
+> `DOMContentLoaded`, экспорт `window.AmbientLayer`. Интенсивность
+> подключена к игровым данным в `engine/turn.js` внутри `renderAll()`:
+> количество войн игрока (`myNation.military.at_war_with`) → уровни
+> 0/1/2/3+ войн ↔ 0.3 / 0.5 / 0.7 / 0.9. Обновляется после каждого хода.
 
 **Улучшение:** #15 — «Живой» ambient-слой
 **Часть:** 1 из 2 — Canvas фоновых частиц
