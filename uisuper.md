@@ -7492,7 +7492,7 @@ refactor(engine): этап 48 — вынос OU-процесса и AI-скор�
 
 ---
 
-## ЭТАП 49 — Рефакторинг: вынос fallback AI в `engine/ai_fallback.js`
+## ЭТАП 49 — Рефакторинг: вынос fallback AI в `engine/ai_fallback.js` ✅ ВЫПОЛНЕНО
 
 **Направление:** A — разбиение `engine/turn.js`
 **Часть:** 6 из 11
