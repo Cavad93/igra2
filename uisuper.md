@@ -6218,7 +6218,7 @@ refactor(ui): этап 36 — CSS нижней зоны → ui/styles/bottom.css
 
 ---
 
-## ЭТАП 37 — Рефакторинг: вынос `SplashMosaic` в `ui/splash_mosaic.js`
+## ЭТАП 37 — Рефакторинг: вынос `SplashMosaic` в `ui/splash_mosaic.js` ✅ ВЫПОЛНЕНО
 
 **Улучшение:** Часть II — вынос JavaScript
 **Часть:** 7 из 13 — первый JS-модуль (изолированный, низкий риск)
