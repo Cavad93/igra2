@@ -6326,7 +6326,7 @@ refactor(ui): этап 37 — SplashMosaic → ui/splash_mosaic.js
 
 ---
 
-## ЭТАП 38 — Рефакторинг: вынос `Clepsydra` в `ui/clepsydra.js`
+## ЭТАП 38 — Рефакторинг: вынос `Clepsydra` в `ui/clepsydra.js` ✅ ВЫПОЛНЕНО
 
 **Улучшение:** Часть II — вынос JavaScript
 **Часть:** 8 из 13 — средний риск (зависит `engine/turn.js`)
