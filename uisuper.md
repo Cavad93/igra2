@@ -7643,7 +7643,7 @@ refactor(engine): этап 50 — вынос AI Worker в engine/ai_worker.js
 
 ---
 
-## ЭТАП 51 — Рефакторинг: вынос событий в `engine/events.js`
+## ЭТАП 51 — Рефакторинг: вынос событий в `engine/events.js` ✅ ВЫПОЛНЕНО
 
 **Направление:** A — разбиение `engine/turn.js`
 **Часть:** 8 из 11
