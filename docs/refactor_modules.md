@@ -582,3 +582,45 @@ ui/boot.js        (точка входа, монтирует всё прилож
 | Единая точка входа | нет | `ui/boot.js` |
 
 Оставшаяся задача: `index.html` = 8688 строк (Часть IV, этапы 72–80 → цель < 2000).
+
+---
+
+## Часть IV — Финальное расщепление CSS (этапы 72–80)
+
+### Начальные метрики
+
+| Метрика | Значение |
+|---------|----------|
+| `index.html` строк | 8 688 |
+| Inline `<style>` строк | 7 779 |
+| Файлов в `ui/styles/` | 5 |
+
+### Финальные метрики
+
+| Метрика | Значение |
+|---------|----------|
+| `index.html` строк | 918 |
+| Inline `<style>` | 0 (удалён полностью) |
+| Файлов в `ui/styles/` | 15 |
+| Суммарно CSS-строк | 10 976 |
+
+### CSS-файлы и размеры
+
+| Файл | Строк |
+|------|-------|
+| `ui/styles/base.css` | 403 |
+| `ui/styles/top.css` | 351 |
+| `ui/styles/splash.css` | 185 |
+| `ui/styles/panels.css` | 1 937 |
+| `ui/styles/bottom.css` | 873 |
+| `ui/styles/map.css` | 1 457 |
+| `ui/styles/diplomacy.css` | 1 868 |
+| `ui/styles/regions.css` | 1 181 |
+| `ui/styles/population.css` | 887 |
+| `ui/styles/economy.css` | 59 |
+| `ui/styles/characters.css` | 366 |
+| `ui/styles/government.css` | 847 |
+| `ui/styles/overlays.css` | 241 |
+| `ui/styles/battle.css` | 303 |
+| `ui/styles/responsive.css` | 18 |
+| **Итого** | **10 976** |
