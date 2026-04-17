@@ -9817,7 +9817,7 @@ refactor(ui): этап 77 — вынос CSS правительства в ui/st
 
 ---
 
-## ЭТАП 78 — Рефакторинг: `ui/styles/overlays.css` и `battle.css`
+## ЭТАП 78 — Рефакторинг: `ui/styles/overlays.css` и `battle.css` ✅ ВЫПОЛНЕНО
 
 **Улучшение:** Часть IV — финальное расщепление `index.html`
 **Часть:** 7 из 9
