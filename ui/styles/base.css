@@ -93,3 +93,311 @@ html, body {
   font-size: var(--text-base);
   line-height: var(--leading-normal);
 }
+
+/* ══════════════════════════════════════════════════
+   SVG-иконки (этап 6)
+══════════════════════════════════════════════════ */
+.icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2em;
+  height: 1.2em;
+  vertical-align: middle;
+  flex-shrink: 0;
+  color: currentColor;
+}
+.icon-wrap svg,
+.icon {
+  width: 100%;
+  height: 100%;
+  display: block;
+  stroke: currentColor;
+  fill: none;
+}
+
+/* ══════════════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════════════ */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+#main-area {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ══════════════════════════════════════════════════
+   АКВИДУКТ РЕСУРСОВ (этап 15)
+══════════════════════════════════════════════════ */
+#aqua-widget {
+  position: fixed;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 15;
+  width: 140px;
+  height: 140px;
+  pointer-events: none;
+}
+
+#aqua-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px; height: 36px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gold);
+  z-index: 2;
+}
+
+.aqua-channel {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: all;
+}
+
+#aqua-gold   { top: 0; left: 50%; transform: translateX(-50%);
+               flex-direction: column-reverse; }
+#aqua-troops { right: 0; top: 50%; transform: translateY(-50%);
+               flex-direction: row; }
+#aqua-food   { bottom: 0; left: 50%; transform: translateX(-50%);
+               flex-direction: column; }
+#aqua-pop    { left: 0; top: 50%; transform: translateY(-50%);
+               flex-direction: row-reverse; }
+
+.aqua-stream {
+  display: block;
+  opacity: 0.7;
+}
+
+.aqua-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-data);
+  font-size: var(--text-xs);
+  opacity: 0;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.aqua-channel:hover .aqua-label {
+  opacity: 1;
+}
+
+.aqua-val {
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+.aqua-delta {
+  font-size: var(--text-xs);
+}
+.aqua-delta.positive { color: var(--positive); }
+.aqua-delta.negative { color: var(--negative); }
+
+/* Иконка культурной группы внутри маркера армии */
+.army-marker__culture {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+  filter: invert(1) sepia(0.8) saturate(1.5) drop-shadow(0 0 1px #000);
+  opacity: 0.95;
+}
+
+/* ══════════════════════════════════════════════════
+   СТАТУС-БАР (скрыт — этап 13)
+══════════════════════════════════════════════════ */
+#status-bar {
+  display: none;
+  height: 22px;
+  flex-shrink: 0;
+  background: #0a0705;
+  border-top: 1px solid rgba(107,79,26,0.3);
+  align-items: center;
+  gap: 0;
+  padding: 0 10px;
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: var(--font-data);
+  user-select: none;
+}
+#status-bar > span { white-space: nowrap; }
+.sb-sep { margin: 0 8px; opacity: 0.3; }
+#sb-ai.ready   { color: var(--positive); }
+#sb-ai.busy    { color: var(--warning); }
+#sb-ai.error   { color: var(--negative); }
+
+/* ── Индикатор сохранения (этап 13) ── */
+#save-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: transparent;
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  transition: background 0.3s, box-shadow 0.3s;
+  pointer-events: auto;
+}
+#save-indicator.saving {
+  background: var(--gold);
+  box-shadow: 0 0 6px rgba(201,169,97,0.8);
+  animation: save-pulse 0.6s ease-in-out 3;
+}
+#save-indicator.saved {
+  background: var(--gold-dim, rgba(201,169,97,0.5));
+}
+#save-indicator.error {
+  background: var(--negative);
+}
+@keyframes save-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+/* ── AI-индикатор (этап 13) ── */
+.ai-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  margin: 0 4px;
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.ai-dot.ready    { background: var(--positive); }
+.ai-dot.busy,
+.ai-dot.thinking {
+  background: var(--gold);
+  animation: save-pulse 0.8s ease-in-out infinite;
+}
+.ai-dot.error    { background: var(--negative); }
+
+/* ══════════════════════════════════════════════════
+   TOAST-уведомления (шаг 27)
+══════════════════════════════════════════════════ */
+#toast-container {
+  position: fixed;
+  top: 54px;
+  right: 12px;
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+@keyframes toast-in {
+  from { transform: translateX(110%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes toast-out {
+  from { transform: translateX(0);    opacity: 1; }
+  to   { transform: translateX(110%); opacity: 0; }
+}
+.toast {
+  min-width: 240px;
+  max-width: 320px;
+  padding: 10px 14px;
+  background: rgba(20, 15, 8, 0.96);
+  border-left: 3px solid var(--border-gold);
+  border-radius: 3px;
+  font-size: 12px;
+  color: var(--text-light);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  animation: toast-in 0.25s ease-out;
+  will-change: transform, opacity;
+}
+.toast.toast-hide {
+  animation: toast-out 0.2s ease-in forwards;
+}
+.toast .toast-text {
+  flex: 1;
+  line-height: 1.35;
+  word-wrap: break-word;
+}
+.toast .toast-close {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  color: var(--text-light);
+  opacity: 0.65;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0 2px;
+}
+.toast .toast-close:hover { opacity: 1; }
+.toast.info     { border-left-color: var(--border-gold); }
+.toast.warning  { border-left-color: var(--warning); }
+.toast.danger   { border-left-color: var(--negative); background: rgba(30, 10, 8, 0.97); }
+.toast.success  { border-left-color: var(--positive); }
+
+/* ══════════════════════════════════════════════════
+   ПУЛЬС критических событий (шаг 35)
+══════════════════════════════════════════════════ */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+body.pulse-war::after {
+  background: radial-gradient(ellipse at center,
+    transparent 40%,
+    rgba(200, 30, 30, 0.18) 100%);
+  animation: pulse-edge 2s ease-out forwards;
+}
+body.pulse-gold::after {
+  background: radial-gradient(ellipse at center,
+    transparent 40%,
+    rgba(212, 168, 83, 0.2) 100%);
+  animation: pulse-edge 1.5s ease-out forwards;
+}
+body.pulse-warning::after {
+  background: radial-gradient(ellipse at center,
+    transparent 40%,
+    rgba(255, 200, 60, 0.18) 100%);
+  animation: pulse-edge 1.5s ease-out forwards;
+}
+body.pulse-dark::after {
+  background: radial-gradient(ellipse at center,
+    transparent 40%,
+    rgba(20, 20, 20, 0.35) 100%);
+  animation: pulse-edge 2s ease-out forwards;
+}
+@keyframes pulse-edge {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ══════════════════════════════════════════════════
+   УТИЛИТЫ
+══════════════════════════════════════════════════ */
+.dim { color: var(--text-dim); }
+.positive { color: var(--positive); }

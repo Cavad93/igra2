@@ -31,6 +31,7 @@
   <link rel="stylesheet" href="ui/styles/government.css">
   <link rel="stylesheet" href="ui/styles/overlays.css">
   <link rel="stylesheet" href="ui/styles/battle.css">
+  <link rel="stylesheet" href="ui/styles/responsive.css">
 
   <!-- Leaflet.js — интерактивные карты, без npm.
        Без integrity= чтобы корректно загружаться с file:// -->
@@ -44,336 +45,24 @@
   <!-- Этап 65: initIconWraps и MutationObserver перенесены в ui/boot.js -->
 
   <style>
-    /* ══════════════════════════════════════════════════
-       ЭТАП 6 — SVG-иконки (монетный штамп)
-       .icon-wrap — контейнер для data-icon; .icon — сам svg
-    ══════════════════════════════════════════════════ */
-    .icon-wrap {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 1.2em;
-      height: 1.2em;
-      vertical-align: middle;
-      flex-shrink: 0;
-      color: currentColor;
-    }
-    .icon-wrap svg,
-    .icon {
-      width: 100%;
-      height: 100%;
-      display: block;
-      stroke: currentColor;
-      fill: none;
-    }
-
+    /* base.css: .icon-wrap, #app, #main-area, layout вынесены (этап 79) */
     /* splash.css: splash-screen, мозаика, keyframes вынесены (этап 34). */
-
-    /* base.css: :root + reset + html,body + font-roles вынесены в ui/styles/base.css
-       (uisuper.md этап 32). */
-
-    /* ══════════════════════════════════════════════════
-       LAYOUT
-    ══════════════════════════════════════════════════ */
-    #app {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      position: relative;
-      z-index: 1;
-    }
-
+    /* base.css: :root + reset + html,body + font-roles (этап 32). */
     /* bottom.css: #ambient-canvas вынесен (этап 36) */
+    /* top.css: стела, топ-бар, клепсидра, ресурс-бар вынесены (этап 33). */
 
-    /* top.css: стела, топ-бар, клепсидра, ресурс-бар вынесены (uisuper.md этап 33). */
-
-    /* ── ЭТАП 15 — РАДИАЛЬНЫЙ АКВИДУКТ РЕСУРСОВ ── */
-    #aqua-widget {
-      position: fixed;
-      left: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 15;
-      width: 140px;
-      height: 140px;
-      pointer-events: none;  /* каналы перехватывают события сами */
-    }
-
-    /* Центральный медальон */
-    #aqua-center {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 36px; height: 36px;
-      background: var(--bg-panel);
-      border: 1px solid var(--border-gold);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--gold);
-      z-index: 2;
-    }
-
-    /* Каналы */
-    .aqua-channel {
-      position: absolute;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      pointer-events: all;
-    }
-
-    /* Позиции каналов */
-    #aqua-gold   { top: 0; left: 50%; transform: translateX(-50%);
-                   flex-direction: column-reverse; }
-    #aqua-troops { right: 0; top: 50%; transform: translateY(-50%);
-                   flex-direction: row; }
-    #aqua-food   { bottom: 0; left: 50%; transform: translateX(-50%);
-                   flex-direction: column; }
-    #aqua-pop    { left: 0; top: 50%; transform: translateY(-50%);
-                   flex-direction: row-reverse; }
-
-    /* Canvas-поток частиц */
-    .aqua-stream {
-      display: block;
-      opacity: 0.7;
-    }
-
-    /* Метка с цифрой — скрыта, появляется при hover */
-    .aqua-label {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      font-family: var(--font-data);
-      font-size: var(--text-xs);
-      opacity: 0;
-      transition: opacity 0.2s;
-      white-space: nowrap;
-      pointer-events: none;
-    }
-    .aqua-channel:hover .aqua-label {
-      opacity: 1;
-    }
-
-    .aqua-val {
-      color: var(--text-primary);
-      font-size: var(--text-sm);
-    }
-    .aqua-delta {
-      font-size: var(--text-xs);
-    }
-    .aqua-delta.positive { color: var(--positive); }
-    .aqua-delta.negative { color: var(--negative); }
-
-    /* top.css: #turn-progress, #settings-btn, #nation-header вынесены (uisuper.md этап 33). */
+    /* base.css: #aqua-widget и каналы вынесены (этап 79) */
+    /* top.css: #turn-progress, #settings-btn, #nation-header вынесены (этап 33). */
 
     /* [diplomacy.css] .diplo-row__icon вынесен (этап 73) */
-    /* Иконка культурной группы внутри маркера армии */
-    .army-marker__culture {
-      position: absolute;
-      right: -4px;
-      bottom: -4px;
-      width: 12px;
-      height: 12px;
-      pointer-events: none;
-      filter: invert(1) sepia(0.8) saturate(1.5) drop-shadow(0 0 1px #000);
-      opacity: 0.95;
-    }
-
+    /* base.css: .army-marker__culture вынесен (этап 79) */
     /* [panels.css] settings-modal, sm-* вынесены в ui/styles/panels.css (этап 35) */
-
-    /* Основная область */
-    #main-area {
-      flex: 1;
-      display: flex;
-      overflow: hidden;
-      min-height: 0;
-    }
-
+    /* base.css: #main-area вынесен (этап 79) */
     /* [panels.css] Боковые панели, диптих, panel-resizer → ui/styles/panels.css (этап 35) */
-    /* ══════════════════════════════════════════════════
-       Шаг 33 — Строка статуса внизу
-       ══════════════════════════════════════════════════ */
-    /* Этап 13 (uisuper.md): статус-бар скрыт от игрока.
-       Данные переехали в #save-indicator (стела) и #ai-dot (#top-actions).
-       JS продолжает обновлять sb-* для обратной совместимости. */
-    #status-bar {
-      display: none;
-      height: 22px;
-      flex-shrink: 0;
-      background: #0a0705;
-      border-top: 1px solid rgba(107,79,26,0.3);
-      align-items: center;
-      gap: 0;
-      padding: 0 10px;
-      font-size: 10px;
-      color: var(--text-dim);
-      font-family: var(--font-data);
-      user-select: none;
-    }
-    #status-bar > span { white-space: nowrap; }
-    .sb-sep { margin: 0 8px; opacity: 0.3; }
-    #sb-ai.ready   { color: var(--positive); }
-    #sb-ai.busy    { color: var(--warning); }
-    #sb-ai.error   { color: var(--negative); }
+    /* base.css: #status-bar, #save-indicator, .ai-dot, @keyframes save-pulse вынесены (этап 79) */
 
-    /* ── Этап 13 — Индикатор сохранения (маленькая точка на стеле) ── */
-    #save-indicator {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: transparent;
-      position: absolute;
-      top: 8px;
-      left: 8px;
-      transition: background 0.3s, box-shadow 0.3s;
-      pointer-events: auto;
-    }
-    #save-indicator.saving {
-      background: var(--gold);
-      box-shadow: 0 0 6px rgba(201,169,97,0.8);
-      animation: save-pulse 0.6s ease-in-out 3;
-    }
-    #save-indicator.saved {
-      background: var(--gold-dim, rgba(201,169,97,0.5));
-    }
-    #save-indicator.error {
-      background: var(--negative);
-    }
-    @keyframes save-pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.3; }
-    }
-
-    /* ── Этап 13 — Мини-индикатор AI-статуса в правых действиях ── */
-    .ai-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--text-dim);
-      margin: 0 4px;
-      flex-shrink: 0;
-      transition: background 0.3s;
-    }
-    .ai-dot.ready    { background: var(--positive); }
-    .ai-dot.busy,
-    .ai-dot.thinking {
-      background: var(--gold);
-      animation: save-pulse 0.8s ease-in-out infinite;
-    }
-    .ai-dot.error    { background: var(--negative); }
-
-    /* ══════════════════════════════════════════════════
-    /* [panels.css] Search panel → ui/styles/panels.css (этап 35) */
-    /* ══════════════════════════════════════════════════
-    /* [panels.css] Turn summary card → ui/styles/panels.css (этап 35) */
-    /* ══════════════════════════════════════════════════
-    /* [panels.css] Compare panel → ui/styles/panels.css (этап 35) */
-    /* ══════════════════════════════════════════════════
-       Шаг 27 — Toast-уведомления
-       ══════════════════════════════════════════════════ */
-    #toast-container {
-      position: fixed;
-      top: 54px;
-      right: 12px;
-      z-index: 9000;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      pointer-events: none;
-    }
-    @keyframes toast-in {
-      from { transform: translateX(110%); opacity: 0; }
-      to   { transform: translateX(0);    opacity: 1; }
-    }
-    @keyframes toast-out {
-      from { transform: translateX(0);    opacity: 1; }
-      to   { transform: translateX(110%); opacity: 0; }
-    }
-    .toast {
-      min-width: 240px;
-      max-width: 320px;
-      padding: 10px 14px;
-      background: rgba(20, 15, 8, 0.96);
-      border-left: 3px solid var(--border-gold);
-      border-radius: 3px;
-      font-size: 12px;
-      color: var(--text-light);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-      pointer-events: auto;
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      animation: toast-in 0.25s ease-out;
-      will-change: transform, opacity;
-    }
-    .toast.toast-hide {
-      animation: toast-out 0.2s ease-in forwards;
-    }
-    .toast .toast-text {
-      flex: 1;
-      line-height: 1.35;
-      word-wrap: break-word;
-    }
-    .toast .toast-close {
-      flex: 0 0 auto;
-      background: none;
-      border: none;
-      color: var(--text-light);
-      opacity: 0.65;
-      cursor: pointer;
-      font-size: 13px;
-      line-height: 1;
-      padding: 0 2px;
-    }
-    .toast .toast-close:hover { opacity: 1; }
-    .toast.info     { border-left-color: var(--border-gold); }
-    .toast.warning  { border-left-color: var(--warning); }
-    .toast.danger   { border-left-color: var(--negative); background: rgba(30, 10, 8, 0.97); }
-    .toast.success  { border-left-color: var(--positive); }
-
-    /* ══════════════════════════════════════════════════
-       Шаг 35 — Визуальный "пульс" для критических событий
-       ══════════════════════════════════════════════════ */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 9999;
-      opacity: 0;
-      transition: opacity 0.1s;
-    }
-    body.pulse-war::after {
-      background: radial-gradient(ellipse at center,
-        transparent 40%,
-        rgba(200, 30, 30, 0.18) 100%);
-      animation: pulse-edge 2s ease-out forwards;
-    }
-    body.pulse-gold::after {
-      background: radial-gradient(ellipse at center,
-        transparent 40%,
-        rgba(212, 168, 83, 0.2) 100%);
-      animation: pulse-edge 1.5s ease-out forwards;
-    }
-    body.pulse-warning::after {
-      background: radial-gradient(ellipse at center,
-        transparent 40%,
-        rgba(255, 200, 60, 0.18) 100%);
-      animation: pulse-edge 1.5s ease-out forwards;
-    }
-    body.pulse-dark::after {
-      background: radial-gradient(ellipse at center,
-        transparent 40%,
-        rgba(20, 20, 20, 0.35) 100%);
-      animation: pulse-edge 2s ease-out forwards;
-    }
-    @keyframes pulse-edge {
-      0%   { opacity: 1; }
-      100% { opacity: 0; }
-    }
+    /* [panels.css] Search panel, Turn summary card, Compare panel → ui/styles/panels.css (этап 35) */
+    /* base.css: toast-container, .toast, pulse-* вынесены (этап 79) */
 
     /* [panels.css] Скроллбар webkit → ui/styles/panels.css (этап 35) */
     /* map.css: ЦЕНТРАЛЬНАЯ ОБЛАСТЬ — КАРТА, Leaflet, zoom, region-info,
@@ -384,21 +73,7 @@
 
     /* [diplomacy.css] ДИПЛОМАТИЯ — левая панель вынесена (этап 73) */
 
-    /* ══════════════════════════════════════════════════
-       АДАПТИВНОСТЬ
-    ══════════════════════════════════════════════════ */
-    @media (max-width: 1024px) {
-      :root { --panel-w: 220px; }
-    }
-    @media (max-width: 768px) {
-      :root { --panel-w: 0px; --footer-h: 32px; }
-      #left-panel, #right-panel { display: none; }
-      #input-row   { width: auto; flex: 1; }
-      #region-info { width: 92vw; right: 4vw; }
-    }
-    @media (max-width: 480px) {
-      #region-info { width: 96vw; right: 2vw; font-size: 10px; }
-    }
+    /* responsive.css: все @media-блоки вынесены (этап 79) */
 
     /* bottom.css: нижняя область, лог-strip, лог-drawer вынесены (этап 36) */
 
@@ -406,269 +81,21 @@
 
     /* bottom.css: манифест, цели, клятвы, летопись, legacy, testament вынесены (этап 36) */
 
-    /* bottom.css: панель приказов вынесена (этап 36) — начало следующего блока: */
-    /* ══════════════════════════════════════════════════
-       ПАНЕЛЬ ПРИКАЗОВ — вынесена в bottom.css (этап 36)
-    ══════════════════════════════════════════════════ */
-    /* bottom.css: orders-panel, op-* вынесены (этап 36) */
+    /* bottom.css: панель приказов, orders-panel, op-* вынесены (этап 36) */
 
     /* bottom.css: input-area, api-key-section, ai-response, .positive/.negative вынесены (этап 36) */
 
     /* bottom.css: messenger, api-key, input-row, send-btn вынесены (этап 36) */
 
-    /* ══════════════════════════════════════════════════
-       ПАНЕЛИ — ОБЩИЕ СТИЛИ
-    ══════════════════════════════════════════════════ */
-    .panel-title {
-      font-family: var(--font-display);
-      font-size: var(--text-md);
-      font-weight: 700;
-      color: var(--text-gold);
-      text-align: center;
-      padding: 6px 0 8px;
-      border-bottom: 1px solid var(--border-gold);
-      margin-bottom: 8px;
-      letter-spacing: 0.08em;
-    }
+    /* panels.css: панели — общие стили вынесены (этап 79) */
 
-    .panel-section {
-      background: var(--bg-section);
-      border: 1px solid var(--border-gold);
-      border-radius: 2px;
-      padding: 8px;
-      margin-bottom: 8px;
-    }
+    /* panels.css: полосы, правитель, профессии вынесены (этап 79) */
 
-    .section-title {
-      font-size: 11px;
-      font-weight: bold;
-      color: var(--text-gold);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 6px;
-      padding-bottom: 3px;
-      border-bottom: 1px solid rgba(107,79,26,0.4);
-    }
+    /* panels.css: мини-виджет населения вынесен (этап 79) */
 
-    .section-label {
-      font-size: 10px;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
-    }
+    /* panels.css: диаграмма истории населения, тултип, легенда вынесены (этап 79) */
 
-    .stat-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 3px;
-      gap: 4px;
-    }
-    .stat-label { font-size: 11px; color: var(--text-dim); flex: 1; }
-    .stat-value { font-size: 11px; color: var(--text-light); font-weight: bold; }
-    .stat-value.gold     { color: var(--gold-bright); }
-    .stat-value.positive { color: var(--positive); }
-    .stat-value.negative { color: var(--negative); }
-
-    .total-row {
-      border-top: 1px solid rgba(107,79,26,0.3);
-      padding-top: 3px;
-      margin-top: 2px;
-    }
-
-    /* Полосы */
-    .bar-container {
-      flex: 1;
-      height: 6px;
-      background: rgba(0,0,0,0.4);
-      border-radius: 3px;
-      overflow: hidden;
-      margin: 0 6px;
-    }
-    .bar-container.small { height: 4px; }
-
-    .bar-fill {
-      height: 100%;
-      border-radius: 3px;
-      transition: width 0.3s ease;
-    }
-
-    .legitimacy-bar, .happiness-row, .morale-row, .stat-row {
-      display: flex;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-
-    .legitimacy-fill { background: linear-gradient(to right, #9C27B0, #E040FB); }
-    .happiness-fill  { /* задаётся inline */ }
-    .morale-fill     { background: linear-gradient(to right, #B71C1C, var(--negative)); }
-    .loyalty-fill    { background: linear-gradient(to right, #1B5E20, #43A047); }
-
-    /* Правитель */
-    .ruler-section { text-align: center; }
-    .ruler-name { font-size: 15px; color: var(--gold-bright); font-weight: bold; margin-bottom: 2px; }
-    .ruler-sub  { font-size: 10px; color: var(--text-dim); margin-bottom: 6px; }
-    .legitimacy-bar { gap: 0; }
-    .legitimacy-bar .stat-label { text-align: left; min-width: 70px; }
-
-    /* Профессии */
-    .professions-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 3px;
-      margin-top: 6px;
-    }
-    .prof-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: var(--bg-hover);
-      border-radius: 2px;
-      padding: 3px;
-      cursor: default;
-    }
-    .prof-icon  { font-size: 13px; }
-    .prof-count { font-size: 9px; color: var(--text-dim); }
-
-    /* Мини-виджет населения в левой панели */
-    .pop-mini-top {
-      display: flex; align-items: baseline; justify-content: space-between;
-      margin-bottom: 5px;
-    }
-    .pop-mini-total {
-      font-family: var(--font-data); font-size: 16px; font-weight: bold;
-      color: var(--text-gold); letter-spacing: .3px;
-    }
-    .pop-mini-hap {
-      font-size: 11px; font-family: var(--font-ui); font-weight: bold;
-    }
-    .pop-mini-bar {
-      display: flex; height: 6px; border-radius: 3px;
-      overflow: hidden; gap: 1px; margin-bottom: 7px;
-    }
-    .pop-mini-seg { height: 100%; min-width: 2px; cursor: default; }
-    .pop-mini-classes { display: flex; flex-direction: column; gap: 3px; }
-    .pop-mini-row {
-      display: flex; align-items: center; gap: 4px;
-    }
-    .pop-mini-dot {
-      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
-    }
-    .pop-mini-name {
-      font-size: 9px; color: var(--text-light); font-family: var(--font-ui);
-      width: 72px; flex-shrink: 0; white-space: nowrap;
-      overflow: hidden; text-overflow: ellipsis;
-    }
-    .pop-mini-name.unhappy { color: #EF9A9A; }
-    .pop-mini-wrap {
-      flex: 1; height: 4px; background: rgba(255,255,255,.06);
-      border-radius: 2px; overflow: hidden;
-    }
-    .pop-mini-fill { height: 100%; border-radius: 2px; }
-    .pop-mini-cnt {
-      font-size: 9px; font-family: var(--font-ui); color: var(--text-dim);
-      min-width: 26px; text-align: right; flex-shrink: 0;
-    }
-    .pop-mini-more {
-      font-size: 9px; color: var(--text-dim); font-style: italic;
-      font-family: var(--font-ui); padding: 1px 0 0 11px;
-    }
-
-    /* ── История населения (диаграмма в оверлее) ── */
-    .pop-chart-section {
-      border-top: 1px solid rgba(107,79,26,.18);
-    }
-    .pop-chart-tabs {
-      display: flex; gap: 3px;
-    }
-    .pct {
-      background: rgba(255,255,255,.04); border: 1px solid rgba(212,175,55,.15);
-      color: var(--text-dim); border-radius: 4px; padding: 2px 10px;
-      font-size: 10px; font-family: var(--font-ui); cursor: pointer;
-      transition: all .15s; letter-spacing: .3px;
-    }
-    .pct:hover  { color: var(--text-light); border-color: rgba(212,175,55,.3); }
-    .pct.active { background: rgba(212,175,55,.12); border-color: rgba(212,175,55,.45); color: var(--text-gold); }
-
-    .pop-chart-wrap {
-      position: relative; padding: 4px 16px 10px;
-    }
-    .pop-chart-svg { display: block; width: 100%; height: auto; }
-    .pop-chart-empty {
-      text-align: center; padding: 28px 0;
-      font-size: 11px; color: var(--text-dim); font-style: italic;
-      font-family: var(--font-ui);
-    }
-
-    /* Tooltip */
-    .pop-ctip {
-      position: absolute; top: 14px; pointer-events: none;
-      background: rgba(14,11,8,.94); border: 1px solid rgba(212,175,55,.3);
-      border-radius: 6px; padding: 8px 11px; min-width: 155px;
-      box-shadow: 0 8px 28px rgba(0,0,0,.7); z-index: 50;
-      font-family: var(--font-ui);
-    }
-    .pct-date  { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; }
-    .pct-total { font-size: 13px; font-weight: bold; color: var(--text-gold); margin-bottom: 6px; font-family: var(--font-data); }
-    .pct-row   { display: flex; align-items: center; gap: 5px; padding: 1.5px 0; }
-    .pct-dot   { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-    .pct-nm    { font-size: 10px; color: rgba(255,255,255,.65); flex: 1; white-space: nowrap; }
-    .pct-val   { font-size: 10px; font-weight: bold; }
-
-    /* Legend */
-    .pop-chart-legend {
-      display: flex; flex-wrap: wrap; gap: 6px 14px;
-      padding: 4px 16px 12px;
-    }
-    .pcl-item  { display: flex; align-items: center; gap: 4px; }
-    .pcl-dot   { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .pcl-nm    { font-size: 9px; color: var(--text-dim); font-family: var(--font-ui); }
-    .pcl-val   { font-size: 9px; color: var(--text-light); font-family: var(--font-ui); font-weight: bold; }
-
-    /* Отношения */
-    .relation-row {
-      display: flex;
-      align-items: center;
-      margin-bottom: 4px;
-      gap: 4px;
-    }
-    .relation-name  { font-size: 10px; width: 70px; flex-shrink: 0; }
-    .relation-score { font-size: 10px; width: 24px; text-align: right; flex-shrink: 0; }
-    .relation-status { font-size: 10px; }
-
-    /* Культура */
-    .culture-name { font-size: 11px; font-weight: bold; margin-bottom: 2px; }
-    .culture-group { font-size: 9px; color: var(--text-dim); font-weight: normal; }
-    .culture-mutation-status { font-size: 9px; margin-bottom: 6px; }
-    .mutation-ready { color: var(--positive); }
-    .mutation-cooldown { color: var(--text-dim); }
-    .traditions-list { display: flex; flex-direction: column; gap: 3px; }
-    .tradition-item {
-      display: flex; flex-wrap: wrap; align-items: center;
-      gap: 3px; padding: 3px 4px;
-      background: var(--bg-hover); border-radius: 2px;
-      cursor: default;
-    }
-    .tradition-icon { font-size: 11px; flex-shrink: 0; }
-    .tradition-name { font-size: 10px; font-weight: 500; flex-shrink: 0; }
-    .tradition-bonus { font-size: 8px; color: var(--text-dim); width: 100%; }
-    .bonus-positive { color: var(--positive); }
-    .bonus-negative { color: var(--negative); }
-
-    /* Законы */
-    .laws-count {
-      background: var(--gold-bright);
-      color: var(--bg-deep);
-      border-radius: 10px;
-      padding: 0 5px;
-      font-size: 10px;
-      margin-left: 4px;
-    }
-    .law-item { font-size: 11px; margin-bottom: 3px; }
-    .law-name { color: var(--text-light); }
-    .law-vote { font-size: 10px; color: var(--text-dim); margin-left: 4px; }
-    .no-data  { font-size: 10px; color: var(--text-dim); font-style: italic; }
+    /* panels.css: отношения, культура, законы вынесены (этап 79) */
 
     /* [characters.css] Персонажи, CC0-портреты, двор, Court Board, tooltip нации → ui/styles/characters.css (этап 76) */
 
@@ -681,25 +108,17 @@
 
     /* [battle.css] Результат битвы (#battle-result-overlay) → ui/styles/battle.css (этап 78) */
 
-    /* ══════════════════════════════════════════
-       ПАНЕЛЬ ОСАДЫ (#siege-panel)
-    ══════════════════════════════════════════ */
     /* [panels.css] Панель осады → ui/styles/panels.css (этап 35) */
 
     /* map.css: маршруты, панель армии, режим движения, приказы вынесены в ui/styles/map.css (этап 72). */
     /* [government.css] Детальные стили оверлея правительства → ui/styles/government.css (этап 77) */
-    .dim { color: var(--text-dim); }
-
+    /* base.css: .dim вынесен (этап 79) */
     /* [government.css] Залы правления, сенат, парламент, карточки сенаторов → ui/styles/government.css (этап 77) */
-
     /* [government.css] Модал переговоров с сенатором, свободный диалог → ui/styles/government.css (этап 77) */
-
     /* [government.css] Senate lazy materialization + форма составления закона → ui/styles/government.css (этап 77) */
-
     /* [government.css] Зал дебатов, вердикт, голосование, драматические события → ui/styles/government.css (этап 77) */
-
-    /* [government.css] Залы типов правления (тирания, монархия, олигархия, демократия, племя, теократия, кастомный) → ui/styles/government.css (этап 77) */
-    .positive { color: var(--positive); }
+    /* [government.css] Залы типов правления → ui/styles/government.css (этап 77) */
+    /* base.css: .positive вынесен (этап 79) */
 
     /* [overlays.css] Лог-фильтры, выбор события, итоги хода, мирные переговоры, конец игры → ui/styles/overlays.css (этап 78) */
 
