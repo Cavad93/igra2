@@ -19,15 +19,45 @@
     if (el) el.style.display = 'none';
   };
 
-  // data-action="fn" [data-arg="..."]
+  // data-action="fn" [data-arg="val" | data-arg="a|b"]
+  // data-guard=".selector"  — skip if click came from that selector
+  // data-stop-prop          — call e.stopPropagation()
+  // data-action2="fn2"     — chain a second no-arg function
+  // data-pass-event         — pass event as first arg before data-arg
   document.addEventListener('click', function(e) {
     var el = e.target.closest('[data-action]');
-    if (!el) return;
+
+    // data-stop-prop без data-action (только stopPropagation)
+    // Применяем только если нет вложенного data-action, иначе data-action обработает
+    if (!el) {
+      var stopEl = e.target.closest('[data-stop-prop]');
+      if (stopEl) { e.stopPropagation(); }
+      return;
+    }
+
+    var guard = el.dataset.guard;
+    if (guard && e.target.closest(guard)) return;
+
+    if (el.dataset.stopProp !== undefined) e.stopPropagation();
+
     var fn = window[el.dataset.action];
     if (typeof fn === 'function') {
-      var arg = el.dataset.arg;
-      arg !== undefined ? fn(arg) : fn();
+      var raw = el.dataset.arg;
+      if (raw !== undefined) {
+        var args = raw.split('|').map(function(s) {
+          if (s === 'true') return true;
+          if (s === 'false') return false;
+          return s;
+        });
+        if (el.dataset.passEvent !== undefined) args.unshift(e);
+        fn.apply(null, args);
+      } else {
+        el.dataset.passEvent !== undefined ? fn(e) : fn();
+      }
     }
+
+    var fn2 = el.dataset.action2 ? window[el.dataset.action2] : null;
+    if (typeof fn2 === 'function') fn2();
   });
 
   // data-action-self="fn" — срабатывает только при клике по самому элементу

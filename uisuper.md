@@ -8178,7 +8178,7 @@ refactor(ui): этап 56 — убрать inline onclick из index.html
 
 ---
 
-## ЭТАП 57 — Модули: убрать onclick из `ui/panels.js`
+## ЭТАП 57 — Модули: убрать onclick из `ui/panels.js` ✅ ВЫПОЛНЕНО
 
 **Направление:** B — переход на ES-модули
 **Часть:** 3 из 12

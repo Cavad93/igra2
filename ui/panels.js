@@ -60,26 +60,26 @@ function _buildLeftPanelSections(nation, nationId) {
         </div>
         <span class="stat-value">${(gov.legitimacy ?? 0).toFixed(1)}%</span>
       </div>
-      <button class="gov-open-btn" onclick="showGovernmentOverlay()">
+      <button class="gov-open-btn" data-action="showGovernmentOverlay">
         <span class="icon-wrap" data-icon="court"></span> Управление государством ▸
       </button>
-      <button class="gov-open-btn" style="margin-top:4px" onclick="showPopulationOverlay()">
+      <button class="gov-open-btn" style="margin-top:4px" data-action="showPopulationOverlay">
         <span class="icon-wrap" data-icon="population"></span> Структура общества ▸
       </button>
-      <button class="gov-open-btn" id="eco-open-btn" style="margin-top:4px" onclick="showEconomyOverlay()">
+      <button class="gov-open-btn" id="eco-open-btn" style="margin-top:4px" data-action="showEconomyOverlay">
         <span class="icon-wrap" data-icon="economy"></span> Экономический обзор ▸
       </button>
-      <button class="gov-open-btn" style="margin-top:4px" onclick="showTreasuryOverlay()">
+      <button class="gov-open-btn" style="margin-top:4px" data-action="showTreasuryOverlay">
         <span class="icon-wrap" data-icon="gold"></span> Казна и налоги ▸
       </button>
-      <button class="gov-open-btn" style="margin-top:4px" onclick="showVowsModal()">
+      <button class="gov-open-btn" style="margin-top:4px" data-action="showVowsModal">
         <span class="icon-wrap" data-icon="army"></span> Клятвы ▸
       </button>
-      <button class="gov-open-btn" style="margin-top:4px" onclick="showChronicleModal()">
+      <button class="gov-open-btn" style="margin-top:4px" data-action="showChronicleModal">
         <span class="icon-wrap" data-icon="chronicle"></span> Открыть летопись ▸
       </button>
       ${(gov.ruler?.age ?? 0) >= 60 ? `
-      <button class="gov-open-btn" style="margin-top:4px;border-color:var(--gold,#c8a84b)" onclick="showTestamentModal()">
+      <button class="gov-open-btn" style="margin-top:4px;border-color:var(--gold,#c8a84b)" data-action="showTestamentModal">
         <span class="icon-wrap" data-icon="laws"></span> Завещание ▸
       </button>` : ''}
     </div>
@@ -161,7 +161,7 @@ function _buildLeftPanelSections(nation, nationId) {
     <div class="panel-section">
       <div class="section-title">🎭 Культура</div>
       ${renderCulturePanel(nationId)}
-      <button class="cw-btn-open" onclick="openCultureWindow('${nationId}')">📊 Подробнее о культурах</button>
+      <button class="cw-btn-open" data-action="openCultureWindow" data-arg="${nationId}">📊 Подробнее о культурах</button>
     </div>
   `;
 
@@ -170,7 +170,7 @@ function _buildLeftPanelSections(nation, nationId) {
     <div class="panel-section">
       <div class="section-title">⛪ Религия</div>
       ${typeof renderReligionPanel === 'function' ? renderReligionPanel(nationId) : '<div class="no-data">Нет данных</div>'}
-      <button class="cw-btn-open" onclick="openReligionWindow('${nationId}')">⛪ Подробнее о религиях</button>
+      <button class="cw-btn-open" data-action="openReligionWindow" data-arg="${nationId}">⛪ Подробнее о религиях</button>
     </div>
   `;
 
@@ -1129,7 +1129,7 @@ function _buildCultureWindowHtml() {
             <div class="cw-header-title">${nationName}</div>
             <div class="cw-header-sub">Культурный состав · ${stats.cultures.length} ${_cwPlural(stats.cultures.length, 'культура', 'культуры', 'культур')}</div>
           </div>
-          <button class="cw-close" onclick="closeCultureWindow()">✕</button>
+          <button class="cw-close" data-action="closeCultureWindow">✕</button>
         </div>
         <div class="cw-body">
           <div class="cw-left">
@@ -1152,7 +1152,7 @@ function _buildCultureWindowHtml() {
       <div class="culture-window">
         <div class="cw-header">
           <div class="cw-header-title">Культуры</div>
-          <button class="cw-close" onclick="closeCultureWindow()">✕</button>
+          <button class="cw-close" data-action="closeCultureWindow">✕</button>
         </div>
         <div class="cw-body" style="padding:20px">
           <div class="no-data">Ошибка: ${e.message}</div>
@@ -1754,7 +1754,7 @@ function renderRelations(relations) {
   const treatyGroupsHtml = Object.entries(byType).map(([typeKey, group]) => {
     const nationsList = group.nations.map(n =>
       `<button class="diplo-nation-chip ${group.isWar ? 'diplo-nation-chip--war' : ''}"
-        onclick="showDiplomacyOverlay('${n.id}')"
+        data-action="showDiplomacyOverlay" data-arg="${n.id}"
         title="${n.name}">${n.flag} ${n.name}</button>`
     ).join('');
     return `<div class="diplo-type-row">
@@ -1824,7 +1824,7 @@ function renderRelations(relations) {
     }
     const warBadge = atWar ? '<span class="diplo-war-dot">⚔</span>' : '';
 
-    return `<div class="diplo-rel-row" onclick="showDiplomacyOverlay('${nId}')" title="Открыть переговоры">
+    return `<div class="diplo-rel-row" data-action="showDiplomacyOverlay" data-arg="${nId}" title="Открыть переговоры">
       <div class="diplo-rel-left">
         <span class="diplo-rel-flag">${nation.flag_emoji ?? '🏛'}</span>
         <div class="diplo-rel-info">
@@ -1849,7 +1849,7 @@ function renderRelations(relations) {
   const hasNations  = allNations.length > 0;
 
   return `
-    <button class="diplo-open-btn" onclick="showDiplomacyOverlay()">
+    <button class="diplo-open-btn" data-action="showDiplomacyOverlay">
 <span class="icon-wrap" data-icon="diplomacy"></span> Зал переговоров ▸
     </button>
 
@@ -2159,10 +2159,10 @@ function renderRightPanel() {
       return `
         <div class="position-cameo filled" data-role="${p.id}" data-char-id="${_courtEscAttr(char.id)}"
              draggable="true"
-             onclick="if(event.target.closest('.cameo-unassign'))return; showCharacterDetail('${cidJs}')"
+             data-action="showCharacterDetail" data-arg="${cidJs}" data-guard=".cameo-unassign"
              title="${cnAttr} — ${_courtEscAttr(p.title)}">
           <button class="cameo-unassign"
-                  onclick="event.stopPropagation(); unassignCharacter('${p.id}')"
+                  data-action="unassignCharacter" data-arg="${p.id}" data-stop-prop
                   title="Снять с должности">✕</button>
           ${portrait}
           <div class="cameo-name">${cnEsc}</div>
@@ -2173,7 +2173,7 @@ function renderRightPanel() {
     } else {
       return `
         <div class="position-cameo vacant" data-role="${p.id}"
-             onclick="openAssignModal('${p.id}')"
+             data-action="openAssignModal" data-arg="${p.id}"
              title="${_courtEscAttr(p.title)}: ${_courtEscAttr(p.bonus)}">
           <div class="cameo-icon">${_posIconHtml(p.icon)}</div>
           <div class="cameo-title">${p.title}</div>
@@ -2200,7 +2200,7 @@ function renderRightPanel() {
         <span class="court-era">${_courtEscHtml(capital)} · ${_courtEscHtml(year)}</span>
       </div>
 
-      <button id="generate-chars-btn" onclick="handleGenerateChars()">
+      <button id="generate-chars-btn" data-action="handleGenerateChars">
         <span class="icon-wrap" data-icon="ai"></span> Созвать советников (AI)
       </button>
 
@@ -2261,7 +2261,7 @@ function renderAdvisorChip(char, nationId) {
 
   return `
     <div class="roster-row" data-char-id="${cidAttr}" draggable="true"
-         onclick="if(event.target.closest('.roster-menu-btn'))return; showCharacterDetail('${cidJs}')"
+         data-action="showCharacterDetail" data-arg="${cidJs}" data-guard=".roster-menu-btn"
          title="${nameAtr} — ${_courtEscAttr(role)}">
       ${portrait}
       <div class="roster-info">
@@ -2269,7 +2269,7 @@ function renderAdvisorChip(char, nationId) {
         <div class="roster-meta">${skillsHtml}</div>
       </div>
       <button class="roster-menu-btn"
-              onclick="event.stopPropagation(); _showRosterMenu(event, '${cidJs}')"
+              data-action="_showRosterMenu" data-arg="${cidJs}" data-stop-prop data-pass-event
               title="Назначить в…">⋮</button>
     </div>
   `;
@@ -2296,7 +2296,7 @@ function _renderRosterFilters(freeChars) {
       : '';
     const lbl = f.label;
     return `<button class="roster-filter-btn ${_rosterFilter === f.id ? 'active' : ''}"
-            onclick="setRosterFilter('${f.id}')"
+            data-action="setRosterFilter" data-arg="${f.id}"
             title="${_courtEscAttr(f.id)}">${icon}${lbl}·<b>${counts[f.id] ?? 0}</b></button>`;
   }).join('');
   const sorts = [
@@ -2306,7 +2306,7 @@ function _renderRosterFilters(freeChars) {
   ];
   const sortHtml = sorts.map(s => `
     <button class="roster-sort-btn ${_rosterSort === s.id ? 'active' : ''}"
-            onclick="setRosterSort('${s.id}')">${s.label}</button>
+            data-action="setRosterSort" data-arg="${s.id}">${s.label}</button>
   `).join('');
   return `
     <div class="roster-filters">${filterHtml}</div>
@@ -2364,11 +2364,11 @@ function _showRosterMenu(ev, charId) {
   menu.innerHTML =
     `<div class="rm-title">Назначить в…</div>` +
     COURT_POSITIONS.map(p =>
-      `<button onclick="assignCharacter('${cidJs}','${p.id}'); _closeRosterMenu()">` +
+      `<button data-action="assignCharacter" data-arg="${cidJs}|${p.id}" data-action2="_closeRosterMenu">` +
       `<span class="icon-wrap" data-icon="${p.icon}"></span> ${p.title}</button>`
     ).join('') +
-    `<button class="rm-sep" onclick="showCharacterDetail('${cidJs}'); _closeRosterMenu()">Подробно</button>` +
-    `<button onclick="_closeRosterMenu()">Отмена</button>`;
+    `<button class="rm-sep" data-action="showCharacterDetail" data-arg="${cidJs}" data-action2="_closeRosterMenu">Подробно</button>` +
+    `<button data-action="_closeRosterMenu">Отмена</button>`;
   document.body.appendChild(menu);
   // Инициализируем svg-иконки (MutationObserver их подхватит, но на
   // всякий случай запустим initIconWraps для свежего узла)
@@ -2515,7 +2515,7 @@ function _swapCourtPositions(fromRole, toRole, charId) {
   renderRightPanel();
 }
 
-// Экспорт в window для onclick-обработчиков inline-разметки
+// Экспорт в window для data-action делегирования (uisuper этап 57)
 if (typeof window !== 'undefined') {
   window.setRosterFilter      = setRosterFilter;
   window.setRosterSort        = setRosterSort;
@@ -2560,22 +2560,22 @@ function openAssignModal(roleId) {
             </div>
             <div class="assign-cand-skill" title="Релевантный навык">${score}</div>
             ${isCurrent
-              ? `<button class="assign-cand-btn unassign" onclick="unassignCharacter('${roleId}')">Снять</button>`
-              : `<button class="assign-cand-btn" onclick="assignCharacter('${char.id}','${roleId}')">Назначить</button>`
+              ? `<button class="assign-cand-btn unassign" data-action="unassignCharacter" data-arg="${roleId}">Снять</button>`
+              : `<button class="assign-cand-btn" data-action="assignCharacter" data-arg="${char.id}|${roleId}">Назначить</button>`
             }
           </div>
         `;
       }).join('');
 
   overlay.innerHTML = `
-    <div class="assign-modal-box" onclick="event.stopPropagation()">
+    <div class="assign-modal-box" data-stop-prop>
       <div class="assign-modal-header">
         <div class="assign-modal-icon">${_posIconHtml(posDef.icon)}</div>
         <div>
           <div class="assign-modal-title">${posDef.title}</div>
           <div class="assign-modal-sub">${posDef.bonus}</div>
         </div>
-        <button class="close-btn" onclick="closeAssignModal()" style="margin-left:auto">✕</button>
+        <button class="close-btn" data-action="closeAssignModal" style="margin-left:auto">✕</button>
       </div>
       <div class="assign-cand-list">${candHtml}</div>
     </div>
@@ -2631,7 +2631,7 @@ function renderCharacterCard(char) {
     : `<div class="char-portrait">${char.portrait || '👤'}</div>`;
 
   return `
-    <div class="char-card" onclick="showCharacterDetail('${char.id}')" title="${char.description}">
+    <div class="char-card" data-action="showCharacterDetail" data-arg="${char.id}" title="${char.description}">
       ${portraitHtml}
       <div class="char-info">
         <div class="char-name">${char.name}</div>
@@ -2673,7 +2673,7 @@ function showCharacterDetail(charId) {
           <div class="char-detail-name">${char.name}</div>
           <div class="char-detail-role">${getRoleLabel(char.role)} · ${char.age} лет · ❤️ ${char.health}/100</div>
         </div>
-        <button onclick="closeCharacterDetail()" class="close-btn">✕</button>
+        <button data-action="closeCharacterDetail" class="close-btn">✕</button>
       </div>
       <div class="char-detail-desc">${char.description}</div>
 
@@ -2847,7 +2847,7 @@ function showTurnSummary() {
     </div>
     <div class="ts-spark-label">Тренд казны (последние ходы):</div>
     <div class="ts-sparkline">${sparkRows}</div>
-    <button class="ts-close-btn" onclick="hideTurnSummary()">Закрыть ✕</button>
+    <button class="ts-close-btn" data-action="hideTurnSummary">Закрыть ✕</button>
   `;
 
   overlay.style.display = 'flex';
@@ -2913,8 +2913,8 @@ function renderCharInitiativesPanel() {
         </div>
         <div class="ci-message">${p.message}</div>
         <div class="ci-buttons">
-          <button class="ci-btn accept" onclick="respondToCharInitiative('${p.charId}', true)">✅ Принять</button>
-          <button class="ci-btn reject" onclick="respondToCharInitiative('${p.charId}', false)">❌ Отказать</button>
+          <button class="ci-btn accept" data-action="respondToCharInitiative" data-arg="${p.charId}|true">✅ Принять</button>
+          <button class="ci-btn reject" data-action="respondToCharInitiative" data-arg="${p.charId}|false">❌ Отказать</button>
         </div>
       </div>
     `).join('')}
