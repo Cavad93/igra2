@@ -284,3 +284,43 @@ engine/turn.js (processTurn — ~380 строк после разбиения)
 - `processAINations` + `_logAIStrategy` — сложный вопрос: тесно переплетён с `_aiPending` (Этап 50) и `applyFallbackDecision` (Этап 49). Вероятно останется в `turn.js` или переедет в отдельный модуль позже.
 - `_recordTurnSummary` — мелкая функция (~60 строк), можно оставить в turn.js или перенести в init.js.
 - `IS_PROCESSING_TURN` используется только в processTurn — остаётся в turn.js.
+
+---
+
+## После разбиения (этап 54)
+
+| Метрика | До | После | Δ |
+|---------|-----|-------|---|
+| `wc -l engine/turn.js` | 2575 | 634 | −1941 |
+| Файлов в `engine/` (новых) | 0 | 9 | +9 |
+
+### Размеры новых модулей
+
+| Файл | Строк |
+|------|-------|
+| `engine/date.js` | 249 |
+| `engine/characters_lifecycle.js` | 84 |
+| `engine/espionage.js` | 167 |
+| `engine/ai_scoring.js` | 186 |
+| `engine/ai_fallback.js` | 420 |
+| `engine/ai_worker.js` | 207 |
+| `engine/events.js` | 150 |
+| `engine/save.js` | 221 |
+| `engine/init.js` | 269 |
+| **Итого новых** | **1953** |
+
+### Содержимое `turn.js` после разбиения (634 строки)
+
+| Элемент | Тип |
+|---------|-----|
+| `IS_PROCESSING_TURN` | переменная (флаг) |
+| `_ensureNationDefaults(nation)` | функция (~20 строк) |
+| `processTurn()` | async функция (~340 строк) |
+| `processAINations()` | async функция (~185 строк) |
+| `_recordTurnSummary()` | функция (~60 строк) |
+
+### Верификация
+
+- Все 9 новых файлов проходят `node --check` ✅
+- `turn.js` содержит только 5 элементов верхнего уровня ✅
+- Обратная совместимость через `window.*` сохранена ✅
