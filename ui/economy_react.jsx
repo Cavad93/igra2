@@ -935,19 +935,19 @@ function _eBackdropClick(e) {
 let _eOpenCats = { 'Провизия': true, 'Промышленность': true, 'Роскошь': false };
 
 // ─── PUBLIC API ───────────────────────────────────────────────────────────
-function showEconomyOverlay() {
+export function showEconomyOverlay() {
   const el = document.getElementById('economy-overlay');
   if (!el) return;
   el.classList.remove('hidden');
   _eRender();
 }
 
-function hideEconomyOverlay() {
+export function hideEconomyOverlay() {
   const el = document.getElementById('economy-overlay');
   if (el) el.classList.add('hidden');
 }
 
-function refreshEconomyTab() {
+export function refreshEconomyTab() {
   const nation = typeof _econNation === 'function' ? _econNation() : null;
   const btn    = document.getElementById('eco-open-btn');
   if (btn) btn.classList.toggle('eco-btn-alert', !!(nation?.economy?._income_alert));

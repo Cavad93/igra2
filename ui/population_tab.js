@@ -1915,26 +1915,26 @@ export function renderPopulationOverlay() {
 // УПРАВЛЕНИЕ ОВЕРЛЕЕМ
 // ─────────────────────────────────────────────────────────────────────────
 
-function showPopulationOverlay() {
+export function showPopulationOverlay() {
   const overlay = document.getElementById('population-overlay');
   if (!overlay) return;
   overlay.classList.remove('hidden');
   renderPopulationOverlay();
 }
 
-function hidePopulationOverlay() {
+export function hidePopulationOverlay() {
   const overlay = document.getElementById('population-overlay');
   if (!overlay) return;
   overlay.classList.add('hidden');
 }
 
-function togglePopClass(classId) {
+export function togglePopClass(classId) {
   _popExpandedClass = (_popExpandedClass === classId) ? null : classId;
   renderPopulationOverlay();
 }
 
 // Перерисовка после каждого хода
-function refreshPopulationTab() {
+export function refreshPopulationTab() {
   const overlay = document.getElementById('population-overlay');
   if (!overlay || overlay.classList.contains('hidden')) return;
   renderPopulationOverlay();

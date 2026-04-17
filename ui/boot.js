@@ -108,7 +108,7 @@ import * as _events from '../engine/events.js';
 import * as _save from '../engine/save.js';
 import * as _turn from '../engine/turn.js';
 import * as _init from '../engine/init.js';
-import * as _tactBattle from '../engine/tactical_battle.js';
+// _tactBattle → lazy-loaded (этап 70)
 import * as _noise from '../engine/noise.js';
 
 // ═══════════════════════════════════════════════════════════
@@ -122,7 +122,7 @@ import * as _mapAiInd from './map_ai_indicators.js';
 import * as _turnSumCard from './turn_summary_card.js';
 import * as _regCompare from './region_compare.js';
 import * as _regBuild from './region_build_tab.js';
-import * as _diploTab from './diplomacy_tab.js';
+// _diploTab → lazy-loaded (этап 70)
 import * as _diploGraph from './diplo_graph.js';
 import * as _portSvg from './portrait_svg.js';
 import * as _portrait from './portrait.js';
@@ -135,17 +135,15 @@ import * as _splash from './splash.js';
 import * as _panels from './panels.js';
 import * as _aqueduct from './aqueduct.js';
 import * as _govTab from './government_tab.js';
-import * as _popTab from './population_tab.js';
+// _popTab, _ecoReact → lazy-loaded (этап 70)
 import * as _ecoTab from './economy_tab.js';
-import * as _ecoReact from './economy_react.jsx';
 import * as _treasury from './treasury-panel.js';
 import * as _siegePanel from './siege_panel.js';
 import * as _battleResult from './battle_result.js';
 import * as _peacePanel from './peace_panel.js';
 import * as _apikey from './apikey.js';
 import * as _input from './input.js';
-import * as _tactMap from './tactical_map.js';
-import * as _battlePix from './battle_map_pixi.js';
+// _tactMap, _battlePix → lazy-loaded (этап 70)
 import * as _ambient from './ambient.js';
 import * as _reactions from './reactions.js';
 import * as _diptych from './diptych.js';
@@ -188,18 +186,140 @@ _reg(
   _combat, _siege, _victory, _charsAi, _orders, _culture, _religion,
   _storage, _superOu, _achieve, _date, _charsLife, _espionage,
   _aiScoring, _aiFallback, _aiWorker, _events, _save, _turn, _init,
-  _tactBattle, _noise,
+  _noise,
   _map, _mapArmies, _mapEvents, _mapFeed, _mapAiInd,
-  _turnSumCard, _regCompare, _regBuild, _diploTab, _diploGraph,
+  _turnSumCard, _regCompare, _regBuild, _diploGraph,
   _portSvg, _portrait, _splashMos, _clepsydra, _turnProg,
   _statusBar, _topBar, _splash, _panels, _aqueduct, _govTab,
-  _popTab, _ecoTab, _ecoReact, _treasury, _siegePanel,
-  _battleResult, _peacePanel, _apikey, _input, _tactMap, _battlePix,
+  _ecoTab, _treasury, _siegePanel,
+  _battleResult, _peacePanel, _apikey, _input,
   _ambient, _reactions, _diptych,
   _chronicle, _aiPrompts, _aiParser, _claude, _diploAi, _utilAi,
   _cmdAi, _treatyInt, _anomaly, _stratLlm,
   _rng
 );
+
+
+// ═══════════════════════════════════════════════════════════
+//  LAZY-LOADED MODULES (этап 70)
+//  Тяжёлые UI-модули загружаются при первом обращении.
+//  После загрузки _reg() регистрирует все экспорты на window,
+//  заменяя обёртки на реальные функции.
+// ═══════════════════════════════════════════════════════════
+
+var _lazyCache = {};
+
+function _lazyReg(key, importFn) {
+  if (!_lazyCache[key]) {
+    _lazyCache[key] = importFn().then(function (m) { _reg(m); return m; });
+  }
+  return _lazyCache[key];
+}
+
+// ── Diplomacy Tab ────────────────────────────────────────
+function _lazyDiploTab() { return _lazyReg('diploTab', function () { return import('./diplomacy_tab.js'); }); }
+
+window.showDiplomacyOverlay = function (aiNationId) {
+  _lazyDiploTab().then(function (m) { m.showDiplomacyOverlay(aiNationId); });
+};
+window.hideDiplomacyOverlay = function () {
+  _lazyDiploTab().then(function (m) { m.hideDiplomacyOverlay(); });
+};
+window.dpSwitchTab = function (tab) {
+  _lazyDiploTab().then(function (m) { m.dpSwitchTab(tab); });
+};
+window.dpSelectNation = function (aiNationId) {
+  _lazyDiploTab().then(function (m) { m.dpSelectNation(aiNationId); });
+};
+
+// ── Population Tab ───────────────────────────────────────
+function _lazyPopTab() { return _lazyReg('popTab', function () { return import('./population_tab.js'); }); }
+
+window.showPopulationOverlay = function () {
+  _lazyPopTab().then(function (m) { m.showPopulationOverlay(); });
+};
+window.hidePopulationOverlay = function () {
+  _lazyPopTab().then(function (m) { m.hidePopulationOverlay(); });
+};
+window.togglePopClass = function (classId) {
+  _lazyPopTab().then(function (m) { m.togglePopClass(classId); });
+};
+window.refreshPopulationTab = function () {
+  _lazyPopTab().then(function (m) { m.refreshPopulationTab(); });
+};
+window.renderPopulationOverlay = function () {
+  _lazyPopTab().then(function (m) { m.renderPopulationOverlay(); });
+};
+window.setPopChartMode = function (mode) {
+  _lazyPopTab().then(function (m) { m.setPopChartMode(mode); });
+};
+window.buildGaugeSVG = function (val) { return ''; };
+
+// ── Economy React ────────────────────────────────────────
+function _lazyEcoReact() { return _lazyReg('ecoReact', function () { return import('./economy_react.jsx'); }); }
+
+window.showEconomyOverlay = function () {
+  _lazyEcoReact().then(function (m) { m.showEconomyOverlay(); });
+};
+window.hideEconomyOverlay = function () {
+  _lazyEcoReact().then(function (m) { m.hideEconomyOverlay(); });
+};
+window.refreshEconomyTab = function () {
+  if (_lazyCache['ecoReact']) {
+    _lazyCache['ecoReact'].then(function (m) { m.refreshEconomyTab(); });
+  }
+};
+window._eSetTab = function (t) {
+  _lazyEcoReact().then(function (m) { m._eSetTab(t); });
+};
+window._eToggleCat = function (cat) {
+  _lazyEcoReact().then(function (m) { m._eToggleCat(cat); });
+};
+window._eSelectProf = function (p) {
+  _lazyEcoReact().then(function (m) { m._eSelectProf(p); });
+};
+window._eSetMarketSub = function (s) {
+  _lazyEcoReact().then(function (m) { m._eSetMarketSub(s); });
+};
+window._eSetMarketProv = function (t) {
+  _lazyEcoReact().then(function (m) { m._eSetMarketProv(t); });
+};
+window._eSetMarketReg = function (id) {
+  _lazyEcoReact().then(function (m) { m._eSetMarketReg(id); });
+};
+window.renderPriceSparkline = function () { return ''; };
+
+// ── Tactical group ───────────────────────────────────────
+function _lazyTactical() {
+  if (!_lazyCache['tactical']) {
+    _lazyCache['tactical'] = Promise.all([
+      import('../engine/tactical_battle.js'),
+      import('./tactical_map.js'),
+      import('./battle_map_pixi.js')
+    ]).then(function (mods) {
+      _reg(mods[0]);
+      _reg(mods[1]);
+      _reg(mods[2]);
+      return mods;
+    });
+  }
+  return _lazyCache['tactical'];
+}
+
+window.openTacticalMap = function (atkArmy, defArmy, region) {
+  _lazyTactical().then(function (mods) { mods[1].openTacticalMap(atkArmy, defArmy, region); });
+};
+window.initBattleMap = function (containerId, width, height, opts) {
+  return _lazyTactical().then(function (mods) { return mods[2].initBattleMap(containerId, width, height, opts); });
+};
+window.destroyBattleMap = function () {
+  if (_lazyCache['tactical']) {
+    _lazyCache['tactical'].then(function (mods) { mods[2].destroyBattleMap(); });
+  }
+};
+window.initTacticalBattle = function (atkArmy, defArmy, region) {
+  return _lazyTactical().then(function (mods) { return mods[0].initTacticalBattle(atkArmy, defArmy, region); });
+};
 
 
 // ═══════════════════════════════════════════════════════════

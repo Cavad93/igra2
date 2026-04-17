@@ -2382,7 +2382,7 @@ function resumeBattleMap() {
  * @param {object} [opts]       — { resolution?, backgroundColor?, antialias? }
  * @returns {Promise<object>}   — the BattleMap singleton
  */
-async function initBattleMap(containerId, width, height, opts) {
+export async function initBattleMap(containerId, width, height, opts) {
   // Prevent double-init
   if (BattleMap && BattleMap.app) {
     console.warn('[BattleMap] already initialised — call destroyBattleMap() first');
@@ -2493,7 +2493,7 @@ async function initBattleMap(containerId, width, height, opts) {
  * the offscreen terrain cache so the next open() starts fresh.
  * Safe to call even if not initialised.
  */
-function destroyBattleMap() {
+export function destroyBattleMap() {
   if (!BattleMap || !BattleMap.app) return;
 
   // Снять мастер-тик, очистить handlers — чтобы не осталось ссылок на

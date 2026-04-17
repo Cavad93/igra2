@@ -1102,7 +1102,7 @@ function _stopRenderLoop() {
   }
 }
 
-function openTacticalMap(atkArmy, defArmy, region) {
+export function openTacticalMap(atkArmy, defArmy, region) {
   const overlay = document.getElementById('tactical-overlay');
   const canvas  = document.getElementById('tactical-canvas');
   overlay.classList.add('visible');
