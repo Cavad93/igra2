@@ -7878,8 +7878,8 @@
   <div id="compare-panel" class="hidden">
     <div class="cp-header">
       <span class="cp-title">⚖ Сравнение регионов</span>
-      <button type="button" class="cp-reset-btn" onclick="closeCompare()">Сбросить</button>
-      <button type="button" class="cp-close-btn" onclick="closeCompare()">✕</button>
+      <button type="button" class="cp-reset-btn" data-action="closeCompare">Сбросить</button>
+      <button type="button" class="cp-close-btn" data-action="closeCompare">✕</button>
     </div>
     <div class="cp-body">
       <div class="cp-col" id="cp-left"></div>
@@ -7899,7 +7899,7 @@
     <div class="tsc-alerts" id="tsc-alerts"></div>
     <div class="tsc-footer">
       <div class="tsc-progress"></div>
-      <button type="button" id="tsc-continue-btn" onclick="closeTurnSummaryCard()">Продолжить →</button>
+      <button type="button" id="tsc-continue-btn" data-action="closeTurnSummaryCard">Продолжить →</button>
     </div>
   </div>
 
@@ -7949,14 +7949,14 @@
       <div id="top-actions">
         <!-- Этап 13 — мини-индикатор AI (временно до Этапа 23–24) -->
         <div id="ai-dot" class="ai-dot ready" title="AI: готов"></div>
-        <button id="search-btn" onclick="toggleSearchPanel()" title="Поиск [/]">
+        <button id="search-btn" data-action="toggleSearchPanel" title="Поиск [/]">
           <span class="icon-wrap" data-icon="search"></span>
         </button>
-        <button id="settings-btn" onclick="toggleSettingsModal()" title="Настройки">
+        <button id="settings-btn" data-action="toggleSettingsModal" title="Настройки">
           <span class="icon-wrap" data-icon="settings"></span>
         </button>
         <!-- Этап 11 — Клепсидра (кнопка завершения хода) -->
-        <button id="end-turn-btn" onclick="processTurn()"
+        <button id="end-turn-btn" data-action="processTurn"
                 title="Следующий ход [Space]" aria-label="Следующий ход">
           <svg id="clepsydra-svg" viewBox="0 0 48 80"
                fill="none" stroke="currentColor"
@@ -8017,7 +8017,7 @@
       <!-- Четыре канала -->
       <div class="aqua-channel" id="aqua-gold"
            data-res="gold" data-dir="up"
-           title="Казна" onclick="onResourceBarClick('gold')">
+           title="Казна" data-action="onResourceBarClick" data-arg="gold">
         <canvas class="aqua-stream" width="8" height="60"></canvas>
         <div class="aqua-label">
           <span class="aqua-val" id="aq-gold-val">—</span>
@@ -8027,7 +8027,7 @@
 
       <div class="aqua-channel" id="aqua-troops"
            data-res="troops" data-dir="right"
-           title="Войска" onclick="onResourceBarClick('troops')">
+           title="Войска" data-action="onResourceBarClick" data-arg="troops">
         <canvas class="aqua-stream" width="60" height="8"></canvas>
         <div class="aqua-label">
           <span class="aqua-val" id="aq-troops-val">—</span>
@@ -8037,7 +8037,7 @@
 
       <div class="aqua-channel" id="aqua-food"
            data-res="food" data-dir="down"
-           title="Снабжение" onclick="onResourceBarClick('food')">
+           title="Снабжение" data-action="onResourceBarClick" data-arg="food">
         <canvas class="aqua-stream" width="8" height="60"></canvas>
         <div class="aqua-label">
           <span class="aqua-val" id="aq-food-val">—</span>
@@ -8047,7 +8047,7 @@
 
       <div class="aqua-channel" id="aqua-pop"
            data-res="pop" data-dir="left"
-           title="Население" onclick="onResourceBarClick('pop')">
+           title="Население" data-action="onResourceBarClick" data-arg="pop">
         <canvas class="aqua-stream" width="60" height="8"></canvas>
         <div class="aqua-label">
           <span class="aqua-val" id="aq-pop-val">—</span>
@@ -8061,7 +8061,7 @@
     <div id="diplo-graph-overlay" class="hidden">
       <div class="dg-header">
         <h2>Дипломатические отношения</h2>
-        <button type="button" onclick="closeDiploGraph()" title="Закрыть [Esc]">✕</button>
+        <button type="button" data-action="closeDiploGraph" title="Закрыть [Esc]">✕</button>
       </div>
       <svg id="diplo-graph-svg" xmlns="http://www.w3.org/2000/svg"></svg>
       <div class="dg-legend">
@@ -8093,7 +8093,7 @@
       <div id="left-panel" class="diptych closed">
 
         <!-- ТОРЕЦ (виден когда закрыто, 48px) -->
-        <div id="diptych-spine" onclick="toggleDiptych()" title="Открыть панель">
+        <div id="diptych-spine" data-action="toggleDiptych" title="Открыть панель">
           <!-- Золотая застёжка -->
           <div class="diptych-clasp">
             <svg viewBox="0 0 12 32" fill="none" stroke="currentColor"
@@ -8119,32 +8119,32 @@
           <!-- Заголовок с кнопкой закрытия -->
           <div id="diptych-header">
             <span id="diptych-title">Обзор</span>
-            <button onclick="toggleDiptych()" title="Свернуть" class="diptych-close">✕</button>
+            <button data-action="toggleDiptych" title="Свернуть" class="diptych-close">✕</button>
           </div>
 
           <!-- Навигация — горизонтальные метки (не вкладки) -->
           <div id="diptych-nav">
             <button class="dip-nav-btn active" data-tab="overview"
-                    onclick="switchDiptychTab('overview')">Обзор</button>
+                    data-action="switchDiptychTab" data-arg="overview">Обзор</button>
             <button class="dip-nav-btn" data-tab="army"
-                    onclick="switchDiptychTab('army')">Армия</button>
+                    data-action="switchDiptychTab" data-arg="army">Армия</button>
             <button class="dip-nav-btn" data-tab="economy"
-                    onclick="switchDiptychTab('economy')">Казна</button>
+                    data-action="switchDiptychTab" data-arg="economy">Казна</button>
             <button class="dip-nav-btn" data-tab="diplomacy"
-                    onclick="switchDiptychTab('diplomacy')">Дипломатия</button>
+                    data-action="switchDiptychTab" data-arg="diplomacy">Дипломатия</button>
             <button class="dip-nav-btn" data-tab="laws"
-                    onclick="switchDiptychTab('laws')">Законы</button>
+                    data-action="switchDiptychTab" data-arg="laws">Законы</button>
           </div>
 
           <!-- Legacy icon-bar — скрыт визуально, сохранён для совместимости -->
           <nav id="left-nav" aria-hidden="true">
-            <button class="lnav-btn active" data-tab="overview"  title="Обзор нации" onclick="renderLeftPanelTab('overview')"><span class="icon-wrap" data-icon="overview"></span><span class="lnav-badge" id="badge-overview"  style="display:none">0</span></button>
-            <button class="lnav-btn"        data-tab="army"      title="Армия"       onclick="renderLeftPanelTab('army')"><span class="icon-wrap" data-icon="army"></span><span class="lnav-badge" id="badge-army"      style="display:none">0</span></button>
-            <button class="lnav-btn"        data-tab="economy"   title="Экономика"   onclick="renderLeftPanelTab('economy')"><span class="icon-wrap" data-icon="economy"></span><span class="lnav-badge" id="badge-economy"   style="display:none">0</span></button>
-            <button class="lnav-btn"        data-tab="diplomacy" title="Дипломатия"  onclick="renderLeftPanelTab('diplomacy')"><span class="icon-wrap" data-icon="diplomacy"></span><span class="lnav-badge" id="badge-diplomacy" style="display:none">0</span></button>
-            <button class="lnav-btn"        data-tab="laws"      title="Законы"      onclick="renderLeftPanelTab('laws')"><span class="icon-wrap" data-icon="laws"></span><span class="lnav-badge" id="badge-laws"      style="display:none">0</span></button>
+            <button class="lnav-btn active" data-tab="overview"  title="Обзор нации" data-action="renderLeftPanelTab" data-arg="overview"><span class="icon-wrap" data-icon="overview"></span><span class="lnav-badge" id="badge-overview"  style="display:none">0</span></button>
+            <button class="lnav-btn"        data-tab="army"      title="Армия"       data-action="renderLeftPanelTab" data-arg="army"><span class="icon-wrap" data-icon="army"></span><span class="lnav-badge" id="badge-army"      style="display:none">0</span></button>
+            <button class="lnav-btn"        data-tab="economy"   title="Экономика"   data-action="renderLeftPanelTab" data-arg="economy"><span class="icon-wrap" data-icon="economy"></span><span class="lnav-badge" id="badge-economy"   style="display:none">0</span></button>
+            <button class="lnav-btn"        data-tab="diplomacy" title="Дипломатия"  data-action="renderLeftPanelTab" data-arg="diplomacy"><span class="icon-wrap" data-icon="diplomacy"></span><span class="lnav-badge" id="badge-diplomacy" style="display:none">0</span></button>
+            <button class="lnav-btn"        data-tab="laws"      title="Законы"      data-action="renderLeftPanelTab" data-arg="laws"><span class="icon-wrap" data-icon="laws"></span><span class="lnav-badge" id="badge-laws"      style="display:none">0</span></button>
             <!-- Шаг 49 (arma.md): граф дипломатических отношений -->
-            <button class="lnav-btn"        id="diplo-graph-btn" data-tab="diplo-graph" title="Граф дипломатии" onclick="toggleDiploGraph()"><span class="icon-wrap" data-icon="diplo_graph"></span></button>
+            <button class="lnav-btn"        id="diplo-graph-btn" data-tab="diplo-graph" title="Граф дипломатии" data-action="toggleDiploGraph"><span class="icon-wrap" data-icon="diplo_graph"></span></button>
           </nav>
 
           <!-- Прокручиваемый контент (id сохранён для panels.js) -->
@@ -8167,10 +8167,10 @@
           <!-- Шаг 29 (arma): панель режимов карты — скрыта визуально с этапа 19 (uisuper),
                оставлена в DOM для совместимости с setMapMode/onZoomChange. -->
           <div id="map-mode-bar" aria-hidden="true">
-            <button class="mm-btn active" data-mode="political" title="Политический [1]" onclick="setMapMode('political')"><span class="icon-wrap" data-icon="overview"></span></button>
-            <button class="mm-btn"        data-mode="economy"   title="Экономика [2]"    onclick="setMapMode('economy')"><span class="icon-wrap" data-icon="economy"></span></button>
-            <button class="mm-btn"        data-mode="military"  title="Военный [3]"       onclick="setMapMode('military')"><span class="icon-wrap" data-icon="army"></span></button>
-            <button class="mm-btn"        data-mode="population" title="Население [4]"    onclick="setMapMode('population')"><span class="icon-wrap" data-icon="population"></span></button>
+            <button class="mm-btn active" data-mode="political" title="Политический [1]" data-action="setMapMode" data-arg="political"><span class="icon-wrap" data-icon="overview"></span></button>
+            <button class="mm-btn"        data-mode="economy"   title="Экономика [2]"    data-action="setMapMode" data-arg="economy"><span class="icon-wrap" data-icon="economy"></span></button>
+            <button class="mm-btn"        data-mode="military"  title="Военный [3]"       data-action="setMapMode" data-arg="military"><span class="icon-wrap" data-icon="army"></span></button>
+            <button class="mm-btn"        data-mode="population" title="Население [4]"    data-action="setMapMode" data-arg="population"><span class="icon-wrap" data-icon="population"></span></button>
           </div>
 
           <!-- ЭТАП 19/20 (uisuper.md) + hot-fix #7: Роза ветров = селектор режима карты.
@@ -8190,7 +8190,7 @@
               <path id="wr-political"
                     d="M0,0 L-10,-18 L0,-42 L10,-18 Z"
                     class="wr-petal active" data-mode="political"
-                    onclick="setMapMode('political')"
+                    data-action="setMapMode" data-arg="political"
                     role="button" tabindex="0"
                     aria-label="Политический режим [1]">
                 <title>Политический режим [1] — цвета фракций</title>
@@ -8201,7 +8201,7 @@
               <path id="wr-economy"
                     d="M0,0 L18,-10 L42,0 L18,10 Z"
                     class="wr-petal" data-mode="economy"
-                    onclick="setMapMode('economy')"
+                    data-action="setMapMode" data-arg="economy"
                     role="button" tabindex="0"
                     aria-label="Режим экономики [2]">
                 <title>Режим экономики [2] — богатство регионов</title>
@@ -8212,7 +8212,7 @@
               <path id="wr-military"
                     d="M0,0 L10,18 L0,42 L-10,18 Z"
                     class="wr-petal" data-mode="military"
-                    onclick="setMapMode('military')"
+                    data-action="setMapMode" data-arg="military"
                     role="button" tabindex="0"
                     aria-label="Военный режим [3]">
                 <title>Военный режим [3] — дислокация армий</title>
@@ -8223,7 +8223,7 @@
               <path id="wr-population"
                     d="M0,0 L-18,10 L-42,0 L-18,-10 Z"
                     class="wr-petal" data-mode="population"
-                    onclick="setMapMode('population')"
+                    data-action="setMapMode" data-arg="population"
                     role="button" tabindex="0"
                     aria-label="Режим населения [4]">
                 <title>Режим населения [4] — плотность населения</title>
@@ -8254,7 +8254,7 @@
             <span>🏰</span>
             <span class="sp-header-title">Осада: <span id="sp-region-name">—</span></span>
             <span class="sp-header-sub">ход <span id="sp-turns">0</span> · осталось: <span id="sp-eta">?</span></span>
-            <button class="sp-close" onclick="closeSiegePanel()">✕</button>
+            <button class="sp-close" data-action="closeSiegePanel">✕</button>
           </div>
 
           <div class="sp-anim-section">
@@ -8318,8 +8318,8 @@
           <!-- Кнопки -->
           <div class="sp-footer">
             <button class="sp-btn" id="sp-storm-btn"
-                    onclick="siegePanelStorm()">⚔️ Штурм!</button>
-            <button class="sp-btn" onclick="siegePanelLift()">🏳 Снять осаду</button>
+                    data-action="siegePanelStorm">⚔️ Штурм!</button>
+            <button class="sp-btn" data-action="siegePanelLift">🏳 Снять осаду</button>
           </div>
         </div>
         <!-- /ПАНЕЛЬ ОСАДЫ -->
@@ -8331,7 +8331,7 @@
       <!-- Правая панель: двор -->
       <div id="right-panel">
         <div class="panel-title"><span class="icon-wrap" data-icon="court"></span> Двор Агафокла</div>
-        <button id="generate-chars-btn" onclick="handleGenerateChars()">
+        <button id="generate-chars-btn" data-action="handleGenerateChars">
           <span class="icon-wrap" data-icon="ai"></span> Созвать советников (AI)
         </button>
 
@@ -8350,7 +8350,7 @@
       <!-- Лог событий — uisuper Этап 25: «Вощёная табличка» -->
       <div id="event-log" class="collapsed" role="log" aria-label="Хроники">
         <!-- Полоска (strip) — видна в свёрнутом состоянии, играет роль #log-collapsed -->
-        <div id="log-strip" onclick="toggleLog()">
+        <div id="log-strip" data-action="toggleLog">
           <!-- Нотификации-точки по категориям -->
           <div id="log-dots">
             <span class="log-dot" data-filter="danger"    title="Опасность"></span>
@@ -8360,7 +8360,7 @@
           <!-- Последняя запись (одна строка, стиль манускрипта) -->
           <span id="log-last-entry">—</span>
           <!-- Кнопка раскрытия -->
-          <button id="log-expand-btn" onclick="toggleLog()" tabindex="-1">▲ Хроники</button>
+          <button id="log-expand-btn" data-action="toggleLog" tabindex="-1">▲ Хроники</button>
         </div>
 
         <!-- Тело таблички — раскрывается снизу (expanded) -->
@@ -8368,15 +8368,15 @@
           <div class="log-title">
             <span class="icon-wrap" data-icon="chronicle"></span> Хроники
             <div class="log-filters">
-              <button class="log-filter-btn active" data-filter="all"       onclick="setLogFilter('all')">Все</button>
-              <button class="log-filter-btn"        data-filter="danger"    onclick="setLogFilter('danger')"><span class="icon-wrap" data-icon="warning"></span></button>
-              <button class="log-filter-btn"        data-filter="economy"   onclick="setLogFilter('economy')"><span class="icon-wrap" data-icon="gold"></span></button>
-              <button class="log-filter-btn"        data-filter="character" onclick="setLogFilter('character')"><span class="icon-wrap" data-icon="population"></span></button>
-              <button class="log-filter-btn"        data-filter="law"       onclick="setLogFilter('law')"><span class="icon-wrap" data-icon="laws"></span></button>
+              <button class="log-filter-btn active" data-filter="all"       data-action="setLogFilter" data-arg="all">Все</button>
+              <button class="log-filter-btn"        data-filter="danger"    data-action="setLogFilter" data-arg="danger"><span class="icon-wrap" data-icon="warning"></span></button>
+              <button class="log-filter-btn"        data-filter="economy"   data-action="setLogFilter" data-arg="economy"><span class="icon-wrap" data-icon="gold"></span></button>
+              <button class="log-filter-btn"        data-filter="character" data-action="setLogFilter" data-arg="character"><span class="icon-wrap" data-icon="population"></span></button>
+              <button class="log-filter-btn"        data-filter="law"       data-action="setLogFilter" data-arg="law"><span class="icon-wrap" data-icon="laws"></span></button>
             </div>
-            <button class="btn-icon" onclick="showTurnSummary()" title="Итоги хода" style="margin-left:auto"><span class="icon-wrap" data-icon="orders"></span></button>
+            <button class="btn-icon" data-action="showTurnSummary" title="Итоги хода" style="margin-left:auto"><span class="icon-wrap" data-icon="orders"></span></button>
             <!-- кнопка свёртывания таблички -->
-            <button class="log-collapse-btn" onclick="toggleLog()"
+            <button class="log-collapse-btn" data-action="toggleLog"
                     title="Свернуть хроники" aria-label="Свернуть">▼</button>
           </div>
           <div id="log-entries"></div>
@@ -8387,7 +8387,7 @@
       <div id="input-row">
 
         <!-- Мини-счётчик приказов (слева от поля) -->
-        <button id="orders-mini-btn" onclick="toggleOrdersMini()"
+        <button id="orders-mini-btn" data-action="toggleOrdersMini"
                 title="Активные приказы" class="orders-counter">
           <span class="icon-wrap" data-icon="orders"></span>
           <span id="orders-mini-count">0</span>
@@ -8424,8 +8424,8 @@
         <div class="op-hdr">
           <span class="icon-wrap" data-icon="orders"></span> Приказы и делегирование
           <span style="display:flex;gap:6px;align-items:center">
-            <button class="op-new-btn" onclick="showMpOrderForm()">+ Новый приказ</button>
-            <button class="op-new-btn" onclick="toggleOrdersMini()" title="Свернуть">▼</button>
+            <button class="op-new-btn" data-action="showMpOrderForm">+ Новый приказ</button>
+            <button class="op-new-btn" data-action="toggleOrdersMini" title="Свернуть">▼</button>
           </span>
         </div>
         <!-- Форма выдачи приказа (скрыта по умолчанию) -->
@@ -8459,7 +8459,7 @@
         </div>
         <div id="messenger-scroll">
           <div id="messenger-text"></div>
-          <button id="messenger-close" onclick="dismissMessenger()">Принято</button>
+          <button id="messenger-close" data-action="dismissMessenger">Принято</button>
         </div>
       </div>
 
@@ -8482,14 +8482,14 @@
   <!-- ═══════════════════════════
        ОВЕРЛЕИ
   ═══════════════════════════ -->
-  <div id="char-overlay" onclick="if(event.target===this)closeCharacterDetail()"></div>
+  <div id="char-overlay" data-action-self="closeCharacterDetail"></div>
   <div id="voting-overlay"></div>
 
   <!-- Шаг 43 — модал назначения на должность -->
-  <div id="assign-modal-overlay" onclick="if(event.target===this)closeAssignModal()"></div>
+  <div id="assign-modal-overlay" data-action-self="closeAssignModal"></div>
 
   <!-- Выбор реакции на случайное событие -->
-  <div id="event-choice-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div id="event-choice-overlay" style="display:none" data-action-self="closeEventChoiceOverlay">
     <div class="ec-box">
       <div class="ec-title"></div>
       <div class="ec-description"></div>
@@ -8498,7 +8498,7 @@
   </div>
 
   <!-- Итоги хода -->
-  <div id="turn-summary-overlay" style="display:none" onclick="if(event.target===this)hideTurnSummary()">
+  <div id="turn-summary-overlay" style="display:none" data-action-self="hideTurnSummary">
     <div class="ts-box" id="ts-content"></div>
   </div>
 
@@ -8509,7 +8509,7 @@
       <div class="eg-title"></div>
       <div class="eg-desc"></div>
       <div class="eg-turn"></div>
-      <button class="eg-restart-btn" onclick="location.reload()">🔄 Начать заново</button>
+      <button class="eg-restart-btn" data-action="reloadPage">🔄 Начать заново</button>
     </div>
   </div>
 
@@ -8517,11 +8517,11 @@
   <div id="char-initiatives-panel" style="display:none"></div>
 
   <!-- Оверлей правительства -->
-  <div id="gov-overlay" onclick="if(event.target===this)hideGovernmentOverlay()" style="display:none">
+  <div id="gov-overlay" data-action-self="hideGovernmentOverlay" style="display:none">
     <div class="gov-panel">
       <div class="gov-panel-header">
         <span class="gov-panel-title">🏛 Форма правления</span>
-        <button class="gov-close-btn" onclick="hideGovernmentOverlay()">✕</button>
+        <button class="gov-close-btn" data-action="hideGovernmentOverlay">✕</button>
       </div>
       <div id="gov-content" class="gov-panel-body">
         <!-- заполняется renderGovernmentOverlay() -->
@@ -8530,36 +8530,36 @@
   </div>
 
   <!-- Модал клятв -->
-  <div id="vows-modal" onclick="if(event.target===this)hideVowsModal()"
+  <div id="vows-modal" data-action-self="hideVowsModal"
        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1100;align-items:center;justify-content:center">
     <div class="gov-panel" style="max-width:520px">
       <div class="gov-panel-header">
         <span class="gov-panel-title">⚔️ Клятвы правителя</span>
-        <button class="gov-close-btn" onclick="hideVowsModal()">✕</button>
+        <button class="gov-close-btn" data-action="hideVowsModal">✕</button>
       </div>
       <div id="vows-modal-content" class="gov-panel-body" style="padding:16px"></div>
     </div>
   </div>
 
   <!-- Модал летописи -->
-  <div id="chronicle-modal" onclick="if(event.target===this)hideChronicleModal()"
+  <div id="chronicle-modal" data-action-self="hideChronicleModal"
        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1100;align-items:center;justify-content:center">
     <div class="gov-panel" style="max-width:640px">
       <div class="gov-panel-header">
         <span class="gov-panel-title">📖 Летопись правления</span>
-        <button class="gov-close-btn" onclick="hideChronicleModal()">✕</button>
+        <button class="gov-close-btn" data-action="hideChronicleModal">✕</button>
       </div>
       <div id="chronicle-modal-content" class="gov-panel-body" style="padding:16px;overflow-y:auto;max-height:60vh"></div>
     </div>
   </div>
 
   <!-- Модал завещания (Сессия 10) -->
-  <div id="testament-modal" onclick="if(event.target===this)hideTestamentModal()"
+  <div id="testament-modal" data-action-self="hideTestamentModal"
        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1100;align-items:center;justify-content:center">
     <div class="gov-panel" style="max-width:540px">
       <div class="gov-panel-header">
         <span class="gov-panel-title">📜 Завещание наследнику</span>
-        <button class="gov-close-btn" onclick="hideTestamentModal()">✕</button>
+        <button class="gov-close-btn" data-action="hideTestamentModal">✕</button>
       </div>
       <div id="testament-modal-content" class="gov-panel-body" style="padding:16px"></div>
     </div>
@@ -8581,24 +8581,24 @@
   <div id="dp-chat-modal" class="dp-cm-root hidden"></div>
 
   <!-- Оверлей: результат битвы (анимация) -->
-  <div id="battle-result-overlay" onclick="closeBattleResult()"></div>
+  <div id="battle-result-overlay" data-action="closeBattleResult"></div>
 
   <!-- Модал: мирные переговоры после победы -->
-  <div id="peace-offer-overlay" onclick="if(event.target===this)closePeacePanel()">
+  <div id="peace-offer-overlay" data-action-self="closePeacePanel">
     <div id="peace-offer-box"></div>
   </div>
 
   <!-- Шаг 22: Модал настроек (⚙) — API ключи и прочее -->
-  <div id="settings-modal" onclick="if(event.target===this)closeSettingsModal()">
+  <div id="settings-modal" data-action-self="closeSettingsModal">
     <div class="sm-box">
       <div class="sm-header">
         <span class="sm-title">⚙ Настройки</span>
-        <button class="sm-close" onclick="closeSettingsModal()" title="Закрыть">✕</button>
+        <button class="sm-close" data-action="closeSettingsModal" title="Закрыть">✕</button>
       </div>
       <div class="sm-tabs">
-        <button class="sm-tab active" data-sm-tab="keys" onclick="switchSettingsTab('keys')">🔑 API ключи</button>
-        <button class="sm-tab" data-sm-tab="hotkeys" onclick="switchSettingsTab('hotkeys')">⌨ Клавиши</button>
-        <button class="sm-tab" data-sm-tab="ui" onclick="switchSettingsTab('ui')">🎨 Интерфейс</button>
+        <button class="sm-tab active" data-sm-tab="keys" data-action="switchSettingsTab" data-arg="keys">🔑 API ключи</button>
+        <button class="sm-tab" data-sm-tab="hotkeys" data-action="switchSettingsTab" data-arg="hotkeys">⌨ Клавиши</button>
+        <button class="sm-tab" data-sm-tab="ui" data-action="switchSettingsTab" data-arg="ui">🎨 Интерфейс</button>
       </div>
       <div class="sm-body">
         <!-- Вкладка: API ключи -->
@@ -8624,7 +8624,7 @@
               🔗 <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys
             </div>
 
-            <button class="api-key-btn" style="width:100%;padding:6px;" onclick="saveInlineAPIKeys()">💾 Сохранить ключи</button>
+            <button class="api-key-btn" style="width:100%;padding:6px;" data-action="saveInlineAPIKeys">💾 Сохранить ключи</button>
             <div id="inline-key-status" style="font-size:10px;margin-top:4px;color:var(--text-dim);text-align:center"></div>
           </div>
         </div>
@@ -8674,7 +8674,7 @@
         </div>
         <input type="password" id="akm-groq-input" class="akm-input"
                placeholder="gsk_..."
-               onkeydown="_akmKeyDown(event)" autocomplete="off" spellcheck="false">
+               data-keydown="_akmKeyDown" autocomplete="off" spellcheck="false">
         <div class="akm-key-hint">
           Получить: <a href="https://console.groq.com" target="_blank">console.groq.com</a> → API Keys
         </div>
@@ -8688,14 +8688,14 @@
         </div>
         <input type="password" id="akm-input" class="akm-input"
                placeholder="sk-ant-api03-..."
-               onkeydown="_akmKeyDown(event)" autocomplete="off" spellcheck="false">
+               data-keydown="_akmKeyDown" autocomplete="off" spellcheck="false">
         <div class="akm-key-hint">
           Получить: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>
         </div>
       </div>
 
       <div id="akm-error" class="akm-error"></div>
-      <button id="akm-btn" class="akm-btn" onclick="submitAPIKey()">
+      <button id="akm-btn" class="akm-btn" data-action="submitAPIKey">
         Сохранить и продолжить
       </button>
     </div>

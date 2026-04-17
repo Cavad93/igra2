@@ -9,6 +9,45 @@
   'use strict';
 
   // ──────────────────────────────────────────
+  // ДЕЛЕГИРОВАНИЕ СОБЫТИЙ (uisuper этап 56)
+  // ──────────────────────────────────────────
+
+  // Хелперы для специальных inline-действий, не имеющих глобальной функции
+  window.reloadPage = function() { location.reload(); };
+  window.closeEventChoiceOverlay = function() {
+    var el = document.getElementById('event-choice-overlay');
+    if (el) el.style.display = 'none';
+  };
+
+  // data-action="fn" [data-arg="..."]
+  document.addEventListener('click', function(e) {
+    var el = e.target.closest('[data-action]');
+    if (!el) return;
+    var fn = window[el.dataset.action];
+    if (typeof fn === 'function') {
+      var arg = el.dataset.arg;
+      arg !== undefined ? fn(arg) : fn();
+    }
+  });
+
+  // data-action-self="fn" — срабатывает только при клике по самому элементу
+  document.addEventListener('click', function(e) {
+    var el = e.target;
+    if (el.dataset && el.dataset.actionSelf && e.target === el) {
+      var fn = window[el.dataset.actionSelf];
+      if (typeof fn === 'function') fn();
+    }
+  });
+
+  // data-keydown="fn"
+  document.addEventListener('keydown', function(e) {
+    var el = e.target.closest('[data-keydown]');
+    if (!el) return;
+    var fn = window[el.dataset.keydown];
+    if (typeof fn === 'function') fn(e);
+  });
+
+  // ──────────────────────────────────────────
   // СТАРТ ИГРЫ
   // ──────────────────────────────────────────
 
