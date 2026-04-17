@@ -324,3 +324,48 @@ engine/turn.js (processTurn — ~380 строк после разбиения)
 - Все 9 новых файлов проходят `node --check` ✅
 - `turn.js` содержит только 5 элементов верхнего уровня ✅
 - Обратная совместимость через `window.*` сохранена ✅
+
+---
+
+## Финальный аудит (этап 71)
+
+### Актуальные метрики
+
+| Метрика | Ожидание | Факт | Статус |
+|---------|----------|------|--------|
+| `wc -l engine/turn.js` | ~600 | 642 | ✅ |
+| `wc -l index.html` | < 2000 | 8688 (CSS inline — Часть IV) | ⏳ |
+| `<script` тегов в HTML | 3 | 3 | ✅ |
+| Inline onclick | 0 | 0 | ✅ |
+| `window.*` экспорты (реальные) | ≤ 5 | 4 | ✅ |
+| Vite build | проходит | ✅ (9.75s, 136 модулей) | ✅ |
+
+### Бандл (Vite prod build)
+
+| Чанк | Размер |
+|------|--------|
+| index.js (main) | 13 048 kB |
+| index.css | 62.78 kB |
+| diplomacy.js (lazy) | 52.48 kB |
+| population.js (lazy) | 49.71 kB |
+| economy_ui.js (lazy) | 40.60 kB |
+| tactical.js (lazy) | 33.01 kB |
+| rolldown-runtime.js | 0.99 kB |
+
+### Актуальные размеры engine-модулей
+
+| Файл | Строк |
+|------|-------|
+| `engine/turn.js` | 642 |
+| `engine/date.js` | 239 |
+| `engine/init.js` | 273 |
+| `engine/ai_fallback.js` | 425 |
+| `engine/save.js` | 223 |
+| `engine/ai_worker.js` | 207 |
+| `engine/ai_scoring.js` | 183 |
+| `engine/espionage.js` | 167 |
+| `engine/events.js` | 152 |
+| `engine/characters_lifecycle.js` | 83 |
+
+Примечание: `index.html` (8688 строк) будет уменьшен до < 2000 строк
+в Части IV (этапы 72–80) путём выноса inline CSS в отдельные файлы.

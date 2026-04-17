@@ -556,3 +556,29 @@ ui/boot.js        (точка входа, монтирует всё прилож
 | ui/map.js | CURRENT_MAP_MODE | Cross-module state (top_bar.js читает) |
 | ui/portrait.js | __renderPortraitFallback | Canvas-iframe коммуникация |
 | engine/combat.js | _onTacticalBattleEnd | Cross-module callback (tactical_map.js вызывает) |
+
+---
+
+## Финальный аудит Части III (Этап 71)
+
+### Сводка Vite build
+
+| Метрика | Значение |
+|---------|----------|
+| Vite build | ✅ проходит (v8.0.8, 136 модулей, 9.75s) |
+| Code-splitting | 4 lazy-чанка (diplomacy, economy, population, tactical) |
+| Source maps | ✅ генерируются |
+
+### Итоговые метрики Части III
+
+| Метрика | До (начало) | После (этап 71) |
+|---------|-------------|-----------------|
+| `engine/turn.js` строк | 2575 | 642 |
+| `<script>` тегов | 117 | 3 |
+| Inline onclick | 288 | 0 |
+| `window.*` экспортов | 267 | 4 |
+| Build-step | нет | Vite (dev + prod) |
+| Модульная система | `window.*` | ES modules |
+| Единая точка входа | нет | `ui/boot.js` |
+
+Оставшаяся задача: `index.html` = 8688 строк (Часть IV, этапы 72–80 → цель < 2000).
