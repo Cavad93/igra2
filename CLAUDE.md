@@ -97,6 +97,7 @@ CSS был монолитом в `<style>` внутри [index.html](index.html)
 - **Новая логика хода** идёт в соответствующий `engine/*.js` и вызывается из `processTurn()` в порядке, не нарушающем существующие инварианты (`_ensureNationDefaults` → производство → рынок → дипломатия → военные → события → сохранение).
 - **Не коммитить** `models/`, `*.gguf`, `llm_server.*`, `assets/portraits/**/*.jpg`, `assets/textures/*.jpg`, `dist/`, `data/backups/` — они в [.gitignore](.gitignore).
 - **API-ключи** хранятся только на клиенте (шифрованные в localStorage через [ui/apikey.js](ui/apikey.js)). Не добавлять значения в [config.js](config.js).
+- **GitHub PAT для push** лежит локально в `.env` (в [.gitignore](.gitignore), не коммитится). Переменная `GITHUB_TOKEN` + `GITHUB_REPO`. Использовать так: `source .env && git push "https://${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git" <branch>`. Никогда не выводить значение токена в чат и не писать в коммиты/PR.
 
 ## Ключевые документы
 

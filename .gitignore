@@ -3,6 +3,11 @@ package-lock.json
 dist/
 data/backups/
 
+# Секреты (GitHub PAT и т.п.) — никогда не коммитить
+.env
+.env.*
+!.env.example
+
 # macOS
 .DS_Store
 **/.DS_Store
