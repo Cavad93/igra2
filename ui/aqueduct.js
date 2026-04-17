@@ -16,11 +16,13 @@
 // resource bar is refreshed.
 // ─────────────────────────────────────────────────────────────────
 
+  // Все каналы в топ-баре горизонтальные слева-направо (раньше виджет был
+  // радиальным и каждый ресурс имел своё направление).
   const RESOURCES = [
-    { id: 'gold',   dir: 'up'    },
+    { id: 'gold',   dir: 'right' },
     { id: 'troops', dir: 'right' },
-    { id: 'food',   dir: 'down'  },
-    { id: 'pop',    dir: 'left'  },
+    { id: 'food',   dir: 'right' },
+    { id: 'pop',    dir: 'right' },
   ];
 
   // Maximum live particles per channel — keeps mobile performance safe.

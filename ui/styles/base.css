@@ -135,68 +135,15 @@ html, body {
 }
 
 /* ══════════════════════════════════════════════════
-   АКВИДУКТ РЕСУРСОВ (этап 15)
+   АКВИДУКТ РЕСУРСОВ — общие стили (этап 15).
+   Сам виджет позиционируется в top.css внутри #top-bar-center;
+   здесь только то, что относится к внутренним элементам чипов
+   (поток, цифра, дельта) — чтобы соседние CSS-модули могли
+   подхватывать классы без дубликатов.
 ══════════════════════════════════════════════════ */
-#aqua-widget {
-  position: fixed;
-  left: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 15;
-  width: 140px;
-  height: 140px;
-  pointer-events: none;
-}
-
-#aqua-center {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 36px; height: 36px;
-  background: var(--bg-panel);
-  border: 1px solid var(--border-gold);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--gold);
-  z-index: 2;
-}
-
-.aqua-channel {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  pointer-events: all;
-}
-
-#aqua-gold   { top: 0; left: 50%; transform: translateX(-50%);
-               flex-direction: column-reverse; }
-#aqua-troops { right: 0; top: 50%; transform: translateY(-50%);
-               flex-direction: row; }
-#aqua-food   { bottom: 0; left: 50%; transform: translateX(-50%);
-               flex-direction: column; }
-#aqua-pop    { left: 0; top: 50%; transform: translateY(-50%);
-               flex-direction: row-reverse; }
-
 .aqua-stream {
   display: block;
   opacity: 0.7;
-}
-
-.aqua-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-family: var(--font-data);
-  font-size: var(--text-xs);
-  opacity: 0;
-  transition: opacity 0.2s;
-  white-space: nowrap;
-  pointer-events: none;
-}
-.aqua-channel:hover .aqua-label {
-  opacity: 1;
 }
 
 .aqua-val {

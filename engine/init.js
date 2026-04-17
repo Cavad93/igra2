@@ -13,15 +13,23 @@ export async function initGame() {
     JSON.stringify(INITIAL_CHARACTERS_SYRACUSE)
   );
 
-  // Загружаем сенаторов Рима
-  GAME_STATE.nations.rome.characters = JSON.parse(JSON.stringify(INITIAL_SENATORS_ROME));
-  // Загружаем акторов остальных наций
-  GAME_STATE.nations.carthage.characters = JSON.parse(JSON.stringify(INITIAL_COUNCIL_CARTHAGE));
+  // Загружаем персонажей крупных наций (при их наличии в текущем пресете —
+  // Pax Historia 304 BC включает не все страны первоначального датасета)
+  if (GAME_STATE.nations.rome) {
+    GAME_STATE.nations.rome.characters = JSON.parse(JSON.stringify(INITIAL_SENATORS_ROME));
+  }
+  if (GAME_STATE.nations.carthage) {
+    GAME_STATE.nations.carthage.characters = JSON.parse(JSON.stringify(INITIAL_COUNCIL_CARTHAGE));
+  }
   if (GAME_STATE.nations.ptolemaic_kingdom) {
     GAME_STATE.nations.ptolemaic_kingdom.characters = JSON.parse(JSON.stringify(INITIAL_COURT_EGYPT));
   }
-  GAME_STATE.nations.macedon.characters  = JSON.parse(JSON.stringify(INITIAL_HETAIROI_MACEDON));
-  GAME_STATE.nations.numidia.characters  = JSON.parse(JSON.stringify(INITIAL_ELDERS_NUMIDIA));
+  if (GAME_STATE.nations.macedon) {
+    GAME_STATE.nations.macedon.characters = JSON.parse(JSON.stringify(INITIAL_HETAIROI_MACEDON));
+  }
+  if (GAME_STATE.nations.numidia) {
+    GAME_STATE.nations.numidia.characters = JSON.parse(JSON.stringify(INITIAL_ELDERS_NUMIDIA));
+  }
 
   // Инициализируем провинции (до рендера!)
   if (typeof initProvinces === 'function') initProvinces();

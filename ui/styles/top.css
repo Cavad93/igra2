@@ -57,9 +57,65 @@
   opacity: 0.5;
 }
 
-/* ── ЦЕНТР ── */
+/* ── ЦЕНТР: горизонтальная полоса ресурсов (Аквидукт) ── */
 #top-bar-center {
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+#aqua-widget {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  pointer-events: auto;
+}
+
+#aqua-widget .aqua-channel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+#aqua-widget .aqua-channel:hover {
+  background: rgba(201, 169, 97, 0.12);
+}
+
+#aqua-widget .aqua-icon {
+  font-size: var(--text-md);
+  line-height: 1;
+  color: var(--gold);
+}
+
+#aqua-widget .aqua-stream {
+  /* Тонкая канавка между иконкой и числом — поток частиц оставлен
+     как визуальный отголосок прежнего «аквидукта». */
+  width: 40px;
+  height: 8px;
+}
+
+#aqua-widget .aqua-label {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 4px;
+  font-family: var(--font-data);
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  /* На узких экранах сжимаем — сначала убираем канавки, потом дельты */
+  #aqua-widget { gap: 6px; }
+  #aqua-widget .aqua-stream { display: none; }
+  #aqua-widget .aqua-channel { padding: 4px 6px; }
+}
+@media (max-width: 720px) {
+  #aqua-widget .aqua-delta { display: none; }
 }
 
 /* ── ПРАВЫЕ ДЕЙСТВИЯ ── */
@@ -105,17 +161,11 @@
   text-shadow: 0 0 12px rgba(232,201,122,0.4);
 }
 
-/* Этап 11 — Клепсидра (кнопка конца хода)
-   uisuper hot-fix #5: раньше кнопка была крошечной (40×66) и
-   рисовалась только outline-ами --bronze (#8c6e4f) — на тёмном
-   фоне она была практически неразличима. Увеличиваем размер,
-   даём полупрозрачную подложку, золотой drop-shadow. */
+/* Этап 11 — Клепсидра (кнопка конца хода).
+   Раньше была position:fixed и накрывала #settings-btn. Теперь
+   живёт в потоке #top-actions как его последний элемент. */
 #end-turn-btn {
-  position: fixed;
-  top: 12px;
-  right: 16px;
-  z-index: 25;
-
+  position: relative;
   background: radial-gradient(
     ellipse at center,
     rgba(60,40,12,0.7) 30%,
@@ -124,17 +174,18 @@
   );
   border: 1px solid var(--gold-bright);
   cursor: pointer;
-  padding: 6px 8px;
+  padding: 4px 6px;
   border-radius: 6px;
   transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
   filter: drop-shadow(0 0 6px rgba(232,201,122,0.45));
   box-shadow: 0 0 12px rgba(201,169,97,0.35),
               inset 0 0 8px rgba(232,201,122,0.15);
 
-  width: 56px;
-  height: 84px;
-  /* Золото вместо бронзы — видно на любом фоне */
+  width: 44px !important;
+  height: 44px !important;
+  margin-left: 8px;
   color: var(--gold-bright);
+  flex-shrink: 0;
 }
 
 #end-turn-btn:hover:not(:disabled) {
@@ -148,48 +199,121 @@
   transform: none;
 }
 
-/* SVG клепсидры */
+/* SVG маховика истории (Rota Historiae) */
 #clepsydra-svg {
   width: 100%;
   height: 100%;
+  display: block;
+  overflow: visible;
 }
 
-/* uisuper hot-fix #5: золотая рамка вместо бронзовой —
-   клепсидра должна быть заметно видна на любом фоне. */
-.clepsy-frame {
+/* Внешний бронзовый обод */
+.rh-ring-outer {
+  fill: rgba(30, 20, 10, 0.55);
   stroke: var(--gold-bright);
-  stroke-width: 2;
+  stroke-width: 1.5;
+}
+.rh-ring-inner {
+  fill: none;
+  stroke: rgba(201, 169, 97, 0.35);
+  stroke-width: 0.8;
 }
 
-/* Вода — по умолчанию синевато-прозрачная */
-.clepsy-water {
-  fill: rgba(30, 80, 120, 0.5);
-  stroke: none;
-  transition: fill 0.5s;
+/* Дуга прогресса — заполняется по часовой стрелке от 12h */
+.rh-progress {
+  fill: none;
+  stroke: var(--gold-bright);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 2px rgba(232, 201, 122, 0.6));
+  transition: stroke-dashoffset 0.3s ease-out;
 }
 
-/* Когда ход готов завершиться — вода золотая */
-.clepsy-water.ready {
-  fill: rgba(201,169,97,0.7);
+/* 12 часовых меток */
+.rh-ticks line {
+  stroke: var(--gold-bright);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+/* Каждая третья метка (3, 6, 9, 12) — ярче */
+.rh-ticks line:nth-child(4n+1) {
+  opacity: 1;
+  stroke-width: 1.8;
 }
 
-/* Струя воды */
-.clepsy-stream {
-  stroke: rgba(80,140,200,0.4);
+/* Стрелка-указатель сверху */
+.rh-gnomon {
+  fill: var(--gold-bright);
+  stroke: var(--gold-bright);
+  stroke-width: 0.8;
+  filter: drop-shadow(0 0 3px rgba(232, 201, 122, 0.8));
+}
+
+/* Вращающийся диск */
+.rh-disc {
+  transform-origin: 40px 40px;
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: rh-idle-rotate 60s linear infinite;
+}
+.rh-disc-bg {
+  fill: rgba(22, 14, 6, 0.85);
+  stroke: rgba(201, 169, 97, 0.4);
+  stroke-width: 0.6;
+}
+.rh-spoke {
+  stroke: rgba(201, 169, 97, 0.55);
   stroke-width: 1;
-  stroke-dasharray: 2 3;
+  stroke-linecap: round;
 }
-.clepsy-stream.ready {
-  stroke: rgba(201,169,97,0.6);
+.rh-disc-mid {
+  fill: none;
+  stroke: rgba(201, 169, 97, 0.35);
+  stroke-width: 0.6;
+}
+.rh-disc-eye {
+  fill: rgba(40, 28, 12, 0.7);
+  stroke: rgba(201, 169, 97, 0.5);
+  stroke-width: 0.6;
+}
+.rh-hub {
+  fill: var(--gold-bright);
+  stroke: rgba(80, 55, 20, 0.8);
+  stroke-width: 0.6;
+  filter: drop-shadow(0 0 2px rgba(232, 201, 122, 0.7));
 }
 
-/* Анимация мерцания когда ход готов */
-@keyframes clepsydra-pulse {
-  0%, 100% { filter: drop-shadow(0 0 4px rgba(201,169,97,0.3)); }
-  50%       { filter: drop-shadow(0 0 12px rgba(201,169,97,0.8)); }
+/* Медленное idle-вращение («течение истории») */
+@keyframes rh-idle-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Ускорение вращения при hover */
+#end-turn-btn:hover:not(:disabled) .rh-disc {
+  animation-duration: 8s;
+}
+
+/* Стадия: ход готов — золотое мерцание всего колеса */
+@keyframes rh-ready-pulse {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(201, 169, 97, 0.3)); }
+  50%      { filter: drop-shadow(0 0 14px rgba(232, 201, 122, 0.9)); }
 }
 #end-turn-btn.turn-ready {
-  animation: clepsydra-pulse 2s ease-in-out infinite;
+  animation: rh-ready-pulse 2s ease-in-out infinite;
+}
+#end-turn-btn.turn-ready .rh-ring-outer {
+  stroke: #f3d98a;
+}
+#end-turn-btn.turn-ready .rh-hub {
+  fill: #f8e2a2;
+}
+
+/* Момент смены хода — ускоренный оборот диска (запускается из JS через
+   класс .rh-flipping: диск делает один полный оборот за 700мс) */
+#end-turn-btn.rh-flipping .rh-disc {
+  animation: none;
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Шаг 21 — Ресурс-бар в топ-баре */

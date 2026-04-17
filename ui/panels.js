@@ -2116,7 +2116,7 @@ function _courtEscJs(s) {
   return String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
-function renderRightPanel() {
+export function renderRightPanel() {
   const panel = document.getElementById('right-panel');
   if (!panel || !GAME_STATE) return;
 
@@ -2878,7 +2878,7 @@ const _origAddEventLog = typeof addEventLog === 'function' ? addEventLog : null;
 // ИНИЦИАТИВЫ ПЕРСОНАЖЕЙ — панель ожидающих запросов
 // ──────────────────────────────────────────────────────────────
 
-function renderCharInitiativesPanel() {
+export function renderCharInitiativesPanel() {
   const panel = document.getElementById('char-initiatives-panel');
   if (!panel) return;
 

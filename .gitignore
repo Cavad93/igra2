@@ -3,6 +3,10 @@ package-lock.json
 dist/
 data/backups/
 
+# macOS
+.DS_Store
+**/.DS_Store
+
 # Тяжёлые ассеты (JPG) — скачиваются через assets/download.sh, не хранятся в git
 assets/portraits/**/*.jpg
 assets/textures/*.jpg

@@ -17,29 +17,14 @@
   overflow: hidden;
 }
 /* Шаг 58 -- слой исторической фрески.
-   uisuper hot-fix #6: фреска не должна быть видна на старте --
-   эффект должен быть «мозаика собирается -> проявляется фреска».
-   Раньше .splash__bg рендерилась мгновенно, а canvas с мозаикой
-   только начинал накладывать тессеры, из-за чего в первые
-   секунды видно финальное фото. Делаем fade-in через keyframes
-   splash-bg-fade (9с: 0->0 первые 3с, затем плавное 0->1 до 9с).
-   К этому моменту мозаика уже собрала большинство тайлов. */
+   Картина полностью собирается мозаикой (ui/splash_mosaic.js):
+   тессеры перекрашиваются цветами фрески, и в финале canvas-мозаика
+   визуально идентична самой фреске. Отдельный CSS-слой фрески
+   больше не нужен -- раньше он успевал мелькнуть до того, как
+   SplashMosaic прятал его через display:none, что убивало эффект
+   «картина собирается из кусочков». */
 .splash__bg {
-  position: absolute;
-  inset: 0;
-  background-image: var(--splash-bg);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  filter: sepia(0.25) brightness(0.55);
-  z-index: 0;
-  opacity: 0;
-  animation: splash-bg-fade 9s ease-out forwards;
-}
-@keyframes splash-bg-fade {
-  0%   { opacity: 0; }
-  33%  { opacity: 0; }
-  100% { opacity: 1; }
+  display: none;
 }
 /* Шаг 58 -- виньетка по краям */
 .splash__vignette {

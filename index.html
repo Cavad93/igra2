@@ -117,8 +117,60 @@
         </div>
       </div>
 
-      <!-- ЦЕНТР: пустой — карта будет видна через прозрачность -->
-      <div id="top-bar-center"></div>
+      <!-- ЦЕНТР: горизонтальная полоса ресурсов (Аквидукт).
+           Раньше висел радиалкой слева поверх карты и закрывал торец
+           TABVLAE. Теперь живёт в шапке — карта и левая панель свободны.
+           DOM id/классы сохранены: AquaWidget.init/update и
+           updateResourceBar ищут их по именам. -->
+      <div id="top-bar-center">
+        <div id="aqua-widget" aria-label="Ресурсы">
+
+          <div class="aqua-channel" id="aqua-gold"
+               data-res="gold" data-dir="right"
+               title="Казна" data-action="onResourceBarClick" data-arg="gold">
+            <span class="aqua-icon">💰</span>
+            <canvas class="aqua-stream" width="60" height="8"></canvas>
+            <div class="aqua-label">
+              <span class="aqua-val" id="aq-gold-val">—</span>
+              <span class="aqua-delta" id="aq-gold-delta"></span>
+            </div>
+          </div>
+
+          <div class="aqua-channel" id="aqua-troops"
+               data-res="troops" data-dir="right"
+               title="Войска" data-action="onResourceBarClick" data-arg="troops">
+            <span class="aqua-icon">⚔</span>
+            <canvas class="aqua-stream" width="60" height="8"></canvas>
+            <div class="aqua-label">
+              <span class="aqua-val" id="aq-troops-val">—</span>
+              <span class="aqua-delta" id="aq-troops-delta"></span>
+            </div>
+          </div>
+
+          <div class="aqua-channel" id="aqua-food"
+               data-res="food" data-dir="right"
+               title="Снабжение" data-action="onResourceBarClick" data-arg="food">
+            <span class="aqua-icon">🌾</span>
+            <canvas class="aqua-stream" width="60" height="8"></canvas>
+            <div class="aqua-label">
+              <span class="aqua-val" id="aq-food-val">—</span>
+              <span class="aqua-delta" id="aq-food-delta"></span>
+            </div>
+          </div>
+
+          <div class="aqua-channel" id="aqua-pop"
+               data-res="pop" data-dir="right"
+               title="Население" data-action="onResourceBarClick" data-arg="pop">
+            <span class="aqua-icon">👥</span>
+            <canvas class="aqua-stream" width="60" height="8"></canvas>
+            <div class="aqua-label">
+              <span class="aqua-val" id="aq-pop-val">—</span>
+              <span class="aqua-delta" id="aq-pop-delta"></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
 
       <!-- ПРАВЫЙ БЛОК: действия -->
       <div id="top-actions">
@@ -130,45 +182,60 @@
         <button id="settings-btn" data-action="toggleSettingsModal" title="Настройки">
           <span class="icon-wrap" data-icon="settings"></span>
         </button>
-        <!-- Этап 11 — Клепсидра (кнопка завершения хода) -->
+        <!-- Этап 11 — Rota Historiae (Маховик Истории), кнопка хода.
+             Круглое бронзовое колесо с 12 часовыми метками, вращающийся
+             диск со спицами, стрелка-указатель сверху, прогресс через
+             дугу обода. API Clepsydra.progress/setReady/flip не изменился. -->
         <button id="end-turn-btn" data-action="processTurn"
                 title="Следующий ход [Space]" aria-label="Следующий ход">
-          <svg id="clepsydra-svg" viewBox="0 0 48 80"
+          <svg id="clepsydra-svg" viewBox="0 0 80 80"
                fill="none" stroke="currentColor"
-               stroke-width="1.5" stroke-linecap="round">
+               stroke-linecap="round" stroke-linejoin="round">
+            <!-- Внешний бронзовый обод -->
+            <circle cx="40" cy="40" r="36" class="rh-ring-outer"/>
+            <circle cx="40" cy="40" r="32" class="rh-ring-inner"/>
 
-            <!-- Корпус: верхний конус -->
-            <path d="M8 4 L40 4 L40 6 L26 32 L22 32 L8 6 Z"
-                  class="clepsy-frame"/>
-            <!-- Корпус: нижний конус -->
-            <path d="M8 76 L40 76 L40 74 L26 48 L22 48 L8 74 Z"
-                  class="clepsy-frame"/>
-            <!-- Стойки -->
-            <line x1="8"  y1="4"  x2="8"  y2="76" class="clepsy-frame"/>
-            <line x1="40" y1="4"  x2="40" y2="76" class="clepsy-frame"/>
-            <!-- Горизонтальные перекладины -->
-            <line x1="4"  y1="4"  x2="44" y2="4"  class="clepsy-frame"/>
-            <line x1="4"  y1="76" x2="44" y2="76" class="clepsy-frame"/>
+            <!-- Дуга прогресса (pathLength=100 → в JS ставим stroke-dashoffset) -->
+            <circle id="rh-progress" cx="40" cy="40" r="34"
+                    class="rh-progress"
+                    pathLength="100"
+                    stroke-dasharray="100 100"
+                    stroke-dashoffset="100"
+                    transform="rotate(-90 40 40)"/>
 
-            <!-- Вода в верхнем резервуаре (clipPath ограничивает по уровню) -->
-            <clipPath id="clip-upper">
-              <rect id="clip-upper-rect" x="8" y="4" width="32" height="28"/>
-            </clipPath>
-            <path d="M8 6 L40 6 L26 32 L22 32 Z"
-                  class="clepsy-water upper"
-                  clip-path="url(#clip-upper)"/>
+            <!-- 12 часовых меток по периметру -->
+            <g class="rh-ticks">
+              <line x1="40" y1="4"  x2="40" y2="10" />
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(30 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(60 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(90 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(120 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(150 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(180 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(210 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(240 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(270 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(300 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(330 40 40)"/>
+            </g>
 
-            <!-- Вода в нижнем резервуаре (накапливается снизу) -->
-            <clipPath id="clip-lower">
-              <rect id="clip-lower-rect" x="8" y="48" width="32" height="28"/>
-            </clipPath>
-            <path d="M8 74 L40 74 L26 48 L22 48 Z"
-                  class="clepsy-water lower"
-                  clip-path="url(#clip-lower)"/>
+            <!-- Стрелка-указатель (gnomon) — статичная метка сверху -->
+            <polygon points="40,2 36,12 44,12" class="rh-gnomon"/>
 
-            <!-- Тонкая струя посередине -->
-            <line id="clepsy-stream" x1="24" y1="32" x2="24" y2="48"
-                  class="clepsy-stream"/>
+            <!-- Внутренний диск, поворачивается на 30° за ход -->
+            <g id="rh-disc" class="rh-disc">
+              <circle cx="40" cy="40" r="26" class="rh-disc-bg"/>
+              <!-- 8 спиц -->
+              <line x1="40" y1="14" x2="40" y2="66" class="rh-spoke"/>
+              <line x1="14" y1="40" x2="66" y2="40" class="rh-spoke"/>
+              <line x1="22" y1="22" x2="58" y2="58" class="rh-spoke"/>
+              <line x1="58" y1="22" x2="22" y2="58" class="rh-spoke"/>
+              <!-- Декоративный внутренний круг -->
+              <circle cx="40" cy="40" r="18" class="rh-disc-mid"/>
+              <circle cx="40" cy="40" r="12" class="rh-disc-eye"/>
+              <!-- Центральный хаб -->
+              <circle cx="40" cy="40" r="5" class="rh-hub"/>
+            </g>
           </svg>
         </button>
       </div>
@@ -180,57 +247,6 @@
       </div>
 
     </header>
-
-    <!-- Этап 15 — Радиальный виджет ресурсов «Аквидукт» (левый край экрана) -->
-    <div id="aqua-widget" aria-label="Ресурсы">
-
-      <!-- Центральный медальон -->
-      <div id="aqua-center">
-        <span class="icon-wrap" data-icon="gold"></span>
-      </div>
-
-      <!-- Четыре канала -->
-      <div class="aqua-channel" id="aqua-gold"
-           data-res="gold" data-dir="up"
-           title="Казна" data-action="onResourceBarClick" data-arg="gold">
-        <canvas class="aqua-stream" width="8" height="60"></canvas>
-        <div class="aqua-label">
-          <span class="aqua-val" id="aq-gold-val">—</span>
-          <span class="aqua-delta" id="aq-gold-delta"></span>
-        </div>
-      </div>
-
-      <div class="aqua-channel" id="aqua-troops"
-           data-res="troops" data-dir="right"
-           title="Войска" data-action="onResourceBarClick" data-arg="troops">
-        <canvas class="aqua-stream" width="60" height="8"></canvas>
-        <div class="aqua-label">
-          <span class="aqua-val" id="aq-troops-val">—</span>
-          <span class="aqua-delta" id="aq-troops-delta"></span>
-        </div>
-      </div>
-
-      <div class="aqua-channel" id="aqua-food"
-           data-res="food" data-dir="down"
-           title="Снабжение" data-action="onResourceBarClick" data-arg="food">
-        <canvas class="aqua-stream" width="8" height="60"></canvas>
-        <div class="aqua-label">
-          <span class="aqua-val" id="aq-food-val">—</span>
-          <span class="aqua-delta" id="aq-food-delta"></span>
-        </div>
-      </div>
-
-      <div class="aqua-channel" id="aqua-pop"
-           data-res="pop" data-dir="left"
-           title="Население" data-action="onResourceBarClick" data-arg="pop">
-        <canvas class="aqua-stream" width="60" height="8"></canvas>
-        <div class="aqua-label">
-          <span class="aqua-val" id="aq-pop-val">—</span>
-          <span class="aqua-delta" id="aq-pop-delta"></span>
-        </div>
-      </div>
-
-    </div>
 
     <!-- Шаг 49 (arma.md) — Граф дипломатических отношений -->
     <div id="diplo-graph-overlay" class="hidden">
@@ -349,61 +365,87 @@
           </div>
 
           <!-- ЭТАП 19/20 (uisuper.md) + hot-fix #7: Роза ветров = селектор режима карты.
-               Над SVG добавлена подпись «РЕЖИМ КАРТЫ», каждый лепесток содержит
-               SVG <title> для native-tooltip, буквенные метки заменены на короткие
-               русские слова (ПОЛИТ/ЭКОН/ВОЙ/НАР). -->
+               Лепестки расширены вдвое, под каждым — прозрачный <rect>.wr-hit
+               размером ~50×40 px для надёжной hit-area (раньше узкие ромбы
+               шириной ~20 px трудно ловились мышью). Хоткеи 1-4 (см.
+               ui/top_bar.js:170) переключают режимы без клика. -->
           <div id="wind-rose" role="group" aria-label="Режим карты">
-            <div class="wr-caption">Режим карты</div>
+            <div class="wr-caption">
+              Режим карты: <span id="wr-caption-mode">Политический</span>
+            </div>
             <svg id="wind-rose-svg" viewBox="-60 -60 120 120"
                  xmlns="http://www.w3.org/2000/svg">
+
+              <!-- Hit-зоны (прозрачные прямоугольники, ловят клик по всему сектору).
+                   Рисуются ДО лепестков, чтобы лепестки были видны поверх. -->
+              <rect class="wr-hit" x="-26" y="-52" width="52" height="42"
+                    data-action="setMapMode" data-arg="political"
+                    aria-label="Политический режим [1]">
+                <title>Политический режим [1] — цвета фракций</title>
+              </rect>
+              <rect class="wr-hit" x="10" y="-26" width="42" height="52"
+                    data-action="setMapMode" data-arg="economy"
+                    aria-label="Режим экономики [2]">
+                <title>Режим экономики [2] — богатство регионов</title>
+              </rect>
+              <rect class="wr-hit" x="-26" y="10" width="52" height="42"
+                    data-action="setMapMode" data-arg="military"
+                    aria-label="Военный режим [3]">
+                <title>Военный режим [3] — дислокация армий</title>
+              </rect>
+              <rect class="wr-hit" x="-52" y="-26" width="42" height="52"
+                    data-action="setMapMode" data-arg="population"
+                    aria-label="Режим населения [4]">
+                <title>Режим населения [4] — плотность населения</title>
+              </rect>
 
               <!-- Центральная точка -->
               <circle cx="0" cy="0" r="8" class="wr-center"/>
               <circle cx="0" cy="0" r="5" class="wr-center-dot"/>
 
-              <!-- Лепесток Север: Политика -->
+              <!-- Лепесток Север: Политика (расширен с 20→40 px) -->
               <path id="wr-political"
-                    d="M0,0 L-10,-18 L0,-42 L10,-18 Z"
+                    d="M0,0 L-20,-22 L0,-46 L20,-22 Z"
                     class="wr-petal active" data-mode="political"
                     data-action="setMapMode" data-arg="political"
                     role="button" tabindex="0"
                     aria-label="Политический режим [1]">
                 <title>Политический режим [1] — цвета фракций</title>
               </path>
-              <text x="0" y="-48" class="wr-label" text-anchor="middle">ПОЛИТ</text>
+              <text x="0" y="-52" class="wr-label" text-anchor="middle">ПОЛИТ</text>
 
               <!-- Лепесток Восток: Экономика -->
               <path id="wr-economy"
-                    d="M0,0 L18,-10 L42,0 L18,10 Z"
+                    d="M0,0 L22,-20 L46,0 L22,20 Z"
                     class="wr-petal" data-mode="economy"
                     data-action="setMapMode" data-arg="economy"
                     role="button" tabindex="0"
                     aria-label="Режим экономики [2]">
                 <title>Режим экономики [2] — богатство регионов</title>
               </path>
-              <text x="50" y="4" class="wr-label" text-anchor="start">ЭКОН</text>
+              <text x="52" y="4" class="wr-label" text-anchor="start">ЭКОН</text>
 
               <!-- Лепесток Юг: Военный -->
               <path id="wr-military"
-                    d="M0,0 L10,18 L0,42 L-10,18 Z"
+                    d="M0,0 L20,22 L0,46 L-20,22 Z"
                     class="wr-petal" data-mode="military"
                     data-action="setMapMode" data-arg="military"
                     role="button" tabindex="0"
                     aria-label="Военный режим [3]">
                 <title>Военный режим [3] — дислокация армий</title>
               </path>
-              <text x="0" y="56" class="wr-label" text-anchor="middle">ВОЙ</text>
+              <text x="0" y="58" class="wr-label" text-anchor="middle">ВОЙ</text>
 
               <!-- Лепесток Запад: Население -->
               <path id="wr-population"
-                    d="M0,0 L-18,10 L-42,0 L-18,-10 Z"
+                    d="M0,0 L-22,20 L-46,0 L-22,-20 Z"
                     class="wr-petal" data-mode="population"
                     data-action="setMapMode" data-arg="population"
                     role="button" tabindex="0"
                     aria-label="Режим населения [4]">
                 <title>Режим населения [4] — плотность населения</title>
               </path>
-              <text x="-50" y="4" class="wr-label" text-anchor="end">НАР</text>
+              <text x="-52" y="4" class="wr-label" text-anchor="end">НАР</text>
 
               <!-- Диагональные засечки (декор) -->
               <line x1="-6" y1="-6" x2="-14" y2="-14" class="wr-notch"/>

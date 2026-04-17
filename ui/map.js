@@ -3103,6 +3103,14 @@ const WindRose = {
     population: 'wr-population',
   },
 
+  // Русское имя режима для подписи
+  LABELS: {
+    political:  'Политический',
+    economy:    'Экономика',
+    military:   'Военный',
+    population: 'Население',
+  },
+
   /**
    * Установить активный лепесток по режиму карты.
    * @param {'political'|'economy'|'military'|'population'} mode
@@ -3110,6 +3118,10 @@ const WindRose = {
   setActive(mode) {
     if (!this.PETALS[mode]) return;
     this._current = mode;
+
+    // Обновить текст подписи
+    const caption = document.getElementById('wr-caption-mode');
+    if (caption) caption.textContent = this.LABELS[mode] ?? mode;
 
     // Снять active со всех лепестков
     const petals = document.querySelectorAll('.wr-petal');

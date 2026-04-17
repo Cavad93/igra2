@@ -1,9 +1,13 @@
-/* clepsydra.js — клепсидра (кнопка конца хода) */
+/* clepsydra.js — Rota Historiae (маховик истории), кнопка конца хода.
+   Имя модуля оставлено для обратной совместимости с engine/turn.js и
+   ui/turn_progress.js, которые зовут window.Clepsydra.{progress,setReady,flip}.
+   Внутри — колесо со стрелкой-указателем и дугой прогресса. */
 
 export const Clepsydra = {
   _progress: 0,
   _ready: false,
   _flipping: false,
+  _rot: 0,   // накопленный поворот диска в градусах
 
   get progress() { return this._progress; },
   set progress(v) {
@@ -15,63 +19,37 @@ export const Clepsydra = {
     this._ready = !!isReady;
     const btn = document.getElementById('end-turn-btn');
     if (btn) btn.classList.toggle('turn-ready', this._ready);
-    document.querySelectorAll('.clepsy-water').forEach(el =>
-      el.classList.toggle('ready', this._ready)
-    );
-    const stream = document.getElementById('clepsy-stream');
-    if (stream) stream.classList.toggle('ready', this._ready);
   },
 
   _update() {
-    const upperH = Math.round(28 * (1 - this._progress));
-    const upperRect = document.getElementById('clip-upper-rect');
-    if (upperRect) {
-      upperRect.setAttribute('y', String(4 + (28 - upperH)));
-      upperRect.setAttribute('height', String(upperH));
-    }
-    const lowerH = Math.round(28 * this._progress);
-    const lowerRect = document.getElementById('clip-lower-rect');
-    if (lowerRect) {
-      lowerRect.setAttribute('y', String(76 - lowerH));
-      lowerRect.setAttribute('height', String(lowerH));
-    }
-    const stream = document.getElementById('clepsy-stream');
-    if (stream) {
-      stream.style.opacity = (this._progress > 0 && this._progress < 1) ? '1' : '0';
-    }
+    // Дуга прогресса: pathLength=100, offset=100 → невидима, offset=0 → полная окружность.
+    const arc = document.getElementById('rh-progress');
+    if (arc) arc.setAttribute('stroke-dashoffset', String(100 - 100 * this._progress));
   },
 
   flip(onComplete) {
     if (this._flipping) { try { onComplete?.(); } catch (_) {} return; }
+    const btn  = document.getElementById('end-turn-btn');
+    const disc = document.getElementById('rh-disc');
+    if (!btn || !disc) { try { onComplete?.(); } catch (_) {} return; }
+
     this._flipping = true;
-    const btn = document.getElementById('end-turn-btn');
-    if (!btn) { this._flipping = false; try { onComplete?.(); } catch (_) {} return; }
+    btn.classList.add('rh-flipping');
 
-    const start = this._progress;
-    const t0 = performance.now();
-    const dur = 400;
+    // Один полный оборот + 30° (символ «прошёл месяц»).
+    this._rot += 390;
+    disc.style.transformOrigin = '40px 40px';
+    disc.style.transform = `rotate(${this._rot}deg)`;
 
-    const drain = (now) => {
-      const p = Math.min(1, (now - t0) / dur);
-      this.progress = start + (1 - start) * p;
-      if (p < 1) {
-        requestAnimationFrame(drain);
-      } else {
-        btn.style.transition = 'transform 0.3s ease-in-out';
-        btn.style.transform  = 'rotate(180deg)';
-        setTimeout(() => {
-          this.progress = 0;
-          this.setReady(false);
-          btn.style.transform  = '';
-          btn.style.transition = '';
-          this._flipping = false;
-          try { onComplete?.(); } catch (_) {}
-        }, 320);
-      }
-    };
-    requestAnimationFrame(drain);
+    setTimeout(() => {
+      btn.classList.remove('rh-flipping');
+      this.progress = 0;
+      this.setReady(false);
+      this._flipping = false;
+      try { onComplete?.(); } catch (_) {}
+    }, 720);
   },
 };
 
-// Backward compat
+// Инициализация начального состояния
 try { Clepsydra.progress = 0; } catch (_) {}

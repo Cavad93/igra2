@@ -771,8 +771,8 @@
       bottom: 20px;
       right: 20px;
       z-index: 10;
-      width: 150px;
-      height: 164px;
+      width: 180px;
+      height: 200px;
       pointer-events: none;
       display: flex;
       flex-direction: column;
@@ -833,6 +833,20 @@
       stroke-width: 1.5;
       filter: drop-shadow(0 0 4px rgba(201,169,97,0.4));
     }
+
+    /* Прозрачные hit-зоны — ловят клик по всему сектору.
+       Подсвечивают соответствующий лепесток при hover через sibling-селектор. */
+    .wr-hit {
+      fill: transparent;
+      cursor: pointer;
+      pointer-events: all;
+    }
+    .wr-hit:hover + * + #wr-political,
+    .wr-hit:hover + * + #wr-economy,
+    .wr-hit:hover + * + #wr-military,
+    .wr-hit:hover + * + #wr-population { fill: var(--bg-hover); }
+    /* Универсальный hover для лепестка, когда курсор на его hit-зоне */
+    #wind-rose-svg:hover .wr-petal:not(.active):not(:hover) { opacity: 1; }
 
     .wr-label {
       font-family: var(--font-display);
