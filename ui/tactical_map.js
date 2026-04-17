@@ -699,7 +699,7 @@ function updateUnitPanel(unit, bs) {
     fbtns.innerHTML = Object.entries(FORMATION_LABELS)
       .map(([f, label]) =>
         `<button class="tup-form-btn${unit.formation === f ? ' active' : ''}"
-         onclick="_setFormation('${unit.id}','${f}')">${label}</button>`)
+         data-action="_setFormation" data-arg="${unit.id}|${f}">${label}</button>`)
       .join('');
   }
 
@@ -710,8 +710,8 @@ function updateUnitPanel(unit, bs) {
       resBtn.innerHTML = '';
     } else {
       resBtn.innerHTML = unit.isReserve
-        ? `<button onclick="_withdrawReserve('${unit.id}')">⚔ В бой!</button>`
-        : `<button onclick="_sendReserve('${unit.id}')">🛡 В резерв</button>`;
+        ? `<button data-action="_withdrawReserve" data-arg="${unit.id}">⚔ В бой!</button>`
+        : `<button data-action="_sendReserve" data-arg="${unit.id}">🛡 В резерв</button>`;
     }
   }
 
@@ -724,7 +724,7 @@ function updateUnitPanel(unit, bs) {
         ambushBtn.innerHTML = '<span style="color:#888;font-size:11px">(Засада использована)</span>';
       } else {
         ambushBtn.innerHTML =
-          '<button onclick="_triggerAmbush()" style="width:100%;margin-top:6px;padding:4px;' +
+          '<button data-action="_triggerAmbush" style="width:100%;margin-top:6px;padding:4px;' +
           'background:#1a1a1a;border:1px solid #8a5a00;color:#ffaa00;' +
           'border-radius:2px;cursor:pointer;font-size:11px">🎯 Засада</button>';
       }
@@ -830,11 +830,10 @@ function showRetreatConfirm(bs) {
           pct < 0.4 ? '⚠️ Частичное окружение' : ''}
       </p>
       <div style="display:flex;gap:10px;justify-content:center;margin-top:16px">
-        <button onclick="document.getElementById('retreat-confirm').remove();
-                         executeRetreat(_battleState)"
+        <button data-action="_confirmRetreat"
           style="padding:8px 20px;background:#3a1a1a;border:1px solid #aa4444;
                  color:#ee8888;border-radius:3px;cursor:pointer">Отступить</button>
-        <button onclick="document.getElementById('retreat-confirm').remove()"
+        <button data-action="_cancelRetreat"
           style="padding:8px 20px;background:#1a1a1a;border:1px solid #444;
                  color:#ccc;border-radius:3px;cursor:pointer">Продолжать бой</button>
       </div>
@@ -1179,4 +1178,15 @@ function openTacticalMap(atkArmy, defArmy, region) {
   } catch (err) {
     console.warn('[tactical_map] initBattleMap threw:', err);
   }
+}
+
+function _confirmRetreat() {
+  var el = document.getElementById('retreat-confirm');
+  if (el) el.remove();
+  if (typeof executeRetreat === 'function') executeRetreat(_battleState);
+}
+
+function _cancelRetreat() {
+  var el = document.getElementById('retreat-confirm');
+  if (el) el.remove();
 }

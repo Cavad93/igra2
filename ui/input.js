@@ -400,6 +400,8 @@ function showVotingModal(nationId, law) {
     ? `<div class="vote-senate-note">🏛️ Голосует Сенат (${votesFor + votesAgainst + votesAbstain} голосов)</div>`
     : '';
 
+  window._pendingVoteData = { nationId, law, votesFor: Math.round(votesFor), votesAgainst: Math.round(votesAgainst), votesAbstain: Math.round(votesAbstain), passed };
+
   overlay.innerHTML = `
     <div class="voting-modal">
       <div class="voting-title">⚖️ Голосование: ${law.name}</div>
@@ -426,7 +428,7 @@ function showVotingModal(nationId, law) {
       </div>
 
       <div class="voting-btns">
-        <button onclick="finalizeVote('${nationId}', ${JSON.stringify(law).replace(/"/g, '&quot;')}, ${Math.round(votesFor)}, ${Math.round(votesAgainst)}, ${Math.round(votesAbstain)}, ${passed})">
+        <button data-action="_pendingFinalizeVote">
           Принять результат
         </button>
       </div>
@@ -859,10 +861,9 @@ async function _runDebateAnimation(nationId, law, playerSpeech, result, speakers
   const btnEl = document.createElement('div');
   btnEl.style.textAlign = 'center';
   btnEl.style.marginTop = '16px';
-  const lawJson = encodeURIComponent(JSON.stringify(law));
+  window._pendingDebateVoteData = { nationId, law, votesFor: Math.round(result.for), votesAgainst: Math.round(result.against), votesAbstain: Math.round(result.abstain), passed: result.passed };
   btnEl.innerHTML = `
-    <button class="debate-accept-btn"
-            onclick="finalizeDebateVote('${nationId}', '${lawJson}', ${Math.round(result.for)}, ${Math.round(result.against)}, ${Math.round(result.abstain)}, ${result.passed})">
+    <button class="debate-accept-btn" data-action="_pendingFinalizeDebateVote">
       Покинуть зал Сената
     </button>
   `;
@@ -1083,4 +1084,14 @@ function formatEffectPath(path) {
     tax_rate:    'Налоговая ставка',
   };
   return labels[last] || last.replace(/_/g, ' ');
+}
+
+function _pendingFinalizeVote() {
+  var d = window._pendingVoteData;
+  if (d) finalizeVote(d.nationId, d.law, d.votesFor, d.votesAgainst, d.votesAbstain, d.passed);
+}
+
+function _pendingFinalizeDebateVote() {
+  var d = window._pendingDebateVoteData;
+  if (d) finalizeDebateVote(d.nationId, encodeURIComponent(JSON.stringify(d.law)), d.votesFor, d.votesAgainst, d.votesAbstain, d.passed);
 }

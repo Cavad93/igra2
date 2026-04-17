@@ -1537,7 +1537,7 @@ function showRegionInfo(regionId) {
       }).join('');
       diplTabHtml = `
         <div class="ri-dipl-panel">
-          <button class="ri-dipl-overlay-btn" onclick="showDiplomacyOverlay('${nationId}')">
+          <button class="ri-dipl-overlay-btn" data-action="showDiplomacyOverlay" data-arg="${nationId}">
             🤝 Открыть дипломатическое окно
           </button>
           <div class="ri-dipl-mission-form">
@@ -1550,7 +1550,7 @@ function showRegionInfo(regionId) {
               <option value="direct" selected>Прямое управление</option>
               <option value="distant">Удалённый контроль</option>
             </select>
-            <button class="ri-dipl-send-btn" onclick="sendDiplomaticMissionFromPanel('${nationId}', '${nationName}')">
+            <button class="ri-dipl-send-btn" data-action="sendDiplomaticMissionFromPanel" data-arg="${nationId}|${nationName}">
               Отправить миссию
             </button>
           </div>
@@ -1600,18 +1600,18 @@ function showRegionInfo(regionId) {
     let footerHtml = '';
     // Шаг 53 (arma.md): кнопка "⚖ Сравнить" — доступна для всех регионов
     const isPinned = (typeof getPinnedRegionId === 'function') && getPinnedRegionId() === regionId;
-    const compareBtn = `<button class="ri-action-btn ri-compare-btn${isPinned ? ' ri-compare-active' : ''}" data-region-id="${regionId}" onclick="pinRegionForCompare('${regionId}')">${isPinned ? '⚖ Сравнивается...' : '⚖ Сравнить'}</button>`;
+    const compareBtn = `<button class="ri-action-btn ri-compare-btn${isPinned ? ' ri-compare-active' : ''}" data-region-id="${regionId}" data-action="pinRegionForCompare" data-arg="${regionId}">${isPinned ? '⚖ Сравнивается...' : '⚖ Сравнить'}</button>`;
     if (nationId === GAME_STATE.player_nation) {
       const hasArmy = (GAME_STATE.armies ?? []).some(a =>
         a.position === regionId && a.nation === GAME_STATE.player_nation && a.state !== 'disbanded'
       );
       const selectArmyBtn = hasArmy
-        ? `<button class="ri-action-btn" onclick="selectArmy((GAME_STATE.armies ?? []).find(a => a.position === '${regionId}' && a.nation === GAME_STATE.player_nation && a.state !== 'disbanded')?.id)">🛡 Армия</button>`
+        ? `<button class="ri-action-btn" data-action="selectArmyInRegion" data-arg="${regionId}">🛡 Армия</button>`
         : '';
       footerHtml = `
         <div class="ri-footer">
-          <button class="ri-action-btn primary" onclick="showAssembleArmyDialog('${regionId}');closeRegionInfo();">⚔ Собрать армию</button>
-          <button class="ri-action-btn" onclick="switchRegionTab('build')">🏗 Построить</button>
+          <button class="ri-action-btn primary" data-action="showAssembleArmyDialog" data-arg="${regionId}" data-action2="closeRegionInfo">⚔ Собрать армию</button>
+          <button class="ri-action-btn" data-action="switchRegionTab" data-arg="build">🏗 Построить</button>
           ${selectArmyBtn}
           ${compareBtn}
         </div>`;
@@ -1628,7 +1628,7 @@ function showRegionInfo(regionId) {
         <div class="region-info-header-row">
           <span class="region-info-name">${mapData.name}</span>
           <span class="region-info-nation" style="color:${nationColor}">${nationName}</span>
-          <button class="region-info-close" onclick="closeRegionInfo()">✕</button>
+          <button class="region-info-close" data-action="closeRegionInfo">✕</button>
         </div>
       </div>
       <div class="ri-key-stats">
@@ -1651,11 +1651,11 @@ function showRegionInfo(regionId) {
       </div>
       <div class="ri-tabs">
         <button class="ri-tab${curTab === 'info'  ? ' ri-tab--active' : ''}" data-tab="info"
-          onclick="switchRegionTab('info')">Информация</button>
+          data-action="switchRegionTab" data-arg="info">Информация</button>
         <button class="ri-tab${curTab === 'build' ? ' ri-tab--active' : ''}" data-tab="build"
-          onclick="switchRegionTab('build')">${isPlayer ? '🏗 Строительство' : 'Строительство'}</button>
+          data-action="switchRegionTab" data-arg="build">${isPlayer ? '🏗 Строительство' : 'Строительство'}</button>
         ${!isPlayer ? `<button class="ri-tab${curTab === 'diplomacy' ? ' ri-tab--active' : ''}" data-tab="diplomacy"
-          onclick="switchRegionTab('diplomacy')">🤝 Дипломатия</button>` : ''}
+          data-action="switchRegionTab" data-arg="diplomacy">🤝 Дипломатия</button>` : ''}
         <div class="ri-tab-indicator"></div>
       </div>
       <div id="region-tab-info" class="region-info-body ri-tab-content${curTab !== 'info' ? ' hidden' : ''}">
@@ -1697,7 +1697,7 @@ function showRegionInfo(regionId) {
         <div class="ri-nation-stripe" style="background: #A8A898"></div>
         <div class="region-info-header-row">
           <span class="region-info-name">${mapData.name}</span>
-          <button class="region-info-close" onclick="closeRegionInfo()">✕</button>
+          <button class="region-info-close" data-action="closeRegionInfo">✕</button>
         </div>
       </div>
       <div class="region-info-body">
@@ -1718,6 +1718,12 @@ function showRegionInfo(regionId) {
   // после того, как DOM смонтирован (учитываем offsetLeft/clientWidth).
   const activeBtn = panel.querySelector('.ri-tab.ri-tab--active');
   if (activeBtn) updateTabIndicator(activeBtn);
+}
+
+function selectArmyInRegion(regionId) {
+  const army = (GAME_STATE.armies ?? []).find(a =>
+    a.position === regionId && a.nation === GAME_STATE.player_nation && a.state !== 'disbanded');
+  if (army && typeof selectArmy === 'function') selectArmy(army.id);
 }
 
 function closeRegionInfo() {

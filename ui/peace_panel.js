@@ -59,7 +59,7 @@ function _renderPeacePanel(defeatedNationId) {
         <div class="po-title">Условия мира</div>
         <div class="po-subtitle">${defeated.flag_emoji ?? '🏴'} ${defeated.name} разгромлена</div>
       </div>
-      <button class="po-close" onclick="closePeacePanel()">✕</button>
+      <button class="po-close" data-action="closePeacePanel">✕</button>
     </div>
 
     <div class="po-desc">
@@ -67,7 +67,7 @@ function _renderPeacePanel(defeatedNationId) {
     </div>
 
     <!-- Контрибуция -->
-    <button class="po-option" onclick="peaceAcceptTribute()">
+    <button class="po-option" data-action="peaceAcceptTribute">
       <div class="po-opt-icon">💰</div>
       <div class="po-opt-body">
         <div class="po-opt-title">Контрибуция</div>
@@ -79,7 +79,7 @@ function _renderPeacePanel(defeatedNationId) {
     </button>
 
     <!-- Аннексия -->
-    <button class="po-option po-option--danger" onclick="peaceAcceptAnnexation()">
+    <button class="po-option po-option--danger" data-action="peaceAcceptAnnexation">
       <div class="po-opt-icon">👑</div>
       <div class="po-opt-body">
         <div class="po-opt-title">Полная аннексия</div>
@@ -91,7 +91,7 @@ function _renderPeacePanel(defeatedNationId) {
     </button>
 
     <!-- Вассалитет -->
-    <button class="po-option po-option--vassal" onclick="peaceAcceptVassal()">
+    <button class="po-option po-option--vassal" data-action="peaceAcceptVassal">
       <div class="po-opt-icon">🤝</div>
       <div class="po-opt-body">
         <div class="po-opt-title">Вассалитет</div>
@@ -103,7 +103,7 @@ function _renderPeacePanel(defeatedNationId) {
     </button>
 
     <!-- Просто мир -->
-    <button class="po-option po-option--neutral" onclick="peaceAcceptPeace()">
+    <button class="po-option po-option--neutral" data-action="peaceAcceptPeace">
       <div class="po-opt-icon">🏳</div>
       <div class="po-opt-body">
         <div class="po-opt-title">Белый мир</div>

@@ -217,7 +217,7 @@ function showBattleResult(r) {
         <div class="br-progress-wrap">
           <div class="br-progress-bar" id="br-prog"></div>
         </div>
-        <button class="br-close-btn" onclick="closeBattleResult()">Закрыть ✕</button>
+        <button class="br-close-btn" data-action="closeBattleResult">Закрыть ✕</button>
       </div>
     </div>
   `;

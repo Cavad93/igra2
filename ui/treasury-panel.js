@@ -1031,7 +1031,7 @@ function _tpRender() {
   const balSign     = balance >= 0 ? '+' : '';
 
   el.innerHTML = `
-    <div class="tp-backdrop" onclick="hideTreasuryOverlay()"></div>
+    <div class="tp-backdrop" data-action="hideTreasuryOverlay"></div>
     <div class="tp-panel">
 
       <div class="tp-header">
@@ -1044,7 +1044,7 @@ function _tpRender() {
             ${balSign}${balance.toLocaleString()} ₴/ход
           </span>
         </div>
-        <button class="tp-close" onclick="hideTreasuryOverlay()">✕</button>
+        <button class="tp-close" data-action="hideTreasuryOverlay">✕</button>
       </div>
 
       <div class="tp-body">
@@ -1058,12 +1058,12 @@ function _tpRender() {
 
       <div class="tp-footer">
         <div class="tp-footer-top">
-          <button class="tp-advisor-btn" onclick="_tpToggleAdvisor()">
+          <button class="tp-advisor-btn" data-action="_tpToggleAdvisor">
             📜 Советник
           </button>
           <button id="tp-apply-btn" class="tp-apply-btn"
                   ${_tpDirty ? '' : 'disabled'}
-                  onclick="applyTreasuryRates()">
+                  data-action="applyTreasuryRates">
             ✓ Применить изменения
           </button>
         </div>
@@ -1112,7 +1112,7 @@ function _tpRenderLoans() {
       }).join('')}</div>`;
 
   const bankruptBtn = status.loans.length > 0
-    ? `<button class="tp-loan-btn danger" onclick="_tpConfirmBankruptcy()"
+    ? `<button class="tp-loan-btn danger" data-action="_tpConfirmBankruptcy"
          title="Списать все долги, но получить тяжёлые штрафы">
          💸 Объявить банкротство
        </button>`
@@ -1166,7 +1166,7 @@ function _tpRenderLoans() {
           <option value="36">36 мес. (3 года)</option>
           <option value="60">60 мес. (5 лет)</option>
         </select>
-        <button class="tp-loan-btn" onclick="_tpTakeLoan()"
+        <button class="tp-loan-btn" data-action="_tpTakeLoan"
                 ${canBorrow ? '' : 'disabled'}>
           + Взять заём
         </button>

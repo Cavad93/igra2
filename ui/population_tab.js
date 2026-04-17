@@ -218,7 +218,7 @@ function renderClassCard(classId, classDef, classData, totalPop, stockpile, isEx
 
   return `
     <div class="pop-card${isExpanded ? ' expanded' : ''}${isSlv ? ' slaves' : ''}"
-         data-cls="${classId}" onclick="togglePopClass('${classId}')">
+         data-cls="${classId}" data-action="togglePopClass" data-arg="${classId}">
       <div class="pop-ch">
         <span class="pop-ci">${classDef.icon}</span>
         <div class="pop-ct">
@@ -795,11 +795,11 @@ function buildPopHistorySection(pop, stockpile, nation) {
         <span class="pop-st">📈 История населения</span>
         <div class="pop-chart-tabs">
           <button class="pct ${_popChartMode === 'stacked' ? 'active' : ''}"
-                  onclick="setPopChartMode('stacked')">Состав</button>
+                  data-action="setPopChartMode" data-arg="stacked">Состав</button>
           <button class="pct ${_popChartMode === 'lines' ? 'active' : ''}"
-                  onclick="setPopChartMode('lines')">Тренды</button>
+                  data-action="setPopChartMode" data-arg="lines">Тренды</button>
           <button class="pct ${_popChartMode === 'demography' ? 'active' : ''}"
-                  onclick="setPopChartMode('demography')">Демография</button>
+                  data-action="setPopChartMode" data-arg="demography">Демография</button>
         </div>
       </div>
       <div class="pop-chart-wrap" id="pop-chart-wrap">
@@ -1421,7 +1421,7 @@ function _buildLaborLawsPanel(nation) {
       const isActive = id === activeId;
       return `
         <button class="adm-law-btn${isActive ? ' active' : ''}"
-                onclick="uiToggleLaborLaw('${id}')"
+                data-action="uiToggleLaborLaw" data-arg="${id}"
                 title="${law.description || ''}">
           ${law.name}
         </button>
@@ -1485,6 +1485,7 @@ let _cidExpanded       = new Set(); // "cls|ptype" keys
 // ─────────────────────────────────────────────────────────────────────────
 
 function _popSetIncomeFilter(type) {
+  if (type === undefined) type = null;
   _popIncomeFilter = (_popIncomeFilter === type) ? null : type;
   renderPopulationOverlay();
 }
@@ -1667,7 +1668,7 @@ function buildClassIncomeSection(nation) {
     const meta   = _PROD_TYPE_META[type] || { icon: '📦', label: type };
     const active = _popIncomeFilter === type;
     return `<button class="cid-filter-btn${active ? ' active' : ''}"
-                    onclick="_popSetIncomeFilter('${type}')">
+                    data-action="_popSetIncomeFilter" data-arg="${type}">
               ${meta.icon} ${meta.label}
             </button>`;
   }).join('');
@@ -1722,7 +1723,7 @@ function buildClassIncomeSection(nation) {
       return `
         <div class="cid-batt-row">
           <div class="cid-batt-label cid-clickable"
-               onclick="_cidToggle('${cls}','${ptype}')">
+               data-action="_cidToggle" data-arg="${cls}|${ptype}">
             <span>${meta.icon} ${meta.label}
               <span class="cid-batt-typeinc">${typeInc > 0 ? '+' + Math.round(typeInc).toLocaleString() + ' ₴/мес' : '—'}</span>
               <span class="cid-chevron">${chevron}</span>
@@ -1767,7 +1768,7 @@ function buildClassIncomeSection(nation) {
     <div class="cid-wrap">
       <div class="cid-filter-row">
         <button class="cid-filter-btn${!_popIncomeFilter ? ' active' : ''}"
-                onclick="_popSetIncomeFilter(null)">Все типы</button>
+                data-action="_popSetIncomeFilter">Все типы</button>
         ${filterBtns}
       </div>
       ${clsRows || '<div class="cid-empty">Нет данных по классам</div>'}
@@ -1853,7 +1854,7 @@ function renderPopulationOverlay() {
           <div class="pop-hdr-t">Структура общества</div>
           <div class="pop-hdr-n">${nation.name}</div>
         </div>
-        <button class="pop-x" onclick="hidePopulationOverlay()">✕</button>
+        <button class="pop-x" data-action="hidePopulationOverlay">✕</button>
       </div>
 
       <!-- Hero metrics -->

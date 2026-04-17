@@ -164,7 +164,7 @@ function _rbtFortressPanel(regionId, region, nation, queue) {
         <span>🏗 Строится… ${inQueue.turns_left} ход(а)</span>
         <div class="rbt-ac-prog"><div class="rbt-ac-prog-fill" style="width:${pct}%"></div></div>
         <button class="rbt-ac-btn rbt-ac-btn--cancel"
-          onclick="uiCancelConstruction('${regionId}','${inQueue.slot_id}')">✕ Отменить</button>
+          data-action="uiCancelConstruction" data-arg="${regionId}|${inQueue.slot_id}">✕ Отменить</button>
       </div>`;
   } else if (fortLvl < maxLvl) {
     const nextLvl   = fortLvl + 1;
@@ -181,7 +181,7 @@ function _rbtFortressPanel(regionId, region, nation, queue) {
     const action    = fortLvl === 0 ? 'Построить' : 'Улучшить';
     buildBtn = `
       <button class="rbt-fort-btn ${disabled ? 'rbt-fort-btn--noafford' : ''}"
-        ${disabled ? 'disabled' : `onclick="uiOrderConstruction('${regionId}','fortress')"`}
+        ${disabled ? 'disabled' : `data-action="uiOrderConstruction" data-arg="${regionId}|fortress"`}
         title="${disReason || `${nextLabel} · ${turns} ход(а) · ${cost} монет`}">
         ${action} ур.${nextLvl} — ${nextLabel}<br>
         <span class="rbt-fort-cost ${canAfford && !atLimit ? '' : 'rbt-ac-cost--no'}">
@@ -199,14 +199,14 @@ function _rbtFortressPanel(regionId, region, nation, queue) {
     if (isConserved) {
       conserveBtn = `
         <button class="rbt-fort-conserve-btn rbt-fort-conserve-btn--active"
-          onclick="toggleFortressConservation('${regionId}')"
+          data-action="toggleFortressConservation" data-arg="${regionId}"
           title="Расконсервировать — восстановить полное содержание, начать набор гарнизона">
           🔓 Расконсервировать
         </button>`;
     } else {
       conserveBtn = `
         <button class="rbt-fort-conserve-btn"
-          onclick="toggleFortressConservation('${regionId}')"
+          data-action="toggleFortressConservation" data-arg="${regionId}"
           title="Законсервировать — содержание −90%, гарнизон заморожен, ползунок не влияет">
           🔒 Законсервировать
         </button>`;
@@ -304,7 +304,7 @@ function _rbtCategoryBlock(cat, regionId, region, nation, activeSlots, queue, co
 
   return `
     <div class="rbt-ac-cat" id="rbt-cat-${regionId}-${catId}">
-      <div class="${hdrCls}" onclick="rbtToggleCategory('${regionId}','${catId}')">
+      <div class="${hdrCls}" data-action="rbtToggleCategory" data-arg="${regionId}|${catId}">
         <span class="rbt-ac-icon">${cat.icon}</span>
         <span class="rbt-ac-title">${cat.label}</span>
         ${statsHtml}
@@ -353,19 +353,19 @@ function _rbtBuiltRow(slot, regionId, region, nation) {
   const upgBtn = canUpgrade
     ? `<button class="rbt-ac-btn rbt-ac-btn--upg"
          title="Построить ещё 1 здание (уровень ${level} → ${level + 1})"
-         onclick="uiOrderConstruction('${regionId}','${slot.building_id}')">▲ +1</button>`
+         data-action="uiOrderConstruction" data-arg="${regionId}|${slot.building_id}">▲ +1</button>`
     : (upgrading
         ? `<span class="rbt-ac-building">▲…</span>`
         : (!isPaused ? maxTag : ''));
 
   const demBtn = `<button class="rbt-ac-btn rbt-ac-btn--dem"
       title="${level > 1 ? 'Снизить уровень' : 'Снести'}"
-      onclick="uiDemolishBuilding('${regionId}','${slot.slot_id}')">✕</button>`;
+      data-action="uiDemolishBuilding" data-arg="${regionId}|${slot.slot_id}">✕</button>`;
 
   // Кнопка паузы — для всех зданий
   const pauseBtn = `<button class="rbt-ac-btn rbt-ac-btn--pause${isPaused ? ' rbt-ac-btn--paused' : ''}"
       title="${isPaused ? 'Возобновить работу' : 'Приостановить'}"
-      onclick="uiToggleBuildingPause('${regionId}','${slot.slot_id}')">
+      data-action="uiToggleBuildingPause" data-arg="${regionId}|${slot.slot_id}">
       ${isPaused ? '▶' : '⏸'}</button>`;
 
   // Строка рекрутинга (для казарм, конюшен, военного порта)
@@ -461,7 +461,7 @@ function _rbtQueueRow(entry, regionId) {
       <span class="rbt-ac-actions">
         <button class="rbt-ac-btn rbt-ac-btn--cancel"
           title="Отменить (+${refund} монет)"
-          onclick="uiCancelConstruction('${regionId}','${entry.slot_id}')">✕ +${refund}</button>
+          data-action="uiCancelConstruction" data-arg="${regionId}|${entry.slot_id}">✕ +${refund}</button>
       </span>
     </div>
   `;
@@ -518,7 +518,7 @@ function _rbtAvailRow(b, regionId, region, nation, slotsLeft) {
   const totalWorkers = (b.worker_profession || []).reduce((s, wp) => s + wp.count, 0);
 
   const addBtn = `<button class="rbt-ac-btn rbt-ac-btn--add"
-      ${disabled ? 'disabled' : `onclick="uiOrderConstruction('${regionId}','${b.id}')"`}
+      ${disabled ? 'disabled' : `data-action="uiOrderConstruction" data-arg="${regionId}|${b.id}"`}
       title="${disabled ? (reason || 'Недоступно') : matTooltip}">＋</button>`;
 
   const rowCls = disabled ? 'rbt-ac-row rbt-ac-row--avail rbt-ac-row--noafford' : 'rbt-ac-row rbt-ac-row--avail';

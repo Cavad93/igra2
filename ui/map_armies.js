@@ -564,9 +564,9 @@ function _renderArmyPanel(armyId) {
     const s = (GAME_STATE.sieges ?? []).find(sg => sg.id === army.siege_id);
     return s ? `<div class="army-siege-info">
       🏰 Осада ${s.region_name}: <b>${Math.round(s.progress)}%</b>
-      <button class="army-btn" onclick="showSiegePanel('${s.id}')">📊 Панель</button>
-      ${s.storm_possible ? `<button class="army-btn army-btn--danger" onclick="showSiegePanel('${s.id}');setTimeout(()=>siegePanelStorm&&siegePanelStorm(),50)">⚔️ Штурм</button>` : ''}
-      <button class="army-btn" onclick="liftSiege('${army.id}');renderAllArmies();">🏃 Снять</button>
+      <button class="army-btn" data-action="showSiegePanel" data-arg="${s.id}">📊 Панель</button>
+      ${s.storm_possible ? `<button class="army-btn army-btn--danger" data-action="showSiegePanel" data-arg="${s.id}" data-action2="siegePanelStormDelayed">⚔️ Штурм</button>` : ''}
+      <button class="army-btn" data-action="liftSiege" data-arg="${army.id}" data-action2="renderAllArmies">🏃 Снять</button>
     </div>` : '';
   })() : '';
 
@@ -582,7 +582,7 @@ function _renderArmyPanel(armyId) {
       <div class="army-panel-header">
         <span>${isNaval ? '⛵' : '🛡'} <b>${army.name}</b></span>
         <span class="army-nation-name">${nation?.name ?? army.nation}</span>
-        <button class="army-panel-close" onclick="closeArmyPanel()">✕</button>
+        <button class="army-panel-close" data-action="closeArmyPanel">✕</button>
       </div>
 
       <div class="army-panel-stats">
@@ -620,7 +620,7 @@ function _renderArmyPanel(armyId) {
       ${(() => {
         if (!cmd) return `<div class="army-panel-cmd army-panel-cmd--empty">
           ⚠️ Нет командующего
-          ${isPlayer ? `<button class="army-btn army-btn--assign" onclick="showCommanderPicker('${army.id}')">👑 Назначить</button>` : ''}
+          ${isPlayer ? `<button class="army-btn army-btn--assign" data-action="showCommanderPicker" data-arg="${army.id}">👑 Назначить</button>` : ''}
         </div>`;
         const lvl    = typeof getCommanderLevel === 'function' ? getCommanderLevel(cmd) : 0;
         const stars  = '★'.repeat(lvl) + '☆'.repeat(5 - lvl);
@@ -638,7 +638,7 @@ function _renderArmyPanel(armyId) {
           <div class="cmd-row-top">
             <span class="cmd-name">👤 <b>${cmd.name}</b></span>
             <span class="cmd-stars" title="${xp} XP">${stars}</span>
-            ${isPlayer ? `<button class="army-btn army-btn--assign" onclick="showCommanderPicker('${army.id}')">🔄</button>` : ''}
+            ${isPlayer ? `<button class="army-btn army-btn--assign" data-action="showCommanderPicker" data-arg="${army.id}">🔄</button>` : ''}
           </div>
           <div class="cmd-row-stats">Тактика: <b>${tactic}</b> · Логистика: <b>${logist}</b> · Осада: <b>${siege}</b></div>
           ${skillsHtml ? `<div class="cmd-skills-row">${skillsHtml}</div>` : ''}
@@ -663,11 +663,11 @@ function _renderArmyPanel(armyId) {
                ⚔️ Командует <b>${campaignOrder.assigned_char_name}</b><br>
                <small style="color:var(--text-dim)">Маршрут задаёт командующий. Правитель не вмешивается.</small>
              </div>`
-          : `<button class="army-btn" onclick="enterMoveMode('${army.id}')">🗺 Марш</button>`;
+          : `<button class="army-btn" data-action="enterMoveMode" data-arg="${army.id}">🗺 Марш</button>`;
         return `<div class="army-panel-actions">
           ${marchBtn}
-          <button class="army-btn" onclick="showFormationPicker('${army.id}')">⚔ Строй</button>
-          <button class="army-btn army-btn--secondary" onclick="disbandArmyUI('${army.id}')">❌ Распустить</button>
+          <button class="army-btn" data-action="showFormationPicker" data-arg="${army.id}">⚔ Строй</button>
+          <button class="army-btn army-btn--secondary" data-action="disbandArmyUI" data-arg="${army.id}">❌ Распустить</button>
         </div>`;
       })() : ''}
     </div>`;
@@ -744,7 +744,7 @@ function _showMoveBanner(armyName, armyId) {
     <div class="mmb-inner">
       <span class="mmb-pulse"></span>
       <span class="mmb-text">🗺 Выберите цель марша для <b>${armyName}</b></span>
-      <button class="mmb-cancel" onclick="cancelMoveMode('${armyId}')">✕ Отмена</button>
+      <button class="mmb-cancel" data-action="cancelMoveMode" data-arg="${armyId}">✕ Отмена</button>
     </div>`;
   banner.style.display = 'block';
 }
@@ -1016,7 +1016,7 @@ function showAssembleArmyDialog(regionId) {
     <div class="assemble-panel">
       <div class="assemble-panel-header">
         ⚔️ Собрать армию в ${region.name ?? regionId}
-        <button onclick="document.getElementById('assemble-army-panel').style.display='none'">✕</button>
+        <button data-action="closeAssemblePanel">✕</button>
       </div>
 
       <div class="assemble-form">
@@ -1040,8 +1040,8 @@ function showAssembleArmyDialog(regionId) {
       </div>
 
       <div class="assemble-actions">
-        <button class="army-btn" onclick="_submitAssembleArmy('${regionId}')">✅ Собрать</button>
-        <button class="army-btn army-btn--secondary" onclick="document.getElementById('assemble-army-panel').style.display='none'">Отмена</button>
+        <button class="army-btn" data-action="_submitAssembleArmy" data-arg="${regionId}">✅ Собрать</button>
+        <button class="army-btn army-btn--secondary" data-action="closeAssemblePanel">Отмена</button>
       </div>
     </div>`;
 
@@ -1217,7 +1217,7 @@ function _cmdCardHtml(char, armyId, isHire) {
       </div>
       ${skillsHtml ? `<div class="cmd-skills-row">${skillsHtml}</div>` : ''}
       <button class="army-btn cmd-pick-assign-btn"
-        onclick="assignCommanderFromPicker('${armyId}','${char.id}',${isHire})">
+        data-action="assignCommanderFromPicker" data-arg="${armyId}|${char.id}|${isHire}">
         ${isHire ? '⚔ Нанять и назначить' : '✔ Назначить'}
       </button>
     </div>`;
@@ -1247,7 +1247,7 @@ function showCommanderPicker(armyId) {
     <div class="cmd-picker">
       <div class="cmd-picker-hdr">
         <span>👑 Назначить командующего</span>
-        <button class="cmd-picker-close" onclick="closeCommanderPicker()">✕</button>
+        <button class="cmd-picker-close" data-action="closeCommanderPicker">✕</button>
       </div>
       <div class="cmd-picker-body">
         <div class="cmd-picker-section-title">🏛 Двор / Советники</div>
@@ -1298,3 +1298,14 @@ function assignCommanderFromPicker(armyId, charId, isHire) {
   if (typeof addEventLog === 'function')
     addEventLog(`👑 ${char.name} назначен командующим армии «${army.name}».`, 'character');
 }
+
+function siegePanelStormDelayed() {
+  setTimeout(() => { if (typeof siegePanelStorm === 'function') siegePanelStorm(); }, 50);
+}
+window.siegePanelStormDelayed = siegePanelStormDelayed;
+
+function closeAssemblePanel() {
+  var el = document.getElementById('assemble-army-panel');
+  if (el) el.style.display = 'none';
+}
+window.closeAssemblePanel = closeAssemblePanel;

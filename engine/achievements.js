@@ -453,41 +453,8 @@ function _ensureAchievements(nationId) {
 
 /**
  * Проверить все достижения для нации и разблокировать новые.
- * @param {string} nationId
+ * Полная реализация с доп. тиками ниже (единственное определение).
  */
-function checkAchievements(nationId) {
-  if (!GAME_STATE || !nationId) return;
-  const nation = GAME_STATE.nations?.[nationId];
-  if (!nation) return;
-
-  _ensureAchievements(nationId);
-  _updateAchievementCounters(nationId, nation);
-
-  const unlocked = GAME_STATE.achievements[nationId];
-
-  for (const achiev of ACHIEVEMENTS_LIST) {
-    if (unlocked[achiev.id]) continue; // уже разблокировано
-
-    let passed = false;
-    try {
-      passed = achiev.check(nation, GAME_STATE);
-    } catch (e) {
-      // Тихо пропускаем ошибки в check-функциях
-    }
-
-    if (passed) {
-      unlocked[achiev.id] = {
-        turn: GAME_STATE.turn ?? 0,
-        name: achiev.name,
-        icon: achiev.icon,
-        desc: achiev.desc,
-      };
-      if (typeof addEventLog === 'function') {
-        addEventLog(`${achiev.icon} Достижение: «${achiev.name}»!`, 'achievement');
-      }
-    }
-  }
-}
 
 /**
  * Обновить вспомогательные счётчики для достижений.
@@ -657,7 +624,7 @@ function showManifestModal() {
       </div>
       <div class="manifest-options">
         ${MANIFEST_PRESETS.filter(p => p.id !== 'custom').map(p => `
-          <button class="manifest-option" onclick="selectManifestPreset('${p.id}')">
+          <button class="manifest-option" data-action="selectManifestPreset" data-arg="${p.id}">
             <span class="manifest-option-icon">${p.icon}</span>
             <span class="manifest-option-text">«${p.text}»</span>
           </button>
@@ -669,7 +636,7 @@ function showManifestModal() {
             placeholder="Написать собственную историю..."
             maxlength="120">
           <button class="manifest-option manifest-custom-btn"
-            onclick="selectManifestCustom()">Принять</button>
+            data-action="selectManifestCustom">Принять</button>
         </div>
       </div>
     </div>`;
@@ -1072,7 +1039,7 @@ function renderVowsPanel() {
             </div>`;
           }
           return `<div class="vow-row vow-available">
-            <button class="vow-take-btn" onclick="takeVow('${def.id}');renderVowsModal()">
+            <button class="vow-take-btn" data-action="takeVow" data-arg="${def.id}" data-action2="renderVowsModal">
               ${def.icon} Дать клятву: «${def.name}»
             </button>
           </div>`;
@@ -1239,9 +1206,6 @@ function getHistoricalRating(nationId) {
 // ══════════════════════════════════════════════════════════════════════
 // ГЛАВНЫЙ ТИК — вызывается из checkAchievements
 // ══════════════════════════════════════════════════════════════════════
-
-// Переопределяем checkAchievements чтобы включить все доп. тики
-const _checkAchievementsCore = checkAchievements;
 
 function checkAchievements(nationId) {
   // Запускаем основную проверку

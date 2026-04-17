@@ -232,7 +232,7 @@ function showLegacyModal(text, data, testament) {
       <div class="legacy-text">${text}</div>
       ${testamentHtml}
       <div class="legacy-footer">
-        <button class="legacy-continue-btn" onclick="document.getElementById('legacy-modal').remove()">
+        <button class="legacy-continue-btn" data-action="closeLegacyModal">
           Продолжить ▸
         </button>
       </div>
@@ -647,8 +647,8 @@ function _renderTestamentModalContent() {
       <span class="testament-goal-text">${def.text}</span>
       ${taken
         ? `<span class="testament-goal-status">${status}</span>
-           <button class="testament-remove-btn" onclick="removeTestamentGoal('${def.id}');_renderTestamentModalContent()">✕</button>`
-        : `<button class="testament-add-btn" onclick="addTestamentGoal('${def.id}');_renderTestamentModalContent()"
+           <button class="testament-remove-btn" data-action="removeTestamentGoal" data-arg="${def.id}" data-action2="_renderTestamentModalContent">✕</button>`
+        : `<button class="testament-add-btn" data-action="addTestamentGoal" data-arg="${def.id}" data-action2="_renderTestamentModalContent"
             ${takenIds.length >= 3 ? 'disabled' : ''}>+ Добавить</button>`
       }
     </div>`;
@@ -700,7 +700,7 @@ function renderTestamentBlock(nation) {
         ? '<div class="testament-empty">Завещание не составлено.</div>'
         : goalRows
       }
-      <button class="gov-action-btn" style="margin-top:8px" onclick="showTestamentModal()">
+      <button class="gov-action-btn" style="margin-top:8px" data-action="showTestamentModal">
         📜 Составить завещание
       </button>
     </div>`;
@@ -729,4 +729,9 @@ function renderHistoricalRatingBlock(nation) {
     <div class="gov-block">
       ${lines.map(l => `<div style="font-style:italic;font-size:12px;color:var(--text-dim);margin:2px 0">${l}</div>`).join('')}
     </div>`;
+}
+
+function closeLegacyModal() {
+  var el = document.getElementById('legacy-modal');
+  if (el) el.remove();
 }
