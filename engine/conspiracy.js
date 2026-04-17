@@ -12,7 +12,7 @@
 // Хранение: nation.conspiracies = [ConspiracyRecord, ...]
 // ══════════════════════════════════════════════════════════════════════
 
-class ConspiracyEngine {
+export class ConspiracyEngine {
 
   // ══════════════════════════════════════════════════════════════════
   // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
@@ -599,4 +599,9 @@ class ConspiracyEngine {
 // ══════════════════════════════════════════════════════════════════════
 // SINGLETON
 // ══════════════════════════════════════════════════════════════════════
-const CONSPIRACY_ENGINE = new ConspiracyEngine();
+export const CONSPIRACY_ENGINE = new ConspiracyEngine();
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.CONSPIRACY_ENGINE = CONSPIRACY_ENGINE;
+window.ConspiracyEngine = ConspiracyEngine;
+

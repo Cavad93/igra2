@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// ВОЗРАСТНАЯ ДЕМОГРАФИЯ
+// ВОЗРАСТНАЯ ДЕМОГРАФИЯ (ES module)
 //
 // Система моделирует три возрастные когорты населения:
 //   children  — от 0 до min_work_age (иждивенцы / частичные работники)
@@ -18,11 +18,13 @@
 //   BASELINE_CONSUMPTION_MULT = 1.80   (каждый работник кормит 1.8 потребителя)
 // ═══════════════════════════════════════════════════════════════════════════
 
+import { CONFIG } from '../config.js';
+
 // ──────────────────────────────────────────────────────────────
 // БИОЛОГИЧЕСКИЕ КОНСТАНТЫ (Античность ~300 г. до н.э.)
 // ──────────────────────────────────────────────────────────────
 
-const AGE_PARAMS = {
+export const AGE_PARAMS = {
   birth_rate_annual:      0.042,   // ~42 на 1000 в год (высокая рождаемость)
   child_mortality_annual: 0.030,   // 3% детской смертности в год
   adult_mortality_annual: 0.012,   // 1.2% взрослой смертности в год (без войны)
@@ -46,7 +48,7 @@ const AGE_PARAMS = {
 // ИНИЦИАЛИЗАЦИЯ КОГОРТ НАЦИИ (ленивая, при первом обращении)
 // ──────────────────────────────────────────────────────────────
 
-function initAgeCohorts(nation) {
+export function initAgeCohorts(nation) {
   if (nation.demographics) return;
 
   const total = nation.population?.total || 0;
@@ -81,7 +83,7 @@ function initAgeCohorts(nation) {
 // Вызывается ПОСЛЕ processDemography() — total уже обновлён.
 // ──────────────────────────────────────────────────────────────
 
-function updateAgeCohorts(nation) {
+export function updateAgeCohorts(nation) {
   if (!nation.demographics) initAgeCohorts(nation);
 
   const dem   = nation.demographics;
@@ -170,7 +172,7 @@ function updateAgeCohorts(nation) {
 // labor_productivity_mod из текущих когорт + labor_laws.
 // ──────────────────────────────────────────────────────────────
 
-function computeLaborForce(nation) {
+export function computeLaborForce(nation) {
   const dem   = nation.demographics;
   if (!dem) return;
 
@@ -247,7 +249,7 @@ function computeLaborForce(nation) {
 // Хранит в nation.population._labor_law_bonuses для updateHappiness().
 // ──────────────────────────────────────────────────────────────
 
-function collectLaborLawBonuses(nation) {
+export function collectLaborLawBonuses(nation) {
   if (typeof LAWS_LABOR === 'undefined') return;
 
   const bonuses = {};
@@ -288,7 +290,7 @@ function collectLaborLawBonuses(nation) {
 // Вызывается из turn.js ПОСЛЕ processDemography().
 // ──────────────────────────────────────────────────────────────
 
-function processAgeDemographics() {
+export function processAgeDemographics() {
   if (typeof GAME_STATE === 'undefined') return;
 
   for (const nation of Object.values(GAME_STATE.nations)) {
@@ -304,7 +306,7 @@ function processAgeDemographics() {
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // ──────────────────────────────────────────────────────────────
 
-function _getLaborLaws(nation) {
+export function _getLaborLaws(nation) {
   const base = (typeof DEFAULT_LABOR_LAWS !== 'undefined')
     ? DEFAULT_LABOR_LAWS
     : { min_work_age: 12, child_labor_intensity: 0.40, elder_threshold: 55,
@@ -313,11 +315,11 @@ function _getLaborLaws(nation) {
   return Object.assign({}, base, nation.labor_laws || {});
 }
 
-function _turnsPerYear() {
+export function _turnsPerYear() {
   return (typeof CONFIG !== 'undefined' && CONFIG.TURNS_PER_YEAR) || 12;
 }
 
-function _getFoodRatio(nation) {
+export function _getFoodRatio(nation) {
   const stockpile = nation.economy?.stockpile || {};
   const pop       = nation.population?.total  || 0;
   const FOOD_PP   = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.FOOD_PER_PERSON) || 1.2;
@@ -328,7 +330,7 @@ function _getFoodRatio(nation) {
   return needed > 0 ? Math.min(1.5, avail / needed) : 1.0;
 }
 
-function _nationHasBuilding(nation, buildingId) {
+export function _nationHasBuilding(nation, buildingId) {
   if (typeof GAME_STATE !== 'undefined') {
     for (const rid of (nation.regions || [])) {
       const r = GAME_STATE.regions?.[rid];
@@ -346,7 +348,7 @@ function _nationHasBuilding(nation, buildingId) {
 // ──────────────────────────────────────────────────────────────
 
 // Получить читаемую строку для dependency_ratio
-function dependencyRatioLabel(ratio) {
+export function dependencyRatioLabel(ratio) {
   if (ratio < 0.5)  return { text: 'Очень низкая',  cls: 'good' };
   if (ratio < 0.8)  return { text: 'Низкая',        cls: 'good' };
   if (ratio < 1.2)  return { text: 'Умеренная',     cls: 'neutral' };
@@ -356,7 +358,7 @@ function dependencyRatioLabel(ratio) {
 }
 
 // Получить активный трудовой закон для группы
-function getActiveLaborLawForGroup(nation, group) {
+export function getActiveLaborLawForGroup(nation, group) {
   if (typeof LAWS_LABOR === 'undefined') return null;
   const activeLaw = (nation.active_laws || []).find(l =>
     l._labor_law && LAWS_LABOR[l.id]?.group === group
@@ -373,7 +375,7 @@ function getActiveLaborLawForGroup(nation, group) {
 // низкое e0, но выжившие до 20 лет живут ещё 30–35 лет).
 // ──────────────────────────────────────────────────────────────
 
-function computeLifeExpectancy(nation) {
+export function computeLifeExpectancy(nation) {
   const laws  = _getLaborLaws(nation);
   const TURNS = _turnsPerYear();
 
@@ -460,7 +462,7 @@ function computeLifeExpectancy(nation) {
 // нормируются в сумму 1.0.
 // ──────────────────────────────────────────────────────────────
 
-function estimateClassAgeCohorts(classId, nationCohorts) {
+export function estimateClassAgeCohorts(classId, nationCohorts) {
   // Множители смещения (child/adult/elder) относительно нации
   const BIAS = {
     //                           c      a      e
@@ -492,7 +494,7 @@ function estimateClassAgeCohorts(classId, nationCohorts) {
 // Вызывается из updateAgeCohorts() в конце хода.
 // ──────────────────────────────────────────────────────────────
 
-function recordDemographicHistory(nation) {
+export function recordDemographicHistory(nation) {
   const dem = nation.demographics;
   if (!dem) return;
   if (!dem.history) dem.history = [];
@@ -528,3 +530,21 @@ function recordDemographicHistory(nation) {
   // Храним не более 120 точек (~10 лет игрового времени)
   if (dem.history.length > 120) dem.history.shift();
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.AGE_PARAMS = AGE_PARAMS;
+window._getFoodRatio = _getFoodRatio;
+window._getLaborLaws = _getLaborLaws;
+window._nationHasBuilding = _nationHasBuilding;
+window._turnsPerYear = _turnsPerYear;
+window.collectLaborLawBonuses = collectLaborLawBonuses;
+window.computeLaborForce = computeLaborForce;
+window.computeLifeExpectancy = computeLifeExpectancy;
+window.dependencyRatioLabel = dependencyRatioLabel;
+window.estimateClassAgeCohorts = estimateClassAgeCohorts;
+window.getActiveLaborLawForGroup = getActiveLaborLawForGroup;
+window.initAgeCohorts = initAgeCohorts;
+window.processAgeDemographics = processAgeDemographics;
+window.recordDemographicHistory = recordDemographicHistory;
+window.updateAgeCohorts = updateAgeCohorts;
+

@@ -18,7 +18,7 @@
 // СПИСОК ДОСТИЖЕНИЙ (50 штук)
 // ──────────────────────────────────────────────────────────────
 
-const ACHIEVEMENTS_LIST = [
+export const ACHIEVEMENTS_LIST = [
   // ── ВОЕННЫЕ ────────────────────────────────────────────────
   {
     id: 'first_blood',
@@ -434,7 +434,7 @@ const ACHIEVEMENTS_LIST = [
 // ──────────────────────────────────────────────────────────────
 
 /** Найти ID нации по объекту нации в GAME_STATE */
-function _getNationId(nation, gs) {
+export function _getNationId(nation, gs) {
   for (const [id, n] of Object.entries(gs.nations ?? {})) {
     if (n === nation) return id;
   }
@@ -442,7 +442,7 @@ function _getNationId(nation, gs) {
 }
 
 /** Инициализировать хранилище достижений для нации */
-function _ensureAchievements(nationId) {
+export function _ensureAchievements(nationId) {
   if (!GAME_STATE.achievements) GAME_STATE.achievements = {};
   if (!GAME_STATE.achievements[nationId]) GAME_STATE.achievements[nationId] = {};
 }
@@ -460,7 +460,7 @@ function _ensureAchievements(nationId) {
  * Обновить вспомогательные счётчики для достижений.
  * Вызывается каждый ход из checkAchievements.
  */
-function _updateAchievementCounters(nationId, nation) {
+export function _updateAchievementCounters(nationId, nation) {
   const gs = GAME_STATE;
   const eco = nation.economy ?? {};
   const mil = nation.military ?? {};
@@ -519,7 +519,7 @@ function _updateAchievementCounters(nationId, nation) {
  * @param {string} nationId
  * @returns {Array<{id, name, icon, desc, turn}>}
  */
-function getAchievements(nationId) {
+export function getAchievements(nationId) {
   if (!GAME_STATE || !nationId) return [];
   _ensureAchievements(nationId);
   return Object.entries(GAME_STATE.achievements[nationId]).map(([id, data]) => ({
@@ -533,7 +533,7 @@ function getAchievements(nationId) {
  * @param {string} nationId
  * @returns {number}
  */
-function getAchievementCount(nationId) {
+export function getAchievementCount(nationId) {
   if (!GAME_STATE || !nationId) return 0;
   _ensureAchievements(nationId);
   return Object.keys(GAME_STATE.achievements[nationId]).length;
@@ -548,7 +548,7 @@ function getAchievementCount(nationId) {
  * @param {string} nationId
  * @returns {number}
  */
-function calcGrandeur(nationId) {
+export function calcGrandeur(nationId) {
   if (!GAME_STATE || !nationId) return 0;
   const n   = GAME_STATE.nations?.[nationId];
   if (!n) return 0;
@@ -582,7 +582,7 @@ function calcGrandeur(nationId) {
 /**
  * Обновить отображение индекса величия в левой панели.
  */
-function updateGrandeurDisplay() {
+export function updateGrandeurDisplay() {
   if (typeof document === 'undefined') return;
   const nationId = GAME_STATE?.player_nation;
   if (!nationId) return;
@@ -596,7 +596,7 @@ function updateGrandeurDisplay() {
 // СЕССИЯ 3 — ЛИЧНЫЙ МАНИФЕСТ
 // ══════════════════════════════════════════════════════════════════════
 
-const MANIFEST_PRESETS = [
+export const MANIFEST_PRESETS = [
   { id: 'unify',   icon: '🗺',  text: 'Объединить все регионы острова' },
   { id: 'richest', icon: '💰',  text: 'Стать богатейшей державой Средиземноморья' },
   { id: 'army',    icon: '⚔️', text: 'Создать непобедимую армию' },
@@ -607,7 +607,7 @@ const MANIFEST_PRESETS = [
 /**
  * Показать модальное окно «Личный манифест» при первом ходе.
  */
-function showManifestModal() {
+export function showManifestModal() {
   if (typeof document === 'undefined') return;
 
   const existing = document.getElementById('manifest-modal');
@@ -643,20 +643,20 @@ function showManifestModal() {
   document.body.appendChild(modal);
 }
 
-function selectManifestPreset(id) {
+export function selectManifestPreset(id) {
   const preset = MANIFEST_PRESETS.find(p => p.id === id);
   if (!preset) return;
   _saveManifest(preset.text);
 }
 
-function selectManifestCustom() {
+export function selectManifestCustom() {
   const input = document.getElementById('manifest-custom-input');
   const text = (input?.value ?? '').trim();
   if (!text) return;
   _saveManifest(text);
 }
 
-function _saveManifest(text) {
+export function _saveManifest(text) {
   GAME_STATE.player_manifest = { text, chosen_turn: GAME_STATE.turn ?? 1 };
   const modal = document.getElementById('manifest-modal');
   if (modal) modal.remove();
@@ -669,7 +669,7 @@ function _saveManifest(text) {
 /**
  * Обновить отображение манифеста в левой панели.
  */
-function _renderManifestInPanel() {
+export function _renderManifestInPanel() {
   if (typeof document === 'undefined') return;
   const el = document.getElementById('manifest-display');
   if (!el) return;
@@ -682,7 +682,7 @@ function _renderManifestInPanel() {
  * Проверить нужно ли показывать манифест, хроникёр (каждые 25 ходов).
  * Вызывается из checkAchievements.
  */
-function _tickManifest(nationId) {
+export function _tickManifest(nationId) {
   const gs = GAME_STATE;
   const turn = gs.turn ?? 0;
 
@@ -716,7 +716,7 @@ function _tickManifest(nationId) {
  * @param {string} nationId
  * @returns {Array<{id, text, progress: ()=>number, completed: ()=>boolean}>}
  */
-function generateDynamicGoals(nationId) {
+export function generateDynamicGoals(nationId) {
   if (!GAME_STATE) return [];
   const gs = GAME_STATE;
   const n  = gs.nations?.[nationId];
@@ -853,7 +853,7 @@ function generateDynamicGoals(nationId) {
 /**
  * Обновить dynamic_goals каждые 10 ходов и обновить UI.
  */
-function _tickDynamicGoals(nationId) {
+export function _tickDynamicGoals(nationId) {
   const turn = GAME_STATE.turn ?? 0;
   if (turn % 10 !== 0 && turn > 1) return;
 
@@ -873,7 +873,7 @@ function _tickDynamicGoals(nationId) {
 /**
  * Отрисовать блок «Цели» в левой панели.
  */
-function _renderDynamicGoalsInPanel(nationId, goals) {
+export function _renderDynamicGoalsInPanel(nationId, goals) {
   if (typeof document === 'undefined') return;
   const el = document.getElementById('dynamic-goals-block');
   if (!el) return;
@@ -899,7 +899,7 @@ function _renderDynamicGoalsInPanel(nationId, goals) {
 // СЕССИЯ 5 — ЛИЧНЫЕ КЛЯТВЫ
 // ══════════════════════════════════════════════════════════════════════
 
-const VOW_DEFS = [
+export const VOW_DEFS = [
   {
     id:   'no_first_strike',
     name: 'Не нападать первым',
@@ -941,7 +941,7 @@ const VOW_DEFS = [
 /**
  * Инициализировать хранилище клятв.
  */
-function _ensureVows() {
+export function _ensureVows() {
   if (!GAME_STATE.player_vows) GAME_STATE.player_vows = [];
 }
 
@@ -949,7 +949,7 @@ function _ensureVows() {
  * Принять клятву (вызывается из UI).
  * @param {string} vowId
  */
-function takeVow(vowId) {
+export function takeVow(vowId) {
   _ensureVows();
   const def = VOW_DEFS.find(v => v.id === vowId);
   if (!def) return;
@@ -969,7 +969,7 @@ function takeVow(vowId) {
  * Проверить нарушения клятв. Вызывать из turn.js каждый ход.
  * @param {string} nationId
  */
-function checkVowViolations(nationId) {
+export function checkVowViolations(nationId) {
   _ensureVows();
   const n = GAME_STATE.nations?.[nationId];
   if (!n) return;
@@ -1017,7 +1017,7 @@ function checkVowViolations(nationId) {
  * Рендер панели клятв (для модального окна).
  * @returns {string} HTML
  */
-function renderVowsPanel() {
+export function renderVowsPanel() {
   _ensureVows();
   const active = GAME_STATE.player_vows;
 
@@ -1048,7 +1048,7 @@ function renderVowsPanel() {
     </div>`;
 }
 
-function showVowsModal() {
+export function showVowsModal() {
   if (typeof document === 'undefined') return;
   const modal = document.getElementById('vows-modal');
   if (!modal) return;
@@ -1057,12 +1057,12 @@ function showVowsModal() {
   if (content) content.innerHTML = renderVowsPanel();
 }
 
-function hideVowsModal() {
+export function hideVowsModal() {
   const modal = document.getElementById('vows-modal');
   if (modal) modal.style.display = 'none';
 }
 
-function renderVowsModal() {
+export function renderVowsModal() {
   const content = document.getElementById('vows-modal-content');
   if (content) content.innerHTML = renderVowsPanel();
 }
@@ -1075,7 +1075,7 @@ function renderVowsModal() {
  * Добавить запись в chronicle_log (максимум 50).
  * @param {object} entry
  */
-function _addChronicleEntry(entry) {
+export function _addChronicleEntry(entry) {
   if (!GAME_STATE.chronicle_log) GAME_STATE.chronicle_log = [];
   GAME_STATE.chronicle_log.push({ turn: GAME_STATE.turn ?? 0, ...entry });
   if (GAME_STATE.chronicle_log.length > 50) GAME_STATE.chronicle_log.shift();
@@ -1085,7 +1085,7 @@ function _addChronicleEntry(entry) {
  * Каждые 25 ходов генерировать хроническую запись.
  * @param {string} nationId
  */
-function _tickChronicle(nationId) {
+export function _tickChronicle(nationId) {
   const turn = GAME_STATE.turn ?? 0;
   if (turn === 0 || turn % 25 !== 0) return;
 
@@ -1114,7 +1114,7 @@ function _tickChronicle(nationId) {
   }
 }
 
-function _buildChronicleText({ grandeur, achievements, manifest, wars, treasury, turn }) {
+export function _buildChronicleText({ grandeur, achievements, manifest, wars, treasury, turn }) {
   const year = Math.abs((GAME_STATE.date?.year ?? -301)) + Math.floor(turn / 12);
   let text = `Год ${year} до н.э. `;
 
@@ -1135,7 +1135,7 @@ function _buildChronicleText({ grandeur, achievements, manifest, wars, treasury,
 /**
  * Показать модальное окно летописи.
  */
-function showChronicleModal() {
+export function showChronicleModal() {
   if (typeof document === 'undefined') return;
   const modal = document.getElementById('chronicle-modal');
   if (!modal) return;
@@ -1157,7 +1157,7 @@ function showChronicleModal() {
     </div>`).join('');
 }
 
-function hideChronicleModal() {
+export function hideChronicleModal() {
   const modal = document.getElementById('chronicle-modal');
   if (modal) modal.style.display = 'none';
 }
@@ -1171,7 +1171,7 @@ function hideChronicleModal() {
  * @param {string} nationId
  * @returns {string[]} массив строк-сравнений
  */
-function getHistoricalRating(nationId) {
+export function getHistoricalRating(nationId) {
   const n = GAME_STATE.nations?.[nationId];
   if (!n) return [];
 
@@ -1207,7 +1207,7 @@ function getHistoricalRating(nationId) {
 // ГЛАВНЫЙ ТИК — вызывается из checkAchievements
 // ══════════════════════════════════════════════════════════════════════
 
-function checkAchievements(nationId) {
+export function checkAchievements(nationId) {
   // Запускаем основную проверку
   if (!GAME_STATE || !nationId) return;
   const nation = GAME_STATE.nations?.[nationId];
@@ -1243,3 +1243,47 @@ function checkAchievements(nationId) {
   }
   _tickChronicle(nationId);
 }
+
+// ── window bindings for data-action handlers in HTML templates ──
+if (typeof window !== 'undefined') {
+  window.selectManifestPreset = selectManifestPreset;
+  window.selectManifestCustom = selectManifestCustom;
+  window.takeVow              = takeVow;
+  window.renderVowsModal      = renderVowsModal;
+}
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.ACHIEVEMENTS_LIST = ACHIEVEMENTS_LIST;
+window.MANIFEST_PRESETS = MANIFEST_PRESETS;
+window.VOW_DEFS = VOW_DEFS;
+window._addChronicleEntry = _addChronicleEntry;
+window._buildChronicleText = _buildChronicleText;
+window._ensureAchievements = _ensureAchievements;
+window._ensureVows = _ensureVows;
+window._getNationId = _getNationId;
+window._renderDynamicGoalsInPanel = _renderDynamicGoalsInPanel;
+window._renderManifestInPanel = _renderManifestInPanel;
+window._saveManifest = _saveManifest;
+window._tickChronicle = _tickChronicle;
+window._tickDynamicGoals = _tickDynamicGoals;
+window._tickManifest = _tickManifest;
+window._updateAchievementCounters = _updateAchievementCounters;
+window.calcGrandeur = calcGrandeur;
+window.checkAchievements = checkAchievements;
+window.checkVowViolations = checkVowViolations;
+window.generateDynamicGoals = generateDynamicGoals;
+window.getAchievementCount = getAchievementCount;
+window.getAchievements = getAchievements;
+window.getHistoricalRating = getHistoricalRating;
+window.hideChronicleModal = hideChronicleModal;
+window.hideVowsModal = hideVowsModal;
+window.renderVowsModal = renderVowsModal;
+window.renderVowsPanel = renderVowsPanel;
+window.selectManifestCustom = selectManifestCustom;
+window.selectManifestPreset = selectManifestPreset;
+window.showChronicleModal = showChronicleModal;
+window.showManifestModal = showManifestModal;
+window.showVowsModal = showVowsModal;
+window.takeVow = takeVow;
+window.updateGrandeurDisplay = updateGrandeurDisplay;
+

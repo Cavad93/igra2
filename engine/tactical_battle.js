@@ -5,16 +5,16 @@
 // Этап 8: боевые формулы и тактический тик
 // ══════════════════════════════════════════════════════
 
-const TACTICAL_GRID_COLS = 22;
-const TACTICAL_GRID_ROWS = 16;
-const MAX_UNITS_PER_SIDE = 20;
-const CELL_SIZE = 40;
-const UNIT_BASE_SIZE = 400;
-const RESERVE_ZONE_COLS = 3;
+export const TACTICAL_GRID_COLS = 22;
+export const TACTICAL_GRID_ROWS = 16;
+export const MAX_UNITS_PER_SIDE = 20;
+export const CELL_SIZE = 40;
+export const UNIT_BASE_SIZE = 400;
+export const RESERVE_ZONE_COLS = 3;
 
 // ── Этап 3: структура юнита ──────────────────────────
 
-function createUnit(id, side, type, strength, gridX, gridY, extra = {}) {
+export function createUnit(id, side, type, strength, gridX, gridY, extra = {}) {
   return {
     id, side, type,
     strength,
@@ -33,7 +33,7 @@ function createUnit(id, side, type, strength, gridX, gridY, extra = {}) {
   };
 }
 
-function initTacticalBattle(atkArmy, defArmy, region) {
+export function initTacticalBattle(atkArmy, defArmy, region) {
   const playerUnits = [];
   const enemyUnits  = [];
 
@@ -120,7 +120,7 @@ function initTacticalBattle(atkArmy, defArmy, region) {
 
 // ── Этап 10: генерация возвышенных клеток ────────────
 
-function generateElevatedCells(terrain, cols, rows) {
+export function generateElevatedCells(terrain, cols, rows) {
   const elevated = new Set();
   const ratio = { plains: 0, river_valley: 0.04, coastal_city: 0.05,
                   hills: 0.25, mountains: 0.40 }[terrain] ?? 0;
@@ -152,7 +152,7 @@ function generateElevatedCells(terrain, cols, rows) {
 
 // ── Этап 10: боевой бонус от рельефа ─────────────────
 
-function getTerrainAttackMult(attacker, defender, bs) {
+export function getTerrainAttackMult(attacker, defender, bs) {
   const atkElev = bs.elevatedCells.has(`${attacker.gridX},${attacker.gridY}`);
   const defElev = bs.elevatedCells.has(`${defender.gridX},${defender.gridY}`);
   if (atkElev && !defElev) return 1.10; // атака с высоты
@@ -162,7 +162,7 @@ function getTerrainAttackMult(attacker, defender, bs) {
 
 // ── Этап 11: фланговая атака ─────────────────────────
 
-function getAttackDirection(attacker, defender) {
+export function getAttackDirection(attacker, defender) {
   const dx = attacker.gridX - defender.gridX;
   const dy = attacker.gridY - defender.gridY;
   // Флаг если атака преимущественно горизонтальная
@@ -177,7 +177,7 @@ function getAttackDirection(attacker, defender) {
   return 'flank';
 }
 
-function flankBonus(direction) {
+export function flankBonus(direction) {
   if (direction === 'rear')  return { dmg: 1.70, morale: -35 };
   if (direction === 'flank') return { dmg: 1.40, morale: -20 };
   return { dmg: 1.00, morale: 0 };
@@ -185,7 +185,7 @@ function flankBonus(direction) {
 
 // ── Этап 9: боеприпасы стрелков ──────────────────────
 
-function resolveArrows(archer, target, bs) {
+export function resolveArrows(archer, target, bs) {
   const isElev   = bs.elevatedCells.has(`${archer.gridX},${archer.gridY}`);
   const rangeMax = isElev ? 4 : 3;
   const dist     = Math.abs(archer.gridX - target.gridX)
@@ -211,7 +211,7 @@ function resolveArrows(archer, target, bs) {
 
 // ── Этап 8: боевые формулы и тактический тик ──────────
 
-const FORMATION_MULT = {
+export const FORMATION_MULT = {
   standard:  { atk: 1.0, def: 1.0 },
   aggressive:{ atk: 1.3, def: 0.8 },
   defensive: { atk: 0.7, def: 1.4 },
@@ -219,14 +219,14 @@ const FORMATION_MULT = {
   siege:     { atk: 0.5, def: 1.2 }
 };
 
-function moraleMultiplier(morale) {
+export function moraleMultiplier(morale) {
   if (morale >= 80) return 1.20;
   if (morale >= 50) return 1.00;
   if (morale >= 30) return 0.80;
   return 0.50;
 }
 
-function fatigueMultiplier(fatigue) {
+export function fatigueMultiplier(fatigue) {
   if (fatigue < 40)  return 1.00;
   if (fatigue < 70)  return 0.85;
   if (fatigue < 90)  return 0.65;
@@ -235,7 +235,7 @@ function fatigueMultiplier(fatigue) {
 
 // ── Этап 14: усталость ───────────────────────────────
 
-function processFatigue(unit, moved, fought) {
+export function processFatigue(unit, moved, fought) {
   if (unit.isReserve) {
     unit.fatigue = Math.max(0, unit.fatigue - 5); // отдых в резерве
     return;
@@ -246,7 +246,7 @@ function processFatigue(unit, moved, fought) {
   if (unit.type === 'cavalry') unit.fatigue = Math.min(100, unit.fatigue + 2); // кавалерия устаёт быстрее
 }
 
-function getAdjacentUnits(unit, side, bs) {
+export function getAdjacentUnits(unit, side, bs) {
   const all = side === 'player' ? bs.playerUnits : bs.enemyUnits;
   return all.filter(u =>
     u.strength > 0 && !u.isRouting &&
@@ -254,7 +254,7 @@ function getAdjacentUnits(unit, side, bs) {
   );
 }
 
-function resolveMelee(attacker, defender, bs) {
+export function resolveMelee(attacker, defender, bs) {
   const fm  = FORMATION_MULT[attacker.formation] ?? FORMATION_MULT.standard;
   const dir = getAttackDirection(attacker, defender);
   const fb  = flankBonus(dir);
@@ -293,7 +293,7 @@ function resolveMelee(attacker, defender, bs) {
 
 // ── Этап 13: аура командира ───────────────────────────
 
-function processCommanderAura(bs) {
+export function processCommanderAura(bs) {
   for (const side of ['player', 'enemy']) {
     const units = side === 'player' ? bs.playerUnits : bs.enemyUnits;
     const cmd   = units.find(u => u.isCommander && u.strength > 0);
@@ -317,7 +317,7 @@ function processCommanderAura(bs) {
 }
 
 // Вызывается из resolveMelee при атаке на командира
-function processCommanderDeath(cmd, bs) {
+export function processCommanderDeath(cmd, bs) {
   const side  = cmd.side;
   const units = side === 'player' ? bs.playerUnits : bs.enemyUnits;
 
@@ -332,7 +332,7 @@ function processCommanderDeath(cmd, bs) {
 
 // ── Этап 12: паника и бегство ────────────────────────
 
-function processPanic(bs) {
+export function processPanic(bs) {
   const allUnits = [...bs.playerUnits, ...bs.enemyUnits];
 
   for (const unit of allUnits) {
@@ -723,3 +723,28 @@ function finalizeTacticalBattle(bs, outcome) {
       ? bs.region?.name : null
   };
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.CELL_SIZE = CELL_SIZE;
+window.FORMATION_MULT = FORMATION_MULT;
+window.MAX_UNITS_PER_SIDE = MAX_UNITS_PER_SIDE;
+window.RESERVE_ZONE_COLS = RESERVE_ZONE_COLS;
+window.TACTICAL_GRID_COLS = TACTICAL_GRID_COLS;
+window.TACTICAL_GRID_ROWS = TACTICAL_GRID_ROWS;
+window.UNIT_BASE_SIZE = UNIT_BASE_SIZE;
+window.createUnit = createUnit;
+window.fatigueMultiplier = fatigueMultiplier;
+window.flankBonus = flankBonus;
+window.generateElevatedCells = generateElevatedCells;
+window.getAdjacentUnits = getAdjacentUnits;
+window.getAttackDirection = getAttackDirection;
+window.getTerrainAttackMult = getTerrainAttackMult;
+window.initTacticalBattle = initTacticalBattle;
+window.moraleMultiplier = moraleMultiplier;
+window.processCommanderAura = processCommanderAura;
+window.processCommanderDeath = processCommanderDeath;
+window.processFatigue = processFatigue;
+window.processPanic = processPanic;
+window.resolveArrows = resolveArrows;
+window.resolveMelee = resolveMelee;
+

@@ -3,11 +3,14 @@
 // Главный принцип: код считает механику, Claude интерпретирует людей.
 // ══════════════════════════════════════════════════════════════════════
 
+import { CONFIG } from '../config.js';
+import { MAP_REGIONS } from '../data/map.js';
+
 // ──────────────────────────────────────────────────────────────────────
 // ХОД: вызывается из turn.js для всех наций
 // ──────────────────────────────────────────────────────────────────────
 
-function processAllGovernmentTicks() {
+export function processAllGovernmentTicks() {
   for (const nationId of Object.keys(GAME_STATE.nations)) {
     processGovernmentTick(nationId);
   }
@@ -15,7 +18,7 @@ function processAllGovernmentTicks() {
   processSenateTickForAllNations();
 }
 
-function processGovernmentTick(nationId) {
+export function processGovernmentTick(nationId) {
   const nation = GAME_STATE.nations[nationId];
   const gov = nation.government;
   if (!gov) return;
@@ -180,7 +183,7 @@ function processGovernmentTick(nationId) {
 // НАРОДНЫЕ ВОССТАНИЯ
 // ──────────────────────────────────────────────────────────────────────
 
-function checkPopularRevolt(nationId, isPlayer) {
+export function checkPopularRevolt(nationId, isPlayer) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -249,7 +252,7 @@ function checkPopularRevolt(nationId, isPlayer) {
 // Вызывается из turn.js при гибели правителя.
 // ──────────────────────────────────────────────────────────────────────
 
-function triggerSuccessionCrisis(nationId) {
+export function triggerSuccessionCrisis(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
   const gov    = nation.government;
@@ -386,7 +389,7 @@ ${regent.name} назначен временным регентом. \
 // ──────────────────────────────────────────────────────────────────────
 
 // Имена для автогенерации претендентов по культуре нации
-const SUCCESSION_NAMES_BY_CULTURE = {
+export const SUCCESSION_NAMES_BY_CULTURE = {
   greek:   ['Антиох', 'Птолемей', 'Деметрий', 'Пердикка', 'Лисандр', 'Никомед', 'Аттал'],
   roman:   ['Марк', 'Луций', 'Гней', 'Публий', 'Тит', 'Гай', 'Квинт'],
   persian: ['Артабаз', 'Мазей', 'Фрада', 'Оронт', 'Митридат', 'Арсам'],
@@ -398,7 +401,7 @@ const SUCCESSION_NAMES_BY_CULTURE = {
  * Инициализирует массив кандидатов-претендентов для монархии.
  * Вызывается один раз, если candidates ещё не задан.
  */
-function initSuccessionCandidates(nationId) {
+export function initSuccessionCandidates(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
   const gov = nation.government;
@@ -446,7 +449,7 @@ function initSuccessionCandidates(nationId) {
  * @param {string} candidateId
  * @returns {{ ok: boolean, reason?: string }}
  */
-function appointSuccessionHeir(nationId, candidateId) {
+export function appointSuccessionHeir(nationId, candidateId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return { ok: false, reason: 'no_nation' };
   const gov = nation.government;
@@ -483,7 +486,7 @@ function appointSuccessionHeir(nationId, candidateId) {
  * @param {string} candidateId
  * @returns {{ ok: boolean, reason?: string }}
  */
-function arrangeMarriageForClaimant(nationId, candidateId) {
+export function arrangeMarriageForClaimant(nationId, candidateId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return { ok: false, reason: 'no_nation' };
   const gov = nation.government;
@@ -531,7 +534,7 @@ function arrangeMarriageForClaimant(nationId, candidateId) {
 //  70-84  — сильная: законы проходят легче, заговоры реже
 //  85-100 — тираническая: безграничная воля, но опасность переворота
 
-function calculatePersonalPower(nationId) {
+export function calculatePersonalPower(nationId) {
   const nation = GAME_STATE.nations[nationId];
   const gov    = nation?.government;
   if (!gov?.ruler) return 25;
@@ -604,7 +607,7 @@ function calculatePersonalPower(nationId) {
 // ЗАГОВОРЫ
 // ──────────────────────────────────────────────────────────────────────
 
-function calculateConspiracyChance(nation) {
+export function calculateConspiracyChance(nation) {
   const gov = nation.government;
   let chance = gov.conspiracies?.base_chance_per_turn ?? 0.15;
 
@@ -642,7 +645,7 @@ function calculateConspiracyChance(nation) {
   return Math.max(0, Math.min(0.85, chance));
 }
 
-function triggerConspiracy(nationId) {
+export function triggerConspiracy(nationId) {
   if (nationId !== GAME_STATE.player_nation) return;
 
   const nation = GAME_STATE.nations[nationId];
@@ -679,7 +682,7 @@ function triggerConspiracy(nationId) {
 // ──────────────────────────────────────────────────────────────────────
 
 // GOV_006: Скандалы на выборах
-const ELECTION_SCANDALS = {
+export const ELECTION_SCANDALS = {
   bribery: {
     label: 'взяточничество',
     base_penalty: -25,
@@ -698,7 +701,7 @@ const ELECTION_SCANDALS = {
 };
 
 // GOV_006: Подкуп кандидата до выборов (вызывается из UI)
-function bribeElectionCandidate(nationId, candidateId, goldAmount) {
+export function bribeElectionCandidate(nationId, candidateId, goldAmount) {
   const nation = GAME_STATE.nations[nationId];
   const gov    = nation.government;
   if (!gov?.elections?.enabled) return { ok: false, reason: 'no_elections' };
@@ -726,11 +729,11 @@ function bribeElectionCandidate(nationId, candidateId, goldAmount) {
 }
 
 // GOV_006: Стоимость подкупа (50-150 в зависимости от влияния)
-function calcBribeCost(candidate) {
+export function calcBribeCost(candidate) {
   return Math.round(50 + (candidate.influence ?? 40) * 2.5);
 }
 
-async function triggerElection(nationId) {
+export async function triggerElection(nationId) {
   const nation  = GAME_STATE.nations[nationId];
   const gov     = nation.government;
   const mgr     = getSenateManager(nationId);
@@ -872,7 +875,7 @@ async function triggerElection(nationId) {
 }
 
 // GOV_006: Генерация нарратива выборов через Claude Haiku
-async function _generateElectionNarrative(nationId, winner, losers, scandals) {
+export async function _generateElectionNarrative(nationId, winner, losers, scandals) {
   const nation = GAME_STATE.nations[nationId];
   const gov    = nation?.government;
   if (!gov?.elections?.last_result) return;
@@ -921,7 +924,7 @@ async function _generateElectionNarrative(nationId, winner, losers, scandals) {
  * GOV_009: Высокоуровневый триггер перехода правления с типизированными эффектами.
  * cause: 'coup' | 'revolution' | 'reform' | 'conquest'
  */
-function triggerGovernmentTransition(nationId, fromType, toType, cause) {
+export function triggerGovernmentTransition(nationId, fromType, toType, cause) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation?.government) return;
   const gov    = nation.government;
@@ -1032,7 +1035,7 @@ function triggerGovernmentTransition(nationId, fromType, toType, cause) {
 /**
  * Асинхронно генерирует нарратив перехода и сохраняет в transition_history.
  */
-async function _generateTransitionNarrative(nationId, fromType, toType, causeType, causeLabel) {
+export async function _generateTransitionNarrative(nationId, fromType, toType, causeType, causeLabel) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation?.government) return;
 
@@ -1098,7 +1101,7 @@ async function _generateTransitionNarrative(nationId, fromType, toType, causeTyp
   }
 }
 
-function startGovernmentTransition(nationId, toType, cause) {
+export function startGovernmentTransition(nationId, toType, cause) {
   const nation = GAME_STATE.nations[nationId];
   const gov = nation.government;
 
@@ -1127,7 +1130,7 @@ function startGovernmentTransition(nationId, toType, cause) {
   }
 }
 
-function processTransition(nationId) {
+export function processTransition(nationId) {
   const nation = GAME_STATE.nations[nationId];
   const gov    = nation.government;
   const trans  = gov.active_transition;
@@ -1185,7 +1188,7 @@ function processTransition(nationId) {
   }
 }
 
-function completeTransition(nationId) {
+export function completeTransition(nationId) {
   const nation = GAME_STATE.nations[nationId];
   const gov    = nation.government;
   const trans  = gov.active_transition;
@@ -1231,7 +1234,7 @@ function completeTransition(nationId) {
 // ПРИМЕНЕНИЕ DELTA (от Claude)
 // ──────────────────────────────────────────────────────────────────────
 
-function applyGovernmentDelta(nationId, delta) {
+export function applyGovernmentDelta(nationId, delta) {
   const nation = GAME_STATE.nations[nationId];
   const gov    = nation.government;
 
@@ -1315,7 +1318,7 @@ function applyGovernmentDelta(nationId, delta) {
 // ТЕОКРАТИЯ: тик
 // ──────────────────────────────────────────────────────────────────────
 
-function processTheocracyTick(nation, nationId, isPlayer) {
+export function processTheocracyTick(nation, nationId, isPlayer) {
   const gov = nation.government;
   const pr  = gov.power_resource; // type: 'divine_mandate'
 
@@ -1390,7 +1393,7 @@ function processTheocracyTick(nation, nationId, isPlayer) {
  * Генерирует пророчество оракула. Async, fire-and-forget.
  * Результат сохраняется в gov._oracle_buff и отображается игроку.
  */
-async function _triggerOracleRoll(nation, nationId, isPlayer) {
+export async function _triggerOracleRoll(nation, nationId, isPlayer) {
   const gov = nation.government;
 
   const systemPrompt =
@@ -1450,7 +1453,7 @@ async function _triggerOracleRoll(nation, nationId, isPlayer) {
 // ДЕМОКРАТИЯ: народная популярность, остракизм, гражданские свободы
 // ──────────────────────────────────────────────────────────────────────
 
-function processDemocracyTick(nation, nationId, isPlayer) {
+export function processDemocracyTick(nation, nationId, isPlayer) {
   const gov = nation.government;
   const pop = nation.population;
 
@@ -1519,7 +1522,7 @@ function processDemocracyTick(nation, nationId, isPlayer) {
 /**
  * Остракизм: лидер изгоняется на 10 ходов народным собранием.
  */
-function _triggerOstracism(nation, nationId, isPlayer) {
+export function _triggerOstracism(nation, nationId, isPlayer) {
   const gov    = nation.government;
   const leader = gov._ostracism_warning?.leader ?? gov.ruler?.name ?? 'Правитель';
 
@@ -1566,7 +1569,7 @@ function _triggerOstracism(nation, nationId, isPlayer) {
 // КАСТОМНЫЕ МЕХАНИКИ
 // ──────────────────────────────────────────────────────────────────────
 
-function applyCustomMechanics(nationId, trigger) {
+export function applyCustomMechanics(nationId, trigger) {
   const nation = GAME_STATE.nations[nationId];
   const gov    = nation.government;
   if (!gov.custom_mechanics?.length) return;
@@ -1601,7 +1604,7 @@ function applyCustomMechanics(nationId, trigger) {
 // Код считает математику, Claude пишет речи (в claude.js)
 // ──────────────────────────────────────────────────────────────────────
 
-function calculateInstitutionVote(institution, nation) {
+export function calculateInstitutionVote(institution, nation) {
   if (!institution) return { for: 0, against: 0, abstain: 0, passed: false };
 
   const method = institution.decision_method ?? 'majority_vote';
@@ -1668,7 +1671,7 @@ function calculateInstitutionVote(institution, nation) {
 }
 
 // Может ли закон пройти без голосования при данной форме правления?
-function requiresVote(nation, law) {
+export function requiresVote(nation, law) {
   const type = nation.government?.type;
   // При тирании всё решает тиран
   if (type === 'tyranny')  return false;
@@ -1684,7 +1687,7 @@ function requiresVote(nation, law) {
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // ──────────────────────────────────────────────────────────────────────
 
-function getGovernmentNameFull(type, custom_name) {
+export function getGovernmentNameFull(type, custom_name) {
   if (type === 'custom' && custom_name) return custom_name;
   const names = {
     tyranny:    'Тирания',
@@ -1699,7 +1702,7 @@ function getGovernmentNameFull(type, custom_name) {
   return names[type] ?? type;
 }
 
-function getPowerResourceName(type) {
+export function getPowerResourceName(type) {
   const names = {
     fear:             'Страх',
     legitimacy:       'Легитимность',
@@ -1711,7 +1714,7 @@ function getPowerResourceName(type) {
   return names[type] ?? type ?? '—';
 }
 
-function getPowerResourceColor(type) {
+export function getPowerResourceColor(type) {
   const colors = {
     fear:             '#9b2226',
     legitimacy:       '#4CAF50',
@@ -1723,7 +1726,7 @@ function getPowerResourceColor(type) {
   return colors[type] ?? '#d4a853';
 }
 
-function getPowerResourceIcon(type) {
+export function getPowerResourceIcon(type) {
   const icons = {
     fear:             '😨',
     legitimacy:       '⚖️',
@@ -1740,12 +1743,12 @@ function getPowerResourceIcon(type) {
 // ══════════════════════════════════════════════════════════════════════
 
 // Алиас для обратной совместимости
-function negotiateSenator(charId, nationId, actionId) {
+export function negotiateSenator(charId, nationId, actionId) {
   return negotiateActor(charId, nationId, actionId, 'republic');
 }
 
 // Результат: { outcome: 'success'|'partial'|'fail', message, loyalty_delta, disposition_delta, gold_spent, history_note }
-function negotiateActor(charId, nationId, actionId, govType) {
+export function negotiateActor(charId, nationId, actionId, govType) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return null;
 
@@ -2078,7 +2081,7 @@ function negotiateActor(charId, nationId, actionId, govType) {
   };
 }
 
-function _failResult(msg) {
+export function _failResult(msg) {
   return { outcome:'fail', message:msg, loyalty_delta:0, disposition_delta:0, gold_spent:0, history_note:'' };
 }
 
@@ -2086,7 +2089,7 @@ function _failResult(msg) {
 // SENATE — тик ленивой материализации (вызов из processAllGovernmentTicks)
 // ──────────────────────────────────────────────────────────────────────
 
-async function processSenateTickForAllNations() {
+export async function processSenateTickForAllNations() {
   for (const nationId of Object.keys(GAME_STATE.nations)) {
     const mgr = getSenateManager(nationId);
     if (mgr) {
@@ -2103,7 +2106,7 @@ async function processSenateTickForAllNations() {
 // GOV_003: КОНСТРУКТОР ПРАВИТЕЛЬСТВА — движковая часть
 // ──────────────────────────────────────────────────────────────────────
 
-const GOV_INSTITUTION_TEMPLATES = {
+export const GOV_INSTITUTION_TEMPLATES = {
   // Республика
   senate:           { id:'senate',           name:'Сенат',                type:'legislative', decision_method:'majority_vote',      quorum:51 },
   consulate:        { id:'consulate',         name:'Консулат',             type:'executive',   decision_method:'single_person'                },
@@ -2141,7 +2144,7 @@ const GOV_INSTITUTION_TEMPLATES = {
   prophets_guild:   { id:'prophets_guild',    name:'Гильдия пророков',     type:'religious',   decision_method:'majority_vote'                },
 };
 
-const GOV_SETUP_EFFECTS = {
+export const GOV_SETUP_EFFECTS = {
   republic:   { legitimacy_delta: +15, stability_delta: +10 },
   oligarchy:  { legitimacy_delta:  -5, stability_delta:  +5 },
   democracy:  { legitimacy_delta: +10, stability_delta:  +5 },
@@ -2151,7 +2154,7 @@ const GOV_SETUP_EFFECTS = {
   theocracy:  { legitimacy_delta: +20, stability_delta: +10 },
 };
 
-const GOV_DEFAULT_POWER_RESOURCES = {
+export const GOV_DEFAULT_POWER_RESOURCES = {
   republic:   { type:'legitimacy',     max:100, decay_per_turn:0.5 },
   oligarchy:  { type:'legitimacy',     max:100, decay_per_turn:0.3 },
   democracy:  { type:'legitimacy',     max:100, decay_per_turn:0.4 },
@@ -2166,7 +2169,7 @@ const GOV_DEFAULT_POWER_RESOURCES = {
  * @param {string} nationId
  * @param {{ type: string, institutions: string[] }} config
  */
-function applyGovernmentSetup(nationId, config) {
+export function applyGovernmentSetup(nationId, config) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation?.government) return;
   const gov = nation.government;
@@ -2231,7 +2234,7 @@ function applyGovernmentSetup(nationId, config) {
  *  - guard.size > 60 → подавление беспорядков (−10 happiness, но снижает revolt_pressure)
  *  - guard.size > 80 && unpaid_turns > 3 → 5% шанс coup d'état от самой гвардии
  */
-function processPersonalGuardTick(nation, nationId, isPlayer) {
+export function processPersonalGuardTick(nation, nationId, isPlayer) {
   const gov   = nation.government;
   const guard = gov.personal_guard;
   if (!guard || guard.size <= 0) return;
@@ -2281,7 +2284,7 @@ function processPersonalGuardTick(nation, nationId, isPlayer) {
 /**
  * Переворот самой гвардии против тирана.
  */
-function _triggerGuardCoup(nation, nationId, isPlayer) {
+export function _triggerGuardCoup(nation, nationId, isPlayer) {
   const gov = nation.government;
   gov.stability  = Math.max(0, (gov.stability  ?? 50) - 45);
   gov.legitimacy = Math.max(0, (gov.legitimacy ?? 50) - 35);
@@ -2314,7 +2317,7 @@ function _triggerGuardCoup(nation, nationId, isPlayer) {
  * @param {number} size — размер (10–100)
  * @returns {{ ok: boolean, reason?: string }}
  */
-function hirePersonalGuard(nationId, size) {
+export function hirePersonalGuard(nationId, size) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return { ok: false, reason: 'no_nation' };
   const gov = nation.government;
@@ -2351,7 +2354,7 @@ function hirePersonalGuard(nationId, size) {
  * @param {string} nationId
  * @returns {{ ok: boolean }}
  */
-function disbandPersonalGuard(nationId) {
+export function disbandPersonalGuard(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation?.government) return { ok: false };
   const gov = nation.government;
@@ -2375,7 +2378,7 @@ function disbandPersonalGuard(nationId) {
  * Тик тайной полиции: раз в 5 ходов — донос.
  * 15% шанс ложного доноса: казнь невиновного → −15 легитимности + blood_feud клана.
  */
-function processSecretPoliceTick(nation, nationId, isPlayer) {
+export function processSecretPoliceTick(nation, nationId, isPlayer) {
   const gov = nation.government;
   const sp  = gov.conspiracies?.secret_police;
   if (!sp?.enabled) return;
@@ -2453,13 +2456,13 @@ function processSecretPoliceTick(nation, nationId, isPlayer) {
 // угроза свержения, вызов на поединок от соперника-вождя.
 // ══════════════════════════════════════════════════════════════════════
 
-const RIVAL_CHIEF_NAMES = [
+export const RIVAL_CHIEF_NAMES = [
   'Брэнн Огнеборец', 'Кагрим Стальной Кулак', 'Тарн Кровавый Топор',
   'Ворн Жестокий', 'Дагрим Волчий Коготь', 'Харак Буревестник',
   'Скальд Тёмный', 'Гунтар Непобедимый', 'Рольф Железная Рука', 'Сигвальд Меченый',
 ];
 
-function processTribalTick(nation, nationId, isPlayer) {
+export function processTribalTick(nation, nationId, isPlayer) {
   const gov = nation.government;
   if (!gov || gov.power_resource?.type !== 'prestige') return;
 
@@ -2548,7 +2551,7 @@ function processTribalTick(nation, nationId, isPlayer) {
 }
 
 // GOV_010: Принять вызов на поединок (вызывается из UI)
-function acceptTribalChallenge(nationId) {
+export function acceptTribalChallenge(nationId) {
   const nation = GAME_STATE.nations[nationId];
   const gov    = nation?.government;
   if (!gov?._rival_challenge_active) return;
@@ -2584,7 +2587,7 @@ function acceptTribalChallenge(nationId) {
 }
 
 // GOV_010: Уступить власть (вождь добровольно отходит)
-function yieldTribalPower(nationId) {
+export function yieldTribalPower(nationId) {
   const nation = GAME_STATE.nations[nationId];
   const gov    = nation?.government;
   if (!gov?._rival_challenge_active) return;
@@ -2605,3 +2608,56 @@ function yieldTribalPower(nationId) {
     'warning'
   );
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.ELECTION_SCANDALS = ELECTION_SCANDALS;
+window.GOV_DEFAULT_POWER_RESOURCES = GOV_DEFAULT_POWER_RESOURCES;
+window.GOV_INSTITUTION_TEMPLATES = GOV_INSTITUTION_TEMPLATES;
+window.GOV_SETUP_EFFECTS = GOV_SETUP_EFFECTS;
+window.RIVAL_CHIEF_NAMES = RIVAL_CHIEF_NAMES;
+window.SUCCESSION_NAMES_BY_CULTURE = SUCCESSION_NAMES_BY_CULTURE;
+window._failResult = _failResult;
+window._generateElectionNarrative = _generateElectionNarrative;
+window._generateTransitionNarrative = _generateTransitionNarrative;
+window._triggerGuardCoup = _triggerGuardCoup;
+window._triggerOracleRoll = _triggerOracleRoll;
+window._triggerOstracism = _triggerOstracism;
+window.acceptTribalChallenge = acceptTribalChallenge;
+window.applyCustomMechanics = applyCustomMechanics;
+window.applyGovernmentDelta = applyGovernmentDelta;
+window.applyGovernmentSetup = applyGovernmentSetup;
+window.appointSuccessionHeir = appointSuccessionHeir;
+window.arrangeMarriageForClaimant = arrangeMarriageForClaimant;
+window.bribeElectionCandidate = bribeElectionCandidate;
+window.calcBribeCost = calcBribeCost;
+window.calculateConspiracyChance = calculateConspiracyChance;
+window.calculateInstitutionVote = calculateInstitutionVote;
+window.calculatePersonalPower = calculatePersonalPower;
+window.checkPopularRevolt = checkPopularRevolt;
+window.completeTransition = completeTransition;
+window.disbandPersonalGuard = disbandPersonalGuard;
+window.getGovernmentNameFull = getGovernmentNameFull;
+window.getPowerResourceColor = getPowerResourceColor;
+window.getPowerResourceIcon = getPowerResourceIcon;
+window.getPowerResourceName = getPowerResourceName;
+window.hirePersonalGuard = hirePersonalGuard;
+window.initSuccessionCandidates = initSuccessionCandidates;
+window.negotiateActor = negotiateActor;
+window.negotiateSenator = negotiateSenator;
+window.processAllGovernmentTicks = processAllGovernmentTicks;
+window.processDemocracyTick = processDemocracyTick;
+window.processGovernmentTick = processGovernmentTick;
+window.processPersonalGuardTick = processPersonalGuardTick;
+window.processSecretPoliceTick = processSecretPoliceTick;
+window.processSenateTickForAllNations = processSenateTickForAllNations;
+window.processTheocracyTick = processTheocracyTick;
+window.processTransition = processTransition;
+window.processTribalTick = processTribalTick;
+window.requiresVote = requiresVote;
+window.startGovernmentTransition = startGovernmentTransition;
+window.triggerConspiracy = triggerConspiracy;
+window.triggerElection = triggerElection;
+window.triggerGovernmentTransition = triggerGovernmentTransition;
+window.triggerSuccessionCrisis = triggerSuccessionCrisis;
+window.yieldTribalPower = yieldTribalPower;
+

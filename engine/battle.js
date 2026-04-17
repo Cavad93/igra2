@@ -1,3 +1,5 @@
+import { MAP_REGIONS } from '../data/map.js';
+
 // ══════════════════════════════════════════════════════════════════════
 // BATTLE ENGINE — разрешение военных столкновений
 //
@@ -19,7 +21,7 @@
 
 // ── Константы баланса боя ────────────────────────────────────────────
 
-const BATTLE = {
+export const BATTLE = {
   // Множители типов войск
   INF_MULT:       1,
   CAV_MULT:       3,
@@ -84,7 +86,7 @@ const BATTLE = {
 
 // ── Расчёт силы ──────────────────────────────────────────────────────
 
-function calculateMilitaryStrength(nation, opts = {}) {
+export function calculateMilitaryStrength(nation, opts = {}) {
   const mil = nation.military;
   const pp  = nation.government?.ruler?.personal_power ?? 50;
   const terrain = opts.terrain || 'plains';
@@ -146,7 +148,7 @@ function calculateMilitaryStrength(nation, opts = {}) {
 
 // ── Полевое/осадное сражение ─────────────────────────────────────────
 
-function resolveBattle(attackerNationId, defenderNationId, opts = {}) {
+export function resolveBattle(attackerNationId, defenderNationId, opts = {}) {
   const attacker = GAME_STATE.nations[attackerNationId];
   const defender = GAME_STATE.nations[defenderNationId];
   if (!attacker || !defender) return null;
@@ -259,7 +261,7 @@ function resolveBattle(attackerNationId, defenderNationId, opts = {}) {
 
 // ── Морской бой ──────────────────────────────────────────────────────
 
-function resolveNavalBattle(attackerNationId, defenderNationId) {
+export function resolveNavalBattle(attackerNationId, defenderNationId) {
   const attacker = GAME_STATE.nations[attackerNationId];
   const defender = GAME_STATE.nations[defenderNationId];
   if (!attacker || !defender) return null;
@@ -322,7 +324,7 @@ function resolveNavalBattle(attackerNationId, defenderNationId) {
  * Союзник несёт потери 1–3% пехоты за участие.
  * @returns {{ bonus: number, allies: Array<{id, name, contribution, treatyType}> }}
  */
-function _calcJointAttackBonus(attackerNationId, defenderNationId, terrain, battleType) {
+export function _calcJointAttackBonus(attackerNationId, defenderNationId, terrain, battleType) {
   const allies = [];
   let bonus = 0;
   if (typeof DiplomacyEngine === 'undefined') return { bonus, allies };
@@ -375,7 +377,7 @@ function _calcJointAttackBonus(attackerNationId, defenderNationId, terrain, batt
  * Делит добычу с захваченного региона между атакующим и союзниками по совместному походу.
  * joint_campaign.conditions.shared_loot = 0.5 → 50% добычи уходит союзнику.
  */
-function _applySharedLoot(attackerNationId, defenderNationId, capturedRegionId, jointAllies) {
+export function _applySharedLoot(attackerNationId, defenderNationId, capturedRegionId, jointAllies) {
   if (!capturedRegionId || !jointAllies?.length) return;
 
   const region   = GAME_STATE.regions?.[capturedRegionId];
@@ -422,7 +424,7 @@ function _applySharedLoot(attackerNationId, defenderNationId, capturedRegionId, 
  * Активные военные союзы: AI союзники сами атакуют общих врагов каждые 3 хода.
  * Вызывается из turn.js один раз за ход.
  */
-function processAllianceWars() {
+export function processAllianceWars() {
   if (typeof DiplomacyEngine === 'undefined') return;
 
   // Только каждые 3 хода и не каждый раз (30% шанс на пару)
@@ -486,7 +488,7 @@ function processAllianceWars() {
  *
  * @returns {string[]} список ID наций, вступивших в войну
  */
-function triggerDefensiveAlliances(attackerNationId, defenderNationId) {
+export function triggerDefensiveAlliances(attackerNationId, defenderNationId) {
   if (typeof DiplomacyEngine === 'undefined') return [];
   const treaties = GAME_STATE.diplomacy?.treaties ?? [];
   const triggered = [];
@@ -573,7 +575,7 @@ function triggerDefensiveAlliances(attackerNationId, defenderNationId) {
  * AI-атаки отклоняются молча. Если атакует игрок — он обязан сначала объявить войну
  * через declareWar() (там будет своя проверка с предупреждением).
  */
-function _isBlockedByNonAggression(attackerNationId, defenderNationId) {
+export function _isBlockedByNonAggression(attackerNationId, defenderNationId) {
   if (typeof DiplomacyEngine === 'undefined') return false;
   const rel = DiplomacyEngine.getRelation(attackerNationId, defenderNationId);
   if (!rel?.flags?.no_attack) return false;
@@ -589,7 +591,7 @@ function _isBlockedByNonAggression(attackerNationId, defenderNationId) {
   return true;
 }
 
-function _ensureRelation(nation, targetId) {
+export function _ensureRelation(nation, targetId) {
   if (!nation.relations) nation.relations = {};
   if (!nation.relations[targetId]) {
     nation.relations[targetId] = { score: 0, treaties: [], at_war: false };
@@ -598,7 +600,7 @@ function _ensureRelation(nation, targetId) {
 
 // ── Внешний API ──────────────────────────────────────────────────────
 
-function processAttackAction(attackerNationId, defenderNationId, opts = {}) {
+export function processAttackAction(attackerNationId, defenderNationId, opts = {}) {
   // Проверка пакта о ненападении
   if (_isBlockedByNonAggression(attackerNationId, defenderNationId)) return null;
 
@@ -618,7 +620,7 @@ function processAttackAction(attackerNationId, defenderNationId, opts = {}) {
 }
 
 // Применяет пост-боевые эффекты: союзы, добычу, лог, трекинг достижений
-function _applyBattleResult(attackerNationId, defenderNationId, result, opts = {}) {
+export function _applyBattleResult(attackerNationId, defenderNationId, result, opts = {}) {
   if (!result) return;
 
   // Оборонные союзы: союзники защитника автоматически вступают в войну
@@ -716,7 +718,7 @@ function _applyBattleResult(attackerNationId, defenderNationId, result, opts = {
 
 // ── Этап 20: модальный выбор режима боя ─────────────────────────────
 
-function _showTacticalChoiceModal(attackerNationId, defenderNationId, opts) {
+export function _showTacticalChoiceModal(attackerNationId, defenderNationId, opts) {
   document.getElementById('tactical-choice-modal')?.remove();
 
   const atk = GAME_STATE.nations[attackerNationId];
@@ -796,3 +798,19 @@ if (typeof getTerrainName === 'undefined') {
     return names[t] || t;
   }
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.BATTLE = BATTLE;
+window._applyBattleResult = _applyBattleResult;
+window._applySharedLoot = _applySharedLoot;
+window._calcJointAttackBonus = _calcJointAttackBonus;
+window._ensureRelation = _ensureRelation;
+window._isBlockedByNonAggression = _isBlockedByNonAggression;
+window._showTacticalChoiceModal = _showTacticalChoiceModal;
+window.calculateMilitaryStrength = calculateMilitaryStrength;
+window.processAllianceWars = processAllianceWars;
+window.processAttackAction = processAttackAction;
+window.resolveBattle = resolveBattle;
+window.resolveNavalBattle = resolveNavalBattle;
+window.triggerDefensiveAlliances = triggerDefensiveAlliances;
+

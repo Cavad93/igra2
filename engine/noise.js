@@ -27,7 +27,7 @@
  * @param {number} seed  — целочисленный seed
  * @returns {function(): number}
  */
-function mulberry32(seed) {
+export function mulberry32(seed) {
   let a = seed >>> 0;
   return function() {
     a = (a + 0x6D2B79F5) >>> 0;
@@ -50,7 +50,7 @@ function mulberry32(seed) {
  *
  * Диапазон значений: примерно [-1, 1] (теоретический максимум sqrt(2)/2 * 2 ≈ 1).
  */
-function PerlinNoise(seed) {
+export function PerlinNoise(seed) {
   // Build permutation table 0..255 and shuffle via mulberry32
   const rng = mulberry32(seed | 0);
   const p = new Uint8Array(256);
@@ -135,7 +135,7 @@ PerlinNoise.prototype.noise2d = function(x, y) {
  * @param {number} lacunarity  — frequency growth (default 2.0)
  * @returns {number}           — значение в [0, 1]
  */
-function fbm(noise, x, y, octaves, persistence, lacunarity) {
+export function fbm(noise, x, y, octaves, persistence, lacunarity) {
   if (octaves     == null) octaves     = 6;
   if (persistence == null) persistence = 0.5;
   if (lacunarity  == null) lacunarity  = 2.0;
@@ -170,7 +170,7 @@ function fbm(noise, x, y, octaves, persistence, lacunarity) {
  * @param {number} warpStrength  — сила искажения (default 1.2)
  * @returns {number}             — значение в [0, 1]
  */
-function domainWarp(noise, x, y, octaves, warpStrength) {
+export function domainWarp(noise, x, y, octaves, warpStrength) {
   if (octaves      == null) octaves      = 6;
   if (warpStrength == null) warpStrength = 1.2;
 
@@ -215,7 +215,7 @@ function domainWarp(noise, x, y, octaves, warpStrength) {
  * @param {number} [options.warpStrength=1.2]
  * @returns {{data: Float32Array, width: number, height: number}}
  */
-function generateHeightmap(width, height, seed, options) {
+export function generateHeightmap(width, height, seed, options) {
   const opts         = options || {};
   const octaves      = opts.octaves      != null ? opts.octaves      : 6;
   const persistence  = opts.persistence  != null ? opts.persistence  : 0.5;
@@ -280,7 +280,7 @@ function generateHeightmap(width, height, seed, options) {
  * @param {number} y  — целочисленная координата (будет clamp-нута)
  * @returns {number}  — значение в [0, 1]
  */
-function getHeight(heightmap, x, y) {
+export function getHeight(heightmap, x, y) {
   const w = heightmap.width;
   const h = heightmap.height;
   let ix = x | 0;
@@ -292,20 +292,12 @@ function getHeight(heightmap, x, y) {
   return heightmap.data[iy * w + ix];
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Экспорт: глобалы (браузер) + module.exports (Node.js тесты)
-// ──────────────────────────────────────────────────────────────────────
-if (typeof window !== 'undefined') {
-  window.mulberry32       = mulberry32;
-  window.PerlinNoise      = PerlinNoise;
-  window.fbm              = fbm;
-  window.domainWarp       = domainWarp;
-  window.generateHeightmap = generateHeightmap;
-  window.getHeight        = getHeight;
-}
-if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-  module.exports = {
-    mulberry32, PerlinNoise, fbm, domainWarp,
-    generateHeightmap, getHeight
-  };
-}
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.PerlinNoise = PerlinNoise;
+window.domainWarp = domainWarp;
+window.fbm = fbm;
+window.generateHeightmap = generateHeightmap;
+window.getHeight = getHeight;
+window.mulberry32 = mulberry32;
+

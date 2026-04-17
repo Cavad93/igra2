@@ -42,10 +42,13 @@
 // Загружается ПОСЛЕ engine/economy.js и ДО engine/turn.js в index.html.
 // ══════════════════════════════════════════════════════════════
 
+import { CONFIG } from '../config.js';
+import { GOODS } from '../data/goods.js';
+
 // ──────────────────────────────────────────────────────────────
 // INIT — идемпотентно создаём все поля расширения.
 // ──────────────────────────────────────────────────────────────
-function initEconomyExt() {
+export function initEconomyExt() {
   if (typeof GAME_STATE === 'undefined' || !GAME_STATE) return;
   if (!GAME_STATE.economy_ext) GAME_STATE.economy_ext = {};
   const ext = GAME_STATE.economy_ext;
@@ -92,7 +95,7 @@ function initEconomyExt() {
 //
 // Все суммы в золоте (₴), округлены до целого.
 // ──────────────────────────────────────────────────────────────
-function calcTradeBalance(nationId) {
+export function calcTradeBalance(nationId) {
   const nation = GAME_STATE?.nations?.[nationId];
   if (!nation) return { income: 0, expense: 0, net: 0, gross_exports: 0, imports: 0, port_duties: 0, tariff_income: 0 };
 
@@ -135,7 +138,7 @@ function calcTradeBalance(nationId) {
 // ──────────────────────────────────────────────────────────────
 // recordTradeHistory() — раз в тик пишем агрегат по всем нациям.
 // ──────────────────────────────────────────────────────────────
-function _ecoExtRecordTradeHistory() {
+export function _ecoExtRecordTradeHistory() {
   const ext = GAME_STATE?.economy_ext;
   if (!ext) return;
   const balance_by_nation = {};
@@ -170,13 +173,13 @@ function _ecoExtRecordTradeHistory() {
 // Пересчитывается каждый тик в detectMonopolies().
 // ══════════════════════════════════════════════════════════════
 
-const MONOPOLY_PRICE_BONUS     = 0.20;  // +20% к цене продажи
-const MONOPOLY_DIPLOMACY_BONUS = 5;     // +5 к отношениям с импортёрами
+export const MONOPOLY_PRICE_BONUS     = 0.20;  // +20% к цене продажи
+export const MONOPOLY_DIPLOMACY_BONUS = 5;     // +5 к отношениям с импортёрами
 
 // Ключ пары наций для GAME_STATE.diplomacy.relations (совпадает с
 // engine/diplomacy.js → _relKey). Переопределяем локально, т.к.
 // оригинальный _relKey является приватной функцией.
-function _ecoExtRelKey(a, b) {
+export function _ecoExtRelKey(a, b) {
   return [a, b].sort().join('_');
 }
 
@@ -190,7 +193,7 @@ function _ecoExtRelKey(a, b) {
 // Порог «реального производства» — 0.01 кг/ход, чтобы не засчитывать
 // численный шум.
 // ──────────────────────────────────────────────────────────────
-function detectMonopolies() {
+export function detectMonopolies() {
   const ext = GAME_STATE?.economy_ext;
   if (!ext) return;
 
@@ -259,7 +262,7 @@ function detectMonopolies() {
 //
 // Используется в engine/economy.js → processTrade().
 // ──────────────────────────────────────────────────────────────
-function getMonopolyPriceMult(nationId, good) {
+export function getMonopolyPriceMult(nationId, good) {
   const mono = GAME_STATE?.economy_ext?.monopolies?.[good];
   return (mono && mono === nationId) ? (1 + MONOPOLY_PRICE_BONUS) : 1.0;
 }
@@ -275,7 +278,7 @@ function getMonopolyPriceMult(nationId, good) {
 // «Партнёр-импортёр» — любая нация из monoNation.economy.trade_routes,
 // не являющаяся самим монополистом.
 // ──────────────────────────────────────────────────────────────
-function _applyMonopolyDiplomacyDelta(newMono) {
+export function _applyMonopolyDiplomacyDelta(newMono) {
   const diplo = GAME_STATE?.diplomacy;
   if (!diplo || !diplo.relations) return;
 
@@ -346,10 +349,10 @@ function _applyMonopolyDiplomacyDelta(newMono) {
 //   специализированный товар получает прирост перед подсчётом overflow.
 // ══════════════════════════════════════════════════════════════
 
-const SPEC_STREAK_WINDOW = 10;    // один «шаг» бонуса — 10 ходов streak'а
-const SPEC_STEP_BONUS    = 0.05;  // +5% за шаг
-const SPEC_MAX_BONUS     = 0.25;  // потолок +25%
-const SPEC_EPS           = 0.01;  // порог «реального» производства
+export const SPEC_STREAK_WINDOW = 10;    // один «шаг» бонуса — 10 ходов streak'а
+export const SPEC_STEP_BONUS    = 0.05;  // +5% за шаг
+export const SPEC_MAX_BONUS     = 0.25;  // потолок +25%
+export const SPEC_EPS           = 0.01;  // порог «реального» производства
 
 // ──────────────────────────────────────────────────────────────
 // updateRegionSpecialization()
@@ -357,7 +360,7 @@ const SPEC_EPS           = 0.01;  // порог «реального» прои�
 // Проходит по всем регионам, определяет топ-товар текущего тика
 // из region._production_last_tick и обновляет запись специализации.
 // ──────────────────────────────────────────────────────────────
-function updateRegionSpecialization() {
+export function updateRegionSpecialization() {
   const ext = GAME_STATE?.economy_ext;
   if (!ext) return;
   if (!ext.region_specialization) ext.region_specialization = {};
@@ -424,7 +427,7 @@ function updateRegionSpecialization() {
 // Возвращает bonus (≥1.0) только если good совпадает со специализацией
 // региона; иначе 1.0.
 // ──────────────────────────────────────────────────────────────
-function getRegionSpecBonus(regionId, good) {
+export function getRegionSpecBonus(regionId, good) {
   const entry = GAME_STATE?.economy_ext?.region_specialization?.[regionId];
   if (!entry || entry.good !== good) return 1.0;
   const b = Number(entry.bonus);
@@ -462,12 +465,12 @@ function getRegionSpecBonus(regionId, good) {
 //   cur_infl = clamp(0, INFLATION_MAX)
 // ══════════════════════════════════════════════════════════════
 
-const TREASURY_HOARD_RATIO = 3;      // казна > 3× мес. дохода → инфляция
-const TREASURY_CRITICAL_RATIO = 6;   // > 6× → ускоренное накопление
-const INFLATION_STEP       = 0.01;   // ±1% за ход
-const INFLATION_STEP_FAST  = 0.02;   // +2% за ход при ratio ≥ 6×
-const INFLATION_MAX        = 0.25;   // потолок +25%
-const INFLATION_EPS        = 1e-4;
+export const TREASURY_HOARD_RATIO = 3;      // казна > 3× мес. дохода → инфляция
+export const TREASURY_CRITICAL_RATIO = 6;   // > 6× → ускоренное накопление
+export const INFLATION_STEP       = 0.01;   // ±1% за ход
+export const INFLATION_STEP_FAST  = 0.02;   // +2% за ход при ratio ≥ 6×
+export const INFLATION_MAX        = 0.25;   // потолок +25%
+export const INFLATION_EPS        = 1e-4;
 
 // ──────────────────────────────────────────────────────────────
 // updateInflation()
@@ -482,7 +485,7 @@ const INFLATION_EPS        = 1e-4;
 // достижение/снятие максимума и полное обнуление — чтобы не
 // заливать event log.
 // ──────────────────────────────────────────────────────────────
-function updateInflation() {
+export function updateInflation() {
   const ext = GAME_STATE?.economy_ext;
   if (!ext) return;
   if (!ext.inflation) ext.inflation = {};
@@ -544,7 +547,7 @@ function updateInflation() {
 // Используется в engine/buildings.js → procureCapitalInputs() для
 // расчёта оплаты из local/province рынков.
 // ──────────────────────────────────────────────────────────────
-function getInflationMult(nationId) {
+export function getInflationMult(nationId) {
   const ext = GAME_STATE?.economy_ext;
   if (!ext || !ext.inflation) return 1.0;
   const v = Number(ext.inflation[nationId]) || 0;
@@ -573,9 +576,9 @@ function getInflationMult(nationId) {
 //   engine/economy.js → routeProductionToLocalStockpiles().
 // ══════════════════════════════════════════════════════════════
 
-const CYCLE_GOODS = ['wheat', 'barley', 'olives', 'grapes', 'fish'];
+export const CYCLE_GOODS = ['wheat', 'barley', 'olives', 'grapes', 'fish'];
 
-const CYCLE_TYPES = {
+export const CYCLE_TYPES = {
   boom: {
     label: 'Урожайный год',
     mult:  1.15,
@@ -593,12 +596,12 @@ const CYCLE_TYPES = {
   },
 };
 
-const CYCLE_CHECK_MIN = 48;     // мин. интервал между проверками
-const CYCLE_CHECK_RANGE = 24;   // диапазон случайной задержки (48..71)
-const CYCLE_DUR_MIN  = 6;       // мин. длина активного цикла
-const CYCLE_DUR_RANGE = 7;      // случайная добавка (6..12)
-const CYCLE_BOOM_PROB = 0.20;
-const CYCLE_RECESSION_PROB = 0.20;
+export const CYCLE_CHECK_MIN = 48;     // мин. интервал между проверками
+export const CYCLE_CHECK_RANGE = 24;   // диапазон случайной задержки (48..71)
+export const CYCLE_DUR_MIN  = 6;       // мин. длина активного цикла
+export const CYCLE_DUR_RANGE = 7;      // случайная добавка (6..12)
+export const CYCLE_BOOM_PROB = 0.20;
+export const CYCLE_RECESSION_PROB = 0.20;
 
 // ──────────────────────────────────────────────────────────────
 // updateEconomicCycle()
@@ -614,7 +617,7 @@ const CYCLE_RECESSION_PROB = 0.20;
 // Последовательность защищена: новая проверка не делается, пока
 // длится активный цикл.
 // ──────────────────────────────────────────────────────────────
-function updateEconomicCycle() {
+export function updateEconomicCycle() {
   const ext = GAME_STATE?.economy_ext;
   if (!ext) return;
   if (!ext.economic_cycle) {
@@ -668,7 +671,7 @@ function updateEconomicCycle() {
 //   • 1.15  — boom + продовольствие;
 //   • 0.82  — recession + продовольствие.
 // ──────────────────────────────────────────────────────────────
-function getCycleMult(good) {
+export function getCycleMult(good) {
   const cycle = GAME_STATE?.economy_ext?.economic_cycle;
   if (!cycle || !cycle.current || cycle.current === 'normal') return 1.0;
   if (!CYCLE_GOODS.includes(good)) return 1.0;
@@ -680,7 +683,7 @@ function getCycleMult(good) {
 // getEconomicCycleBanner() — HTML-блок для UI-вкладки экономики.
 // Возвращает пустую строку, если активен normal-цикл.
 // ──────────────────────────────────────────────────────────────
-function getEconomicCycleBanner() {
+export function getEconomicCycleBanner() {
   const cycle = GAME_STATE?.economy_ext?.economic_cycle;
   if (!cycle || cycle.current === 'normal') return '';
   const info = CYCLE_TYPES[cycle.current];
@@ -721,8 +724,8 @@ function getEconomicCycleBanner() {
 // предупреждение в панели «Торговый баланс за ход», когда ratio < 0.80.
 // ══════════════════════════════════════════════════════════════
 
-const ARMY_UNDERFUND_THRESHOLD = 0.80;  // ниже 80% от нормы — штраф
-const ARMY_UNDERFUND_PENALTY   = 0.85;  // мин. множитель боевой силы
+export const ARMY_UNDERFUND_THRESHOLD = 0.80;  // ниже 80% от нормы — штраф
+export const ARMY_UNDERFUND_PENALTY   = 0.85;  // мин. множитель боевой силы
 
 // ──────────────────────────────────────────────────────────────
 // calcNormalArmyExpense(nationId)
@@ -733,7 +736,7 @@ const ARMY_UNDERFUND_PENALTY   = 0.85;  // мин. множитель боево
 // Fallback: если CONFIG недоступен (Node-stubs тесты) — плоские
 // весовые коэффициенты (infantry 2, cavalry 4, mercenaries 3).
 // ──────────────────────────────────────────────────────────────
-function calcNormalArmyExpense(nationId) {
+export function calcNormalArmyExpense(nationId) {
   const nation = GAME_STATE?.nations?.[nationId];
   if (!nation) return 0;
   const mil = nation.military || {};
@@ -747,7 +750,7 @@ function calcNormalArmyExpense(nationId) {
   }
 
   // Fallback: пересобираем вручную по CONFIG.BALANCE.
-  const cfg = (typeof CONFIG !== 'undefined') ? CONFIG?.BALANCE : null;
+  const cfg = CONFIG?.BALANCE ?? null;
   const infRate  = cfg?.INFANTRY_UPKEEP  ?? 2;
   const cavRate  = cfg?.CAVALRY_UPKEEP   ?? 4;
   const mercRate = cfg?.MERCENARY_UPKEEP ?? 3;
@@ -764,7 +767,7 @@ function calcNormalArmyExpense(nationId) {
 // нормального upkeep [0, 1]. 1.0 — полное финансирование,
 // 0.0 — полностью прекращено.
 // ──────────────────────────────────────────────────────────────
-function getArmyFundingRatio(nationId) {
+export function getArmyFundingRatio(nationId) {
   const nation = GAME_STATE?.nations?.[nationId];
   if (!nation) return 1.0;
 
@@ -797,7 +800,7 @@ function getArmyFundingRatio(nationId) {
 // Множитель силы армии в бою. 1.0 если финансирование ≥ 80%,
 // линейно падает до ARMY_UNDERFUND_PENALTY = 0.85 при ratio = 0.
 // ──────────────────────────────────────────────────────────────
-function getArmyCombatMult(nationId) {
+export function getArmyCombatMult(nationId) {
   const ratio = getArmyFundingRatio(nationId);
   if (ratio >= ARMY_UNDERFUND_THRESHOLD) return 1.0;
   // Линейная интерполяция: ratio=0 → PENALTY, ratio=THRESHOLD → 1.0
@@ -813,7 +816,7 @@ function getArmyCombatMult(nationId) {
 // (treasury-panel) и облегчает инспекцию из консоли. Логирует
 // появление/снятие штрафа у игрока.
 // ──────────────────────────────────────────────────────────────
-function updateArmyFunding() {
+export function updateArmyFunding() {
   const nations = GAME_STATE?.nations;
   if (!nations) return;
 
@@ -865,9 +868,9 @@ function updateArmyFunding() {
 // технологический прогресс первыми).
 // ══════════════════════════════════════════════════════════════
 
-const TECH_DRIFT_INTERVAL = 120;   // раз в 120 ходов (≈10 лет)
-const TECH_DRIFT_STEP     = 0.02;  // +2% за шаг
-const TECH_DRIFT_MAX      = 0.20;  // потолок +20%
+export const TECH_DRIFT_INTERVAL = 120;   // раз в 120 ходов (≈10 лет)
+export const TECH_DRIFT_STEP     = 0.02;  // +2% за шаг
+export const TECH_DRIFT_MAX      = 0.20;  // потолок +20%
 
 // ──────────────────────────────────────────────────────────────
 // updateTechDrift()
@@ -882,7 +885,7 @@ const TECH_DRIFT_MAX      = 0.20;  // потолок +20%
 // (например, после загрузки старого сейва). Обрабатываем это
 // в цикле, чтобы «догнать» пропущенные шаги.
 // ──────────────────────────────────────────────────────────────
-function updateTechDrift() {
+export function updateTechDrift() {
   const ext = GAME_STATE?.economy_ext;
   if (!ext) return;
   if (!ext.tech_drift) ext.tech_drift = { bonus: 0, last_tick: 0 };
@@ -918,7 +921,7 @@ function updateTechDrift() {
 // engine/economy.js → routeProductionToLocalStockpiles() как третий
 // этап обработки (после spec-бонуса и cycle-мультипликатора).
 // ──────────────────────────────────────────────────────────────
-function getTechDriftMult() {
+export function getTechDriftMult() {
   const b = Number(GAME_STATE?.economy_ext?.tech_drift?.bonus);
   if (!Number.isFinite(b) || b <= 0) return 1.0;
   return 1.0 + Math.min(TECH_DRIFT_MAX, b);
@@ -927,7 +930,7 @@ function getTechDriftMult() {
 // ──────────────────────────────────────────────────────────────
 // renderTechDrift() — короткий HTML-блок для ui/economy_tab.js.
 // ──────────────────────────────────────────────────────────────
-function renderTechDrift() {
+export function renderTechDrift() {
   const td = GAME_STATE?.economy_ext?.tech_drift;
   const b  = Number(td?.bonus) || 0;
   if (b < 0.01) {
@@ -963,14 +966,14 @@ function renderTechDrift() {
 
 // Процент неэффективности неорганизованного производства:
 // 1 − SUBSISTENCE_FACTOR (0.65) = 0.35 (то есть −35%).
-const UNORGANIZED_PENALTY = 0.35;
+export const UNORGANIZED_PENALTY = 0.35;
 
 // ──────────────────────────────────────────────────────────────
 // hasRegionBuildings(region) — true, если в регионе есть хотя бы
 // один активный build-slot. Используется для решения, показывать
 // ли предупреждение «−35% эффективность».
 // ──────────────────────────────────────────────────────────────
-function hasRegionBuildings(region) {
+export function hasRegionBuildings(region) {
   if (!region) return false;
   const slots = region.building_slots;
   if (!slots) return false;
@@ -993,7 +996,7 @@ function hasRegionBuildings(region) {
 //   Строит HTML-блок с активными бонусами/штрафами для данного
 //   региона. Возвращает '' если отображать нечего.
 // ──────────────────────────────────────────────────────────────
-function renderRegionProductionEfficiency(regionId) {
+export function renderRegionProductionEfficiency(regionId) {
   if (typeof GAME_STATE === 'undefined' || !GAME_STATE) return '';
   const region = GAME_STATE.regions?.[regionId];
   if (!region) return '';
@@ -1016,7 +1019,7 @@ function renderRegionProductionEfficiency(regionId) {
   const spec = ext.region_specialization?.[regionId];
   const specBonus = Number(spec?.bonus) || 1.0;
   if (spec && specBonus > 1.0 + 1e-9) {
-    const goodDef = typeof GOODS !== 'undefined' ? GOODS[spec.good] : null;
+    const goodDef = GOODS?.[spec.good] ?? null;
     const goodLabel = goodDef?.name || spec.good;
     const streak = Number(spec.streak) || 0;
     const pct    = Math.round((specBonus - 1) * 100);
@@ -1043,7 +1046,7 @@ function renderRegionProductionEfficiency(regionId) {
   const cycle = ext.economic_cycle;
   if (cycle && cycle.current && cycle.current !== 'normal') {
     const isBoom = cycle.current === 'boom';
-    const mult   = (typeof CYCLE_TYPES !== 'undefined' && CYCLE_TYPES[cycle.current]?.mult) || 1.0;
+    const mult   = CYCLE_TYPES[cycle.current]?.mult || 1.0;
     const pct    = Math.round((mult - 1) * 100);
     const sign   = pct > 0 ? '+' : '';
     const icon   = isBoom ? '🌾' : '🌧';
@@ -1062,7 +1065,7 @@ function renderRegionProductionEfficiency(regionId) {
 // ──────────────────────────────────────────────────────────────
 // addEconomicEvent — общий логгер будущих экономических событий.
 // ──────────────────────────────────────────────────────────────
-function addEconomicEvent(text) {
+export function addEconomicEvent(text) {
   if (typeof addEventLog === 'function') {
     try { addEventLog(text, 'economy'); } catch (_) { /* ignore */ }
   } else if (typeof addLog === 'function') {
@@ -1076,7 +1079,7 @@ function addEconomicEvent(text) {
 // Вызывается ОДИН раз в конце runEconomyTick() (engine/economy.js).
 // Все последующие этапы 2–8 добавляют вызовы сюда.
 // ──────────────────────────────────────────────────────────────
-function runEconomyExtTick() {
+export function runEconomyExtTick() {
   try { initEconomyExt(); } catch (e) { console.warn('[economy_ext:init]', e); }
 
   // Этап 1 — запись торгового баланса в историю.
@@ -1116,60 +1119,57 @@ function runEconomyExtTick() {
   try { updateTechDrift(); } catch (e) { console.warn('[economy_ext:tech]', e); }
 }
 
-// Экспорт в window для инспекции из консоли (браузер) и для save/load.
-if (typeof window !== 'undefined') {
-  window.initEconomyExt      = initEconomyExt;
-  window.calcTradeBalance    = calcTradeBalance;
-  window.runEconomyExtTick   = runEconomyExtTick;
-  window.addEconomicEvent    = addEconomicEvent;
 
-  // Этап 2 — монопольный бонус.
-  window.detectMonopolies    = detectMonopolies;
-  window.getMonopolyPriceMult = getMonopolyPriceMult;
-  window.MONOPOLY_PRICE_BONUS     = MONOPOLY_PRICE_BONUS;
-  window.MONOPOLY_DIPLOMACY_BONUS = MONOPOLY_DIPLOMACY_BONUS;
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.ARMY_UNDERFUND_PENALTY = ARMY_UNDERFUND_PENALTY;
+window.ARMY_UNDERFUND_THRESHOLD = ARMY_UNDERFUND_THRESHOLD;
+window.CYCLE_BOOM_PROB = CYCLE_BOOM_PROB;
+window.CYCLE_CHECK_MIN = CYCLE_CHECK_MIN;
+window.CYCLE_CHECK_RANGE = CYCLE_CHECK_RANGE;
+window.CYCLE_DUR_MIN = CYCLE_DUR_MIN;
+window.CYCLE_DUR_RANGE = CYCLE_DUR_RANGE;
+window.CYCLE_GOODS = CYCLE_GOODS;
+window.CYCLE_RECESSION_PROB = CYCLE_RECESSION_PROB;
+window.CYCLE_TYPES = CYCLE_TYPES;
+window.INFLATION_EPS = INFLATION_EPS;
+window.INFLATION_MAX = INFLATION_MAX;
+window.INFLATION_STEP = INFLATION_STEP;
+window.INFLATION_STEP_FAST = INFLATION_STEP_FAST;
+window.MONOPOLY_DIPLOMACY_BONUS = MONOPOLY_DIPLOMACY_BONUS;
+window.MONOPOLY_PRICE_BONUS = MONOPOLY_PRICE_BONUS;
+window.SPEC_EPS = SPEC_EPS;
+window.SPEC_MAX_BONUS = SPEC_MAX_BONUS;
+window.SPEC_STEP_BONUS = SPEC_STEP_BONUS;
+window.SPEC_STREAK_WINDOW = SPEC_STREAK_WINDOW;
+window.TECH_DRIFT_INTERVAL = TECH_DRIFT_INTERVAL;
+window.TECH_DRIFT_MAX = TECH_DRIFT_MAX;
+window.TECH_DRIFT_STEP = TECH_DRIFT_STEP;
+window.TREASURY_CRITICAL_RATIO = TREASURY_CRITICAL_RATIO;
+window.TREASURY_HOARD_RATIO = TREASURY_HOARD_RATIO;
+window.UNORGANIZED_PENALTY = UNORGANIZED_PENALTY;
+window._applyMonopolyDiplomacyDelta = _applyMonopolyDiplomacyDelta;
+window._ecoExtRecordTradeHistory = _ecoExtRecordTradeHistory;
+window._ecoExtRelKey = _ecoExtRelKey;
+window.addEconomicEvent = addEconomicEvent;
+window.calcNormalArmyExpense = calcNormalArmyExpense;
+window.calcTradeBalance = calcTradeBalance;
+window.detectMonopolies = detectMonopolies;
+window.getArmyCombatMult = getArmyCombatMult;
+window.getArmyFundingRatio = getArmyFundingRatio;
+window.getCycleMult = getCycleMult;
+window.getEconomicCycleBanner = getEconomicCycleBanner;
+window.getInflationMult = getInflationMult;
+window.getMonopolyPriceMult = getMonopolyPriceMult;
+window.getRegionSpecBonus = getRegionSpecBonus;
+window.getTechDriftMult = getTechDriftMult;
+window.hasRegionBuildings = hasRegionBuildings;
+window.initEconomyExt = initEconomyExt;
+window.renderRegionProductionEfficiency = renderRegionProductionEfficiency;
+window.renderTechDrift = renderTechDrift;
+window.runEconomyExtTick = runEconomyExtTick;
+window.updateArmyFunding = updateArmyFunding;
+window.updateEconomicCycle = updateEconomicCycle;
+window.updateInflation = updateInflation;
+window.updateRegionSpecialization = updateRegionSpecialization;
+window.updateTechDrift = updateTechDrift;
 
-  // Этап 3 — специализация региона.
-  window.updateRegionSpecialization = updateRegionSpecialization;
-  window.getRegionSpecBonus         = getRegionSpecBonus;
-  window.SPEC_STREAK_WINDOW = SPEC_STREAK_WINDOW;
-  window.SPEC_STEP_BONUS    = SPEC_STEP_BONUS;
-  window.SPEC_MAX_BONUS     = SPEC_MAX_BONUS;
-
-  // Этап 4 — инфляция от переполненной казны.
-  window.updateInflation   = updateInflation;
-  window.getInflationMult  = getInflationMult;
-  window.TREASURY_HOARD_RATIO    = TREASURY_HOARD_RATIO;
-  window.TREASURY_CRITICAL_RATIO = TREASURY_CRITICAL_RATIO;
-  window.INFLATION_STEP          = INFLATION_STEP;
-  window.INFLATION_STEP_FAST     = INFLATION_STEP_FAST;
-  window.INFLATION_MAX           = INFLATION_MAX;
-
-  // Этап 5 — экономические циклы.
-  window.updateEconomicCycle    = updateEconomicCycle;
-  window.getCycleMult           = getCycleMult;
-  window.getEconomicCycleBanner = getEconomicCycleBanner;
-  window.CYCLE_GOODS            = CYCLE_GOODS;
-  window.CYCLE_TYPES            = CYCLE_TYPES;
-
-  // Этап 6 — усталость армии от недофинансирования.
-  window.calcNormalArmyExpense   = calcNormalArmyExpense;
-  window.getArmyFundingRatio     = getArmyFundingRatio;
-  window.getArmyCombatMult       = getArmyCombatMult;
-  window.updateArmyFunding       = updateArmyFunding;
-  window.ARMY_UNDERFUND_THRESHOLD = ARMY_UNDERFUND_THRESHOLD;
-  window.ARMY_UNDERFUND_PENALTY   = ARMY_UNDERFUND_PENALTY;
-
-  // Этап 7 — технологический дрейф (рост производительности зданий).
-  window.updateTechDrift    = updateTechDrift;
-  window.getTechDriftMult   = getTechDriftMult;
-  window.renderTechDrift    = renderTechDrift;
-  window.TECH_DRIFT_INTERVAL = TECH_DRIFT_INTERVAL;
-  window.TECH_DRIFT_STEP     = TECH_DRIFT_STEP;
-  window.TECH_DRIFT_MAX      = TECH_DRIFT_MAX;
-
-  // Этап 8 — тултипы эффективности производства.
-  window.hasRegionBuildings             = hasRegionBuildings;
-  window.renderRegionProductionEfficiency = renderRegionProductionEfficiency;
-  window.UNORGANIZED_PENALTY            = UNORGANIZED_PENALTY;
-}

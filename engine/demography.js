@@ -4,6 +4,9 @@
 // Вызывается из turn.js вместо старого updatePopulationGrowth().
 // ═══════════════════════════════════════════════════════════════════════════
 
+import { CONFIG } from '../config.js';
+import { BUILDINGS } from '../data/buildings.js';
+
 // ─────────────────────────────────────────────────────────────────────────
 // КОНСТАНТЫ
 // ─────────────────────────────────────────────────────────────────────────
@@ -551,7 +554,7 @@ function _checkRandomEvents(nation, profs) {
 // ГЛАВНАЯ ФУНКЦИЯ — processDemography
 // ─────────────────────────────────────────────────────────────────────────
 
-function processDemography() {
+export function processDemography() {
   for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
     try {
       _processDemographyForNation(nationId, nation);
@@ -698,7 +701,7 @@ const PROF_LABELS = {
 // ─────────────────────────────────────────────────────────────────────────
 
 // Вызывается из turn.js ПОСЛЕ updateHappiness() чтобы записать актуальные данные
-function recordPopulationHistory() {
+export function recordPopulationHistory() {
   const nationId = GAME_STATE.player_nation;
   const nation   = GAME_STATE.nations[nationId];
   if (!nation || !nation.population) return;
@@ -748,3 +751,8 @@ function _logDemographyChanges(nationId, oldProfs, newProfs) {
     addEventLog(`👥 Демография: ${lines.join(' · ')}`, 'info');
   }
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.processDemography = processDemography;
+window.recordPopulationHistory = recordPopulationHistory;
+

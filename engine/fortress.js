@@ -9,23 +9,23 @@
 //   • Консервация: 90% экономия, гарнизон заморожен, ползунок не влияет
 // ══════════════════════════════════════════════════════════════════════
 
-'use strict';
+import { MAP_REGIONS } from '../data/map.js';
 
 // ── Максимальный гарнизон по уровню крепости ─────────────────────────
-const FORTRESS_GARRISON_MAX = { 1: 100, 2: 250, 3: 500, 4: 900, 5: 1500 };
+export const FORTRESS_GARRISON_MAX = { 1: 100, 2: 250, 3: 500, 4: 900, 5: 1500 };
 
 // Монет за одного солдата гарнизона в ход
-const GARRISON_UPKEEP_RATE = 1.5;
+export const GARRISON_UPKEEP_RATE = 1.5;
 
 // Базовое содержание уровня крепости (стены, ремонт, стражники) монет/ход
-const FORTRESS_LEVEL_UPKEEP = { 1: 30, 2: 60, 3: 110, 4: 180, 5: 280 };
+export const FORTRESS_LEVEL_UPKEEP = { 1: 30, 2: 60, 3: 110, 4: 180, 5: 280 };
 
 // ── Лимит крепостей по размеру страны ────────────────────────────────
 /**
  * Возвращает максимальное количество крепостей которое нация может содержать.
  * Формула: floor(регионов / 3) + 1, минимум 1, максимум 12.
  */
-function getFortressLimit(nationId) {
+export function getFortressLimit(nationId) {
   const nation = GAME_STATE.nations?.[nationId];
   if (!nation) return 1;
   const regionCount = (nation.regions ?? []).length;
@@ -35,7 +35,7 @@ function getFortressLimit(nationId) {
 /**
  * Возвращает текущее количество крепостей у нации (fortress_level > 0).
  */
-function getFortressCount(nationId) {
+export function getFortressCount(nationId) {
   const nation = GAME_STATE.nations?.[nationId];
   if (!nation) return 0;
   let count = 0;
@@ -54,7 +54,7 @@ function getFortressCount(nationId) {
  *
  * @returns {{ active: number, conserved: number, detail: Array }}
  */
-function calcFortressExpenses(nationId) {
+export function calcFortressExpenses(nationId) {
   const nation = GAME_STATE.nations?.[nationId];
   if (!nation) return { active: 0, conserved: 0, detail: [] };
 
@@ -96,7 +96,7 @@ function calcFortressExpenses(nationId) {
  *   - При низком финансировании (< 75%) гарнизон убывает
  * Для законсервированных: гарнизон заморожен.
  */
-function processFortressGarrisons() {
+export function processFortressGarrisons() {
   for (const [nationId, nation] of Object.entries(GAME_STATE.nations ?? {})) {
     const expLevels    = nation.economy?.expense_levels ?? {};
     const fundingMult  = Math.max(0.5, Math.min(1.5, expLevels.fortresses ?? 1.0));
@@ -148,7 +148,7 @@ function processFortressGarrisons() {
  * Переключает режим консервации крепости в регионе.
  * Вызывается из UI (кнопка в панели крепости).
  */
-function toggleFortressConservation(regionId) {
+export function toggleFortressConservation(regionId) {
   const region = GAME_STATE.regions?.[regionId];
   if (!region || (region.fortress_level ?? 0) === 0) return;
 
@@ -171,3 +171,14 @@ function toggleFortressConservation(regionId) {
     if (tabEl) tabEl.innerHTML = renderConstructionTab(regionId);
   }
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.FORTRESS_GARRISON_MAX = FORTRESS_GARRISON_MAX;
+window.FORTRESS_LEVEL_UPKEEP = FORTRESS_LEVEL_UPKEEP;
+window.GARRISON_UPKEEP_RATE = GARRISON_UPKEEP_RATE;
+window.calcFortressExpenses = calcFortressExpenses;
+window.getFortressCount = getFortressCount;
+window.getFortressLimit = getFortressLimit;
+window.processFortressGarrisons = processFortressGarrisons;
+window.toggleFortressConservation = toggleFortressConservation;
+

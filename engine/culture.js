@@ -8,13 +8,16 @@
 //  Опыт копится каждый ход от событий.
 // ============================================================================
 
+import { CONFIG } from '../config.js';
+import { MAP_REGIONS } from '../data/map.js';
+
 // ── НАЧИСЛЕНИЕ ОПЫТА ──────────────────────────────────────────────────────────
 
 /**
  * Начисляет опыт культуре на основе текущего состояния нации.
  * Вызывается КАЖДЫЙ ход.
  */
-function updateCultureExperience(nationId) {
+export function updateCultureExperience(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -99,7 +102,7 @@ function updateCultureExperience(nationId) {
  * Вызывается каждые MUTATION_CHECK_INTERVAL ходов (12 = 1 год).
  * Мутация произойдёт, только если прошло >= MUTATION_COOLDOWN_TURNS с последней.
  */
-function checkCultureMutations(nationId) {
+export function checkCultureMutations(nationId) {
   const cultureId = getNationPrimaryCulture(nationId);
   if (!cultureId) return;
 
@@ -178,7 +181,7 @@ function checkCultureMutations(nationId) {
 /**
  * Оценивает условия мутации. Возвращает число 0..1 (0 = не выполнены).
  */
-function evaluateMutationConditions(need, culture, nation) {
+export function evaluateMutationConditions(need, culture, nation) {
   if (!need) return 1.0;
 
   let totalConditions = 0;
@@ -267,7 +270,7 @@ function evaluateMutationConditions(need, culture, nation) {
  * Если регион принадлежит нации с другой культурой — меньшинство постепенно
  * растёт или основная культура постепенно меняется.
  */
-function processAssimilation(nationId) {
+export function processAssimilation(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation || !nation.regions) return;
 
@@ -348,7 +351,7 @@ function processAssimilation(nationId) {
 /**
  * Уменьшает силу меньшинств в регионе (естественная ассимиляция).
  */
-function shrinkMinorities(regionCulture) {
+export function shrinkMinorities(regionCulture) {
   for (let i = regionCulture.minorities.length - 1; i >= 0; i--) {
     regionCulture.minorities[i].strength -= CULTURE_CONFIG.ASSIMILATION_RATE_BASE * 0.5;
     if (regionCulture.minorities[i].strength <= 0.01) {
@@ -363,7 +366,7 @@ function shrinkMinorities(regionCulture) {
  * Когда две культуры долго сосуществуют — может возникнуть новая смешанная.
  * Проверяется при ежегодной проверке мутаций.
  */
-function checkCultureMixing(nationId) {
+export function checkCultureMixing(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation || !nation.regions) return;
 
@@ -415,13 +418,13 @@ function checkCultureMixing(nationId) {
  * Возвращает суммарный бонус культуры по указанному типу.
  * Используется экономическим движком для модификаторов.
  */
-function getCultureBonus(nationId, bonusType) {
+export function getCultureBonus(nationId, bonusType) {
   const cultureId = getNationPrimaryCulture(nationId);
   if (!cultureId) return 0;
   return getCultureBonusSum(cultureId, bonusType);
 }
 
-function getCultureBonusSum(cultureId, bonusType) {
+export function getCultureBonusSum(cultureId, bonusType) {
   const culture = GAME_STATE.cultures[cultureId];
   if (!culture) return 0;
 
@@ -438,7 +441,7 @@ function getCultureBonusSum(cultureId, bonusType) {
 /**
  * Возвращает все бонусы культуры как объект { type: value, ... }
  */
-function getAllCultureBonuses(nationId) {
+export function getAllCultureBonuses(nationId) {
   const cultureId = getNationPrimaryCulture(nationId);
   if (!cultureId) return {};
 
@@ -459,7 +462,7 @@ function getAllCultureBonuses(nationId) {
 
 // ── ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ───────────────────────────────────────────────────
 
-function getNationPrimaryCulture(nationId) {
+export function getNationPrimaryCulture(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation || !nation.regions || nation.regions.length === 0) return null;
 
@@ -479,7 +482,7 @@ function getNationPrimaryCulture(nationId) {
   return best;
 }
 
-function findNationIdByCulture(culture) {
+export function findNationIdByCulture(culture) {
   // Ищем нацию, у которой данная культура основная
   for (const [nId, nation] of Object.entries(GAME_STATE.nations || {})) {
     if (getNationPrimaryCulture(nId) === culture?.id) return nId;
@@ -487,7 +490,7 @@ function findNationIdByCulture(culture) {
   return null;
 }
 
-function countRegionsByType(nationId, type) {
+export function countRegionsByType(nationId, type) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation || !nation.regions) return 0;
   let count = 0;
@@ -498,7 +501,7 @@ function countRegionsByType(nationId, type) {
   return count;
 }
 
-function countRegionsByTerrain(nationId, terrains) {
+export function countRegionsByTerrain(nationId, terrains) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation || !nation.regions) return 0;
   let count = 0;
@@ -509,7 +512,7 @@ function countRegionsByTerrain(nationId, terrains) {
   return count;
 }
 
-function countBuildingsByTag(nationId, tag) {
+export function countBuildingsByTag(nationId, tag) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation || !nation.regions) return 0;
   let count = 0;
@@ -524,7 +527,7 @@ function countBuildingsByTag(nationId, tag) {
   return count;
 }
 
-function countTreaties(nationId) {
+export function countTreaties(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation || !nation.relations) return 0;
   let count = 0;
@@ -534,7 +537,7 @@ function countTreaties(nationId) {
   return count;
 }
 
-function findWeakestTradition(culture) {
+export function findWeakestTradition(culture) {
   // Находим традицию с наименьшим "совпадением" с текущим опытом
   let weakest = null;
   let weakestScore = Infinity;
@@ -583,7 +586,7 @@ function findWeakestTradition(culture) {
  * Вызывается каждый ход из processTurn().
  * Обрабатывает все нации.
  */
-function cultureTick() {
+export function cultureTick() {
   // Инициализация при первом запуске
   if (!GAME_STATE.cultures) {
     initCultures();
@@ -618,7 +621,7 @@ function cultureTick() {
 
 // ── ИНИЦИАЛИЗАЦИЯ ─────────────────────────────────────────────────────────────
 
-function initCultures() {
+export function initCultures() {
   if (typeof CULTURES === 'undefined') { console.warn('[culture] CULTURES not defined'); return; }
   if (typeof GAME_STATE === 'undefined') { console.warn('[culture] GAME_STATE not defined'); return; }
   GAME_STATE.cultures = {};
@@ -637,7 +640,7 @@ function initCultures() {
   console.log('[culture] initCultures: loaded', Object.keys(GAME_STATE.cultures).length, 'cultures');
 }
 
-function initRegionCultures() {
+export function initRegionCultures() {
   if (typeof REGION_CULTURES === 'undefined') { console.warn('[culture] REGION_CULTURES not defined'); return; }
   if (typeof GAME_STATE === 'undefined') { console.warn('[culture] GAME_STATE not defined'); return; }
   GAME_STATE.region_cultures = {};
@@ -654,7 +657,7 @@ function initRegionCultures() {
 
 // ── Статистика культур нации (для окна «Культура») ───────────────────────────
 
-function getNationCultureStats(nationId) {
+export function getNationCultureStats(nationId) {
   const culturePopMap = {};   // cultureId → totalPopulation
   const byRegion = [];
 
@@ -727,7 +730,7 @@ function getNationCultureStats(nationId) {
 
 // ── Экспорт для UI ────────────────────────────────────────────────────────────
 
-function getCultureInfoForUI(nationId) {
+export function getCultureInfoForUI(nationId) {
   const cultureId = getNationPrimaryCulture(nationId);
   if (!cultureId) return null;
 
@@ -755,3 +758,27 @@ function getCultureInfoForUI(nationId) {
     nextMutationIn: Math.max(0, CULTURE_CONFIG.MUTATION_COOLDOWN_TURNS - ((GAME_STATE.turn || 0) - culture.last_mutation_turn)),
   };
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.checkCultureMixing = checkCultureMixing;
+window.checkCultureMutations = checkCultureMutations;
+window.countBuildingsByTag = countBuildingsByTag;
+window.countRegionsByTerrain = countRegionsByTerrain;
+window.countRegionsByType = countRegionsByType;
+window.countTreaties = countTreaties;
+window.cultureTick = cultureTick;
+window.evaluateMutationConditions = evaluateMutationConditions;
+window.findNationIdByCulture = findNationIdByCulture;
+window.findWeakestTradition = findWeakestTradition;
+window.getAllCultureBonuses = getAllCultureBonuses;
+window.getCultureBonus = getCultureBonus;
+window.getCultureBonusSum = getCultureBonusSum;
+window.getCultureInfoForUI = getCultureInfoForUI;
+window.getNationCultureStats = getNationCultureStats;
+window.getNationPrimaryCulture = getNationPrimaryCulture;
+window.initCultures = initCultures;
+window.initRegionCultures = initRegionCultures;
+window.processAssimilation = processAssimilation;
+window.shrinkMinorities = shrinkMinorities;
+window.updateCultureExperience = updateCultureExperience;
+

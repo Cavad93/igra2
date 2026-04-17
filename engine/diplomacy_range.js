@@ -15,7 +15,10 @@
 //   3. Логистический предел  — снабжение армий падает вдали от дома
 // ══════════════════════════════════════════════════════════════════════
 
-const DIPLO_CFG = {
+import { CONFIG } from '../config.js';
+import { MAP_REGIONS } from '../data/map.js';
+
+export const DIPLO_CFG = {
   // ── Зоны охвата ──────────────────────────────────────────────────
   RANGE_NEAR: 4,          // ≤ 4 хопов  → Tier 1 (Sonnet + полная дипломатия)
   RANGE_MID:  8,          // ≤ 8 хопов  → Tier 2 (Haiku + ограниченная)
@@ -46,10 +49,10 @@ const DIPLO_CFG = {
 
 // ── Кэш расстояний ────────────────────────────────────────────────────
 
-let _regionDistCache = {};  // regionId → хопов от ближайшего региона игрока
-let _nationDistCache  = {};  // nationId → минимальное расстояние
-let _cacheComputedAt  = -999;
-let _prevNationTiers  = {};  // nationId → предыдущий tier (для детекции изменений)
+export let _regionDistCache = {};  // regionId → хопов от ближайшего региона игрока
+export let _nationDistCache  = {};  // nationId → минимальное расстояние
+export let _cacheComputedAt  = -999;
+export let _prevNationTiers  = {};  // nationId → предыдущий tier (для детекции изменений)
 
 // ══════════════════════════════════════════════════════════════════════
 // BFS — расстояния от территории игрока
@@ -59,7 +62,7 @@ let _prevNationTiers  = {};  // nationId → предыдущий tier (для �
  * Пересчитать кэш расстояний (BFS от всех регионов игрока).
  * Вызывается автоматически при обращении к getDiploDistance().
  */
-function refreshDiploDistances(forceRefresh) {
+export function refreshDiploDistances(forceRefresh) {
   const turn = GAME_STATE.turn ?? 1;
   if (!forceRefresh && turn - _cacheComputedAt < DIPLO_CFG.CACHE_INTERVAL) return;
 
@@ -176,7 +179,7 @@ function _bfsFromNationRegions(nationId) {
  * Расстояние от территории игрока до ближайшего региона нации (хопов).
  * Учитывает бонусы от послов и торговых маршрутов.
  */
-function getDiploDistance(nationId) {
+export function getDiploDistance(nationId) {
   if (nationId === GAME_STATE.player_nation) return 0;
   refreshDiploDistances();
 
@@ -200,7 +203,7 @@ function getDiploDistance(nationId) {
  * Уровень дипломатического доступа к нации.
  * 1 = полный (Sonnet), 2 = частичный (Haiku), 3 = нет (только fallback)
  */
-function getNationTier(nationId) {
+export function getNationTier(nationId) {
   const d = getDiploDistance(nationId);
   if (d <= DIPLO_CFG.RANGE_NEAR) return 1;
   if (d <= DIPLO_CFG.RANGE_MID)  return 2;
@@ -210,14 +213,14 @@ function getNationTier(nationId) {
 /**
  * Может ли игрок взаимодействовать с нацией (Tier 1 или 2)?
  */
-function canPlayerInteract(nationId) {
+export function canPlayerInteract(nationId) {
   return getNationTier(nationId) <= 2;
 }
 
 /**
  * Полная дипломатия (Tier 1 — предложения, союзы, войны)?
  */
-function canPlayerDiplomate(nationId) {
+export function canPlayerDiplomate(nationId) {
   return getNationTier(nationId) === 1;
 }
 
@@ -227,7 +230,7 @@ function canPlayerDiplomate(nationId) {
  * Tier 2 → Haiku  (ограниченный контакт)
  * Tier 3 → null   (нельзя взаимодействовать)
  */
-function getDialogueModel(nationId) {
+export function getDialogueModel(nationId) {
   const tier = getNationTier(nationId);
   if (tier === 1) return typeof CONFIG !== 'undefined' ? CONFIG.MODEL_SONNET : null;
   if (tier === 2) return typeof CONFIG !== 'undefined' ? CONFIG.MODEL_HAIKU  : null;
@@ -242,7 +245,7 @@ function getDialogueModel(nationId) {
  * Вызывается каждый ход из processTurn().
  * Применяет штрафы к нациям, захватившим слишком много регионов.
  */
-function processConquestFatigue() {
+export function processConquestFatigue() {
   const turn = GAME_STATE.turn ?? 1;
 
   for (const [nId, nation] of Object.entries(GAME_STATE.nations ?? {})) {
@@ -319,7 +322,7 @@ function _tryConquestRevolt(nationId, nation, excess, turn) {
  * Вызывается каждый ход из processTurn().
  * Если нация слишком быстро расширялась — соседи сближаются.
  */
-function checkCoalitionReflex() {
+export function checkCoalitionReflex() {
   const turn = GAME_STATE.turn ?? 1;
 
   for (const [nId, nation] of Object.entries(GAME_STATE.nations ?? {})) {
@@ -434,7 +437,7 @@ function _adjustRelation(fromId, toId, delta) {
  * Обновить таймер нахождения армии вдали от дома.
  * Вызывается из _processSupply() в armies.js.
  */
-function updateArmyLogisticTimer(army) {
+export function updateArmyLogisticTimer(army) {
   // Текущий владелец региона: сначала из игрового состояния, затем из карты
   const regionNation = GAME_STATE.regions?.[army.position]?.nation
                     ?? MAP_REGIONS?.[army.position]?.nation;
@@ -450,7 +453,7 @@ function updateArmyLogisticTimer(army) {
 /**
  * Рассчитать штраф снабжения за дальность от родной территории (% за ход).
  */
-function calcLogisticPenalty(army) {
+export function calcLogisticPenalty(army) {
   // Не применяем к флоту и стоящим дома
   if (army.type === 'naval') return 0;
   const away  = army._turns_away_from_home ?? 0;
@@ -466,7 +469,7 @@ function calcLogisticPenalty(army) {
  * Вернуть объект с информацией о зоне нации для отображения в UI.
  * { tier, distance, label, canInteract, canDiplomate }
  */
-function getDiploRangeInfo(nationId) {
+export function getDiploRangeInfo(nationId) {
   const d    = getDiploDistance(nationId);
   const tier = getNationTier(nationId);
   const labels = {
@@ -482,3 +485,22 @@ function getDiploRangeInfo(nationId) {
     canDiplomate: tier === 1,
   };
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.DIPLO_CFG = DIPLO_CFG;
+window._cacheComputedAt = _cacheComputedAt;
+window._nationDistCache = _nationDistCache;
+window._prevNationTiers = _prevNationTiers;
+window._regionDistCache = _regionDistCache;
+window.calcLogisticPenalty = calcLogisticPenalty;
+window.canPlayerDiplomate = canPlayerDiplomate;
+window.canPlayerInteract = canPlayerInteract;
+window.checkCoalitionReflex = checkCoalitionReflex;
+window.getDialogueModel = getDialogueModel;
+window.getDiploDistance = getDiploDistance;
+window.getDiploRangeInfo = getDiploRangeInfo;
+window.getNationTier = getNationTier;
+window.processConquestFatigue = processConquestFatigue;
+window.refreshDiploDistances = refreshDiploDistances;
+window.updateArmyLogisticTimer = updateArmyLogisticTimer;
+

@@ -1,3 +1,5 @@
+import { MAP_REGIONS } from '../data/map.js';
+
 // ══════════════════════════════════════════════════════════════════════
 // COMBAT ENGINE — расширенная боевая система для армейских стеков
 //
@@ -15,7 +17,7 @@
 // Бой трёхфазный: Скирмиш → Ближний бой → Преследование
 // ══════════════════════════════════════════════════════════════════════
 
-const COMBAT = {
+export const COMBAT = {
   // Порог морали: бегство
   ROUT_THRESHOLD:  15,
   PANIC_THRESHOLD: 30,   // штраф к силе
@@ -90,7 +92,7 @@ const COMBAT = {
  * @param {string} regionId - регион боя
  * @returns {Object|null} результат боя (null если асинхронный тактический)
  */
-function resolveArmyBattle(atkArmy, defArmy, regionId) {
+export function resolveArmyBattle(atkArmy, defArmy, regionId) {
   // Этап 20: бой с участием игрока — показать выбор режима
   const playerInvolved = atkArmy.nation === GAME_STATE.player_nation
     || defArmy.nation === GAME_STATE.player_nation;
@@ -103,7 +105,7 @@ function resolveArmyBattle(atkArmy, defArmy, regionId) {
   return _resolveArmyBattleCore(atkArmy, defArmy, regionId);
 }
 
-function _resolveArmyBattleCore(atkArmy, defArmy, regionId) {
+export function _resolveArmyBattleCore(atkArmy, defArmy, regionId) {
   const region    = _getRegionData(regionId);
   const terrain   = region?.terrain ?? 'plains';
   const atkNation = GAME_STATE.nations[atkArmy.nation];
@@ -285,7 +287,7 @@ function _resolveArmyBattleCore(atkArmy, defArmy, regionId) {
 /**
  * Полный расчёт эффективной боевой силы армии.
  */
-function calcArmyCombatStrength(army, terrain, isDefender) {
+export function calcArmyCombatStrength(army, terrain, isDefender) {
   const u        = army.units;
   const terrAtk  = isDefender ? 1.0 : (COMBAT.TERRAIN_ATK[terrain] ?? 1.0);
   const terrCav  = COMBAT.TERRAIN_CAV[terrain] ?? 1.0;
@@ -376,7 +378,7 @@ function calcArmyCombatStrength(army, terrain, isDefender) {
 
 // ── Фазы боя ─────────────────────────────────────────────────────────
 
-function _resolveSkirmish(atkArmy, defArmy, terrain) {
+export function _resolveSkirmish(atkArmy, defArmy, terrain) {
   // Кавалерия ведёт перестрелку перед боем на открытой местности
   const open = terrain === 'plains' || terrain === 'river_valley';
   const factor = open ? 1.0 : 0.4;
@@ -392,7 +394,7 @@ function _resolveSkirmish(atkArmy, defArmy, terrain) {
 
 // ── Применение потерь ─────────────────────────────────────────────────
 
-function _applyLoss(army, total) {
+export function _applyLoss(army, total) {
   const u    = army.units;
   const cur  = _landTotal(u);
   if (cur === 0 || total <= 0) return;
@@ -406,7 +408,7 @@ function _applyLoss(army, total) {
 
 // ── Синхронизация потерь с nation.military ───────────────────────────
 
-function _syncArmyToNation(army) {
+export function _syncArmyToNation(army) {
   const nat = GAME_STATE.nations[army.nation]?.military;
   if (!nat) return;
 
@@ -430,7 +432,7 @@ function _syncArmyToNation(army) {
 
 // ── Отступление ───────────────────────────────────────────────────────
 
-function _setRetreatPath(army) {
+export function _setRetreatPath(army) {
   const ownRegions = Object.entries(GAME_STATE.regions ?? {})
     .filter(([, r]) => r.nation === army.nation).map(([id]) => id);
 
@@ -467,7 +469,7 @@ function _setRetreatPath(army) {
 
 // ── Морской бой ───────────────────────────────────────────────────────
 
-function resolveNavalArmyBattle(atkFleet, defFleet, regionId) {
+export function resolveNavalArmyBattle(atkFleet, defFleet, regionId) {
   const region    = _getRegionData(regionId);
   const atkNation = GAME_STATE.nations[atkFleet.nation];
   const defNation = GAME_STATE.nations[defFleet.nation];
@@ -537,7 +539,7 @@ function resolveNavalArmyBattle(atkFleet, defFleet, regionId) {
  * @param {string} nationId - нация которую проверяем (владелец региона)
  * @returns {{ isBlockaded: boolean, blockadePower: number }}
  */
-function checkNavalBlockade(regionId, nationId) {
+export function checkNavalBlockade(regionId, nationId) {
   const region = _getRegionData(regionId)
     ?? GAME_STATE.regions?.[regionId]
     ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[regionId] : null);
@@ -579,17 +581,17 @@ function checkNavalBlockade(regionId, nationId) {
 
 // ── Утилиты ───────────────────────────────────────────────────────────
 
-function _landTotal(u) {
+export function _landTotal(u) {
   return (u.infantry ?? 0) + (u.cavalry ?? 0) + (u.mercenaries ?? 0) + (u.artillery ?? 0);
 }
 
-function _getRegionData(regionId) {
+export function _getRegionData(regionId) {
   return GAME_STATE.regions?.[regionId]
     ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[regionId] : null);
 }
 
 /** Начисляет XP командующему армии и разблокирует новые умения при достижении порогов */
-function _awardCommanderXP(army, xpGain) {
+export function _awardCommanderXP(army, xpGain) {
   if (!army?.commander_id) return;
   const nation = GAME_STATE.nations?.[army.nation];
   const char = (nation?.characters ?? []).find(c => c.id === army.commander_id);
@@ -613,7 +615,7 @@ function _awardCommanderXP(army, xpGain) {
 }
 
 /** Суммарный бонус черты командира по полю (atk/def/pursuit/naval) */
-function _traitSum(cmd, field) {
+export function _traitSum(cmd, field) {
   if (!cmd) return 0;
   const traits = cmd.traits_list ?? (typeof cmd.traits === 'object' ? Object.keys(cmd.traits) : []);
   return traits.reduce((sum, t) => {
@@ -623,7 +625,7 @@ function _traitSum(cmd, field) {
 
 // ── Этап 20: модальный выбор режима боя для армейских стеков ─────────
 
-function _showArmyTacticalChoice(atkArmy, defArmy, regionId) {
+export function _showArmyTacticalChoice(atkArmy, defArmy, regionId) {
   document.getElementById('tactical-choice-modal')?.remove();
 
   const region    = _getRegionData(regionId);
@@ -738,3 +740,21 @@ function _showArmyTacticalChoice(atkArmy, defArmy, regionId) {
     _resolveArmyBattleCore(atkArmy, defArmy, regionId);
   };
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.COMBAT = COMBAT;
+window._applyLoss = _applyLoss;
+window._awardCommanderXP = _awardCommanderXP;
+window._getRegionData = _getRegionData;
+window._landTotal = _landTotal;
+window._resolveArmyBattleCore = _resolveArmyBattleCore;
+window._resolveSkirmish = _resolveSkirmish;
+window._setRetreatPath = _setRetreatPath;
+window._showArmyTacticalChoice = _showArmyTacticalChoice;
+window._syncArmyToNation = _syncArmyToNation;
+window._traitSum = _traitSum;
+window.calcArmyCombatStrength = calcArmyCombatStrength;
+window.checkNavalBlockade = checkNavalBlockade;
+window.resolveArmyBattle = resolveArmyBattle;
+window.resolveNavalArmyBattle = resolveNavalArmyBattle;
+

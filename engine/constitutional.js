@@ -12,17 +12,17 @@
 // ══════════════════════════════════════════════════════════════════════
 
 // Допустимые значения перечислимых параметров
-const CONSUL_POWERS   = ['Limited', 'Standard', 'Dictatorial'];
-const VOTING_SYSTEMS  = ['Plutocracy', 'Meritocracy', 'Democracy'];
+export const CONSUL_POWERS   = ['Limited', 'Standard', 'Dictatorial'];
+export const VOTING_SYSTEMS  = ['Plutocracy', 'Meritocracy', 'Democracy'];
 
 // Уровни consul_powers → допустимые действия без голосования
-const POWER_COMMANDS = {
+export const POWER_COMMANDS = {
   Limited:      ['build', 'trade'],
   Standard:     ['build', 'trade', 'reform', 'diplomacy'],
   Dictatorial:  ['build', 'trade', 'reform', 'diplomacy', 'war', 'proscription', 'exile'],
 };
 
-class ConstitutionalEngine {
+export class ConstitutionalEngine {
 
   // ══════════════════════════════════════════════════════════════════
   // ВНУТРЕННИЙ ДОСТУП К СОСТОЯНИЮ
@@ -542,4 +542,12 @@ class ConstitutionalEngine {
 // SINGLETON
 // ══════════════════════════════════════════════════════════════════════
 
-const CONSTITUTIONAL_ENGINE = new ConstitutionalEngine();
+export const CONSTITUTIONAL_ENGINE = new ConstitutionalEngine();
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.CONSTITUTIONAL_ENGINE = CONSTITUTIONAL_ENGINE;
+window.CONSUL_POWERS = CONSUL_POWERS;
+window.ConstitutionalEngine = ConstitutionalEngine;
+window.POWER_COMMANDS = POWER_COMMANDS;
+window.VOTING_SYSTEMS = VOTING_SYSTEMS;
+

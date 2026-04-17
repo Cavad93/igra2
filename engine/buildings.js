@@ -17,12 +17,17 @@
 //   • nation.population._unemployment_rates{} — для UI и демографии
 // ═══════════════════════════════════════════════════════════════════════════
 
+import { BUILDINGS } from '../data/buildings.js';
+import { CONFIG } from '../config.js';
+import { GOODS } from '../data/goods.js';
+import { MAP_REGIONS } from '../data/map.js';
+
 // ──────────────────────────────────────────────────────────────
 // ВСПОМОГАТЕЛЬНЫЕ УТИЛИТЫ
 // ──────────────────────────────────────────────────────────────
 
 // Суммарное число рабочих в слоте
-function _slotTotalWorkers(slot) {
+export function _slotTotalWorkers(slot) {
   if (!slot.workers) return 0;
   return Object.values(slot.workers).reduce((s, v) => s + v, 0);
 }
@@ -30,7 +35,7 @@ function _slotTotalWorkers(slot) {
 // Бонус к производству товара по типу местности или биому региона.
 // Для 13 биомов читает из BIOME_META[biome].goods_bonus (data/biomes.js).
 // Для старых terrain-типов (plains/hills/mountains/coastal_city) — fallback-таблица.
-function _terrainGoodBonus(terrain, good) {
+export function _terrainGoodBonus(terrain, good) {
   // ── 13 биомов: читаем из BIOME_META (data/biomes.js) ──────────────────
   if (typeof BIOME_META !== 'undefined' && BIOME_META[terrain]?.goods_bonus) {
     const v = BIOME_META[terrain].goods_bonus[good];
@@ -51,7 +56,7 @@ function _terrainGoodBonus(terrain, good) {
 // Вызывается всякий раз, когда building_slots меняются.
 // ──────────────────────────────────────────────────────────────
 
-function recalculateRegionEmployment(region) {
+export function recalculateRegionEmployment(region) {
   const emp = region.employment;
   if (!emp) return;
 
@@ -68,7 +73,7 @@ function recalculateRegionEmployment(region) {
 }
 
 // Пересчитать занятость для всех регионов нации
-function recalculateAllEmployment(nationId) {
+export function recalculateAllEmployment(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
   for (const rid of nation.regions) {
@@ -85,7 +90,7 @@ function recalculateAllEmployment(nationId) {
 
 // Возвращает эффективное число рабочих слота с учётом slave_fallback_profession:
 // если nation.population.by_profession.slaves === 0, рабские слоты → farmers.
-function _getEffectiveWorkers(slot, bDef, nation) {
+export function _getEffectiveWorkers(slot, bDef, nation) {
   const w = { ...(slot.workers || {}) };
   const fallback = bDef?.slave_fallback_profession;
   if (fallback && (w.slaves ?? 0) > 0) {
@@ -99,7 +104,7 @@ function _getEffectiveWorkers(slot, bDef, nation) {
   return w;
 }
 
-function _calcSlotBaseOutput(slot, region, nation) {
+export function _calcSlotBaseOutput(slot, region, nation) {
   if (!slot || slot.status !== 'active') return {};
 
   const bDef = BUILDINGS[slot.building_id];
@@ -160,7 +165,7 @@ function _calcSlotBaseOutput(slot, region, nation) {
 // и фактический выход масштабируется (частичное производство).
 // ──────────────────────────────────────────────────────────────
 
-function getBuildingOutput(slot, region, nation) {
+export function getBuildingOutput(slot, region, nation) {
   const base   = _calcSlotBaseOutput(slot, region, nation);
   const ratios = slot._recipe_ratios;
 
@@ -194,7 +199,7 @@ function getBuildingOutput(slot, region, nation) {
 // (средневзвешенное по всем активным рецептам, производящим этот товар).
 // ──────────────────────────────────────────────────────────────
 
-function processAllRecipes(nationId) {
+export function processAllRecipes(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -316,7 +321,7 @@ function processAllRecipes(nationId) {
 // отражал актуальные издержки перед updateMarketPrices().
 // ──────────────────────────────────────────────────────────────
 
-function recomputeAllProductionCosts(nationId) {
+export function recomputeAllProductionCosts(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -364,7 +369,7 @@ function recomputeAllProductionCosts(nationId) {
 // Возвращает { good: totalAmount } — добавляется к общей выработке.
 // ──────────────────────────────────────────────────────────────
 
-function calculateAllBuildingProduction(nationId) {
+export function calculateAllBuildingProduction(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return {};
 
@@ -391,7 +396,7 @@ function calculateAllBuildingProduction(nationId) {
 // Вызывается ПЕРЕД runEconomyTick() в turn.js.
 // ──────────────────────────────────────────────────────────────
 
-function processBuildingConstruction() {
+export function processBuildingConstruction() {
   // Обрабатываем строительные очереди ВСЕХ наций (игрока + AI + автономные классы).
   for (const nationId of Object.keys(GAME_STATE.nations)) {
     const nation = GAME_STATE.nations[nationId];
@@ -423,7 +428,7 @@ function processBuildingConstruction() {
   }
 }
 
-function _completeConstruction(entry, region, regionId) {
+export function _completeConstruction(entry, region, regionId) {
   const bDef = BUILDINGS[entry.building_id];
   if (!bDef) return;
 
@@ -523,7 +528,7 @@ function _completeConstruction(entry, region, regionId) {
 // 5. ВЫРУЧКА ЗДАНИЯ (в денариях за ход)
 // ──────────────────────────────────────────────────────────────
 
-function calculateBuildingRevenue(slot, region, nation) {
+export function calculateBuildingRevenue(slot, region, nation) {
   const output = getBuildingOutput(slot, region, nation);
   let revenue  = 0;
   for (const [good, amount] of Object.entries(output)) {
@@ -546,7 +551,7 @@ function calculateBuildingRevenue(slot, region, nation) {
 //   wheat_villa       (15 раб.) →  30 ден/уровень  (было 50)
 //   wheat_latifundium (100 раб.)→ 200 ден/уровень  (было 50)
 // ──────────────────────────────────────────────────────────────
-function _calcBuildingMaintenance(bDef, level) {
+export function _calcBuildingMaintenance(bDef, level) {
   const ratePerWorker = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.MAINTENANCE_PER_WORKER) ?? 2;
   const workersPerUnit = bDef.workers_per_unit
     ?? (bDef.worker_profession?.reduce((s, p) => s + p.count, 0) ?? 1);
@@ -568,7 +573,7 @@ function _calcBuildingMaintenance(bDef, level) {
 //   стандарт = 0.10×10 + 0.005×12 + 0.01×15 = 1.21 ₴
 //   итого    ≈ 3.77 ₴/раб/тик
 // ──────────────────────────────────────────────────────────────
-function calcSlaveUpkeepPerPerson() {
+export function calcSlaveUpkeepPerPerson() {
   const B       = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE) || {};
   const market  = (typeof GAME_STATE !== 'undefined' && GAME_STATE.market) || {};
   const GOODS_  = (typeof GOODS !== 'undefined') ? GOODS : {};
@@ -610,15 +615,15 @@ function calcSlaveUpkeepPerPerson() {
 //   wages = 300; только ремесленники (нет рабов): 300/200 = 1.5 ден/рабочего → adequacy 3 → cap +20.
 // При бедном (гончарня 200 рабочих, выручка 290, ставка 0.28):
 //   wages = 81; 81/200 = 0.41 → adequacy 0.82 → satBonus −4. Умеренный минус.
-const EXPECTED_WAGE_PER_WORKER = 0.5;
+export const EXPECTED_WAGE_PER_WORKER = 0.5;
 
 // Типы труда, для которых зарплатный satisfaction-бонус НЕ применяется.
 // self/none: самозанятые и пустые здания получают удовлетворение иначе.
 // slave:     рабы работают принудительно — зарплата не мотивирует.
-const _WAGE_BONUS_SKIP = new Set(['self', 'none', 'slave']);
+export const _WAGE_BONUS_SKIP = new Set(['self', 'none', 'slave']);
 
 // Маппинг профессия → класс-владелец прибыли
-const PROFIT_CLASS = {
+export const PROFIT_CLASS = {
   wage:    'citizens',      // работодатели — граждане
   tenant:  'aristocrats',   // арендодатели — аристократы
   slave:   'aristocrats',   // рабовладельцы
@@ -628,7 +633,7 @@ const PROFIT_CLASS = {
   none:    null,
 };
 
-function distributeWages(nationId) {
+export function distributeWages(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -795,7 +800,7 @@ function distributeWages(nationId) {
 // ВЫЗОВ: ШАГ 5б — после recomputeAllProductionCosts(), до deductFoodPurchases().
 //   Перенесено из шага 4 чтобы читать profit_last ТЕКУЩЕГО тика.
 // ══════════════════════════════════════════════════════════════
-function distributeClassIncome(nationId) {
+export function distributeClassIncome(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -1004,7 +1009,7 @@ function distributeClassIncome(nationId) {
 //
 // ВЫЗОВ: ШАГ 5в — сразу после distributeClassIncome() (class_capital уже пополнен).
 // ══════════════════════════════════════════════════════════════
-function deductFoodPurchases(nationId) {
+export function deductFoodPurchases(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -1093,7 +1098,7 @@ function deductFoodPurchases(nationId) {
 // Возвращает числовую прибыль (не bool) для здания в конкретном регионе.
 // Используется processAutonomousBuilding для выбора лучшего региона.
 // ══════════════════════════════════════════════════════════════
-function _estimateSlotProfit(buildingId, region, nation) {
+export function _estimateSlotProfit(buildingId, region, nation) {
   const bDef = BUILDINGS[buildingId];
   if (!bDef) return -Infinity;
 
@@ -1156,9 +1161,9 @@ function _estimateSlotProfit(buildingId, region, nation) {
 //
 // ВЫЗОВ: после updateMarketPrices() — ШАГ 5 runEconomyTick().
 // ══════════════════════════════════════════════════════════════
-const _CLASS_SAFETY_RESERVE = 3000;
+export const _CLASS_SAFETY_RESERVE = 3000;
 
-function processAutonomousBuilding(nationId) {
+export function processAutonomousBuilding(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -1293,7 +1298,7 @@ function processAutonomousBuilding(nationId) {
 //
 // ВЫЗОВ: после processAutonomousBuilding() каждый тик.
 // ══════════════════════════════════════════════════════════════
-function checkClassBankruptcy(nationId) {
+export function checkClassBankruptcy(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -1350,7 +1355,7 @@ function checkClassBankruptcy(nationId) {
 //   net_profit    = gross_revenue − input_costs − wages − maintenance
 // ──────────────────────────────────────────────────────────────
 
-function updateBuildingFinancials(nationId) {
+export function updateBuildingFinancials(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -1438,7 +1443,7 @@ function updateBuildingFinancials(nationId) {
 
 // Вспомогательные функции адаптивного поведения
 
-function _logSlotEvent(slot, bDef, rid, msg, type) {
+export function _logSlotEvent(slot, bDef, rid, msg, type) {
   if (typeof addEventLog !== 'function') return;
   const bName = bDef?.name || slot.building_id;
   const rName = (typeof MAP_REGIONS !== 'undefined' && MAP_REGIONS[rid]?.name) || rid;
@@ -1447,7 +1452,7 @@ function _logSlotEvent(slot, bDef, rid, msg, type) {
 
 // Плавное сокращение рабочих на fraction (0.10 = 10%) от текущего числа.
 // Оставляем минимум 1 в каждой профессии (чтобы не потерять данные о типе занятости).
-function _cutSlotWorkers(slot, fraction) {
+export function _cutSlotWorkers(slot, fraction) {
   for (const [prof, count] of Object.entries(slot.workers || {})) {
     if (count <= 1) continue;
     const cut = Math.max(1, Math.floor(count * fraction));
@@ -1459,7 +1464,7 @@ function _cutSlotWorkers(slot, fraction) {
 // Стандартные здания используют worker_profession; автономные (wheat_*) — workers_per_unit.
 // Для автономных зданий основная профессия определяется по текущим данным слота:
 // берём профессию с максимальным числом рабочих (или 'farmers' по умолчанию).
-function _getBuildingWorkerProfile(bDef, slot) {
+export function _getBuildingWorkerProfile(bDef, slot) {
   if (bDef?.worker_profession?.length) return bDef.worker_profession;
   if (bDef?.workers_per_unit) {
     // Определяем профессию: из slot.workers или 'farmers' по умолчанию
@@ -1475,7 +1480,7 @@ function _getBuildingWorkerProfile(bDef, slot) {
 // Постепенное восстановление рабочих до максимума из bDef.
 // Если задан slave_fallback_profession и рабов нет в нации → восстанавливаем
 // фермеров вместо рабов (не пытаемся нанять несуществующих рабов).
-function _restoreSlotWorkers(slot, bDef, fraction, nation) {
+export function _restoreSlotWorkers(slot, bDef, fraction, nation) {
   const profile = _getBuildingWorkerProfile(bDef, slot);
   if (!profile.length) return;
   const slavePop      = nation?.population?.by_profession?.slaves ?? 0;
@@ -1502,7 +1507,7 @@ function _restoreSlotWorkers(slot, bDef, fraction, nation) {
 
 // Оценивает, будет ли здание прибыльным при текущих рыночных ценах и полной загрузке.
 // Используется для решения о повторном открытии закрытых зданий.
-function _estimateSlotProfitability(slot, bDef, region, nation) {
+export function _estimateSlotProfitability(slot, bDef, region, nation) {
   // Создаём временный «идеальный» слот с production_eff=1 и полными рабочими
   const tempSlot = {
     ...slot,
@@ -1541,7 +1546,7 @@ function _estimateSlotProfitability(slot, bDef, region, nation) {
   return (gross - inputCosts - wages - maint) > 0;
 }
 
-function applyBuildingAdaptiveBehavior(nationId) {
+export function applyBuildingAdaptiveBehavior(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -1654,7 +1659,7 @@ function applyBuildingAdaptiveBehavior(nationId) {
 // Используется демографическим движком и UI.
 // ──────────────────────────────────────────────────────────────
 
-function getUnemploymentRates(nation) {
+export function getUnemploymentRates(nation) {
   const profs    = nation.population.by_profession;
   const regions  = nation.regions || [];
   const regData  = GAME_STATE.regions;
@@ -1698,9 +1703,9 @@ function getUnemploymentRates(nation) {
 // Если рыночная цена недоступна, берётся base_price из GOODS.
 // ──────────────────────────────────────────────────────────────
 
-const CONSTRUCTION_LABOR_SURCHARGE = 1.20;   // 20% на труд строителей
+export const CONSTRUCTION_LABOR_SURCHARGE = 1.20;   // 20% на труд строителей
 
-function calcConstructionCost(buildingId) {
+export function calcConstructionCost(buildingId) {
   const bDef = BUILDINGS[buildingId];
   if (!bDef) return 0;
   const mats = bDef.construction_materials || {};
@@ -1714,7 +1719,7 @@ function calcConstructionCost(buildingId) {
 }
 
 // Детальный расчёт для UI — возвращает разбивку по материалам
-function calcConstructionCostDetailed(buildingId) {
+export function calcConstructionCostDetailed(buildingId) {
   const bDef = BUILDINGS[buildingId];
   if (!bDef) return { total: 0, matCost: 0, laborCost: 0, lines: [] };
   const mats = bDef.construction_materials || {};
@@ -1740,7 +1745,7 @@ function calcConstructionCostDetailed(buildingId) {
 // Возвращает { ok, reason, slot_id } или { ok: false, reason }
 // ──────────────────────────────────────────────────────────────
 
-function orderBuildingConstruction(nationId, regionId, buildingId) {
+export function orderBuildingConstruction(nationId, regionId, buildingId) {
   const nation = GAME_STATE.nations[nationId];
   const region = GAME_STATE.regions[regionId];
   if (!nation || !region) return { ok: false, reason: 'Регион или нация не найдены' };
@@ -1827,7 +1832,7 @@ function orderBuildingConstruction(nationId, regionId, buildingId) {
 // 9. СНОС ЗДАНИЯ
 // ──────────────────────────────────────────────────────────────
 
-function demolishBuilding(nationId, regionId, slotId) {
+export function demolishBuilding(nationId, regionId, slotId) {
   const nation = GAME_STATE.nations[nationId];
   const region = GAME_STATE.regions[regionId];
   if (!nation || !region) return { ok: false, reason: 'Регион или нация не найдены' };
@@ -1868,7 +1873,7 @@ function demolishBuilding(nationId, regionId, slotId) {
 // 10. ОТМЕНА СТРОИТЕЛЬСТВА
 // ──────────────────────────────────────────────────────────────
 
-function cancelConstruction(nationId, regionId, slotId) {
+export function cancelConstruction(nationId, regionId, slotId) {
   const nation = GAME_STATE.nations[nationId];
   const region = GAME_STATE.regions[regionId];
   if (!nation || !region) return { ok: false, reason: 'Регион не найден' };
@@ -1903,7 +1908,7 @@ function cancelConstruction(nationId, regionId, slotId) {
 // ══════════════════════════════════════════════════════════════
 
 // Вспомогательная функция: wear-ставка для конкретного товара.
-function _capitalWearRate(good, ciMonthlyWear) {
+export function _capitalWearRate(good, ciMonthlyWear) {
   if (ciMonthlyWear != null) return ciMonthlyWear;
   if (good === 'horses') return CONFIG.BALANCE.HORSE_MONTHLY_WEAR  ?? 0.0083;
   if (good === 'cattle') return CONFIG.BALANCE.CATTLE_MONTHLY_WEAR ?? 0.0070;
@@ -1921,7 +1926,7 @@ function _capitalWearRate(good, ciMonthlyWear) {
 //   4. Закупает из nation.economy.stockpile (региональный рынок — Этапы 3–4).
 //   5. Устанавливает slot._capital_ratio = min(ratio по всем входам).
 // ──────────────────────────────────────────────────────────────
-function procureCapitalInputs(nationId) {
+export function procureCapitalInputs(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -2154,7 +2159,7 @@ function procureCapitalInputs(nationId) {
 //
 // Вызывается в runEconomyTick ДО processAllRecipes (шаг 0.5б).
 // ──────────────────────────────────────────────────────────────
-function procureSlaves(nationId) {
+export function procureSlaves(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -2230,7 +2235,7 @@ function procureSlaves(nationId) {
 // ИСПРАВЛЯЕТ БАГ: на старте ряд латифундий имел owner='nation' вместо
 // owner='aristocrats', из-за чего аристократы показывали 0 зданий/0 дохода.
 // ─────────────────────────────────────────────────────────────────────────────
-function initBuildingOwnership() {
+export function initBuildingOwnership() {
   const regions = GAME_STATE.regions;
   if (!regions) return;
 
@@ -2390,3 +2395,49 @@ function initBuildingOwnership() {
     '% владения': r.pct, 'Кол-во слотов': r.count,
   })));
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.CONSTRUCTION_LABOR_SURCHARGE = CONSTRUCTION_LABOR_SURCHARGE;
+window.EXPECTED_WAGE_PER_WORKER = EXPECTED_WAGE_PER_WORKER;
+window.PROFIT_CLASS = PROFIT_CLASS;
+window._CLASS_SAFETY_RESERVE = _CLASS_SAFETY_RESERVE;
+window._WAGE_BONUS_SKIP = _WAGE_BONUS_SKIP;
+window._calcBuildingMaintenance = _calcBuildingMaintenance;
+window._calcSlotBaseOutput = _calcSlotBaseOutput;
+window._capitalWearRate = _capitalWearRate;
+window._completeConstruction = _completeConstruction;
+window._cutSlotWorkers = _cutSlotWorkers;
+window._estimateSlotProfit = _estimateSlotProfit;
+window._estimateSlotProfitability = _estimateSlotProfitability;
+window._getBuildingWorkerProfile = _getBuildingWorkerProfile;
+window._getEffectiveWorkers = _getEffectiveWorkers;
+window._logSlotEvent = _logSlotEvent;
+window._restoreSlotWorkers = _restoreSlotWorkers;
+window._slotTotalWorkers = _slotTotalWorkers;
+window._terrainGoodBonus = _terrainGoodBonus;
+window.applyBuildingAdaptiveBehavior = applyBuildingAdaptiveBehavior;
+window.calcConstructionCost = calcConstructionCost;
+window.calcConstructionCostDetailed = calcConstructionCostDetailed;
+window.calcSlaveUpkeepPerPerson = calcSlaveUpkeepPerPerson;
+window.calculateAllBuildingProduction = calculateAllBuildingProduction;
+window.calculateBuildingRevenue = calculateBuildingRevenue;
+window.cancelConstruction = cancelConstruction;
+window.checkClassBankruptcy = checkClassBankruptcy;
+window.deductFoodPurchases = deductFoodPurchases;
+window.demolishBuilding = demolishBuilding;
+window.distributeClassIncome = distributeClassIncome;
+window.distributeWages = distributeWages;
+window.getBuildingOutput = getBuildingOutput;
+window.getUnemploymentRates = getUnemploymentRates;
+window.initBuildingOwnership = initBuildingOwnership;
+window.orderBuildingConstruction = orderBuildingConstruction;
+window.processAllRecipes = processAllRecipes;
+window.processAutonomousBuilding = processAutonomousBuilding;
+window.processBuildingConstruction = processBuildingConstruction;
+window.procureCapitalInputs = procureCapitalInputs;
+window.procureSlaves = procureSlaves;
+window.recalculateAllEmployment = recalculateAllEmployment;
+window.recalculateRegionEmployment = recalculateRegionEmployment;
+window.recomputeAllProductionCosts = recomputeAllProductionCosts;
+window.updateBuildingFinancials = updateBuildingFinancials;
+

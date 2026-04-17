@@ -18,8 +18,10 @@
 //   _pop_eff = lerp(0.7, 1.0, avg_satisfied_workers)
 // ═══════════════════════════════════════════════════════════════════════════
 
+import { GOODS } from '../data/goods.js';
+
 // Начальное богатство по профессии (0–100)
-const POP_INITIAL_WEALTH = {
+export const POP_INITIAL_WEALTH = {
   farmers:   15,
   craftsmen: 45,
   merchants: 65,
@@ -30,14 +32,14 @@ const POP_INITIAL_WEALTH = {
 };
 
 // Скорость изменения богатства: wealth += delta / POP_WEALTH_INERTIA
-const POP_WEALTH_INERTIA = 20;
+export const POP_WEALTH_INERTIA = 20;
 
 // ──────────────────────────────────────────────────────────────
 // 1. ИНИЦИАЛИЗАЦИЯ — ensureNationPops(nationId)
 //    Лениво создаёт nation.population.pops если ещё нет.
 // ──────────────────────────────────────────────────────────────
 
-function ensureNationPops(nationId) {
+export function ensureNationPops(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation?.population) return;
 
@@ -74,7 +76,7 @@ function ensureNationPops(nationId) {
 //    Плавно интерполирует между тремя уровнями богатства.
 // ──────────────────────────────────────────────────────────────
 
-function getConsumptionBasket(wealth) {
+export function getConsumptionBasket(wealth) {
   const w = Math.max(0, Math.min(100, wealth));
 
   // Зерно (wheat): 0.8 (бедные) → 0.6 (средние) → 0.4 (богатые)
@@ -114,7 +116,7 @@ function getConsumptionBasket(wealth) {
 //    Возвращает { good: total_units_per_tick } или null если нет pops.
 // ──────────────────────────────────────────────────────────────
 
-function calcNationBasketDemand(nation) {
+export function calcNationBasketDemand(nation) {
   const pops = nation.population?.pops;
   if (!pops) return null;
 
@@ -139,7 +141,7 @@ function calcNationBasketDemand(nation) {
 //   ratio[good] = min(1, actual / demanded)
 // ──────────────────────────────────────────────────────────────
 
-function updatePopSatisfied(nationId, demanded, actualConsumed) {
+export function updatePopSatisfied(nationId, demanded, actualConsumed) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
   ensureNationPops(nationId);
@@ -187,7 +189,7 @@ function updatePopSatisfied(nationId, demanded, actualConsumed) {
 //   satisfied↑               → wealth↑
 // ──────────────────────────────────────────────────────────────
 
-function updatePopWealth(nationId) {
+export function updatePopWealth(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
   ensureNationPops(nationId);
@@ -257,7 +259,7 @@ function updatePopWealth(nationId) {
 //   чтобы это влияло на выход текущего тика.
 // ──────────────────────────────────────────────────────────────
 
-function applyPopSatisfiedToBuildings(nationId) {
+export function applyPopSatisfiedToBuildings(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -302,3 +304,14 @@ function applyPopSatisfiedToBuildings(nationId) {
     }
   }
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.POP_INITIAL_WEALTH = POP_INITIAL_WEALTH;
+window.POP_WEALTH_INERTIA = POP_WEALTH_INERTIA;
+window.applyPopSatisfiedToBuildings = applyPopSatisfiedToBuildings;
+window.calcNationBasketDemand = calcNationBasketDemand;
+window.ensureNationPops = ensureNationPops;
+window.getConsumptionBasket = getConsumptionBasket;
+window.updatePopSatisfied = updatePopSatisfied;
+window.updatePopWealth = updatePopWealth;
+

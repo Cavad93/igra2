@@ -25,13 +25,15 @@
 //   economic_project    — экономический проект (нужен казначей/министр)
 // ══════════════════════════════════════════════════════════════════════
 
-'use strict';
+import { BUILDINGS } from '../data/buildings.js';
+import { GOODS } from '../data/goods.js';
+import { MAP_REGIONS } from '../data/map.js';
 
 // ──────────────────────────────────────────────────────────────────────
 // КОНСТАНТЫ
 // ──────────────────────────────────────────────────────────────────────
 
-const ORDER_TYPES = {
+export const ORDER_TYPES = {
   military_campaign: {
     label:       '⚔️ Военный поход',
     skill:       'military',
@@ -70,14 +72,14 @@ const ORDER_TYPES = {
 };
 
 // Метки надзора правителя
-const OVERSIGHT_LABELS = {
+export const OVERSIGHT_LABELS = {
   personal: '👑 Личный надзор',
   direct:   '📋 Прямой контроль',
   distant:  '📮 Дальнее командование',
 };
 
 // Модификаторы надзора (влияют на финальное качество)
-const OVERSIGHT_FACTOR = {
+export const OVERSIGHT_FACTOR = {
   personal: 1.00,
   direct:   0.90,
   distant:  0.72,
@@ -88,7 +90,7 @@ const OVERSIGHT_FACTOR = {
 // Если у персонажа нет .skills — выводим из трейтов.
 // ──────────────────────────────────────────────────────────────────────
 
-function getCharSkills(char) {
+export function getCharSkills(char) {
   if (char.skills) return char.skills;
   const t = char.traits ?? {};
   const amb  = t.ambition  ?? 50;
@@ -106,7 +108,7 @@ function getCharSkills(char) {
 }
 
 // Коэффициент коррупции: 0.0 = честный, 0.5 = очень коррумпированный
-function getCorruptionFactor(char) {
+export function getCorruptionFactor(char) {
   const greed = char.traits?.greed ?? 30;
   // Коррупция = жадность (более мягкий эффект: max 0.4 штраф при greed=100)
   return greed / 250;   // 0 – 0.40
@@ -124,7 +126,7 @@ function getCorruptionFactor(char) {
  * @param {object} nation       - нация игрока (для личной власти правителя)
  * @returns {number} 0–100
  */
-function calcOrderQuality(char, skillName, oversight, nation) {
+export function calcOrderQuality(char, skillName, oversight, nation) {
   const skills = getCharSkills(char);
   const rawSkill = skills[skillName] ?? 50;
 
@@ -153,14 +155,14 @@ function calcOrderQuality(char, skillName, oversight, nation) {
 // СОЗДАНИЕ ПРИКАЗА
 // ──────────────────────────────────────────────────────────────────────
 
-let _orderIdCounter = 1;
+export let _orderIdCounter = 1;
 
 /**
  * Создаёт новый приказ и добавляет в GAME_STATE.orders.
  * @param {object} opts - параметры приказа
  * @returns {object|null} созданный приказ или null при ошибке
  */
-function issueOrder(opts) {
+export function issueOrder(opts) {
   const {
     type,
     target_id    = null,
@@ -258,7 +260,7 @@ function issueOrder(opts) {
 // ОТМЕНА ПРИКАЗА
 // ──────────────────────────────────────────────────────────────────────
 
-function cancelOrder(orderId) {
+export function cancelOrder(orderId) {
   if (!GAME_STATE.orders) return;
   const order = GAME_STATE.orders.find(o => o.id === orderId);
   if (!order || order.status !== 'active') return;
@@ -275,7 +277,7 @@ function cancelOrder(orderId) {
 // ОБРАБОТКА ХОДА — прогресс всех активных приказов
 // ──────────────────────────────────────────────────────────────────────
 
-function processAllOrders() {
+export function processAllOrders() {
   if (!GAME_STATE.orders || !GAME_STATE.orders.length) return;
 
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
@@ -295,7 +297,7 @@ function processAllOrders() {
  * Тактический ИИ командующего — вызывается каждый ход для армий с НПЦ-командиром.
  * Использует Groq Llama через commander_ai.js; падает на эвристику без ключа.
  */
-function _processNpcCommanderMove(order) {
+export function _processNpcCommanderMove(order) {
   if (typeof getArmy !== 'function' || typeof orderArmyMove !== 'function') return;
   const army = getArmy(order.army_id);
   if (!army || army.state === 'disbanded') return;
@@ -312,7 +314,7 @@ function _processNpcCommanderMove(order) {
 /**
  * Применяет тактическое решение командующего к армии.
  */
-function _applyCommanderDecision(army, decision) {
+export function _applyCommanderDecision(army, decision) {
   const char    = typeof getArmyCommander === 'function' ? getArmyCommander(army) : null;
   const cmdName = char?.name ?? 'Командующий';
 
@@ -375,7 +377,7 @@ function _applyCommanderDecision(army, decision) {
 }
 
 /** Устаревший fallback (без commander_ai.js) */
-function _legacyMove(army, order) {
+export function _legacyMove(army, order) {
   if (army.state === 'moving' && army.target) return null;
   if (!order.target_id) return null;
   const tNation = GAME_STATE.nations?.[order.target_id];
@@ -384,7 +386,7 @@ function _legacyMove(army, order) {
   return null;
 }
 
-function _progressOrder(order, nation) {
+export function _progressOrder(order, nation) {
   order.progress = Math.min(100, order.progress + Math.round(100 / order.duration));
 
   if (order.progress >= 100) {
@@ -395,7 +397,7 @@ function _progressOrder(order, nation) {
   }
 }
 
-function _completeOrder(order, nation) {
+export function _completeOrder(order, nation) {
   const typeDef = ORDER_TYPES[order.type];
   if (!typeDef) { order.status = 'completed'; return; }
 
@@ -448,7 +450,7 @@ function _completeOrder(order, nation) {
 // ПРИМЕНЕНИЕ ЭФФЕКТОВ ВЫПОЛНЕННОГО ПРИКАЗА
 // ──────────────────────────────────────────────────────────────────────
 
-function _applyOrderEffects(order, quality, char, nation) {
+export function _applyOrderEffects(order, quality, char, nation) {
   const qf = quality / 100;   // 0–1
 
   switch (order.type) {
@@ -625,7 +627,7 @@ function _applyOrderEffects(order, quality, char, nation) {
 // ПРОМЕЖУТОЧНЫЕ СОБЫТИЯ (например, предательство на полпути)
 // ──────────────────────────────────────────────────────────────────────
 
-function _checkMidOrderEvents(order, nation) {
+export function _checkMidOrderEvents(order, nation) {
   const char = (nation.characters ?? []).find(c => c.id === order.assigned_char_id);
   if (!char) return;
 
@@ -658,7 +660,7 @@ function _checkMidOrderEvents(order, nation) {
 /**
  * Возвращает список персонажей, подходящих для данного типа приказа.
  */
-function getEligibleChars(nationId, orderType) {
+export function getEligibleChars(nationId, orderType) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return [];
   const typeDef = ORDER_TYPES[orderType];
@@ -685,14 +687,14 @@ function getEligibleChars(nationId, orderType) {
 /**
  * Возвращает активные приказы игрока.
  */
-function getActiveOrders() {
+export function getActiveOrders() {
   return (GAME_STATE.orders ?? []).filter(o => o.status === 'active');
 }
 
 /**
  * Возвращает завершённые приказы (последние N).
  */
-function getRecentCompletedOrders(n = 5) {
+export function getRecentCompletedOrders(n = 5) {
   return (GAME_STATE.orders ?? [])
     .filter(o => o.status === 'completed' || o.status === 'failed')
     .slice(-n)
@@ -702,7 +704,7 @@ function getRecentCompletedOrders(n = 5) {
 /**
  * Метка роли персонажа (для отображения пригодности).
  */
-function getOrderRoleMatch(char, orderType) {
+export function getOrderRoleMatch(char, orderType) {
   const typeDef = ORDER_TYPES[orderType];
   if (!typeDef) return '—';
   const roleOk = typeDef.role_needed.some(r =>
@@ -714,7 +716,7 @@ function getOrderRoleMatch(char, orderType) {
 /**
  * Инициализирует GAME_STATE.orders если отсутствует.
  */
-function initOrders() {
+export function initOrders() {
   if (!GAME_STATE.orders) GAME_STATE.orders = [];
 }
 
@@ -727,7 +729,7 @@ function initOrders() {
  * Приоритет: wheat > timber > salt > tools > cloth > iron > wine > fish
  * Возвращает строку-ключ товара или null если дефицита нет.
  */
-function _findDeficitGood(nation) {
+export function _findDeficitGood(nation) {
   const stockpile = nation?.economy?.stockpile ?? {};
   const PRIORITY = ['wheat', 'timber', 'salt', 'tools', 'cloth', 'iron', 'wine', 'fish',
                     'wool', 'leather', 'olive_oil', 'pottery', 'bronze', 'trade_goods'];
@@ -752,7 +754,7 @@ function _findDeficitGood(nation) {
  * Находит здание, производящее указанный товар и совместимое с регионом.
  * Возвращает buildingId или null.
  */
-function _findBuildingForGood(good, region) {
+export function _findBuildingForGood(good, region) {
   if (!good || typeof BUILDINGS === 'undefined') return null;
 
   const candidates = [];
@@ -775,3 +777,30 @@ function _findBuildingForGood(good, region) {
   }
   return candidates[0];
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.ORDER_TYPES = ORDER_TYPES;
+window.OVERSIGHT_FACTOR = OVERSIGHT_FACTOR;
+window.OVERSIGHT_LABELS = OVERSIGHT_LABELS;
+window._applyCommanderDecision = _applyCommanderDecision;
+window._applyOrderEffects = _applyOrderEffects;
+window._checkMidOrderEvents = _checkMidOrderEvents;
+window._completeOrder = _completeOrder;
+window._findBuildingForGood = _findBuildingForGood;
+window._findDeficitGood = _findDeficitGood;
+window._legacyMove = _legacyMove;
+window._orderIdCounter = _orderIdCounter;
+window._processNpcCommanderMove = _processNpcCommanderMove;
+window._progressOrder = _progressOrder;
+window.calcOrderQuality = calcOrderQuality;
+window.cancelOrder = cancelOrder;
+window.getActiveOrders = getActiveOrders;
+window.getCharSkills = getCharSkills;
+window.getCorruptionFactor = getCorruptionFactor;
+window.getEligibleChars = getEligibleChars;
+window.getOrderRoleMatch = getOrderRoleMatch;
+window.getRecentCompletedOrders = getRecentCompletedOrders;
+window.initOrders = initOrders;
+window.issueOrder = issueOrder;
+window.processAllOrders = processAllOrders;
+

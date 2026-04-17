@@ -1,8 +1,8 @@
-// engine/date.js — Дата, сезон, стела
+// engine/date.js — Дата, сезон, стела (ES module)
 // Вынесено из engine/turn.js (Этап 45 uisuper.md)
 
 // Названия месяцев в греческой традиции
-const MONTH_NAMES = [
+export const MONTH_NAMES = [
   '', // индекс 0 не используется
   'Гекатомбеон', 'Метагейтнион', 'Боэдромион',
   'Пианепсион',  'Мемактерион',  'Посидеон',
@@ -14,7 +14,7 @@ const MONTH_NAMES = [
 // ДАТА
 // ──────────────────────────────────────────────────────────────
 
-function advanceDate() {
+export function advanceDate() {
   GAME_STATE.turn++;
   let { year, month } = GAME_STATE.date;
   month++;
@@ -29,7 +29,7 @@ function advanceDate() {
   try { updateStele(); } catch (e) { console.error('updateStele error:', e); }
 }
 
-function formatDate(date) {
+export function formatDate(date) {
   const era = date.year < 0 ? `${Math.abs(date.year)} г. до н.э.` : `${date.year} г. н.э.`;
   return `${MONTH_NAMES?.[Math.max(1, Math.min(12, date.month ?? 1))] ?? 'Месяц'}, ${era}`;
 }
@@ -44,7 +44,7 @@ function formatDate(date) {
 // Более низкие alpha у overlay и мягкий filter (минимум hue/saturate),
 // чтобы смена сезона выглядела как едва заметный сдвиг настроения, а не
 // резкий цветокоррекционный фильтр поверх Tabula Peutingeriana.
-const SEASON_STYLES = {
+export const SEASON_STYLES = {
   0: { // Весна
     overlay: 'rgba(40,80,30,0.035)',   // едва заметный зелёный
     filter:  'hue-rotate(4deg) saturate(1.04)',
@@ -76,7 +76,7 @@ const SEASON_STYLES = {
  * Зеркалит логику super_ou.js: season = tick % 4 → 0=весна, 1=лето, 2=осень, 3=зима.
  * Если у игрока есть ou.tick, используем его; иначе GAME_STATE.turn.
  */
-function getCurrentSeason() {
+export function getCurrentSeason() {
   try {
     const gs = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
     if (!gs) return 0;
@@ -95,7 +95,7 @@ function getCurrentSeason() {
  * Применяет визуальный фильтр сезона к карте и оверлею.
  * Плавность — через CSS transition (2s ease).
  */
-function applySeasonVisual(season) {
+export function applySeasonVisual(season) {
   try {
     const s = (typeof season === 'number')
       ? (((season % 4) + 4) % 4)
@@ -121,7 +121,7 @@ function applySeasonVisual(season) {
   }
 }
 
-function updateDateDisplay() {
+export function updateDateDisplay() {
   const el = document.getElementById('game-date');
   if (!el) return;
   const dateStr = formatDate(GAME_STATE.date);
@@ -174,7 +174,7 @@ const STELE_GOV_TITLES = {
 };
 
 // Конвертация года в римские цифры (до 999) + эра
-function toRomanYear(n, era) {
+export function toRomanYear(n, era) {
   if (!(n > 0) || n > 999) return `${n} ${era}`;
   const vals = [900, 400, 100, 90, 40, 10, 9, 5, 4, 1];
   const syms = ['CM', 'CD', 'C', 'XC', 'XL', 'X', 'IX', 'V', 'IV', 'I'];
@@ -187,7 +187,7 @@ function toRomanYear(n, era) {
 }
 
 // Обновить «Стелу» (верхний левый блок): имя правителя и дата.
-function updateStele() {
+export function updateStele() {
   if (typeof document === 'undefined') return;
   const gs = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
   if (!gs) return;
@@ -235,15 +235,14 @@ function updateStele() {
   } catch (e) { /* no-op */ }
 }
 
-// Экспортируем в window для доступа из HTML/других модулей
-if (typeof window !== 'undefined') {
-  window.MONTH_NAMES      = MONTH_NAMES;
-  window.SEASON_STYLES    = SEASON_STYLES;
-  window.getCurrentSeason = getCurrentSeason;
-  window.applySeasonVisual = applySeasonVisual;
-  window.updateStele      = updateStele;
-  window.toRomanYear      = toRomanYear;
-  window.advanceDate      = advanceDate;
-  window.formatDate       = formatDate;
-  window.updateDateDisplay = updateDateDisplay;
-}
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.MONTH_NAMES = MONTH_NAMES;
+window.SEASON_STYLES = SEASON_STYLES;
+window.advanceDate = advanceDate;
+window.applySeasonVisual = applySeasonVisual;
+window.formatDate = formatDate;
+window.getCurrentSeason = getCurrentSeason;
+window.toRomanYear = toRomanYear;
+window.updateDateDisplay = updateDateDisplay;
+window.updateStele = updateStele;
+

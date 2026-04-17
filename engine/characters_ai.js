@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════════════
-// CHARACTER AUTONOMY ENGINE — персонажи сами инициируют события
+// CHARACTER AUTONOMY ENGINE (ES module) — персонажи сами инициируют события
 //
 // Каждые 3 хода 1-2 персонажа действуют согласно своим ambition_goal.
 // Используем Haiku 4.5 (дёшево): персонаж решает что предпринять
@@ -18,7 +18,9 @@
 // Остальные — в лог.
 // ══════════════════════════════════════════════════════════════════════
 
-async function processCharacterAutonomy(nationId) {
+import { CONFIG } from '../config.js';
+
+export async function processCharacterAutonomy(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation || nationId !== GAME_STATE.player_nation) return;
   if (GAME_STATE.turn % 3 !== 0) return;
@@ -125,7 +127,7 @@ async function processCharacterAutonomy(nationId) {
 }
 
 // Игрок отвечает на инициативу персонажа
-function respondToCharInitiative(charId, accept) {
+export function respondToCharInitiative(charId, accept) {
   const nation  = GAME_STATE.nations[GAME_STATE.player_nation];
   const pending = GAME_STATE._pending_char_initiatives ?? [];
   const idx     = pending.findIndex(p => p.charId === charId);
@@ -166,10 +168,16 @@ function respondToCharInitiative(charId, accept) {
   if (typeof renderCharInitiativesPanel === 'function') renderCharInitiativesPanel();
 }
 
-function _updateInitiativesBadge() {
+export function _updateInitiativesBadge() {
   const count  = (GAME_STATE._pending_char_initiatives ?? []).length;
   const badge  = document.getElementById('char-initiatives-badge');
   if (!badge) return;
   badge.textContent = count > 0 ? count : '';
   badge.style.display = count > 0 ? 'inline-flex' : 'none';
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window._updateInitiativesBadge = _updateInitiativesBadge;
+window.processCharacterAutonomy = processCharacterAutonomy;
+window.respondToCharInitiative = respondToCharInitiative;
+

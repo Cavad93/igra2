@@ -1,6 +1,8 @@
 // engine/events.js — Случайные события (вынесено из turn.js, этап 51)
 
-const RANDOM_EVENTS = [
+import { MAP_REGIONS } from '../data/map.js';
+
+export const RANDOM_EVENTS = [
   {
     id: 'PLAGUE',
     name: 'Чума',
@@ -97,7 +99,7 @@ const RANDOM_EVENTS = [
   },
 ];
 
-function triggerRandomEvent() {
+export function triggerRandomEvent() {
   const allNations = Object.keys(GAME_STATE.nations);
   const targetNationId = allNations[Math.floor(Math.random() * allNations.length)];
 
@@ -117,7 +119,7 @@ function triggerRandomEvent() {
   }
 }
 
-function _showEventChoiceOverlay(event, nationId) {
+export function _showEventChoiceOverlay(event, nationId) {
   const overlay = document.getElementById('event-choice-overlay');
   if (!overlay) {
     event.effect(nationId);
@@ -145,6 +147,9 @@ function _showEventChoiceOverlay(event, nationId) {
   overlay.style.display = 'flex';
 }
 
-window.RANDOM_EVENTS           = RANDOM_EVENTS;
-window.triggerRandomEvent      = triggerRandomEvent;
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.RANDOM_EVENTS = RANDOM_EVENTS;
 window._showEventChoiceOverlay = _showEventChoiceOverlay;
+window.triggerRandomEvent = triggerRandomEvent;
+

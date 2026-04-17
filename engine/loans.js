@@ -23,14 +23,14 @@
 
 // ─── КОНСТАНТЫ ────────────────────────────────────────────────────────────────
 
-const LOAN_MAX_PAYMENT_RATIO  = 0.70;  // платежи ≤ 70% валового дохода
-const LOAN_MIN_AMOUNT         = 500;   // минимальная сумма займа
-const LOAN_DEFAULT_TERM       = 24;    // срок по умолчанию: 24 хода (2 года)
+export const LOAN_MAX_PAYMENT_RATIO  = 0.70;  // платежи ≤ 70% валового дохода
+export const LOAN_MIN_AMOUNT         = 500;   // минимальная сумма займа
+export const LOAN_DEFAULT_TERM       = 24;    // срок по умолчанию: 24 хода (2 года)
 
 // Штрафы при банкротстве
-const BANKRUPTCY_STABILITY_HIT  = -20;
-const BANKRUPTCY_HAPPINESS_HIT  = -15;
-const BANKRUPTCY_RELATION_HIT   = -25; // к отношениям со всеми соседями
+export const BANKRUPTCY_STABILITY_HIT  = -20;
+export const BANKRUPTCY_HAPPINESS_HIT  = -15;
+export const BANKRUPTCY_RELATION_HIT   = -25; // к отношениям со всеми соседями
 
 // ─── ВСПОМОГАТЕЛЬНЫЕ ──────────────────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ function _getTradeVolume(nation) {
 /** Рассчитать годовую процентную ставку для данной нации.
  *  Базовая 8%. Скидка за торговлю. Надбавка за нестабильность и долг.
  */
-function calcInterestRate(nationId) {
+export function calcInterestRate(nationId) {
   const nation     = GAME_STATE.nations?.[nationId];
   if (!nation) return 0.12;
 
@@ -82,7 +82,7 @@ function calcInterestRate(nationId) {
 /** Рассчитать фиксированный ежемесячный платёж (аннуитет).
  *  payment = P × r / (1 − (1+r)^−n),  r = месячная ставка, n = срок в месяцах
  */
-function calcMonthlyPayment(principal, annualRate, termTurns) {
+export function calcMonthlyPayment(principal, annualRate, termTurns) {
   const r = annualRate / 12; // месячная ставка
   if (r < 0.0001) return Math.ceil(principal / termTurns);
   const factor = Math.pow(1 + r, termTurns);
@@ -92,7 +92,7 @@ function calcMonthlyPayment(principal, annualRate, termTurns) {
 // ─── ПУБЛИЧНОЕ API ─────────────────────────────────────────────────────────────
 
 /** Суммарный ежемесячный платёж по всем активным займам нации. */
-function getLoanTotalPayment(nationId) {
+export function getLoanTotalPayment(nationId) {
   const loans = (GAME_STATE.loans ?? []).filter(
     l => l.nation_id === nationId && !l.defaulted && l.remaining > 0
   );
@@ -100,7 +100,7 @@ function getLoanTotalPayment(nationId) {
 }
 
 /** Отношение суммарного платежа к валовому доходу (0..1+). */
-function getLoanDebtLoad(nationId) {
+export function getLoanDebtLoad(nationId) {
   const nation = GAME_STATE.nations?.[nationId];
   if (!nation) return 0;
   return getLoanTotalPayment(nationId) / _getGrossIncome(nation);
@@ -110,7 +110,7 @@ function getLoanDebtLoad(nationId) {
  *  Ограничена тем, чтобы суммарный платёж не превышал 70% дохода.
  *  Возвращает 0 если взять нельзя.
  */
-function getLoanCapacity(nationId, termTurns = LOAN_DEFAULT_TERM) {
+export function getLoanCapacity(nationId, termTurns = LOAN_DEFAULT_TERM) {
   const nation = GAME_STATE.nations?.[nationId];
   if (!nation) return 0;
 
@@ -140,7 +140,7 @@ function getLoanCapacity(nationId, termTurns = LOAN_DEFAULT_TERM) {
  *  @param {number} [term]      — срок в ходах (по умолчанию 24)
  *  @returns {{ ok: boolean, loan?: object, reason?: string }}
  */
-function takeLoan(nationId, amount, term = LOAN_DEFAULT_TERM) {
+export function takeLoan(nationId, amount, term = LOAN_DEFAULT_TERM) {
   if (!GAME_STATE.loans) GAME_STATE.loans = [];
 
   const nation = GAME_STATE.nations?.[nationId];
@@ -196,7 +196,7 @@ function takeLoan(nationId, amount, term = LOAN_DEFAULT_TERM) {
  *  Если казна не позволяет — уходит в минус (государство берёт в долг у себя).
  *  Если казна уже < −(3× валового дохода) — объявляем банкротство.
  */
-function processLoanPayments(nationId) {
+export function processLoanPayments(nationId) {
   if (!GAME_STATE.loans) return;
 
   const nation  = GAME_STATE.nations?.[nationId];
@@ -231,7 +231,7 @@ function processLoanPayments(nationId) {
 /** Объявить банкротство.
  *  Списывает все долги, но наносит тяжёлые штрафы.
  */
-function declareBankruptcy(nationId) {
+export function declareBankruptcy(nationId) {
   const nation = GAME_STATE.nations?.[nationId];
   if (!nation) return;
   if (!GAME_STATE.loans) return;
@@ -285,7 +285,7 @@ function declareBankruptcy(nationId) {
 /** Получить сводку по займам нации для UI.
  *  @returns {{ totalDebt, monthlyPayment, debtLoad, loans: [] }}
  */
-function getLoanStatus(nationId) {
+export function getLoanStatus(nationId) {
   const loans = (GAME_STATE.loans ?? []).filter(
     l => l.nation_id === nationId && !l.defaulted && l.remaining > 0
   );
@@ -304,3 +304,21 @@ function getLoanStatus(nationId) {
     loans,
   };
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.BANKRUPTCY_HAPPINESS_HIT = BANKRUPTCY_HAPPINESS_HIT;
+window.BANKRUPTCY_RELATION_HIT = BANKRUPTCY_RELATION_HIT;
+window.BANKRUPTCY_STABILITY_HIT = BANKRUPTCY_STABILITY_HIT;
+window.LOAN_DEFAULT_TERM = LOAN_DEFAULT_TERM;
+window.LOAN_MAX_PAYMENT_RATIO = LOAN_MAX_PAYMENT_RATIO;
+window.LOAN_MIN_AMOUNT = LOAN_MIN_AMOUNT;
+window.calcInterestRate = calcInterestRate;
+window.calcMonthlyPayment = calcMonthlyPayment;
+window.declareBankruptcy = declareBankruptcy;
+window.getLoanCapacity = getLoanCapacity;
+window.getLoanDebtLoad = getLoanDebtLoad;
+window.getLoanStatus = getLoanStatus;
+window.getLoanTotalPayment = getLoanTotalPayment;
+window.processLoanPayments = processLoanPayments;
+window.takeLoan = takeLoan;
+

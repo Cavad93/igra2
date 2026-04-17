@@ -12,9 +12,12 @@
 // 1 ход = 1 месяц. Скорость зависит от состава, местности, усталости.
 // ══════════════════════════════════════════════════════════════════════
 
+import { BUILDINGS } from '../data/buildings.js';
+import { MAP_REGIONS } from '../data/map.js';
+
 // ── Константы движения ───────────────────────────────────────────────
 
-const ARMY_MOVE = {
+export const ARMY_MOVE = {
   // Стоимость местности (ходов на регион)
   TERRAIN_COST: {
     plains:       1.0,
@@ -79,7 +82,7 @@ const ARMY_MOVE = {
  * @param {Object} units - { infantry, cavalry, mercenaries, artillery }
  * @param {Object} opts  - { name, type, commander_id, morale, discipline }
  */
-function createArmy(nationId, regionId, units, opts = {}) {
+export function createArmy(nationId, regionId, units, opts = {}) {
   if (!GAME_STATE.armies) GAME_STATE.armies = [];
 
   const nation = GAME_STATE.nations[nationId];
@@ -130,7 +133,7 @@ function createArmy(nationId, regionId, units, opts = {}) {
 
 // ── Скорость движения ────────────────────────────────────────────────
 
-function calcArmySpeed(army) {
+export function calcArmySpeed(army) {
   if (army.type === 'naval') return _calcFleetSpeed(army);
 
   const u     = army.units;
@@ -159,7 +162,7 @@ function calcArmySpeed(army) {
   return (base * logBonus * fatPen * swiftBonus) / terrainCost;
 }
 
-function _calcFleetSpeed(army) {
+export function _calcFleetSpeed(army) {
   const s = army.ships;
   if (!s) return 0;
 
@@ -185,7 +188,7 @@ function _calcFleetSpeed(army) {
 //   garrison>0) принадлежащих нации M, с которой N находится в состоянии войны.
 // Исключение: если целевой регион сам является крепостью (осада обязательна).
 
-function _isFortressLineBlocked(regionId, movingNationId) {
+export function _isFortressLineBlocked(regionId, movingNationId) {
   if (!movingNationId) return false;
   const region = _getRegionData(regionId);
   if (!region) return false;
@@ -212,7 +215,7 @@ function _isFortressLineBlocked(regionId, movingNationId) {
  * Проверяет оба источника: military.at_war_with И DiplomacyEngine/getRelation.
  * Это предотвращает рассинхронизацию между старыми сохранениями и новым кодом.
  */
-function _armiesAtWar(nationA, nationB) {
+export function _armiesAtWar(nationA, nationB) {
   if (!nationA || !nationB || nationA === nationB) return false;
   const na = GAME_STATE.nations?.[nationA];
   const nb = GAME_STATE.nations?.[nationB];
@@ -237,7 +240,7 @@ function _armiesAtWar(nationA, nationB) {
 // checkSupply — если true, использует взвешенный поиск (Dijkstra),
 // увеличивая стоимость горных/холмистых регионов на вражеской территории ×1.8
 
-function findArmyPath(fromId, toId, type = 'land', nationId = null, checkSupply = false) {
+export function findArmyPath(fromId, toId, type = 'land', nationId = null, checkSupply = false) {
   if (fromId === toId) return [fromId];
 
   // ── MIL_004: Supply-aware Dijkstra (checkSupply=true) ───────────────
@@ -309,7 +312,7 @@ function findArmyPath(fromId, toId, type = 'land', nationId = null, checkSupply 
 
 // ── Отдать приказ о движении ─────────────────────────────────────────
 
-function orderArmyMove(armyId, targetRegionId) {
+export function orderArmyMove(armyId, targetRegionId) {
   const army = getArmy(armyId);
   if (!army)                      return false;
   if (army.state === 'sieging')   return 'sieging';
@@ -333,7 +336,7 @@ function orderArmyMove(armyId, targetRegionId) {
  * Командир действует автономно: анализирует обстановку и принимает решения.
  * Вызывается из turn.js после processAllOrders().
  */
-function processCommanderAI() {
+export function processCommanderAI() {
   if (typeof getCommanderDecisionNow !== 'function') return;
 
   const playerNation = GAME_STATE.player_nation;
@@ -384,7 +387,7 @@ function processCommanderAI() {
   }
 }
 
-function processArmyMovement() {
+export function processArmyMovement() {
   const armies = GAME_STATE.armies ?? [];
   let   battlesThisTurn = 0;       // глобальный лимит битв за ход
   const MAX_BATTLES_PER_TURN = 12; // защита от каскада
@@ -460,7 +463,7 @@ function processArmyMovement() {
 
 // ── Внутренние методы ────────────────────────────────────────────────
 
-function _onArmyEnterRegion(army, regionId) {
+export function _onArmyEnterRegion(army, regionId) {
   const region = _getRegionData(regionId);
   if (!region) return;
 
@@ -480,7 +483,7 @@ function _onArmyEnterRegion(army, regionId) {
   }
 }
 
-function _checkSiegeOnArrival(army) {
+export function _checkSiegeOnArrival(army) {
   const region = _getRegionData(army.position);
   if (!region) return;
 
@@ -504,7 +507,7 @@ function _checkSiegeOnArrival(army) {
 }
 
 // Возвращает максимальную ёмкость провианта для региона (с учётом построек).
-function _getRegionSupplyCapacity(region) {
+export function _getRegionSupplyCapacity(region) {
   if (!region) return 0;
   const terrain = region.terrain ?? 'plains';
   let capacity = ARMY_MOVE.TERRAIN_SUPPLY_CAPACITY[terrain] ?? 3000;
@@ -520,7 +523,7 @@ function _getRegionSupplyCapacity(region) {
 }
 
 // Суммарное число войск всех армий в регионе (исключая расформированные).
-function _getTotalTroopsInRegion(regionId) {
+export function _getTotalTroopsInRegion(regionId) {
   const armies = GAME_STATE.armies ?? [];
   let total = 0;
   for (const a of armies) {
@@ -533,7 +536,7 @@ function _getTotalTroopsInRegion(regionId) {
   return total;
 }
 
-function _processSupply(army) {
+export function _processSupply(army) {
   const region = _getRegionData(army.position);
   if (!region) return;
 
@@ -653,7 +656,7 @@ function _processSupply(army) {
   }
 }
 
-function _processRout(army) {
+export function _processRout(army) {
   if (army.path.length > 0) {
     army.position = army.path.shift();
     if (army.path.length === 0) army.state = 'stationed';
@@ -684,7 +687,7 @@ function _processRout(army) {
 
 // ── Слияние и разделение ─────────────────────────────────────────────
 
-function mergeArmies(armyId1, armyId2) {
+export function mergeArmies(armyId1, armyId2) {
   const a1 = getArmy(armyId1);
   const a2 = getArmy(armyId2);
   if (!a1 || !a2 || a1.nation !== a2.nation || a1.position !== a2.position) return null;
@@ -709,7 +712,7 @@ function mergeArmies(armyId1, armyId2) {
   return a1;
 }
 
-function splitArmy(armyId, splitUnits) {
+export function splitArmy(armyId, splitUnits) {
   const army = getArmy(armyId);
   if (!army) return null;
 
@@ -729,7 +732,7 @@ function splitArmy(armyId, splitUnits) {
 
 // ── Захват региона ────────────────────────────────────────────────────
 
-function captureRegion(captorId, regionId, prevOwnerId) {
+export function captureRegion(captorId, regionId, prevOwnerId) {
   const region   = GAME_STATE.regions?.[regionId];
   if (!region) return;
 
@@ -784,7 +787,7 @@ function captureRegion(captorId, regionId, prevOwnerId) {
  * Уничтожение (is_eliminated) происходит только через мирный договор с аннексией.
  * Оккупационные маркеры (occupied_by/original_nation) сохраняются до переговоров.
  */
-function checkNationDefeated(nationId, captorId) {
+export function checkNationDefeated(nationId, captorId) {
   const nation = GAME_STATE.nations?.[nationId];
   if (!nation || nation.is_defeated || nation.is_eliminated) return;
 
@@ -823,16 +826,16 @@ function checkNationDefeated(nationId, captorId) {
 
 // ── Вспомогательные геттеры ───────────────────────────────────────────
 
-function getArmy(id) {
+export function getArmy(id) {
   return (GAME_STATE.armies ?? []).find(a => a.id === id) ?? null;
 }
 
-function getNationArmies(nationId) {
+export function getNationArmies(nationId) {
   return (GAME_STATE.armies ?? []).filter(a => a.nation === nationId && a.state !== 'disbanded');
 }
 
 /** Командир армии (персонаж нации) */
-function getArmyCommander(army) {
+export function getArmyCommander(army) {
   if (!army?.commander_id) return null;
   const nation = GAME_STATE.nations?.[army.nation];
   return (nation?.characters ?? []).find(c => c.id === army.commander_id) ?? null;
@@ -840,9 +843,9 @@ function getArmyCommander(army) {
 
 // ── Система уровней командующих ──────────────────────────────────────
 
-const COMMANDER_XP_LEVELS = [0, 10, 40, 100, 250, 500]; // XP для звёзд 0-5
+export const COMMANDER_XP_LEVELS = [0, 10, 40, 100, 250, 500]; // XP для звёзд 0-5
 
-const COMMANDER_SKILLS_DEF = {
+export const COMMANDER_SKILLS_DEF = {
   siege_master:     { name: 'Мастер осады',      icon: '🏰', desc: '+25% скорость осады' },
   fierce_aggressor: { name: 'Неистовый агрессор', icon: '⚔️', desc: '+20% атака, −10% защита' },
   iron_discipline:  { name: 'Железная воля',      icon: '🛡', desc: 'Дисциплина ≥ 40 в бою' },
@@ -854,7 +857,7 @@ const COMMANDER_SKILLS_DEF = {
   legendary:        { name: 'Легендарный',        icon: '👑', desc: 'Все боевые бонусы +10%' },
 };
 
-function getCommanderLevel(char) {
+export function getCommanderLevel(char) {
   const xp = char?.commander_xp ?? 0;
   let level = 0;
   for (let i = COMMANDER_XP_LEVELS.length - 1; i >= 0; i--) {
@@ -863,7 +866,7 @@ function getCommanderLevel(char) {
   return level;
 }
 
-function grantCommanderSkill(char) {
+export function grantCommanderSkill(char) {
   if (!char) return;
   if (!char.commander_skills) char.commander_skills = [];
   const existing = new Set(char.commander_skills);
@@ -885,11 +888,11 @@ function grantCommanderSkill(char) {
   return skill; // возвращаем для лога
 }
 
-function _armyLandTotal(u) {
+export function _armyLandTotal(u) {
   return (u.infantry ?? 0) + (u.cavalry ?? 0) + (u.mercenaries ?? 0) + (u.artillery ?? 0);
 }
 
-function _getRegionData(regionId) {
+export function _getRegionData(regionId) {
   const gs = GAME_STATE.regions?.[regionId];
   const mr = typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[regionId] : null;
   if (!gs) return mr ?? null;
@@ -903,7 +906,7 @@ function _getRegionData(regionId) {
 
 // Предварительное заполнение geo-данных для всех игровых регионов.
 // Вызывается после initGame/loadGame чтобы гарантировать наличие connections и mapType.
-function initRegionGeoData() {
+export function initRegionGeoData() {
   if (typeof MAP_REGIONS === 'undefined') return;
   const regions = GAME_STATE.regions;
   if (!regions) return;
@@ -915,13 +918,13 @@ function initRegionGeoData() {
   }
 }
 
-function _getOwnRegions(nationId) {
+export function _getOwnRegions(nationId) {
   return Object.entries(GAME_STATE.regions ?? {})
     .filter(([, r]) => r.nation === nationId)
     .map(([id]) => id);
 }
 
-function _isFriendlyTerritory(regionId, nationId) {
+export function _isFriendlyTerritory(regionId, nationId) {
   const region = _getRegionData(regionId);
   if (!region) return false;
   if (region.nation === nationId) return true;
@@ -931,7 +934,7 @@ function _isFriendlyTerritory(regionId, nationId) {
   return false;
 }
 
-function _isAtWarWith(a, b) {
+export function _isAtWarWith(a, b) {
   if (typeof DiplomacyEngine !== 'undefined') {
     return DiplomacyEngine.getRelation(a, b)?.war === true;
   }
@@ -939,7 +942,7 @@ function _isAtWarWith(a, b) {
 }
 
 /** Общее кол-во войск всех армий нации (для совместимости с существующей системой) */
-function getArmyTotalUnits(nationId) {
+export function getArmyTotalUnits(nationId) {
   return getNationArmies(nationId).reduce((acc, a) => ({
     infantry:    acc.infantry    + (a.units.infantry    ?? 0),
     cavalry:     acc.cavalry     + (a.units.cavalry     ?? 0),
@@ -948,7 +951,7 @@ function getArmyTotalUnits(nationId) {
 }
 
 /** Взять войска из резерва нации в армию */
-function recruitToArmy(armyId, addUnits) {
+export function recruitToArmy(armyId, addUnits) {
   const army   = getArmy(armyId);
   const nation = army ? GAME_STATE.nations[army.nation] : null;
   if (!army || !nation) return false;
@@ -981,7 +984,7 @@ function recruitToArmy(armyId, addUnits) {
  *   3. Ограничивает по населению (≤2% региона, мин. 500 после).
  *   4. Прибавляет к nation.military[unit_type].
  */
-function processRecruitment() {
+export function processRecruitment() {
   const nationId  = GAME_STATE.player_nation;
   const nation    = GAME_STATE.nations[nationId];
   if (!nation) return;
@@ -1086,3 +1089,42 @@ function processRecruitment() {
     addEventLog(`🪖 Рекрутинг: ${parts.join(', ')}`, 'info');
   }
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.ARMY_MOVE = ARMY_MOVE;
+window.COMMANDER_SKILLS_DEF = COMMANDER_SKILLS_DEF;
+window.COMMANDER_XP_LEVELS = COMMANDER_XP_LEVELS;
+window._armiesAtWar = _armiesAtWar;
+window._armyLandTotal = _armyLandTotal;
+window._calcFleetSpeed = _calcFleetSpeed;
+window._checkSiegeOnArrival = _checkSiegeOnArrival;
+window._getOwnRegions = _getOwnRegions;
+window._getRegionData = _getRegionData;
+window._getRegionSupplyCapacity = _getRegionSupplyCapacity;
+window._getTotalTroopsInRegion = _getTotalTroopsInRegion;
+window._isAtWarWith = _isAtWarWith;
+window._isFortressLineBlocked = _isFortressLineBlocked;
+window._isFriendlyTerritory = _isFriendlyTerritory;
+window._onArmyEnterRegion = _onArmyEnterRegion;
+window._processRout = _processRout;
+window._processSupply = _processSupply;
+window.calcArmySpeed = calcArmySpeed;
+window.captureRegion = captureRegion;
+window.checkNationDefeated = checkNationDefeated;
+window.createArmy = createArmy;
+window.findArmyPath = findArmyPath;
+window.getArmy = getArmy;
+window.getArmyCommander = getArmyCommander;
+window.getArmyTotalUnits = getArmyTotalUnits;
+window.getCommanderLevel = getCommanderLevel;
+window.getNationArmies = getNationArmies;
+window.grantCommanderSkill = grantCommanderSkill;
+window.initRegionGeoData = initRegionGeoData;
+window.mergeArmies = mergeArmies;
+window.orderArmyMove = orderArmyMove;
+window.processArmyMovement = processArmyMovement;
+window.processCommanderAI = processCommanderAI;
+window.processRecruitment = processRecruitment;
+window.recruitToArmy = recruitToArmy;
+window.splitArmy = splitArmy;
+

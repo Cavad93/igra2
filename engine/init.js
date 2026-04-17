@@ -1,7 +1,10 @@
 // engine/init.js — Инициализация игры и полный рендер
 // Вынесено из engine/turn.js (Этап 53)
 
-async function initGame() {
+import { CONFIG } from '../config.js';
+import { GOODS } from '../data/goods.js';
+
+export async function initGame() {
   // Инициализируем GAME_STATE из стартовых данных
   Object.assign(GAME_STATE, JSON.parse(JSON.stringify(INITIAL_GAME_STATE)));
 
@@ -108,7 +111,7 @@ async function initGame() {
 
   // Инициализируем world_stockpile и price_history до первого рендера
   // чтобы Биржа в Экономическом обзоре показывала реальные данные с хода 1.
-  if (typeof GOODS !== 'undefined') {
+  {
     for (const [good, mkt] of Object.entries(GAME_STATE.market || {})) {
       if (mkt.world_stockpile == null) {
         const targetTurns = GOODS[good]?.stockpile_target_turns ?? 4;
@@ -220,7 +223,7 @@ async function initGame() {
 }
 
 // Рендерим всё разом — каждая функция изолирована, чтобы ошибка в одной не ломала остальные
-function renderAll() {
+export function renderAll() {
   try { renderMap(); }                    catch (e) { console.error('renderMap error:', e); }
   try { renderLeftPanel(); }              catch (e) { console.error('renderLeftPanel error:', e); }
   try { renderRightPanel(); }             catch (e) { console.error('renderRightPanel error:', e); }
@@ -265,5 +268,8 @@ function renderAll() {
   } catch (e) {}
 }
 
-window.initGame  = initGame;
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.initGame = initGame;
 window.renderAll = renderAll;
+

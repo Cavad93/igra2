@@ -12,29 +12,29 @@
 //   LTS Tags        — постоянные теги из старых резюме (>20 ходов назад)
 // ══════════════════════════════════════════════════════════════════════
 
+import { CONFIG } from '../config.js';
+
 // Реестр временных персонажей для диалога (senators, advisors без char в nation.characters)
-const _DIALOGUE_TEMP_CHARS = {};
+export const _DIALOGUE_TEMP_CHARS = {};
 
-const DIALOGUE_ENGINE = (() => {
+// ─────────────────────────────────────────────────────────────
+// КОНСТАНТЫ
+// ─────────────────────────────────────────────────────────────
+const HOT_MEMORY_LIMIT   = 15;   // максимум реплик в горячей памяти (пар player+char)
+const PATIENCE_MAX       = 100;
+const PATIENCE_COST_SPAM = 25;   // штраф за бессмыслицу
+const PATIENCE_REGEN     = 10;   // восстановление за ход без взаимодействия
+const SESSION_TIMEOUT_TURNS = 3; // ходов тишины → сессия считается завершённой
 
-  // ─────────────────────────────────────────────────────────────
-  // КОНСТАНТЫ
-  // ─────────────────────────────────────────────────────────────
-  const HOT_MEMORY_LIMIT   = 15;   // максимум реплик в горячей памяти (пар player+char)
-  const PATIENCE_MAX       = 100;
-  const PATIENCE_COST_SPAM = 25;   // штраф за бессмыслицу
-  const PATIENCE_REGEN     = 10;   // восстановление за ход без взаимодействия
-  const SESSION_TIMEOUT_TURNS = 3; // ходов тишины → сессия считается завершённой
+// charId → { lastTurn: number } — отслеживание активных сессий
+const _sessions = {};
 
-  // charId → { lastTurn: number } — отслеживание активных сессий
-  const _sessions = {};
+// ─────────────────────────────────────────────────────────────
+// ПУБЛИЧНЫЙ ИНТЕРФЕЙС
+// ─────────────────────────────────────────────────────────────
 
-  // ─────────────────────────────────────────────────────────────
-  // ПУБЛИЧНЫЙ ИНТЕРФЕЙС
-  // ─────────────────────────────────────────────────────────────
-
-  // Главная функция: игрок отправил text персонажу charId
-  async function processPlayerInput(charId, text, nationId) {
+// Главная функция: игрок отправил text персонажу charId
+export async function processPlayerInput(charId, text, nationId) {
     const nId    = nationId ?? GAME_STATE.player_nation;
     const nation = GAME_STATE.nations[nId];
     const char   = (nation?.characters ?? []).find(c => c.id === charId)
@@ -94,7 +94,7 @@ const DIALOGUE_ENGINE = (() => {
   }
 
   // Сжать горячую память по окончании диалога/хода (вызывается из tick)
-  async function compressMemory(charId, nationId) {
+  export async function compressMemory(charId, nationId) {
     const nId    = nationId ?? GAME_STATE.player_nation;
     const nation = GAME_STATE.nations[nId];
     const char   = (nation?.characters ?? []).find(c => c.id === charId)
@@ -127,7 +127,7 @@ const DIALOGUE_ENGINE = (() => {
   }
 
   // Ежеходный тик: сжать память тех персонажей, у кого закончилась активная сессия
-  async function tick(nationId) {
+  export async function tick(nationId) {
     const nId    = nationId ?? GAME_STATE.player_nation;
     const nation = GAME_STATE.nations[nId];
 
@@ -147,7 +147,7 @@ const DIALOGUE_ENGINE = (() => {
   }
 
   // Проверяет, является ли сессия "горячей" (игрок недавно разговаривал)
-  function isSessionActive(charId) {
+  export function isSessionActive(charId) {
     const s = _sessions[charId];
     if (!s) return false;
     return (GAME_STATE.turn - s.lastTurn) < SESSION_TIMEOUT_TURNS;
@@ -609,7 +609,7 @@ ${recentLines ? `ПРЕДЫДУЩИЙ КОНТЕКСТ:\n${recentLines}\n\n` : '
   // ЭКСПОРТ
   // ─────────────────────────────────────────────────────────────
   // Сжать диалог напрямую по объекту персонажа (для сенаторов и внешних объектов)
-  async function compressDirect(char) {
+  export async function compressDirect(char) {
     if (!char?.dialogue?.hot_memory?.length) return;
     const lastTurn = char.dialogue.last_interaction_turn ?? 0;
     if (GAME_STATE.turn <= lastTurn) return;  // сессия ещё горячая
@@ -636,6 +636,12 @@ ${recentLines ? `ПРЕДЫДУЩИЙ КОНТЕКСТ:\n${recentLines}\n\n` : '
     char.dialogue.hot_memory = [];
   }
 
-  return { processPlayerInput, compressMemory, compressDirect, tick, isSessionActive };
 
-})();
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window._DIALOGUE_TEMP_CHARS = _DIALOGUE_TEMP_CHARS;
+window.compressDirect = compressDirect;
+window.compressMemory = compressMemory;
+window.isSessionActive = isSessionActive;
+window.processPlayerInput = processPlayerInput;
+window.tick = tick;
+

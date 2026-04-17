@@ -12,7 +12,7 @@
 'use strict';
 
 // ── Балансовые ограничения ────────────────────────────────────
-const TREATY_LIMITS = {
+export const TREATY_LIMITS = {
   MAX_TRIBUTE_PCT:          0.25,   // макс. дань 25% дохода вассала
   MAX_REPARATION_TURN_PCT:  0.10,   // макс. контрибуция/ход: 10% казны плательщика
   MAX_REPARATION_TOTAL_PCT: 0.50,   // единовременно: не более 50% казны
@@ -24,7 +24,7 @@ const TREATY_LIMITS = {
 };
 
 // ── Контент-фильтр: жёсткие блокировки ───────────────────────
-const HARD_BLOCK_PATTERNS = [
+export const HARD_BLOCK_PATTERNS = [
   // Сексуальное содержание
   /секс|совокупл|порногр|эротич|проститут|блудниц/i,
   // Экстремизм / реальные геноциды
@@ -36,10 +36,10 @@ const HARD_BLOCK_PATTERNS = [
 ];
 
 // В брачном договоре некоторые слова допустимы
-const MARRIAGE_WHITELIST_RE = /брак|свадьб|династи|помолвк|наследник/i;
+export const MARRIAGE_WHITELIST_RE = /брак|свадьб|династи|помолвк|наследник/i;
 
 // ── Предупреждения (не блокировки) ───────────────────────────
-const WARN_PATTERNS = [
+export const WARN_PATTERNS = [
   { re: /вечн|навсегда|бессрочн/i,    msg: 'Договор помечен как бессрочный.' },
   { re: /военн.*пропуск.*любых/i,     msg: 'Неограниченный военный проход — риск для безопасности.' },
   { re: /освободить всех рабов/i,     msg: 'Освобождение рабов сильно снизит экономику.' },
@@ -58,7 +58,7 @@ const WARN_PATTERNS = [
  * @returns {{ ok: boolean, blocked: boolean, issues: string[], warnings: string[],
  *             modified: object, reason: string }}
  */
-function validateTreaty(treaty, playerNationId, aiNationId) {
+export function validateTreaty(treaty, playerNationId, aiNationId) {
   const result = {
     ok:       true,
     blocked:  false,
@@ -209,10 +209,10 @@ function validateTreaty(treaty, playerNationId, aiNationId) {
 }
 
 // ── Вспомогательные ──────────────────────────────────────────
-function pct(v) { return `${Math.round(v * 100)}%`; }
+export function pct(v) { return `${Math.round(v * 100)}%`; }
 
 /** Определяет, кто платит (для контрибуций) — проигравший = первый подписавший */
-function _validatorPayerOf(treaty, playerNationId) {
+export function _validatorPayerOf(treaty, playerNationId) {
   // Обычно игрок не платит сам себе; плательщик = не-игрок
   return treaty.parties.find(p => p !== playerNationId) ?? treaty.parties[0];
 }
@@ -222,7 +222,7 @@ function _validatorPayerOf(treaty, playerNationId) {
  * Возвращает человекочитаемое резюме валидации для отображения в UI.
  * @returns {string} HTML-строка
  */
-function formatValidationResult(v) {
+export function formatValidationResult(v) {
   if (v.blocked) {
     return `<div class="treaty-val treaty-val--blocked">
       🚫 <strong>Договор отклонён:</strong> ${_escHtmlValidator(v.reason)}
@@ -243,6 +243,18 @@ function formatValidationResult(v) {
   return parts.join('');
 }
 
-function _escHtmlValidator(s) {
+export function _escHtmlValidator(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.HARD_BLOCK_PATTERNS = HARD_BLOCK_PATTERNS;
+window.MARRIAGE_WHITELIST_RE = MARRIAGE_WHITELIST_RE;
+window.TREATY_LIMITS = TREATY_LIMITS;
+window.WARN_PATTERNS = WARN_PATTERNS;
+window._escHtmlValidator = _escHtmlValidator;
+window._validatorPayerOf = _validatorPayerOf;
+window.formatValidationResult = formatValidationResult;
+window.pct = pct;
+window.validateTreaty = validateTreaty;
+

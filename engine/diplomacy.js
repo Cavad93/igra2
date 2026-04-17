@@ -1,3 +1,6 @@
+import { CONFIG } from '../config.js';
+import { MAP_REGIONS } from '../data/map.js';
+
 // ═══════════════════════════════════════════════════════════════════════════
 // ДВИЖОК ДИПЛОМАТИИ
 //
@@ -19,9 +22,9 @@
 // ──────────────────────────────────────────────────────────────
 
 // 1 год = 12 ходов (месяцев). Все default_duration хранятся в ГОДАХ.
-const TURNS_PER_YEAR = 12;
+export const TURNS_PER_YEAR = 12;
 
-const TREATY_TYPES = {
+export const TREATY_TYPES = {
   trade_agreement: {
     label:       'Торговый договор',
     icon:        '💼',
@@ -150,9 +153,9 @@ const TREATY_TYPES = {
 
 // Пороговое количество наций: при > MAX_NATIONS_FULL_INIT используем ленивый режим.
 // 200 наций → 19,900 пар — допустимо. 1920 наций → 1,843,680 пар → freeze браузера.
-const _INIT_NATION_LIMIT = 200;
+export const _INIT_NATION_LIMIT = 200;
 
-function initDiplomacy() {
+export function initDiplomacy() {
   if (!GAME_STATE.diplomacy) {
     GAME_STATE.diplomacy = {
       relations: {},
@@ -206,7 +209,7 @@ function initDiplomacy() {
  * Читает score из устаревшего формата nation.relations[otherId].score.
  * Возвращает null если данных нет.
  */
-function _legacyScore(nationA, nationB) {
+export function _legacyScore(nationA, nationB) {
   const a = GAME_STATE.nations?.[nationA]?.relations?.[nationB]?.score;
   if (typeof a === 'number') return a;
   const b = GAME_STATE.nations?.[nationB]?.relations?.[nationA]?.score;
@@ -219,7 +222,7 @@ function _legacyScore(nationA, nationB) {
  * Если рассчитанный score == 0, но в legacy есть ненулевое значение — берём legacy.
  * Если оба ненулевые — среднее, с весом 60% legacy (сценарные данные приоритетнее).
  */
-function _seedFromLegacyRelations() {
+export function _seedFromLegacyRelations() {
   const nations = GAME_STATE.nations ?? {};
   for (const [nId, nation] of Object.entries(nations)) {
     const legRels = nation.relations;
@@ -247,11 +250,11 @@ function _seedFromLegacyRelations() {
 // ГЕТТЕРЫ ОТНОШЕНИЙ
 // ──────────────────────────────────────────────────────────────
 
-function _relKey(a, b) {
+export function _relKey(a, b) {
   return [a, b].sort().join('_');
 }
 
-function getRelation(nationA, nationB) {
+export function getRelation(nationA, nationB) {
   if (!GAME_STATE.diplomacy) initDiplomacy();
   const key = _relKey(nationA, nationB);
   if (!GAME_STATE.diplomacy.relations[key]) {
@@ -277,12 +280,12 @@ function getRelation(nationA, nationB) {
   return rel;
 }
 
-function getRelationScore(nationA, nationB) {
+export function getRelationScore(nationA, nationB) {
   return getRelation(nationA, nationB).score;
 }
 
 // Текстовый уровень отношений
-function getRelationLabel(score) {
+export function getRelationLabel(score) {
   if (score >=  60) return { label: 'Союзник',      color: '#4caf50', icon: '💚' };
   if (score >=  30) return { label: 'Дружественный', color: '#8bc34a', icon: '🟢' };
   if (score >=   5) return { label: 'Нейтральный',   color: '#9e9e9e', icon: '⚪' };
@@ -291,7 +294,7 @@ function getRelationLabel(score) {
   return               { label: 'Война',            color: '#b71c1c', icon: '⚔' };
 }
 
-function isAtWar(nationA, nationB) {
+export function isAtWar(nationA, nationB) {
   return getRelation(nationA, nationB).war;
 }
 
@@ -299,7 +302,7 @@ function isAtWar(nationA, nationB) {
 // АКТИВНЫЕ ДОГОВОРЫ
 // ──────────────────────────────────────────────────────────────
 
-function getActiveTreaties(nationA, nationB) {
+export function getActiveTreaties(nationA, nationB) {
   if (!GAME_STATE.diplomacy) return [];
   return GAME_STATE.diplomacy.treaties.filter(t =>
     t.status === 'active' &&
@@ -308,7 +311,7 @@ function getActiveTreaties(nationA, nationB) {
   );
 }
 
-function getAllTreaties(nationId) {
+export function getAllTreaties(nationId) {
   if (!GAME_STATE.diplomacy) return [];
   return GAME_STATE.diplomacy.treaties.filter(t => t.parties.includes(nationId));
 }
@@ -317,7 +320,7 @@ function getAllTreaties(nationId) {
 // СОЗДАНИЕ / СОХРАНЕНИЕ ДОГОВОРА
 // ──────────────────────────────────────────────────────────────
 
-function createTreaty(nationA, nationB, type, conditions, dialogueLog) {
+export function createTreaty(nationA, nationB, type, conditions, dialogueLog) {
   if (!GAME_STATE.diplomacy) initDiplomacy();
 
   const tDef = TREATY_TYPES[type] || TREATY_TYPES.custom;
@@ -354,7 +357,7 @@ function createTreaty(nationA, nationB, type, conditions, dialogueLog) {
   return treaty;
 }
 
-function breakTreaty(treatyId, breakerNation) {
+export function breakTreaty(treatyId, breakerNation) {
   if (!GAME_STATE.diplomacy) return;
   const t = GAME_STATE.diplomacy.treaties.find(x => x.id === treatyId);
   if (!t) return;
@@ -379,7 +382,7 @@ function breakTreaty(treatyId, breakerNation) {
 // ПРИМЕНЕНИЕ ЭФФЕКТОВ ДОГОВОРОВ (вызывается каждый ход)
 // ──────────────────────────────────────────────────────────────
 
-function processDiplomacyTick(nationId) {
+export function processDiplomacyTick(nationId) {
   if (!GAME_STATE.diplomacy) return;
   const turn = GAME_STATE.turn || 1;
 
@@ -433,7 +436,7 @@ function processDiplomacyTick(nationId) {
 // ИСТОРИЯ ДИАЛОГОВ
 // ──────────────────────────────────────────────────────────────
 
-function getDiplomacyDialogue(nationA, nationB) {
+export function getDiplomacyDialogue(nationA, nationB) {
   if (!GAME_STATE.diplomacy) initDiplomacy();
   const key = _relKey(nationA, nationB);
   if (!GAME_STATE.diplomacy.dialogues[key]) {
@@ -442,7 +445,7 @@ function getDiplomacyDialogue(nationA, nationB) {
   return GAME_STATE.diplomacy.dialogues[key];
 }
 
-function addDiplomacyMessage(nationA, nationB, role, text, displayText) {
+export function addDiplomacyMessage(nationA, nationB, role, text, displayText) {
   const log = getDiplomacyDialogue(nationA, nationB);
   const entry = { role, text, turn: GAME_STATE.turn || 1, ts: Date.now() };
   // displayText — очищенный текст для UI (без JSON-блоков)
@@ -456,7 +459,7 @@ function addDiplomacyMessage(nationA, nationB, role, text, displayText) {
 /**
  * Записывает отклонённое предложение в архив договоров.
  */
-function recordRejection(nationA, nationB, treatyType) {
+export function recordRejection(nationA, nationB, treatyType) {
   if (!GAME_STATE.diplomacy) initDiplomacy();
   const id = `treaty_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const treaty = {
@@ -474,7 +477,7 @@ function recordRejection(nationA, nationB, treatyType) {
   return treaty;
 }
 
-function clearDiplomacyDialogue(nationA, nationB) {
+export function clearDiplomacyDialogue(nationA, nationB) {
   if (!GAME_STATE.diplomacy) return;
   const key = _relKey(nationA, nationB);
   GAME_STATE.diplomacy.dialogues[key] = [];
@@ -485,7 +488,7 @@ function clearDiplomacyDialogue(nationA, nationB) {
 // ──────────────────────────────────────────────────────────────
 
 // Возвращает 0..1 — насколько AI склонен принять предложение
-function evalAIReceptiveness(aiNationId, playerNationId, treatyType) {
+export function evalAIReceptiveness(aiNationId, playerNationId, treatyType) {
   const tDef = TREATY_TYPES[treatyType] || TREATY_TYPES.custom;
   const rel   = getRelation(aiNationId, playerNationId);
 
@@ -530,7 +533,7 @@ function evalAIReceptiveness(aiNationId, playerNationId, treatyType) {
 
 // AI возвращает JSON-блок с условиями внутри ответа.
 // Ищем ```json ... ``` или <treaty_conditions>...</treaty_conditions>
-function extractTreatyConditions(aiResponse) {
+export function extractTreatyConditions(aiResponse) {
   // Вариант 1: JSON в ```json...```
   const jsonBlock = aiResponse.match(/```json\s*([\s\S]*?)```/);
   if (jsonBlock) {
@@ -560,7 +563,7 @@ function extractTreatyConditions(aiResponse) {
 // ══════════════════════════════════════════════════════════════
 
 // ── Группировка форм правления (Doyle 1983) ──────────────────
-function _govGroupOf(type) {
+export function _govGroupOf(type) {
   if (['republic', 'democracy', 'oligarchy'].includes(type)) return 'civic';
   if (['monarchy', 'absolute_monarchy', 'kingdom'].includes(type)) return 'monarchic';
   if (['empire', 'hegemony', 'imperial'].includes(type)) return 'imperial';
@@ -568,7 +571,7 @@ function _govGroupOf(type) {
 }
 
 // ── 1. АФФИНИТЕТ: культура + религия + правление (±25) ───────
-function _calcAffinity(natA, natB) {
+export function _calcAffinity(natA, natB) {
   let aff = 0;
 
   // Культурная близость
@@ -610,7 +613,7 @@ function _calcAffinity(natA, natB) {
 // ── 2. БАЛАНС УГРОЗ (Walt 1987) (±30) ────────────────────────
 // Угроза = f(мощь, наступ.потенциал, близость)
 // Высокая угроза → негативный вклад в отношения
-function _calcThreatBalance(natA, natB) {
+export function _calcThreatBalance(natA, natB) {
   const popA = natA.population?.total ?? 100_000;
   const popB = natB.population?.total ?? 100_000;
   const milA = natA.military?.size ?? natA.military?.total ?? 0;
@@ -646,7 +649,7 @@ function _calcThreatBalance(natA, natB) {
 }
 
 // ── 3. ЭКОНОМИЧЕСКАЯ ВЗАИМОЗАВИСИМОСТЬ (Rosecrance 1986) (0..20) ──
-function _calcEconInterdep(nationA, nationB, treaties) {
+export function _calcEconInterdep(nationA, nationB, treaties) {
   const natA = GAME_STATE.nations[nationA];
   const natB = GAME_STATE.nations[nationB];
   if (!natA || !natB) return 0;
@@ -672,7 +675,7 @@ function _calcEconInterdep(nationA, nationB, treaties) {
 // ── 4. ТРЕУГОЛЬНЫЙ БАЛАНС (Heider 1958) (±15) ────────────────
 // «Враг врага — мой друг», «друг врага — мой враг»
 // Взвешенная сумма знаков парных произведений через третьи страны
-function _calcTriangularBalance(nationA, nationB) {
+export function _calcTriangularBalance(nationA, nationB) {
   if (!GAME_STATE.diplomacy) return 0;
 
   // Для больших карт итерируем только по СУЩЕСТВУЮЩИМ отношениям (не создаём новые),
@@ -719,7 +722,7 @@ function _calcTriangularBalance(nationA, nationB) {
 
 // ── 5. ПАМЯТЬ СОБЫТИЙ — экспоненциальное затухание ───────────
 // Σ delta_i × e^(−λ × age_i),  λ = 0.10 за ход, ±30
-function _calcMemoryDecay(nationA, nationB) {
+export function _calcMemoryDecay(nationA, nationB) {
   const rel    = getRelation(nationA, nationB);
   const events = rel.events || [];
   const now    = GAME_STATE.turn || 1;
@@ -748,14 +751,14 @@ function _calcMemoryDecay(nationA, nationB) {
  * @param {object} nation
  * @returns {number} 0..1
  */
-function _getNationGrievance(nation) {
+export function _getNationGrievance(nation) {
   const arr = nation?._ou?.diplomacy;
   if (!Array.isArray(arr)) return 0;
   const v = arr.find(x => x.name === 'historical_grievances');
   return v ? (v.current ?? 0) : 0;
 }
 
-function calcBaseRelation(nationA, nationB) {
+export function calcBaseRelation(nationA, nationB) {
   const natA = GAME_STATE.nations?.[nationA];
   const natB = GAME_STATE.nations?.[nationB];
   if (!natA || !natB) return 0;
@@ -792,7 +795,7 @@ function calcBaseRelation(nationA, nationB) {
  * @param {number} delta      — изменение (−30…+30)
  * @param {string} eventType  — 'war', 'gift', 'betrayal', 'aid', 'insult', ...
  */
-function addDiplomacyEvent(nationA, nationB, delta, eventType) {
+export function addDiplomacyEvent(nationA, nationB, delta, eventType) {
   const rel = getRelation(nationA, nationB);
   if (!rel.events) rel.events = [];
   rel.events.push({
@@ -813,7 +816,7 @@ function addDiplomacyEvent(nationA, nationB, delta, eventType) {
  * 2% шанс за ход генерировать инцидент: пограничная стычка, поимка шпиона,
  * оскорбление при дворе. Вызывает addDiplomacyEvent() и уведомляет игрока.
  */
-function _processDiplomaticIncidents(nids) {
+export function _processDiplomaticIncidents(nids) {
   const INCIDENT_CHANCE = 0.02;
   const INCIDENT_TYPES  = [
     { label: 'Пограничная стычка',   delta: -10 },
@@ -885,7 +888,7 @@ function _processDiplomaticIncidents(nids) {
  * религии сильного партнёра. Отслеживается в nation.religion_influence{}.
  * При influence > 0.5: religious_conversion — +8 к единоверцам, -8 с противниками.
  */
-function _processReligionSpread() {
+export function _processReligionSpread() {
   if (!GAME_STATE.diplomacy) return;
   const nations = GAME_STATE.nations || {};
   const SPREAD_CHANCE            = 0.01;   // 1% шанс за ход
@@ -968,7 +971,7 @@ function _processReligionSpread() {
  * дипломатическое требование репараций от ИИ.
  * Добавляет событие 'demand_reparations' и уведомляет игрока.
  */
-function _processHistoricalGrievances() {
+export function _processHistoricalGrievances() {
   if (!GAME_STATE.diplomacy) return;
   const nations      = GAME_STATE.nations || {};
   const playerNation = GAME_STATE.player_nation;
@@ -1026,7 +1029,7 @@ function _processHistoricalGrievances() {
  * α = 0.04 (≈ полная конвергенция за ~25 ходов).
  * Должен вызываться один раз за ход (не per-nation).
  */
-function processDiplomacyGlobalTick() {
+export function processDiplomacyGlobalTick() {
   if (!GAME_STATE.diplomacy) return;
   const ALPHA = 0.04;
   const nids  = Object.keys(GAME_STATE.nations || {});
@@ -1085,7 +1088,7 @@ function processDiplomacyGlobalTick() {
  * Официально объявить войну. Учитывает активное перемирие (armistice).
  * @returns { ok: bool, reason: string }
  */
-function declareWar(attackerNationId, targetNationId) {
+export function declareWar(attackerNationId, targetNationId) {
   if (!GAME_STATE.diplomacy) initDiplomacy();
   const rel = getRelation(attackerNationId, targetNationId);
 
@@ -1204,7 +1207,7 @@ function declareWar(attackerNationId, targetNationId) {
  * Вызывается однажды в момент объявления войны — первый экстренный набор.
  * Регулярная мобилизация продолжается через applyFallbackDecision каждый ход.
  */
-function _warMobilizationResponse(nationId, nation) {
+export function _warMobilizationResponse(nationId, nation) {
   const military = nation.military;
   const treasury = nation.economy?.treasury ?? 0;
   const pop      = nation.population?.total ?? 0;
@@ -1284,7 +1287,7 @@ function _warMobilizationResponse(nationId, nation) {
 }
 
 /** Штраф к отношениям агрессора со всеми его соседями при нарушении перемирия. */
-function _applyArmisticeBreakCoalitionPenalty(aggressorId, victimId) {
+export function _applyArmisticeBreakCoalitionPenalty(aggressorId, victimId) {
   const allNationIds = Object.keys(GAME_STATE.nations ?? {});
   for (const otherId of allNationIds) {
     if (otherId === aggressorId || otherId === victimId) continue;
@@ -1302,7 +1305,7 @@ function _applyArmisticeBreakCoalitionPenalty(aggressorId, victimId) {
  * через removeTreatyEffects(). treaty_effects.js::_applyBetrayalReputation()
  * обрабатывает остальные случаи через breakTreaty().
  */
-function _recordBetrayalDirect(nationId) {
+export function _recordBetrayalDirect(nationId) {
   if (!nationId) return;
   const nat = GAME_STATE.nations?.[nationId];
   if (!nat) return;
@@ -1323,7 +1326,7 @@ function _recordBetrayalDirect(nationId) {
   }
 }
 
-function _areNeighbors(nationA, nationB) {
+export function _areNeighbors(nationA, nationB) {
   const natA = GAME_STATE.nations?.[nationA];
   const natB = GAME_STATE.nations?.[nationB];
   if (!natA || !natB) return false;
@@ -1344,7 +1347,7 @@ function _areNeighbors(nationA, nationB) {
  * @param {string} fromNationId
  * @param {string} toNationId
  */
-function transferRegion(regionId, fromNationId, toNationId) {
+export function transferRegion(regionId, fromNationId, toNationId) {
   const region = GAME_STATE.regions?.[regionId];
   if (!region) return false;
   if (region.nation !== fromNationId) return false;
@@ -1377,7 +1380,7 @@ function transferRegion(regionId, fromNationId, toNationId) {
  *   winner:           string,      // nationId победителя
  * }
  */
-function concludePeace(playerNationId, targetNationId, terms) {
+export function concludePeace(playerNationId, targetNationId, terms) {
   if (!GAME_STATE.diplomacy) initDiplomacy();
   const rel = getRelation(playerNationId, targetNationId);
 
@@ -1447,7 +1450,7 @@ function concludePeace(playerNationId, targetNationId, terms) {
 }
 
 /** Получить активное перемирие между двумя нациями (или null). */
-function getArmistice(nationA, nationB) {
+export function getArmistice(nationA, nationB) {
   if (!GAME_STATE.diplomacy) return null;
   return (GAME_STATE.diplomacy.treaties ?? []).find(t =>
     t.status === 'active' && t.type === 'armistice' &&
@@ -1467,7 +1470,7 @@ function getArmistice(nationA, nationB) {
  *
  * @param {string} nationId — нация, чей правитель умер
  */
-function onRulerDeath(nationId) {
+export function onRulerDeath(nationId) {
   if (!GAME_STATE.diplomacy) return;
 
   const nation = GAME_STATE.nations?.[nationId];
@@ -1551,7 +1554,7 @@ function onRulerDeath(nationId) {
  * @param {object} treaty
  * @param {number} turn
  */
-function _checkDynastyExpiry(treaty, turn) {
+export function _checkDynastyExpiry(treaty, turn) {
   if (!treaty._dynasty_expires_turn) return;
   if (turn < treaty._dynasty_expires_turn) return;
   if (treaty.status !== 'active') return;
@@ -1595,7 +1598,7 @@ function _checkDynastyExpiry(treaty, turn) {
  * @param {string} nationB
  * @returns {string[]} массив nationId общих врагов
  */
-function findCommonEnemies(nationA, nationB) {
+export function findCommonEnemies(nationA, nationB) {
   const nations = GAME_STATE.nations ?? {};
   const common  = [];
   for (const [nId, n] of Object.entries(nations)) {
@@ -1622,7 +1625,7 @@ function findCommonEnemies(nationA, nationB) {
  * @param {string} enemyNationId  — общий враг
  * @returns {{ ok: boolean, reason?: string, treaty?: object }}
  */
-function proposeCoalition(playerNationId, targetNationId, enemyNationId) {
+export function proposeCoalition(playerNationId, targetNationId, enemyNationId) {
   if (!GAME_STATE.diplomacy) initDiplomacy();
 
   const playerNation = GAME_STATE.nations?.[playerNationId];
@@ -1720,7 +1723,7 @@ function proposeCoalition(playerNationId, targetNationId, enemyNationId) {
 /**
  * Стоимость дипломатических действий в Очках Влияния.
  */
-const INFLUENCE_COSTS = {
+export const INFLUENCE_COSTS = {
   send_ambassador: 5,   // Отправить посла / начать переговоры
   propose_alliance: 15, // Предложить союз (defensive/military alliance)
   bribe:            20, // Подкуп иностранного правителя
@@ -1730,7 +1733,7 @@ const INFLUENCE_COSTS = {
 /**
  * Гарантирует поле influence_points у нации.
  */
-function _ensureInfluencePoints(nation) {
+export function _ensureInfluencePoints(nation) {
   if (nation && nation.influence_points == null) {
     nation.influence_points = 0;
   }
@@ -1739,7 +1742,7 @@ function _ensureInfluencePoints(nation) {
 /**
  * Возвращает текущие ОВ игровой нации.
  */
-function getInfluencePoints(nationId) {
+export function getInfluencePoints(nationId) {
   const nation = GAME_STATE.nations?.[nationId];
   if (!nation) return 0;
   _ensureInfluencePoints(nation);
@@ -1752,7 +1755,7 @@ function getInfluencePoints(nationId) {
  *   +1 за каждую нацию, с которой есть хотя бы один активный договор (посольство)
  *   +0.5 за каждый активный договор trade_agreement
  */
-function _earnInfluencePointsTick() {
+export function _earnInfluencePointsTick() {
   const nations = GAME_STATE.nations || {};
   const treaties = GAME_STATE.diplomacy?.treaties ?? [];
 
@@ -1788,7 +1791,7 @@ function _earnInfluencePointsTick() {
  * Проверяет и списывает ОВ у нации перед дипломатическим действием.
  * @returns { ok: boolean, reason?: string }
  */
-function spendInfluencePoints(nationId, amount, actionName) {
+export function spendInfluencePoints(nationId, amount, actionName) {
   const nation = GAME_STATE.nations?.[nationId];
   if (!nation) return { ok: false, reason: 'Нация не найдена.' };
   _ensureInfluencePoints(nation);
@@ -1810,7 +1813,7 @@ function spendInfluencePoints(nationId, amount, actionName) {
  * @param {number} goldAmount — сумма подкупа (влияет на эффективность)
  * @returns { ok: boolean, delta?: number, reason?: string }
  */
-function bribeNation(playerNationId, targetNationId, goldAmount) {
+export function bribeNation(playerNationId, targetNationId, goldAmount) {
   if (!GAME_STATE.diplomacy) initDiplomacy();
 
   const playerNation = GAME_STATE.nations?.[playerNationId];
@@ -1853,7 +1856,7 @@ function bribeNation(playerNationId, targetNationId, goldAmount) {
 // ПУБЛИЧНОЕ API
 // ──────────────────────────────────────────────────────────────
 
-const DiplomacyEngine = {
+export const DiplomacyEngine = {
   init:              initDiplomacy,
   getRelation,
   getRelationScore,
@@ -1911,3 +1914,60 @@ const DiplomacyEngine = {
   bribeNation,
   INFLUENCE_COSTS,
 };
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.DiplomacyEngine = DiplomacyEngine;
+window.INFLUENCE_COSTS = INFLUENCE_COSTS;
+window.TREATY_TYPES = TREATY_TYPES;
+window.TURNS_PER_YEAR = TURNS_PER_YEAR;
+window._INIT_NATION_LIMIT = _INIT_NATION_LIMIT;
+window._applyArmisticeBreakCoalitionPenalty = _applyArmisticeBreakCoalitionPenalty;
+window._areNeighbors = _areNeighbors;
+window._calcAffinity = _calcAffinity;
+window._calcEconInterdep = _calcEconInterdep;
+window._calcMemoryDecay = _calcMemoryDecay;
+window._calcThreatBalance = _calcThreatBalance;
+window._calcTriangularBalance = _calcTriangularBalance;
+window._checkDynastyExpiry = _checkDynastyExpiry;
+window._earnInfluencePointsTick = _earnInfluencePointsTick;
+window._ensureInfluencePoints = _ensureInfluencePoints;
+window._getNationGrievance = _getNationGrievance;
+window._govGroupOf = _govGroupOf;
+window._legacyScore = _legacyScore;
+window._processDiplomaticIncidents = _processDiplomaticIncidents;
+window._processHistoricalGrievances = _processHistoricalGrievances;
+window._processReligionSpread = _processReligionSpread;
+window._recordBetrayalDirect = _recordBetrayalDirect;
+window._relKey = _relKey;
+window._seedFromLegacyRelations = _seedFromLegacyRelations;
+window._warMobilizationResponse = _warMobilizationResponse;
+window.addDiplomacyEvent = addDiplomacyEvent;
+window.addDiplomacyMessage = addDiplomacyMessage;
+window.breakTreaty = breakTreaty;
+window.bribeNation = bribeNation;
+window.calcBaseRelation = calcBaseRelation;
+window.clearDiplomacyDialogue = clearDiplomacyDialogue;
+window.concludePeace = concludePeace;
+window.createTreaty = createTreaty;
+window.declareWar = declareWar;
+window.evalAIReceptiveness = evalAIReceptiveness;
+window.extractTreatyConditions = extractTreatyConditions;
+window.findCommonEnemies = findCommonEnemies;
+window.getActiveTreaties = getActiveTreaties;
+window.getAllTreaties = getAllTreaties;
+window.getArmistice = getArmistice;
+window.getDiplomacyDialogue = getDiplomacyDialogue;
+window.getInfluencePoints = getInfluencePoints;
+window.getRelation = getRelation;
+window.getRelationLabel = getRelationLabel;
+window.getRelationScore = getRelationScore;
+window.initDiplomacy = initDiplomacy;
+window.isAtWar = isAtWar;
+window.onRulerDeath = onRulerDeath;
+window.processDiplomacyGlobalTick = processDiplomacyGlobalTick;
+window.processDiplomacyTick = processDiplomacyTick;
+window.proposeCoalition = proposeCoalition;
+window.recordRejection = recordRejection;
+window.spendInfluencePoints = spendInfluencePoints;
+window.transferRegion = transferRegion;
+

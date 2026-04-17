@@ -16,7 +16,7 @@
 
 // ── Конфигурация ──────────────────────────────────────────────────────────────
 
-const WAR_SCORE_CFG = {
+export const WAR_SCORE_CFG = {
   // Полевые сражения
   BATTLE_BASE:        5,   // базовые очки за победу
   BATTLE_PER_ENEMY:   200, // 1 очко за каждые N уничтоженных врагов
@@ -58,7 +58,7 @@ const WAR_SCORE_CFG = {
 
 // ── Инициализация ─────────────────────────────────────────────────────────────
 
-function ensureWarsArray() {
+export function ensureWarsArray() {
   if (!GAME_STATE.wars) GAME_STATE.wars = [];
   return GAME_STATE.wars;
 }
@@ -69,7 +69,7 @@ function ensureWarsArray() {
  * Создаёт запись войны при объявлении.
  * Вызывается из DiplomacyEngine.declareWar().
  */
-function initWar(attackerNationId, defenderNationId) {
+export function initWar(attackerNationId, defenderNationId) {
   ensureWarsArray();
   // Проверяем, нет ли уже активной войны между ними
   if (getActiveWar(attackerNationId, defenderNationId)) return;
@@ -93,7 +93,7 @@ function initWar(attackerNationId, defenderNationId) {
 /**
  * Завершает войну (мир, капитуляция).
  */
-function endWar(nationA, nationB) {
+export function endWar(nationA, nationB) {
   const war = getActiveWar(nationA, nationB);
   if (!war) return;
   war.status     = 'ended';
@@ -105,7 +105,7 @@ function endWar(nationA, nationB) {
 /**
  * Получить активную войну между двумя нациями (или null).
  */
-function getActiveWar(nationA, nationB) {
+export function getActiveWar(nationA, nationB) {
   return (GAME_STATE.wars ?? []).find(w =>
     w.status === 'active' &&
     ((w.attacker === nationA && w.defender === nationB) ||
@@ -123,7 +123,7 @@ function getActiveWar(nationA, nationB) {
  * @param {string} reason      — 'battle' | 'siege' | 'capture' | 'naval' | 'blockade' | 'hold'
  * @param {string} [notes]     — доп. описание
  */
-function addWarScore(nation, opponent, amount, reason, notes) {
+export function addWarScore(nation, opponent, amount, reason, notes) {
   if (amount <= 0) return;
   const war = getActiveWar(nation, opponent);
   if (!war) return;
@@ -145,7 +145,7 @@ function addWarScore(nation, opponent, amount, reason, notes) {
  * Получить очки войны игрока и противника.
  * @returns {{ player: number, opponent: number, war: object|null }}
  */
-function getWarScore(playerNationId, opponentNationId) {
+export function getWarScore(playerNationId, opponentNationId) {
   const war = getActiveWar(playerNationId, opponentNationId);
   if (!war) return { player: 0, opponent: 0, war: null };
   const isAttacker = war.attacker === playerNationId;
@@ -163,7 +163,7 @@ function getWarScore(playerNationId, opponentNationId) {
  * @param {Object} terms — { ceded_regions: string[], vassalize: bool, reparations_turns: number }
  * @returns {{ total: number, breakdown: [{label, cost}] }}
  */
-function calcPeaceTermsCost(terms) {
+export function calcPeaceTermsCost(terms) {
   const cfg       = WAR_SCORE_CFG;
   const breakdown = [];
   let   total     = 0;
@@ -205,7 +205,7 @@ function calcPeaceTermsCost(terms) {
 // ── Подключение к боевым системам ────────────────────────────────────────────
 
 /** Вызывается из combat.js после полевого сражения. */
-function onBattleResult(winnerNationId, loserNationId, enemyCasualties, capturedRegionId) {
+export function onBattleResult(winnerNationId, loserNationId, enemyCasualties, capturedRegionId) {
   const cfg    = WAR_SCORE_CFG;
   let   amount = Math.min(cfg.BATTLE_MAX,
     cfg.BATTLE_BASE + Math.floor((enemyCasualties ?? 0) / cfg.BATTLE_PER_ENEMY)
@@ -233,7 +233,7 @@ function onBattleResult(winnerNationId, loserNationId, enemyCasualties, captured
 }
 
 /** Вызывается из siege.js при взятии крепости. */
-function onSiegeComplete(winnerNationId, loserNationId, fortressLevel) {
+export function onSiegeComplete(winnerNationId, loserNationId, fortressLevel) {
   const cfg    = WAR_SCORE_CFG;
   const amount = Math.min(cfg.SIEGE_MAX,
     cfg.SIEGE_BASE + (fortressLevel ?? 1) * cfg.SIEGE_PER_LEVEL
@@ -243,7 +243,7 @@ function onSiegeComplete(winnerNationId, loserNationId, fortressLevel) {
 }
 
 /** Вызывается из combat.js при морском сражении. */
-function onNavalBattle(winnerNationId, loserNationId, enemyShipsLost) {
+export function onNavalBattle(winnerNationId, loserNationId, enemyShipsLost) {
   const cfg    = WAR_SCORE_CFG;
   const amount = Math.min(cfg.NAVAL_MAX,
     cfg.NAVAL_BASE + Math.floor((enemyShipsLost ?? 0) / 10) * cfg.NAVAL_PER_10_SHIPS
@@ -258,7 +258,7 @@ function onNavalBattle(winnerNationId, loserNationId, enemyShipsLost) {
  * Проверяет флоты и регистрирует/обновляет блокады портов.
  * Вызывается в начале каждого хода перед экономическим расчётом.
  */
-function processBlockadeTick() {
+export function processBlockadeTick() {
   ensureWarsArray();
   const armies = GAME_STATE.armies ?? [];
   const turn   = GAME_STATE.turn ?? 1;
@@ -325,7 +325,7 @@ function processBlockadeTick() {
 /**
  * Начисляет очки за удержание вражеских территорий (за ход).
  */
-function processHoldingTick() {
+export function processHoldingTick() {
   ensureWarsArray();
   const activeWars = GAME_STATE.wars.filter(w => w.status === 'active');
   if (!activeWars.length) return;
@@ -360,7 +360,7 @@ function processHoldingTick() {
  * Оценивает, должна ли ИИ-нация запрашивать мир с игроком.
  * Возвращает { shouldSeekPeace: bool, score: { ai, player }, reason: string }
  */
-function evaluateAIWarPosition(aiNationId, playerNationId) {
+export function evaluateAIWarPosition(aiNationId, playerNationId) {
   const { player: playerScore, opponent: aiScore, war } = getWarScore(playerNationId, aiNationId);
   if (!war) return { shouldSeekPeace: false, score: null };
 
@@ -408,7 +408,7 @@ function evaluateAIWarPosition(aiNationId, playerNationId) {
 /**
  * Возвращает строку-описание военного положения для системного промпта AI.
  */
-function getWarContextForAI(aiNationId, playerNationId) {
+export function getWarContextForAI(aiNationId, playerNationId) {
   const ws = getWarScore(playerNationId, aiNationId);
   if (!ws.war) return '';
 
@@ -461,7 +461,7 @@ armistice_turns: всегда 60 (5 лет перемирия).
 
 // ── Публичное API ─────────────────────────────────────────────────────────────
 
-const WarScoreEngine = {
+export const WarScoreEngine = {
   init:        ensureWarsArray,
   initWar,
   endWar,
@@ -478,3 +478,22 @@ const WarScoreEngine = {
   getWarContextForAI,
   CFG: WAR_SCORE_CFG,
 };
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.WAR_SCORE_CFG = WAR_SCORE_CFG;
+window.WarScoreEngine = WarScoreEngine;
+window.addWarScore = addWarScore;
+window.calcPeaceTermsCost = calcPeaceTermsCost;
+window.endWar = endWar;
+window.ensureWarsArray = ensureWarsArray;
+window.evaluateAIWarPosition = evaluateAIWarPosition;
+window.getActiveWar = getActiveWar;
+window.getWarContextForAI = getWarContextForAI;
+window.getWarScore = getWarScore;
+window.initWar = initWar;
+window.onBattleResult = onBattleResult;
+window.onNavalBattle = onNavalBattle;
+window.onSiegeComplete = onSiegeComplete;
+window.processBlockadeTick = processBlockadeTick;
+window.processHoldingTick = processHoldingTick;
+

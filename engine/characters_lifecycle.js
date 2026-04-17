@@ -5,7 +5,7 @@
 // ПЕРСОНАЖИ — СТАРЕНИЕ И СМЕРТЬ
 // ──────────────────────────────────────────────────────────────
 
-function agingCharacters() {
+export function agingCharacters() {
   // Раз в год (ход 12, 24, ...) стареем персонажей
   if (GAME_STATE.turn % 12 !== 0) return;
 
@@ -20,7 +20,7 @@ function agingCharacters() {
   }
 }
 
-function checkCharacterDeaths() {
+export function checkCharacterDeaths() {
   for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
     for (const char of (nation.characters || [])) {
       if (!char.alive) continue;
@@ -63,7 +63,7 @@ function checkCharacterDeaths() {
   }
 }
 
-function maybeSpawnCharacter() {
+export function maybeSpawnCharacter() {
   // Каждые 10 ходов 20% шанс нового персонажа для игрока
   if (GAME_STATE.turn % 10 !== 0) return;
   if (Math.random() > 0.2) return;
@@ -78,7 +78,9 @@ function maybeSpawnCharacter() {
   generateNewCharacter(GAME_STATE.player_nation).catch(console.error);
 }
 
-// ── window.* экспорты ──
-window.agingCharacters      = agingCharacters;
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.agingCharacters = agingCharacters;
 window.checkCharacterDeaths = checkCharacterDeaths;
-window.maybeSpawnCharacter  = maybeSpawnCharacter;
+window.maybeSpawnCharacter = maybeSpawnCharacter;
+

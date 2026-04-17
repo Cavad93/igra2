@@ -3,8 +3,11 @@
 // и фоновый AI-цикл (Super-OU).
 // Вынесено из engine/turn.js (Этап 50).
 
+import { CONFIG } from '../config.js';
+import { SuperOU } from './super_ou.js';
+
 // ── Фоновый AI: кэш решений и флаг цикла ────────────────────────────────
-const _aiPending = new Map();
+export const _aiPending = new Map();
 let _aiBgRunning = false;
 
 // ══════════════════════════════════════════════════════════════════════
@@ -42,7 +45,7 @@ function _getAIHttpWorker() {
   }
 }
 
-function _callGroqViaWorker(system, user, maxTokens) {
+export function _callGroqViaWorker(system, user, maxTokens) {
   if (!CONFIG?.GROQ_API_KEY) return null;
   const worker = _getAIHttpWorker();
   if (!worker) return null;
@@ -66,14 +69,14 @@ function _callGroqViaWorker(system, user, maxTokens) {
 // ФОНОВЫЙ AI-ЦИКЛ
 // ══════════════════════════════════════════════════════════════════════
 
-function startAIBackgroundLoop() {
+export function startAIBackgroundLoop() {
   if (_aiBgRunning) return;
   _aiBgRunning = true;
   console.log('[ai_bg] Фоновый AI-цикл запущен');
   _aiBgTick();
 }
 
-function stopAIBackgroundLoop() {
+export function stopAIBackgroundLoop() {
   _aiBgRunning = false;
   console.log('[ai_bg] Фоновый AI-цикл остановлен');
 }
@@ -90,8 +93,7 @@ async function _aiBgTick() {
 
 async function _aiBgProcess() {
   if (!GAME_STATE?.nations || IS_PROCESSING_TURN) return;
-  const superOU = typeof window !== 'undefined' ? window.SuperOU : null;
-  if (!superOU) return;
+  if (!SuperOU) return;
 
   const tier1 = [], tier2 = [];
   for (const [nId, n] of Object.entries(GAME_STATE.nations)) {
@@ -183,7 +185,7 @@ async function _aiBgProcess() {
   const t0 = Date.now();
   let decision = null;
   try {
-    const ouResult = superOU.tick(GAME_STATE, nationId);
+    const ouResult = SuperOU.tick(GAME_STATE, nationId);
     if (ouResult?.actions?.length) {
       const top = ouResult.actions[0];
       decision = { action: top.action, target: top.target ?? null, reasoning: `SuperOU p=${top.prob?.toFixed(2)}` };
@@ -200,8 +202,10 @@ async function _aiBgProcess() {
   }
 }
 
-// ── Экспорт через window ──────────────────────────────────────────────
-window._aiPending           = _aiPending;
-window._callGroqViaWorker   = _callGroqViaWorker;
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window._aiPending = _aiPending;
+window._callGroqViaWorker = _callGroqViaWorker;
 window.startAIBackgroundLoop = startAIBackgroundLoop;
-window.stopAIBackgroundLoop  = stopAIBackgroundLoop;
+window.stopAIBackgroundLoop = stopAIBackgroundLoop;
+

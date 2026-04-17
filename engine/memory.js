@@ -15,7 +15,9 @@
 //   6. getDialogueContext() → последние диалоги с нацией → строка в промпт
 // ══════════════════════════════════════════════════════════════════════
 
-const MEMORY_CFG = {
+import { CONFIG } from '../config.js';
+
+export const MEMORY_CFG = {
   RECENT_TURNS:       120,  // ходов (10 лет) — полное хранение
   COMPRESS_INTERVAL:   12,  // запускать компрессию каждые N ходов
   COMPRESS_BATCH:      12,  // ходов в одном сжимаемом batch
@@ -32,7 +34,7 @@ const MEMORY_CFG = {
 // ИНИЦИАЛИЗАЦИЯ
 // ══════════════════════════════════════════════════════════════════════
 
-function _ensureMemory(nationId) {
+export function _ensureMemory(nationId) {
   const nation = GAME_STATE.nations?.[nationId];
   if (!nation) return null;
   if (!nation.memory) {
@@ -53,7 +55,7 @@ function _ensureMemory(nationId) {
  * @param {string[]} [involvedNations] — другие нации-участники (для перекрёстной записи)
  * @param {'haiku'|'sonnet'|'fallback'|'player'|null} [model] — кто принял решение
  */
-function addMemoryEvent(nationId, type, text, involvedNations, model) {
+export function addMemoryEvent(nationId, type, text, involvedNations, model) {
   const mem = _ensureMemory(nationId);
   if (!mem) return;
 
@@ -85,7 +87,7 @@ function addMemoryEvent(nationId, type, text, involvedNations, model) {
  * @param {'user'|'assistant'|'system'} role
  * @param {string} text
  */
-function addDialogueMessage(nationId, partnerId, role, text) {
+export function addDialogueMessage(nationId, partnerId, role, text) {
   const mem = _ensureMemory(nationId);
   if (!mem) return;
 
@@ -110,7 +112,7 @@ function addDialogueMessage(nationId, partnerId, role, text) {
  * Строка контекста для промпта решения AI-нации.
  * Включает архивные сводки + последние события.
  */
-function getDecisionContext(nationId) {
+export function getDecisionContext(nationId) {
   const mem = _ensureMemory(nationId);
   if (!mem) return '';
 
@@ -150,7 +152,7 @@ function getDecisionContext(nationId) {
  * @param {'sonnet'|'haiku'|'fallback'} receivingModel — кто ПОЛУЧАЕТ контекст
  * @returns {string}
  */
-function getHandoffContext(nationId, receivingModel) {
+export function getHandoffContext(nationId, receivingModel) {
   const mem = GAME_STATE.nations?.[nationId]?.memory;
   if (!mem) return '';
 
@@ -212,7 +214,7 @@ function getHandoffContext(nationId, receivingModel) {
 /**
  * История диалогов с конкретной нацией (для системного промпта дипломатии).
  */
-function getDialogueContext(nationId, partnerId) {
+export function getDialogueContext(nationId, partnerId) {
   const mem = GAME_STATE.nations?.[nationId]?.memory;
   const msgs = mem?.dialogues?.[partnerId];
   if (!msgs || msgs.length === 0) return '';
@@ -231,7 +233,7 @@ function getDialogueContext(nationId, partnerId) {
 // ТИК ПАМЯТИ — вызывается каждый ход из processTurn()
 // ══════════════════════════════════════════════════════════════════════
 
-function processMemoryTick() {
+export function processMemoryTick() {
   const turn = GAME_STATE.turn ?? 1;
   if (turn % MEMORY_CFG.COMPRESS_INTERVAL !== 0) return; // только каждые 12 ходов
 
@@ -246,7 +248,7 @@ function processMemoryTick() {
 // КОМПРЕССИЯ СТАРЫХ СОБЫТИЙ → АРХИВ
 // ══════════════════════════════════════════════════════════════════════
 
-function _scheduleCompression(nationId, currentTurn) {
+export function _scheduleCompression(nationId, currentTurn) {
   const mem = _ensureMemory(nationId);
   if (!mem) return;
 
@@ -276,7 +278,7 @@ function _scheduleCompression(nationId, currentTurn) {
   }
 }
 
-async function _compressBatchAsync(nationId, fromTurn, toTurn, events) {
+export async function _compressBatchAsync(nationId, fromTurn, toTurn, events) {
   const mem    = GAME_STATE.nations?.[nationId]?.memory;
   const nation = GAME_STATE.nations?.[nationId];
   if (!mem || !nation) return;
@@ -323,7 +325,7 @@ ${eventText}
 /**
  * Вернуть краткую статистику памяти нации (для отладки).
  */
-function getMemoryStats(nationId) {
+export function getMemoryStats(nationId) {
   const mem = GAME_STATE.nations?.[nationId]?.memory;
   if (!mem) return null;
   return {
@@ -334,3 +336,17 @@ function getMemoryStats(nationId) {
     ),
   };
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.MEMORY_CFG = MEMORY_CFG;
+window._compressBatchAsync = _compressBatchAsync;
+window._ensureMemory = _ensureMemory;
+window._scheduleCompression = _scheduleCompression;
+window.addDialogueMessage = addDialogueMessage;
+window.addMemoryEvent = addMemoryEvent;
+window.getDecisionContext = getDecisionContext;
+window.getDialogueContext = getDialogueContext;
+window.getHandoffContext = getHandoffContext;
+window.getMemoryStats = getMemoryStats;
+window.processMemoryTick = processMemoryTick;
+

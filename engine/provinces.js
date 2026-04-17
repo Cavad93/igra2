@@ -23,15 +23,17 @@
 // Загружать ДО engine/economy.js в index.html.
 // ══════════════════════════════════════════════════════════════
 
-const _PROVINCE_TRANSPORT_BASE = 0.15;  // +15% базовая надбавка
-const _PROVINCE_ROAD_DISCOUNT  = 0.05;  // −5% за наличие дорог
+import { GOODS } from '../data/goods.js';
+
+export const _PROVINCE_TRANSPORT_BASE = 0.15;  // +15% базовая надбавка
+export const _PROVINCE_ROAD_DISCOUNT  = 0.05;  // −5% за наличие дорог
 
 // ──────────────────────────────────────────────────────────────
 // initProvinces()
 //
 // Вызывается ОДИН РАЗ при initGame().
 // ──────────────────────────────────────────────────────────────
-function initProvinces() {
+export function initProvinces() {
   if (!GAME_STATE.provinces) GAME_STATE.provinces = {};
 
   for (const [rid, region] of Object.entries(GAME_STATE.regions)) {
@@ -69,7 +71,7 @@ function initProvinces() {
 // с основной культурой нации (по populace, не по REGION_CULTURES.primary).
 // Возвращает 0–1.
 // ──────────────────────────────────────────────────────────────
-function _provinceCulturalPresence(nationId, provRegions) {
+export function _provinceCulturalPresence(nationId, provRegions) {
   if (typeof getNationPrimaryCulture !== 'function') return 0;
 
   const nationCulture = getNationPrimaryCulture(nationId);
@@ -105,7 +107,7 @@ function _provinceCulturalPresence(nationId, provRegions) {
 // effective_control[n] = area_control[n] × 0.70
 //                      + min(1, influence_bonus[n]) × 0.30
 // ──────────────────────────────────────────────────────────────
-function calculateProvinceControl() {
+export function calculateProvinceControl() {
   if (!GAME_STATE.provinces) return;
 
   for (const prov of Object.values(GAME_STATE.provinces)) {
@@ -182,7 +184,7 @@ function calculateProvinceControl() {
 }
 
 // Алиас — вызывается из economy.js (шаг 1.5а)
-const updateProvinceControl = calculateProvinceControl;
+export const updateProvinceControl = calculateProvinceControl;
 
 // ──────────────────────────────────────────────────────────────
 // getProvinceMarketAccess(nationId, provinceTag)
@@ -195,7 +197,7 @@ const updateProvinceControl = calculateProvinceControl;
 //   'trade_only' — 20–49%: торговля без налогов, цена +15%
 //   'none'       — < 20%: провинциальный рынок недоступен
 // ──────────────────────────────────────────────────────────────
-function getProvinceMarketAccess(nationId, provinceTag) {
+export function getProvinceMarketAccess(nationId, provinceTag) {
   const prov = GAME_STATE.provinces?.[provinceTag];
   if (!prov) return { fraction: 0, price_modifier: 1.0, tax_fraction: 0, access_tier: 'none' };
 
@@ -231,7 +233,7 @@ function getProvinceMarketAccess(nationId, provinceTag) {
 //   • Потеря доступа (падение ниже 20%)
 //   • Восстановление контроля (рост выше 80%)
 // ──────────────────────────────────────────────────────────────
-function checkProvinceControlEvents() {
+export function checkProvinceControlEvents() {
   if (!GAME_STATE.provinces) return;
   if (typeof addEventLog !== 'function') return;
 
@@ -291,7 +293,7 @@ function checkProvinceControlEvents() {
 // Каждый тик (шаг 1.5б, после routeProductionToLocalStockpiles).
 // Агрегирует local_stockpile всех регионов провинции.
 // ──────────────────────────────────────────────────────────────
-function buildProvinceMarket() {
+export function buildProvinceMarket() {
   if (!GAME_STATE.provinces) return;
 
   for (const prov of Object.values(GAME_STATE.provinces)) {
@@ -325,7 +327,7 @@ function buildProvinceMarket() {
 // ──────────────────────────────────────────────────────────────
 // getRegionProvince(rid)
 // ──────────────────────────────────────────────────────────────
-function getRegionProvince(rid) {
+export function getRegionProvince(rid) {
   const region = GAME_STATE.regions?.[rid];
   const tag    = Array.isArray(region?.tags) ? region.tags[0] : null;
   if (!tag || !GAME_STATE.provinces?.[tag]) return null;
@@ -341,7 +343,7 @@ function getRegionProvince(rid) {
 //
 // Возвращает строку '#rrggbb' или null (если нет данных).
 // ──────────────────────────────────────────────────────────────
-function getProvinceBlendColor(regionId) {
+export function getProvinceBlendColor(regionId) {
   const region = GAME_STATE.regions?.[regionId];
   if (!region) return null;
 
@@ -372,7 +374,7 @@ function getProvinceBlendColor(regionId) {
 }
 
 // ── вспомогательная: смешать два hex-цвета ─────────────────────
-function _blendHexColors(c1, c2, t) {
+export function _blendHexColors(c1, c2, t) {
   const parse = c => [
     parseInt(c.slice(1, 3), 16),
     parseInt(c.slice(3, 5), 16),
@@ -385,3 +387,18 @@ function _blendHexColors(c1, c2, t) {
   const b = Math.round(b1*(1-t) + b2*t);
   return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window._PROVINCE_ROAD_DISCOUNT = _PROVINCE_ROAD_DISCOUNT;
+window._PROVINCE_TRANSPORT_BASE = _PROVINCE_TRANSPORT_BASE;
+window._blendHexColors = _blendHexColors;
+window._provinceCulturalPresence = _provinceCulturalPresence;
+window.buildProvinceMarket = buildProvinceMarket;
+window.calculateProvinceControl = calculateProvinceControl;
+window.checkProvinceControlEvents = checkProvinceControlEvents;
+window.getProvinceBlendColor = getProvinceBlendColor;
+window.getProvinceMarketAccess = getProvinceMarketAccess;
+window.getRegionProvince = getRegionProvince;
+window.initProvinces = initProvinces;
+window.updateProvinceControl = updateProvinceControl;
+

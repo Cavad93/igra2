@@ -14,9 +14,12 @@
 //                     processReligionEvents(), checkReligiousCrisis()
 // ══════════════════════════════════════════════════════════════════════════
 
+import { CONFIG } from '../config.js';
+import { MAP_REGIONS } from '../data/map.js';
+
 // ── ИНИЦИАЛИЗАЦИЯ ────────────────────────────────────────────────────────
 
-function initReligions() {
+export function initReligions() {
   if (GAME_STATE.religions) return; // уже инициализировано (загрузка)
 
   GAME_STATE.religions = {};
@@ -39,7 +42,7 @@ function initReligions() {
   _initDogmas();
 }
 
-function _initDogmas() {
+export function _initDogmas() {
   if (GAME_STATE.religion_dogmas) return; // уже есть (из сохранения)
   if (typeof RELIGION_DOGMAS === 'undefined') return;
 
@@ -54,7 +57,7 @@ function _initDogmas() {
   }
 }
 
-function initRegionReligions() {
+export function initRegionReligions() {
   if (GAME_STATE.region_religions) return;
 
   GAME_STATE.region_religions = {};
@@ -81,7 +84,7 @@ function initRegionReligions() {
   }
 }
 
-function _inferReligionFromCulture(regionId) {
+export function _inferReligionFromCulture(regionId) {
   const rc = GAME_STATE.region_cultures?.[regionId];
   const cultureToReligion = {
     greek_sicilian: 'olympian',
@@ -101,7 +104,7 @@ function _inferReligionFromCulture(regionId) {
 
 // ── ГЛАВНЫЙ ТИК ──────────────────────────────────────────────────────────
 
-function religionTick() {
+export function religionTick() {
   initReligions();
   initRegionReligions();
   _initDogmas(); // гарантируем наличие догм (для старых сохранений)
@@ -145,7 +148,7 @@ function religionTick() {
 
 // ── ИНСТИТУЦИОНАЛИЗАЦИЯ ──────────────────────────────────────────────────
 
-function _updateInstitutionalization(nationId) {
+export function _updateInstitutionalization(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -191,7 +194,7 @@ function _updateInstitutionalization(nationId) {
 
 // ── ПОЛИТИКА: ПОКРОВИТЕЛЬСТВО И ГОНЕНИЯ ──────────────────────────────────
 
-function _applyReligionPolicy(nationId) {
+export function _applyReligionPolicy(nationId) {
   const policy = GAME_STATE.religion_policy?.[nationId];
   if (!policy) return;
 
@@ -243,7 +246,7 @@ function _applyReligionPolicy(nationId) {
 
 // ── РАСПРОСТРАНЕНИЕ РЕЛИГИИ ──────────────────────────────────────────────
 
-function _processReligionSpread(nationId) {
+export function _processReligionSpread(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -323,7 +326,7 @@ function _processReligionSpread(nationId) {
   }
 }
 
-function _addFervor(rr, religionId, amount) {
+export function _addFervor(rr, religionId, amount) {
   const existing = rr.beliefs.find(b => b.religion === religionId);
   if (existing) {
     existing.fervor = Math.min(1, existing.fervor + amount);
@@ -334,7 +337,7 @@ function _addFervor(rr, religionId, amount) {
 
 // ── СИНКРЕТИЗМ ───────────────────────────────────────────────────────────
 
-function _checkSyncretism() {
+export function _checkSyncretism() {
   const coexist = GAME_STATE._religion_coexist;
 
   for (const regionId of Object.keys(GAME_STATE.region_religions)) {
@@ -372,7 +375,7 @@ function _checkSyncretism() {
   }
 }
 
-function _createSyncreticReligion(relA, relB, birthRegionId) {
+export function _createSyncreticReligion(relA, relB, birthRegionId) {
   const defA = _getReligionDef(relA);
   const defB = _getReligionDef(relB);
   if (!defA || !defB) return;
@@ -428,7 +431,7 @@ function _createSyncreticReligion(relA, relB, birthRegionId) {
 
 // ── СОБЫТИЯ-ТРИГГЕРЫ ─────────────────────────────────────────────────────
 
-function _processReligionEvents(nationId) {
+export function _processReligionEvents(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -488,7 +491,7 @@ function _processReligionEvents(nationId) {
 
 // ── РЕЛИГИОЗНЫЕ КРИЗИСЫ ──────────────────────────────────────────────────
 
-function _checkReligiousCrisis(nationId) {
+export function _checkReligiousCrisis(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -530,7 +533,7 @@ function _checkReligiousCrisis(nationId) {
   }
 }
 
-function _triggerSchism(nationId, religionId) {
+export function _triggerSchism(nationId, religionId) {
   const nation = GAME_STATE.nations[nationId];
   const def = _getReligionDef(religionId);
   if (!def) return;
@@ -553,7 +556,7 @@ function _triggerSchism(nationId, religionId) {
   addEventLog(`⚡ Религиозный раскол в ${nationName}! Жречество ${def.name} раскололось — реформаторы против ортодоксов. Стабильность −8.`, 'religion');
 }
 
-function _triggerProphet(nationId) {
+export function _triggerProphet(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
@@ -580,7 +583,7 @@ function _triggerProphet(nationId) {
 
 // ── БОНУСЫ РЕЛИГИИ К НАЦИИ ──────────────────────────────────────────────
 
-function getReligionBonus(nationId, bonusType) {
+export function getReligionBonus(nationId, bonusType) {
   const nation = GAME_STATE.nations?.[nationId];
   if (!nation) return 0;
 
@@ -611,7 +614,7 @@ function getReligionBonus(nationId, bonusType) {
   return regionCount > 0 ? total / regionCount : 0;
 }
 
-function getAllReligionBonuses(nationId) {
+export function getAllReligionBonuses(nationId) {
   const nation = GAME_STATE.nations?.[nationId];
   if (!nation) return {};
 
@@ -647,7 +650,7 @@ function getAllReligionBonuses(nationId) {
 
 // ── СТАТИСТИКА ДЛЯ UI ───────────────────────────────────────────────────
 
-function getNationReligionStats(nationId) {
+export function getNationReligionStats(nationId) {
   const nation = GAME_STATE.nations?.[nationId];
   if (!nation) return { religions: [], byRegion: [], totalPopulation: 0 };
 
@@ -712,14 +715,14 @@ function getNationReligionStats(nationId) {
 
 // ── ВСПОМОГАТЕЛЬНЫЕ ──────────────────────────────────────────────────────
 
-function _getReligionDef(id) {
+export function _getReligionDef(id) {
   return RELIGIONS[id]
     || GAME_STATE.religions?.[id]
     || GAME_STATE.syncretic_religions?.[id]
     || null;
 }
 
-function _getNationDominantReligion(nationId) {
+export function _getNationDominantReligion(nationId) {
   const nation = GAME_STATE.nations?.[nationId];
   if (!nation) return null;
 
@@ -739,14 +742,14 @@ function _getNationDominantReligion(nationId) {
   return best;
 }
 
-function _getNeighborRegions(regionId, nationId) {
+export function _getNeighborRegions(regionId, nationId) {
   // Простая эвристика: другие регионы той же нации
   const nation = GAME_STATE.nations?.[nationId];
   if (!nation) return [];
   return (nation.regions || []).filter(r => r !== regionId).slice(0, 4);
 }
 
-function _isBuildingReligious(buildingName) {
+export function _isBuildingReligious(buildingName) {
   if (!buildingName) return false;
   const lower = (typeof buildingName === 'string') ? buildingName.toLowerCase() : '';
   return lower.includes('храм') || lower.includes('temple')
@@ -754,11 +757,11 @@ function _isBuildingReligious(buildingName) {
     || lower.includes('алтарь') || lower.includes('altar');
 }
 
-function _clamp(val, min, max) {
+export function _clamp(val, min, max) {
   return Math.min(max, Math.max(min, val));
 }
 
-function _blendColors(colorA, colorB) {
+export function _blendColors(colorA, colorB) {
   const parseHex = (hex) => {
     const c = hex.replace('#', '');
     return [parseInt(c.slice(0, 2), 16), parseInt(c.slice(2, 4), 16), parseInt(c.slice(4, 6), 16)];
@@ -776,7 +779,7 @@ function _blendColors(colorA, colorB) {
 
 // ── ДОГМЫ: ДРИФТ ДОКТРИН ────────────────────────────────────────────────
 
-function _processDogmaDrift() {
+export function _processDogmaDrift() {
   if (!GAME_STATE.religion_dogmas) return;
   if (typeof DOCTRINE_AXES === 'undefined') return;
 
@@ -840,7 +843,7 @@ function _processDogmaDrift() {
 
 // ── ДОГМЫ: МУТАЦИИ КАНОНОВ ──────────────────────────────────────────────
 
-function _processCanonMutations() {
+export function _processCanonMutations() {
   if (!GAME_STATE.religion_dogmas) return;
   if (typeof CANONS === 'undefined') return;
 
@@ -917,7 +920,7 @@ function _processCanonMutations() {
   }
 }
 
-function _evaluateCanonMutation(need, ctx) {
+export function _evaluateCanonMutation(need, ctx) {
   if (!need) return 1.0;
   let score = 1.0;
 
@@ -944,7 +947,7 @@ function _evaluateCanonMutation(need, ctx) {
   return _clamp(score, 0, 2);
 }
 
-function _findNationForReligion(relId) {
+export function _findNationForReligion(relId) {
   // Находим нацию, где данная религия доминирует
   for (const nationId of Object.keys(GAME_STATE.nations || {})) {
     const dominant = _getNationDominantReligion(nationId);
@@ -955,7 +958,7 @@ function _findNationForReligion(relId) {
 
 // ── ДОГМЫ: БОНУСЫ К НАЦИИ ──────────────────────────────────────────────
 
-function getDogmaBonus(nationId, bonusType) {
+export function getDogmaBonus(nationId, bonusType) {
   if (!GAME_STATE.religion_dogmas) return 0;
   if (typeof CANONS === 'undefined' || typeof DOCTRINE_AXES === 'undefined') return 0;
 
@@ -991,7 +994,7 @@ function getDogmaBonus(nationId, bonusType) {
   return total;
 }
 
-function getAllDogmaBonuses(nationId) {
+export function getAllDogmaBonuses(nationId) {
   if (!GAME_STATE.religion_dogmas) return {};
   if (typeof CANONS === 'undefined' || typeof DOCTRINE_AXES === 'undefined') return {};
 
@@ -1032,7 +1035,7 @@ function getAllDogmaBonuses(nationId) {
 
 // ── ДОГМЫ: UI ДАННЫЕ ────────────────────────────────────────────────────
 
-function getDogmaInfoForUI(religionId) {
+export function getDogmaInfoForUI(religionId) {
   if (!GAME_STATE.religion_dogmas) return null;
   if (typeof CANONS === 'undefined' || typeof DOCTRINE_AXES === 'undefined') return null;
   if (typeof CANON_CATEGORIES === 'undefined') return null;
@@ -1097,7 +1100,7 @@ function getDogmaInfoForUI(religionId) {
 
 // ── API для интерфейса управления политикой ──────────────────────────────
 
-function setReligionPatronage(nationId, religionId) {
+export function setReligionPatronage(nationId, religionId) {
   if (!GAME_STATE.religion_policy) GAME_STATE.religion_policy = {};
   if (!GAME_STATE.religion_policy[nationId]) {
     GAME_STATE.religion_policy[nationId] = { patronage: null, persecution: null };
@@ -1116,7 +1119,7 @@ function setReligionPatronage(nationId, religionId) {
   }
 }
 
-function setReligionPersecution(nationId, religionId) {
+export function setReligionPersecution(nationId, religionId) {
   if (!GAME_STATE.religion_policy) GAME_STATE.religion_policy = {};
   if (!GAME_STATE.religion_policy[nationId]) {
     GAME_STATE.religion_policy[nationId] = { patronage: null, persecution: null };
@@ -1133,3 +1136,39 @@ function setReligionPersecution(nationId, religionId) {
     addEventLog('⚔ Гонения прекращены.', 'religion');
   }
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window._addFervor = _addFervor;
+window._applyReligionPolicy = _applyReligionPolicy;
+window._blendColors = _blendColors;
+window._checkReligiousCrisis = _checkReligiousCrisis;
+window._checkSyncretism = _checkSyncretism;
+window._clamp = _clamp;
+window._createSyncreticReligion = _createSyncreticReligion;
+window._evaluateCanonMutation = _evaluateCanonMutation;
+window._findNationForReligion = _findNationForReligion;
+window._getNationDominantReligion = _getNationDominantReligion;
+window._getNeighborRegions = _getNeighborRegions;
+window._getReligionDef = _getReligionDef;
+window._inferReligionFromCulture = _inferReligionFromCulture;
+window._initDogmas = _initDogmas;
+window._isBuildingReligious = _isBuildingReligious;
+window._processCanonMutations = _processCanonMutations;
+window._processDogmaDrift = _processDogmaDrift;
+window._processReligionEvents = _processReligionEvents;
+window._processReligionSpread = _processReligionSpread;
+window._triggerProphet = _triggerProphet;
+window._triggerSchism = _triggerSchism;
+window._updateInstitutionalization = _updateInstitutionalization;
+window.getAllDogmaBonuses = getAllDogmaBonuses;
+window.getAllReligionBonuses = getAllReligionBonuses;
+window.getDogmaBonus = getDogmaBonus;
+window.getDogmaInfoForUI = getDogmaInfoForUI;
+window.getNationReligionStats = getNationReligionStats;
+window.getReligionBonus = getReligionBonus;
+window.initRegionReligions = initRegionReligions;
+window.initReligions = initReligions;
+window.religionTick = religionTick;
+window.setReligionPatronage = setReligionPatronage;
+window.setReligionPersecution = setReligionPersecution;
+

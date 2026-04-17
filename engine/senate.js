@@ -21,7 +21,7 @@
 // ── Таблица модификаторов голосования ────────────────────────────────
 // Trait/interest → { law_type: delta }
 // delta ∈ [-100, +100]; итог суммируется и зажимается в [-100, +100]
-const VOTE_MODIFIERS = {
+export const VOTE_MODIFIERS = {
   // visible traits
   'Честолюбец':      { war: +30, reform: +20 },
   'Ambitious':       { war: +30, reform: +20 },
@@ -52,13 +52,13 @@ const VOTE_MODIFIERS = {
 };
 
 // Пул скрытых интересов для случайной выдачи
-const HIDDEN_INTEREST_POOL = [
+export const HIDDEN_INTEREST_POOL = [
   'Grain_Monopolist', 'Land_Speculator', 'Arms_Dealer',
   'Cult_Follower', 'Temple_Patron', 'Slave_Owner', 'Grain_Hoarder',
   'Foreign_Agent:Carthage', 'Foreign_Agent:Rome', 'Foreign_Agent:Egypt',
 ];
 
-class SenateManager {
+export class SenateManager {
   constructor(nationId, factions) {
     this.nationId  = nationId;
     // Клонируем фракции, добавляем leader_senator_id если отсутствует
@@ -1338,13 +1338,13 @@ class SenateManager {
 // ГЛОБАЛЬНЫЙ РЕЕСТР
 // ══════════════════════════════════════════════════════════════════════
 
-const SENATE_MANAGERS = {};
+export const SENATE_MANAGERS = {};
 
-function getSenateManager(nationId) {
+export function getSenateManager(nationId) {
   return SENATE_MANAGERS[nationId] ?? null;
 }
 
-function initSenateForNation(nationId) {
+export function initSenateForNation(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation?.senate_config) return null;
   // Ранний выход: сенат только для республиканских типов правления
@@ -1361,7 +1361,7 @@ function initSenateForNation(nationId) {
   return mgr;
 }
 
-function initAllSenates() {
+export function initAllSenates() {
   for (const nationId of Object.keys(GAME_STATE.nations)) {
     initSenateForNation(nationId);
   }
@@ -1369,7 +1369,7 @@ function initAllSenates() {
 
 // Синхронизирует faction.seats из SenateManager обратно в senate_config.factions
 // Вызывается после голосований, которые могут изменить состав сената
-function syncSenateConfigFromManager(nationId) {
+export function syncSenateConfigFromManager(nationId) {
   const mgr    = getSenateManager(nationId);
   const nation = GAME_STATE.nations[nationId];
   if (!mgr || !nation?.senate_config?.factions) return;
@@ -1384,3 +1384,14 @@ function syncSenateConfigFromManager(nationId) {
   // Обновляем total_seats
   nation.senate_config.total_seats = mgr.senators.length;
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.HIDDEN_INTEREST_POOL = HIDDEN_INTEREST_POOL;
+window.SENATE_MANAGERS = SENATE_MANAGERS;
+window.SenateManager = SenateManager;
+window.VOTE_MODIFIERS = VOTE_MODIFIERS;
+window.getSenateManager = getSenateManager;
+window.initAllSenates = initAllSenates;
+window.initSenateForNation = initSenateForNation;
+window.syncSenateConfigFromManager = syncSenateConfigFromManager;
+

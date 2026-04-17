@@ -2,8 +2,10 @@
 // Динамическая формула земельной ёмкости региона
 // Вызывается каждый ход после processDemography(), перед runEconomyTick()
 
+import { BUILDINGS } from '../data/buildings.js';
+
 // ── БИОМНЫЕ КОЭФФИЦИЕНТЫ ─────────────────────────────────────────────────────
-const BIOME_LAND_PARAMS = {
+export const BIOME_LAND_PARAMS = {
 
   // Города плотные, строят вверх, земля дорогая
   // Помпеи, Карфаген, Афины — 150-300 чел/га в черте города
@@ -102,8 +104,8 @@ const BIOME_LAND_PARAMS = {
 // ── ПЛОЩАДИ ЗДАНИЙ ───────────────────────────────────────────────────────────
 // Площадь каждого здания теперь хранится в data/buildings.js как footprint_ha.
 // Вспомогательная функция читает её оттуда — дублирования нет.
-function getBuildingFootprint(buildingId) {
-  if (typeof BUILDINGS !== 'undefined' && BUILDINGS[buildingId]) {
+export function getBuildingFootprint(buildingId) {
+  if (BUILDINGS && BUILDINGS[buildingId]) {
     return BUILDINGS[buildingId].footprint_ha ?? 0;
   }
   return 0;
@@ -116,7 +118,7 @@ function getBuildingFootprint(buildingId) {
  * @param {string} regionId — ключ региона, например "r246"
  * @returns {object} полный расчёт земельного баланса
  */
-function calcRegionLandCapacity(region, regionId) {
+export function calcRegionLandCapacity(region, regionId) {
 
   // Определяем биом: из объекта региона или из REGION_BIOMES
   const numId  = String(regionId).replace('r', '');
@@ -224,3 +226,9 @@ function calcRegionLandCapacity(region, regionId) {
     ),
   };
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.BIOME_LAND_PARAMS = BIOME_LAND_PARAMS;
+window.calcRegionLandCapacity = calcRegionLandCapacity;
+window.getBuildingFootprint = getBuildingFootprint;
+

@@ -1,6 +1,9 @@
 // Главный игровой цикл — один ход = один месяц
 
-let IS_PROCESSING_TURN = false;
+import { CONFIG } from '../config.js';
+import { _aiPending } from './ai_worker.js';
+
+export let IS_PROCESSING_TURN = false;
 
 // _aiPending, _aiBgRunning — вынесены в engine/ai_worker.js (Этап 50)
 
@@ -12,7 +15,7 @@ let IS_PROCESSING_TURN = false;
 // ──────────────────────────────────────────────────────────────
 
 // Гарантирует минимальную структуру нации перед обработкой хода
-function _ensureNationDefaults(nation) {
+export function _ensureNationDefaults(nation) {
   if (!nation.economy)                    nation.economy    = {};
   if (!nation.economy.stockpile)          nation.economy.stockpile = {};
   if (nation.economy.treasury == null)    nation.economy.treasury  = 0;
@@ -36,7 +39,7 @@ function _ensureNationDefaults(nation) {
   }
 }
 
-async function processTurn() {
+export async function processTurn() {
   if (IS_PROCESSING_TURN) return;
   IS_PROCESSING_TURN = true;
 
@@ -381,7 +384,7 @@ async function processTurn() {
 // AI НАЦИИ — РЕШЕНИЯ
 // ──────────────────────────────────────────────────────────────
 
-async function processAINations() {
+export async function processAINations() {
   // Шаг 51: очищаем старые индикаторы AI-действий — перед сбором нового пула.
   if (typeof window !== 'undefined' && typeof window.clearAIIndicators === 'function') {
     try { window.clearAIIndicators(); } catch (e) { console.warn('[ai_indicators] clear:', e); }
@@ -567,7 +570,7 @@ async function processAINations() {
 // ИТОГИ ХОДА — записываем дельты для сводного экрана
 // ──────────────────────────────────────────────────────────────
 
-function _recordTurnSummary() {
+export function _recordTurnSummary() {
   if (!GAME_STATE._turn_summary_history) GAME_STATE._turn_summary_history = [];
 
   const nationId = GAME_STATE.player_nation;
@@ -632,3 +635,14 @@ function _recordTurnSummary() {
 // — вынесены в engine/save.js (Этап 52)
 
 // initGame, renderAll — вынесены в engine/init.js (Этап 53)
+
+// ── Window binding for data-action="processTurn" delegation in boot.js ──
+window.processTurn = processTurn;
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.IS_PROCESSING_TURN = IS_PROCESSING_TURN;
+window._ensureNationDefaults = _ensureNationDefaults;
+window._recordTurnSummary = _recordTurnSummary;
+window.processAINations = processAINations;
+window.processTurn = processTurn;
+

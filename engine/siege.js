@@ -12,7 +12,9 @@
 // Штурм: возможен при progress≥50 | garrison_morale≤30 (риск: +20% потерь)
 // ══════════════════════════════════════════════════════════════════════
 
-const SIEGE_CFG = {
+import { MAP_REGIONS } from '../data/map.js';
+
+export const SIEGE_CFG = {
   // Сопротивление крепости по уровню (уменьшает прогресс)
   FORTRESS_RESIST: { 1: 20, 2: 40, 3: 55, 4: 70, 5: 85 },
 
@@ -43,7 +45,7 @@ const SIEGE_CFG = {
  * @param {number} fortressLevel - 1-5
  * @param {number} garrison - начальный гарнизон
  */
-function beginSiege(attackerArmy, regionId, fortressLevel, garrison) {
+export function beginSiege(attackerArmy, regionId, fortressLevel, garrison) {
   if (!GAME_STATE.sieges) GAME_STATE.sieges = [];
 
   // Уже осаждается?
@@ -108,7 +110,7 @@ function beginSiege(attackerArmy, regionId, fortressLevel, garrison) {
 
 // ── Ход осады ─────────────────────────────────────────────────────────
 
-function processSiegeTicks() {
+export function processSiegeTicks() {
   const sieges = GAME_STATE.sieges ?? [];
 
   for (const siege of sieges) {
@@ -213,7 +215,7 @@ function processSiegeTicks() {
  * Немедленный штурм крепости — рискованно, но быстро.
  * @returns {Object|null} результат штурма
  */
-function stormAssault(armyId, siegeId) {
+export function stormAssault(armyId, siegeId) {
   const army  = typeof getArmy === 'function' ? getArmy(armyId) : null;
   const siege = (GAME_STATE.sieges ?? []).find(s => s.id === siegeId);
 
@@ -251,7 +253,7 @@ function stormAssault(armyId, siegeId) {
 
 // ── Снятие осады ─────────────────────────────────────────────────────
 
-function liftSiege(armyId) {
+export function liftSiege(armyId) {
   const army = typeof getArmy === 'function' ? getArmy(armyId) : null;
   if (!army || !army.siege_id) return;
 
@@ -270,7 +272,7 @@ function liftSiege(armyId) {
 /**
  * Рассчитать ожидаемое число ходов до капитуляции.
  */
-function estimateSiegeDuration(armyId, regionId) {
+export function estimateSiegeDuration(armyId, regionId) {
   const army   = typeof getArmy === 'function' ? getArmy(armyId) : null;
   const region = _getRegionData(regionId);
   if (!army || !region) return null;
@@ -297,7 +299,7 @@ function estimateSiegeDuration(armyId, regionId) {
 
 // ── Завершение осады ──────────────────────────────────────────────────
 
-function _completeSiege(siege, winArmy, cause) {
+export function _completeSiege(siege, winArmy, cause) {
   siege.status = 'captured';
   if (winArmy) {
     winArmy.state    = 'stationed';
@@ -337,11 +339,23 @@ function _completeSiege(siege, winArmy, cause) {
   if (gr) gr.garrison = Math.max(100, Math.round((siege.garrison ?? 0) * 0.1));
 }
 
-function _getRegionData(regionId) {
+export function _getRegionData(regionId) {
   return GAME_STATE.regions?.[regionId]
     ?? (typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[regionId] : null);
 }
 
-function _landTotal(u) {
+export function _landTotal(u) {
   return (u.infantry ?? 0) + (u.cavalry ?? 0) + (u.mercenaries ?? 0) + (u.artillery ?? 0);
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.SIEGE_CFG = SIEGE_CFG;
+window._completeSiege = _completeSiege;
+window._getRegionData = _getRegionData;
+window._landTotal = _landTotal;
+window.beginSiege = beginSiege;
+window.estimateSiegeDuration = estimateSiegeDuration;
+window.liftSiege = liftSiege;
+window.processSiegeTicks = processSiegeTicks;
+window.stormAssault = stormAssault;
+

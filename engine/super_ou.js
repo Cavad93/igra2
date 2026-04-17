@@ -5,7 +5,7 @@
 
 // ─── CONFIGURATION ────────────────────────────────────────────────────────────
 
-const SUPER_OU_CONFIG = {
+export const SUPER_OU_CONFIG = {
   // Core OU parameters
   defaultTheta:        0.15,   // mean-reversion speed
   defaultSigma:        0.05,   // volatility scale
@@ -48,7 +48,7 @@ const SUPER_OU_CONFIG = {
 
 // ─── STATE VECTOR SCHEMA — ECONOMY (80 vars) ─────────────────────────────────
 
-const ECONOMY_SCHEMA = [
+export const ECONOMY_SCHEMA = [
   { name:'gdp_growth',            mu:0.03,  sigma:0.02, theta:0.2, min:-0.3,  max:0.3,  category:'economy' },
   { name:'inflation_rate',        mu:0.04,  sigma:0.02, theta:0.2, min:-0.1,  max:1.0,  category:'economy' },
   { name:'unemployment_rate',     mu:0.07,  sigma:0.02, theta:0.15,min:0.0,   max:0.5,  category:'economy' },
@@ -137,7 +137,7 @@ const ECONOMY_SCHEMA = [
  * @param {object} nation
  * @returns {Array} array of variable state objects
  */
-function _initEconomyVector(nation) {
+export function _initEconomyVector(nation) {
   const src = (nation && nation.economy) || {};
   return ECONOMY_SCHEMA.map(s => ({
     name:     s.name,
@@ -153,7 +153,7 @@ function _initEconomyVector(nation) {
 
 // ─── STATE VECTOR SCHEMA — MILITARY (80 vars) ────────────────────────────────
 
-const MILITARY_SCHEMA = [
+export const MILITARY_SCHEMA = [
   { name:'army_size',               mu:0.3,   sigma:0.04, theta:0.1, min:0.0,   max:1.0,  category:'military' },
   { name:'navy_size',               mu:0.2,   sigma:0.03, theta:0.1, min:0.0,   max:1.0,  category:'military' },
   { name:'air_force_size',          mu:0.2,   sigma:0.03, theta:0.1, min:0.0,   max:1.0,  category:'military' },
@@ -241,7 +241,7 @@ const MILITARY_SCHEMA = [
  * @param {object} nation
  * @returns {Array} array of variable state objects
  */
-function _initMilitaryVector(nation) {
+export function _initMilitaryVector(nation) {
   const src = (nation && nation.military) || {};
   return MILITARY_SCHEMA.map(s => ({
     name:     s.name,
@@ -257,7 +257,7 @@ function _initMilitaryVector(nation) {
 
 // ─── STATE VECTOR SCHEMA — DIPLOMACY (80 vars) ───────────────────────────────
 
-const DIPLOMACY_SCHEMA = [
+export const DIPLOMACY_SCHEMA = [
   { name:'global_reputation',        mu:0.5,  sigma:0.04, theta:0.05, min:0.0, max:1.0, category:'diplomacy' },
   { name:'alliance_count',           mu:0.3,  sigma:0.04, theta:0.08, min:0.0, max:1.0, category:'diplomacy' },
   { name:'enemy_count',              mu:0.1,  sigma:0.03, theta:0.1,  min:0.0, max:1.0, category:'diplomacy' },
@@ -345,7 +345,7 @@ const DIPLOMACY_SCHEMA = [
  * @param {object} nation
  * @returns {Array} array of variable state objects
  */
-function _initDiplomacyVector(nation) {
+export function _initDiplomacyVector(nation) {
   const src = (nation && nation.diplomacy) || {};
   return DIPLOMACY_SCHEMA.map(s => ({
     name:     s.name,
@@ -361,7 +361,7 @@ function _initDiplomacyVector(nation) {
 
 // ─── POLITICS SCHEMA ──────────────────────────────────────────────────────────
 
-const POLITICS_SCHEMA = [
+export const POLITICS_SCHEMA = [
   { name:'regime_stability',        mu:0.65, sigma:0.06, theta:0.10, min:0.0, max:1.0, category:'politics' },
   { name:'government_legitimacy',   mu:0.60, sigma:0.05, theta:0.08, min:0.0, max:1.0, category:'politics' },
   { name:'popular_support',         mu:0.55, sigma:0.07, theta:0.12, min:0.0, max:1.0, category:'politics' },
@@ -449,7 +449,7 @@ const POLITICS_SCHEMA = [
  * @param {object} nation
  * @returns {Array} array of variable state objects
  */
-function _initPoliticsVector(nation) {
+export function _initPoliticsVector(nation) {
   const src = (nation && nation.politics) || {};
   return POLITICS_SCHEMA.map(s => ({
     name:     s.name,
@@ -465,7 +465,7 @@ function _initPoliticsVector(nation) {
 
 // ─── GOALS SCHEMA ─────────────────────────────────────────────────────────────
 
-const GOALS_SCHEMA = [
+export const GOALS_SCHEMA = [
   { name:'expansion_drive',         mu:0.30, sigma:0.05, theta:0.08, min:0.0, max:1.0, category:'goals' },
   { name:'survival_imperative',     mu:0.70, sigma:0.04, theta:0.06, min:0.0, max:1.0, category:'goals' },
   { name:'wealth_accumulation',     mu:0.55, sigma:0.05, theta:0.07, min:0.0, max:1.0, category:'goals' },
@@ -553,7 +553,7 @@ const GOALS_SCHEMA = [
  * @param {object} nation
  * @returns {Array} array of variable state objects
  */
-function _initGoalsVector(nation) {
+export function _initGoalsVector(nation) {
   const src = (nation && nation.goals) || {};
   return GOALS_SCHEMA.map(s => ({
     name:     s.name,
@@ -573,7 +573,7 @@ function _initGoalsVector(nation) {
  * Box-Muller transform — returns standard normal N(0,1) sample.
  * @returns {number}
  */
-function gaussian() {
+export function gaussian() {
   let u, v;
   do { u = Math.random(); } while (u === 0);
   do { v = Math.random(); } while (v === 0);
@@ -583,7 +583,7 @@ function gaussian() {
 /**
  * Clamp value between min and max.
  */
-function clamp(x, min, max) {
+export function clamp(x, min, max) {
   return Math.min(Math.max(x, min), max);
 }
 
@@ -594,7 +594,7 @@ function clamp(x, min, max) {
  * @param {number} dt
  * @returns {number} new value (clamped)
  */
-function _ouStep(variable, dt = 1) {
+export function _ouStep(variable, dt = 1) {
   const { current, mu, sigma, min, max } = variable;
   // ST_020: use theta override if set (betrayal memory slowdown)
   const theta = variable._theta_override ?? variable.theta;
@@ -610,7 +610,7 @@ function _ouStep(variable, dt = 1) {
  * Calls all 5 _init functions and stores results in nation._ou
  * @param {object} nation
  */
-function initNation(nation) {
+export function initNation(nation) {
   nation._ou = {
     economy:   _initEconomyVector(nation),
     military:  _initMilitaryVector(nation),
@@ -641,7 +641,7 @@ function initNation(nation) {
  * Memories older than 200 turns are forgotten.
  * Sets v._theta_override for affected variables (used in _ouStep).
  */
-function _applyBetrayalMemorySlowdown(nation, ou) {
+export function _applyBetrayalMemorySlowdown(nation, ou) {
   if (!ou._betrayal_memory || ou._betrayal_memory.length === 0) return;
 
   const currentTurn = ou.tick ?? 0;
@@ -685,7 +685,7 @@ function _applyBetrayalMemorySlowdown(nation, ou) {
  * Iterates over all 5 categories in nation._ou and applies _ouStep to each.
  * @param {object} nation
  */
-function updateState(nation) {
+export function updateState(nation) {
   const ou = nation._ou;
   const dt = SUPER_OU_CONFIG.dt;
   const categories = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
@@ -705,7 +705,7 @@ function updateState(nation) {
 // ─── MODIFIER HELPERS ────────────────────────────────────────────────────────
 
 /** Get current value of an OU variable by category + name. */
-function _getVal(ouState, category, name) {
+export function _getVal(ouState, category, name) {
   const arr = ouState[category];
   if (!arr) return 0;
   const v = arr.find(x => x.name === name);
@@ -713,7 +713,7 @@ function _getVal(ouState, category, name) {
 }
 
 /** Temporarily shift mu of a variable; record in activeModifiers. */
-function _mod(ouState, modName, category, varName, deltaMu, duration = 6) {
+export function _mod(ouState, modName, category, varName, deltaMu, duration = 6) {
   if (!ouState.activeModifiers) ouState.activeModifiers = [];
   const existing = ouState.activeModifiers.find(m => m.name === modName);
   if (existing) {
@@ -732,7 +732,7 @@ function _mod(ouState, modName, category, varName, deltaMu, duration = 6) {
 }
 
 /** Tick down active modifiers; reverse mu shift when expired. */
-function _decayModifiers(ouState) {
+export function _decayModifiers(ouState) {
   if (!ouState.activeModifiers) return;
   ouState.activeModifiers = ouState.activeModifiers.filter(m => {
     m.duration--;
@@ -750,7 +750,7 @@ function _decayModifiers(ouState) {
 
 // ─── GROUP 1 — ECONOMIC: HARVEST & AGRICULTURE ───────────────────────────────
 
-function _modGroup1_Harvest(ou) {
+export function _modGroup1_Harvest(ou) {
   const fp  = _getVal(ou, 'economy', 'food_production');
   const fc  = _getVal(ou, 'economy', 'food_consumption');
   const ao  = _getVal(ou, 'economy', 'agricultural_output');
@@ -773,7 +773,7 @@ function _modGroup1_Harvest(ou) {
 
 // ─── GROUP 2 — ECONOMIC: TRADE & COMMERCE ────────────────────────────────────
 
-function _modGroup2_Trade(ou) {
+export function _modGroup2_Trade(ou) {
   const to  = _getVal(ou, 'economy', 'trade_openness');
   const tb  = _getVal(ou, 'economy', 'trade_balance');
   const pa  = _getVal(ou, 'economy', 'port_activity');
@@ -795,7 +795,7 @@ function _modGroup2_Trade(ou) {
 
 // ─── GROUP 3 — ECONOMIC: INFRASTRUCTURE & RESOURCES ──────────────────────────
 
-function _modGroup3_Infra(ou) {
+export function _modGroup3_Infra(ou) {
   const rn  = _getVal(ou, 'economy', 'road_network_index');
   const mo  = _getVal(ou, 'economy', 'mining_output');
   const rd  = _getVal(ou, 'economy', 'resource_depletion');
@@ -818,7 +818,7 @@ function _modGroup3_Infra(ou) {
 
 // ─── GROUP 4 — ECONOMIC: TAXATION & FINANCE ──────────────────────────────────
 
-function _modGroup4_Finance(ou) {
+export function _modGroup4_Finance(ou) {
   const tr  = _getVal(ou, 'economy', 'tax_revenue');
   const ci  = _getVal(ou, 'economy', 'corruption_index');
   const dr  = _getVal(ou, 'economy', 'debt_ratio');
@@ -841,7 +841,7 @@ function _modGroup4_Finance(ou) {
 
 // ─── GROUP 5 — ECONOMIC: CRISIS & RECOVERY ───────────────────────────────────
 
-function _modGroup5_Crisis(ou) {
+export function _modGroup5_Crisis(ou) {
   const pg  = _getVal(ou, 'economy', 'population_growth');
   const ms  = _getVal(ou, 'economy', 'military_spending');
   const sl  = _getVal(ou, 'economy', 'slave_labor_dependency');
@@ -863,7 +863,7 @@ function _modGroup5_Crisis(ou) {
 
 // ─── GROUP 6 — MILITARY: WARFARE STATE ───────────────────────────────────────
 
-function _modGroup6_Warfare(ou) {
+export function _modGroup6_Warfare(ou) {
   const ac  = _getVal(ou, 'military', 'active_conflicts');
   const we  = _getVal(ou, 'military', 'war_exhaustion');
   const cr  = _getVal(ou, 'military', 'casualty_rate');
@@ -886,7 +886,7 @@ function _modGroup6_Warfare(ou) {
 
 // ─── GROUP 7 — MILITARY: ARMY QUALITY ────────────────────────────────────────
 
-function _modGroup7_ArmyQuality(ou) {
+export function _modGroup7_ArmyQuality(ou) {
   const oq  = _getVal(ou, 'military', 'officer_quality');
   const vr  = _getVal(ou, 'military', 'veteran_ratio');
   const dr  = _getVal(ou, 'military', 'desertion_rate');
@@ -910,7 +910,7 @@ function _modGroup7_ArmyQuality(ou) {
 
 // ─── GROUP 8 — MILITARY: NAVAL & LOGISTICS ───────────────────────────────────
 
-function _modGroup8_Naval(ou) {
+export function _modGroup8_Naval(ou) {
   const nv  = _getVal(ou, 'military', 'naval_vessels');
   const ns  = _getVal(ou, 'military', 'navy_size');
   const sl3 = _getVal(ou, 'military', 'supply_line_security');
@@ -933,7 +933,7 @@ function _modGroup8_Naval(ou) {
 
 // ─── GROUP 9 — MILITARY: DEFENCE & FORTIFICATION ─────────────────────────────
 
-function _modGroup9_Defence(ou) {
+export function _modGroup9_Defence(ou) {
   const fl  = _getVal(ou, 'military', 'fortification_level');
   const fn  = _getVal(ou, 'military', 'fortress_network');
   const bc  = _getVal(ou, 'military', 'border_control');
@@ -956,7 +956,7 @@ function _modGroup9_Defence(ou) {
 
 // ─── GROUP 10 — MILITARY: MORALE & DISCIPLINE ────────────────────────────────
 
-function _modGroup10_Morale(ou) {
+export function _modGroup10_Morale(ou) {
   const tm  = _getVal(ou, 'military', 'troop_morale');
   const ml2 = _getVal(ou, 'military', 'military_loyalty');
   const oq2 = _getVal(ou, 'military', 'officer_quality');
@@ -989,7 +989,7 @@ function _modGroup10_Morale(ou) {
  */
 // ─── GROUP 11 — DIPLOMACY: REPUTATION & RELATIONS ────────────────────────────
 
-function _modGroup11_DiplomacyReputation(ou) {
+export function _modGroup11_DiplomacyReputation(ou) {
   const gr  = _getVal(ou, 'diplomacy', 'global_reputation');
   const tc  = _getVal(ou, 'diplomacy', 'treaty_compliance');
   const di  = _getVal(ou, 'diplomacy', 'diplomatic_incidents');
@@ -1015,7 +1015,7 @@ function _modGroup11_DiplomacyReputation(ou) {
 
 // ─── GROUP 12 — DIPLOMACY: ALLIANCES & TREATIES ──────────────────────────────
 
-function _modGroup12_DiplomacyAlliances(ou) {
+export function _modGroup12_DiplomacyAlliances(ou) {
   const ac  = _getVal(ou, 'diplomacy', 'alliance_count');
   const ar  = _getVal(ou, 'diplomacy', 'alliance_reliability');
   const trc = _getVal(ou, 'diplomacy', 'treaty_count');
@@ -1041,7 +1041,7 @@ function _modGroup12_DiplomacyAlliances(ou) {
 
 // ─── GROUP 13 — DIPLOMACY: TRADE & ECONOMIC DIPLOMACY ────────────────────────
 
-function _modGroup13_DiplomacyTrade(ou) {
+export function _modGroup13_DiplomacyTrade(ou) {
   const tpc = _getVal(ou, 'diplomacy', 'trade_partner_count');
   const mgi = _getVal(ou, 'diplomacy', 'merchant_guild_influence');
   const tbi = _getVal(ou, 'diplomacy', 'trade_bloc_integration');
@@ -1067,7 +1067,7 @@ function _modGroup13_DiplomacyTrade(ou) {
 
 // ─── GROUP 14 — DIPLOMACY: CRISIS & ESPIONAGE ────────────────────────────────
 
-function _modGroup14_DiplomacyCrisis(ou) {
+export function _modGroup14_DiplomacyCrisis(ou) {
   const esp = _getVal(ou, 'diplomacy', 'espionage_capability');
   const ce  = _getVal(ou, 'diplomacy', 'counter_espionage');
   const coa = _getVal(ou, 'diplomacy', 'covert_operations_abroad');
@@ -1093,7 +1093,7 @@ function _modGroup14_DiplomacyCrisis(ou) {
 
 // ─── GROUP 15 — DIPLOMACY: SOFT POWER & CULTURE ──────────────────────────────
 
-function _modGroup15_DiplomacySoftPower(ou) {
+export function _modGroup15_DiplomacySoftPower(ou) {
   const sp  = _getVal(ou, 'diplomacy', 'soft_power_index');
   const ci  = _getVal(ou, 'diplomacy', 'cultural_influence');
   const rd  = _getVal(ou, 'diplomacy', 'religious_diplomacy');
@@ -1119,7 +1119,7 @@ function _modGroup15_DiplomacySoftPower(ou) {
 
 // ─── GROUP 16 — POLITICS: STABILITY & REGIME ─────────────────────────────────
 
-function _modGroup16_PoliticsStability(ou) {
+export function _modGroup16_PoliticsStability(ou) {
   const rs  = _getVal(ou, 'politics', 'regime_stability');
   const gl  = _getVal(ou, 'politics', 'government_legitimacy');
   const ps  = _getVal(ou, 'politics', 'popular_support');
@@ -1145,7 +1145,7 @@ function _modGroup16_PoliticsStability(ou) {
 
 // ─── GROUP 17 — POLITICS: LEGITIMACY & IDEOLOGY ──────────────────────────────
 
-function _modGroup17_PoliticsLegitimacy(ou) {
+export function _modGroup17_PoliticsLegitimacy(ou) {
   const ri  = _getVal(ou, 'politics', 'religious_influence');
   const ni  = _getVal(ou, 'politics', 'nationalist_sentiment');
   const pi  = _getVal(ou, 'politics', 'populism_index');
@@ -1171,7 +1171,7 @@ function _modGroup17_PoliticsLegitimacy(ou) {
 
 // ─── GROUP 18 — POLITICS: CORRUPTION & INSTITUTIONS ──────────────────────────
 
-function _modGroup18_PoliticsCorruption(ou) {
+export function _modGroup18_PoliticsCorruption(ou) {
   const cx  = _getVal(ou, 'politics', 'corruption_index');
   const be  = _getVal(ou, 'politics', 'bureaucratic_efficiency');
   const rl  = _getVal(ou, 'politics', 'rule_of_law');
@@ -1197,7 +1197,7 @@ function _modGroup18_PoliticsCorruption(ou) {
 
 // ─── GROUP 19 — POLITICS: CRISIS & CONFLICT ──────────────────────────────────
 
-function _modGroup19_PoliticsCrisis(ou) {
+export function _modGroup19_PoliticsCrisis(ou) {
   const pf  = _getVal(ou, 'politics', 'protest_frequency');
   const pin = _getVal(ou, 'politics', 'protest_intensity');
   const pv  = _getVal(ou, 'politics', 'political_violence');
@@ -1223,7 +1223,7 @@ function _modGroup19_PoliticsCrisis(ou) {
 
 // ─── GROUP 20 — POLITICS: GOVERNANCE & SOCIAL POLICY ─────────────────────────
 
-function _modGroup20_PoliticsGovernance(ou) {
+export function _modGroup20_PoliticsGovernance(ou) {
   const ws  = _getVal(ou, 'politics', 'welfare_state');
   const ps2 = _getVal(ou, 'politics', 'public_services');
   const ha  = _getVal(ou, 'politics', 'healthcare_access');
@@ -1249,7 +1249,7 @@ function _modGroup20_PoliticsGovernance(ou) {
 
 // ─── GROUP 21 — SEASONAL: SPRING (CAMPAIGNING SEASON) ────────────────────────
 
-function _modGroup21_SeasonSpring(ou) {
+export function _modGroup21_SeasonSpring(ou) {
   const tick  = ou.tick || 0;
   const phase = tick % 4; // 0=spring, 1=summer, 2=autumn, 3=winter
   if (phase !== 0) return;
@@ -1279,7 +1279,7 @@ function _modGroup21_SeasonSpring(ou) {
 
 // ─── GROUP 22 — SEASONAL: SUMMER (PEAK CAMPAIGN) ─────────────────────────────
 
-function _modGroup22_SeasonSummer(ou) {
+export function _modGroup22_SeasonSummer(ou) {
   const tick  = ou.tick || 0;
   const phase = tick % 4;
   if (phase !== 1) return;
@@ -1309,7 +1309,7 @@ function _modGroup22_SeasonSummer(ou) {
 
 // ─── GROUP 23 — SEASONAL: AUTUMN (HARVEST & CONSOLIDATION) ───────────────────
 
-function _modGroup23_SeasonAutumn(ou) {
+export function _modGroup23_SeasonAutumn(ou) {
   const tick  = ou.tick || 0;
   const phase = tick % 4;
   if (phase !== 2) return;
@@ -1339,7 +1339,7 @@ function _modGroup23_SeasonAutumn(ou) {
 
 // ─── GROUP 24 — SEASONAL: WINTER (HARDSHIP & REST) ───────────────────────────
 
-function _modGroup24_SeasonWinter(ou) {
+export function _modGroup24_SeasonWinter(ou) {
   const tick  = ou.tick || 0;
   const phase = tick % 4;
   if (phase !== 3) return;
@@ -1369,7 +1369,7 @@ function _modGroup24_SeasonWinter(ou) {
 
 // ─── GROUP 25 — MEMORY: RECENT VICTORIES & DEFEATS ───────────────────────────
 
-function _modGroup25_MemoryWar(ou) {
+export function _modGroup25_MemoryWar(ou) {
   const hist = ou.history || {};
   const recentWins  = hist.recentWins  || 0;
   const recentLoss  = hist.recentLoss  || 0;
@@ -1396,7 +1396,7 @@ function _modGroup25_MemoryWar(ou) {
 
 // ─── GROUP 26 — MEMORY: ECONOMIC BOOM & BUST CYCLES ──────────────────────────
 
-function _modGroup26_MemoryEconomy(ou) {
+export function _modGroup26_MemoryEconomy(ou) {
   const hist = ou.history || {};
   const growthStreak = hist.growthStreak || 0;
   const recessionStr = hist.recessionStr || 0;
@@ -1423,7 +1423,7 @@ function _modGroup26_MemoryEconomy(ou) {
 
 // ─── GROUP 27 — MEMORY: POLITICAL STABILITY STREAKS ──────────────────────────
 
-function _modGroup27_MemoryPolitics(ou) {
+export function _modGroup27_MemoryPolitics(ou) {
   const hist = ou.history || {};
   const stabStr   = hist.stabilityStreak || 0;
   const crisisStr = hist.crisisStreak    || 0;
@@ -1450,7 +1450,7 @@ function _modGroup27_MemoryPolitics(ou) {
 
 // ─── GROUP 28 — EVENTS: NATURAL DISASTERS ────────────────────────────────────
 
-function _modGroup28_EventsNature(ou) {
+export function _modGroup28_EventsNature(ou) {
   const wa  = _getVal(ou, 'economy',  'water_availability');
   const fp  = _getVal(ou, 'economy',  'food_production');
   const ii  = _getVal(ou, 'economy',  'infrastructure_index');
@@ -1476,7 +1476,7 @@ function _modGroup28_EventsNature(ou) {
 
 // ─── GROUP 29 — EVENTS: GREAT MEN & LEADERS ──────────────────────────────────
 
-function _modGroup29_EventsLeaders(ou) {
+export function _modGroup29_EventsLeaders(ou) {
   const gl  = _getVal(ou, 'politics', 'government_legitimacy');
   const rs  = _getVal(ou, 'politics', 'regime_stability');
   const ms  = _getVal(ou, 'military', 'soldier_morale');
@@ -1502,7 +1502,7 @@ function _modGroup29_EventsLeaders(ou) {
 
 // ─── GROUP 30 — EVENTS: CIVILIZATIONAL & EPOCHAL ─────────────────────────────
 
-function _modGroup30_EventsEpochal(ou) {
+export function _modGroup30_EventsEpochal(ou) {
   const gl  = _getVal(ou, 'politics', 'government_legitimacy');
   const gr  = _getVal(ou, 'diplomacy','global_reputation');
   const ir  = _getVal(ou, 'economy',  'innovation_rate');
@@ -1534,7 +1534,7 @@ function _modGroup30_EventsEpochal(ou) {
  * - Разные религии: rivalry_index+0.15/3t, international_trust-0.10/3t
  * - Греческая религия (Hellenism/Greek): 2% шанс oracle_blessing → military_readiness+0.12/8t
  */
-function _applyReligionModifier(nation, ou, gameState) {
+export function _applyReligionModifier(nation, ou, gameState) {
   const natRel = nation.religion ?? nation.state_religion ?? null;
   if (!natRel) return;
 
@@ -1562,8 +1562,8 @@ function _applyReligionModifier(nation, ou, gameState) {
   const isGreek = /hell?en|greek|olymp/i.test(natRel);
   if (isGreek && Math.random() < 0.02) {
     _mod(ou, `ORACLE_BLESSING_${ou.tick}`, 'military', 'military_readiness', +0.12, 8);
-    if (typeof window !== 'undefined' && window.addEventLog) {
-      window.addEventLog(`[🏛] Оракул благословил ${nation.name ?? nationId} — армия усилена`);
+    if (typeof addEventLog === 'function') {
+      addEventLog(`[🏛] Оракул благословил ${nation.name ?? nationId} — армия усилена`);
     }
   }
 }
@@ -1575,7 +1575,7 @@ function _applyReligionModifier(nation, ou, gameState) {
  *   diplomatic_openness-0.10/3t, aggression-0.05/3t
  * Если эта третья сторона — игрок: trust_index_player-0.08/4t
  */
-function _applyTradeChainPressure(nation, ou, gameState) {
+export function _applyTradeChainPressure(nation, ou, gameState) {
   const gs = gameState ?? (typeof GAME_STATE !== 'undefined' ? GAME_STATE : null);
   if (!gs || !gs.nations) return;
 
@@ -1623,7 +1623,7 @@ function _applyTradeChainPressure(nation, ou, gameState) {
  * expansion_desire (expansion_drive), mobilization (mobilization_speed).
  * season = ou.tick % 4 → 0=spring, 1=summer, 2=autumn, 3=winter
  */
-function _applySeasonalModifier(nation, ou) {
+export function _applySeasonalModifier(nation, ou) {
   const season = (ou.tick || 0) % 4;
 
   if (season === 0 || season === 1) {
@@ -1654,7 +1654,7 @@ function _applySeasonalModifier(nation, ou) {
 
 // ─── PUBLIC: applyModifiers ───────────────────────────────────────────────────
 
-function applyModifiers(nation, ouState, gameState) {
+export function applyModifiers(nation, ouState, gameState) {
   // First: seasonal behavioral modifiers (confidence, aggression, expansion, mobilization)
   _applySeasonalModifier(nation, ouState);
   // Religion modifier (ST_015)
@@ -1716,7 +1716,7 @@ function applyModifiers(nation, ouState, gameState) {
  * Personality trait definitions — 20 named axes, each mapped to indices.
  * The 1000-element vector is 20 traits × 50 action-weights each.
  */
-const PERSONALITY_TRAITS = [
+export const PERSONALITY_TRAITS = [
   'aggression',       // 0  — willingness to wage war, raid, expand by force
   'expansionism',     // 1  — drive to acquire territory
   'merchantism',      // 2  — preference for trade over war
@@ -1743,7 +1743,7 @@ const PERSONALITY_TRAITS = [
  * AI personality archetypes for ancient nations (300 BCE – 476 CE).
  * Each maps to base trait weights [0..1] for all 20 traits.
  */
-const PERSONALITY_ARCHETYPES = {
+export const PERSONALITY_ARCHETYPES = {
   // Greek city-state flavours
   athenian:       [0.3,0.4,0.9,0.7,0.4,0.5,0.6,0.3,0.8,0.5,0.8,0.3,0.2,0.9,0.3,0.7,0.4,0.4,0.3,0.6],
   spartan:        [0.9,0.4,0.2,0.3,0.9,0.6,0.3,0.7,0.3,0.2,0.3,0.5,0.4,0.2,1.0,0.4,0.8,0.3,0.5,0.7],
@@ -1776,7 +1776,7 @@ const PERSONALITY_ARCHETYPES = {
  * Priority axes — 10 strategic objectives mapped to trait amplifiers.
  * Each priority biases certain personality dimensions.
  */
-const PRIORITY_AMPLIFIERS = {
+export const PRIORITY_AMPLIFIERS = {
   military_supremacy: { aggression:1.4, militarism:1.3, defensiveness:1.1 },
   economic_growth:    { merchantism:1.4, innovation:1.3, greed:0.8 },
   territorial_expansion: { expansionism:1.5, colonialism:1.3, aggression:1.2 },
@@ -1800,7 +1800,7 @@ const PRIORITY_AMPLIFIERS = {
  * @param {object} nation
  * @returns {Float32Array}
  */
-function _buildPersonalityMatrix(nation) {
+export function _buildPersonalityMatrix(nation) {
   const matrix = new Float32Array(1000);
 
   // Resolve archetype
@@ -1865,7 +1865,7 @@ function _buildPersonalityMatrix(nation) {
  * @param {string} str
  * @returns {number}
  */
-function _hashString(str) {
+export function _hashString(str) {
   let h = 5381;
   for (let i = 0; i < str.length; i++) {
     h = ((h << 5) + h + str.charCodeAt(i)) >>> 0;
@@ -1878,7 +1878,7 @@ function _hashString(str) {
  * @param {number} seed
  * @returns {function}
  */
-function _seededRng(seed) {
+export function _seededRng(seed) {
   let s = seed >>> 0;
   return function () {
     s += 0x6D2B79F5;
@@ -1894,7 +1894,7 @@ function _seededRng(seed) {
 /**
  * Available actions for a nation (ancient-world context).
  */
-const ACTION_LIST = [
+export const ACTION_LIST = [
   'build_farm',
   'build_barracks',
   'build_market',
@@ -1917,7 +1917,7 @@ const ACTION_LIST = [
  *   10:navalism, 11:isolationism, 12:tributarism, 13:patronage, 14:militarism,
  *   15:pragmatism, 16:loyalty, 17:greed, 18:paranoia, 19:glory_seeking
  */
-const ACTION_TRAIT_AFFINITY = {
+export const ACTION_TRAIT_AFFINITY = {
   build_farm:        [[2,1.2],[15,1.1],[6,0.9],[13,0.8]],
   build_barracks:    [[14,1.3],[0,1.1],[4,1.0],[7,0.8]],
   build_market:      [[2,1.4],[17,1.2],[8,1.0],[10,0.7]],
@@ -1937,7 +1937,7 @@ const ACTION_TRAIT_AFFINITY = {
  * @param {number} temperature
  * @returns {number[]} probabilities
  */
-function _softmax(scores, temperature = 1.0) {
+export function _softmax(scores, temperature = 1.0) {
   const scaled = scores.map(s => s / temperature);
   const maxS = Math.max(...scaled);
   const exps = scaled.map(s => Math.exp(s - maxS));
@@ -1951,7 +1951,7 @@ function _softmax(scores, temperature = 1.0) {
  * @param {object} ouState  nation._ou
  * @returns {number[]}
  */
-function _buildStateFeatures(ouState) {
+export function _buildStateFeatures(ouState) {
   const features = new Array(20).fill(0);
   if (!ouState || !ouState.economy) return features;
 
@@ -2020,10 +2020,10 @@ function _buildStateFeatures(ouState) {
  * @param {object} nation
  * @param {Array}  results  mutable array of {action, probability, score}
  */
-const WAR_ACTIONS   = new Set(['mobilize', 'recruit_infantry', 'recruit_cavalry']);
-const PEACE_ACTIONS = new Set(['seek_alliance', 'open_trade_route', 'sell_goods', 'buy_food']);
+export const WAR_ACTIONS   = new Set(['mobilize', 'recruit_infantry', 'recruit_cavalry']);
+export const PEACE_ACTIONS = new Set(['seek_alliance', 'open_trade_route', 'sell_goods', 'buy_food']);
 
-function _applyEconomicDependencyConstraint(ou, nation, results) {
+export function _applyEconomicDependencyConstraint(ou, nation, results) {
   // Use trade_openness as proxy for economic dependency (schema var exists)
   // Also account for dynamic modifiers tagged economic_dependency
   let dep = _getVal(ou, 'economy', 'trade_openness') ?? 0;
@@ -2050,9 +2050,9 @@ function _applyEconomicDependencyConstraint(ou, nation, results) {
     }
   }
 
-  if (warWasCritical && typeof window !== 'undefined' && window.addEventLog) {
+  if (warWasCritical && typeof addEventLog === 'function') {
     const name = nation?.name ?? nation?.id ?? 'Nation';
-    window.addEventLog(`[🤝] ${name}: торговля удерживает от войны`);
+    addEventLog(`[🤝] ${name}: торговля удерживает от войны`);
   }
 }
 
@@ -2064,7 +2064,7 @@ function _applyEconomicDependencyConstraint(ou, nation, results) {
  * @param {object} ouState  (nation._ou)
  * @returns {Array<{action:string, probability:number, score:number}>}
  */
-function decideActions(nation, ouState) {
+export function decideActions(nation, ouState) {
   const ou = ouState || nation._ou;
   if (!ou) return [{ action: 'pass', probability: 1.0, score: 0 }];
 
@@ -2122,7 +2122,7 @@ function decideActions(nation, ouState) {
 /**
  * Modifier tags that boost specific actions.
  */
-const ACTION_MOD_TAGS = {
+export const ACTION_MOD_TAGS = {
   build_farm:        ['harvest','agriculture','irrigation','grain'],
   build_barracks:    ['barracks','drill','recruit','garrison'],
   build_market:      ['trade_route','market','commerce','merchant'],
@@ -2141,7 +2141,7 @@ const ACTION_MOD_TAGS = {
 /**
  * Cat 1: Statistical outliers — variables whose |current - mu| > 3σ
  */
-function _anomalyCat1_Outliers(ouState) {
+export function _anomalyCat1_Outliers(ouState) {
   const cats = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
   let score = 0;
   let count = 0;
@@ -2160,7 +2160,7 @@ function _anomalyCat1_Outliers(ouState) {
 /**
  * Cat 2: Rapid change detection — delta since last tick too large
  */
-function _anomalyCat2_RapidChange(ouState) {
+export function _anomalyCat2_RapidChange(ouState) {
   if (!ouState._prev) return { score: 0, count: 0, label: 'rapid_change' };
   const cats = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
   let score = 0;
@@ -2185,7 +2185,7 @@ function _anomalyCat2_RapidChange(ouState) {
  * Cat 3: Conflict detection — contradictory high values simultaneously
  * e.g. high mobilization + high demobilization pressure
  */
-function _anomalyCat3_Conflicts(ouState) {
+export function _anomalyCat3_Conflicts(ouState) {
   const pairs = [
     ['military', 'army_mobilization', 'military', 'army_demobilization'],
     ['economy',  'trade_volume',      'economy',  'trade_embargo_risk'],
@@ -2214,7 +2214,7 @@ function _anomalyCat3_Conflicts(ouState) {
 /**
  * Cat 4: Boundary violations — values stuck near min or max
  */
-function _anomalyCat4_Boundaries(ouState) {
+export function _anomalyCat4_Boundaries(ouState) {
   const cats = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
   let score = 0;
   let count = 0;
@@ -2235,7 +2235,7 @@ function _anomalyCat4_Boundaries(ouState) {
 /**
  * Cat 5: Consistency — strongly correlated variable pairs diverging
  */
-function _anomalyCat5_Consistency(ouState) {
+export function _anomalyCat5_Consistency(ouState) {
   const correlated = [
     ['economy','gdp_growth',      'economy','trade_volume',         0.7],
     ['economy','food_production', 'economy','population_growth',    0.6],
@@ -2267,7 +2267,7 @@ function _anomalyCat5_Consistency(ouState) {
 /**
  * Cat 6: Goal alignment — goals vs actual state mismatch
  */
-function _anomalyCat6_GoalAlignment(ouState) {
+export function _anomalyCat6_GoalAlignment(ouState) {
   const alignments = [
     // [goal_cat, goal_var, actual_cat, actual_var]
     ['goals','economic_growth_goal',        'economy','gdp_growth'],
@@ -2299,7 +2299,7 @@ function _anomalyCat6_GoalAlignment(ouState) {
 /**
  * Cat 7: Modifier saturation — too many simultaneous active modifiers
  */
-function _anomalyCat7_ModifierSaturation(ouState) {
+export function _anomalyCat7_ModifierSaturation(ouState) {
   const mods = (ouState.activeModifiers || []).length;
   const threshold = SUPER_OU_CONFIG.maxActiveModifiers || 15;
   if (mods <= threshold) return { score: 0, count: mods, label: 'modifier_saturation' };
@@ -2313,7 +2313,7 @@ function _anomalyCat7_ModifierSaturation(ouState) {
  * @param {object} ouState
  * @returns {{ total: number, categories: object[], isAnomaly: boolean }}
  */
-function calculateAnomalyScore(nation, ouState) {
+export function calculateAnomalyScore(nation, ouState) {
   const ou = ouState || nation._ou;
   const cats = [
     _anomalyCat1_Outliers(ou),
@@ -2347,7 +2347,7 @@ function calculateAnomalyScore(nation, ouState) {
  * Call this AFTER updateState, BEFORE the next tick.
  * @param {object} ouState
  */
-function snapshotState(ouState) {
+export function snapshotState(ouState) {
   const cats = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
   ouState._prev = {};
   for (const cat of cats) {
@@ -2366,7 +2366,7 @@ function snapshotState(ouState) {
  * @param {object} ou
  * @param {number} currentTurn
  */
-function _checkResentmentRevenge(nation, ou, currentTurn) {
+export function _checkResentmentRevenge(nation, ou, currentTurn) {
   const pr = nation._player_relation;
   if (!pr) return;
 
@@ -2392,8 +2392,8 @@ function _checkResentmentRevenge(nation, ou, currentTurn) {
   ou._revenge_cooldown = currentTurn + 50;
 
   // Log event
-  if (typeof window !== 'undefined' && window.addEventLog) {
-    window.addEventLog(`[⚔] ${nation.name ?? nation.id} ищет реванш`);
+  if (typeof addEventLog === 'function') {
+    addEventLog(`[⚔] ${nation.name ?? nation.id} ищет реванш`);
   }
 }
 
@@ -2403,7 +2403,7 @@ function _checkResentmentRevenge(nation, ou, currentTurn) {
  * _updateConquestFatigue — вычисляет усталость от завоеваний на основе
  * соотношения регионов к базовым. Вызывается из updateState().
  */
-function _updateConquestFatigue(nation, ou) {
+export function _updateConquestFatigue(nation, ou) {
   const regions     = nation.regions     ?? nation.territories ?? 1;
   const baseRegions = nation.base_regions ?? nation.start_territories ?? regions;
   if (baseRegions <= 0) return;
@@ -2424,8 +2424,8 @@ function _updateConquestFatigue(nation, ou) {
   }
 
   if (fatigue > 0.5) {
-    if (typeof window !== 'undefined' && window.addEventLog) {
-      window.addEventLog(`[📉] ${nation.name ?? nation.id}: усталость от завоеваний (${(fatigue * 100).toFixed(0)}%)`);
+    if (typeof addEventLog === 'function') {
+      addEventLog(`[📉] ${nation.name ?? nation.id}: усталость от завоеваний (${(fatigue * 100).toFixed(0)}%)`);
     }
   }
 }
@@ -2437,7 +2437,7 @@ function _updateConquestFatigue(nation, ou) {
  * @param {string} nationId   — id of the nation to process
  * @returns {object}          — { nationId, actions, anomaly, debug? }
  */
-function tick(gameState, nationId) {
+export function tick(gameState, nationId) {
   const nation = gameState.nations
     ? gameState.nations[nationId] || gameState.nations.find?.(n => n.id === nationId)
     : null;
@@ -2469,9 +2469,9 @@ function tick(gameState, nationId) {
 
   // 5a. Execute strategic plan phase (StrategicLLM) — adjusts ou overrides
   let strategicCtx = null;
-  if (typeof window !== 'undefined' && window.StrategicLLM?.executePlan) {
+  if (typeof StrategicLLM !== 'undefined' && StrategicLLM?.executePlan) {
     try {
-      strategicCtx = window.StrategicLLM.executePlan(nation, ouState, ouState.tick);
+      strategicCtx = StrategicLLM.executePlan(nation, ouState, ouState.tick);
     } catch (e) { /* fallback: no strategic overrides */ }
   }
 
@@ -2523,7 +2523,7 @@ function tick(gameState, nationId) {
  * @param {object} nation
  * @returns {object}
  */
-function getDebugVector(nation) {
+export function getDebugVector(nation) {
   const ou = nation._ou;
   if (!ou) return { error: 'nation not initialised' };
   const cats = ['economy', 'military', 'diplomacy', 'politics', 'goals'];
@@ -2553,7 +2553,7 @@ function getDebugVector(nation) {
  * @param {object} nation
  * @returns {object}
  */
-function getContextForSonnet(nation) {
+export function getContextForSonnet(nation) {
   const ou = nation._ou;
   if (!ou) return { error: 'not_initialised' };
 
@@ -2639,8 +2639,8 @@ function getContextForSonnet(nation) {
 
 // ─── ST_009: EVENT_DELTA_MAP + onDiplomacyEvent ────────────────────────────────
 // Format: [category, varName, deltaMu, durationTurns] — 9999 = permanent
-const _PERM = 9999;
-const EVENT_DELTA_MAP = {
+export const _PERM = 9999;
+export const EVENT_DELTA_MAP = {
   ALLIANCE_SIGNED:   [['diplomacy','alliance_reliability',+0.55,80],['diplomacy','international_trust',+0.45,80],
                       ['military','war_exhaustion',-0.30,60],['goals','expansion_drive',-0.20,80]],
   ALLIANCE_BROKEN:   [['diplomacy','alliance_reliability',-0.60,_PERM],['diplomacy','international_trust',-0.50,_PERM],
@@ -2667,7 +2667,7 @@ const EVENT_DELTA_MAP = {
 /** Apply diplomacy event deltas to nation's OU state.
  *  nationId: nation ID string or nation object
  *  data: { severity?, gameState? } — extra context */
-function onDiplomacyEvent(nationId, eventType, data = {}) {
+export function onDiplomacyEvent(nationId, eventType, data = {}) {
   const gs = data?.gameState ?? (typeof GAME_STATE !== 'undefined' ? GAME_STATE : null);
   const ouKey = nationId?.id ?? nationId;
   const nation = nationId?.name ? nationId : (gs?.nations?.[ouKey] ?? null);
@@ -2728,7 +2728,7 @@ function onDiplomacyEvent(nationId, eventType, data = {}) {
  * Применить кризис преемственности: stability↓, legitimacy↓, coalition*0.7,
  * _force_anomaly=true для немедленного вызова LLM-обработчика в tick().
  */
-function onRulerDied(nationId, gameState) {
+export function onRulerDied(nationId, gameState) {
   const gs = gameState ?? (typeof GAME_STATE !== 'undefined' ? GAME_STATE : null);
   const ouKey = nationId?.id ?? nationId;
   const nation = nationId?.name ? nationId : (gs?.nations?.[ouKey] ?? null);
@@ -2752,9 +2752,9 @@ function onRulerDied(nationId, gameState) {
   ou._force_anomaly   = true;
   ou._anomaly_reason  = 'Succession crisis';
 
-  if (typeof window !== 'undefined' && window.addEventLog) {
+  if (typeof addEventLog === 'function') {
     const name = nation.name ?? ouKey;
-    window.addEventLog(`[👑] Правитель ${name} умер — кризис преемственности`);
+    addEventLog(`[👑] Правитель ${name} умер — кризис преемственности`);
   }
 }
 
@@ -2764,7 +2764,7 @@ function onRulerDied(nationId, gameState) {
  * При PROMISE_BROKEN или BETRAYED_ALLY применить штраф доверия к игроку
  * всем нациям Tier1+Tier2 (tier <= 2), не являющимся самим игроком.
  */
-function onPlayerReputationEvent(eventType, gameState) {
+export function onPlayerReputationEvent(eventType, gameState) {
   const gs = gameState ?? (typeof GAME_STATE !== 'undefined' ? GAME_STATE : null);
   if (!gs) return;
 
@@ -2790,8 +2790,8 @@ function onPlayerReputationEvent(eventType, gameState) {
     affected++;
   }
 
-  if (affected > 0 && typeof window !== 'undefined' && window.addEventLog) {
-    window.addEventLog(`[📢] Репутация игрока упала — ${affected} наций узнали о нарушении слова`);
+  if (affected > 0 && typeof addEventLog === 'function') {
+    addEventLog(`[📢] Репутация игрока упала — ${affected} наций узнали о нарушении слова`);
   }
 }
 
@@ -2801,7 +2801,7 @@ function onPlayerReputationEvent(eventType, gameState) {
  * Если игрок контролирует > 15% регионов — все Tier1+Tier2 нации ощущают страх.
  * Вызывать из turn.js каждые 5 ходов (turn % 5 === 0).
  */
-function applyHegemonModifier(gameState) {
+export function applyHegemonModifier(gameState) {
   const gs = gameState ?? (typeof GAME_STATE !== 'undefined' ? GAME_STATE : null);
   if (!gs) return;
 
@@ -2836,29 +2836,119 @@ function applyHegemonModifier(gameState) {
     affected++;
   }
 
-  if (intensity > 0.5 && affected > 0 && typeof window !== 'undefined' && window.addEventLog) {
-    window.addEventLog(`[⚖] Гегемония игрока (${Math.round(playerShare * 100)}% регионов) — ${affected} наций сплачиваются`);
+  if (intensity > 0.5 && affected > 0 && typeof addEventLog === 'function') {
+    addEventLog(`[⚖] Гегемония игрока (${Math.round(playerShare * 100)}% регионов) — ${affected} наций сплачиваются`);
   }
 }
 
-// ─── GLOBAL BROWSER EXPORT ────────────────────────────────────────────────────
-// Expose SuperOU as window.SuperOU so non-module scripts (turn.js) can call it.
-if (typeof window !== 'undefined') {
-  window.SuperOU = {
-    tick,
-    initNation,
-    updateState,
-    applyModifiers,
-    decideActions,
-    calculateAnomalyScore,
-    getDebugVector,
-    getContextForSonnet,
-    onDiplomacyEvent,
-    onRulerDied,
-    onPlayerReputationEvent,
-    applyHegemonModifier,
-    EVENT_DELTA_MAP,
-    SUPER_OU_CONFIG,
-  };
-}
+// ─── MODULE EXPORT ───────────────────────────────────────────────────────────
+export const SuperOU = {
+  tick,
+  initNation,
+  updateState,
+  applyModifiers,
+  decideActions,
+  calculateAnomalyScore,
+  getDebugVector,
+  getContextForSonnet,
+  onDiplomacyEvent,
+  onRulerDied,
+  onPlayerReputationEvent,
+  applyHegemonModifier,
+  EVENT_DELTA_MAP,
+  SUPER_OU_CONFIG,
+};
+
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.ACTION_LIST = ACTION_LIST;
+window.ACTION_MOD_TAGS = ACTION_MOD_TAGS;
+window.ACTION_TRAIT_AFFINITY = ACTION_TRAIT_AFFINITY;
+window.DIPLOMACY_SCHEMA = DIPLOMACY_SCHEMA;
+window.ECONOMY_SCHEMA = ECONOMY_SCHEMA;
+window.EVENT_DELTA_MAP = EVENT_DELTA_MAP;
+window.GOALS_SCHEMA = GOALS_SCHEMA;
+window.MILITARY_SCHEMA = MILITARY_SCHEMA;
+window.PEACE_ACTIONS = PEACE_ACTIONS;
+window.PERSONALITY_ARCHETYPES = PERSONALITY_ARCHETYPES;
+window.PERSONALITY_TRAITS = PERSONALITY_TRAITS;
+window.POLITICS_SCHEMA = POLITICS_SCHEMA;
+window.PRIORITY_AMPLIFIERS = PRIORITY_AMPLIFIERS;
+window.SUPER_OU_CONFIG = SUPER_OU_CONFIG;
+window.SuperOU = SuperOU;
+window.WAR_ACTIONS = WAR_ACTIONS;
+window._PERM = _PERM;
+window._anomalyCat1_Outliers = _anomalyCat1_Outliers;
+window._anomalyCat2_RapidChange = _anomalyCat2_RapidChange;
+window._anomalyCat3_Conflicts = _anomalyCat3_Conflicts;
+window._anomalyCat4_Boundaries = _anomalyCat4_Boundaries;
+window._anomalyCat5_Consistency = _anomalyCat5_Consistency;
+window._anomalyCat6_GoalAlignment = _anomalyCat6_GoalAlignment;
+window._anomalyCat7_ModifierSaturation = _anomalyCat7_ModifierSaturation;
+window._applyBetrayalMemorySlowdown = _applyBetrayalMemorySlowdown;
+window._applyEconomicDependencyConstraint = _applyEconomicDependencyConstraint;
+window._applyReligionModifier = _applyReligionModifier;
+window._applySeasonalModifier = _applySeasonalModifier;
+window._applyTradeChainPressure = _applyTradeChainPressure;
+window._buildPersonalityMatrix = _buildPersonalityMatrix;
+window._buildStateFeatures = _buildStateFeatures;
+window._checkResentmentRevenge = _checkResentmentRevenge;
+window._decayModifiers = _decayModifiers;
+window._getVal = _getVal;
+window._hashString = _hashString;
+window._initDiplomacyVector = _initDiplomacyVector;
+window._initEconomyVector = _initEconomyVector;
+window._initGoalsVector = _initGoalsVector;
+window._initMilitaryVector = _initMilitaryVector;
+window._initPoliticsVector = _initPoliticsVector;
+window._mod = _mod;
+window._modGroup10_Morale = _modGroup10_Morale;
+window._modGroup11_DiplomacyReputation = _modGroup11_DiplomacyReputation;
+window._modGroup12_DiplomacyAlliances = _modGroup12_DiplomacyAlliances;
+window._modGroup13_DiplomacyTrade = _modGroup13_DiplomacyTrade;
+window._modGroup14_DiplomacyCrisis = _modGroup14_DiplomacyCrisis;
+window._modGroup15_DiplomacySoftPower = _modGroup15_DiplomacySoftPower;
+window._modGroup16_PoliticsStability = _modGroup16_PoliticsStability;
+window._modGroup17_PoliticsLegitimacy = _modGroup17_PoliticsLegitimacy;
+window._modGroup18_PoliticsCorruption = _modGroup18_PoliticsCorruption;
+window._modGroup19_PoliticsCrisis = _modGroup19_PoliticsCrisis;
+window._modGroup1_Harvest = _modGroup1_Harvest;
+window._modGroup20_PoliticsGovernance = _modGroup20_PoliticsGovernance;
+window._modGroup21_SeasonSpring = _modGroup21_SeasonSpring;
+window._modGroup22_SeasonSummer = _modGroup22_SeasonSummer;
+window._modGroup23_SeasonAutumn = _modGroup23_SeasonAutumn;
+window._modGroup24_SeasonWinter = _modGroup24_SeasonWinter;
+window._modGroup25_MemoryWar = _modGroup25_MemoryWar;
+window._modGroup26_MemoryEconomy = _modGroup26_MemoryEconomy;
+window._modGroup27_MemoryPolitics = _modGroup27_MemoryPolitics;
+window._modGroup28_EventsNature = _modGroup28_EventsNature;
+window._modGroup29_EventsLeaders = _modGroup29_EventsLeaders;
+window._modGroup2_Trade = _modGroup2_Trade;
+window._modGroup30_EventsEpochal = _modGroup30_EventsEpochal;
+window._modGroup3_Infra = _modGroup3_Infra;
+window._modGroup4_Finance = _modGroup4_Finance;
+window._modGroup5_Crisis = _modGroup5_Crisis;
+window._modGroup6_Warfare = _modGroup6_Warfare;
+window._modGroup7_ArmyQuality = _modGroup7_ArmyQuality;
+window._modGroup8_Naval = _modGroup8_Naval;
+window._modGroup9_Defence = _modGroup9_Defence;
+window._ouStep = _ouStep;
+window._seededRng = _seededRng;
+window._softmax = _softmax;
+window._updateConquestFatigue = _updateConquestFatigue;
+window.applyHegemonModifier = applyHegemonModifier;
+window.applyModifiers = applyModifiers;
+window.calculateAnomalyScore = calculateAnomalyScore;
+window.clamp = clamp;
+window.decideActions = decideActions;
+window.gaussian = gaussian;
+window.getContextForSonnet = getContextForSonnet;
+window.getDebugVector = getDebugVector;
+window.initNation = initNation;
+window.onDiplomacyEvent = onDiplomacyEvent;
+window.onPlayerReputationEvent = onPlayerReputationEvent;
+window.onRulerDied = onRulerDied;
+window.snapshotState = snapshotState;
+window.tick = tick;
+window.updateState = updateState;
 

@@ -1,5 +1,7 @@
 // engine/ai_scoring.js — OU-процесс и AI-скоринг (вынесено из turn.js, этап 48)
 
+import { BUILDINGS } from '../data/buildings.js';
+
 // ══════════════════════════════════════════════════════════════════════
 // OU (Ornstein-Uhlenbeck) — стохастические "настроения" нации
 // Каждое настроение дрейфует случайно, но возвращается к своему μ.
@@ -13,10 +15,10 @@
 //   caution       [-1..+1]  склонность к миру и осторожности
 // ══════════════════════════════════════════════════════════════════════
 
-const _OU_THETA = 0.12; // скорость возврата к среднему
-const _OU_SIGMA = 0.07; // амплитуда шума
+export const _OU_THETA = 0.12; // скорость возврата к среднему
+export const _OU_SIGMA = 0.07; // амплитуда шума
 
-function _ouNaturalMu(nation) {
+export function _ouNaturalMu(nation) {
   const treasury  = nation.economy?.treasury ?? 0;
   const military  = nation.military          ?? {};
   const pop       = nation.population        ?? {};
@@ -37,14 +39,14 @@ function _ouNaturalMu(nation) {
   };
 }
 
-function _ouStep(x, mu) {
+export function _ouStep(x, mu) {
   const u1 = Math.random() || 1e-10;
   const u2 = Math.random();
   const normal = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
   return Math.max(-1, Math.min(1, x + _OU_THETA * (mu - x) + _OU_SIGMA * normal));
 }
 
-function _tickOU(nationId, nation) {
+export function _tickOU(nationId, nation) {
   const mu = _ouNaturalMu(nation);
   // Если Super-OU уже инициализировал _ou с массивами — не изменять их скалярами.
   // Возвращаем отдельный скалярный снимок для fallback-скоринга.
@@ -79,14 +81,14 @@ function _tickOU(nationId, nation) {
   return ou;
 }
 
-function _softmax(scoreMap, temp = 1.2) {
+export function _softmax(scoreMap, temp = 1.2) {
   const entries = Object.entries(scoreMap);
   const exps    = entries.map(([k, v]) => [k, Math.exp(v / temp)]);
   const sum     = exps.reduce((s, [, e]) => s + e, 0);
   return Object.fromEntries(exps.map(([k, e]) => [k, e / sum]));
 }
 
-function _weightedPick(probMap) {
+export function _weightedPick(probMap) {
   const r = Math.random();
   let cum = 0;
   for (const [key, p] of Object.entries(probMap)) {
@@ -97,7 +99,7 @@ function _weightedPick(probMap) {
 }
 
 // ── Найти враждебного соседа для объявления войны (max 20 отношений) ───
-function _findWarTarget(nationId, nation) {
+export function _findWarTarget(nationId, nation) {
   const military = nation.military ?? {};
   if ((military.at_war_with ?? []).length >= 2) return null;
   const ownStr = (military.infantry ?? 0) + (military.cavalry ?? 0) * 3;
@@ -123,7 +125,7 @@ function _findWarTarget(nationId, nation) {
 }
 
 // ── Найти дружественного партнёра для союза/торговли ───────────────────
-function _findDiplomacyPartner(nationId, nation, minScore = 20, excludeTreaty = null) {
+export function _findDiplomacyPartner(nationId, nation, minScore = 20, excludeTreaty = null) {
   let best = null, bestScore = -Infinity;
   const entries = Object.entries(nation.relations || {}).slice(0, 20);
   for (const [otherId, rel] of entries) {
@@ -139,11 +141,11 @@ function _findDiplomacyPartner(nationId, nation, minScore = 20, excludeTreaty = 
 }
 
 // ── Подобрать здание для строительства (max 10 регионов) ───────────────
-const _FALLBACK_BUILD_PRIORITY = [
+export const _FALLBACK_BUILD_PRIORITY = [
   'barracks', 'granary', 'market', 'road', 'warehouse',
   'temple', 'forum', 'stables', 'workshop', 'farm',
 ];
-function _findBuildTarget(nationId, nation) {
+export function _findBuildTarget(nationId, nation) {
   const regions = (nation.regions ?? []).slice(0, 10);
   for (const regionId of regions) {
     const region = GAME_STATE.regions?.[regionId];
@@ -160,7 +162,7 @@ function _findBuildTarget(nationId, nation) {
 }
 
 // ── Маппинг SuperOU actions → turn.js scores ─────────────────────────────────
-const _SUPER_OU_ACTION_MAP = {
+export const _SUPER_OU_ACTION_MAP = {
   build_farm:        'build',
   build_barracks:    'recruit',
   build_market:      'build',
@@ -176,11 +178,18 @@ const _SUPER_OU_ACTION_MAP = {
   debt_reduction:    'wait',
 };
 
-// ── Экспорт через window (глобальные скрипты) ────────────────────────────────
-window._tickOU               = _tickOU;
-window._softmax              = _softmax;
-window._weightedPick         = _weightedPick;
-window._findWarTarget        = _findWarTarget;
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window._FALLBACK_BUILD_PRIORITY = _FALLBACK_BUILD_PRIORITY;
+window._OU_SIGMA = _OU_SIGMA;
+window._OU_THETA = _OU_THETA;
+window._SUPER_OU_ACTION_MAP = _SUPER_OU_ACTION_MAP;
+window._findBuildTarget = _findBuildTarget;
 window._findDiplomacyPartner = _findDiplomacyPartner;
-window._findBuildTarget      = _findBuildTarget;
-window._SUPER_OU_ACTION_MAP  = _SUPER_OU_ACTION_MAP;
+window._findWarTarget = _findWarTarget;
+window._ouNaturalMu = _ouNaturalMu;
+window._ouStep = _ouStep;
+window._softmax = _softmax;
+window._tickOU = _tickOU;
+window._weightedPick = _weightedPick;
+

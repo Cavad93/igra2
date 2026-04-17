@@ -1,11 +1,15 @@
 // engine/ai_fallback.js — Этап 49
 // Fallback AI: applyFallbackDecision (вынесено из engine/turn.js)
-// Зависимости (window.*): _tickOU, _softmax, _weightedPick,
-//   _findWarTarget, _findDiplomacyPartner, _findBuildTarget, _SUPER_OU_ACTION_MAP
-//   из engine/ai_scoring.js
+
+import { CONFIG } from '../config.js';
+import {
+  _tickOU, _softmax, _weightedPick,
+  _findWarTarget, _findDiplomacyPartner, _findBuildTarget, _SUPER_OU_ACTION_MAP,
+} from './ai_scoring.js';
+import { SuperOU } from './super_ou.js';
 
 // ── Fallback с OU-вероятностями — полный набор действий ────────────────
-function applyFallbackDecision(nationId) {
+export function applyFallbackDecision(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
   // Stub nations (no regions, no population) have no meaningful AI to run.
@@ -14,9 +18,9 @@ function applyFallbackDecision(nationId) {
 
   // ── SuperOU tick (полный 400-переменный вектор состояния) ──────────────
   let _superOuResult = null;
-  if (typeof window !== 'undefined' && window.SuperOU) {
+  if (SuperOU) {
     try {
-      _superOuResult = window.SuperOU.tick(GAME_STATE, nationId);
+      _superOuResult = SuperOU.tick(GAME_STATE, nationId);
     } catch (e) {
       console.warn('[super_ou] tick:', e);
     }
@@ -36,8 +40,7 @@ function applyFallbackDecision(nationId) {
     // По умолчанию привязываем к столичному региону; для 'build' и
     // 'move_army' — к конкретному из деталей (если удастся распарсить).
     if (action && action !== 'wait' &&
-        typeof window !== 'undefined' &&
-        typeof window.recordAIAction === 'function') {
+        typeof recordAIAction === 'function') {
       let regionId = (nation.regions && nation.regions[0]) || null;
       if (action === 'build' && typeof detail === 'string') {
         const m = detail.match(/\sв\s+([a-zA-Z0-9_\-]+)/);
@@ -48,7 +51,7 @@ function applyFallbackDecision(nationId) {
       }
       if (regionId) {
         try {
-          window.recordAIAction({ nationId, action, regionId, detail: detail || '' });
+          recordAIAction({ nationId, action, regionId, detail: detail || '' });
         } catch (_) {}
       }
     }
@@ -417,4 +420,7 @@ function applyFallbackDecision(nationId) {
   }
 }
 
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
 window.applyFallbackDecision = applyFallbackDecision;
+

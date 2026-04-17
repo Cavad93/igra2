@@ -1,6 +1,8 @@
 // engine/save.js — Сохранение / загрузка игры
 // Вынесено из engine/turn.js (Этап 52)
 
+import { CONFIG } from '../config.js';
+
 // SaveWorker — сохранение в фоне, не блокирует главный поток.
 // JSON.stringify + transfer ArrayBuffer быстрее, чем IndexedDB structured clone на главном потоке.
 let _saveWorker        = null;   // Worker instance
@@ -63,7 +65,7 @@ function _buildSavePayload() {
   return { ...base, _senate: senateData };
 }
 
-async function saveGame() {
+export async function saveGame() {
   const payload = _buildSavePayload();
   const worker  = _getSaveWorker();
 
@@ -95,7 +97,7 @@ async function saveGame() {
   }
 }
 
-async function loadGame() {
+export async function loadGame() {
   try {
     await GameStorage.migrate(CONFIG.SAVE_KEY);
 
@@ -212,10 +214,13 @@ function _migrateCharacterSenateFields() {
   }
 }
 
-function warmupSaveWorker() {
+export function warmupSaveWorker() {
   _getSaveWorker();
 }
 
-window.saveGame  = saveGame;
-window.loadGame  = loadGame;
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.loadGame = loadGame;
+window.saveGame = saveGame;
 window.warmupSaveWorker = warmupSaveWorker;
+

@@ -18,10 +18,13 @@
 // Сглаживание: изменение ≤ 30% за тик (инерция рынка).
 // ══════════════════════════════════════════════════════════════
 
-const _MARKET_SMOOTHING  = 0.30;   // скорость сглаживания (30% за тик)
-const _BALANCE_SENS      = 0.05;   // чувствительность зоны баланса (±5% / тик)
-const _SURPLUS_RATE      = 0.03;   // скорость снижения цены в зоне избытка
-const _DEFICIT_INTENSITY = 0.10;   // базовый множитель дельты в зоне дефицита
+import { CONFIG } from '../config.js';
+import { GOODS } from '../data/goods.js';
+
+export const _MARKET_SMOOTHING  = 0.30;   // скорость сглаживания (30% за тик)
+export const _BALANCE_SENS      = 0.05;   // чувствительность зоны баланса (±5% / тик)
+export const _SURPLUS_RATE      = 0.03;   // скорость снижения цены в зоне избытка
+export const _DEFICIT_INTENSITY = 0.10;   // базовый множитель дельты в зоне дефицита
 
 // Компенсация ненаписанных наций.
 // Пока не все нации/регионы реализованы, реальный спрос занижен:
@@ -35,7 +38,7 @@ const _DEFICIT_INTENSITY = 0.10;   // базовый множитель дель
 //   3.0 = реализована ~треть (текущее состояние разработки)
 // Убирать постепенно по мере добавления новых наций.
 // ECO_010: используем CONFIG.BALANCE.MISSING_NATIONS_MULT (default 2.0)
-const _MISSING_NATIONS_DEMAND_MULT = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.MISSING_NATIONS_MULT) || 2.0;
+export const _MISSING_NATIONS_DEMAND_MULT = CONFIG.BALANCE?.MISSING_NATIONS_MULT || 2.0;
 
 // ──────────────────────────────────────────────────────────────
 // updateMarketPrices(totalProduced, totalConsumed)
@@ -47,7 +50,7 @@ const _MISSING_NATIONS_DEMAND_MULT = (typeof CONFIG !== 'undefined' && CONFIG.BA
 //   price, price_floor, world_stockpile, shortage_streak, price_history
 // ──────────────────────────────────────────────────────────────
 
-function updateMarketPrices(totalProduced, totalConsumed) {
+export function updateMarketPrices(totalProduced, totalConsumed) {
   // ── 1. Агрегируем мировые supply / demand ────────────────────────────────
   const worldSupply = {};
   const worldDemand = {};
@@ -73,7 +76,7 @@ function updateMarketPrices(totalProduced, totalConsumed) {
     market.demand = demand;
 
     // Метаданные из GOODS (elasticity, stockpile_target_turns)
-    const goodDef        = typeof GOODS !== 'undefined' ? GOODS[good] : null;
+    const goodDef        = GOODS?.[good] ?? null;
     const targetTurns    = goodDef?.stockpile_target_turns ?? 4;
     const elasticity     = goodDef?.price_elasticity      ?? 1.0;
     const base           = market.base;
@@ -112,7 +115,7 @@ function updateMarketPrices(totalProduced, totalConsumed) {
       const shortage_mult = Math.exp(streak * 0.15);
       price_delta = base * shortage_mult * _DEFICIT_INTENSITY * elasticity;
       // ECO_010: cap shortage_streak
-      const streakCap = (typeof CONFIG !== 'undefined' && CONFIG.BALANCE?.SHORTAGE_STREAK_CAP) || 8;
+      const streakCap = CONFIG.BALANCE?.SHORTAGE_STREAK_CAP || 8;
       market.shortage_streak = Math.min(streak + 1, streakCap);
 
     } else if (stockpile <= 2.0 * stockpileTarget) {
@@ -181,13 +184,13 @@ function updateMarketPrices(totalProduced, totalConsumed) {
 //   Сбрасывает market[good]._world_bought_tick = {}.
 // ══════════════════════════════════════════════════════════════
 
-const _WORLD_SEA_COST_BASE      = 0.25;  // базовая морская надбавка
-const _WORLD_TREATY_DISCOUNT    = 0.10;  // скидка за торговый договор
-const _WORLD_MONOPOLY_DISCOUNT  = 0.05;  // скидка при монопольном маршруте
-const _WORLD_COST_CAP           = 0.40;  // максимальная надбавка
+export const _WORLD_SEA_COST_BASE      = 0.25;  // базовая морская надбавка
+export const _WORLD_TREATY_DISCOUNT    = 0.10;  // скидка за торговый договор
+export const _WORLD_MONOPOLY_DISCOUNT  = 0.05;  // скидка при монопольном маршруте
+export const _WORLD_COST_CAP           = 0.40;  // максимальная надбавка
 
 // ──────────────────────────────────────────────────────────────
-function canAccessWorldMarket(nationId) {
+export function canAccessWorldMarket(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return false;
 
@@ -207,7 +210,7 @@ function canAccessWorldMarket(nationId) {
 }
 
 // ──────────────────────────────────────────────────────────────
-function getWorldMarketTransportCost(nationId, good) {
+export function getWorldMarketTransportCost(nationId, good) {
   let cost = _WORLD_SEA_COST_BASE;
 
   const nation = GAME_STATE.nations[nationId];
@@ -233,7 +236,7 @@ function getWorldMarketTransportCost(nationId, good) {
 // распределяет world_stockpile на равные доли между ними.
 // Сбрасывает _world_bought_tick для отслеживания тикового объёма.
 // ──────────────────────────────────────────────────────────────
-function computeWorldMarketQuotas() {
+export function computeWorldMarketQuotas() {
   const buyers = Object.keys(GAME_STATE.nations).filter(canAccessWorldMarket);
   const count  = buyers.length || 1;
 
@@ -244,12 +247,12 @@ function computeWorldMarketQuotas() {
   }
 }
 
-const _REGIONAL_SMOOTH      = 0.30;  // сглаживание локальной цены за тик
-const _REGIONAL_DEFICIT_MAX = 0.20;  // максимальная надбавка при дефиците (+20%)
-const _REGIONAL_SURPLUS_MAX = 0.15;  // максимальная скидка при избытке (−15%)
-const _REGIONAL_BALANCE_AMP = 0.05;  // амплитуда колебаний в зоне баланса (±5%)
+export const _REGIONAL_SMOOTH      = 0.30;  // сглаживание локальной цены за тик
+export const _REGIONAL_DEFICIT_MAX = 0.20;  // максимальная надбавка при дефиците (+20%)
+export const _REGIONAL_SURPLUS_MAX = 0.15;  // максимальная скидка при избытке (−15%)
+export const _REGIONAL_BALANCE_AMP = 0.05;  // амплитуда колебаний в зоне баланса (±5%)
 
-function updateRegionalMarketPrices() {
+export function updateRegionalMarketPrices() {
   for (const region of Object.values(GAME_STATE.regions)) {
     const ls   = region.local_stockpile;
     const prod = region._production_last_tick;
@@ -305,3 +308,24 @@ function updateRegionalMarketPrices() {
     }
   }
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window._BALANCE_SENS = _BALANCE_SENS;
+window._DEFICIT_INTENSITY = _DEFICIT_INTENSITY;
+window._MARKET_SMOOTHING = _MARKET_SMOOTHING;
+window._MISSING_NATIONS_DEMAND_MULT = _MISSING_NATIONS_DEMAND_MULT;
+window._REGIONAL_BALANCE_AMP = _REGIONAL_BALANCE_AMP;
+window._REGIONAL_DEFICIT_MAX = _REGIONAL_DEFICIT_MAX;
+window._REGIONAL_SMOOTH = _REGIONAL_SMOOTH;
+window._REGIONAL_SURPLUS_MAX = _REGIONAL_SURPLUS_MAX;
+window._SURPLUS_RATE = _SURPLUS_RATE;
+window._WORLD_COST_CAP = _WORLD_COST_CAP;
+window._WORLD_MONOPOLY_DISCOUNT = _WORLD_MONOPOLY_DISCOUNT;
+window._WORLD_SEA_COST_BASE = _WORLD_SEA_COST_BASE;
+window._WORLD_TREATY_DISCOUNT = _WORLD_TREATY_DISCOUNT;
+window.canAccessWorldMarket = canAccessWorldMarket;
+window.computeWorldMarketQuotas = computeWorldMarketQuotas;
+window.getWorldMarketTransportCost = getWorldMarketTransportCost;
+window.updateMarketPrices = updateMarketPrices;
+window.updateRegionalMarketPrices = updateRegionalMarketPrices;
+

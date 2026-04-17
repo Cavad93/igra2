@@ -12,13 +12,11 @@
 //   nation._treaty_effects = {}        — числовые бонусы нации (пересчитываются каждый ход)
 // ══════════════════════════════════════════════════════════════════
 
-'use strict';
-
 // ─────────────────────────────────────────────────────────────
 // ПРИМЕНЕНИЕ ЭФФЕКТОВ ПРИ ПОДПИСАНИИ (one-shot)
 // ─────────────────────────────────────────────────────────────
 
-function applyTreatyEffects(treaty) {
+export function applyTreatyEffects(treaty) {
   if (!treaty || treaty._effects_applied) return;
 
   const [a, b] = treaty.parties;
@@ -66,7 +64,7 @@ function applyTreatyEffects(treaty) {
 // СНЯТИЕ ЭФФЕКТОВ ПРИ РАСТОРЖЕНИИ / ИСТЕЧЕНИИ
 // ─────────────────────────────────────────────────────────────
 
-function removeTreatyEffects(treaty) {
+export function removeTreatyEffects(treaty) {
   if (!treaty) return;
   const [a, b] = treaty.parties;
   const rel = _rel(a, b);
@@ -188,7 +186,7 @@ function _applyBetrayalReputation(nationId) {
 // PER-TURN: финансы + обновление флагов (вызывать 1 раз за ход)
 // ─────────────────────────────────────────────────────────────
 
-function processAllTreatyTicks() {
+export function processAllTreatyTicks() {
   if (!GAME_STATE.diplomacy) return;
 
   const turn = GAME_STATE.turn ?? 1;
@@ -513,7 +511,7 @@ function _onEmbargo(treaty, a, b, natA, natB, cond) {
 // DIP_001: ЭМБАРГО — перturновый штраф (вызывается из processAllTreatyTicks)
 // ─────────────────────────────────────────────────────────────
 
-function applyEmbargo(treaty, turn) {
+export function applyEmbargo(treaty, turn) {
   if (!treaty || treaty.status !== 'active' || treaty.type !== 'embargo') return;
 
   const [a, b]    = treaty.parties;
@@ -832,3 +830,10 @@ function _log(msg) {
   if (typeof addEventLog === 'function') addEventLog(msg, 'diplomacy');
   else console.info('[treaty_effects]', msg);
 }
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.applyEmbargo = applyEmbargo;
+window.applyTreatyEffects = applyTreatyEffects;
+window.processAllTreatyTicks = processAllTreatyTicks;
+window.removeTreatyEffects = removeTreatyEffects;
+

@@ -13,8 +13,8 @@
 // ──────────────────────────────────────────────────────────────────────
 // FALLBACK — _addChronicleEntry (если achievements.js не загружен)
 // ──────────────────────────────────────────────────────────────────────
-if (typeof _addChronicleEntry !== 'function') {
-  _addChronicleEntry = function(entry) {
+if (typeof window._addChronicleEntry !== 'function') {
+  window._addChronicleEntry = function(entry) {
     if (!GAME_STATE) return;
     if (!GAME_STATE.chronicle_log) GAME_STATE.chronicle_log = [];
     GAME_STATE.chronicle_log.push({ turn: GAME_STATE.turn ?? 0, ...entry });
@@ -29,7 +29,7 @@ if (typeof _addChronicleEntry !== 'function') {
 /**
  * Главный тик условий. Вызывается из turn.js после каждого хода.
  */
-function checkVictoryConditions() {
+export function checkVictoryConditions() {
   if (!GAME_STATE) return;
   const playerNation = GAME_STATE.player_nation;
   if (!playerNation) return;
@@ -83,7 +83,7 @@ function checkVictoryConditions() {
  * @param {string} nationId
  * @param {string} reason  'ruler_death' | 'consul_change' | 'council_change'
  */
-function generateRulerLegacy(nationId, reason) {
+export function generateRulerLegacy(nationId, reason) {
   const n = GAME_STATE.nations?.[nationId];
   if (!n) return;
   const gov = n.government ?? {};
@@ -137,7 +137,7 @@ function generateRulerLegacy(nationId, reason) {
  * @param {object} data
  * @returns {string}
  */
-function _buildLegacyText(data) {
+export function _buildLegacyText(data) {
   if (!data) return '';
   const ruler_name  = data.ruler_name  ?? 'Правитель';
   const turns_ruled = data.turns_ruled ?? 0;
@@ -190,7 +190,7 @@ function _buildLegacyText(data) {
  * @param {object} data    данные правителя
  * @param {object|null} testament  результат проверки завещания
  */
-function showLegacyModal(text, data, testament) {
+export function showLegacyModal(text, data, testament) {
   if (typeof document === 'undefined') return;
 
   const existing = document.getElementById('legacy-modal');
@@ -244,7 +244,7 @@ function showLegacyModal(text, data, testament) {
 // СЕССИЯ 8 — КРИЗИСНЫЕ ВЕХИ
 // ──────────────────────────────────────────────────────────────────────
 
-const CRISIS_DEFS = {
+export const CRISIS_DEFS = {
   PLAGUE: {
     type:     'PLAGUE',
     priority: 3,
@@ -351,7 +351,7 @@ const CRISIS_DEFS = {
  * Вызывается из checkVictoryConditions при turn % 600 === 0.
  * @param {string} nationId
  */
-function processCrisisVeha(nationId) {
+export function processCrisisVeha(nationId) {
   nationId = nationId ?? GAME_STATE?.player_nation;
   if (GAME_STATE.active_crisis && !GAME_STATE.active_crisis.resolved) return; // уже идёт кризис
 
@@ -396,7 +396,7 @@ function processCrisisVeha(nationId) {
  * Вызывается из checkVictoryConditions каждый ход.
  * @param {string} nationId
  */
-function _tickActiveCrisis(nationId) {
+export function _tickActiveCrisis(nationId) {
   const crisis = GAME_STATE.active_crisis;
   if (!crisis || crisis.resolved) return;
   // Treat undefined nation_id as matching player_nation
@@ -414,7 +414,7 @@ function _tickActiveCrisis(nationId) {
  * @param {string} nationId
  * @param {object} crisis
  */
-function _resolveCrisis(nationId, crisis) {
+export function _resolveCrisis(nationId, crisis) {
   const def = CRISIS_DEFS[crisis.type];
   const n   = GAME_STATE.nations?.[nationId];
   if (!n || !def) { crisis.resolved = true; return; }
@@ -459,7 +459,7 @@ function _resolveCrisis(nationId, crisis) {
 // СЕССИЯ 10 — ЗАВЕЩАНИЕ
 // ──────────────────────────────────────────────────────────────────────
 
-const TESTAMENT_GOAL_DEFS = [
+export const TESTAMENT_GOAL_DEFS = [
   {
     id:   'treasury_20k',
     text: '💰 Оставить казну > 20 000',
@@ -516,7 +516,7 @@ const TESTAMENT_GOAL_DEFS = [
  * Проверить возраст правителя и уведомить об открытии завещания.
  * @param {string} nationId
  */
-function _checkTestamentAge(nationId) {
+export function _checkTestamentAge(nationId) {
   const n = GAME_STATE.nations?.[nationId];
   if (!n) return;
   const age = n.government?.ruler?.age ?? 0;
@@ -534,7 +534,7 @@ function _checkTestamentAge(nationId) {
  * Получить все доступные цели завещания.
  * @returns {Array}
  */
-function getTestamentGoalDefs() {
+export function getTestamentGoalDefs() {
   return TESTAMENT_GOAL_DEFS;
 }
 
@@ -542,7 +542,7 @@ function getTestamentGoalDefs() {
  * Взять цель в завещание.
  * @param {string} goalId
  */
-function addTestamentGoal(goalId) {
+export function addTestamentGoal(goalId) {
   if (!GAME_STATE.testament) {
     GAME_STATE.testament = { goals: [], created_turn: GAME_STATE.turn ?? 0 };
   }
@@ -565,7 +565,7 @@ function addTestamentGoal(goalId) {
  * Убрать цель из завещания.
  * @param {string} goalId
  */
-function removeTestamentGoal(goalId) {
+export function removeTestamentGoal(goalId) {
   if (!GAME_STATE.testament) return;
   GAME_STATE.testament.goals = GAME_STATE.testament.goals.filter(g => g.id !== goalId);
 }
@@ -576,7 +576,7 @@ function removeTestamentGoal(goalId) {
  * @param {string} nationId
  * @returns {{ done, total, goals, all_ok }} | null
  */
-function _evaluateTestament(nationId) {
+export function _evaluateTestament(nationId) {
   const testament = GAME_STATE.testament;
   if (!testament || !testament.goals?.length) return null;
 
@@ -609,7 +609,7 @@ function _evaluateTestament(nationId) {
 /**
  * Показать модальное окно «Завещание».
  */
-function showTestamentModal() {
+export function showTestamentModal() {
   if (typeof document === 'undefined') return;
   const modal = document.getElementById('testament-modal');
   if (!modal) return;
@@ -617,12 +617,12 @@ function showTestamentModal() {
   _renderTestamentModalContent();
 }
 
-function hideTestamentModal() {
+export function hideTestamentModal() {
   const modal = document.getElementById('testament-modal');
   if (modal) modal.style.display = 'none';
 }
 
-function _renderTestamentModalContent() {
+export function _renderTestamentModalContent() {
   const content = document.getElementById('testament-modal-content');
   if (!content) return;
 
@@ -675,7 +675,7 @@ function _renderTestamentModalContent() {
  * @param {object} nation
  * @returns {string} HTML или ''
  */
-function renderTestamentBlock(nation) {
+export function renderTestamentBlock(nation) {
   const age = nation?.government?.ruler?.age ?? 0;
   if (age < 60) return '';
 
@@ -711,7 +711,7 @@ function renderTestamentBlock(nation) {
  * @param {object} nation
  * @returns {string} HTML
  */
-function renderHistoricalRatingBlock(nation) {
+export function renderHistoricalRatingBlock(nation) {
   const nationId = GAME_STATE?.player_nation;
   if (!nationId || typeof getHistoricalRating !== 'function') return '';
 
@@ -731,7 +731,38 @@ function renderHistoricalRatingBlock(nation) {
     </div>`;
 }
 
-function closeLegacyModal() {
+export function closeLegacyModal() {
   var el = document.getElementById('legacy-modal');
   if (el) el.remove();
 }
+
+// ── data-action / data-action2 / data-action-self handlers need window binding ──
+window.closeLegacyModal            = closeLegacyModal;
+window.showTestamentModal          = showTestamentModal;
+window.hideTestamentModal          = hideTestamentModal;
+window.addTestamentGoal            = addTestamentGoal;
+window.removeTestamentGoal         = removeTestamentGoal;
+window._renderTestamentModalContent = _renderTestamentModalContent;
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+window.CRISIS_DEFS = CRISIS_DEFS;
+window.TESTAMENT_GOAL_DEFS = TESTAMENT_GOAL_DEFS;
+window._buildLegacyText = _buildLegacyText;
+window._checkTestamentAge = _checkTestamentAge;
+window._evaluateTestament = _evaluateTestament;
+window._renderTestamentModalContent = _renderTestamentModalContent;
+window._resolveCrisis = _resolveCrisis;
+window._tickActiveCrisis = _tickActiveCrisis;
+window.addTestamentGoal = addTestamentGoal;
+window.checkVictoryConditions = checkVictoryConditions;
+window.closeLegacyModal = closeLegacyModal;
+window.generateRulerLegacy = generateRulerLegacy;
+window.getTestamentGoalDefs = getTestamentGoalDefs;
+window.hideTestamentModal = hideTestamentModal;
+window.processCrisisVeha = processCrisisVeha;
+window.removeTestamentGoal = removeTestamentGoal;
+window.renderHistoricalRatingBlock = renderHistoricalRatingBlock;
+window.renderTestamentBlock = renderTestamentBlock;
+window.showLegacyModal = showLegacyModal;
+window.showTestamentModal = showTestamentModal;
+

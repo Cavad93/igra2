@@ -9,7 +9,7 @@
  * разведывательные миссии против враждебных соседей.
  * Если шпион пойман — ухудшение отношений и возможный casus belli.
  */
-function _processEspionageTick() {
+export function _processEspionageTick() {
   if (!GAME_STATE.diplomacy) return;
   const nations      = GAME_STATE.nations || {};
   const playerNation = GAME_STATE.player_nation;
@@ -152,7 +152,7 @@ function _processEspionageTick() {
 }
 
 /** Удалить просроченные записи casus belli из всех отношений */
-function _cleanExpiredCasusBelli() {
+export function _cleanExpiredCasusBelli() {
   if (!GAME_STATE.diplomacy?.relations) return;
   const now = GAME_STATE.turn ?? 1;
   for (const rel of Object.values(GAME_STATE.diplomacy.relations)) {
@@ -162,6 +162,8 @@ function _cleanExpiredCasusBelli() {
   }
 }
 
-// Экспорт в глобальную область
-window._processEspionageTick   = _processEspionageTick;
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
 window._cleanExpiredCasusBelli = _cleanExpiredCasusBelli;
+window._processEspionageTick = _processEspionageTick;
+
