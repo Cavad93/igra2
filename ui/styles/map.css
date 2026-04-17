@@ -1,0 +1,1457 @@
+/* ═══════════════════════════════════════════════════════════
+   map.css — стили карты и всех визуальных элементов на ней:
+   Leaflet, zoom-levels, map-modes, wind-rose, armies,
+   cities, routes, event-feed, AI-indicators, region-info.
+   Рефакторинг Части IV, этап 72 (uisuper.md).
+   Вынесено из index.html <style> блоков.
+   ═══════════════════════════════════════════════════════════ */
+
+    /* ══════════════════════════════════════════════════
+       ЦЕНТРАЛЬНАЯ ОБЛАСТЬ — КАРТА
+    ══════════════════════════════════════════════════ */
+    #center-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: var(--sea);
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    #map-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      /* Leaflet требует явный height */
+      min-height: 0;
+      /* Этап 17 (Tabula Peutingeriana) — фон = тёмный базальт (море) */
+      background: var(--sea);
+      /* Этап 30 — «Дыхание карты»: почти незаметный scale, 8с цикл.
+         Leaflet не задаёт transform самому #map-container (только его
+         внутренним .leaflet-*-pane), поэтому конфликта нет. */
+      animation: map-breathe 8s ease-in-out infinite;
+      transform-origin: center center;
+    }
+    /* bottom.css: @keyframes map-breathe, ui-shake вынесены (этап 36) */
+
+    /* Leaflet перекрывает стандартные стили — сбрасываем */
+    .leaflet-container {
+      width: 100% !important;
+      height: 100% !important;
+      background: var(--sea) !important;
+      font-family: var(--font-display);
+    }
+
+    /* Этап 17 — кнопки зума в палитре пергамента */
+    .leaflet-control-zoom {
+      border: 1px solid var(--border-main) !important;
+      border-radius: 2px !important;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.55) !important;
+    }
+    .leaflet-control-zoom a {
+      background: var(--bg-panel) !important;
+      color: var(--text-secondary) !important;
+      border-bottom-color: var(--border-main) !important;
+      font-size: 16px !important;
+      font-weight: normal !important;
+    }
+    .leaflet-control-zoom a:hover {
+      background: var(--bg-hover) !important;
+      color: var(--gold) !important;
+    }
+
+    /* Этап 17 — регионы как рельефный пергамент. Полигоны рендерятся
+       Canvas-рендерером, поэтому per-polygon CSS-классы не работают;
+       рельефность достигается за счёт тёмных границ (darkenColor 50%)
+       и охристой палитры fill в buildPolygonStyle(). */
+
+    /* Атрибуция CAWM */
+    .leaflet-control-attribution {
+      background: rgba(13,10,5,0.75) !important;
+      color: var(--text-dim) !important;
+      font-size: 10px !important;
+      border-top: 1px solid var(--border-gold) !important;
+    }
+    .leaflet-control-attribution a {
+      color: var(--text-gold) !important;
+    }
+
+    /* Тултип региона */
+    .leaflet-tooltip.region-tooltip {
+      background: rgba(13,10,5,0.95);
+      border: 1px solid var(--border-gold, var(--border-main));
+      border-radius: 3px;
+      color: var(--text-primary);
+      padding: 5px 8px;
+      font-family: var(--font-ui);
+      font-size: 11px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      pointer-events: none;
+    }
+    .leaflet-tooltip.region-tooltip::before {
+      border-top-color: rgba(107,79,26,0.8);
+    }
+    .rt-name    { font-size: 13px; font-weight: bold; color: var(--gold); font-family: var(--font-display); letter-spacing: 0.03em; }
+    .rt-nation  { font-size: 10px; margin-top: 1px; }
+    .rt-pop     { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+    .rt-mil     { font-size: 10px; color: #cc9944; margin-top: 2px; }
+    .rt-fort     { font-size: 10px; color: #ff8a65; margin-top: 2px; }
+    .rt-blocked  { font-size: 10px; color: var(--negative); margin-top: 3px; font-weight: 600; }
+    .rt-occupied { font-size: 10px; margin-top: 3px; font-weight: 600; }
+    .rt-garr     { font-size: 10px; color: #c39454; margin-top: 2px; }
+    /* Шаг 48 — индикатор разведданных в тултипе */
+    .rt-intel    { font-size: 9px; margin-top: 4px; padding-top: 3px; border-top: 1px dashed rgba(107,79,26,0.5); color: #bfa878; font-style: italic; }
+    .rt-intel--0 { color: #7a6a48; }
+    .rt-intel--1 { color: #c9a566; }
+    .rt-intel--2 { color: #8ec07c; }
+
+    /* Шаг 48 — индикатор разведки в панели региона */
+    .ri-intel {
+      display: block;
+      margin: 6px 10px 8px;
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 3px;
+      border: 1px solid rgba(107,79,26,0.5);
+      background: rgba(25,20,12,0.5);
+      color: #c9a566;
+      font-family: var(--font-lore);
+    }
+    .ri-intel--0 { color: #a08868; border-color: rgba(80,60,30,0.6); background: rgba(30,22,12,0.6); }
+    .ri-intel--1 { color: var(--gold); }
+    .ri-intel--2 { color: #8ec07c; border-color: rgba(80,120,60,0.5); }
+    .ri-intel-hint { color: #8a7553; font-style: italic; margin-left: 4px; }
+    .ri-stat--hidden { opacity: 0.55; filter: saturate(0.4); }
+    .ri-stat--blurred .ri-key-num { filter: blur(0px); letter-spacing: 0.04em; }
+    .ri-stat--blurred { opacity: 0.8; }
+
+    /* Подписи наций рендерятся через SVG overlay в map.js (Imperator Rome стиль).
+       DOM-маркеры отключены: весь рендеринг через <svg> поверх карты. */
+    .nation-name-label { display: none !important; }
+    .nation-label-span  { display: none !important; }
+
+    /* Кнопка показа ID регионов */
+    .region-id-toggle-btn {
+      background: rgba(20,16,10,0.85) !important;
+      color: var(--gold) !important;
+      border: 1px solid #6a4e23 !important;
+      font-weight: bold;
+      font-size: 12px;
+      padding: 4px 8px;
+      cursor: pointer;
+      border-radius: 4px;
+      min-width: 32px;
+      text-align: center;
+    }
+    .region-id-toggle-btn.active { background: #6a4e23 !important; color: #fff !important; }
+
+    /* Кнопка торговых маршрутов */
+    .trade-routes-toggle-btn {
+      background: rgba(20,16,10,0.85) !important;
+      color: var(--gold) !important;
+      border: 1px solid #6a4e23 !important;
+      font-size: 10px;
+      padding: 2px 5px;
+      cursor: pointer;
+      border-radius: 4px;
+      min-width: 36px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .trade-routes-toggle-btn.active { background: #2196F3 !important; color: white !important; border-color: #1565C0 !important; }
+
+    /* ── Шаг 42: Анимированные торговые маршруты ───────────────
+       Маршруты рисуются SVG-линиями с анимацией stroke-dashoffset.
+       Создаётся иллюзия потока точек вдоль линии. */
+    .trade-route-path {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      animation: tradeFlow 1s linear infinite;
+      pointer-events: stroke;
+    }
+    .trade-route-path.grain   { stroke: #a5d6a7; }
+    .trade-route-path.metal   { stroke: #b0bec5; }
+    .trade-route-path.luxury  { stroke: #ce93d8; }
+    .trade-route-path.general { stroke: var(--gold); }
+    .trade-route-path.world   { stroke: #64b5f6; animation-duration: 1.5s; opacity: 0.55; }
+    @keyframes tradeFlow {
+      from { stroke-dashoffset: 0;   }
+      to   { stroke-dashoffset: -14; }
+    }
+    /* Уважаем prefers-reduced-motion — статические пунктиры */
+    @media (prefers-reduced-motion: reduce) {
+      .trade-route-path { animation: none; }
+    }
+
+    /* Разбивка производства (ECO_006) */
+    .prod-breakdown       { margin-top: 8px; border-top: 1px solid #444; padding-top: 6px; }
+    .prod-breakdown-title { font-size: 11px; font-weight: bold; color: var(--gold); margin-bottom: 4px; }
+    .prod-row  { font-size: 11px; margin: 3px 0; }
+    .prod-bar  { height: 6px; background: #333; border-radius: 3px; margin-top: 2px; }
+    .prod-bar div { height: 100%; border-radius: 3px; }
+    .prod-hint { font-size: 10px; color: var(--positive); margin-top: 4px; font-style: italic; }
+
+    /* Панель балансировки развития (ECO_005) */
+    .balance-panel  { padding: 8px; background: #111; border-radius: 4px; margin: 6px 0; }
+    .balance-title  { font-size: 11px; font-weight: bold; color: var(--gold); margin-bottom: 4px; }
+    .balance-row    { display:flex; align-items:center; gap:8px; margin:3px 0; font-size:11px; }
+    .balance-row > span:first-child { width: 80px; flex-shrink:0; }
+    .balance-bar    { flex:1; height:8px; background:#333; border-radius:4px; }
+    .bar-fill       { height:100%; border-radius:4px; }
+    .bar-fill.trade { background:#2196F3; }
+    .bar-fill.agri  { background:var(--positive); }
+    .bar-fill.mil   { background:var(--negative); }
+    .balance-hint   { font-size:10px; color:#9E9E9E; margin-top:6px; font-style:italic; }
+
+    /* Панель мирового рынка (ECO_004) */
+    .wm-panel { margin: 6px 0; padding: 6px; background: #1a1a2e; border-radius: 4px; font-size: 11px; }
+    .wm-good  { margin: 3px 0; }
+    .wm-bar   { height: 4px; background: #333; border-radius: 2px; margin-top: 2px; }
+    .wm-bar div { height: 100%; background: #2196F3; border-radius: 2px; }
+    .no-access  { border-left: 3px solid var(--negative); color: #9E9E9E; }
+    .has-access { border-left: 3px solid var(--positive); }
+
+    /* Диагностика дефицита бюджета */
+    .deficit-diagnostics { margin-top: 8px; border-top: 1px solid #444; padding-top: 6px; }
+    .deficit-title { font-size: 11px; font-weight: bold; color: #FFC107; margin-bottom: 4px; }
+    .deficit-item { font-size: 11px; padding: 2px 0; }
+    .deficit-item.high { color: var(--negative); }
+    .deficit-item.med  { color: #FFC107; }
+    .deficit-item.low  { color: #9E9E9E; }
+
+    /* Метки ID регионов */
+    .region-id-label { background: none !important; border: none !important; }
+    .region-id-label span {
+      font-size: 9px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 3px #000, 0 0 3px #000;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* Подписи морей (DivIcon) */
+    .sea-label { background: none !important; border: none !important; }
+    .sea-label-text {
+      color: rgba(140, 180, 210, 0.45);
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      text-align: center;
+      white-space: pre-line;
+      text-transform: uppercase;
+      line-height: 1.3;
+      pointer-events: none;
+      text-shadow: 0 1px 4px rgba(0,0,20,0.5), 0 0 8px rgba(0,0,40,0.3);
+    }
+
+    /* Виньетка поверх карты */
+    #map-vignette {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 5;
+      background: radial-gradient(ellipse at center,
+        transparent 55%,
+        rgba(15, 8, 3, 0.25) 80%,
+        rgba(10, 5, 2, 0.5) 100%
+      );
+    }
+
+    /* Шаг 45 — Сезонный оверлей поверх карты */
+    #season-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 200;
+      background: transparent;
+      transition: background 2s ease, filter 2s ease;
+    }
+    /* Плавный transition фильтра leaflet-контейнера (сам #map-container
+       получает класс .leaflet-container после L.map('map-container')) */
+    #map-container,
+    #map-container.leaflet-container {
+      transition: filter 2s ease;
+    }
+    /* Иконка сезона в топ-баре */
+    #game-date .season-chip {
+      display: inline-block;
+      margin-right: 6px;
+      opacity: 0.9;
+    }
+
+    /* Инфо о выбранном регионе */
+    #region-info {
+      /* position: fixed — вырывается из overflow:hidden центральной панели */
+      position: fixed;
+      top: calc(var(--header-h) + 10px);
+      right: calc(var(--panel-w) + 10px);
+      width: 310px;
+      max-height: calc(100vh - var(--header-h) - var(--footer-h) - 20px);
+      /* flex-колонка: шапка+табы фиксированы, контент скроллится */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: rgba(17, 11, 4, 0.97);
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+      pointer-events: auto;
+    }
+    #region-info.hidden { display: none; }
+
+    /* Шапка, ключевые цифры, табы и футер — не скроллятся */
+    .region-info-header { flex-shrink: 0; }
+    .ri-key-stats       { flex-shrink: 0; }
+    .ri-tabs            { flex-shrink: 0; }
+    .ri-footer          { flex-shrink: 0; }
+
+    /* Анимация появления панели региона */
+    #region-info.ri-entering {
+      animation: ri-slide-in 0.2s ease-out forwards;
+    }
+    @keyframes ri-slide-in {
+      from { opacity: 0; transform: translateX(20px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Цветная полоса нации на шапке */
+    .ri-nation-stripe {
+      height: 3px;
+      width: 100%;
+      border-radius: 0;
+    }
+
+    /* Блок ключевых цифр */
+    .ri-key-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+      padding: 10px 6px 10px;
+      background: rgba(20, 12, 4, 0.85);
+      border-bottom: 1px solid var(--border-gold);
+    }
+    .ri-key-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 4px;
+      border-right: 1px solid rgba(107, 79, 26, 0.25);
+    }
+    .ri-key-stat:last-child { border-right: none; }
+    .ri-key-num {
+      font-size: 18px;
+      font-family: var(--font-data);
+      color: var(--text-gold);
+      font-weight: bold;
+      line-height: 1.1;
+    }
+    .ri-key-lbl {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 3px;
+      white-space: nowrap;
+    }
+
+    /* Прогресс-бары в панели региона */
+    .ri-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0;
+      font-size: 11px;
+    }
+    .ri-bar-lbl {
+      flex-shrink: 0;
+      width: 92px;
+      color: var(--text-light);
+    }
+    .ri-bar-track {
+      flex: 1;
+      height: 8px;
+      background: rgba(20, 12, 4, 0.8);
+      border: 1px solid rgba(107, 79, 26, 0.4);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .ri-bar-fill {
+      height: 100%;
+      transition: width 0.25s ease-out;
+    }
+    .ri-bar-val {
+      flex-shrink: 0;
+      width: 36px;
+      text-align: right;
+      color: var(--text-dim);
+      font-family: var(--font-ui);
+      font-weight: bold;
+    }
+
+    /* Футер с кнопками действий */
+    .ri-footer {
+      display: flex;
+      gap: 6px;
+      padding: 8px 10px;
+      background: rgba(20, 12, 4, 0.9);
+      border-top: 1px solid var(--border-gold);
+    }
+    .ri-action-btn {
+      flex: 1;
+      padding: 7px 8px;
+      background: rgba(40, 28, 8, 0.6);
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+      color: var(--text-light);
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .ri-action-btn:hover {
+      background: rgba(107, 79, 26, 0.35);
+      color: var(--text-gold);
+    }
+    .ri-action-btn.primary {
+      background: linear-gradient(135deg, rgba(107, 79, 26, 0.55), rgba(40, 28, 8, 0.8));
+      color: var(--text-gold);
+      font-weight: bold;
+    }
+    .ri-action-btn.primary:hover {
+      background: linear-gradient(135deg, rgba(127, 99, 46, 0.75), rgba(60, 40, 12, 0.9));
+    }
+
+    /* Контент вкладок — скроллится */
+    #region-tab-info,
+    #region-tab-build,
+    #region-tab-diplomacy {
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex: 1;
+      min-height: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-gold) var(--bg-deep);
+    }
+    #region-tab-info::-webkit-scrollbar,
+    #region-tab-build::-webkit-scrollbar,
+    #region-tab-diplomacy::-webkit-scrollbar { width: 5px; }
+    #region-tab-info::-webkit-scrollbar-thumb,
+    #region-tab-build::-webkit-scrollbar-thumb,
+    #region-tab-diplomacy::-webkit-scrollbar-thumb { background: var(--border-gold); border-radius: 2px; }
+
+    .region-info-header {
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      gap: 0;
+      background: rgba(40,25,8,0.8);
+      border-bottom: 2px solid var(--border-gold);
+    }
+    .region-info-header-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px 10px;
+    }
+    .region-info-name {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-gold);
+      flex: 1;
+    }
+    .region-info-nation {
+      font-size: 11px;
+    }
+    .region-info-close {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0 2px;
+    }
+    .region-info-close:hover { color: var(--text-gold); }
+
+    .region-info-body { padding: 10px; }
+    .region-info-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      font-style: italic;
+      line-height: 1.4;
+    }
+
+    .region-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .region-stat {
+      font-size: 11px;
+      color: var(--text-light);
+    }
+
+    .region-production {
+      margin-top: 6px;
+    }
+    .prod-item {
+      display: inline-block;
+      background: var(--bg-section);
+      border: 1px solid var(--border-gold);
+      border-radius: 2px;
+      padding: 2px 5px;
+      font-size: 10px;
+      margin: 2px;
+      color: var(--text-light);
+    }
+
+    /* ── Биом ── */
+    .region-biome-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 11px;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      margin-top: 6px;
+    }
+
+    .region-buildings {
+      margin-top: 6px;
+    }
+    .building-tag {
+      display: inline-block;
+      background: rgba(100,70,20,0.3);
+      border: 1px solid var(--border-gold);
+      border-radius: 2px;
+      padding: 2px 5px;
+      font-size: 10px;
+      margin: 2px;
+      color: var(--text-dim);
+    }
+
+    /* ── Социальная структура региона ── */
+    .region-pop-struct {
+      margin: 8px 0 4px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(107,79,26,.25);
+    }
+
+    /* Donut + legend side by side */
+    .rps-donut-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .rps-legend { flex: 1; }
+    .rps-leg-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 1.5px 0;
+    }
+    .rps-leg-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%; flex-shrink: 0;
+    }
+    .rps-leg-nm  { font-size: 9.5px; color: rgba(255,255,255,.7); flex: 1; }
+    .rps-leg-pct { font-size: 9.5px; color: var(--text-gold); font-weight: bold; }
+
+    /* Composition strip */
+    .rps-strip {
+      display: flex;
+      height: 6px;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 8px;
+      background: rgba(255,255,255,.04);
+    }
+
+    /* Class rows */
+    .rps-rows { display: flex; flex-direction: column; gap: 3px; margin-bottom: 6px; }
+    .rps-row  {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 16px;
+    }
+    .rps-ic   { font-size: 10px; width: 14px; text-align: center; flex-shrink: 0; }
+    .rps-nm   {
+      font-size: 9.5px; color: rgba(255,255,255,.75);
+      width: 78px; flex-shrink: 0; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .rps-bar-w {
+      flex: 1; height: 8px;
+      background: rgba(255,255,255,.04);
+      border-radius: 2px; overflow: hidden; position: relative;
+    }
+    .rps-bar-f {
+      height: 100%; border-radius: 2px;
+      transition: width .3s ease;
+    }
+    .rps-cnt  { font-size: 9px; color: var(--text-light); width: 28px; text-align: right; flex-shrink: 0; }
+    .rps-pct  { font-size: 9px; color: var(--text-dim);   width: 26px; text-align: right; flex-shrink: 0; }
+
+    /* Satisfaction mini bar (только для провинций игрока) */
+    .rps-sat {
+      display: inline-block;
+      width: 22px; height: 5px;
+      background: linear-gradient(to right, var(--col) var(--sat), rgba(255,255,255,.1) var(--sat));
+      border-radius: 3px; flex-shrink: 0;
+    }
+
+    .rps-note {
+      font-size: 9px; color: var(--text-dim);
+      font-style: italic; text-align: right; padding-top: 2px;
+    }
+    .rps-note--real { color: rgba(212,175,55,.5); font-style: normal; }
+
+    /* ── Культура региона — круговая диаграмма ── */
+    .region-culture-section {
+      margin: 10px 0 6px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border-gold);
+    }
+    .culture-chart-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-top: 6px;
+    }
+    .culture-pie {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 0 6px rgba(0,0,0,0.5), inset 0 0 0 2px rgba(232,201,122,0.2);
+    }
+    .culture-pie-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--bg-section);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.4);
+    }
+    .culture-legend {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .culture-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 5px;
+      background: rgba(40,25,8,0.4);
+      border-radius: 3px;
+      border: 1px solid rgba(180,140,60,0.15);
+    }
+    .culture-legend-img {
+      width: 32px;
+      height: 32px;
+      border-radius: 3px;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 1px solid rgba(180,140,60,0.3);
+    }
+    .culture-legend-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .culture-legend-name {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-gold);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .culture-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .culture-legend-stats {
+      font-size: 9px;
+      color: var(--text-dim);
+      display: flex;
+      gap: 6px;
+      margin-top: 1px;
+    }
+    .culture-pct {
+      font-weight: 600;
+      color: var(--text-light);
+    }
+    .culture-pop {
+      color: var(--text-dim);
+    }
+
+/* ── БЛОК B: Map modes, Wind rose, Zoom levels ──────── */
+
+    /* ══════════════════════════════════════════════════
+       ШАГ 29: ПАНЕЛЬ РЕЖИМОВ КАРТЫ (Map modes)
+    ══════════════════════════════════════════════════ */
+    #map-mode-bar {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 500;
+      display: flex;
+      gap: 4px;
+      pointer-events: auto;
+    }
+    .mm-btn {
+      width: 32px;
+      height: 32px;
+      background: rgba(13,10,5,0.85);
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 15px;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      line-height: 1;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .mm-btn:hover {
+      background: rgba(42,32,16,0.95);
+      border-color: var(--gold-bright);
+    }
+    .mm-btn.active {
+      background: rgba(107,79,26,0.5);
+      border-color: var(--gold-bright);
+      color: var(--gold-bright);
+    }
+    /* Плавный переход цветов при смене режимов */
+    .leaflet-interactive {
+      transition: fill 0.3s, fill-opacity 0.3s, stroke-opacity 0.3s;
+    }
+
+    /* ══════════════════════════════════════════════════
+       ШАГ 44 (arma.md): СТРАТЕГИЧЕСКИЕ УРОВНИ ЗУМА
+    ══════════════════════════════════════════════════ */
+    /* #map-mode-bar плавно исчезает на strategic уровне. Видимость
+       управляется через inline style (opacity) из onZoomChange(). */
+    #map-mode-bar {
+      transition: opacity 0.3s ease;
+    }
+
+    /* ══════════════════════════════════════════════════
+       ЭТАП 19 (uisuper.md): РОЗА ВЕТРОВ
+       Заменяет визуально #map-mode-bar в правом нижнем углу карты.
+       Легаси-бар сохраняется в DOM для совместимости с логикой
+       setMapMode/onZoomChange, но скрыт визуально.
+    ══════════════════════════════════════════════════ */
+    #map-mode-bar {
+      display: none !important;
+    }
+
+    #wind-rose {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      z-index: 10;
+      width: 150px;
+      height: 164px;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    /* uisuper hot-fix #7: подпись над розой ветров — чтобы игрок
+       сразу понял, что это селектор режима карты. */
+    #wind-rose .wr-caption {
+      font-family: var(--font-display);
+      font-size: 10px;
+      color: var(--gold-bright);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      padding: 2px 8px;
+      background: rgba(20,14,6,0.7);
+      border: 1px solid var(--border-gold);
+      border-radius: 3px;
+      margin-bottom: 4px;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    #wind-rose-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .wr-center {
+      fill: var(--bg-panel);
+      stroke: var(--border-gold);
+      stroke-width: 1;
+    }
+    .wr-center-dot {
+      fill: var(--gold);
+    }
+
+    .wr-petal {
+      fill: var(--bg-section);
+      stroke: var(--border-main);
+      stroke-width: 1;
+      cursor: pointer;
+      pointer-events: all;
+      transition: fill 0.25s, stroke 0.25s, transform 0.25s;
+      transform-origin: center;
+      transform-box: fill-box;
+    }
+
+    .wr-petal:hover {
+      fill: var(--bg-hover);
+      stroke: var(--border-light);
+    }
+
+    /* Активный лепесток */
+    .wr-petal.active {
+      fill: var(--bronze-dark);
+      stroke: var(--gold);
+      stroke-width: 1.5;
+      filter: drop-shadow(0 0 4px rgba(201,169,97,0.4));
+    }
+
+    .wr-label {
+      font-family: var(--font-display);
+      font-size: 8px;
+      fill: var(--gold-bright);
+      pointer-events: none;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .wr-notch {
+      stroke: var(--border-main);
+      stroke-width: 1;
+      pointer-events: none;
+    }
+
+    /* Strategic view (zoom < 4): уменьшенные маркеры армий.
+       Показываем только флаг нации — .army-count прячется. */
+    body.map-zoom-strategic .army-marker {
+      width: 18px !important;
+      height: 18px !important;
+    }
+    body.map-zoom-strategic .army-marker__svg {
+      width: 18px !important;
+      height: 18px !important;
+    }
+    body.map-zoom-strategic .army-count {
+      display: none;
+    }
+
+    /* Detailed view (zoom > 6.5): увеличенные маркеры, утолщённые
+       торговые маршруты, иконки построек проявляются плавно. */
+    body.map-zoom-detailed .trade-route-line {
+      stroke-width: 4px !important;
+    }
+    .zoom-bld-div {
+      pointer-events: none;
+      background: transparent;
+      border: none;
+    }
+    .zoom-bld-mini {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1px;
+      padding: 2px 3px;
+      background: rgba(13,10,5,0.78);
+      border: 1px solid rgba(200,170,100,0.5);
+      border-radius: 3px;
+      font-size: 10px;
+      line-height: 1;
+      max-width: 60px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    body.map-zoom-detailed .zoom-bld-mini {
+      opacity: 1;
+    }
+    .zoom-bld-icon {
+      display: inline-block;
+      width: 12px;
+      text-align: center;
+    }
+    .zoom-garrison-div {
+      pointer-events: none;
+      background: transparent;
+      border: none;
+    }
+    .zoom-garrison-num {
+      font-size: 11px;
+      color: var(--gold-bright);
+      background: rgba(13,10,5,0.85);
+      border: 1px solid rgba(200,170,100,0.45);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-family: var(--font-data);
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      text-align: center;
+    }
+    body.map-zoom-detailed .zoom-garrison-num {
+      opacity: 1;
+    }
+
+/* ── Армии, города, события, AI-индикаторы ───────────── */
+
+    /* ══════════════════════════════════════════════════
+       АРМИИ НА КАРТЕ
+    ══════════════════════════════════════════════════ */
+
+    /* ══════════════════════════════════════════════════
+       uisuper Этап 18 — Подписи городов-столиц
+    ══════════════════════════════════════════════════ */
+    .city-label {
+      font-family: var(--font-display, 'Cinzel', 'Palatino', 'Georgia', serif);
+      font-size: 9px;
+      color: var(--text-secondary, #c7b28a);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85),
+                   0 0 4px rgba(0, 0, 0, 0.6);
+      white-space: nowrap;
+      pointer-events: none;
+      transform: translate(6px, 4px);
+      opacity: 0.88;
+    }
+    .city-label.capital {
+      color: var(--gold, #c9a961);
+      font-size: 10px;
+      letter-spacing: 0.10em;
+      font-weight: 600;
+    }
+    .city-label.capital.player {
+      color: var(--gold-bright, #e6c37a);
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      font-weight: 700;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9),
+                   0 0 6px rgba(201, 169, 97, 0.45);
+      opacity: 1;
+    }
+
+    /* ══════════════════════════════════════════════════
+       Шаг 39 — Анимированные SVG-маркеры армий
+    ══════════════════════════════════════════════════ */
+    .army-marker {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+      transition: transform 0.15s;
+    }
+    .army-marker:hover { transform: scale(1.15); }
+    .army-marker__svg {
+      display: block;
+      pointer-events: auto;
+    }
+    .army-marker__star { /* силуэт звезды — заливка цветом нации */ }
+    .army-marker__glyph { /* значок рода войск — белый */ }
+
+    .army-selected .army-marker__svg {
+      filter: drop-shadow(0 0 6px var(--nc));
+      animation: army-pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes army-pulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.6; }
+    }
+
+    .army-count {
+      font-size: 9px;
+      color: #fff;
+      background: rgba(0,0,0,0.65);
+      padding: 0 3px;
+      border-radius: 3px;
+      margin-top: 2px;
+      font-family: var(--font-data);
+      white-space: nowrap;
+    }
+
+    .army-marker--player .army-marker__star {
+      stroke: var(--gold-bright);
+      stroke-width: 1.2;
+    }
+
+    .mini-bar { height: 3px; flex: 1; background: rgba(255,255,255,0.15); border-radius: 1px; overflow: hidden; }
+
+    /* Призрак движения */
+    .army-ghost {
+      width: 26px; height: 26px;
+      border: 2px dashed; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: 700; color: #fff;
+      opacity: .75; pointer-events: none;
+    }
+
+    /* Индикатор осады */
+    .siege-indicator {
+      display: flex; align-items: center; gap: 3px;
+      background: rgba(0,0,0,0.75); border: 1px solid #c62828;
+      border-radius: 3px; padding: 2px 5px;
+      font-size: 10px; color: #fff; white-space: nowrap;
+    }
+    .siege-bar { width: 36px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 2px; overflow: hidden; }
+    .siege-bar__fill { height: 100%; transition: width .4s; }
+    .siege-pct { font-size: 9px; color: #ff8a65; }
+
+    /* ── Улучшенный маркер осады на карте ── */
+    .siege-indicator {
+      display: flex; align-items: center; gap: 3px;
+      background: rgba(0,0,0,0.80); border: 1px solid #c62828;
+      border-radius: 3px; padding: 2px 5px;
+      font-size: 10px; color: #fff; white-space: nowrap;
+      cursor: pointer;
+      animation: si-pulse-border 2s ease-in-out infinite;
+    }
+    .siege-indicator:hover { background: rgba(80,0,0,0.85); }
+    @keyframes si-pulse-border {
+      0%,100% { box-shadow: 0 0 0 0 rgba(198,40,40,0.6); }
+      50%      { box-shadow: 0 0 0 5px rgba(198,40,40,0); }
+    }
+    .siege-ring-wrap { position: relative; width: 22px; height: 22px; }
+    .siege-ring-svg { position: absolute; top:0; left:0; }
+    .siege-ring-icon { position: absolute; top:50%; left:50%; transform: translate(-50%,-50%); font-size: 11px; line-height: 1; }
+
+    /* ══════════════════════════════════════════════════
+       Шаг 40 — Прогресс строительства на карте
+    ══════════════════════════════════════════════════ */
+    .build-progress-marker {
+      width: 48px;
+      height: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-overlay);
+      border: 1px solid rgba(232,201,122,0.55);
+      border-radius: 3px;
+      font-size: 14px;
+      line-height: 1;
+      color: #fff;
+      pointer-events: none;
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+    }
+    .bpm-bar {
+      width: 44px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 2px;
+    }
+    .bpm-fill {
+      height: 100%;
+      background: var(--gold-bright);
+      transition: width 0.4s ease;
+    }
+    .bpm-turns {
+      font-size: 9px;
+      color: var(--gold-bright);
+      margin-top: 1px;
+      font-family: var(--font-data);
+      white-space: nowrap;
+    }
+
+    /* ══════════════════════════════════════════════════
+       Шаг 41 — Пульсирующие иконки событий на карте
+    ══════════════════════════════════════════════════ */
+    .map-event-svg {
+      /* SVG-overlay поверх Leaflet, не блокирует клики */
+      pointer-events: none;
+    }
+    .map-event-icon {
+      paint-order: stroke;
+      stroke: rgba(0, 0, 0, 0.55);
+      stroke-width: 0.5px;
+      filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+    }
+
+    /* ══════════════════════════════════════════════════
+       Шаг 50 — Лента событий на карте (Event Feed)
+
+       L.divIcon с баббл-иконкой над регионом. slideup → idle →
+       fadeout. Максимум 5 одновременных бабблов; остальные ждут
+       в очереди (см. ui/map_event_feed.js). pointer-events:none —
+       клики идут в regionLayers под бабблом.
+    ══════════════════════════════════════════════════ */
+    .event-feed-divicon {
+      /* Leaflet по-умолчанию добавляет background и border для
+         .leaflet-div-icon; сбрасываем, чтобы отображался только
+         наш .event-feed-marker. */
+      background: transparent !important;
+      border: none !important;
+      pointer-events: none;
+    }
+    .event-feed-marker {
+      background: rgba(13, 10, 5, 0.88);
+      border: 1px solid var(--border-gold, #a68a4a);
+      border-radius: 12px;
+      padding: 3px 8px;
+      font-size: 11px;
+      color: var(--text-light, #e8dcb8);
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      animation: event-bubble 2.6s forwards;
+      pointer-events: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      /* Центрируем баббл над точкой региона (L.divIcon
+         ставит iconAnchor в (0,0)). */
+      transform: translate(-50%, -100%);
+      transform-origin: bottom center;
+    }
+    .event-feed-marker .event-feed-icon { font-size: 13px; line-height: 1; }
+    .event-feed-marker .event-feed-text { line-height: 1.2; }
+    @keyframes event-bubble {
+      0%   { opacity: 0; transform: translate(-50%, calc(-100% + 8px)); }
+      15%  { opacity: 1; transform: translate(-50%, -100%); }
+      75%  { opacity: 1; transform: translate(-50%, -100%); }
+      100% { opacity: 0; transform: translate(-50%, calc(-100% - 6px)); }
+    }
+
+    /* ══════════════════════════════════════════
+       ИНДИКАТОРЫ ДЕЙСТВИЙ AI-НАЦИЙ (Шаг 51 arma.md)
+
+       Над регионами, где AI-нация выполнила действие на этом
+       ходу, показывается маленький цветной кружок с иконкой
+       действия. Цвет нации задаётся через CSS-переменную --nc,
+       в tooltip — имя нации, тип действия и регион.
+       См. ui/map_ai_indicators.js.
+    ══════════════════════════════════════════ */
+    .ai-indicator-divicon {
+      background: transparent !important;
+      border: none !important;
+      pointer-events: none;
+    }
+    .ai-indicator {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--nc, #888);
+      opacity: 0.75;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      line-height: 1;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+      animation: ai-appear 0.4s ease-out;
+      pointer-events: auto;
+      cursor: help;
+      transform: translate(-50%, -50%);
+      transform-origin: center center;
+      transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+    }
+    .ai-indicator:hover {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.2);
+    }
+    @keyframes ai-appear {
+      from { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+      to   { transform: translate(-50%, -50%) scale(1); opacity: 0.75; }
+    }
+
+/* ── Маршруты, панель армии, режим движения, приказы ── */
+
+    /* Режим движения */
+    .map--move-mode { cursor: crosshair !important; }
+    .map--move-mode .leaflet-interactive { cursor: crosshair !important; }
+
+    /* ══════════════════════════════════════════════════
+       Шаг 47 — Предпросмотр маршрута армии (hover)
+    ══════════════════════════════════════════════════ */
+    .leaflet-overlay-pane path.army-route-preview {
+      animation: army-route-march 1.4s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes army-route-march {
+      from { stroke-dashoffset: 0;   }
+      to   { stroke-dashoffset: -28; }  /* 2×(8+6) — 2 периода паттерна 8 6 */
+    }
+
+    #army-route-preview-tooltip {
+      position: fixed;
+      display: none;
+      z-index: 9500;
+      pointer-events: none;
+      background: rgba(10, 8, 4, 0.92);
+      color: #ffd48a;
+      border: 1px solid rgba(255, 215, 120, 0.55);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-family: var(--font-ui);
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+    }
+
+    /* Панель армии */
+    #army-panel {
+      display: none;
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      z-index: 800;
+      width: 360px; max-width: 94vw;
+      background: var(--bg-panel); border: 1px solid var(--border-gold);
+      border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+    }
+    .army-panel-inner { padding: 10px 12px; }
+    .army-panel-header {
+      display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+      font-size: 13px; color: var(--text-primary);
+    }
+    .army-nation-name { color: var(--text-secondary); font-size: 11px; flex: 1; text-align: right; }
+    .army-panel-close {
+      background: none; border: none; color: var(--text-secondary);
+      cursor: pointer; font-size: 14px; padding: 0 4px;
+    }
+    .army-panel-stats { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+    .army-stat-row { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+    .army-stat-label { width: 74px; color: var(--text-secondary); }
+    .army-stat-bar {
+      flex: 1; height: 6px; background: rgba(255,255,255,0.1);
+      border-radius: 3px; overflow: hidden;
+    }
+    .army-stat-bar > div { height: 100%; border-radius: 3px; transition: width .4s; }
+    .army-stat-val { width: 28px; text-align: right; color: var(--text-primary); font-size: 11px; }
+    .army-panel-units { font-size: 11px; color: var(--text-primary); margin-bottom: 6px; line-height: 1.6; }
+    .army-panel-meta { font-size: 10px; color: var(--text-secondary); margin-bottom: 5px; }
+    .army-panel-cmd { font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; padding: 4px 6px; background: rgba(255,255,255,0.04); border-radius: 3px; }
+    .army-siege-info { font-size: 11px; color: #ff8a65; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .army-panel-footer { font-size: 10px; color: var(--text-secondary); margin-bottom: 6px; }
+    .army-panel-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .army-panel-npc-cmd {
+      font-size: 11px; color: var(--warning);
+      background: rgba(255,152,0,0.1);
+      border: 1px solid rgba(255,152,0,0.3);
+      border-radius: 4px;
+      padding: 5px 8px;
+      line-height: 1.5;
+    }
+    .army-cap-row {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 10px; color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+    .army-cap-label { white-space: nowrap; min-width: 100px; }
+    .army-cap-bar-wrap {
+      flex: 1; height: 5px;
+      background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;
+    }
+    .army-cap-bar { height: 100%; border-radius: 3px; transition: width .3s, background .3s; }
+    .army-cap-nums { white-space: nowrap; min-width: 80px; text-align: right; }
+    .army-cap-over { color: var(--negative); font-weight: bold; white-space: nowrap; }
+    .army-btn {
+      padding: 4px 10px; font-size: 11px; cursor: pointer;
+      border: 1px solid var(--border-gold); border-radius: 3px;
+      background: rgba(107,79,26,0.4); color: var(--text-primary);
+      transition: background .15s;
+    }
+    .army-btn:hover { background: rgba(107,79,26,0.7); }
+    .army-btn--danger { border-color: #c62828; background: rgba(198,40,40,0.25); }
+    .army-btn--danger:hover { background: rgba(198,40,40,0.5); }
+    .army-btn--secondary { border-color: var(--border); background: rgba(255,255,255,0.05); }
+    .army-btn--assign { padding: 2px 7px; font-size: 10px; margin-left: auto; }
+
+    /* Командующий — расширенный блок */
+    .army-panel-cmd--empty { display: flex; align-items: center; gap: 8px; color: var(--negative); }
+    .cmd-row-top   { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+    .cmd-name      { flex: 1; font-size: 11px; }
+    .cmd-stars     { font-size: 13px; color: var(--gold-bright); letter-spacing: 1px; cursor: default; }
+    .cmd-row-stats { font-size: 10px; color: var(--text-secondary); margin-bottom: 4px; }
+    .cmd-skills-row { display: flex; flex-wrap: wrap; gap: 4px; }
+    .cmd-skill-badge {
+      font-size: 10px; padding: 1px 6px;
+      background: rgba(180,140,60,0.2); border: 1px solid rgba(180,140,60,0.5);
+      border-radius: 10px; color: var(--text-gold); cursor: default; white-space: nowrap;
+    }
+
+    /* Баннер режима марша */
+    #move-mode-banner {
+      display: none;
+      position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+      z-index: 1200; pointer-events: auto;
+    }
+    .mmb-inner {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(10,8,5,0.92); border: 1px solid var(--gold-bright);
+      border-radius: 6px; padding: 8px 14px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.7);
+      font-size: 12px; color: #fff;
+    }
+    .mmb-pulse {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--gold-bright);
+      box-shadow: 0 0 0 0 rgba(232,201,122,0.7);
+      animation: mmb-pulse-anim 1.2s infinite;
+      flex-shrink: 0;
+    }
+    @keyframes mmb-pulse-anim {
+      0%   { box-shadow: 0 0 0 0 rgba(232,201,122,0.7); }
+      70%  { box-shadow: 0 0 0 8px rgba(232,201,122,0); }
+      100% { box-shadow: 0 0 0 0 rgba(232,201,122,0); }
+    }
+    .mmb-text b { color: var(--gold-bright); }
+    .mmb-cancel {
+      padding: 3px 9px; font-size: 11px; cursor: pointer;
+      border: 1px solid var(--negative); border-radius: 3px;
+      background: rgba(139,32,32,0.2); color: #ef9a9a;
+      transition: background .15s; flex-shrink: 0;
+    }
+    .mmb-cancel:hover { background: rgba(139,32,32,0.4); }
+
+    /* Picker командующего */
+    #cmd-picker-overlay {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.65);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cmd-picker {
+      width: 420px; max-width: 96vw; max-height: 80vh;
+      background: var(--bg-panel); border: 1px solid var(--border-gold);
+      border-radius: 8px; box-shadow: 0 8px 40px rgba(0,0,0,0.85);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .cmd-picker-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-bottom: 1px solid var(--border-gold);
+      font-size: 13px; font-weight: 700; color: var(--text-gold);
+      flex-shrink: 0;
+    }
+    .cmd-picker-close {
+      background: none; border: none; color: #888; font-size: 16px;
+      cursor: pointer; padding: 0 4px;
+    }
+    .cmd-picker-close:hover { color: #fff; }
+    .cmd-picker-body { overflow-y: auto; padding: 10px 12px; flex: 1; }
+    .cmd-picker-section-title {
+      font-size: 10px; color: var(--text-dim); text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 6px; padding-bottom: 4px;
+      border-bottom: 1px solid rgba(107,79,26,0.3);
+    }
+    .cmd-pick-card {
+      background: rgba(0,0,0,0.25); border: 1px solid rgba(107,79,26,0.4);
+      border-radius: 5px; padding: 8px 10px; margin-bottom: 6px;
+    }
+    .cmd-pick-card:hover { border-color: var(--border-gold); }
+    .cmd-pick-top { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
+    .cmd-pick-name { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+    .cmd-pick-role { font-size: 10px; color: #888; margin-left: 5px; }
+    .cmd-pick-stars { font-size: 14px; color: var(--gold-bright); flex-shrink: 0; }
+    .cmd-archetype {
+      font-size: 9px; padding: 1px 5px; border-radius: 8px;
+      background: rgba(33,150,243,0.2); border: 1px solid rgba(33,150,243,0.4);
+      color: #90CAF9; margin-left: 4px; vertical-align: middle;
+    }
+    .cmd-pick-stats { font-size: 10px; color: var(--text-secondary); margin-bottom: 5px; }
+    .cmd-pick-empty { font-size: 11px; color: #666; font-style: italic; padding: 6px 0; }
+    .cmd-pick-assign-btn { margin-top: 6px; width: 100%; }
+
+    /* Панель сборки армии */
+    #assemble-army-panel {
+      display: none;
+      position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
+      z-index: 810; width: 320px; max-width: 92vw;
+      background: var(--bg-panel); border: 1px solid var(--border-gold);
+      border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+    }
+    .assemble-panel { padding: 12px; }
+    .assemble-panel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;
+    }
+    .assemble-form { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+    .assemble-form label { font-size: 11px; color: var(--text-secondary); }
+    .assemble-form input {
+      background: rgba(255,255,255,0.08); border: 1px solid var(--border);
+      border-radius: 3px; color: var(--text-primary); padding: 4px 7px; font-size: 12px; width: 100%;
+    }
+    .assemble-actions { display: flex; gap: 8px; }
+
+    /* ── Система приказов ────────────────────────────────── */
+    .orders-new-btn {
+      float: right; font-size: 10px; padding: 2px 7px;
+      background: rgba(107,79,26,0.5); border: 1px solid var(--border);
+      color: var(--text-gold); border-radius: 3px; cursor: pointer;
+    }
+    .orders-new-btn:hover { background: rgba(107,79,26,0.9); }
+    .orders-subsection-title {
+      font-size: 10px; color: #aaa; text-transform: uppercase;
+      letter-spacing: 0.6px; margin: 6px 0 4px;
+    }
+    .orders-empty {
+      font-size: 11px; color: #888; font-style: italic; padding: 4px 0;
+    }
+    .order-card {
+      background: rgba(0,0,0,0.2); border: 1px solid rgba(107,79,26,0.3);
+      border-radius: 3px; padding: 7px 9px; margin-bottom: 5px;
+    }
+    .order-card.active { border-color: rgba(33,150,243,0.5); }
+    .order-card.done   { opacity: 0.75; }
+    .order-card-header {
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 4px;
+    }
+    .order-label { font-size: 12px; font-weight: bold; color: var(--text-gold); flex: 1; }
+    .order-cancel-btn {
+      background: none; border: none; color: #f44; cursor: pointer;
+      font-size: 12px; padding: 0 2px;
+    }
+    .order-badge { font-size: 10px; padding: 1px 5px; border-radius: 3px; }
+    .order-badge.done   { background: rgba(58,107,58,0.25); color: var(--positive); }
+    .order-badge.fail   { background: rgba(139,32,32,0.25); color: var(--negative); }
+    .order-badge.cancel { background: rgba(150,150,150,0.2); color: #aaa; }
+    .order-meta   { font-size: 10px; color: #aaa; margin-bottom: 4px; }
+    .order-progress-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+    .order-progress-bar { flex: 1; height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+    .order-progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+    .order-progress-pct { font-size: 10px; color: #aaa; min-width: 30px; text-align: right; }
+    .order-expected { font-size: 10px; color: #888; }
+    .order-result   { font-size: 11px; color: #ccc; font-style: italic; }
+    /* Форма приказа */
+    .order-form { display: flex; flex-direction: column; gap: 7px; }
+    .order-form-row { display: flex; flex-direction: column; gap: 3px; }
+    .order-form-row label {
+      font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .order-form-row select,
+    .order-form-row input[type="text"] {
+      background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+      color: var(--text); padding: 4px 7px; border-radius: 3px; font-size: 11px;
+      width: 100%; box-sizing: border-box;
+    }
+    .order-quality-preview {
+      font-size: 11px; color: #ccc;
+      background: rgba(255,255,255,0.04); border-radius: 3px;
+      padding: 5px 8px; border: 1px solid rgba(107,79,26,0.25);
+    }
