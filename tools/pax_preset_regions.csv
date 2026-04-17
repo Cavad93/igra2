@@ -1,0 +1,4150 @@
+region_id,region_name,country,color
+2702,Teboucha (Saharan Atlas),Abannaea,#d96213
+2810,Ibel (Saharan Atlas),Abannaea,#d96213
+2811,Djelfa (Saharan Atlas),Abannaea,#d96213
+2812,Moudjebara (Saharan Atlas),Abannaea,#d96213
+2813,Errich (Saharan Atlas),Abannaea,#d96213
+2814,Slimane (Saharan Atlas),Abannaea,#d96213
+2815,Chioukh (Saharan Atlas),Abannaea,#d96213
+2816,Mcif (Saharan Atlas),Abannaea,#d96213
+2817,Khoubana (Saharan Atlas),Abannaea,#d96213
+2818,Gahra (Saharan Atlas),Abannaea,#d96213
+2819,Hamel (Saharan Atlas),Abannaea,#d96213
+3008,Leukas (Aetolia),Acarnania,#86EFAC
+3009,Thyrrheion (Aetolia),Acarnania,#86EFAC
+3010,Stratos (Aetolia),Acarnania,#86EFAC
+678,'Akol (Byzacena),Achola,#4ADE80
+2486,Kerkennah (Byzacena),Achola,#4ADE80
+812,Acinippo  (Conventus Gaditanus),Acinippo,#e1b3e0
+2409,Acragas (Sicily),Acragas,#6366F1
+947,Adagaiman,Adagaiman,#DB2777
+447,Adiabene,Adiabene,#16A5A5
+80,Adoulia,Adoulia,#B0BC00
+332,Aedui,Aedui,#68BC00
+527,Gdansk,Aestia,#68CCCA
+528,Elblag,Aestia,#68CCCA
+529,Olszytyn,Aestia,#68CCCA
+530,Lidzbark,Aestia,#68CCCA
+1761,Gizycko,Aestia,#68CCCA
+3006,Zakynthos (Elis),Aetolia,#808080
+3007,Kranioi (Aetolia),Aetolia,#808080
+3011,Thermos (Aetolia),Aetolia,#808080
+3012,Naupaktos (Aetolia),Aetolia,#808080
+3013,Oeniadae (Aetolia),Aetolia,#808080
+2753,Agadir (Souss),Agadir,#7C3AED
+563,Pidhaitsi,Agathyrsi,#acf9ce
+564,Dubno,Agathyrsi,#acf9ce
+565,Lanivtsi,Agathyrsi,#acf9ce
+566,Zovste,Agathyrsi,#acf9ce
+776,Aigion (Achaea),Aigion,#73D8FF
+924,Ailao,Ailao,#9CA3AF
+1179,Aki,Aki,#93C5FD
+2371,Isinisca,Alauni,#A2FA7C
+2372,Atobrigia,Alauni,#A2FA7C
+2373,Iuvavum,Alauni,#A2FA7C
+2374,Innaba,Alauni,#A2FA7C
+2375,Laciacum,Alauni,#A2FA7C
+2378,Tergolape,Alauni,#A2FA7C
+2379,Stanacum,Alauni,#A2FA7C
+2380,Ioviacum,Alauni,#A2FA7C
+180,Albosenses,Albosenses,#FCDC00
+330,Allobriges,Allobriges,#CCCCCC
+1126,Amakusa,Amakusa,#FB923C
+1131,Nagashima,Amakusa,#FB923C
+1164,Goshouramachi,Amakusa,#FB923C
+1165,Shishijima,Amakusa,#FB923C
+2316,Teurnia,Ambidravi,#14532D
+2334,In Murio,Ambisonti,#16A34A
+2335,Anisus,Ambisonti,#16A34A
+3804,Amblada (Pisidia),Ambladia,#166534
+3806,Misteia (Isauria),Ambladia,#166534
+3017,Ambracia (Epirus),Ambrakia,#831843
+509,Ambronia,Ambronia,#c45c1e
+805,Amisos,Amisos,#009CE0
+213,Amphissa (Aetolia),Amphissa,#009CE0
+1491,Karakol,Amyrgia,#e7fec5
+1492,Tekes,Amyrgia,#e7fec5
+1493,Oulja,Amyrgia,#e7fec5
+1497,Kara-Balta,Amyrgia,#e7fec5
+1498,Almaty,Amyrgia,#e7fec5
+1499,Karatau,Amyrgia,#e7fec5
+1177,Chōshū,Ana,#FCA5A5
+2217,Clastidium (Transpadana),Anamaria,#FEF5C5
+2218,Placentia (Aemilia),Anamaria,#FEF5C5
+391,Anartes,Anartes,#FE9200
+2309,Vadena (Rhaetica),Anauni,#F5CDCD
+602,Tonghe,Anchegu,#16A34A
+711,Ancona (Picenum),Ancona,#0C797D
+289,Andhra,Andhra,#4C1D95
+367,Andizeti,Andizeti,#f73c3c
+1674,Beloomut,Androphagi,#CCCCCC
+1675,Obninsk,Androphagi,#CCCCCC
+1685,Skopin,Androphagi,#CCCCCC
+1686,Mtsensk,Androphagi,#CCCCCC
+1687,Tula,Androphagi,#CCCCCC
+1688,Mosalsk,Androphagi,#CCCCCC
+1689,Ugra,Androphagi,#CCCCCC
+1690,Kaluga,Androphagi,#CCCCCC
+1691,Vyazma,Androphagi,#CCCCCC
+1692,Belyy,Androphagi,#CCCCCC
+1693,Liozna,Androphagi,#CCCCCC
+1116,Andros (Euboea),Andros,#93C5FD
+1117,Syros (Cyclades),Andros,#93C5FD
+1118,Tenos (Euboea),Andros,#93C5FD
+504,Anglia,Angles,#D33115
+599,Bulgan,Anhou,#6B7280
+390,Ansanemes,Ansanemes,#E27300
+79,Antilibanus Mons,Antigonid Kingdom,#CA8A04
+88,Kadasa (South Phoenicia),Antigonid Kingdom,#CA8A04
+90,Hor Lebanon,Antigonid Kingdom,#CA8A04
+91,Bargylus Mons,Antigonid Kingdom,#CA8A04
+93,Beloi Mons (Pieria),Antigonid Kingdom,#CA8A04
+118,Syrian Gates (Cilicia),Antigonid Kingdom,#CA8A04
+129,Amanian Gates (Cilicia),Antigonid Kingdom,#CA8A04
+130,Amanus Mountains (CIlicia),Antigonid Kingdom,#CA8A04
+156,Cilician Taurus Mountains,Antigonid Kingdom,#CA8A04
+227,Lesbos (Aeolis),Antigonid Kingdom,#CA8A04
+417,Commagenian Gates (Cilicia),Antigonid Kingdom,#CA8A04
+430,Isaurian Taurus Mountains (Isauria),Antigonid Kingdom,#CA8A04
+449,Alalis (Palmyrene),Antigonid Kingdom,#CA8A04
+783,Chalkis (Euboea),Antigonid Kingdom,#CA8A04
+801,Gelil (South Phoenicia),Antigonid Kingdom,#CA8A04
+802,Lycaonian Taurus Mountains (Lycaonia),Antigonid Kingdom,#CA8A04
+810,Chios (Ionia),Antigonid Kingdom,#CA8A04
+1098,Samos (Ionia),Antigonid Kingdom,#CA8A04
+1099,Ikaria (Ionia),Antigonid Kingdom,#CA8A04
+1101,Leros (Sporades),Antigonid Kingdom,#CA8A04
+1112,Salamis (Attica),Antigonid Kingdom,#CA8A04
+1113,Aegina (Argolis),Antigonid Kingdom,#CA8A04
+1139,Dableis (Bithynia),Antigonid Kingdom,#CA8A04
+1142,Gordioukome (Bithynia),Antigonid Kingdom,#CA8A04
+1153,Lagania (Bithynia),Antigonid Kingdom,#CA8A04
+1159,Peion (Bithynia),Antigonid Kingdom,#CA8A04
+3152,Mount Dede (Troas),Antigonid Kingdom,#CA8A04
+3153,Kaz Mountains (Troas),Antigonid Kingdom,#CA8A04
+3154,Sipylos Mons (Lydia),Antigonid Kingdom,#CA8A04
+3155,Mount Nif (Ionia),Antigonid Kingdom,#CA8A04
+3156,Latmos Mountains,Antigonid Kingdom,#CA8A04
+3157,Marcal Mountains,Antigonid Kingdom,#CA8A04
+3158,Parion (Troas),Antigonid Kingdom,#CA8A04
+3159,Kolonai (Troas),Antigonid Kingdom,#CA8A04
+3160,Kale Peuke (Troas),Antigonid Kingdom,#CA8A04
+3161,Skepsis (Troas),Antigonid Kingdom,#CA8A04
+3162,Kebren (Troas),Antigonid Kingdom,#CA8A04
+3163,Lampsakos (Troas),Antigonid Kingdom,#CA8A04
+3164,Abydos (Troas),Antigonid Kingdom,#CA8A04
+3165,Ilion (Troas),Antigonid Kingdom,#CA8A04
+3166,Alexandria Troas (Troas),Antigonid Kingdom,#CA8A04
+3167,Tenedos (Troas),Antigonid Kingdom,#CA8A04
+3169,Assos (Troas),Antigonid Kingdom,#CA8A04
+3170,Adramytteion (Aeolis),Antigonid Kingdom,#CA8A04
+3171,Elateia Aioleias (Aeolis),Antigonid Kingdom,#CA8A04
+3172,Elaia (Aeolis),Antigonid Kingdom,#CA8A04
+3173,Kyme (Aeolis),Antigonid Kingdom,#CA8A04
+3174,Smyrna (Ionia),Antigonid Kingdom,#CA8A04
+3175,Teos (Ionia),Antigonid Kingdom,#CA8A04
+3176,Erythrai (Ionia),Antigonid Kingdom,#CA8A04
+3177,Metropolis Lydias (Ionia),Antigonid Kingdom,#CA8A04
+3178,Kolophon (Ionia),Antigonid Kingdom,#CA8A04
+3179,Ephesos (Ionia),Antigonid Kingdom,#CA8A04
+3180,Priene (Ionia),Antigonid Kingdom,#CA8A04
+3185,Idyma (Caria),Antigonid Kingdom,#CA8A04
+3187,Sandras Mountain,Antigonid Kingdom,#CA8A04
+3470,Ammana (Decapolis),Antigonid Kingdom,#CA8A04
+3471,Gerasa (Decapolis),Antigonid Kingdom,#CA8A04
+3472,Marisa (Philistia),Antigonid Kingdom,#CA8A04
+3473,Lycian Mountains (Lycia),Antigonid Kingdom,#CA8A04
+3474,Askalon (Philistia),Antigonid Kingdom,#CA8A04
+3475,Azotos (Philistia),Antigonid Kingdom,#CA8A04
+3476,Iamneia (Philistia),Antigonid Kingdom,#CA8A04
+3477,Joppa (Samaria),Antigonid Kingdom,#CA8A04
+3480,Dora (Samaria),Antigonid Kingdom,#CA8A04
+3482,Sykaminon (Galilee),Antigonid Kingdom,#CA8A04
+3483,Acre (Galilee),Antigonid Kingdom,#CA8A04
+3484,Netzer (Galilee),Antigonid Kingdom,#CA8A04
+3485,Gaba (Galilee),Antigonid Kingdom,#CA8A04
+3486,Ophrah (Galilee),Antigonid Kingdom,#CA8A04
+3487,Skythopolis (Decapolis),Antigonid Kingdom,#CA8A04
+3488,Philoteria (Galilee),Antigonid Kingdom,#CA8A04
+3490,Tarichaia (Galilee),Antigonid Kingdom,#CA8A04
+3491,Hippos (Decapolis),Antigonid Kingdom,#CA8A04
+3493,Gadara (Decapolis),Antigonid Kingdom,#CA8A04
+3495,Edrei (Decapolis),Antigonid Kingdom,#CA8A04
+3496,Karneia (Decapolis),Antigonid Kingdom,#CA8A04
+3497,Rhaphana (Decapolis),Antigonid Kingdom,#CA8A04
+3498,Bostra (Decapolis),Antigonid Kingdom,#CA8A04
+3499,Mothana (Decapolis),Antigonid Kingdom,#CA8A04
+3500,Kanatha (Decapolis),Antigonid Kingdom,#CA8A04
+3501,Mt Hermon (South Phoenicia),Antigonid Kingdom,#CA8A04
+3503,Paneias (South Phoenicia),Antigonid Kingdom,#CA8A04
+3504,Ekdippa (South Phoenicia),Antigonid Kingdom,#CA8A04
+3505,Tyros (South Phoenicia),Antigonid Kingdom,#CA8A04
+3506,Abila (South Phoenicia),Antigonid Kingdom,#CA8A04
+3509,Berytos (South Phoenicia),Antigonid Kingdom,#CA8A04
+3510,Gerrha (South Phoenicia),Antigonid Kingdom,#CA8A04
+3511,Brochoi (South Phoenicia),Antigonid Kingdom,#CA8A04
+3527,Caria Mountains (Caria),Antigonid Kingdom,#CA8A04
+3528,Tempsis Mons (Lydia),Antigonid Kingdom,#CA8A04
+3529,Tmolus Mons (Lydia),Antigonid Kingdom,#CA8A04
+3531,North Lydian Mountains (Lydia),Antigonid Kingdom,#CA8A04
+3533,Mysian Mountains (Mysia),Antigonid Kingdom,#CA8A04
+3534,Synaos (Mysia),Antigonid Kingdom,#CA8A04
+3612,Trogodos Mons (Cyprus),Antigonid Kingdom,#CA8A04
+3613,Zenopolis (Coele Syria),Antigonid Kingdom,#CA8A04
+3614,Damaskos (Coele Syria),Antigonid Kingdom,#CA8A04
+3615,Aire (Coele Syria),Antigonid Kingdom,#CA8A04
+3616,Leukas Chrysorrhoai (Coele Syria),Antigonid Kingdom,#CA8A04
+3617,Chalkis Libanon (Coele Syria),Antigonid Kingdom,#CA8A04
+3618,Berothai (Coele Syria),Antigonid Kingdom,#CA8A04
+3619,Heliopolis (Coele Syria),Antigonid Kingdom,#CA8A04
+3620,Iabrouda (Coele Syria),Antigonid Kingdom,#CA8A04
+3621,Thelseai (Coele Syria),Antigonid Kingdom,#CA8A04
+3622,Leuke Koilas (Coele Syria),Antigonid Kingdom,#CA8A04
+3623,Kara (Coele Syria),Antigonid Kingdom,#CA8A04
+3624,Oneuatha (Coele Syria),Antigonid Kingdom,#CA8A04
+3626,Botyrs (North Phoenicia),Antigonid Kingdom,#CA8A04
+3627,Tripolis (North Phoenicia),Antigonid Kingdom,#CA8A04
+3628,Arka (North Phoenicia),Antigonid Kingdom,#CA8A04
+3631,Pelleta (North Phoenicia),Antigonid Kingdom,#CA8A04
+3632,Leuke Akte (North Phoenicia),Antigonid Kingdom,#CA8A04
+3633,Posideion (North Phoenicia),Antigonid Kingdom,#CA8A04
+3634,Sigon (North Phoenicia),Antigonid Kingdom,#CA8A04
+3635,Kone (Apamene),Antigonid Kingdom,#CA8A04
+3636,Laodicea Libanon (Apamene),Antigonid Kingdom,#CA8A04
+3637,Triparadeisos (Apamene),Antigonid Kingdom,#CA8A04
+3638,Korlon (Apamene),Antigonid Kingdom,#CA8A04
+3639,Emesa (Apamene),Antigonid Kingdom,#CA8A04
+3640,Otthara (Apamene),Antigonid Kingdom,#CA8A04
+3641,Amathe (Apamene),Antigonid Kingdom,#CA8A04
+3642,Larissa (Apamene),Antigonid Kingdom,#CA8A04
+3643,Rhaphaneia (Apamene),Antigonid Kingdom,#CA8A04
+3644,Pella Orontou (Apamene),Antigonid Kingdom,#CA8A04
+3645,Theleda (Apamene),Antigonid Kingdom,#CA8A04
+3646,Adrona (Apamene),Antigonid Kingdom,#CA8A04
+3647,Beloi (Pieria),Antigonid Kingdom,#CA8A04
+3648,Telmenissos (Pieria),Antigonid Kingdom,#CA8A04
+3649,Potamoi Karon (Pieria),Antigonid Kingdom,#CA8A04
+3650,Daphne (Pieria),Antigonid Kingdom,#CA8A04
+3651,Antigoneia (Pieria),Antigonid Kingdom,#CA8A04
+3652,Chalkis Belon (Pieria),Antigonid Kingdom,#CA8A04
+3653,Gindaros (Pieria),Antigonid Kingdom,#CA8A04
+3654,Pagrai (Pieria),Antigonid Kingdom,#CA8A04
+3655,Trapezon (Pieria),Antigonid Kingdom,#CA8A04
+3656,Omeros (Pieria),Antigonid Kingdom,#CA8A04
+3657,Chalibon (Pieria),Antigonid Kingdom,#CA8A04
+3658,Nikopolis Syrias (Pieria),Antigonid Kingdom,#CA8A04
+3659,Kounna (Palmyrene),Antigonid Kingdom,#CA8A04
+3660,Beriaraka (Palmyrene),Antigonid Kingdom,#CA8A04
+3661,Palmyra (Palmyrene),Antigonid Kingdom,#CA8A04
+3662,Heliaramia (Palmyrene),Antigonid Kingdom,#CA8A04
+3663,Gennaes (Palmyrene),Antigonid Kingdom,#CA8A04
+3664,Okkraraba (Palmyrene),Antigonid Kingdom,#CA8A04
+3665,Seriane (Palmyrene),Antigonid Kingdom,#CA8A04
+3666,Oriza (Palmyrene),Antigonid Kingdom,#CA8A04
+3667,Rhesapha (Palmyrene),Antigonid Kingdom,#CA8A04
+3668,Birtha Asporakou (Palmyrene),Antigonid Kingdom,#CA8A04
+3669,Soura (Palmyrene),Antigonid Kingdom,#CA8A04
+3670,Dansara (Cyrrhestica),Antigonid Kingdom,#CA8A04
+3671,Barbalissos (Cyrrhestica),Antigonid Kingdom,#CA8A04
+3672,Chenneseroi (Cyrrhestica),Antigonid Kingdom,#CA8A04
+3673,Ammattha (Cyrrhestica),Antigonid Kingdom,#CA8A04
+3674,Amphipolis Syrias (Cyrrhestica),Antigonid Kingdom,#CA8A04
+3675,Beselatha (Cyrrhestica),Antigonid Kingdom,#CA8A04
+3678,Doliche (Cyrrhestica),Antigonid Kingdom,#CA8A04
+3680,Chaonia (Cyrrhestica),Antigonid Kingdom,#CA8A04
+3682,Phaliga (Dura-Europos),Antigonid Kingdom,#CA8A04
+3683,Asicha (Dura-Europos),Antigonid Kingdom,#CA8A04
+3684,Appadana (Dura-Europos),Antigonid Kingdom,#CA8A04
+3685,Dura-Europos (Dura-Europos),Antigonid Kingdom,#CA8A04
+3686,Eddana (Dura-Europos),Antigonid Kingdom,#CA8A04
+3695,Ichnai (Osroene),Antigonid Kingdom,#CA8A04
+3696,Kommisimbela (Osroene),Antigonid Kingdom,#CA8A04
+3697,Alagma (Osroene),Antigonid Kingdom,#CA8A04
+3698,Ganaba (Osroene),Antigonid Kingdom,#CA8A04
+3699,Karrhai (Osroene),Antigonid Kingdom,#CA8A04
+3700,Ballatha (Osroene),Antigonid Kingdom,#CA8A04
+3701,Batnai (Osroene),Antigonid Kingdom,#CA8A04
+3702,Bithias (Osroene),Antigonid Kingdom,#CA8A04
+3703,Adma (Osroene),Antigonid Kingdom,#CA8A04
+3704,Antiocheia Mesopotamias (Osroene),Antigonid Kingdom,#CA8A04
+3705,Barbare (Osroene),Antigonid Kingdom,#CA8A04
+3706,Arsemeia (Osroene),Antigonid Kingdom,#CA8A04
+3719,Paphos (Cyprus),Antigonid Kingdom,#CA8A04
+3720,Marion (Cyprus),Antigonid Kingdom,#CA8A04
+3721,Kourion (Cyprus),Antigonid Kingdom,#CA8A04
+3722,Amathous (Cyprus),Antigonid Kingdom,#CA8A04
+3723,Kition (Cyprus),Antigonid Kingdom,#CA8A04
+3724,Salamis Kyprias (Cyprus),Antigonid Kingdom,#CA8A04
+3725,Karpaseia (Cyprus),Antigonid Kingdom,#CA8A04
+3726,Keryneia (Cyprus),Antigonid Kingdom,#CA8A04
+3727,Idalion (Cyprus),Antigonid Kingdom,#CA8A04
+3728,Chythroi (Cyprus),Antigonid Kingdom,#CA8A04
+3729,Tamassos (Cyprus),Antigonid Kingdom,#CA8A04
+3730,Soloi Kypriai (Cyprus),Antigonid Kingdom,#CA8A04
+3731,Alexandria Issos (Cilicia),Antigonid Kingdom,#CA8A04
+3732,Issos (Cilicia),Antigonid Kingdom,#CA8A04
+3733,Aigaiai (Cilicia),Antigonid Kingdom,#CA8A04
+3734,Magarsa (Cilicia),Antigonid Kingdom,#CA8A04
+3735,Mallos (Cilicia),Antigonid Kingdom,#CA8A04
+3736,Adana (Cilicia),Antigonid Kingdom,#CA8A04
+3737,Mopsou Hestia (Cilicia),Antigonid Kingdom,#CA8A04
+3738,Oiniandos (Cilicia),Antigonid Kingdom,#CA8A04
+3739,Anazarbos (Cilicia),Antigonid Kingdom,#CA8A04
+3740,Sipha (Cilicia),Antigonid Kingdom,#CA8A04
+3741,Hierapolis Kastabala (Cilicia),Antigonid Kingdom,#CA8A04
+3742,Erana (Cilicia),Antigonid Kingdom,#CA8A04
+3743,Pylai Kilikia (Cilicia),Antigonid Kingdom,#CA8A04
+3744,Tarsos (Cilicia),Antigonid Kingdom,#CA8A04
+3746,Soloi (Cilicia),Antigonid Kingdom,#CA8A04
+3747,Kyinda (Cilicia),Antigonid Kingdom,#CA8A04
+3752,Lakaine (Cilicia),Antigonid Kingdom,#CA8A04
+3753,Kelenderis (Cilicia),Antigonid Kingdom,#CA8A04
+3754,Anemourion (Cilicia),Antigonid Kingdom,#CA8A04
+3755,Selinous Kilikias (Cilicia),Antigonid Kingdom,#CA8A04
+3756,Ano Kotradis (Pamphylia),Antigonid Kingdom,#CA8A04
+3757,Laertes (Pamphylia),Antigonid Kingdom,#CA8A04
+3759,Korakesion (Pamphylia),Antigonid Kingdom,#CA8A04
+3760,Side (Pamphylia),Antigonid Kingdom,#CA8A04
+3762,Aspendos (Pamphylia),Antigonid Kingdom,#CA8A04
+3763,Sillyon (Pamphylia),Antigonid Kingdom,#CA8A04
+3764,Perge (Pamphylia),Antigonid Kingdom,#CA8A04
+3765,Olbia Pamphylias (Pamphylia),Antigonid Kingdom,#CA8A04
+3766,Phaselis (Pamphylia),Antigonid Kingdom,#CA8A04
+3768,Olympos (Lycia),Antigonid Kingdom,#CA8A04
+3769,Limyra (Lycia),Antigonid Kingdom,#CA8A04
+3772,Kanyba (Lycia),Antigonid Kingdom,#CA8A04
+3773,Myra (Lycia),Antigonid Kingdom,#CA8A04
+3774,Patara (Lycia),Antigonid Kingdom,#CA8A04
+3775,Xanthos (Lycia),Antigonid Kingdom,#CA8A04
+3776,Tlos (Lycia),Antigonid Kingdom,#CA8A04
+3777,Telmessos (Lycia),Antigonid Kingdom,#CA8A04
+3778,Kadyanda (Lycia),Antigonid Kingdom,#CA8A04
+3785,Kretopolis,Antigonid Kingdom,#CA8A04
+3786,Kormasa (Milyas),Antigonid Kingdom,#CA8A04
+3794,Ariassos (Pisidia),Antigonid Kingdom,#CA8A04
+3798,Baris (Pisidia),Antigonid Kingdom,#CA8A04
+3810,Isauropolis (Isauria),Antigonid Kingdom,#CA8A04
+3811,Artanada (Isauria),Antigonid Kingdom,#CA8A04
+3812,Klibanos (Isauria),Antigonid Kingdom,#CA8A04
+3813,Adrasos (Isauria),Antigonid Kingdom,#CA8A04
+3814,Ilistra (Isauria),Antigonid Kingdom,#CA8A04
+3815,Koropissos (Isauria),Antigonid Kingdom,#CA8A04
+3816,Laranda (Isauria),Antigonid Kingdom,#CA8A04
+3817,Thebasa (Isauria),Antigonid Kingdom,#CA8A04
+3819,Pappa (Lycaonia),Antigonid Kingdom,#CA8A04
+3820,Lystra (Lycaonia),Antigonid Kingdom,#CA8A04
+3821,Ikonion (Lycaonia),Antigonid Kingdom,#CA8A04
+3822,Barate (Lycaonia),Antigonid Kingdom,#CA8A04
+3823,Derbe (Lycaonia),Antigonid Kingdom,#CA8A04
+3824,Kanna (Lycaonia),Antigonid Kingdom,#CA8A04
+3825,Soatra (Lycaonia),Antigonid Kingdom,#CA8A04
+3826,Perta (Lycaonia),Antigonid Kingdom,#CA8A04
+3827,Kindyria (Lycaonia),Antigonid Kingdom,#CA8A04
+3828,Kongoustos (Lycaonia),Antigonid Kingdom,#CA8A04
+3829,Keissia (Lycaonia),Antigonid Kingdom,#CA8A04
+3830,Ekdaumau (Lycaonia),Antigonid Kingdom,#CA8A04
+3831,Thera Karias (Caria),Antigonid Kingdom,#CA8A04
+3832,Chrysaoris (Caria),Antigonid Kingdom,#CA8A04
+3833,Mylasa (Caria),Antigonid Kingdom,#CA8A04
+3834,Alexandreia Latmoi (Caria),Antigonid Kingdom,#CA8A04
+3835,Alabanda  (Caria),Antigonid Kingdom,#CA8A04
+3836,Magnesia Maiandrou (Caria),Antigonid Kingdom,#CA8A04
+3837,Tralleis (Caria),Antigonid Kingdom,#CA8A04
+3838,Athymbra (Caria),Antigonid Kingdom,#CA8A04
+3839,Kranaos (Caria),Antigonid Kingdom,#CA8A04
+3840,Diospolis Lykou (Caria),Antigonid Kingdom,#CA8A04
+3841,Aphrodisias (Caria),Antigonid Kingdom,#CA8A04
+3842,Neapolis Karias (Caria),Antigonid Kingdom,#CA8A04
+3843,Bargasa (Caria),Antigonid Kingdom,#CA8A04
+3844,Hyllarima (Caria),Antigonid Kingdom,#CA8A04
+3845,Tabai (Caria),Antigonid Kingdom,#CA8A04
+3847,Herakleia Salbake (Caria),Antigonid Kingdom,#CA8A04
+3849,Apollonia Maiandrou (Lydia),Antigonid Kingdom,#CA8A04
+3850,Myloukome (Lydia),Antigonid Kingdom,#CA8A04
+3851,Maionia (Lydia),Antigonid Kingdom,#CA8A04
+3852,Silandos (Lydia),Antigonid Kingdom,#CA8A04
+3853,Maiboza (Lydia),Antigonid Kingdom,#CA8A04
+3854,Thyateira (Lydia),Antigonid Kingdom,#CA8A04
+3855,Sardeis (Lydia),Antigonid Kingdom,#CA8A04
+3856,Hypaipa (Lydia),Antigonid Kingdom,#CA8A04
+3857,Larisas Ionias (Lydia),Antigonid Kingdom,#CA8A04
+3858,Magnesia Sipylon (Lydia),Antigonid Kingdom,#CA8A04
+3859,Aigai (Lydia),Antigonid Kingdom,#CA8A04
+3860,Hyrkanis (Lydia),Antigonid Kingdom,#CA8A04
+3861,Pergamon (Aeolis),Antigonid Kingdom,#CA8A04
+3862,Apollonia Mysias (Aeolis),Antigonid Kingdom,#CA8A04
+3863,Pioniai (Aeolis),Antigonid Kingdom,#CA8A04
+3864,Hiera Germe (Aeolis),Antigonid Kingdom,#CA8A04
+3865,Zeleia (Mysia),Antigonid Kingdom,#CA8A04
+3866,Baris Mysias (Mysia),Antigonid Kingdom,#CA8A04
+3867,Argiza (Mysia),Antigonid Kingdom,#CA8A04
+3868,Antigoneia Daskyleion (Mysia),Antigonid Kingdom,#CA8A04
+3869,Miletopolis (Mysia),Antigonid Kingdom,#CA8A04
+3870,Pericharaxis (Mysia),Antigonid Kingdom,#CA8A04
+3872,Ankyra Sidera (Mysia),Antigonid Kingdom,#CA8A04
+3873,Hyssa (Mysia),Antigonid Kingdom,#CA8A04
+3874,Inde (Mysia),Antigonid Kingdom,#CA8A04
+3875,Attea (Mysia),Antigonid Kingdom,#CA8A04
+3876,Ariste (Mysia),Antigonid Kingdom,#CA8A04
+3877,Kallydion (Mysia),Antigonid Kingdom,#CA8A04
+3878,Kybellion (Mysia),Antigonid Kingdom,#CA8A04
+3879,Apollonia Rhyndakon (Bithynia),Antigonid Kingdom,#CA8A04
+3880,Bithynian Mountains (Bithynia),Antigonid Kingdom,#CA8A04
+3881,Booskoite (Bithynia),Antigonid Kingdom,#CA8A04
+3882,Pythopolis (Bithynia),Antigonid Kingdom,#CA8A04
+3883,Antigoneia Bithynias (Bithynia),Antigonid Kingdom,#CA8A04
+3889,Sarkotyle (Bithynia),Antigonid Kingdom,#CA8A04
+3890,Lamounia (Bithynia),Antigonid Kingdom,#CA8A04
+3891,Otroia (Bithynia),Antigonid Kingdom,#CA8A04
+3892,Oka (Bithynia),Antigonid Kingdom,#CA8A04
+3893,Tattaios (Bithynia),Antigonid Kingdom,#CA8A04
+3894,Kabia (Bithynia),Antigonid Kingdom,#CA8A04
+3913,Kinna (Eastern Phrygia),Antigonid Kingdom,#CA8A04
+3914,Orbana (Eastern Phrygia),Antigonid Kingdom,#CA8A04
+3915,Androna (Eastern Phrygia),Antigonid Kingdom,#CA8A04
+3916,Gordion (Eastern Phrygia),Antigonid Kingdom,#CA8A04
+3917,Germa (Eastern Phrygia),Antigonid Kingdom,#CA8A04
+3918,Trokna (Eastern Phrygia),Antigonid Kingdom,#CA8A04
+3919,Orkistos (Eastern Phrygia),Antigonid Kingdom,#CA8A04
+3920,Pessinous (Eastern Phrygia),Antigonid Kingdom,#CA8A04
+3921,Klaneos (Eastern Phrygia),Antigonid Kingdom,#CA8A04
+3922,Ouetissos (Eastern Phrygia),Antigonid Kingdom,#CA8A04
+3923,Kybeleion (Eastern Phrygia),Antigonid Kingdom,#CA8A04
+3924,Midaeion (Western Phrygia),Antigonid Kingdom,#CA8A04
+3925,Dorylaion (Western Phrygia),Antigonid Kingdom,#CA8A04
+3926,Phrygian Mountains (Western Phrygia),Antigonid Kingdom,#CA8A04
+3927,Kotyaion (Western Phrygia),Antigonid Kingdom,#CA8A04
+3928,Nakoleia (Western Phrygia),Antigonid Kingdom,#CA8A04
+3929,Meiros (Western Phrygia),Antigonid Kingdom,#CA8A04
+3930,Aizanoi (Western Phrygia),Antigonid Kingdom,#CA8A04
+3931,Kadoi (Western Phrygia),Antigonid Kingdom,#CA8A04
+3932,Appia (Western Phrygia),Antigonid Kingdom,#CA8A04
+3933,Metropolis Phrygias (Western Phrygia),Antigonid Kingdom,#CA8A04
+3934,Amorion (Western Phrygia),Antigonid Kingdom,#CA8A04
+3935,Dokimeion (Western Phrygia),Antigonid Kingdom,#CA8A04
+3936,Ipsos (Western Phrygia),Antigonid Kingdom,#CA8A04
+3937,Kidyessos (Western Phrygia),Antigonid Kingdom,#CA8A04
+3938,Prymnessos (Western Phrygia),Antigonid Kingdom,#CA8A04
+3939,Synnada (Western Phrygia),Antigonid Kingdom,#CA8A04
+3940,Euphorbion (Western Phrygia),Antigonid Kingdom,#CA8A04
+3941,Mordiaion (Western Phrygia),Antigonid Kingdom,#CA8A04
+3942,Aurokra (Western Phrygia),Antigonid Kingdom,#CA8A04
+3943,Philomelion (Western Phrygia),Antigonid Kingdom,#CA8A04
+3944,Azareis (Western Phrygia),Antigonid Kingdom,#CA8A04
+3945,Tyriaion (Western Phrygia),Antigonid Kingdom,#CA8A04
+3946,Thymbrion (Western Phrygia),Antigonid Kingdom,#CA8A04
+3947,Anaboura (Western Phrygia),Antigonid Kingdom,#CA8A04
+3948,Tymbrias (Western Phrygia),Antigonid Kingdom,#CA8A04
+3949,Tyita (Western Phrygia),Antigonid Kingdom,#CA8A04
+3950,Eukarpia (Western Phrygia),Antigonid Kingdom,#CA8A04
+3951,Akmonia (Western Phrygia),Antigonid Kingdom,#CA8A04
+3952,Bageis (Western Phrygia),Antigonid Kingdom,#CA8A04
+3953,Elouza (Western Phrygia),Antigonid Kingdom,#CA8A04
+3954,Blaundos (Western Phrygia),Antigonid Kingdom,#CA8A04
+3955,Pepouza (Western Phrygia),Antigonid Kingdom,#CA8A04
+3956,Lounda (Western Phrygia),Antigonid Kingdom,#CA8A04
+3957,Kelainai (Western Phrygia),Antigonid Kingdom,#CA8A04
+3958,Peltai (Western Phrygia),Antigonid Kingdom,#CA8A04
+3959,Sanaos (Western Phrygia),Antigonid Kingdom,#CA8A04
+3960,Hieropolis (Western Phrygia),Antigonid Kingdom,#CA8A04
+3961,Kolossai (Western Phrygia),Antigonid Kingdom,#CA8A04
+208,Corinth (Corinthia),Antipatrid Kingdom,#303096
+224,Thasos (Macedonia),Antipatrid Kingdom,#303096
+352,Oichalia Aitolias (Aetolia),Antipatrid Kingdom,#303096
+1114,Skyros (Euboea),Antipatrid Kingdom,#303096
+1115,Peparethos (Thessaly),Antipatrid Kingdom,#303096
+2994,Mount Othrys (Thessaly),Antipatrid Kingdom,#303096
+2996,Lamia (Boeotia),Antipatrid Kingdom,#303096
+2999,Herakleia Trachinias (Boeotia),Antipatrid Kingdom,#303096
+3001,Nikaia Lokre (Boeotia),Antipatrid Kingdom,#303096
+3015,Hypate (Aetolia),Antipatrid Kingdom,#303096
+3026,Mount Olympus (Thessaly),Antipatrid Kingdom,#303096
+3027,Mount Ossa (Thessaly),Antipatrid Kingdom,#303096
+3028,Pierian Mountains (Macedonia),Antipatrid Kingdom,#303096
+3029,Baba Mountains (Macedonia),Antipatrid Kingdom,#303096
+3030,Vermio Mountains (Macedonia),Antipatrid Kingdom,#303096
+3031,Voras Mountains (Macedonia),Antipatrid Kingdom,#303096
+3033,Thaumakoi (Thessaly),Antipatrid Kingdom,#303096
+3034,Halos (Thessaly),Antipatrid Kingdom,#303096
+3035,Pagasai (Thessaly),Antipatrid Kingdom,#303096
+3036,Meliboia (Thessaly),Antipatrid Kingdom,#303096
+3037,Oloosson (Thessaly),Antipatrid Kingdom,#303096
+3038,Pherai (Thessaly),Antipatrid Kingdom,#303096
+3039,Pharsalos (Thessaly),Antipatrid Kingdom,#303096
+3040,Tricca (Thessaly),Antipatrid Kingdom,#303096
+3041,Oichalia (Thessaly),Antipatrid Kingdom,#303096
+3042,Larissa (Thessaly),Antipatrid Kingdom,#303096
+3043,Gonnoi (Thessaly),Antipatrid Kingdom,#303096
+3044,Dion (Macedonia),Antipatrid Kingdom,#303096
+3045,Pydna (Macedonia),Antipatrid Kingdom,#303096
+3046,Methone (Macedonia),Antipatrid Kingdom,#303096
+3047,Beroia (Macedonia),Antipatrid Kingdom,#303096
+3048,Europos Almopias (Macedonia),Antipatrid Kingdom,#303096
+3049,Edessa (Macedonia),Antipatrid Kingdom,#303096
+3050,Pella (Macedonia),Antipatrid Kingdom,#303096
+3051,Gortynia (Macedonia),Antipatrid Kingdom,#303096
+3052,Thessalonike (Macedonia),Antipatrid Kingdom,#303096
+3053,Tauriana (Macedonia),Antipatrid Kingdom,#303096
+3054,Asseros (Macedonia),Antipatrid Kingdom,#303096
+3055,Berge (Macedonia),Antipatrid Kingdom,#303096
+3056,Lychnidos (Macedonia),Antipatrid Kingdom,#303096
+3057,Beue (Macedonia),Antipatrid Kingdom,#303096
+3058,Keletron (Macedonia),Antipatrid Kingdom,#303096
+3059,Eratyra (Macedonia),Antipatrid Kingdom,#303096
+3060,Elimeia (Macedonia),Antipatrid Kingdom,#303096
+3061,Arnisa (Macedonia),Antipatrid Kingdom,#303096
+3062,Herakleia Lynkestis (Macedonia),Antipatrid Kingdom,#303096
+3064,Stymbara (Macedonia),Antipatrid Kingdom,#303096
+3065,Pelagonia (Macedonia),Antipatrid Kingdom,#303096
+3066,Cassandreia (Macedonia),Antipatrid Kingdom,#303096
+3067,Torone (Macedonia),Antipatrid Kingdom,#303096
+3068,Akanthos (Macedonia),Antipatrid Kingdom,#303096
+3069,Kalindoia (Macedonia),Antipatrid Kingdom,#303096
+3070,Tragilos (Macedonia),Antipatrid Kingdom,#303096
+3071,Menoikion Oros (Macedonia),Antipatrid Kingdom,#303096
+3072,Serrhai (Macedonia),Antipatrid Kingdom,#303096
+3073,Amphipolis (Macedonia),Antipatrid Kingdom,#303096
+3074,Neapolis Thrake (Macedonia),Antipatrid Kingdom,#303096
+3075,Philippoi (Macedonia),Antipatrid Kingdom,#303096
+3076,Keirpara (Macedonia),Antipatrid Kingdom,#303096
+3078,Herakleia Sintike (Macedonia),Antipatrid Kingdom,#303096
+3079,Doberos (Macedonia),Antipatrid Kingdom,#303096
+3080,East Pindus Mountains (Thessaly),Antipatrid Kingdom,#303096
+661,Anuradhapura,Anuradhapura,#f9ccf5
+1292,Gaya,Anya,#86EFAC
+1629,Iskra,Aorsi,#D5D6C2
+1630,Kurmangazy,Aorsi,#D5D6C2
+1631,Bogdo,Aorsi,#D5D6C2
+1632,Kamyzyak,Aorsi,#D5D6C2
+1633,Sadovoye,Aorsi,#D5D6C2
+1634,Lagan,Aorsi,#D5D6C2
+1558,Kentau,Apasiacae,#79d595
+1559,Baikonur,Apasiacae,#79d595
+1560,Kyzylorda,Apasiacae,#79d595
+1561,Qaraozek,Apasiacae,#79d595
+3025,Apollonia Epidamnon,Apollonia,#16A5A5
+3106,Apollonia Pontike (East Thrace),Apollonia Pontica,#FACC15
+3107,Anchialos (East Thrace),Apollonia Pontica,#FACC15
+2264,Portus Veneris (Liguria),Apuania,#DC2626
+2165,Cannae (Apulia),Apulians,#6072c7
+2166,Natolium (Apulia),Apulians,#6072c7
+2167,Barium (Apulia),Apulians,#6072c7
+2168,Gnatia (Apulia),Apulians,#6072c7
+268,Iacetania,Aquetanians,#be8337
+276,Tarbellia,Aquetanians,#be8337
+192,Arachosia,Arachosia,#16A5A5
+3629,Arados (North Phoenicia),Arados,#A78BFA
+3630,Qarn (North Phoenicia),Arados,#A78BFA
+655,Arakan,Arakan,#ffeca8
+2742,Arambys (Marrakesh),Arambys,#A5B4FC
+346,Ardiei,Ardiei,#ac7a75
+1618,Salavat,Argippaeans,#CCCCCC
+1619,Ufa,Argippaeans,#CCCCCC
+1620,Zainsk,Argippaeans,#CCCCCC
+1621,Sharan,Argippaeans,#CCCCCC
+205,Kleonai (Argolis),Argos,#b0b0b0
+206,Argolis (Argolis),Argos,#b0b0b0
+2973,Thyrea (Argolis),Argos,#b0b0b0
+1599,Qarabaliq,Arismaspians,#ded9ff
+1602,Kurtamysh,Arismaspians,#ded9ff
+1603,Tyumen,Arismaspians,#ded9ff
+1604,Kurgan,Arismaspians,#ded9ff
+1605,Borovskoy,Arismaspians,#ded9ff
+1606,Polovinnoye,Arismaspians,#ded9ff
+1607,Bulaev,Arismaspians,#ded9ff
+1608,Tatarsk,Arismaspians,#ded9ff
+1609,Kokshetau,Arismaspians,#ded9ff
+1610,Ertis,Arismaspians,#ded9ff
+1611,Isilkul,Arismaspians,#ded9ff
+3195,Arkades (Crete),Arkades,#95FBDA
+3567,Marand Mountains,Armenia,#D33115
+3568,Balaberd Mountains,Armenia,#D33115
+3569,Chahuk Mountains,Armenia,#D33115
+3570,Qarqar Volcano,Armenia,#D33115
+3571,Bamni Volcano,Armenia,#D33115
+3572,Vardenis Mountains,Armenia,#D33115
+3573,Arran Mountains,Armenia,#D33115
+3574,Dzhrarat Mountains,Armenia,#D33115
+3582,Lesser Armenian Mountains (Lesser Armenia),Armenia,#D33115
+3590,Turuberan Mountains (Turuberan),Armenia,#D33115
+3591,Bagrewand Mountains (Turuberan),Armenia,#D33115
+3592,Tateon Mountains,Armenia,#D33115
+3593,Paracata Mountains,Armenia,#D33115
+3988,Zigana (Pontus),Armenia,#D33115
+3989,Magnana (Pontus),Armenia,#D33115
+4022,Daskousa (Lesser Armenia),Armenia,#D33115
+4023,Sabos (Lesser Armenia),Armenia,#D33115
+4024,Zimara (Lesser Armenia),Armenia,#D33115
+4025,Pisingara (Lesser Armenia),Armenia,#D33115
+4026,Arane (Lesser Armenia),Armenia,#D33115
+4027,Kangal (Lesser Armenia),Armenia,#D33115
+4028,Zoana (Lesser Armenia),Armenia,#D33115
+4029,Goundousa (Lesser Armenia),Armenia,#D33115
+4030,Samuha (Lesser Armenia),Armenia,#D33115
+4031,Kamisa (Lesser Armenia),Armenia,#D33115
+4032,Zara (Lesser Armenia),Armenia,#D33115
+4033,Dasteira (Lesser Armenia),Armenia,#D33115
+4034,Anniaka (Lesser Armenia),Armenia,#D33115
+4035,Olotoedariza (Lesser Armenia),Armenia,#D33115
+4036,Kogoniya (Lesser Armenia),Armenia,#D33115
+4037,Arauraka (Lesser Armenia),Armenia,#D33115
+4038,Sediska (Lesser Armenia),Armenia,#D33115
+4039,Chorsabia (Lesser Armenia),Armenia,#D33115
+4040,Analibna (Lesser Armenia),Armenia,#D33115
+4041,Ani (Lesser Armenia),Armenia,#D33115
+4042,Til (Lesser Armenia),Armenia,#D33115
+4043,Eriza (Lesser Armenia),Armenia,#D33115
+4044,Satal (Lesser Armenia),Armenia,#D33115
+4045,Charton (Lesser Armenia),Armenia,#D33115
+4046,Sper (Lesser Armenia),Armenia,#D33115
+4047,Baiberdon (Lesser Armenia),Armenia,#D33115
+4048,Tareina (Lesser Armenia),Armenia,#D33115
+4049,Bagariza (Lesser Armenia),Armenia,#D33115
+4050,Koubina (Lesser Armenia),Armenia,#D33115
+4051,Sinara (Lesser Armenia),Armenia,#D33115
+4052,Bizana (Lesser Armenia),Armenia,#D33115
+4053,Karana (Lesser Armenia),Armenia,#D33115
+4054,Basean (Lesser Armenia),Armenia,#D33115
+4055,Barantea (Lesser Armenia),Armenia,#D33115
+4056,Arda (Turuberan),Armenia,#D33115
+4057,Kitharizon (Turuberan),Armenia,#D33115
+4058,Ashtishat (Turuberan),Armenia,#D33115
+4059,Datvan (Turuberan),Armenia,#D33115
+4060,Khlat (Turuberan),Armenia,#D33115
+4061,Archesh (Turuberan),Armenia,#D33115
+4062,Cumb (Turuberan),Armenia,#D33115
+4063,Dut'akh (Turuberan),Armenia,#D33115
+4064,Vagarshakert (Turuberan),Armenia,#D33115
+4065,Kolchion (Turuberan),Armenia,#D33115
+4066,Tateon (Turuberan),Armenia,#D33115
+4067,Bagrewand (Turuberan),Armenia,#D33115
+4068,Arest Mountains (Vaspurakan),Armenia,#D33115
+4070,Balesh (Vaspurakan),Armenia,#D33115
+4071,Aparank (Vaspurakan),Armenia,#D33115
+4072,Zoaranda (Vaspurakan),Armenia,#D33115
+4073,Artamet (Vaspurakan),Armenia,#D33115
+4074,Andzevatsik (Vaspurakan),Armenia,#D33115
+4075,Alouaka (Vaspurakan),Armenia,#D33115
+4076,Mardastan (Vaspurakan),Armenia,#D33115
+4077,Tosp (Vaspurakan),Armenia,#D33115
+4078,Eruandunik (Vaspurakan),Armenia,#D33115
+4079,Bogunik (Vaspurakan),Armenia,#D33115
+4080,Arest (Vaspurakan),Armenia,#D33115
+4081,Kotorox (Vaspurakan),Armenia,#D33115
+4082,Aladagh Qal'eh (Vaspurakan),Armenia,#D33115
+4083,Her (Vaspurakan),Armenia,#D33115
+4084,Zarawand (Vaspurakan),Armenia,#D33115
+4085,Marand (Vaspurakan),Armenia,#D33115
+4086,Malejin (Vaspurakan),Armenia,#D33115
+4087,Jula (Vaspurakan),Armenia,#D33115
+4088,Shamiram (Vaspurakan),Armenia,#D33115
+4089,Rusakhinili (Vaspurakan),Armenia,#D33115
+4090,Maku (Vaspurakan),Armenia,#D33115
+4091,Qiz Chakhlu (Vaspurakan),Armenia,#D33115
+4092,Amatunik (Vaspurakan),Armenia,#D33115
+4093,Shawarshan (Vaspurakan),Armenia,#D33115
+4094,Barun Qal'eh (Vaspurakan),Armenia,#D33115
+4095,Tambat (Vaspurakan),Armenia,#D33115
+4096,Ardeank' (Vaspurakan),Armenia,#D33115
+4097,Catispi (Vaspurakan),Armenia,#D33115
+4098,Avarayr (Vaspurakan),Armenia,#D33115
+4099,Nuarsak (Vaspurakan),Armenia,#D33115
+4100,Sangibut (Vaspurakan),Armenia,#D33115
+4101,Arshakavan (Ayrarat),Armenia,#D33115
+4102,Chakatk' (Ayrarat),Armenia,#D33115
+4103,Artashat (Ayrarat),Armenia,#D33115
+4104,Dowin (Ayrarat),Armenia,#D33115
+4105,Paracata (Ayrarat),Armenia,#D33115
+4106,Yervandashat (Ayrarat),Armenia,#D33115
+4107,Armavir (Ayrarat),Armenia,#D33115
+4108,Vagharshapat (Ayrarat),Armenia,#D33115
+4109,Ani (Ayrarat),Armenia,#D33115
+4110,Ashnak (Ayrarat),Armenia,#D33115
+4111,Dzhrapi (Ayrarat),Armenia,#D33115
+4112,Shirakavan (Ayrarat),Armenia,#D33115
+4113,Katnakhpyur (Ayrarat),Armenia,#D33115
+4114,Garni (Ayrarat),Armenia,#D33115
+4115,Erebuni (Ayrarat),Armenia,#D33115
+4116,Motene (Ayrarat),Armenia,#D33115
+4117,Atarbegian (Ayrarat),Armenia,#D33115
+4118,Dzhrarat (Ayrarat),Armenia,#D33115
+4119,Berdatekh (Ayrarat),Armenia,#D33115
+4120,Gezlu (Ayrarat),Armenia,#D33115
+4121,Akunk (Ayrarat),Armenia,#D33115
+4122,Kamo (Ayrarat),Armenia,#D33115
+4123,Karchakhpyur (Ayrarat),Armenia,#D33115
+4124,Maravan (Syunik),Armenia,#D33115
+4125,Vayotz Dzor (Syunik),Armenia,#D33115
+4126,Arshat-Ark-ashat (Syunik),Armenia,#D33115
+4127,Shalat (Syunik),Armenia,#D33115
+4128,Chahuk (Syunik),Armenia,#D33115
+4129,Nakhchawan (Syunik),Armenia,#D33115
+4130,Parakan (Syunik),Armenia,#D33115
+4131,Golt'n (Syunik),Armenia,#D33115
+4132,Arevik (Syunik),Armenia,#D33115
+4133,Balaberd (Syunik),Armenia,#D33115
+4134,Sigan (Artsakh),Armenia,#D33115
+4135,Kapan (Artsakh),Armenia,#D33115
+4136,Nakorzan (Artsakh),Armenia,#D33115
+4137,Sisakan (Artsakh),Armenia,#D33115
+4138,Aghahechk (Artsakh),Armenia,#D33115
+4139,Parsakank (Artsakh),Armenia,#D33115
+4140,Amaras (Artsakh),Armenia,#D33115
+4141,Arank (Artsakh),Armenia,#D33115
+4142,Tigranakert (Artsakh),Armenia,#D33115
+4143,Koght (Artsakh),Armenia,#D33115
+4144,Vaykunik (Artsakh),Armenia,#D33115
+4145,Parsk (Pasrkahayak),Armenia,#D33115
+4146,Tasuk (Pasrkahayak),Armenia,#D33115
+4147,Gazrik (Pasrkahayak),Armenia,#D33115
+4148,Salamat (Pasrkahayak),Armenia,#D33115
+1614,Yanaul,Armphaeians,#CCCCCC
+1615,Mozhga,Armphaeians,#CCCCCC
+1616,Igra,Armphaeians,#CCCCCC
+1749,Lityn,Aroteres,#a7feb6
+1750,Malyn,Aroteres,#a7feb6
+1751,Liubar,Aroteres,#a7feb6
+1752,Uman,Aroteres,#a7feb6
+1753,Fastiv,Aroteres,#a7feb6
+935,Aru,Aru,#C4B5FD
+328,Arverni,Arverni,#A4DD00
+3770,Arykanda (Lycia),Arykandia,#4C1D95
+3771,Choma (Lycia),Arykandia,#4C1D95
+635,Ashmaka,Asmaka,#D1D5DB
+432,Aspisia,Aspisia,#86EFAC
+152,Astacus (Bithynia),Astakos,#FFD897
+62,Astigi,Astigi,#c7bed6
+265,Astures,Astures,#1cc424
+640,Atavia,Atavia,#FDE047
+852,Athagausia,Athagausia,#68BC00
+235,Lemnos (Lemnos),Athens,#0062B1
+1119,Imbros (Imbros),Athens,#0062B1
+2982,Thorikos (Attica),Athens,#0062B1
+2983,Rhamnous (Attica),Athens,#0062B1
+2984,Athens (Attica),Athens,#0062B1
+2985,Eleusis (Attica),Athens,#0062B1
+2986,Oropos (Attica),Athens,#0062B1
+952,Athigannadu,Athigannadu,#D5CAC6
+159,Atropatene (Atropatene),Atropatene,#a5c6cd
+428,Cadusia (Atropatene),Atropatene,#a5c6cd
+846,Pasrkahayak (Pasrkahayak),Atropatene,#a5c6cd
+627,Attasia,Attasia,#4C1D95
+557,Autenia,Autenia,#194D33
+2731,Amrane (Rutubis),Autolalia,#c16c17
+2732,Zaakna (Rutubis),Autolalia,#c16c17
+2735,Mizab (Rutubis),Autolalia,#c16c17
+2738,Frej (Rutubis),Autolalia,#c16c17
+2739,Bouzerrara (Rutubis),Autolalia,#c16c17
+2740,Haouzia (Rutubis),Autolalia,#c16c17
+2741,Aguz (Marrakesh),Autolalia,#c16c17
+2743,Tamanar (Marrakesh),Autolalia,#c16c17
+2744,Guigou (Marrakesh),Autolalia,#c16c17
+2745,Mejjat (Marrakesh),Autolalia,#c16c17
+2746,Aghmat (Marrakesh),Autolalia,#c16c17
+2747,Laattaouia (Marrakesh),Autolalia,#c16c17
+2748,Moktar (Marrakesh),Autolalia,#c16c17
+2749,Iyiche (Marrakesh),Autolalia,#c16c17
+2750,Yousouffia (Marrakesh),Autolalia,#c16c17
+2751,Marrakech (Marrakesh),Autolalia,#c16c17
+2752,Guerir (Marrakesh),Autolalia,#c16c17
+853,Avalitia,Avalitia,#194D33
+505,Avionia,Avionia,#9F0500
+1230,Anshū,Awa,#064E3B
+1167,Awaji,Awaji,#F9A8D4
+849,Aksum,Axum,#7e382c
+636,Ay,Ay,#0F766E
+398,Azali,Azali,#DBDF00
+369,Azalo,Azalo,#ff3833
+775,Azania (Arcadia),Azania,#0C797D
+439,Margia,Bactria,#16A5A5
+441,Bactria,Bactria,#16A5A5
+1287,Seoul,Baekje,#DC2626
+911,Baima,Baima,#CCCCCC
+601,Mudanjiang,Baishan,#EAB308
+1295,Gajo,Ballo,#0F766E
+3676,Manbugh (Cyrrhestica),Bambyce,#C2410C
+3677,Karkemish (Cyrrhestica),Bambyce,#C2410C
+3679,Zuqarra (Cyrrhestica),Bambyce,#C2410C
+3681,Rhabaine (Cyrrhestica),Bambyce,#C2410C
+648,Ban Chiang,Ban Chiang,#FDE047
+254,Barduli,Barduli,#feceff
+933,Barus,Barus,#FACC15
+503,Bastarnia,Bastarnia,#C45100
+272,Bastetania,Bastetani,#ffb366
+657,Beikthano,Beikthano,#EA580C
+4017,Ophis (Pontus),Bekhyria,#B0BC00
+4018,Rhizaion (Pontus),Bekhyria,#B0BC00
+4019,Athenai Pontikai (Pontus),Bekhyria,#B0BC00
+4020,Kissa (Pontus),Bekhyria,#B0BC00
+396,Belgites,Belgites,#A4DD00
+277,Bellovaci,Bellovaci,#194D33
+1048,Benahoaritas (Canary Islands),Benahoaritas,#CCCCCC
+291,Bhoja,Bhoja,#3B82F6
+1527,Lanling,Bi,#4338CA
+319,Bie,Bie,#9CA3AF
+386,Biephes,Biephes,#FCC400
+1049,Bimbaches (Canary Islands),Bimbaches,#CCCCCC
+3539,Sophon Pass,Bithynia,#D1D5DB
+3884,Libyssa (Bithynia),Bithynia,#D1D5DB
+3885,Rhebas (Bithynia),Bithynia,#D1D5DB
+3886,Artanes (Bithynia),Bithynia,#D1D5DB
+3887,Kalpe (Mariandynia),Bithynia,#D1D5DB
+3888,Tarsos Bithynias (Mariandynia),Bithynia,#D1D5DB
+327,Biturges,Biturges,#308b3e
+469,Blemmia (Blemmia),Blemmyes,#FE9200
+3398,Karim (Blemmia),Blemmyes,#FE9200
+3400,Shabbabah (Blemmia),Blemmyes,#FE9200
+603,Harbin,Boduo,#EF4444
+3003,Orchomenos (Boeotia),Boeotian States,#F44E3B
+3004,Thespiae (Boeotia),Boeotian States,#F44E3B
+3005,Anthedon (Boeotia),Boeotian States,#F44E3B
+2211,Bononia (Aemilia),Boi,#0fdd43
+2212,Mutina (Aemilia),Boi,#0fdd43
+2213,Regium Lepidum (Aemilia),Boi,#0fdd43
+2214,Brixellum (Aemilia),Boi,#0fdd43
+2215,Parma (Aemilia),Boi,#0fdd43
+2216,Vicumvia (Aemilia),Boi,#0fdd43
+2219,Forum Novum (Aemilia),Boi,#0fdd43
+2222,Beccazzola (Aemilia),Boi,#0fdd43
+2223,Cavaedium (Aemilia),Boi,#0fdd43
+399,Boiihami,Boiihami,#68BC00
+1658,Kanash,Borusci,#D8EAFE
+1659,Sanchursk,Borusci,#D8EAFE
+1660,Kazan,Borusci,#D8EAFE
+1661,Morki,Borusci,#D8EAFE
+1737,Smila,Borysthenes,#F44E3B
+1738,Kaniv,Borysthenes,#F44E3B
+1739,Irpin,Borysthenes,#F44E3B
+1740,Desna,Borysthenes,#F44E3B
+1741,Brovary,Borysthenes,#F44E3B
+1743,Drabiv,Borysthenes,#F44E3B
+3134,Charax (Taurica),Bosporan Kingdom,#D33115
+3135,Lampas (Taurica),Bosporan Kingdom,#D33115
+3136,Aloustou Phrourion (Taurica),Bosporan Kingdom,#D33115
+3137,Neapolis Taurike (Taurica),Bosporan Kingdom,#D33115
+3138,Athenaion (Taurica),Bosporan Kingdom,#D33115
+3139,Theodosia (Taurica),Bosporan Kingdom,#D33115
+3142,Kimmerikon (Taurica),Bosporan Kingdom,#D33115
+3143,Pantikapaion (Taurica),Bosporan Kingdom,#D33115
+3144,Phanagoria (Maeotia),Bosporan Kingdom,#D33115
+3145,Hermonassa (Maeotia),Bosporan Kingdom,#D33115
+3146,Gorgippia (Maeotia),Bosporan Kingdom,#D33115
+3147,Bata (Maeotia),Bosporan Kingdom,#D33115
+3148,Labrys (Maeotia),Bosporan Kingdom,#D33115
+3149,Lebedia (Maeotia),Bosporan Kingdom,#D33115
+3150,Azara (Maeotia),Bosporan Kingdom,#D33115
+3151,Pataroue (Maeotia),Bosporan Kingdom,#D33115
+2354,Brigantium,Breganti,#3DA356
+2355,Vernania,Breganti,#3DA356
+2356,Arbor Felix,Breganti,#3DA356
+2357,Vemania,Breganti,#3DA356
+359,Breuci,Breuci,#c06043
+2312,Sublavione (Rhaetica),Breuni,#7F1D1D
+2313,Vipitenum (Rhaetica),Breuni,#7F1D1D
+40,Brigantia,Brigantia,#9ff9fd
+476,Bructeria,Bructeria,#E27300
+243,Brundisium (Apulia),Brundisium,#16A5A5
+2159,Mons Appenninus Croton (Bruttium),Brutii,#0062B1
+2174,Laus (Bruttium),Brutii,#0062B1
+2175,Consentia (Bruttium),Brutii,#0062B1
+2176,Tempsa (Bruttium),Brutii,#0062B1
+2177,Petelia (Bruttium),Brutii,#0062B1
+1716,Valuyki,Budini,#1D4ED8
+1717,Kharkiv,Budini,#1D4ED8
+1718,Shostka,Budini,#1D4ED8
+1719,Berezna,Budini,#1D4ED8
+1720,Nizhyn,Budini,#1D4ED8
+1721,Konotop,Budini,#1D4ED8
+1722,Sumy,Budini,#1D4ED8
+1742,Varva,Budini,#1D4ED8
+1503,Priozersk,Bugu,#fdf4c6
+1504,Balqas,Bugu,#fdf4c6
+1296,Ugok-myeon,Bulsa,#6366F1
+1233,North Iyo,Buma,#16A34A
+388,Bures,Bures,#FCDC00
+496,Burgundia,Burgundia,#C45100
+3625,Byblos (North Phoenicia),Byblos,#4C1D95
+3094,Byzantion (East Thrace),Byzantion,#7B64FF
+3096,Selymbria (East Thrace),Byzantion,#7B64FF
+3097,Philia (East Thrace),Byzantion,#7B64FF
+339,Cadurici,Cadurici,#d8ff62
+1093,Caerosia,Caerosia,#16A34A
+2417,Kephaloidion (Sicily),Calactea,#F58D8D
+2418,Kale Akte (Sicily),Calactea,#F58D8D
+858,Calchedon (Bithynia),Calchedon,#009CE0
+549,Caledonia,Caledonia,#68CCCA
+3112,Tirizis,Callatis,#F87171
+3113,Kallatis,Callatis,#F87171
+344,Curia,Caluconi,#064E3B
+2339,Clunia Raetia,Caluconi,#064E3B
+2304,Camuni (Rhaetica),Camuni,#FCA5A5
+2777,Ifri (Drâa-Tafilalet),Canaria,#eed5b9
+2778,Tinghir (Drâa-Tafilalet),Canaria,#eed5b9
+2779,Goulmima (Drâa-Tafilalet),Canaria,#eed5b9
+2780,Errachidia (Drâa-Tafilalet),Canaria,#eed5b9
+2781,Jorf (Drâa-Tafilalet),Canaria,#eed5b9
+2782,Sigilmasa (Drâa-Tafilalet),Canaria,#eed5b9
+2783,Tisserdmine (Drâa-Tafilalet),Canaria,#eed5b9
+2784,Merzouga (Drâa-Tafilalet),Canaria,#eed5b9
+2785,Ouzina (Drâa-Tafilalet),Canaria,#eed5b9
+2956,Berenike Pancrysia (Drâa-Tafilalet),Canaria,#eed5b9
+1045,Canarios (Canary Islands),Canarios,#CCCCCC
+898,Cangwu,Cangwu,#22C55E
+266,Cantabria,Cantabri,#66ea69
+531,Cantiacia,Cantiacia,#16A5A5
+2800,Sefra (Saharan Atlas),Capariensa,#f7bf9b
+2801,Boussemghoun (Saharan Atlas),Capariensa,#f7bf9b
+2802,Arbaouats (Saharan Atlas),Capariensa,#f7bf9b
+2803,Krakda (Saharan Atlas),Capariensa,#f7bf9b
+2804,Brezina (Saharan Atlas),Capariensa,#f7bf9b
+2805,Bayadh (Saharan Atlas),Capariensa,#f7bf9b
+2806,Aflou (Saharan Atlas),Capariensa,#f7bf9b
+2807,Laghouat (Saharan Atlas),Capariensa,#f7bf9b
+2808,Messaad (Saharan Atlas),Capariensa,#f7bf9b
+2809,Dechret Kamra (Saharan Atlas),Capariensa,#f7bf9b
+117,Kybistra (Cappadocia),Cappadocia,#CBCCE0
+128,Ardistama (Cappadocia),Cappadocia,#CBCCE0
+157,Cilician Gates (Cilicia),Cappadocia,#CBCCE0
+158,Cappadocian Taurus Mountains (Cappadocia),Cappadocia,#CBCCE0
+194,Padyandos (Cappadocia),Cappadocia,#CBCCE0
+196,Tyana (Cappadocia),Cappadocia,#CBCCE0
+236,Salamboreia (Cappadocia),Cappadocia,#CBCCE0
+418,Komana Hierapolis (Cappadocia),Cappadocia,#CBCCE0
+419,Koropassos (Cappadocia),Cappadocia,#CBCCE0
+420,Garsaura (Cappadocia),Cappadocia,#CBCCE0
+421,Nora (Cappadocia),Cappadocia,#CBCCE0
+422,Sasima (Cappadocia),Cappadocia,#CBCCE0
+423,Zeila (Cappadocia),Cappadocia,#CBCCE0
+424,Ouenasa (Cappadocia),Cappadocia,#CBCCE0
+425,Argaios Mons,Cappadocia,#CBCCE0
+426,Zoropassos (Cappadocia),Cappadocia,#CBCCE0
+427,Nyssa (Cappadocia),Cappadocia,#CBCCE0
+429,Parnassos (Cappadocia),Cappadocia,#CBCCE0
+443,Androna (Cappadocia),Cappadocia,#CBCCE0
+445,Saraouene (Cappadocia),Cappadocia,#CBCCE0
+446,Sakoina (Cappadocia),Cappadocia,#CBCCE0
+458,Soanda (Cappadocia),Cappadocia,#CBCCE0
+799,Saralos (Cappadocia),Cappadocia,#CBCCE0
+800,Euaissa (Cappadocia),Cappadocia,#CBCCE0
+803,Pteria Kappadokias (Cappadocia),Cappadocia,#CBCCE0
+804,Sibora (Cappadocia),Cappadocia,#CBCCE0
+862,Argyrion (Cappadocia),Cappadocia,#CBCCE0
+1161,Malandara (Cappadocia),Cappadocia,#CBCCE0
+3468,Eulepa (Cappadocia),Cappadocia,#CBCCE0
+3478,Anisa (Cappadocia),Cappadocia,#CBCCE0
+3481,Kamoulianai (Cappadocia),Cappadocia,#CBCCE0
+3492,Mazaka (Cappadocia),Cappadocia,#CBCCE0
+3494,Soandos (Cappadocia),Cappadocia,#CBCCE0
+3507,Kyzistra (Cappadocia),Cappadocia,#CBCCE0
+3525,Ariaramneia (Cappadocia),Cappadocia,#CBCCE0
+3526,Kiskisos (Cappadocia),Cappadocia,#CBCCE0
+3530,Arathia (Cappadocia),Cappadocia,#CBCCE0
+3532,Euagina (Cappadocia),Cappadocia,#CBCCE0
+3535,Herapha (Cappadocia),Cappadocia,#CBCCE0
+3536,Baka (Cappadocia),Cappadocia,#CBCCE0
+3537,Kabassos (Cappadocia),Cappadocia,#CBCCE0
+3538,Kodouzalaba (Cappadocia),Cappadocia,#CBCCE0
+3540,Dasmenda (Cappadocia),Cappadocia,#CBCCE0
+3541,Karnalis (Cappadocia),Cappadocia,#CBCCE0
+3542,Tonosa (Cappadocia),Cappadocia,#CBCCE0
+3543,Gauraina (Cappadocia),Cappadocia,#CBCCE0
+3544,Maroga (Cappadocia),Cappadocia,#CBCCE0
+3545,Arabissos (Cappadocia),Cappadocia,#CBCCE0
+3546,Phouphagena (Cappadocia),Cappadocia,#CBCCE0
+3549,Pisonos (Cappadocia),Cappadocia,#CBCCE0
+3550,Kiakis (Cappadocia),Cappadocia,#CBCCE0
+3551,Melitene (Cappadocia),Cappadocia,#CBCCE0
+3552,Zizoatra (Cappadocia),Cappadocia,#CBCCE0
+3555,Arka (Cappadocia),Cappadocia,#CBCCE0
+3556,Ablastha (Cappadocia),Cappadocia,#CBCCE0
+3557,Osdara (Cappadocia),Cappadocia,#CBCCE0
+3558,Ouarsapa (Cappadocia),Cappadocia,#CBCCE0
+3559,Dalanda (Cappadocia),Cappadocia,#CBCCE0
+3560,Miasena (Cappadocia),Cappadocia,#CBCCE0
+3561,Korne (Cappadocia),Cappadocia,#CBCCE0
+114,Juvanum (Samnium),Caraceni,#064E3B
+2449,Kares (Sardinia),Carenses,#FDBA74
+1839,Luga,Careoti,#999999
+1840,Shimsk,Careoti,#999999
+1842,Pskov,Careoti,#999999
+1843,Dno,Careoti,#999999
+1844,Staraya,Careoti,#999999
+1845,Kirishi,Careoti,#999999
+1846,Vishera,Careoti,#999999
+1847,Boksitogorsk,Careoti,#999999
+1848,Demyansk,Careoti,#999999
+1849,Firovo,Careoti,#999999
+1850,Bologoe,Careoti,#999999
+1851,Okulovka,Careoti,#999999
+1852,Ruch'i,Careoti,#999999
+1853,Loshnya,Careoti,#999999
+1854,Valday,Careoti,#999999
+1855,Udomlya,Careoti,#999999
+1856,Megletsy,Careoti,#999999
+1857,Ustiutskoe,Careoti,#999999
+2317,Carnium,Carni,#064E3B
+2318,Emona,Carni,#064E3B
+2319,Longaticum,Carni,#064E3B
+198,Carnutes,Carnutes,#B0BC00
+257,Carpetania,Carpetani,#B0BC00
+262,Iplacea,Carpetani,#B0BC00
+393,Carpi,Carpi,#FCC400
+52,Nura (Sardinia),Carthage,#E4DDE6
+53,Sulki (Sardinia),Carthage,#E4DDE6
+54,Karali (Sardinia),Carthage,#E4DDE6
+58,Jebel el Mellaha Mountain (Carthago),Carthage,#E4DDE6
+96,Rucuma (Carthago),Carthage,#E4DDE6
+101,'Otnot (Carthago),Carthage,#E4DDE6
+112,Qart Mem (Byzacena),Carthage,#E4DDE6
+113,'Arromon Byzacena (Byzacena),Carthage,#E4DDE6
+116,'Oz 'Oppon (Byzacena),Carthage,#E4DDE6
+119,Masclinae (Byzacena),Carthage,#E4DDE6
+147,Boujlida Mountain (Carthago),Carthage,#E4DDE6
+166,Aïn Zana Mountain (Carthago),Carthage,#E4DDE6
+184,Djebel Zaghouan Mountain (Carthago),Carthage,#E4DDE6
+218,'Ishoq (Byzacena),Carthage,#E4DDE6
+219,Tabira (Byzacena),Carthage,#E4DDE6
+249,Tirm (Sicily),Carthage,#E4DDE6
+340,Djebel Zaghdoud Mountains (Carthago),Carthage,#E4DDE6
+341,Bellejbel Mountains (Byzacena),Carthage,#E4DDE6
+342,Tuburb (Carthago),Carthage,#E4DDE6
+664,Tinismot (Carthago),Carthage,#E4DDE6
+665,Ureu (Carthago),Carthage,#E4DDE6
+666,Habbir-Ton (Carthago),Carthage,#E4DDE6
+667,Bisqot (Carthago),Carthage,#E4DDE6
+668,Purnosh (Carthago),Carthage,#E4DDE6
+669,Limshot (Carthago),Carthage,#E4DDE6
+670,Midiqqir (Carthago),Carthage,#E4DDE6
+671,Ulizibbira (Carthago),Carthage,#E4DDE6
+672,Parod (Carthago),Carthage,#E4DDE6
+673,'Apet Bogin (Carthago),Carthage,#E4DDE6
+674,Shoresh (Carthago),Carthage,#E4DDE6
+679,Tapshor (Byzacena),Carthage,#E4DDE6
+680,Baror (Byzacena),Carthage,#E4DDE6
+811,Uzali Sar (Carthago),Carthage,#E4DDE6
+813,Hush'ol (Byzacena),Carthage,#E4DDE6
+816,Wagot (Byzacena),Carthage,#E4DDE6
+817,Tzobir (Carthago),Carthage,#E4DDE6
+818,Tapror (Byzacena),Carthage,#E4DDE6
+819,Ta'Inot (Byzacena),Carthage,#E4DDE6
+820,Aeliae (Byzacena),Carthage,#E4DDE6
+821,Qart Tenes (West Numida),Carthage,#E4DDE6
+823,Port Magnus (West Numida),Carthage,#E4DDE6
+1042,'I Nun (Malta),Carthage,#E4DDE6
+2412,Le-Lubim (Sicily),Carthage,#E4DDE6
+2415,Ziz (Sicily),Carthage,#E4DDE6
+2416,Hyccara (Sicily),Carthage,#E4DDE6
+2427,Gurgua (Sardinia),Carthage,#E4DDE6
+2428,Sarcapos (Sardinia),Carthage,#E4DDE6
+2431,Serdan (Sardinia),Carthage,#E4DDE6
+2432,Samas (Sardinia),Carthage,#E4DDE6
+2434,Othoca (Sardinia),Carthage,#E4DDE6
+2436,Tharros (Sardinia),Carthage,#E4DDE6
+2437,Sanaphar (Sardinia),Carthage,#E4DDE6
+2438,Carbia (Sardinia),Carthage,#E4DDE6
+2447,Phausiane (Sardinia),Carthage,#E4DDE6
+2460,Qart Hadasht (Carthago),Carthage,#E4DDE6
+2461,Kapir (Carthago),Carthage,#E4DDE6
+2464,Kirob (Carthago),Carthage,#E4DDE6
+2465,Mator (Carthago),Carthage,#E4DDE6
+2466,Tamdu' (Carthago),Carthage,#E4DDE6
+2468,Kinna Thabracania (Carthago),Carthage,#E4DDE6
+2470,Tabrak'on (Carthago),Carthage,#E4DDE6
+2471,Vaga (Carthago),Carthage,#E4DDE6
+2475,'Ashshur (Byzacena),Carthage,#E4DDE6
+2477,Tzamoh (Carthago),Carthage,#E4DDE6
+2478,Tigniqot (Carthago),Carthage,#E4DDE6
+2479,Tubgog (Carthago),Carthage,#E4DDE6
+2480,'Anobaresh (Carthago),Carthage,#E4DDE6
+2481,Tamdu (Carthago),Carthage,#E4DDE6
+2482,Tiburibshi (Carthago),Carthage,#E4DDE6
+2485,'I Ranim (Pantelleria),Carthage,#E4DDE6
+2505,Tuniza (East Numida),Carthage,#E4DDE6
+2506,'Oppon (East Numida),Carthage,#E4DDE6
+2507,Kulkitani (East Numida),Carthage,#E4DDE6
+2508,Rush 'Ikkad (East Numida),Carthage,#E4DDE6
+2519,Chullu (East Numida),Carthage,#E4DDE6
+2520,Tokkot (East Numida),Carthage,#E4DDE6
+2521,Igilgili (East Numida),Carthage,#E4DDE6
+2548,Choba (East Numida),Carthage,#E4DDE6
+2549,Muslubium (East Numida),Carthage,#E4DDE6
+2557,Saldi (West Numida),Carthage,#E4DDE6
+2559,Rush 'Oz (West Numida),Carthage,#E4DDE6
+2560,Bida (West Numida),Carthage,#E4DDE6
+2561,'I 'Ommon (West Numida),Carthage,#E4DDE6
+2562,Rush 'Iqqore (West Numida),Carthage,#E4DDE6
+2563,Rush Ga'on (West Numida),Carthage,#E4DDE6
+2600,Portus Divinus (West Numida),Carthage,#E4DDE6
+2624,Tamuda (Tingitania),Carthage,#E4DDE6
+2625,Tingi (Tingitania),Carthage,#E4DDE6
+2669,Baylon (Conventus Gaditanus),Carthage,#E4DDE6
+2670,Qart 'I (Conventus Gaditanus),Carthage,#E4DDE6
+2671,Malako'  (Conventus Gaditanus),Carthage,#E4DDE6
+2672,Menaqo  (Conventus Gaditanus),Carthage,#E4DDE6
+2674,Tziktz  (Conventus Gaditanus),Carthage,#E4DDE6
+2675,'Obed 'El  (Conventus Gaditanus),Carthage,#E4DDE6
+2676,Murgi (Conventus Gaditanus),Carthage,#E4DDE6
+2678,Aboula (Conventus Gaditanus),Carthage,#E4DDE6
+2679,Baria (Conventus Gaditanus),Carthage,#E4DDE6
+2680,Tarshish (Conventus Gaditanus),Carthage,#E4DDE6
+2730,Safim (Rutubis),Carthage,#E4DDE6
+2733,Amar (Rutubis),Carthage,#E4DDE6
+2734,Rutubis (Rutubis),Carthage,#E4DDE6
+2736,Azama (Rutubis),Carthage,#E4DDE6
+2737,Anfa (Rutubis),Carthage,#E4DDE6
+542,Carvetia,Carvetia,#a9e9f3
+2364,Rostrum Nemaviae,Catenati,#22C55E
+2365,Vindelecia,Catenati,#22C55E
+2366,Venaxamodurum,Catenati,#22C55E
+2367,Ambrae,Catenati,#22C55E
+2368,Celeusum,Catenati,#22C55E
+2294,Scingomagus,Caturigi,#113523
+2295,Catorissium,Caturigi,#113523
+2296,Eburodunum,Caturigi,#113523
+149,Albanica,Caucasian Albania,#0062B1
+150,Albanica Septentrionalis,Caucasian Albania,#0062B1
+1547,Cedu,Cedu,#86EFAC
+2435,Hydata (Sardinia),Celesitani,#22C55E
+2439,Makopsis (Sardinia),Celesitani,#22C55E
+258,Alce,Celtiberi,#239852
+259,Lobetania,Celtiberi,#239852
+263,Numantia,Celtiberi,#239852
+165,Celtici,Celtici,#687100
+256,Capara,Celtici,#687100
+2247,Bretina (Venetia),Cenomanni,#68BC00
+2248,Verona (Venetia),Cenomanni,#68BC00
+2249,Mantua (Venetia),Cenomanni,#68BC00
+2250,Bedriacum (Transpadana),Cenomanni,#68BC00
+2251,Cremona (Transpadana),Cenomanni,#68BC00
+2252,Ariolica (Transpadana),Cenomanni,#68BC00
+2253,Brixia (Transpadana),Cenomanni,#68BC00
+2707,Tindite (Mauretania),Cetiana,#ff9a35
+2708,Orjane (Mauretania),Cetiana,#ff9a35
+2709,Missour (Mauretania),Cetiana,#ff9a35
+2710,Ksabi (Drâa-Tafilalet),Cetiana,#ff9a35
+2711,Izdeg,Cetiana,#ff9a35
+2712,Tounfit (Drâa-Tafilalet),Cetiana,#ff9a35
+2713,Boumia (Drâa-Tafilalet),Cetiana,#ff9a35
+2714,Zarhour (Drâa-Tafilalet),Cetiana,#ff9a35
+2715,Aghbala  (Drâa-Tafilalet),Cetiana,#ff9a35
+2716,Kerrouchen (Tadla),Cetiana,#ff9a35
+518,Chaidinia,Chaidinia,#D33115
+478,Chamavia,Chamavia,#ff9b37
+629,Chansen,Chansen,#CCCCCC
+987,Charklik,Charklik,#6D28D9
+506,Charudia,Charudia,#F44E3B
+479,Chattia,Chattia,#C45100
+477,Chaucia,Chaucia,#b8440c
+482,Chausaria,Chausaria,#FB9E00
+940,Chera,Chera,#16A34A
+3130,Kalos Limen (Bosporanum),Chersonesus,#68CCCA
+3131,Kerkinitis (Taurica),Chersonesus,#68CCCA
+3132,Partheneion (Taurica),Chersonesus,#68CCCA
+3133,Chersonesus (Taurica),Chersonesus,#68CCCA
+232,Cheruscia,Cheruscia,#E27300
+7,Langkasuka,Chi Tu,#A4DD00
+942,Chola,Chola,#B91C1C
+300,Lujiang,Chu,#FCC400
+312,Jiujiang,Chu,#FCC400
+878,Wu,Chu,#FCC400
+879,Yancheng,Chu,#FCC400
+880,Danyang,Chu,#FCC400
+881,Yuzhang,Chu,#FCC400
+882,Guangling,Chu,#FCC400
+883,Donghai,Chu,#FCC400
+884,Luling,Chu,#FCC400
+885,Changsha,Chu,#FCC400
+886,Changde,Chu,#FCC400
+887,Wuling,Chu,#FCC400
+888,Nan,Chu,#FCC400
+889,Deng,Chu,#FCC400
+891,Yicheng,Chu,#FCC400
+892,Jiangxia,Chu,#FCC400
+893,Nanyang,Chu,#FCC400
+894,Runan,Chu,#FCC400
+895,Pei,Chu,#FCC400
+1536,Yingchuan,Chu,#FCC400
+1537,Zhongyuan,Chu,#FCC400
+1552,Lingling,Chu,#FCC400
+508,Cimbria,Cimbria,#9F0500
+120,Lazica,Cochis,#468000
+121,Colchis Interna,Cochis,#468000
+356,Colapiani,Colapiani,#FE9200
+3707,Barzala (Commagene),Commagene,#A16207
+3708,Nymphaios (Commagene),Commagene,#A16207
+3709,Charmodara (Commagene),Commagene,#A16207
+3710,Semsath (Commagene),Commagene,#A16207
+3711,Perrhe (Commagene),Commagene,#A16207
+3712,Nastai (Commagene),Commagene,#A16207
+3713,Tarsa (Commagene),Commagene,#A16207
+3714,Nisos (Commagene),Commagene,#A16207
+3715,Adatha (Commagene),Commagene,#A16207
+3716,Tyba (Commagene),Commagene,#A16207
+3717,Markash (Commagene),Commagene,#A16207
+3718,Oulnia (Commagene),Commagene,#A16207
+1091,Condrusia,Condrusia,#86EFAC
+164,Mirobrigentia,Conii,#A4DD00
+274,Contestania,Contestani,#E27300
+2440,Nure (Sardinia),Coracenses,#C4B5FD
+2442,Gurulis (Sardinia),Coracenses,#C4B5FD
+200,Coritania,Coritania,#157369
+552,Cornavia,Cornavia,#0C797D
+540,Cornovia,Cornovia,#68CCCA
+392,Costoboces,Costobaces,#FB9E00
+2369,Batavis,Cosuaneti,#B3E6CC
+2370,Iovisura,Cosuaneti,#B3E6CC
+1933,Northern Carpathian Mountains,Cotinia,#C4D5C6
+1938,Poprad,Cotinia,#C4D5C6
+1939,Rabka-Zdroj,Cotinia,#C4D5C6
+757,Croton (Bruttium),Croton,#68CCCA
+89,Medrion (Cyrenaica),Cyrene,#82B8CA
+95,Astrochonda (Cyrenaica),Cyrene,#82B8CA
+459,Korniklanon (Cyrenaica),Cyrene,#82B8CA
+460,Chorotos (Cyrenaica),Cyrene,#82B8CA
+461,Kainon (Cyrenaica),Cyrene,#82B8CA
+462,Serapeion (Cyrenaica),Cyrene,#82B8CA
+463,Amastor (Cyrenaica),Cyrene,#82B8CA
+464,Chaminos (Cyrenaica),Cyrene,#82B8CA
+465,Chersis (Cyrenaica),Cyrene,#82B8CA
+466,Zaou Katastema (Cyrenaica),Cyrene,#82B8CA
+467,Euesperides (Cyrenaica),Cyrene,#82B8CA
+468,Stratonikeia Cyrenaike (Cyrenaica),Cyrene,#82B8CA
+3063,Taucheira (Cyrenaica),Cyrene,#82B8CA
+3200,Limen Barkias (Cyrenaica),Cyrene,#82B8CA
+3201,Phykous (Cyrenaica),Cyrene,#82B8CA
+3202,Cyrene (Cyrenaica),Cyrene,#82B8CA
+3203,Chairekla (Cyrenaica),Cyrene,#82B8CA
+3204,Barke (Cyrenaica),Cyrene,#82B8CA
+3205,Balagrai (Cyrenaica),Cyrene,#82B8CA
+3206,Apollonia Cyrenaike (Cyrenaica),Cyrene,#82B8CA
+3207,Darnis (Cyrenaica),Cyrene,#82B8CA
+3208,Aziris (Cyrenaica),Cyrene,#82B8CA
+3209,Agabis (Cyrenaica),Cyrene,#82B8CA
+3210,Marandis (Cyrenaica),Cyrene,#82B8CA
+3211,Petra Mikra (Cyrenaica),Cyrene,#82B8CA
+3212,Paliouros (Cyrenaica),Cyrene,#82B8CA
+850,Daamot,Daamat,#194D33
+345,Dalmati,Dalmati,#96382e
+1124,Tamna,Damna,#4F46E5
+546,Damnonia,Damnonia,#68CCCA
+512,Danciona,Danciona,#F44E3B
+347,Daorsi,Daorsi,#d17a50
+2786,Boudenib (Saharan Atlas),Daphnitaea,#b5510f
+2787,Guir (Saharan Atlas),Daphnitaea,#b5510f
+2788,Bechar (Saharan Atlas),Daphnitaea,#b5510f
+2789,Abadla (Saharan Atlas),Daphnitaea,#b5510f
+2790,Shoshoba (Saharan Atlas),Daphnitaea,#b5510f
+2791,Taghit (Saharan Atlas),Daphnitaea,#b5510f
+2792,Goumi (Saharan Atlas),Daphnitaea,#b5510f
+2793,Lahmar (Saharan Atlas),Daphnitaea,#b5510f
+2794,Fendi (Saharan Atlas),Daphnitaea,#b5510f
+2795,Figuig (Saharan Atlas),Daphnitaea,#b5510f
+2796,Bourzeg (Saharan Atlas),Daphnitaea,#b5510f
+2797,Sfissifa (Saharan Atlas),Daphnitaea,#b5510f
+1078,Daqiuyuan,Daqiuyuan,#FDE047
+354,Dardani,Dardani,#f5a89a
+556,Darinia,Darinia,#68BC00
+615,Xiwuzhu'er,Daze,#653294
+538,Deceanglia,Deceanglia,#0C797D
+2267,Libarna (Liguria),Dectuninia,#CCCCCC
+785,Delphi (Boeotia),Delphi,#A4DD00
+537,Demetia,Demetia,#0C797D
+1577,Karakalpakstan,Derbices,#F5DDBC
+1578,Prorva,Derbices,#F5DDBC
+1579,Shetpe,Derbices,#F5DDBC
+1247,Nosi-nay,Dewa,#3E2723
+1248,Tou-nay,Dewa,#3E2723
+1249,Hukama-nay,Dewa,#3E2723
+901,Dian,Dian,#2DD4BF
+361,Dindari,Dindari,#dc9145
+1456,Khankh,Dingling,#374151
+535,Dobbunia,Dobbunia,#0C797D
+2279,Savo (Liguria),Docilia,#C4B5FD
+3269,Boron (Kharga),Dodekaschoinos,#ACAAD9
+3270,Simbel (Kharga),Dodekaschoinos,#ACAAD9
+3271,Peherse (Aswan),Dodekaschoinos,#ACAAD9
+3272,Serra (Aswan),Dodekaschoinos,#ACAAD9
+3273,Kambousis (Aswan),Dodekaschoinos,#ACAAD9
+3274,Tene (Aswan),Dodekaschoinos,#ACAAD9
+3275,Nalot (Aswan),Dodekaschoinos,#ACAAD9
+3276,Aramum (Aswan),Dodekaschoinos,#ACAAD9
+3277,Takompsaw (Aswan),Dodekaschoinos,#ACAAD9
+3278,Per-Selk (Aswan),Dodekaschoinos,#ACAAD9
+3279,Qort (Aswan),Dodekaschoinos,#ACAAD9
+3280,Talmes (Aswan),Dodekaschoinos,#ACAAD9
+3282,Swenett (Aswan),Dodekaschoinos,#ACAAD9
+3399,Hudi (Blemmia),Dodekaschoinos,#ACAAD9
+1531,Gong,Dong Zhou,#CA8A04
+614,Dayingzi,Donghue,#AB149E
+616,Beipiao,Donghue,#AB149E
+617,Chifeng,Donghue,#AB149E
+916,Chengde,Donghue,#AB149E
+1290,Tongyeong,Dongno,#FDE047
+1291,Geoje,Dongno,#FDE047
+1467,Dong Qiemi,Dongqiemi,#A5B4FC
+1306,Gangneung,Dongye,#C45100
+1307,Sokcho,Dongye,#C45100
+1308,Hyeonnae,Dongye,#C45100
+1309,Kosan-up,Dongye,#C45100
+191,Drangiana,Drangiana,#16A5A5
+533,Dumnonia,Dumnonia,#68CCCA
+534,Durotrigia,Durotrigia,#0C797D
+773,Dyme (Achaea),Dyme,#009CE0
+1260,Sapporo,Ebetsu,#795548
+1261,Yam-wakka-ru,Ebetsu,#795548
+1262,Notka-an,Ebetsu,#795548
+22,Eblania,Eblania,#B0BC00
+824,Eburania,Eburani,#FB9E00
+1092,Eburonia,Eburonia,#22C55E
+275,Saguntum,Edetani,#C45100
+3000,Elateia (Boeotia),Elatea,#808080
+2155,Elea (Lucania),Elea,#CCCCCC
+3190,Eleutherna (Crete),Eleutherna,#1BA0AB
+202,Elis (Elis),Elis,#ffecb0
+2413,Eryx (Sicily),Elymia,#F9A8D4
+2414,Egesta (Sicily),Elymia,#F9A8D4
+806,Emporion,Emporion,#16A5A5
+781,Epidauros (Argolis),Epidauros,#0062B1
+550,Epidia,Epidia,#0C797D
+551,Dumnia,Epidia,#0C797D
+3018,Kassope (Epirus),Epirus,#EAB308
+3019,Dodona (Epirus),Epirus,#EAB308
+3020,Toryne (Epirus),Epirus,#EAB308
+3021,Phoinike (Epirus),Epirus,#EAB308
+3022,Passaron (Epirus),Epirus,#EAB308
+3023,Hekatompedon (Epirus),Epirus,#EAB308
+3024,Orikon (Epirus),Epirus,#EAB308
+368,Eravisci,Eravisci,#df2824
+2988,Eretria (Euboea),Eretria,#B5D6FD
+2989,Oichalia Euboike (Euboea),Eretria,#B5D6FD
+2990,Styra (Euboea),Eretria,#B5D6FD
+2991,Karystos (Euboea),Eretria,#B5D6FD
+1257,Cir-o-p,Esan,#BCAAA4
+1258,Poro-moy,Esan,#BCAAA4
+1259,Kapar,Esan,#BCAAA4
+2358,Cambodunum,Estioni,#064E3B
+2360,Abodiacum,Estioni,#064E3B
+2363,Novia,Estioni,#064E3B
+100,Cisra (Etruria),Etruscan Confederation,#AB149E
+126,Tarchuna (Etruria),Etruscan Confederation,#AB149E
+132,Vesnth (Etruria),Etruscan Confederation,#AB149E
+143,Velcal (Etruria),Etruscan Confederation,#AB149E
+153,Mons Appenninus Cleusi (Etruria),Etruscan Confederation,#AB149E
+154,Urina (Etruria),Etruscan Confederation,#AB149E
+2178,Rusellae (Etruria),Etruscan Confederation,#AB149E
+2179,Tlamun (Etruria),Etruscan Confederation,#AB149E
+2180,Vatluna (Etruria),Etruscan Confederation,#AB149E
+2181,Pupluna (Etruria),Etruscan Confederation,#AB149E
+2182,Elba (Etruria),Etruscan Confederation,#AB149E
+2183,Cleusi (Etruria),Etruscan Confederation,#AB149E
+2184,Tuter (Etruria),Etruscan Confederation,#AB149E
+2185,Persna (Etruria),Etruscan Confederation,#AB149E
+2186,Mons Appenninus Arritim (Etruria),Etruscan Confederation,#AB149E
+2187,Curtun (Etruria),Etruscan Confederation,#AB149E
+2188,Arritim (Etruria),Etruscan Confederation,#AB149E
+2189,Murlo (Etruria),Etruscan Confederation,#AB149E
+2190,Saina (Etruria),Etruscan Confederation,#AB149E
+2191,Birent (Etruria),Etruscan Confederation,#AB149E
+2192,Velathera (Etruria),Etruscan Confederation,#AB149E
+2193,Vada Velathri (Etruria),Etruscan Confederation,#AB149E
+2194,Valvata (Etruria),Etruscan Confederation,#AB149E
+2195,Pisna (Etruria),Etruscan Confederation,#AB149E
+2196,Luna (Etruria),Etruscan Confederation,#AB149E
+2197,Luc (Etruria),Etruscan Confederation,#AB149E
+2198,Pistorim (Etruria),Etruscan Confederation,#AB149E
+2199,Visal (Etruria),Etruscan Confederation,#AB149E
+2201,Rubra (Corsica),Etruscan Confederation,#AB149E
+2202,Alalia (Corsica),Etruscan Confederation,#AB149E
+2203,Mariana (Corsica),Etruscan Confederation,#AB149E
+2204,Centurinum (Corsica),Etruscan Confederation,#AB149E
+510,Eudosia,Eudosia,#9F0500
+1077,Fanzaiyuan,Fanzaiyuan,#7C3AED
+2239,Feltrini (Venetia),Feltrini,#ffd8d7
+1079,Fengbitou,Fengbitou,#F9A8D4
+515,Firaesia,Firaesia,#9F0500
+2337,Tiralia (Rhaetica),Focunati,#652510
+2338,Foetes (Rhaetica),Focunati,#652510
+484,Fosia,Fosia,#C45100
+2141,Terventum (Samnium),Frentani,#C45100
+2142,Buca (Samnium),Frentani,#C45100
+2143,Gerumum (Samnium),Frentani,#C45100
+473,West Frisia,Frisians,#C45100
+475,East Frisia,Frisians,#C45100
+656,Fugandulu,Fugandulu,#DB2777
+876,Fulou,Fulou,#86EFAC
+1416,Ussurijsk,Funie,#F9A8D4
+1417,Jixi,Funie,#F9A8D4
+1184,Tajima,Futakata,#FCA5A5
+1185,Tango,Futakata,#FCA5A5
+604,Da'an,Fuyu,#A5B4FC
+605,Liaoyuan,Fuyu,#A5B4FC
+606,Changchun,Fuyu,#A5B4FC
+607,Jiutai,Fuyu,#A5B4FC
+2667,Gadir (Conventus Gaditanus),Gadir,#831843
+2668,Margalon  (Conventus Gaditanus),Gadir,#831843
+2681,Central Saharan Atlas Mountains (Gaetulia),Gaetulia,#C45100
+2682,Eastern Saharan Atlas Mountains (Gaetulia),Gaetulia,#C45100
+2683,Western Saharan Atlas Mountains (Gaetulia),Gaetulia,#C45100
+2684,Gemellae (Gaetulia),Gaetulia,#C45100
+2685,Aqua Viva (Gaetulia),Gaetulia,#C45100
+2686,Thubunae (Gaetulia),Gaetulia,#C45100
+2687,Burgus Gaetulia (Gaetulia),Gaetulia,#C45100
+2688,Mesarietta (Gaetulia),Gaetulia,#C45100
+2689,Aurasius Superior (Gaetulia),Gaetulia,#C45100
+2690,Lambafundi (Gaetulia),Gaetulia,#C45100
+2691,Tabudium (Gaetulia),Gaetulia,#C45100
+2692,Badias (Gaetulia),Gaetulia,#C45100
+2693,Aurasius Inferior (Gaetulia),Gaetulia,#C45100
+2694,Claudi (Gaetulia),Gaetulia,#C45100
+2695,Mascula Tiberia (Gaetulia),Gaetulia,#C45100
+2696,Leges Malores (Gaetulia),Gaetulia,#C45100
+2697,Casae Nigrae (Gaetulia),Gaetulia,#C45100
+2698,Midili (Gaetulia),Gaetulia,#C45100
+2699,Ad Speculum (Gaetulia),Gaetulia,#C45100
+2700,Ubaza Castellum (Gaetulia),Gaetulia,#C45100
+2701,Cerva (Gaetulia),Gaetulia,#C45100
+1762,Rozan,Galindia,#16A5A5
+1764,Ostroleka,Galindia,#16A5A5
+1765,Myszyniec,Galindia,#16A5A5
+1767,Kolno,Galindia,#16A5A5
+1768,Orzysz,Galindia,#16A5A5
+1769,Korsze,Galindia,#16A5A5
+1770,Pasym,Galindia,#16A5A5
+1771,Ryn,Galindia,#16A5A5
+1772,Olecko,Galindia,#16A5A5
+264,Gallaeci,Gallaeci,#3a5b15
+85,Gandhara,Gandhara,#FCA5A5
+928,Gangga Negara,Gangga Negara,#EAB308
+2910,Umm Abid (Shatti),Garamantes,#e6e2c1
+2911,Brak (Shatti),Garamantes,#e6e2c1
+2912,Mahruqah (Shatti),Garamantes,#e6e2c1
+2913,Bergin (Shatti),Garamantes,#e6e2c1
+2914,Dedris (Shatti),Garamantes,#e6e2c1
+2915,Adri (Shatti),Garamantes,#e6e2c1
+2916,Adwesa (Shatti),Garamantes,#e6e2c1
+2917,Wanin (Shatti),Garamantes,#e6e2c1
+2920,Samnu (Hayaa),Garamantes,#e6e2c1
+2921,Sabha (Hayaa),Garamantes,#e6e2c1
+2922,Chlef (Hayaa),Garamantes,#e6e2c1
+2923,Gelah (Hayaa),Garamantes,#e6e2c1
+2924,Lecksair (Hayaa),Garamantes,#e6e2c1
+2925,Garama (Hayaa),Garamantes,#e6e2c1
+2926,Zinchekra (Hayaa),Garamantes,#e6e2c1
+2927,Gadduwah (Murzuq),Garamantes,#e6e2c1
+2928,Murzuq (Murzuq),Garamantes,#e6e2c1
+2929,Dujal (Murzuq),Garamantes,#e6e2c1
+2930,Sharraba (Murzuq),Garamantes,#e6e2c1
+2931,Baghira (Murzuq),Garamantes,#e6e2c1
+2932,Tisit (Murzuq),Garamantes,#e6e2c1
+2933,Traghen (Murzuq),Garamantes,#e6e2c1
+2934,Zuwila (Murzuq),Garamantes,#e6e2c1
+2935,Tmassah (Murzuq),Garamantes,#e6e2c1
+2936,Tajerhi (Murzuq),Garamantes,#e6e2c1
+2937,Qatrun (Murzuq),Garamantes,#e6e2c1
+2938,Izam (Murzuq),Garamantes,#e6e2c1
+2939,Mastutah (Murzuq),Garamantes,#e6e2c1
+2940,Terbu (Murzuq),Garamantes,#e6e2c1
+2941,Majdul (Murzuq),Garamantes,#e6e2c1
+2942,Halfa (Murzuq),Garamantes,#e6e2c1
+2943,Duweb (Murzuq),Garamantes,#e6e2c1
+2944,Biyar (Murzuq),Garamantes,#e6e2c1
+2945,Hidiglib (Murzuq),Garamantes,#e6e2c1
+2946,Kuweib (Hayaa),Garamantes,#e6e2c1
+2947,South Khafur (Shatti),Garamantes,#e6e2c1
+385,Gaucoenses,Gaucoenses,#FB9E00
+491,Gautigoths,Gautigoths,#9F0500
+84,Gedrosia,Gedrosia,#68CCCA
+2404,Gela (Sicily),Gela,#F9A8D4
+1723,Samar,Gelonii,#E9F7B9
+1724,Poltava,Gelonii,#E9F7B9
+1725,Kozelshchyna,Gelonii,#E9F7B9
+2336,Mastiacum (Rhaetica),Genauni,#B91C1C
+2266,Genua (Liguria),Genua,#5D4037
+454,Gerrah,Gerrah,#cccccc
+384,Getae,Getae,#B0BC00
+1301,Huenghae,Geungi,#4ADE80
+1302,Andong,Gijeo,#CCCCCC
+2823,Arelliorum (Nalut),Gindania,#d9d8aa
+2824,North Jebil (Nalut),Gindania,#d9d8aa
+2825,Tabria (Nalut),Gindania,#d9d8aa
+2826,Bezereos (Nalut),Gindania,#d9d8aa
+2827,Augemmi (Nalut),Gindania,#d9d8aa
+2828,Naffatiyah (Nalut),Gindania,#d9d8aa
+2829,Tabalati (Nalut),Gindania,#d9d8aa
+2830,Mahalla (Nalut),Gindania,#d9d8aa
+2831,Tisavar (Nalut),Gindania,#d9d8aa
+2832,Tibubuci (Nalut),Gindania,#d9d8aa
+2833,Recheb (Nalut),Gindania,#d9d8aa
+362,Glinditioni,Glinditioni,#e6b9aa
+1369,Huichon,Goguryeo,#FE9200
+1370,Sakju-eup,Goguryeo,#FE9200
+1371,Kopung-up,Goguryeo,#FE9200
+1372,Kanggye,Goguryeo,#FE9200
+1373,Linjiang,Goguryeo,#FE9200
+1374,Baishan,Goguryeo,#FE9200
+1375,Xinbin,Goguryeo,#FE9200
+1376,Kuandian,Goguryeo,#FE9200
+1377,Huanren,Goguryeo,#FE9200
+1378,Dalu,Goguryeo,#FE9200
+1379,Tonghua,Goguryeo,#FE9200
+1289,Sacheon,Gojamidong,#F3F4F6
+1314,Kwail-Up,Gojoseon,#009CE0
+1315,Haeju,Gojoseon,#009CE0
+1316,Anju,Gojoseon,#009CE0
+1317,Yangdok-up,Gojoseon,#009CE0
+1318,Goksan-eup,Gojoseon,#009CE0
+1319,Sunchon,Gojoseon,#009CE0
+1320,Kaesong,Gojoseon,#009CE0
+1321,Kangdon-up,Gojoseon,#009CE0
+1322,Unpa-up,Gojoseon,#009CE0
+1323,Sariwon,Gojoseon,#009CE0
+1324,Gangnam-eup,Gojoseon,#009CE0
+1325,Nampo,Gojoseon,#009CE0
+1326,Pyongyang,Gojoseon,#009CE0
+1327,Jongju,Gojoseon,#009CE0
+1328,Jinzhou,Gojoseon,#009CE0
+1329,Beizhen,Gojoseon,#009CE0
+1330,Panjin,Gojoseon,#009CE0
+1331,Dengta,Gojoseon,#009CE0
+1332,Dandong,Gojoseon,#009CE0
+1333,Benxi,Gojoseon,#009CE0
+1334,Donggang,Gojoseon,#009CE0
+1335,Xiyugou,Gojoseon,#009CE0
+1336,Anshan,Gojoseon,#009CE0
+1337,Yingkou,Gojoseon,#009CE0
+1338,Zhuanghe,Gojoseon,#009CE0
+1339,Wafangdian,Gojoseon,#009CE0
+1340,Pulandian,Gojoseon,#009CE0
+1341,Dalian,Gojoseon,#009CE0
+1047,Gomeritas (Canary Islands),Gomeritas,#CCCCCC
+3745,Oros Masios (Corduene),Gordyene,#D33115
+3784,Kef (Corduene),Gordyene,#D33115
+3818,Chlomaron (Corduene),Gordyene,#D33115
+3848,Pnaha (Corduene),Gordyene,#D33115
+3871,Shfur (Corduene),Gordyene,#D33115
+4008,Grai Darki (Corduene),Gordyene,#D33115
+4021,Sthalih (Corduene),Gordyene,#D33115
+4069,Balaleisa (Vaspurakan),Gordyene,#D33115
+3191,Korion (Crete),Gortyna,#009CE0
+3192,Gortyna (Crete),Gortyna,#009CE0
+494,Gothonia,Gothania,#FE9200
+514,Gothoscandza,Gothoscandza,#9F0500
+511,Goutia,Goutia,#F44E3B
+2299,Darantasia,Graioceli,#93C28D
+1485,Gornyak,Gryphia,#dae8fe
+1486,Aleysk,Gryphia,#dae8fe
+1487,Kargat,Gryphia,#dae8fe
+1488,Turochak,Gryphia,#dae8fe
+1489,Barnaul,Gryphia,#dae8fe
+1490,Sheregesh,Gryphia,#dae8fe
+1046,Guanches (Canary Islands),Guanches,#CCCCCC
+897,Gui,Gui,#CA8A04
+1300,Yeongcheon,Gulbal,#DB2777
+996,Gumo,Gumo,#CCCCCC
+1293,Busan,Guya,#CCCCCC
+1443,Baganuur,Guyan,#C5ADD1
+1444,Ulaanbaatar,Guyan,#C5ADD1
+2458,Palma (Majorca),Gymnaesians,#FEF2AF
+2459,Guium (Majorca),Gymnaesians,#FEF2AF
+2488,Tuci (Majorca),Gymnaesians,#FEF2AF
+2489,Mao (Minorca),Gymnaesians,#FEF2AF
+220,Capsta lustiniana (Tritonis),Gyzantia,#fff39f
+221,Silesva (Tritonis),Gyzantia,#fff39f
+822,Macomades Minores (Byzacena),Gyzantia,#fff39f
+2467,Bennafa (Byzacena),Gyzantia,#fff39f
+2656,Thiges (Tritonis),Gyzantia,#fff39f
+2657,Castra Nepitana (Tritonis),Gyzantia,#fff39f
+2658,Talib,Gyzantia,#fff39f
+2659,Rjim Maatoug (Tritonis),Gyzantia,#fff39f
+2660,Faouar (Tritonis),Gyzantia,#fff39f
+2661,Ghidma (Tritonis),Gyzantia,#fff39f
+2662,Jamnah (Tritonis),Gyzantia,#fff39f
+2663,Turris Tamaleni (Tritonis),Gyzantia,#fff39f
+2664,Aves (Tritonis),Gyzantia,#fff39f
+2665,Aquae Tacapitanae (Tritonis),Gyzantia,#fff39f
+470,Hadramaut,Hadramaut,#CCCCCC
+675,'Adromet (Byzacena),Hadrametum,#312E81
+3183,Bargylia (Caria),Halikarnassos,#F472B6
+3186,Halikarnassos (Caria),Halikarnassos,#F472B6
+920,Halin,Halin,#14B8A6
+1519,Qinshui,Han,#4ADE80
+1520,Shangdang,Han,#4ADE80
+1521,Fushan,Han,#4ADE80
+1534,Zheng,Han,#4ADE80
+1082,Hanben,Hanben,#8B5CF6
+1411,Taejka,Haoshi,#831843
+1412,Spassk-Kal'nij,Haoshi,#831843
+1190,Western Harima,Hari,#C6E498
+502,Haria,Haria,#FE9200
+1191,Eastern Harima,Harima,#8B5CF6
+826,Tartessus,Hasta,#c2aac4
+1236,Western Tosa,Hata,#FDE047
+501,Helisia,Helisia,#C45100
+495,Helveconia,Helveconia,#FE9200
+338,Helvi,Helvi,#194D33
+807,Hemeroskopeion,Hemeroskopeion,#0C797D
+867,Heniochia,Heniochia,#B0BC00
+778,Heraia (Arcadia),Heraia,#16A5A5
+765,Herakleia (Lucania),Herakleia,#16A5A5
+2410,Herakleia Minoa (Sicily),Herakleia Minoa,#CCCCCC
+859,Herakleia Pontica (Mariandynia),Herakleia Pontica,#16A5A5
+207,Hermione (Argolis),Hermione,#0C797D
+485,Hermunduria,Hermunduria,#ff9933
+1451,Hezhongshi,Hezongshi,#999999
+1226,Hida,Hida,#DB2777
+1170,Hyūga,Himuka,#CA8A04
+1171,Hishū,Hinokuni,#EF4444
+41,Zhalauly,Hippasii,#E7F4BB
+110,Koskol,Hippasii,#E7F4BB
+409,Imeni,Hippasii,#E7F4BB
+410,Burmasha,Hippasii,#E7F4BB
+411,Aktas,Hippasii,#E7F4BB
+759,Hipponion (Bruttium),Hipponion,#0C797D
+252,Tergeste (Histria),Histri,#CCCCCC
+2381,Flanona (Histria),Histri,#CCCCCC
+2382,Parentium (Histria),Histri,#CCCCCC
+2383,Pola (Histria),Histri,#CCCCCC
+2384,Piquentum (Histria),Histri,#CCCCCC
+1219,Hitachi,Hitati,#BE185D
+913,Hnaw Kan,Hnaw Kan,#5EEAD4
+3809,Homonadeis (Isauria),Homonadia,#22C55E
+1207,Eastern Mikawa,Honokuni,#6B7280
+1182,Hōki,Houki,#F97316
+1183,Inaba,Houki,#F97316
+321,Helong,Huifa,#86EFAC
+1476,Altay,Hujie,#000000
+1477,Ridder,Hujie,#000000
+1478,Chemal,Hujie,#000000
+1479,Kom-Kanas,Hujie,#000000
+1460,Ulaangom,Hunyu,#000000
+1461,Buruunturuun,Hunyu,#000000
+2281,Vardagate (Liguria),Iadatinia,#22C55E
+387,Iapygia,Iapygia,#FCC400
+357,Iasi,Iasi,#875c32
+1702,Manino,Iazyges,#a3f5ce
+1703,Lyman,Iazyges,#a3f5ce
+1704,Onika,Iazyges,#a3f5ce
+1705,Yalta (Bosporanum),Iazyges,#a3f5ce
+1706,Chaltyr',Iazyges,#a3f5ce
+1707,Polohy,Iazyges,#a3f5ce
+1708,Taganrog (Bosporanum),Iazyges,#a3f5ce
+1709,Donetsk,Iazyges,#a3f5ce
+1710,Soledar,Iazyges,#a3f5ce
+1711,Gukovo,Iazyges,#a3f5ce
+1712,Shakthty,Iazyges,#a3f5ce
+151,Ibericus,Ibericus,#FCDC00
+2457,'I Bosem (Ibiza),Iboshim,#F472B6
+532,Icenia,Icenia,#54e0e0
+3196,Hierapytna (Crete),Ierapetra,#009CE0
+1199,Iga,Igo,#795548
+1056,Iki,Iki,#DC2626
+2268,Dertona (Liguria),Ilvatia,#60A5FA
+2280,Coeba (Liguria),Ilvatia Coeba,#A16207
+2285,Crixia (Liguria),Ilvatia Coeba,#A16207
+1225,Etchū,Imizu,#4ADE80
+270,Indiketia,Indiketia,#bb7500
+638,Indravana,Indravana,#7C3AED
+2287,Album Ingaunum (Liguria),Ingaunia,#6B7280
+2254,Lambrum (Transpadana),Insubri,#808900
+2255,Argentea (Transpadana),Insubri,#808900
+2256,Laus Insubrim (Transpadana),Insubri,#808900
+2257,Ticinum (Transpadana),Insubri,#808900
+2259,Sebuinus Vicus (Transpadana),Insubri,#808900
+2260,Mediolanum (Transpadana),Insubri,#808900
+2271,Plumbia (Transpadana),Insubri,#808900
+2288,Album Intimilium (Liguria),Intimilia,#68BC00
+1211,Suruga,Iohara,#CA8A04
+2564,'I Kossim (West Numida),Iol,#8B5CF6
+2568,Yi'ol (West Numida),Iol,#8B5CF6
+2308,Statio Maiensis (Rhaetica),Isarci,#DC2626
+1205,Ise,Ise,#FDE047
+3780,Podalia (Milyas),Isindia,#0F766E
+3781,Isinda (Milyas),Isindia,#0F766E
+769,Issa,Issa,#73D8FF
+594,Arkalyk,Issedones,#374151
+595,Atbasar,Issedones,#374151
+3115,Histros,Istros,#93C5FD
+3116,Axiopolis,Istros,#93C5FD
+3117,Capidava,Istros,#93C5FD
+1174,Ito,Ito,#CCCCCC
+558,Ivernia,Ivernia,#68BC00
+1194,Izumi,Iwa,#4C1D95
+1180,Iwami,Iwami,#CCCCCC
+1235,South Iyo,Iya,#CCCCCC
+1210,Izu,Izu,#99F6E4
+1016,Jadis,Jadis,#CCCCCC
+1483,Abaza,Jiankun,#D1D5DB
+1484,Kuragino,Jiankun,#D1D5DB
+46,Mokpo,Jin Confederacy,#16A34A
+47,Yeosu,Jin Confederacy,#16A34A
+65,Jinju,Jin Confederacy,#16A34A
+66,Jirisan,Jin Confederacy,#16A34A
+67,Gwangju,Jin Confederacy,#16A34A
+68,Namwon,Jin Confederacy,#16A34A
+69,Jeonju,Jin Confederacy,#16A34A
+74,Sangju,Jin Confederacy,#16A34A
+75,Daejeon,Jin Confederacy,#16A34A
+299,Boryeong,Jin Confederacy,#16A34A
+618,Namhae,Jin Confederacy,#16A34A
+619,Daegok-ri,Jin Confederacy,#16A34A
+620,Cheonan,Jin Confederacy,#16A34A
+983,Jingjue,Jingjue,#FDBA74
+1080,Jiuxianlan,Jiuxianlan,#EC4899
+1013,Jubbah,Jubbah,#FCA5A5
+3446,Tzo'ar (Judea),Judea,#3B82F6
+3447,Metzada (Judea),Judea,#3B82F6
+3448,Beit Lekhem (Judea),Judea,#3B82F6
+3449,Yerushalayim (Judea),Judea,#3B82F6
+3450,Hebron (Judea),Judea,#3B82F6
+3451,Tell 'Arad (Judea),Judea,#3B82F6
+3452,Bettar (Judea),Judea,#3B82F6
+3453,Hamtah (Judea),Judea,#3B82F6
+3454,Lydda (Judea),Judea,#3B82F6
+3455,Yeriho (Judea),Judea,#3B82F6
+3456,Beth Haran (Judea),Judea,#3B82F6
+3457,Karak (Judea),Judea,#3B82F6
+3458,Rabbat (Judea),Judea,#3B82F6
+3459,Medaba (Judea),Judea,#3B82F6
+3460,Heshbon (Judea),Judea,#3B82F6
+3461,Tzor Gilead (Judea),Judea,#3B82F6
+3462,Sukkot (Samaria),Judea,#3B82F6
+3463,Shiloh (Judea),Judea,#3B82F6
+902,Juding,Juding,#831843
+412,Chandmani,Junji,#4D4D4D
+1612,Karabau,Jurcae,#ffea9f
+1613,Oral,Jurcae,#ffea9f
+993,Jushi,Jushi,#F472B6
+1545,Juyan,Juyan,#EAB308
+941,Kaandhalkuranadu,Kaandhalkuranadu,#CCCCCC
+946,Kaankezhunadu,Kaankezhunadu,#CA8A04
+1223,Kaga,Kaga,#CCCCCC
+1212,Kai,Kai,#78350F
+182,Brahmani,Kalinga,#E27300
+295,Kalinga,Kalinga,#E27300
+244,Kallipolis (Apulia),Kallipolis,#16A5A5
+298,Kamarupa,Kamarupa,#0C797D
+1245,Kōzuke,Kaminotuke,#FDE047
+932,Kandis,Kandis,#EF4444
+3188,Kaunos (Caria),Kaounos,#68BC00
+3189,Daidala (Lycia),Kaounos,#68BC00
+1816,Aloja,Karbonia,#B3B3B3
+1817,Valga,Karbonia,#B3B3B3
+1818,Torva,Karbonia,#B3B3B3
+1819,Sindi,Karbonia,#B3B3B3
+1820,Lihula,Karbonia,#B3B3B3
+1821,Saaremaa,Karbonia,#B3B3B3
+1822,Hiiumaa,Karbonia,#B3B3B3
+1823,Muhu,Karbonia,#B3B3B3
+1824,Haapsalu,Karbonia,#B3B3B3
+1825,Rapla,Karbonia,#B3B3B3
+1826,Maardu,Karbonia,#B3B3B3
+1828,Sillamae,Karbonia,#B3B3B3
+1829,Tapa,Karbonia,#B3B3B3
+1830,Kunda,Karbonia,#B3B3B3
+1831,Paide,Karbonia,#B3B3B3
+1832,Kallaste,Karbonia,#B3B3B3
+1833,Tartu,Karbonia,#B3B3B3
+1834,Rapina,Karbonia,#B3B3B3
+1835,Antsla,Karbonia,#B3B3B3
+1836,Palkino,Karbonia,#B3B3B3
+1837,Gdov,Karbonia,#B3B3B3
+1838,Balsovo,Karbonia,#B3B3B3
+951,Karkanadu,Karkanadu,#85766B
+828,Karmo,Karmo,#efe2ef
+829,Kartuba,Kartuba,#d1bdd7
+189,Karusa,Karusa,#818CF8
+3897,Daybra (Mariandynia),Kaukonia,#B0BC00
+3968,Parthenia (Paphlagonia),Kaukonia,#B0BC00
+3981,Kimista (Paphlagonia),Kaukonia,#B0BC00
+1187,Bingo,Kaya,#FDE047
+1188,Bitchū,Kaya,#FDE047
+1216,Awa,Kazusa,#6366F1
+1217,Kazusa,Kazusa,#6366F1
+927,Kedah,Kedah,#60A5FA
+3184,Keramos (Caria),Keramos,#F9A8D4
+864,Kerausous,Kerausous,#68CCCA
+2462,Missu' (Carthago),Kerkouane,#16A34A
+2463,'Asep (Carthago),Kerkouane,#16A34A
+647,Khao Sam Kaeo,Khao Sam Kaeo,#3B82F6
+1562,Urgench,Kharazm,#CA8A04
+1563,Nukus,Kharazm,#CA8A04
+1564,Andalyp,Kharazm,#CA8A04
+639,Khasa,Khasa,#4C1D95
+981,Khotan,Khotan,#CA8A04
+652,Khuan Lukpad,Khuan Lukpad,#86EFAC
+3791,Kibyra (Milyas),Kibyratia,#60A5FA
+3792,Boubon (Milyas),Kibyratia,#60A5FA
+3846,Kidrama (Caria),Kibyratia,#60A5FA
+1166,Shodoshima,Kii,#4ADE80
+1189,Bizen,Kii,#4ADE80
+1196,Western Kii,Kina,#A78BFA
+1015,Kindah,Kindah,#CCCCCC
+226,Kios (Bithynia),Kios,#818CF8
+1263,To-kor-pet,Kitami,#5D4037
+1264,Tu-kotan,Kitami,#5D4037
+1265,Nupka-pet,Kitami,#5D4037
+1266,Kunasir,Kitami,#5D4037
+1097,Knidos (Caria),Knidos,#16A34A
+3193,Knossos (Crete),Knossos,#0062B1
+628,Kok Charoen,Kok Charoen,#5EEAD4
+1512,Ekibastuz,Korgantas,#374151
+1513,Qarqaraly,Korgantas,#374151
+809,Korkyra (Epirus),Korkyra,#68CCCA
+789,Kos (Sporades),Kos,#4D4D4D
+944,Kosar,Kosar,#4ADE80
+1239,Eastern Echigo,Kosinofukae,#A1887F
+929,Kota Gelanggi,Kota Gelanggi,#99F6E4
+3758,Kolybrassos (Pamphylia),Kotennia,#A78BFA
+3761,Kotenna (Pamphylia),Kotennia,#A78BFA
+863,Kotyora,Kotyora,#0C797D
+2627,'Ashshillit (Tingitania),Kouass,#1F0C3D
+376,Krobyzni,Krobyzni,#bdd709
+3111,Krounoi,Krounoi,#F3F4F6
+919,Kualaddungun,Kualaddungun,#2DD4BF
+1238,Western Echigo,Kubiki,#93C5FD
+995,Kucha,Kucha,#BE185D
+948,Kudanadu,Kudanadu,#60A5FA
+1197,Eastern Kii,Kumano,#818CF8
+1168,Kumaso,Kumaso,#22C55E
+1234,Central Iyo,Kumi,#93C5FD
+903,Kunming,Kunming,#F472B6
+949,Kuntala,Kuntala,#C1AEB7
+795,Kydonia (Crete),Kydonia,#0062B1
+796,Kyzikios (Mysia),Kyzikios,#F87171
+1121,Artake (Mysia),Kyzikios,#F87171
+3168,Proikonesos (Mysia),Kyzikios,#F87171
+2269,Laumellum (Transpadana),Laevi,#166534
+2315,Aguntum,Lai,#E3F3A5
+632,Sa Huynh,Lamap,#68CCCA
+695,Lamuri,Lamuri,#14B8A6
+926,Langkashuka,Langkashuka,#6D28D9
+483,Langobardia,Langobardia,#FE9200
+1023,Langyayue,Langyayue,#9C990C
+2220,Apua (Aemilia),Lapicinia,#93C5FD
+793,Lappa (Crete),Lappa,#16A5A5
+2666,Lascuta  (Conventus Gaditanus),Lascutaia,#F7AAF7
+1888,Buhl,Latobrigi,#22C55E
+1889,Bruchsal,Latobrigi,#22C55E
+1891,Backnang,Latobrigi,#22C55E
+1892,Mosbach,Latobrigi,#22C55E
+1893,Wemding,Latobrigi,#22C55E
+1894,Renningen,Latobrigi,#22C55E
+1895,Eppingen,Latobrigi,#22C55E
+1896,Spalt,Latobrigi,#22C55E
+2332,Neviodunum,Latovici,#194D33
+2333,Latobicorum,Latovici,#194D33
+404,Grozny,Legae,#95ff9d
+405,Zeterechny,Legae,#95ff9d
+406,Mozdok,Legae,#95ff9d
+407,Pyatigorsk,Legae,#95ff9d
+493,Lemovia,Lemovia,#C45100
+676,'Illapqi Parva (Byzacena),Lepcis Parva,#831843
+2303,Summus Lacus,Leponti,#22C55E
+772,Lepreon (Elis),Lepreon,#16A5A5
+1909,Rain,Leunia,#8E9E1B
+2258,Vercellae (Transpadana),Libuia,#16A34A
+2273,Eporedia (Transpadana),Libuia,#16A34A
+253,Liburnia,Liburnians,#FB9E00
+2359,Damasia,Licati,#166534
+2361,Arces Covelicae,Licati,#166534
+2362,Bratnanium,Licati,#166534
+125,Lihyan,Lihyan,#CCCCCC
+2224,Forum Alieni (Aemilia),Lingones,#166534
+2225,Vicus Aventia (Aemilia),Lingones,#166534
+2226,Corniculani (Venetia),Lingones,#166534
+2227,Brundulum (Venetia),Lingones,#166534
+2228,Hatria (Venetia),Lingones,#166534
+2229,Trecenta (Venetia),Lingones,#166534
+2230,Ceneselli (Venetia),Lingones,#166534
+336,Lingones,Lingoni,#166534
+1072,Linhue,Linhue,#ACF0C6
+1143,Amamioshima,Liukiu,#60A5FA
+1144,Kikai,Liukiu,#60A5FA
+1145,Tokunoshima,Liukiu,#60A5FA
+1146,Wadomari,Liukiu,#60A5FA
+1147,Yoron,Liukiu,#60A5FA
+1148,Maedomari,Liukiu,#60A5FA
+1149,Izena,Liukiu,#60A5FA
+1150,Okinawa,Liukiu,#60A5FA
+1151,Ie,Liukiu,#60A5FA
+1152,Tokashiki,Liukiu,#60A5FA
+1154,Kumejima,Liukiu,#60A5FA
+1155,Miyakojima,Liukiu,#60A5FA
+1156,Tarama,Liukiu,#60A5FA
+1157,Ishigaki,Liukiu,#60A5FA
+1158,Iriomote,Liukiu,#60A5FA
+1162,Hateruma,Liukiu,#60A5FA
+1163,Yonaguni,Liukiu,#60A5FA
+2754,Ouassay (Souss),Lixitae,#f8afaf
+2755,Aglou (Souss),Lixitae,#f8afaf
+2756,Iligh (Souss),Lixitae,#f8afaf
+2757,Baha (Souss),Lixitae,#f8afaf
+2758,Imighzer (Souss),Lixitae,#f8afaf
+2759,Taroudant (Souss),Lixitae,#f8afaf
+2760,Teima (Souss),Lixitae,#f8afaf
+2761,Larbaa Magnoun (Souss),Lixitae,#f8afaf
+2762,Berhil (Souss),Lixitae,#f8afaf
+2763,Aoulouze (Souss),Lixitae,#f8afaf
+2764,Taliouine (Souss),Lixitae,#f8afaf
+2628,Likesh (Tingitania),Lixus,#EAB308
+2631,Occasum (Tingitania),Lixus,#EAB308
+2632,Nahor Qor (Tingitania),Lixus,#EAB308
+269,Ilergetes,Llergetes,#c0850a
+760,Locri (Bruttium),Locri,#16A5A5
+917,Loeu,Loeu,#FDE047
+2445,Longones (Sardinia),Longonenses,#FCA5A5
+988,Hohhot,Loufan,#808080
+989,Loulan,Loulan,#60A5FA
+900,Louwo,Louwo,#22C55E
+308,Taishan,Lu,#0F766E
+107,Stilianum (Lucania),Lucani,#a6bb11
+115,Bantia (Apulia),Lucani,#a6bb11
+155,Silvium (Apulia),Lucani,#a6bb11
+2156,Paestum (Lucania),Lucani,#a6bb11
+2157,Volcei (Lucania),Lucani,#a6bb11
+2158,Mons Pullinus (Lucania),Lucani,#a6bb11
+2161,Blanda (Lucania),Lucani,#a6bb11
+2162,Siris (Lucania),Lucani,#a6bb11
+2163,Grumentum (Lucania),Lucani,#a6bb11
+2164,Consilinum (Lucania),Lucani,#a6bb11
+937,Lumbini,Lumbini,#FDBA74
+2443,Luguido (Sardinia),Luquidonenses,#FACC15
+2446,Lesa (Sardinia),Luquidonenses,#FACC15
+2448,Thorpe (Sardinia),Luquidonenses,#FACC15
+260,Lusitania,Lusitanii,#DBDF00
+261,Vettones,Lusitanii,#DBDF00
+3194,Lyktos (Crete),Lyktos,#C4B4E4
+1120,Samothraki (Samothraki),Lysimachus Kingdom,#68BC00
+3083,Doriskos (Rhodope),Lysimachus Kingdom,#68BC00
+3084,Abdera (Rhodope),Lysimachus Kingdom,#68BC00
+3085,Oraion (Rhodope),Lysimachus Kingdom,#68BC00
+3086,Porsoula (Rhodope),Lysimachus Kingdom,#68BC00
+3087,Rhodope (Rhodope),Lysimachus Kingdom,#68BC00
+3088,Zerbai (Rhodope),Lysimachus Kingdom,#68BC00
+3089,Ainos (East Thrace),Lysimachus Kingdom,#68BC00
+3090,Kypsela (East Thrace),Lysimachus Kingdom,#68BC00
+3091,Sestos (East Thrace),Lysimachus Kingdom,#68BC00
+3092,Lysimacheia (East Thrace),Lysimachus Kingdom,#68BC00
+3093,Bisanthe (East Thrace),Lysimachus Kingdom,#68BC00
+3095,Aproi (East Thrace),Lysimachus Kingdom,#68BC00
+3098,Perinthos (East Thrace),Lysimachus Kingdom,#68BC00
+3099,Uskodama (East Thrace),Lysimachus Kingdom,#68BC00
+3100,Tarpodizon (East Thrace),Lysimachus Kingdom,#68BC00
+3101,Aulaiouteichos (East Thrace),Lysimachus Kingdom,#68BC00
+3102,Salmydessos (East Thrace),Lysimachus Kingdom,#68BC00
+3103,Bizye (East Thrace),Lysimachus Kingdom,#68BC00
+3104,Nike (East Thrace),Lysimachus Kingdom,#68BC00
+3105,Bergoule (East Thrace),Lysimachus Kingdom,#68BC00
+588,Ma'in,Ma'in,#CCCCCC
+2885,Hun (Socna),Machyles,#c1b968
+2886,Waddan (Socna),Machyles,#c1b968
+2887,Socna (Socna),Machyles,#c1b968
+2888,Wilyan (Socna),Machyles,#c1b968
+2889,Tamshin (Socna),Machyles,#c1b968
+2890,Mughattah (Socna),Machyles,#c1b968
+2891,Fuqaha (Socna),Machyles,#c1b968
+2892,Jufrah (Socna),Machyles,#c1b968
+2948,Kurmut (Socna),Machyles,#c1b968
+1648,Dinskaya,Maeotae,#d0e0b8
+1649,Kanevskaya,Maeotae,#d0e0b8
+1650,Samarskoye,Maeotae,#d0e0b8
+366,Maezaei,Maezaei,#ea921a
+1597,North Magyarok,Magyars,#AEA1FF
+1598,South Magyarok,Magyars,#AEA1FF
+633,Mahisamandala,Mahisamandala,#FDE047
+851,Mai Adrasha,Mai Adrasha,#194D33
+1044,Majos (Canary Islands),Majos,#CCCCCC
+1010,Thenteos (Wadi Ghirza),Makae,#e8f0b7
+2848,Vinaza (Wadi Ghirza),Makae,#e8f0b7
+2849,Garian (Wadi Ghirza),Makae,#e8f0b7
+2850,Thenadassa (Wadi Ghirza),Makae,#e8f0b7
+2851,Mesphe (Wadi Ghirza),Makae,#e8f0b7
+2852,Subututtu (Wadi Ghirza),Makae,#e8f0b7
+2853,Mizda (Wadi Ghirza),Makae,#e8f0b7
+2854,Abraq (Wadi Ghirza),Makae,#e8f0b7
+2855,Banat (Wadi Sawfejjin),Makae,#e8f0b7
+2856,Khnafes (Wadi Sawfejjin),Makae,#e8f0b7
+2857,Scemech (Wadi Sawfejjin),Makae,#e8f0b7
+2858,Ajdab (Wadi Sawfejjin),Makae,#e8f0b7
+2859,Ileigha (Wadi Ghirza),Makae,#e8f0b7
+2860,Dnar (Wadi Sawfejjin),Makae,#e8f0b7
+2861,Rimoniana (Wadi Sawfejjin),Makae,#e8f0b7
+2862,Sdada (Wadi Sawfejjin),Makae,#e8f0b7
+2863,Lebr (Wadi Sawfejjin),Makae,#e8f0b7
+2864,Bularkan (Wadi Sawfejjin),Makae,#e8f0b7
+2865,Gasr Banat (Wadi Sawfejjin),Makae,#e8f0b7
+2866,Scedeua (Wadi Zamzam),Makae,#e8f0b7
+2867,Ghirza (Wadi Zamzam),Makae,#e8f0b7
+2868,Faschia (Wadi Zamzam),Makae,#e8f0b7
+2869,Duraybikah (Wadi Zamzam),Makae,#e8f0b7
+2870,Tabaqah (Wadi Zamzam),Makae,#e8f0b7
+2871,Gharbya (Wadi Zamzam),Makae,#e8f0b7
+2872,Sherbia (Wadi Zamzam),Makae,#e8f0b7
+2873,Schiueref (Wadi Zamzam),Makae,#e8f0b7
+2874,Shawi (Wadi Zamzam),Makae,#e8f0b7
+2875,Sirte (Wadi Zamzam),Makae,#e8f0b7
+2876,Auxiqua (Ajdabiya Interior),Makae,#e8f0b7
+2877,Zayden (Ajdabiya Interior),Makae,#e8f0b7
+2878,Ghoilaia (Ajdabiya Interior),Makae,#e8f0b7
+2879,Jashalam (Ajdabiya Interior),Makae,#e8f0b7
+2949,Barkol (Wadi Zamzam),Makae,#e8f0b7
+2952,Ghaloa (Wadi Ghirza),Makae,#e8f0b7
+15,Kalyani,Malaya,#F44E3B
+497,Manimia,Manimia,#E27300
+525,Sochocin,Manimia,#E27300
+777,Mantinea (Arcadia),Mantinea,#68CCCA
+487,Leipzig,Marcomannia,#C45100
+500,Finsterwalde,Marcomannia,#C45100
+1905,Waldheim,Marcomannia,#C45100
+1141,Modra (Bithynia),Mariandynia,#B3B3B3
+1160,Embolos (Mariandynia),Mariandynia,#B3B3B3
+3547,Mariandynian Mountains (Mariandynia),Mariandynia,#B3B3B3
+3548,Modra Pass (Bithynia),Mariandynia,#B3B3B3
+3895,Kieros (Mariandynia),Mariandynia,#B3B3B3
+3896,Salon (Mariandynia),Mariandynia,#B3B3B3
+3898,Timonion (Mariandynia),Mariandynia,#B3B3B3
+3899,Krateia (Mariandynia),Mariandynia,#B3B3B3
+2282,Forum Fulvii (Liguria),Maricia,#A16207
+251,Histonium (Samnium),Marrucini,#CA8A04
+2123,Mons Appenninus Aufidena (Samnium),Marsi,#1D4ED8
+2127,Antinum (Samnium),Marsi,#1D4ED8
+2128,Aufidena (Samnium),Marsi,#1D4ED8
+2550,Lesbia (East Numida),Masaesyli,#8BCFCF
+2551,Vanisnesi (East Numida),Masaesyli,#8BCFCF
+2552,Equizeto (East Numida),Masaesyli,#8BCFCF
+2555,Zabi (East Numida),Masaesyli,#8BCFCF
+2558,Central Tell Atlas Mountains (West Numida),Masaesyli,#8BCFCF
+2565,Mont Zaccar (West Numida),Masaesyli,#8BCFCF
+2566,Western Tell Atlas Mountains (West Numida),Masaesyli,#8BCFCF
+2569,Cartili (West Numida),Masaesyli,#8BCFCF
+2570,Gunugu (West Numida),Masaesyli,#8BCFCF
+2571,Oppidum Definum (West Numida),Masaesyli,#8BCFCF
+2572,Lambdia (West Numida),Masaesyli,#8BCFCF
+2573,Sufasar (West Numida),Masaesyli,#8BCFCF
+2574,Zucchabar (West Numida),Masaesyli,#8BCFCF
+2575,Tatiliti (East Numida),Masaesyli,#8BCFCF
+2576,Auzia (West Numida),Masaesyli,#8BCFCF
+2577,Rapidum (West Numida),Masaesyli,#8BCFCF
+2578,Phruraesius Mons (West Numida),Masaesyli,#8BCFCF
+2579,Cinnaba Mons (West Numida),Masaesyli,#8BCFCF
+2580,Thanaramusa Castra (West Numida),Masaesyli,#8BCFCF
+2581,Bessemium (West Numida),Masaesyli,#8BCFCF
+2582,Aras (East Numida),Masaesyli,#8BCFCF
+2583,Ausum (West Numida),Masaesyli,#8BCFCF
+2584,Tubusucti (West Numida),Masaesyli,#8BCFCF
+2585,Sertei (East Numida),Masaesyli,#8BCFCF
+2586,Arsennaria (West Numida),Masaesyli,#8BCFCF
+2587,Portus Magulus (West Numida),Masaesyli,#8BCFCF
+2588,Quiza Xenitana (West Numida),Masaesyli,#8BCFCF
+2589,Caudium Castra (West Numida),Masaesyli,#8BCFCF
+2590,Tingitanum (West Numida),Masaesyli,#8BCFCF
+2591,Castra Germanorum (West Numida),Masaesyli,#8BCFCF
+2592,Castra Nova (West Numida),Masaesyli,#8BCFCF
+2593,Mina (West Numida),Masaesyli,#8BCFCF
+2594,Aquae Sirenses (West Numida),Masaesyli,#8BCFCF
+2595,Ala Milaria (West Numida),Masaesyli,#8BCFCF
+2596,Breucorum (West Numida),Masaesyli,#8BCFCF
+2597,Cenavicum (West Numida),Masaesyli,#8BCFCF
+2598,Columnata (West Numida),Masaesyli,#8BCFCF
+2599,Castra Puerorum (West Numida),Masaesyli,#8BCFCF
+2601,Tasaccora (West Numida),Masaesyli,#8BCFCF
+2602,Lucu (West Numida),Masaesyli,#8BCFCF
+2603,Caputtasaccora (West Numida),Masaesyli,#8BCFCF
+2604,Regiae (West Numida),Masaesyli,#8BCFCF
+2605,Albulae (West Numida),Masaesyli,#8BCFCF
+2606,Pomaria (West Numida),Masaesyli,#8BCFCF
+2607,Syrorum (West Numida),Masaesyli,#8BCFCF
+2608,Lemnis (West Numida),Masaesyli,#8BCFCF
+2609,Siga (West Numida),Masaesyli,#8BCFCF
+94,Massilia,Massilia,#68CCCA
+2291,Antipolis,Massilia,#68CCCA
+2469,Eastern Tell Atlas Mountains (East Numida),Massylii,#C9C58B
+2472,Bulla Regia (Carthago),Massylii,#C9C58B
+2473,Sika (Carthago),Massylii,#C9C58B
+2510,Simitthus (East Numida),Massylii,#C9C58B
+2511,Madauros (East Numida),Massylii,#C9C58B
+2512,Tipaza (East Numida),Massylii,#C9C58B
+2513,Thibilis (East Numida),Massylii,#C9C58B
+2514,Zattara (East Numida),Massylii,#C9C58B
+2515,Pagus Malarensium (East Numida),Massylii,#C9C58B
+2516,Asuccuris (East Numida),Massylii,#C9C58B
+2517,Calama (East Numida),Massylii,#C9C58B
+2518,Fabatianum (East Numida),Massylii,#C9C58B
+2522,Cuicul (East Numida),Massylii,#C9C58B
+2523,Milevum (East Numida),Massylii,#C9C58B
+2524,Celtianis (East Numida),Massylii,#C9C58B
+2525,Cirta (East Numida),Massylii,#C9C58B
+2526,Mopth (East Numida),Massylii,#C9C58B
+2527,Zarai (East Numida),Massylii,#C9C58B
+2528,Lamasba (East Numida),Massylii,#C9C58B
+2529,Verecunda (East Numida),Massylii,#C9C58B
+2530,Subzuaritanum (East Numida),Massylii,#C9C58B
+2531,Diana Veteranorum (East Numida),Massylii,#C9C58B
+2532,Thenebrestia (East Numida),Massylii,#C9C58B
+2533,Bagai (East Numida),Massylii,#C9C58B
+2534,Macomades (East Numida),Massylii,#C9C58B
+2535,Casaea (East Numida),Massylii,#C9C58B
+2536,Vasampus (East Numida),Massylii,#C9C58B
+2539,Marcimeni (East Numida),Massylii,#C9C58B
+2540,Thalades (East Numida),Massylii,#C9C58B
+2541,Gadiaufala (East Numida),Massylii,#C9C58B
+2542,Sigus (East Numida),Massylii,#C9C58B
+2543,Nattabutum (East Numida),Massylii,#C9C58B
+2544,Tebessa (Gaetulia),Massylii,#C9C58B
+2545,Vatari (Gaetulia),Massylii,#C9C58B
+2546,Vegesala (Gaetulia),Massylii,#C9C58B
+2547,Nicivibus (Gaetulia),Massylii,#C9C58B
+2553,Lemellia (East Numida),Massylii,#C9C58B
+2554,Setifis (East Numida),Massylii,#C9C58B
+2556,Macri,Massylii,#C9C58B
+1125,Hirado,Matsura,#5EEAD4
+1172,Matsura,Matsura,#5EEAD4
+2567,Ghar Ben Aiss Mountain (Mauretania),Mauretania,#9F0500
+2610,Zaio (Rif),Mauretania,#9F0500
+2611,Laatamna (Rif),Mauretania,#9F0500
+2613, Argo ed Demna Mountain (Mauretania),Mauretania,#9F0500
+2626,Ad Mercuri (Tingitania),Mauretania,#9F0500
+2629,Oppidum Novum (Tingitania),Mauretania,#9F0500
+2630,Tremulae (Tingitania),Mauretania,#9F0500
+2633,Viposcianae (Tingitania),Mauretania,#9F0500
+2634,Aelia (Tingitania),Mauretania,#9F0500
+2635,Aquae Dacicae  (Mauretania),Mauretania,#9F0500
+2636,Gilda (Mauretania),Mauretania,#9F0500
+2640,Mons Semita (Mauretania),Mauretania,#9F0500
+2641,Tocolosida (Mauretania),Mauretania,#9F0500
+2642,Volubilis (Mauretania),Mauretania,#9F0500
+2643,Thamusida Australis (Mauretania),Mauretania,#9F0500
+2644,Khedis (Mauretania),Mauretania,#9F0500
+2645,Brazzia (Mauretania),Mauretania,#9F0500
+2646,Agourai (Mauretania),Mauretania,#9F0500
+2647,Maghessel (Mauretania),Mauretania,#9F0500
+2648,Visum Montis (Mauretania),Mauretania,#9F0500
+2649,Taddart (Mauretania),Mauretania,#9F0500
+2650,Oufriden (Mauretania),Mauretania,#9F0500
+2651,Guercif (Mauretania),Mauretania,#9F0500
+2652,Ouidane (Mauretania),Mauretania,#9F0500
+2653,Mons Ambulatis (Mauretania),Mauretania,#9F0500
+2654,Kandar (Mauretania),Mauretania,#9F0500
+2655,Lamrija (Mauretania),Mauretania,#9F0500
+2717,Sloughia (Mauretania),Mauretania,#9F0500
+2718,Tiflet (Mauretania),Mauretania,#9F0500
+2729,Ziaida (Rutubis),Mauretania,#9F0500
+42,Anga,Maurya Empire,#FCDC00
+59,Vrji,Maurya Empire,#FCDC00
+64,Magadha,Maurya Empire,#FCDC00
+72,Malla,Maurya Empire,#FCDC00
+76,Kasi,Maurya Empire,#FCDC00
+77,Kosala,Maurya Empire,#FCDC00
+279,Panchala,Maurya Empire,#FCDC00
+281,Surasena,Maurya Empire,#FCDC00
+282,South Kuru,Maurya Empire,#FCDC00
+283,Matsya,Maurya Empire,#FCDC00
+284,Avanti,Maurya Empire,#FCDC00
+287,Kambhoja,Maurya Empire,#FCDC00
+288,Thar Desert,Maurya Empire,#FCDC00
+290,Dvaraka,Maurya Empire,#FCDC00
+292,Patalene,Maurya Empire,#FCDC00
+293,Audambara,Maurya Empire,#FCDC00
+294,Dasarna,Maurya Empire,#FCDC00
+297,Gangaridal,Maurya Empire,#FCDC00
+967,Kaccha,Maurya Empire,#FCDC00
+968,Abhiria,Maurya Empire,#FCDC00
+969,Anartta,Maurya Empire,#FCDC00
+970,Sauvira,Maurya Empire,#FCDC00
+971,Pardene,Maurya Empire,#FCDC00
+972,Oxydracae,Maurya Empire,#FCDC00
+973,Sibae,Maurya Empire,#FCDC00
+974,Glausae,Maurya Empire,#FCDC00
+975,Mallia,Maurya Empire,#FCDC00
+976,Rodewala,Maurya Empire,#FCDC00
+979,Maru,Maurya Empire,#FCDC00
+980,Madhyamika,Maurya Empire,#FCDC00
+957,Mazhampulalandu,Mazhamphulanadu,#CA8A04
+78,Magan,Mazun,#CCCCCC
+471,Mazun,Mazun,#CCCCCC
+1095,Mediomatricia,Mediomatricia,#166534
+780,Megalopolis (Arcadia),Megalopolis,#0C797D
+209,Megaris (Attica),Megaris,#EF4444
+179,Horki,Melanchlaeni,#A5B4FC
+313,Surazh,Melanchlaeni,#A5B4FC
+560,Pogar,Melanchlaeni,#A5B4FC
+561,Seltso,Melanchlaeni,#A5B4FC
+1754,Oboyan',Melanchlaeni,#A5B4FC
+1755,L'gov,Melanchlaeni,#A5B4FC
+1756,Lokot,Melanchlaeni,#A5B4FC
+1757,Bolkhov,Melanchlaeni,#A5B4FC
+348,Melcumani,Melcumani,#FCC400
+199,Menapia,Menapia,#0F766E
+48,Alodia,Meroe,#FCDC00
+49,Makuria,Meroe,#FCDC00
+50,Nobatia,Meroe,#FCDC00
+3108,Mesembria (East Thrace),Mesembria,#9CA3AF
+2169,Metania (Apulia),Messapains,#FCDC00
+2170,Mandyrion (Apulia),Messapains,#FCDC00
+2171,Lupiae (Apulia),Messapains,#FCDC00
+2172,Hydruntum (Apulia),Messapains,#FCDC00
+2173,Neretum (Apulia),Messapains,#FCDC00
+2979,Leuktra (Laconia),Messenia,#FB9E00
+2980,Mothone (Laconia),Messenia,#FB9E00
+2981,Messene (Laconia),Messenia,#FB9E00
+766,Metapontum (Apulia),Metapontum,#0C797D
+1222,Echizen,Mikuni,#166534
+3181,Miletos (Ionia),Miletos,#0C4A6E
+3182,Iasos (Ionia),Miletos,#0C4A6E
+874,Minyue,Minyue,#C45100
+986,Miran,Miran,#EC4899
+1294,Miryang,Mirimidong,#BCAAA4
+1241,Hei-nay,Mitinooku,#8D6E63
+555,Monapia,Monapia,#16A5A5
+1664,Vacha,Mordvins,#CCCCCC
+1665,Pochinki,Mordvins,#CCCCCC
+1666,Perza,Mordvins,#CCCCCC
+1667,Kirsanov,Mordvins,#CCCCCC
+1668,Kadom,Mordvins,#CCCCCC
+1669,Vyksa,Mordvins,#CCCCCC
+1087,Morinia,Morinia,#064E3B
+1227,Western Mino,Motosu,#EA580C
+956,Mudhirmali,Mudhirmali,#CCCCCC
+1228,Central Mino,Mugetu,#F9A8D4
+959,Mukkaavalnadu,Mukkaavalnadu,#F9A8D4
+954,Mullurnadu,Mullurnadu,#FCA5A5
+1215,Eastern Musashi,Musasi,#FB923C
+1285,Suwon,Musu,#A78BFA
+201,Mactaris (Byzacena),Musulamii,#B91C1C
+210,Sufes (Musulamia),Musulamii,#B91C1C
+211,Sufetula (Musulamia),Musulamii,#B91C1C
+214,Menegesum (Musulamia),Musulamii,#B91C1C
+215,Thala Musulamia (Musulamia),Musulamii,#B91C1C
+216,Althiburos (Musulamia),Musulamii,#B91C1C
+217,Thugga Terebenthina (Musulamia),Musulamii,#B91C1C
+222,Gemellia (Musulamia),Musulamii,#B91C1C
+223,Nara Maxyesia (Musulamia),Musulamii,#B91C1C
+225,Cillium (Musulamia),Musulamii,#B91C1C
+228,Thelepte (Musulamia),Musulamii,#B91C1C
+2474,Obba (Carthago),Musulamii,#B91C1C
+2476,Lares (Carthago),Musulamii,#B91C1C
+2509,Funda Thavagalensis (Musulamia),Musulamii,#B91C1C
+2537,Ammaedara (Musulamia),Musulamii,#B91C1C
+2538,Thaesactum (Musulamia),Musulamii,#B91C1C
+3411,Tell el-Mashraba (Sinai),Nabataea,#D33115
+3415,Nuweiba (Sinai),Nabataea,#D33115
+3416,'Iloth (Arabia Petraea),Nabataea,#D33115
+3424,Mivatzra (Arabia Petraea),Nabataea,#D33115
+3425,Bossia (Arabia Petraea),Nabataea,#D33115
+3426,Aramaua (Arabia Petraea),Nabataea,#D33115
+3427,Hwara (Arabia Petraea),Nabataea,#D33115
+3428,Raqma (Arabia Petraea),Nabataea,#D33115
+3429,'Adruh (Arabia Petraea),Nabataea,#D33115
+3430,Gypsaria (Arabia Petraea),Nabataea,#D33115
+3431,Kalgouia (Arabia Petraea),Nabataea,#D33115
+3432,Atzmon (Arabia Petraea),Nabataea,#D33115
+3433,Shavta (Arabia Petraea),Nabataea,#D33115
+3434,Mamshith (Arabia Petraea),Nabataea,#D33115
+3435,Toloha (Arabia Petraea),Nabataea,#D33115
+3436,'Avodha (Arabia Petraea),Nabataea,#D33115
+3437,Haqla (Arabia Petraea),Nabataea,#D33115
+3438,Maqna (Arabia Petraea),Nabataea,#D33115
+3439,Leuke Kome (Arabia Petraea),Nabataea,#D33115
+3440,Aybara (Arabia Petraea),Nabataea,#D33115
+3441,Madiama (Arabia Petraea),Nabataea,#D33115
+3442,Ostama (Arabia Petraea),Nabataea,#D33115
+3443,Relicta (Arabia Petraea),Nabataea,#D33115
+3444,Baclanaza (Arabia Petraea),Nabataea,#D33115
+938,Nabhaka,Nabhaka,#EA580C
+71,Nabhapakti,Nabhapakti,#C2410C
+1231,Bōshū,Naga,#D1D5DB
+499,Naharvalia,Naharvalia,#C45100
+899,Nam Cuong,Nam Cuong,#A78BFA
+175,Namnetes,Namnetes,#6f8820
+611,Qiqihar,Nanhe,#FA28FF
+364,Narensi,Narensi,#C45100
+1865,Leinefelde,Naristia,#FB923C
+2893,Meduin (Socna),Nasamonia,#e4e1c0
+2894,Tagrifet (Socna),Nasamonia,#e4e1c0
+2895,Zala (Socna),Nasamonia,#e4e1c0
+2896,Talhah (Socna),Nasamonia,#e4e1c0
+2897,Maradah (Nasamonia),Nasamonia,#e4e1c0
+2898,Jabbanah (Nasamonia),Nasamonia,#e4e1c0
+2899,Jafr (Nasamonia),Nasamonia,#e4e1c0
+2900,Kalanshah (Nasamonia),Nasamonia,#e4e1c0
+2901,Augila (Nasamonia),Nasamonia,#e4e1c0
+2902,Jalu (Nasamonia),Nasamonia,#e4e1c0
+2903,Gicherra (Nasamonia),Nasamonia,#e4e1c0
+2904,Mawahi (Nasamonia),Nasamonia,#e4e1c0
+2905,Bu Athla (Nasamonia),Nasamonia,#e4e1c0
+2906,Sahabi (Nasamonia),Nasamonia,#e4e1c0
+2950,Kalas (Nasamonia),Nasamonia,#e4e1c0
+2951,Fura (Nasamonia),Nasamonia,#e4e1c0
+1221,Northern Shimotsuke,Nasu,#EF4444
+2720,Mdakra (Tadla),Nectiberia,#e99a4b
+2721,Zemour (Tadla),Nectiberia,#e99a4b
+2722,Ifran (Mauretania),Nectiberia,#e99a4b
+2723,Rob'a (Tadla),Nectiberia,#e99a4b
+2724,Mousa (Tadla),Nectiberia,#e99a4b
+2725,Oaurdigha (Tadla),Nectiberia,#e99a4b
+2726,Amer (Tadla),Nectiberia,#e99a4b
+2727,Meskine (Tadla),Nectiberia,#e99a4b
+2728,Mzamza (Tadla),Nectiberia,#e99a4b
+1878,Ebern,Nemetia,#7ED12C
+1879,Ebrach,Nemetia,#7ED12C
+1880,Heilsbronn,Nemetia,#7ED12C
+1881,Aub,Nemetia,#7ED12C
+1882,Bayreuth,Nemetia,#7ED12C
+1883,Pegnitz,Nemetia,#7ED12C
+1885,Cheb,Nemetia,#7ED12C
+1886,Vilseck,Nemetia,#7ED12C
+1088,Nervia,Nervia,#166534
+233,Thera (Cyclades),Nesiotic League,#FB9E00
+234,Naxos (Cyclades),Nesiotic League,#FB9E00
+1103,Arkesine (Cyclades),Nesiotic League,#FB9E00
+1104,Melos (Cyclades),Nesiotic League,#FB9E00
+1105,Delos,Nesiotic League,#FB9E00
+1106,Ios (Cyclades),Nesiotic League,#FB9E00
+1107,Paros (Cyclades),Nesiotic League,#FB9E00
+1108,Siphnos (Cyclades),Nesiotic League,#FB9E00
+1109,Seriphos (Cyclades),Nesiotic League,#FB9E00
+1110,Kythnos (Attica),Nesiotic League,#FB9E00
+1111,Karthaia (Attica),Nesiotic League,#FB9E00
+492,Hlusk,Neuri,#60A5FA
+520,Luniniec,Neuri,#60A5FA
+574,Stepan,Neuri,#60A5FA
+575,Ovruch,Neuri,#60A5FA
+576,Khojniki,Neuri,#60A5FA
+1760,Homel,Neuri,#60A5FA
+1528,Ni,Ni,#EF4444
+310,Takhta,Nivkhgu,#A16207
+311,De-Kastri,Nivkhgu,#A16207
+186,Non Nok That,Non Nok That,#CCCCCC
+355,Virunum,Noricum,#09d56f
+2320,Noreia,Noricum,#09d56f
+2322,Sabatinca,Noricum,#09d56f
+2323,Gabramagus,Noricum,#09d56f
+2324,Loacus Felicus,Noricum,#09d56f
+2325,Faviana,Noricum,#09d56f
+2326,Augustinia,Noricum,#09d56f
+2327,Alpes Poedicum,Noricum,#09d56f
+2328,Poedicum,Noricum,#09d56f
+2376,Lauriacum,Noricum,#09d56f
+2377,Ovilava,Noricum,#09d56f
+2385,Alpes Lauriacum,Noricum,#09d56f
+1224,Noto,Noto,#99F6E4
+545,Novantia,Novantia,#16A5A5
+127,Pompeii (Campania),Nuceria,#FFC2C1
+755,Nuceria (Campania),Nuceria,#FFC2C1
+490,Nuithonia,Nuithonia,#FE9200
+1208,Western Mikawa,Nukata,#14B8A6
+646,Nuomuhong,Nuomuhong,#0062B1
+921,Nyanggaun,Nyanggaun,#16A34A
+961,Oaymaannadu,Oaymaannadu,#A5B4FC
+3109,Erite,Odessa,#8AA813
+3110,Odessos,Odessa,#8AA813
+250,Northwest Thracia,Odrysian kingdom,#C45100
+378,Northeast Thracia,Odrysian kingdom,#C45100
+379,Southeast Thracia,Odrysian kingdom,#C45100
+380,Southwest Thracia,Odrysian kingdom,#C45100
+1176,Bungo,Ohkita,#FB923C
+1203,Western Ōmi,Ohmi,#BCAAA4
+3779,Oinoanda (Milyas),Oinoandia,#FEEDCB
+3782,Balboura (Milyas),Oinoandia,#FEEDCB
+3783,Lagbe (Milyas),Oinoandia,#FEEDCB
+1127,Okinoshima,Oki,#FCA5A5
+1128,Nishinoshima,Oki,#FCA5A5
+1342,Taehung-up,Okjeo,#D8E4E9
+1343,Rangnim-up,Okjeo,#D8E4E9
+1344,Hyesan,Okjeo,#D8E4E9
+1345,Tanchon,Okjeo,#D8E4E9
+1346,Namdae-ri,Okjeo,#D8E4E9
+1347,Ch'ail-Li,Okjeo,#D8E4E9
+1348,Jangjin-eup,Okjeo,#D8E4E9
+1349,Tokchon,Okjeo,#D8E4E9
+1350,Wonsan,Okjeo,#D8E4E9
+1351,Cheongdong-ri,Okjeo,#D8E4E9
+1352,Yodeok-eup,Okjeo,#D8E4E9
+1353,Hamju-eup,Okjeo,#D8E4E9
+1354,Pungsong-ri,Okjeo,#D8E4E9
+1355,Yeonggwang-up,Okjeo,#D8E4E9
+1356,Sinhueng-up,Okjeo,#D8E4E9
+1357,Hamhung,Okjeo,#D8E4E9
+1358,Hongwong-eup,Okjeo,#D8E4E9
+1359,Shinpo,Okjeo,#D8E4E9
+1360,Toksong-up,Okjeo,#D8E4E9
+1368,Rimsan-ri,Okjeo,#D8E4E9
+3748,Elaioussa (Cilicia),Olbe,#F87171
+3749,Olbe (Cilicia),Olbe,#F87171
+3750,Holmoi (Cilicia),Olbe,#F87171
+3751,Ninika (Cilicia),Olbe,#F87171
+3125,Olbia,Olbia,#73D8FF
+943,Ollaiyur,Ollaiyur,#F97316
+825,Onuba,Onuba,#e1dbe8
+3002,Opus (Boeotia),Opus,#EC4899
+554,Orcadia,Orcadia,#CCCCCC
+539,Ordovicia,Ordovicia,#68CCCA
+2992,Oreus (Euboea),Oreos,#C9ACE3
+2993,Kerinthos (Euboea),Oreos,#C9ACE3
+273,Oretania,Oretani,#FCC400
+3118,Orgame,Orgame,#C2410C
+3119,Halmyris,Orgame,#C2410C
+3120,Troismis,Orgame,#C2410C
+3121,Carsium,Orgame,#C2410C
+3122,Libida,Orgame,#C2410C
+827,Orippo,Orippo,#edd6ed
+3788,Takina (Milyas),Ormelia,#16A34A
+3789,Olbasa (Milyas),Ormelia,#16A34A
+3790,Eriza Karias (Milyas),Ormelia,#16A34A
+3807,Ouasada (Isauria),Oroanadia,#FCA5A5
+3808,Kagrai (Isauria),Oroanadia,#FCA5A5
+2261,Comum (Transpadana),Orobia,#8CBE56
+2262,Forum Licinii (Transpadana),Orobia,#8CBE56
+2263,Bergomum (Transpadana),Orobia,#8CBE56
+358,Oseriati,Oseriati,#9a3e1f
+395,Osii,Osii,#68BC00
+177,Osimii,Osimii,#13ca17
+1798,Adazi,Ossi,#cccccc
+1799,Sigulda,Ossi,#cccccc
+1800,Koknese,Ossi,#cccccc
+1801,Gulbene,Ossi,#cccccc
+1802,Pyatlovo,Ossi,#cccccc
+1803,Baldone,Ossi,#cccccc
+1804,Lubana,Ossi,#cccccc
+1805,Smittene,Ossi,#cccccc
+1806,Viesite,Ossi,#cccccc
+1807,Balvi,Ossi,#cccccc
+1808,Rezekne,Ossi,#cccccc
+1809,Braslaw,Ossi,#cccccc
+1810,Subate,Ossi,#cccccc
+1811,Dagda,Ossi,#cccccc
+1812,Vetryna,Ossi,#cccccc
+1813,Zilupe,Ossi,#cccccc
+1814,Asvyeya,Ossi,#cccccc
+1815,Obal,Ossi,#cccccc
+875,Ouyue,Ouyue,#2DD4BF
+1206,Owari,Owari,#7C3AED
+2290,Agathum,Oxybia,#60A5FA
+212,Amarea (Tripolitania),Oyat,#9D2D73
+381,Pisida (Tripolitania),Oyat,#9D2D73
+382,Loqri (Tripolitania),Oyat,#9D2D73
+383,Tzabraton (Tripolitania),Oyat,#9D2D73
+414,Zanazia (Tripolitania),Oyat,#9D2D73
+415,Oyat (Tripolitania),Oyat,#9D2D73
+416,Gaphara (Tripolitania),Oyat,#9D2D73
+771,'Illapqi (Tripolitania),Oyat,#9D2D73
+784,Kinyps (Tripolitania),Oyat,#9D2D73
+787,Tubaqti (Tripolitania),Oyat,#9D2D73
+2131,Corfinium (Samnium),Paeligni,#831843
+1089,Paemania,Paemania,#14532D
+930,Pahang,Pahang,#14B8A6
+285,Palada,Palada,#FDE047
+934,Panai,Panai,#86EFAC
+637,Pandya,Pandya,#C45100
+925,Panpan,Panpan,#F472B6
+3553,Paphlagonian Mountains (Paphlagonia),Paphlagonia,#7B64FF
+3900,Legna (Mariandynia),Paphlagonia,#7B64FF
+3901,Bloukion (Eastern Phrygia),Paphlagonia,#7B64FF
+3902,Klossama (Eastern Phrygia),Paphlagonia,#7B64FF
+3903,Malos (Eastern Phrygia),Paphlagonia,#7B64FF
+3904,Sarmalios (Eastern Phrygia),Paphlagonia,#7B64FF
+3905,Taouion (Eastern Phrygia),Paphlagonia,#7B64FF
+3906,Arinna (Eastern Phrygia),Paphlagonia,#7B64FF
+3907,Posdala (Eastern Phrygia),Paphlagonia,#7B64FF
+3908,Doudousa (Eastern Phrygia),Paphlagonia,#7B64FF
+3909,Mnezos (Eastern Phrygia),Paphlagonia,#7B64FF
+3910,Ankyra (Eastern Phrygia),Paphlagonia,#7B64FF
+3911,Gorbeous (Eastern Phrygia),Paphlagonia,#7B64FF
+3912,Aspona (Eastern Phrygia),Paphlagonia,#7B64FF
+3964,Stephane (Paphlagonia),Paphlagonia,#7B64FF
+3965,Abonouteichos (Paphlagonia),Paphlagonia,#7B64FF
+3966,Karambis (Paphlagonia),Paphlagonia,#7B64FF
+3967,Kytoros (Paphlagonia),Paphlagonia,#7B64FF
+3969,Ziporeia (Paphlagonia),Paphlagonia,#7B64FF
+3970,Domanion (Paphlagonia),Paphlagonia,#7B64FF
+3971,Sakorsa (Paphlagonia),Paphlagonia,#7B64FF
+3972,Blaine (Paphlagonia),Paphlagonia,#7B64FF
+3973,Bonita (Paphlagonia),Paphlagonia,#7B64FF
+3974,Kimiata (Paphlagonia),Paphlagonia,#7B64FF
+3975,Asklepios (Paphlagonia),Paphlagonia,#7B64FF
+3976,Zoaka (Paphlagonia),Paphlagonia,#7B64FF
+3977,Gangra (Paphlagonia),Paphlagonia,#7B64FF
+3978,Kandara (Paphlagonia),Paphlagonia,#7B64FF
+3979,Tobata (Paphlagonia),Paphlagonia,#7B64FF
+3980,Zeita (Paphlagonia),Paphlagonia,#7B64FF
+541,Parisia,Parisia,#0C797D
+333,Parisii,Parisii,#4f7a0e
+1571,Balkanabat,Parni,#bbe3b0
+1572,Ushak,Parni,#bbe3b0
+1575,Garabogaz,Parni,#bbe3b0
+1576,Aktau,Parni,#bbe3b0
+438,Parthia,Parthia,#0C797D
+774,Patrai (Achaea),Patrai,#0062B1
+168,Potulatenses,Patulatenses,#FCDC00
+286,Paurava,Paurava,#FDE047
+3795,Pednelissos (Pisidia),Pednelissia,#F9A8D4
+654,Pegu,Pegu,#22C55E
+163,Pellene (Achaea),Pellene,#0062B1
+1617,Orda,Permani,#D1D5DB
+2765,Tazenakht (Drâa-Tafilalet),Perorsia,#f7dbb0
+2766,Bou Azzer (Drâa-Tafilalet),Perorsia,#f7dbb0
+2767,Agdz (Drâa-Tafilalet),Perorsia,#f7dbb0
+2768,Tamezmoute (Drâa-Tafilalet),Perorsia,#f7dbb0
+2769,Zagora (Drâa-Tafilalet),Perorsia,#f7dbb0
+2770,Zaouia (Drâa-Tafilalet),Perorsia,#f7dbb0
+2771,Ouarzazate (Drâa-Tafilalet),Perorsia,#f7dbb0
+2772,Isli (Drâa-Tafilalet),Perorsia,#f7dbb0
+2773,Iguernane (Drâa-Tafilalet),Perorsia,#f7dbb0
+2774,Skoura (Drâa-Tafilalet),Perorsia,#f7dbb0
+2775,Toundoute (Drâa-Tafilalet),Perorsia,#f7dbb0
+160,Persis,Persis,#0C797D
+844,Taocene,Persis,#0C797D
+845,Utia,Persis,#0C797D
+70,Petchabun,Petchabun,#BCAAA4
+866,Phasis,Phasis,#68CCCA
+2834,Tillibari (Phazania),Phazania,#ffee75
+2835,Praesidium (Phazania),Phazania,#ffee75
+2836,Tanuinati (Phazania),Phazania,#ffee75
+2837,Giosc (Phazania),Phazania,#ffee75
+2838,Zar (Phazania),Phazania,#ffee75
+2839,Borma (Phazania),Phazania,#ffee75
+2840,Sinawen (Phazania),Phazania,#ffee75
+2841,Dirj (Phazania),Phazania,#ffee75
+2842,Ghadames (Phazania),Phazania,#ffee75
+2843,Debdab (Phazania),Phazania,#ffee75
+2844,Asele (Phazania),Phazania,#ffee75
+660,Phnom,Phnom,#FE9200
+38,Phu Lon,Phu Lon,#4ADE80
+442,Phyrnia,Phyrnia,#B91C1C
+797,Physkos (Caria),Physkos,#0C797D
+2133,Asculum Picentes (Picenum),Picentes,#BCE9E8
+2134,Matrinum (Picenum),Picentes,#BCE9E8
+2135,Picenum (Picenum),Picentes,#BCE9E8
+174,Pictones,Pictones,#68BC00
+1084,Pinglin,Pinglin,#86EFAC
+1075,Pingu,Pingu,#EC4899
+363,Pirusti,Pirusti,#f2d09d
+645,Pishan,Pishan,#86EFAC
+1570,Ashgabat,Pissuri,#EFE7A9
+634,Pitinika,Pitinika,#374151
+92,Polyrrhenia (Crete),Polyrrhenia,#009CE0
+653,Pong Manao,Pong Manao,#BCAAA4
+3982,Sermousa (Pontus),Pontus,#FDA1FF
+3983,Karana (Pontus),Pontus,#FDA1FF
+3984,Phiara (Pontus),Pontus,#FDA1FF
+3985,Pedachthoe (Pontus),Pontus,#FDA1FF
+3986,Danai (Pontus),Pontus,#FDA1FF
+3987,Matouasko (Pontus),Pontus,#FDA1FF
+3990,Ouerisa (Pontus),Pontus,#FDA1FF
+3991,Dazimon (Pontus),Pontus,#FDA1FF
+3992,Pleuramis (Pontus),Pontus,#FDA1FF
+3993,Zela (Pontus),Pontus,#FDA1FF
+3994,Gazioura (Pontus),Pontus,#FDA1FF
+3995,Komana Pontike (Pontus),Pontus,#FDA1FF
+3996,Syderos (Pontus),Pontus,#FDA1FF
+3997,Euchaita (Pontus),Pontus,#FDA1FF
+3998,Etonia (Pontus),Pontus,#FDA1FF
+3999,Amaseia (Pontus),Pontus,#FDA1FF
+4000,Kizari (Pontus),Pontus,#FDA1FF
+4001,Gadilon (Pontus),Pontus,#FDA1FF
+4002,Phazemon (Pontus),Pontus,#FDA1FF
+4003,Diakopa (Pontus),Pontus,#FDA1FF
+4004,Pimolisa (Pontus),Pontus,#FDA1FF
+4005,Andrapa (Pontus),Pontus,#FDA1FF
+4006,Pteria Pontias (Pontus),Pontus,#FDA1FF
+4007,Boinasa (Pontus),Pontus,#FDA1FF
+4009,Ibora (Pontus),Pontus,#FDA1FF
+4010,Kabeira (Pontus),Pontus,#FDA1FF
+4011,Themiskyra (Pontus),Pontus,#FDA1FF
+4012,Side Pontike (Pontus),Pontus,#FDA1FF
+4013,Sauronisena (Pontus),Pontus,#FDA1FF
+945,Pothigainadu,Pothigainadu,#CA8A04
+133,Interamna Praetutiana (Samnium),Praetutii,#F472B6
+3197,Praisos (Crete),Praisos,#3C3F59
+868,Dysopon (Tripolitania),Psyllia,#ffefb9
+869,Euphranta (Tripolitania),Psyllia,#ffefb9
+870,Iscina (Tripolitania),Psyllia,#ffefb9
+871,Aulazon (Tripolitania),Psyllia,#ffefb9
+1102,Digdida Selorum (Tripolitania),Psyllia,#ffefb9
+2504,Ad Palmam (Tripolitania),Psyllia,#ffefb9
+2880,Manfuchia (Ajdabiya Interior),Psyllia,#ffefb9
+2881,Nagdiyah (Ajdabiya Interior),Psyllia,#ffefb9
+2882,Qarinah (Ajdabiya Interior),Psyllia,#ffefb9
+2883,Majdubiyah (Ajdabiya Interior),Psyllia,#ffefb9
+123,Mandish (Farafra),Ptolemaic Kingdom,#35244D
+124,Poka (Farafra),Ptolemaic Kingdom,#35244D
+193,Thumat (Farafra),Ptolemaic Kingdom,#35244D
+195,Tablamon (Farafra),Ptolemaic Kingdom,#35244D
+204,Sicyon (Corinthia),Ptolemaic Kingdom,#35244D
+455,Elassa (Farafra),Ptolemaic Kingdom,#35244D
+456,Farafra (Farafra),Ptolemaic Kingdom,#35244D
+457,Bishaya (Farafra),Ptolemaic Kingdom,#35244D
+2961,Sitra (Siwa),Ptolemaic Kingdom,#35244D
+3213,Batrachos (Marmarica),Ptolemaic Kingdom,#35244D
+3214,Gonia(Marmarica),Ptolemaic Kingdom,#35244D
+3215,Antipyrgos (Marmarica),Ptolemaic Kingdom,#35244D
+3216,Kyrthanonion (Marmarica),Ptolemaic Kingdom,#35244D
+3217,Menelaos (Marmarica),Ptolemaic Kingdom,#35244D
+3218,Plynos Limen (Marmarica),Ptolemaic Kingdom,#35244D
+3219,Ainesishyra (Marmarica),Ptolemaic Kingdom,#35244D
+3220,Chettaia (Marmarica),Ptolemaic Kingdom,#35244D
+3221,Selenis (Marmarica),Ptolemaic Kingdom,#35244D
+3222,Apis (Marmarica),Ptolemaic Kingdom,#35244D
+3223,Paraitonion (Marmarica),Ptolemaic Kingdom,#35244D
+3224,Desert of Paraitonion (Marmarica),Ptolemaic Kingdom,#35244D
+3225,Jaghbub (Siwa),Ptolemaic Kingdom,#35244D
+3226,Hait (Marmarica),Ptolemaic Kingdom,#35244D
+3227,Shaqiq (Marmarica),Ptolemaic Kingdom,#35244D
+3228,Kallias (Marmarica),Ptolemaic Kingdom,#35244D
+3229,Leuke Akte Cyrenaike (Marmarica),Ptolemaic Kingdom,#35244D
+3230,Pnigeus (Marmarica),Ptolemaic Kingdom,#35244D
+3231,Graias (Siwa),Ptolemaic Kingdom,#35244D
+3232,Abid (Siwa),Ptolemaic Kingdom,#35244D
+3233,Klimax (Siwa),Ptolemaic Kingdom,#35244D
+3234,Sanos (Siwa),Ptolemaic Kingdom,#35244D
+3235,Alexandrou Parembole (Siwa),Ptolemaic Kingdom,#35244D
+3236,Ouarias (Siwa),Ptolemaic Kingdom,#35244D
+3237,Siwa (Siwa),Ptolemaic Kingdom,#35244D
+3238,Karnasa (Siwa),Ptolemaic Kingdom,#35244D
+3239,Gargara (Siwa),Ptolemaic Kingdom,#35244D
+3240,Areg (Siwa),Ptolemaic Kingdom,#35244D
+3241,Zethin (Siwa),Ptolemaic Kingdom,#35244D
+3242,Geron (Parva),Ptolemaic Kingdom,#35244D
+3243,Magrab (Parva),Ptolemaic Kingdom,#35244D
+3244,Oasis Parva (Parva),Ptolemaic Kingdom,#35244D
+3245,Varam (Parva),Ptolemaic Kingdom,#35244D
+3246,Murta (Parva),Ptolemaic Kingdom,#35244D
+3247,Shunne (Parva),Ptolemaic Kingdom,#35244D
+3248,Tawar (Farafra),Ptolemaic Kingdom,#35244D
+3249,Minqar (Farafra),Ptolemaic Kingdom,#35244D
+3250,Qasr (Farafra),Ptolemaic Kingdom,#35244D
+3251,Mothis (Kharga),Ptolemaic Kingdom,#35244D
+3252,Trimithis (Kharga),Ptolemaic Kingdom,#35244D
+3253,Hibis (Kharga),Ptolemaic Kingdom,#35244D
+3254,Thenete (Kharga),Ptolemaic Kingdom,#35244D
+3255,Kellis (Kharga),Ptolemaic Kingdom,#35244D
+3256,Amoura (Kharga),Ptolemaic Kingdom,#35244D
+3257,Isis (Kharga),Ptolemaic Kingdom,#35244D
+3258,Gebara (Kharga),Ptolemaic Kingdom,#35244D
+3259,Gibra (Kharga),Ptolemaic Kingdom,#35244D
+3260,Pohe (Kharga),Ptolemaic Kingdom,#35244D
+3261,Erebe (Kharga),Ptolemaic Kingdom,#35244D
+3262,Tchonemyris (Kharga),Ptolemaic Kingdom,#35244D
+3263,Perusekh (Kharga),Ptolemaic Kingdom,#35244D
+3264,Tabenesse (Kharga),Ptolemaic Kingdom,#35244D
+3265,Kysis (Kharga),Ptolemaic Kingdom,#35244D
+3266,Prekariton (Kharga),Ptolemaic Kingdom,#35244D
+3267,Sykaminia (Kharga),Ptolemaic Kingdom,#35244D
+3281,Hydreuma Palaion (Troglodytica),Ptolemaic Kingdom,#35244D
+3283,Berku (Parva),Ptolemaic Kingdom,#35244D
+3284,Colira (Parva),Ptolemaic Kingdom,#35244D
+3285,Kom Namrud (Parva),Ptolemaic Kingdom,#35244D
+3286,Pseneros (Parva),Ptolemaic Kingdom,#35244D
+3287,Kerkethoris (Parva),Ptolemaic Kingdom,#35244D
+3288,Philoteris (Heptanomis),Ptolemaic Kingdom,#35244D
+3289,Ptolemais Euergetis (Heptanomis),Ptolemaic Kingdom,#35244D
+3290,Dionysias (Heptanomis),Ptolemaic Kingdom,#35244D
+3291,Karanis (Heptanomis),Ptolemaic Kingdom,#35244D
+3292,Takiris (Memphis),Ptolemaic Kingdom,#35244D
+3293,Pedonia (Marmarica),Ptolemaic Kingdom,#35244D
+3294,Derrhas (Marmarica),Ptolemaic Kingdom,#35244D
+3295,Leukaspis (Western Delta),Ptolemaic Kingdom,#35244D
+3296,Alexandria (Western Delta),Ptolemaic Kingdom,#35244D
+3297,Taposiris Megale (Western Delta),Ptolemaic Kingdom,#35244D
+3298,Kanopos (Western Delta),Ptolemaic Kingdom,#35244D
+3299,Bolbitine (Western Delta),Ptolemaic Kingdom,#35244D
+3300,Chaireon (Western Delta),Ptolemaic Kingdom,#35244D
+3301,Psenemphaia (Western Delta),Ptolemaic Kingdom,#35244D
+3308,Hermopolis Mikra (Western Delta),Ptolemaic Kingdom,#35244D
+3309,Naukratis (Western Delta),Ptolemaic Kingdom,#35244D
+3310,Momemphis (Western Delta),Ptolemaic Kingdom,#35244D
+3311,Nikiou (Memphis),Ptolemaic Kingdom,#35244D
+3312,Panarachthis (Memphis),Ptolemaic Kingdom,#35244D
+3313,Babylon Aigyptou (Memphis),Ptolemaic Kingdom,#35244D
+3314,Onouphis Ano (Central Delta),Ptolemaic Kingdom,#35244D
+3315,Iseion (Central Delta),Ptolemaic Kingdom,#35244D
+3316,Sais (Central Delta),Ptolemaic Kingdom,#35244D
+3317,Boutos (Western Delta),Ptolemaic Kingdom,#35244D
+3318,Sebennytos (Central Delta),Ptolemaic Kingdom,#35244D
+3319,Xois (Central Delta),Ptolemaic Kingdom,#35244D
+3320,Perseos Skope (Western Delta),Ptolemaic Kingdom,#35244D
+3321,Boutike Limne (Central Delta),Ptolemaic Kingdom,#35244D
+3322,Diospolis Kato (Central Delta),Ptolemaic Kingdom,#35244D
+3323,Pachneumounis (Central Delta),Ptolemaic Kingdom,#35244D
+3324,Athribis (Central Delta),Ptolemaic Kingdom,#35244D
+3325,Leontopolis (Central Delta),Ptolemaic Kingdom,#35244D
+3326,Pharbaithos (Eastern Delta),Ptolemaic Kingdom,#35244D
+3327,Mendes (Central Delta),Ptolemaic Kingdom,#35244D
+3328,Hermou Polis (Central Delta),Ptolemaic Kingdom,#35244D
+3329,Tamiathis (Central Delta),Ptolemaic Kingdom,#35244D
+3330,Tanis (Eastern Delta),Ptolemaic Kingdom,#35244D
+3331,Thenisos (Eastern Delta),Ptolemaic Kingdom,#35244D
+3332,Boubastis (Eastern Delta),Ptolemaic Kingdom,#35244D
+3333,Phakousai (Eastern Delta),Ptolemaic Kingdom,#35244D
+3334,Serapieion (Eastern Delta),Ptolemaic Kingdom,#35244D
+3335,Sile (Eastern Delta),Ptolemaic Kingdom,#35244D
+3336,Pilousion (Eastern Delta),Ptolemaic Kingdom,#35244D
+3337,Heliopolis (Memphis),Ptolemaic Kingdom,#35244D
+3338,Memphis (Memphis),Ptolemaic Kingdom,#35244D
+3339,Leonton Polis (Memphis),Ptolemaic Kingdom,#35244D
+3340,Bilbeis (Eastern Delta),Ptolemaic Kingdom,#35244D
+3341,Heroopolis (Eastern Delta),Ptolemaic Kingdom,#35244D
+3342,Klysma (Eastern Delta),Ptolemaic Kingdom,#35244D
+3343,Arsinoe (Sinai),Ptolemaic Kingdom,#35244D
+3344,Aphroditopolis (Heptanomis),Ptolemaic Kingdom,#35244D
+3345,Neiloupolis (Heptanomis),Ptolemaic Kingdom,#35244D
+3346,Ankyronpolis (Heptanomis),Ptolemaic Kingdom,#35244D
+3347,Kynopolis (Heptanomis),Ptolemaic Kingdom,#35244D
+3348,Alabastronpolis (Heptanomis),Ptolemaic Kingdom,#35244D
+3349,Herakleiapolis (Heptanomis),Ptolemaic Kingdom,#35244D
+3350,Oxyrrhynchos (Heptanomis),Ptolemaic Kingdom,#35244D
+3351,Chysis (Heptanomis),Ptolemaic Kingdom,#35244D
+3352,Peentalis (Heptanomis),Ptolemaic Kingdom,#35244D
+3353,Hermopolis Megale (Heptanomis),Ptolemaic Kingdom,#35244D
+3354,Pokis (Heptanomis),Ptolemaic Kingdom,#35244D
+3355,Monkanei (Heptanomis),Ptolemaic Kingdom,#35244D
+3356,Koussai (Heptanomis),Ptolemaic Kingdom,#35244D
+3357,Lykopolis (Heptanomis),Ptolemaic Kingdom,#35244D
+3358,Hypsele (Heptanomis),Ptolemaic Kingdom,#35244D
+3359,Antaiopolis (Heptanomis),Ptolemaic Kingdom,#35244D
+3360,Triphion (Heptanomis),Ptolemaic Kingdom,#35244D
+3361,Thinis (Heptanomis),Ptolemaic Kingdom,#35244D
+3362,Abydos Aigptou (Heptanomis),Ptolemaic Kingdom,#35244D
+3363,Diospolis Mikra (Luxor),Ptolemaic Kingdom,#35244D
+3364,Tentyris (Luxor),Ptolemaic Kingdom,#35244D
+3365,Apollonopolis Mikra (Luxor),Ptolemaic Kingdom,#35244D
+3366,Mennoneion (Luxor),Ptolemaic Kingdom,#35244D
+3367,Terkythis (Luxor),Ptolemaic Kingdom,#35244D
+3368,Pathyris (Luxor),Ptolemaic Kingdom,#35244D
+3369,Apollinopolis Megale (Aswan),Ptolemaic Kingdom,#35244D
+3370,Panopolis (Heptanomis),Ptolemaic Kingdom,#35244D
+3371,Ptolemaios Hermeiou (Heptanomis),Ptolemaic Kingdom,#35244D
+3372,Kainepolis (Luxor),Ptolemaic Kingdom,#35244D
+3373,Koptos (Luxor),Ptolemaic Kingdom,#35244D
+3374,Kerameia (Luxor),Ptolemaic Kingdom,#35244D
+3375,Thebai Hekatompyloi (Luxor),Ptolemaic Kingdom,#35244D
+3376,Hermonthis (Luxor),Ptolemaic Kingdom,#35244D
+3377,Latopolis (Luxor),Ptolemaic Kingdom,#35244D
+3378,Omboi (Aswan),Ptolemaic Kingdom,#35244D
+3379,Eileithyias Polis (Aswan),Ptolemaic Kingdom,#35244D
+3380,Drepanon (Myos Hormos),Ptolemaic Kingdom,#35244D
+3381,Porphyrites (Myos Hormos),Ptolemaic Kingdom,#35244D
+3382,Berkou (Myos Hormos),Ptolemaic Kingdom,#35244D
+3383,Koueoi (Myos Hormos),Ptolemaic Kingdom,#35244D
+3384,Myos Hormos (Myos Hormos),Ptolemaic Kingdom,#35244D
+3385,Sukkari (Troglodytica),Ptolemaic Kingdom,#35244D
+3386,Nechesia (Troglodytica),Ptolemaic Kingdom,#35244D
+3387,Lahami (Troglodytica),Ptolemaic Kingdom,#35244D
+3388,Berenike Troglodytike (Troglodytica),Ptolemaic Kingdom,#35244D
+3389,Hydreuma Neon (Troglodytica),Ptolemaic Kingdom,#35244D
+3390,Phalakron (Troglodytica),Ptolemaic Kingdom,#35244D
+3391,Aristonis (Troglodytica),Ptolemaic Kingdom,#35244D
+3392,Hydreuma Troglodytikon (Troglodytica),Ptolemaic Kingdom,#35244D
+3393,Kompasoi (Myos Hormos),Ptolemaic Kingdom,#35244D
+3394,Pyle Indiai (Myos Hormos),Ptolemaic Kingdom,#35244D
+3395,Semne (Myos Hormos),Ptolemaic Kingdom,#35244D
+3396,East Ileigha (Blemmia),Ptolemaic Kingdom,#35244D
+3397,West Ileigha (Blemmia),Ptolemaic Kingdom,#35244D
+3402,Ras Sheratib (Sinai),Ptolemaic Kingdom,#35244D
+3403,Ostrakine (Eastern Delta),Ptolemaic Kingdom,#35244D
+3404,Rhinokoloura (Eastern Delta),Ptolemaic Kingdom,#35244D
+3405,Maghara (Eastern Delta),Ptolemaic Kingdom,#35244D
+3406,Phoinikon (Sinai),Ptolemaic Kingdom,#35244D
+3407,Medeia (Sinai),Ptolemaic Kingdom,#35244D
+3408,Pharan (Sinai),Ptolemaic Kingdom,#35244D
+3409,Rhaithou (Sinai),Ptolemaic Kingdom,#35244D
+3410,Oros Choreb (Sinai),Ptolemaic Kingdom,#35244D
+3412,Ain Hudera (Sinai),Ptolemaic Kingdom,#35244D
+3413,Naqb Jedid (Sinai),Ptolemaic Kingdom,#35244D
+3414,Sinai Boreioi (Sinai),Ptolemaic Kingdom,#35244D
+3417,Nessana (Philistia),Ptolemaic Kingdom,#35244D
+3418,Betomolachon (Philistia),Ptolemaic Kingdom,#35244D
+3419,Chellous (Philistia),Ptolemaic Kingdom,#35244D
+3420,Bitylion (Philistia),Ptolemaic Kingdom,#35244D
+3421,Gaza (Philistia),Ptolemaic Kingdom,#35244D
+3422,Rhaphia (Philistia),Ptolemaic Kingdom,#35244D
+3423,Be'er Sheva (Philistia),Ptolemaic Kingdom,#35244D
+3514,Desert of Alexandria (Parva),Ptolemaic Kingdom,#35244D
+3515,Desert of Pokis (Farafra),Ptolemaic Kingdom,#35244D
+3516,Desert of Klysma (Myos Hormos),Ptolemaic Kingdom,#35244D
+3518,Serabit el-Khadim (Sinai),Ptolemaic Kingdom,#35244D
+3519,Desert of Latopolis (Myos Hormos),Ptolemaic Kingdom,#35244D
+3520,Desert of Swenett (Troglodytica),Ptolemaic Kingdom,#35244D
+3521,Desert of Minqar (Farafra),Ptolemaic Kingdom,#35244D
+3522,Desert of Kharga (Kharga),Ptolemaic Kingdom,#35244D
+963,Pullinadu,Pullinadu,#60A5FA
+73,Punanadu,Punanadu,#F97316
+958,Punginadu,Punginadu,#C4B5FD
+39,Qataban,Qataban,#CCCCCC
+1014,Qeddar,Qeddar,#CCCCCC
+301,Linzi,Qi,#7F1D1D
+1057,Donglai,Qi,#7F1D1D
+1058,Beihai,Qi,#7F1D1D
+1059,Lixia,Qi,#7F1D1D
+1060,Qiansheng,Qi,#7F1D1D
+1061,Dong,Qi,#7F1D1D
+1062,Jinan,Qi,#7F1D1D
+1063,Pingyuan,Qi,#7F1D1D
+1064,Bohai,Qi,#7F1D1D
+908,Qielan,Qielan,#F9A8D4
+985,Qiemo,Qiemo,#CCCCCC
+320,Yueyang,Qin,#6B7280
+322,Longxi,Qin,#6B7280
+890,Ba,Qin,#6B7280
+914,Qianwei,Qin,#6B7280
+915,Guanghan,Qin,#6B7280
+1071,Wudu,Qin,#6B7280
+1515,Pingzhou,Qin,#6B7280
+1538,Hanzhong,Qin,#6B7280
+1539,Hongnong,Qin,#6B7280
+1540,Tianshui,Qin,#6B7280
+1541,Xianyang,Qin,#6B7280
+1542,Changan,Qin,#6B7280
+1543,Shang,Qin,#6B7280
+1550,Qiongdu,Qiongdu,#F9A8D4
+847,Qohaito,Qohaito,#808900
+486,Quadia,Quadia,#C45100
+1463,Turan,Qushi,#808080
+912,Ranmang,Ranmang,#166534
+296,Rathika,Rathika,#064E3B
+2349,Rauracia,Rauraci,#194D33
+2350,Helvetum,Rauraci,#194D33
+2207,Ravenna (Aemilia),Ravenna,#DC2626
+334,Remi,Remi,#B0BC00
+481,Reudignia,Reudignia,#E27300
+763,Rhegium (Bruttium),Rhegium,#68CCCA
+231,Rhodes (Sporades),Rhodes,#F44E3B
+1096,Poseidion (Sporades),Rhodes,#F44E3B
+131,Ostia (Latinum),Roman Republic,#9F0500
+134,Rome (Latinum),Roman Republic,#9F0500
+136,Veii (Latinum),Roman Republic,#9F0500
+137,Capua (Campania),Roman Republic,#9F0500
+138,Nepete (Etruria),Roman Republic,#9F0500
+139,Cures (Latinum),Roman Republic,#9F0500
+144,Tibur (Latinum),Roman Republic,#9F0500
+145,Lavinium (Latinum),Roman Republic,#9F0500
+146,Carsioli (Latinum),Roman Republic,#9F0500
+237,Mons Appenninus Bovianum (Campania),Roman Republic,#9F0500
+239,Neapolis (Campania),Roman Republic,#9F0500
+2116,Norba (Latinum),Roman Republic,#9F0500
+2117,Circeii (Latinum),Roman Republic,#9F0500
+2118,Fundi (Latinum),Roman Republic,#9F0500
+2119,Fregallae (Latinum),Roman Republic,#9F0500
+2120,Mons Appenninus Antinum (Latinum),Roman Republic,#9F0500
+2121,Saticula (Campania),Roman Republic,#9F0500
+2122,Nola (Campania),Roman Republic,#9F0500
+2125,Venafrum (Campania),Roman Republic,#9F0500
+2126,Mons Appenninus Peltuinum (Samnium),Roman Republic,#9F0500
+2129,Alba Fucens (Samnium),Roman Republic,#9F0500
+2130,Peltuinum (Samnium),Roman Republic,#9F0500
+2136,Canusium (Apulia),Roman Republic,#9F0500
+2137,Luceria (Apulia),Roman Republic,#9F0500
+2138,Teanum Apulum,Roman Republic,#9F0500
+2139,Urium (Apulia),Roman Republic,#9F0500
+1651,Besyoly,Roxolani,#f9ffa6
+1652,Belaya Glina,Roxolani,#f9ffa6
+1653,Zimovnkiki,Roxolani,#f9ffa6
+1654,Yashalta,Roxolani,#f9ffa6
+1655,Kotelnikovo,Roxolani,#f9ffa6
+1656,Fomin,Roxolani,#f9ffa6
+1657,Tatsinskaya,Roxolani,#f9ffa6
+2429,Tyrsenia (Sardinia),Rubrensians,#374151
+2450,Sulki Tyrsen (Sardinia),Rubrensians,#374151
+1897,Irlaching,Rucinatia,#4ADE80
+1898,Feucht,Rucinatia,#4ADE80
+1899,Greding,Rucinatia,#4ADE80
+1900,Hernau,Rucinatia,#4ADE80
+1901,Brunn,Rucinatia,#4ADE80
+1902,Teugn,Rucinatia,#4ADE80
+1903,Straubing,Rucinatia,#4ADE80
+1904,Pram,Rucinatia,#4ADE80
+474,Rugia,Rugia,#E27300
+2306,Alpis Inferior (Rhaetica),Rugusci,#7F1D1D
+662,Ruhunu,Ruhunu,#fdffa8
+815,Rush 'Addir (Rif),Rusadir,#F87171
+197,Jurcae,Sab Champa Jurcae,#C4B5FD
+472,Saba,Saba,#CCCCCC
+103,Mons Appenninus Nequinum (Sabinia),Sabinia,#14532D
+140,Trebula (Sabinia),Sabinia,#14532D
+141,Amiternum (Sabinia),Sabinia,#14532D
+142,Nequinum (Sabinia),Sabinia,#14532D
+1600,Kyshtym,Sabiri,#CCCCCC
+1601,Asbest,Sabiri,#CCCCCC
+3796,Kremna (Pisidia),Sagallasia,#5D4037
+3797,Sagalassos (Pisidia),Sagallasia,#5D4037
+2297,Sallasia,Salassi,#B8E0CA
+2300,Eudracinum,Salassi,#B8E0CA
+1676,Klin,Salii,#CCCCCC
+1677,Taldom,Salii,#CCCCCC
+1678,Nerekhta,Salii,#CCCCCC
+1679,Shuya,Salii,#CCCCCC
+1680,Noginsk,Salii,#CCCCCC
+1681,Kurlovo,Salii,#CCCCCC
+1682,Nerl,Salii,#CCCCCC
+1683,Yuzha,Salii,#CCCCCC
+337,Saluvii,Saluvii,#51ac44
+3464,Shomron (Samaria),Samaria,#EA580C
+3465,Aphek (Samaria),Samaria,#EA580C
+3466,Narbata (Samaria),Samaria,#EA580C
+3467,Shekem (Samaria),Samaria,#EA580C
+3469,Shalem (Samaria),Samaria,#EA580C
+190,Samatata,Samatata,#FACC15
+2144,Bovianum (Samnium),Samnites,#44745c
+2145,Corneliani (Samnium),Samnites,#44745c
+2146,Beneventum (Samnium),Samnites,#44745c
+2147,Tuticum (Samnium),Samnites,#44745c
+2148,Ausculum (Samnium),Samnites,#44745c
+2149,Aeclanum (Samnium),Samnites,#44745c
+2150,Abellinum (Campania),Samnites,#44745c
+2151,Irna (Campania),Samnites,#44745c
+2152,Compsa (Samnium),Samnites,#44745c
+2153,Venusia (Samnium),Samnites,#44745c
+2154,Potentia (Lucania),Samnites,#44745c
+173,Santones,Santones,#68BC00
+1232,Sanuki,Sanu,#C4B5FD
+365,Sardeati,Sardeati,#8a532f
+1299,Gyeongju,Saro,#60A5FA
+939,Satiyaputa,Satiyaputa,#4F46E5
+489,Saurdonia,Saurdonia,#ad6d16
+498,Sciria,Sciria,#FE9200
+526,Siemiatyzcze,Sciria,#FE9200
+1763,Wyszkow,Sciria,#FE9200
+360,North Scordisci,Scordisci,#2e8b5c
+370,South Scordisci,Scordisci,#2e8b5c
+371,East Scordisci,Scordisci,#2e8b5c
+1726,Dnipro,Scythians,#a4bd7f
+1727,Vesele,Scythians,#a4bd7f
+1728,Rykove (Bosporanum),Scythians,#a4bd7f
+1729,Lazurne,Scythians,#a4bd7f
+1730,Kalanchak,Scythians,#a4bd7f
+1731,Bashtanka,Scythians,#a4bd7f
+1732,Zelenivka,Scythians,#a4bd7f
+1733,Bratske,Scythians,#a4bd7f
+1734,Petrove,Scythians,#a4bd7f
+1735,Sofivka,Scythians,#a4bd7f
+1736,Solone,Scythians,#a4bd7f
+1744,Pividenne,Scythians,#a4bd7f
+1745,Smoline,Scythians,#a4bd7f
+1746,Balta,Scythians,#a4bd7f
+1747,Rozdilna,Scythians,#a4bd7f
+1748,Shyriaieve,Scythians,#a4bd7f
+3126,Taphros (Bosporanum),Scythians,#a4bd7f
+3127,Cimus (Bosporanum),Scythians,#a4bd7f
+3128,Masella (Bosporanum),Scythians,#a4bd7f
+3129,Urgat (Bosporanum),Scythians,#a4bd7f
+3140,Kimmeria (Taurica),Scythians,#a4bd7f
+3141,Taurica (Taurica),Scythians,#a4bd7f
+2301,Obilonna,Seduni,#81B136
+1090,Segnia,Segnia,#86EFAC
+931,Selangor,Selangor,#F97316
+148,Elymais,Seleukid Empire,#16A5A5
+170,Kossioi,Seleukid Empire,#16A5A5
+171,Apolloniatis,Seleukid Empire,#16A5A5
+187,Characene,Seleukid Empire,#16A5A5
+431,Amardia,Seleukid Empire,#16A5A5
+433,Rudiana,Seleukid Empire,#16A5A5
+434,Paropamisdae,Seleukid Empire,#16A5A5
+435,Tabiene,Seleukid Empire,#16A5A5
+437,Arcticene,Seleukid Empire,#16A5A5
+448,Assyria,Seleukid Empire,#16A5A5
+450,Babylonia (Babylonia),Seleukid Empire,#16A5A5
+451,Ktesiphon,Seleukid Empire,#16A5A5
+452,Chaldaea,Seleukid Empire,#16A5A5
+453,Sumer,Seleukid Empire,#16A5A5
+831,Garamaea,Seleukid Empire,#16A5A5
+832,Susiana,Seleukid Empire,#16A5A5
+833,Media Magna,Seleukid Empire,#16A5A5
+834,Choromithrene,Seleukid Empire,#16A5A5
+835,Paratacene,Seleukid Empire,#16A5A5
+836,Choarene,Seleukid Empire,#16A5A5
+837,Media Felix,Seleukid Empire,#16A5A5
+838,Comisene,Seleukid Empire,#16A5A5
+839,Traxiane,Seleukid Empire,#16A5A5
+840,Carmania,Seleukid Empire,#16A5A5
+841,Sagartia,Seleukid Empire,#16A5A5
+842,Aria,Seleukid Empire,#16A5A5
+843,Sattagydia,Seleukid Empire,#16A5A5
+3687,Magdala (Dura-Europos),Seleukid Empire,#16A5A5
+3688,Charbora (Dura-Europos),Seleukid Empire,#16A5A5
+3689,Anatho (Dura-Europos),Seleukid Empire,#16A5A5
+3690,Haradon (Dura-Europos),Seleukid Empire,#16A5A5
+3691,Achaiachala (Dura-Europos),Seleukid Empire,#16A5A5
+3692,Haditha (Babylonia),Seleukid Empire,#16A5A5
+3693,Bechchouphrein (Dura-Europos),Seleukid Empire,#16A5A5
+3694,Isiopolis (Babylonia),Seleukid Empire,#16A5A5
+3802,Adada (Pisidia),Selgia,#831843
+3803,Tityassos (Pisidia),Selgia,#831843
+3805,Selge (Pisidia),Selgia,#831843
+544,Selgovia,Selgovia,#16A5A5
+2411,Selinous (Sicily),Selinous,#14532D
+848,Sembritia,Sembritia,#DBDF00
+488,Semnonia,Semnonia,#E27300
+2205,Sena (Umbria),Senones,#b1ec00
+2206,Ariminum (Umbria),Senones,#b1ec00
+2209,Ficline (Aemilia),Senones,#b1ec00
+2210,Faventia (Aemilia),Senones,#b1ec00
+335,Sequani,Sequani,#B0BC00
+331,Serones,Serones,#808900
+861,Sesamos,Sesamos,#16A5A5
+2314,Sebatum,Sevaci,#B4E4D6
+910,Shajing,Shajing,#A5B4FC
+923,Shan,Shan,#99F6E4
+1452,Yumen,Shanma,#FEF5C5
+81,Shenli,Shenli,#2563EB
+1081,Shihsanhang,Shihsanhang,#C4B5FD
+1204,Shima,Shima,#22C55E
+905,Shoumi,Shoumi,#99F6E4
+997,Shule,Shule,#14532D
+2423,Mitistratum (Sicily),Sicani,#F44E3B
+2424,Hyppana (Sicily),Sicani,#F44E3B
+2425,Partanna (Sicily),Sicani,#F44E3B
+2420,Capitium (Sicily),Sicels,#E27300
+2422,Enna (Sicily),Sicels,#E27300
+3508,Tzidon (South Phoenicia),Sidon,#6D28D9
+1305,Samcheok,Siljig,#7F1D1D
+536,Siluria,Siluria,#68CCCA
+1218,Shimōsa,Simobusa,#A16207
+1220,Southern Shimotsuke,Simotuke,#22C55E
+1213,Sinaga,Sinaga,#16A34A
+1244,Shinshū,Sinano,#FEF5C5
+1647,Ponezhunkay,Sindi,#D8FCF1
+3962,Zaliches (Paphlagonia),Sinope,#73D8FF
+3963,Sinope (Paphlagonia),Sinope,#73D8FF
+2140,Sipontum (Apulia),Sipontum,#68CCCA
+408,Maykop,Siraces,#b3e9ab
+579,Ladozhskaya,Siraces,#b3e9ab
+1642,Kursavka,Siraces,#b3e9ab
+1643,Izobilny,Siraces,#b3e9ab
+1644,Ipatovo,Siraces,#b3e9ab
+1645,Manych,Siraces,#b3e9ab
+1646,Arzgir,Siraces,#b3e9ab
+1240,U-nay,Sirakawa,#5D4037
+517,Sithonia,Sithonia,#9F0500
+1858,Tokarevo,Skirithfinia,#FFFFFF
+1859,Plodovoe,Skirithfinia,#FFFFFF
+1860,Helsinki,Skirithfinia,#FFFFFF
+1861,Porvoo,Skirithfinia,#FFFFFF
+1862,Virolahti,Skirithfinia,#FFFFFF
+1863,Seleznevo,Skirithfinia,#FFFFFF
+918,Snay,Snay,#DC2626
+2614,Tiztoutine (Rif),Socosia,#fff5d5
+2615,Ajdir (Rif),Socosia,#fff5d5
+2616,Midar (Rif),Socosia,#fff5d5
+2617,Sidi Driss (Rif),Socosia,#fff5d5
+2618,Mnoud Nekkour (Rif),Socosia,#fff5d5
+2619,Ziam (Rif),Socosia,#fff5d5
+2620,Senada (Rif),Socosia,#fff5d5
+2621,Hoceima (Rif),Socosia,#fff5d5
+2622,Jebha (Rif),Socosia,#fff5d5
+2623,Kach Kouch (Rif),Socosia,#fff5d5
+1209,Tōtōmi,Soga,#FDE047
+1554,Sogdia,Sogdia,#73D8FF
+1286,Gimpo,Soknobulsa,#5EEAD4
+3767,Kitanaura (Pamphylia),Solymia,#93C5FD
+3793,Termessos (Pisidia),Solymia,#93C5FD
+936,Soma,Soma,#F97316
+1303,Somun,Somun,#60A5FA
+307,Song,Song,#FDBA74
+1530,Hexiang,Song,#FDBA74
+3562,Chamishkatsag (Sophene),Sophene,#D33115
+3563,Gareina (Sophene),Sophene,#D33115
+3564,Tomisa (Sophene),Sophene,#D33115
+3575,Arshamashat (Sophene),Sophene,#D33115
+3576,Dadima (Sophene),Sophene,#D33115
+3577,Anzita (Sophene),Sophene,#D33115
+3578,Balisbiga (Sophene),Sophene,#D33115
+3579,Kharberd (Sophene),Sophene,#D33115
+3580,Halouras (Sophene),Sophene,#D33115
+3581,Koloua (Sophene),Sophene,#D33115
+3583,Palios (Sophene),Sophene,#D33115
+3584,Barsalium (Corduene),Sophene,#D33115
+3585,Arsinia (Corduene),Sophene,#D33115
+3586,Karkat'iokert (Corduene),Sophene,#D33115
+3587,Sardeoua (Corduene),Sophene,#D33115
+3588,Sophene Mountains (Sophene),Sophene,#D33115
+3589,Sitai (Corduene),Sophene,#D33115
+3787,Np'rkert (Corduene),Sophene,#D33115
+3801,Tigranakert (Corduene),Sophene,#D33115
+271,Sorbones,Sorbones,#68BC00
+2972,Sparta (Laconia),Sparta,#9F0500
+2974,Tainaron (Laconia),Sparta,#9F0500
+2975,Gytheion (Laconia),Sparta,#9F0500
+2976,Epidauros Limira (Laconia),Sparta,#9F0500
+2977,Kyphanta (Laconia),Sparta,#9F0500
+2978,Kythera (Laconia),Sparta,#9F0500
+2208,Spina (Aemilia),Spina,#FACC15
+567,Turiisk,Sporioi,#3B82F6
+573,Ratne,Sporioi,#3B82F6
+577,Slonim,Sporioi,#3B82F6
+2283,Hasta (Liguria),Statiellia,#DC2626
+2286,Aquae Statiellae (Liguria),Statiellia,#DC2626
+203,Stymphalia (Arcadia),Stymphalia,#009CE0
+400,Clauna,Suaneti,#14532D
+519,Lida,Sudinoia,#68CCCA
+521,Lapy,Sudinoia,#68CCCA
+522,Sejny,Sudinoia,#68CCCA
+523,Daugai,Sudinoia,#68CCCA
+524,Monki,Sudinoia,#68CCCA
+1766,Ostrow,Sudinoia,#68CCCA
+480,Sugambria,Sugambria,#C45100
+1546,Sui,Sui,#EA580C
+516,Suionia,Suionia,#D33115
+600,Jiahe,Sumo,#312E81
+644,Sumpa,Sumpa,#808900
+1253,Horo-nay,Sunazawa,#8D6E63
+1254,Ai-nay,Sunazawa,#8D6E63
+1255,Mago-nay,Sunazawa,#8D6E63
+1256,Tade-nay,Sunazawa,#8D6E63
+1178,Suō,Suo,#CCCCCC
+1418,Jiamusi,Sushen,#BE185D
+1419,Youyi,Sushen,#BE185D
+1420,Luobei,Sushen,#BE185D
+1281,Pesitor,Susuya,#877301
+1282,Nayas,Susuya,#877301
+1243,Shinano,Suwa,#166534
+55,Messena (Sicily),Syracuse,#FCDC00
+102,Tauromenion (Sicily),Syracuse,#FCDC00
+245,Katane (Sicily),Syracuse,#FCDC00
+246,Kentoripa (Sicily),Syracuse,#FCDC00
+247,Megara Hyblaia (Sicily),Syracuse,#FCDC00
+248,Syracuse (Sicily),Syracuse,#FCDC00
+2402,Morgantion (Sicily),Syracuse,#FCDC00
+2403,Kamarina (Sicily),Syracuse,#FCDC00
+2405,Hyblaean Mountains (Sicily),Syracuse,#FCDC00
+2406,Menai (Sicily),Syracuse,#FCDC00
+2407,Akrai (Sicily),Syracuse,#FCDC00
+2408,Leontinoi (Sicily),Syracuse,#FCDC00
+548,Taexalia,Taexalia,#16A5A5
+922,Tagaung,Tagaung,#831843
+1076,Tahu,Tahu,#CCCCCC
+229,Takpes (Tripolitania),Takapes,#E9B7B6
+230,Gigthis (Tripolitania),Takapes,#E9B7B6
+278,Gergis (Tripolitania),Takapes,#E9B7B6
+280,Tipaton (Tripolitania),Takapes,#E9B7B6
+349,Zitha (Tripolitania),Takapes,#E9B7B6
+372,Putea Pallene (Tripolitania),Takapes,#E9B7B6
+377,Zouchis (Tripolitania),Takapes,#E9B7B6
+2637,Tamdo' (Mauretania),Tamusida,#5D4037
+2638,Banasoh (Mauretania),Tamusida,#5D4037
+2639,Sha'lot (Mauretania),Tamusida,#5D4037
+1192,Tamba,Tanba,#5EEAD4
+1200,Yamashiro,Tanba,#5EEAD4
+788,Tangara (Boeotia),Tangara,#16A5A5
+767,Taras (Apulia),Taras,#0C797D
+794,Tarrha (Crete),Tarrha,#73D8FF
+1017,Tasm,Tasm,#CCCCCC
+350,Parthini,Taulantii,#C45100
+351,Eordei,Taulantii,#C45100
+353,Albani,Taulantii,#C45100
+3016,Dassareti,Taulantii,#C45100
+659,Taungthaman,Taungthaman,#EAB308
+2272,Bodincomagus (Transpadana),Taurini,#33a30e
+2275,Segusio (Transpadana),Taurini,#33a30e
+2276,Taurasia (Transpadana),Taurini,#33a30e
+2277,Forum Vibii (Transpadana),Taurini,#33a30e
+2330,Colatio,Tauriscia,#22C55E
+2331,Celeia,Tauriscia,#22C55E
+1557,Tayuan,Tayuan,#CCCCCC
+172,Tectosages,Tectosages,#689229
+779,Tegea (Arcadia),Tegea,#68CCCA
+860,Teion (Mariandynia),Teion,#68CCCA
+649,Tenasserim,Tenasserim,#CCCCCC
+1525,Teng,Teng,#F472B6
+1884,Tanna,Teuria,#064E3B
+507,Teutonia,Teutonia,#e10500
+589,Thamud,Thamud,#CCCCCC
+677,Thapsus (Byzacena),Thapsus,#C9F8D9
+651,Thaton,Thaton,#361469
+786,Thebes (Boeotia),Thebes,#73D8FF
+764,Thuria (Bruttium),Thuria,#68CCCA
+1635,Piterka,Thyssagetae,#f1f59e
+1636,Kaztal,Thyssagetae,#f1f59e
+1637,Saykyn,Thyssagetae,#f1f59e
+1638,Bykovo,Thyssagetae,#f1f59e
+1639,Kotovo,Thyssagetae,#f1f59e
+1640,Kalminsk,Thyssagetae,#f1f59e
+1641,Kumylzhenskaya,Thyssagetae,#f1f59e
+2444,Tibula (Sardinia),Tibulati,#0C4A6E
+1573,Zhaslyk,Tigrakhauda,#FDBA74
+2265,Segesta (Liguria),Tigullia,#EAB308
+1906,Hayingen,Tigurini,#16A34A
+1907,Nagold,Tigurini,#16A34A
+1908,Senden,Tigurini,#16A34A
+1910,Wertingen,Tigurini,#16A34A
+1911,Donau,Tigurini,#16A34A
+1912,Owen,Tigurini,#16A34A
+1913,Langenau,Tigurini,#16A34A
+373,North Tilataloi,Tilataloi,#DBDF00
+374,South Tilataloi,Tilataloi,#DBDF00
+1214,Western Musashi,Titibu,#C4B5FD
+1229,Eastern Mino,Toki,#4ADE80
+3114,Tomis,Tomis,#BE185D
+955,Tondainadu,Tondainadu,#A5B4FC
+1237,Eastern Tosa,Tosu,#FACC15
+2346,Salodurum,Tougeni,#86EFAC
+2347,Petinesca,Tougeni,#86EFAC
+2348,Vindonissa,Tougeni,#86EFAC
+1175,Buzen,Toyo,#6B7280
+4014,Koralla (Pontus),Trapezous,#73D8FF
+4015,Trapezous (Pontus),Trapezous,#73D8FF
+4016,Hyssos (Pontus),Trapezous,#73D8FF
+1094,Treveria,Treveria,#4ADE80
+375,Triballi,Triballi,#d7c709
+1875,Alzenau,Triboccia,#166534
+1876,Eschborn,Triboccia,#166534
+1877,Lauda,Triboccia,#166534
+1890,Eberbach,Triboccia,#166534
+2310,Salurnis (Rhaetica),Tridentini,#000000
+2311,Tridentum (Rhaetica),Tridentini,#000000
+97,Trinovantia,Trinovantia,#68CCCA
+389,Trocmia,Trocmia,#B0BC00
+782,Troizen (Argolis),Troizen,#16A5A5
+2305,Trumpili (Rhaetica),Trumpili,#F87171
+642,Tsang,Tsang,#808900
+1181,Izumo,Tsuma,#CA8A04
+1173,Chikushū,Tukusi,#4F46E5
+2351,Brigobannis,Tulingi,#2c8558
+2352,Tasgetium,Tulingi,#2c8558
+2353,Vitudurum,Tulingi,#2c8558
+255,Turdulia,Turdulia,#cca8d0
+2441,Libisonis (Sardinia),Turritani,#CCCCCC
+1123,Tsushima,Tusima,#16A34A
+3799,Konane (Pisidia),Tymandia,#FEF09E
+3800,Prostanna (Pisidia),Tymandia,#FEF09E
+2419,Tyndaris (Sicily),Tyndaria,#312E81
+3199,Meligounis (Sicily),Tyndaria,#312E81
+3123,Tyras,Tyras,#009CE0
+3124,Nikonia,Tyras,#009CE0
+401,Tyrgetae,Tyrgetae,#B0BC00
+109,Mons Alpinus,Uberi,#86EFAC
+2302,Octodurus,Uberi,#86EFAC
+1864,Overath,Ubia,#C7F8D8
+1867,Diez,Ubia,#C7F8D8
+1872,Brilon,Ubia,#C7F8D8
+1873,Treysa,Ubia,#C7F8D8
+1874,Fulda,Ubia,#C7F8D8
+105,Mons Appenninus Septempeda,Umbrians,#795548
+106,Sentinum (Umbria),Umbrians,#795548
+108,Spoletium (Umbria),Umbrians,#795548
+240,Septempeda (Umbria),Umbrians,#795548
+241,Cingulum (Umbria),Umbrians,#795548
+750,Iguvium (Umbria),Umbrians,#795548
+768,Urbinum (Umbria),Umbrians,#795548
+770,Sarsina (Umbria),Umbrians,#795548
+397,Uperaci,Uperaci,#22C55E
+394,Luena,Uperacii,#064E3B
+99,Utica (Carthago),Utica,#DC2626
+1304,Maehwa,Uyu,#EF4444
+953,Vaanarnadu,Vaanarnadu,#EF4444
+104,Vaccaei,Vaccaei,#B0BC00
+962,Vaengadanadu,Vaengadanadu,#EAB308
+2278,Bagiennorum (Transpadana),Vagiennia,#EC4899
+2284,Pollentia (Transpadana),Vagiennia,#EC4899
+2433,Lacon (Sardinia),Valentini,#EF4444
+623,Lac Viet,Van Lang,#CCCCCC
+624,Juizhen,Van Lang,#CCCCCC
+625,Zhuya,Van Lang,#CCCCCC
+626,Hepu,Van Lang,#CCCCCC
+641,Vanavasi,Vanavasi,#4338CA
+1866,Kassel,Vangiona,#166534
+1868,Geisa,Vangiona,#166534
+1869,Suhl,Vangiona,#166534
+2298,Ad Publicanos,Varagria,#13734D
+513,Varinia,Varinia,#C45100
+267,Autrigones,Vascones,#FE9200
+2289,Níkaia,Vediantia,#CA8A04
+960,Vellimalai,Vellimalai,#16A34A
+1781,Durbe,Veltia,#16A5A5
+1782,Seda,Veltia,#16A5A5
+1783,Telsiai,Veltia,#16A5A5
+1784,Ventspils,Veltia,#16A5A5
+1785,Talsi,Veltia,#16A5A5
+1786,Tukums,Veltia,#16A5A5
+1787,Stakiai,Veltia,#16A5A5
+1788,Taurage,Veltia,#16A5A5
+1789,Vamiai,Veltia,#16A5A5
+1790,Skuodas,Veltia,#16A5A5
+1791,Kelme,Veltia,#16A5A5
+1792,Auce,Veltia,#16A5A5
+1793,Broceni,Veltia,#16A5A5
+1794,Silute,Veltia,#16A5A5
+1795,Kretinga,Veltia,#16A5A5
+1796,Stende,Veltia,#16A5A5
+1797,Jurmala,Veltia,#16A5A5
+1773,Ladushkin,Venedia,#0C797D
+1774,Sepopol,Venedia,#0C797D
+1775,Polessk,Venedia,#0C797D
+1776,Primorsk,Venedia,#0C797D
+1777,Sintautai,Venedia,#0C797D
+1778,Sovetsk,Venedia,#0C797D
+1779,Kybartai,Venedia,#0C797D
+1780,Ozersk,Venedia,#0C797D
+178,Venelli,Venelli,#A4DD00
+2232,Patavium (Venetia),Veneti,#C45100
+2233,Soave (Venetia),Veneti,#C45100
+2234,Ateste (Venetia),Veneti,#C45100
+2235,Vincentia (Venetia),Veneti,#C45100
+2236,Acelum (Venetia),Veneti,#C45100
+2237,Altinum,Veneti,#C45100
+2238,Tarvisus (Venetia),Veneti,#C45100
+2240,Opitergium (Venetia),Veneti,#C45100
+2241,Caprulae (Venetia),Veneti,#C45100
+2242,Quadruvium (Venetia),Veneti,#C45100
+2243,Utinum (Venetia),Veneti,#C45100
+2244,Concordiensis (Venetia),Veneti,#C45100
+2245,Aquilis (Venetia),Veneti,#C45100
+2246,Timavos (Venetia),Veneti,#C45100
+176,Veneti,Venetii,#B0BC00
+547,Veniconia,Veniconia,#0C797D
+2307,Alpis Superior (Rhaetica),Venosti,#FCA5A5
+2340,Brenodunum,Verbigeni,#65B61D
+2341,Aventicum,Verbigeni,#65B61D
+2342,Lausonna,Verbigeni,#65B61D
+2343,Equestris,Verbigeni,#65B61D
+2344,Bodgalio,Verbigeni,#65B61D
+2345,Fliomusiacum,Verbigeni,#65B61D
+2270,Novaria (Transpadana),Vertamocorii,#22C55E
+135,Aternum (Samnium),Vestini,#14B8A6
+2292,Rigomagus,Vesubia,#C4B5FD
+2293,Mustiae Calmes,Vesubia,#C4B5FD
+98,Viromanduia,Viromanduia,#4ADE80
+329,Voconii,Voconii,#1e9d61
+543,Votadinia,Votadinia,#0C797D
+2274,Victimulae (Transpadana),Votodronia,#C9F8D9
+1186,Wakasa,Wakasa,#FB923C
+1514,Yuncheng,Wei,#93C5FD
+1516,Henei,Wei,#93C5FD
+1517,Huojia,Wei,#93C5FD
+1523,Wei,Wei,#93C5FD
+1524,Daliang,Wei,#93C5FD
+1535,Xu,Wei,#93C5FD
+1522,Puyang,Weii,#BCAAA4
+990,Weili,Weili,#FDE047
+998,Weitou,Weitou,#C2410C
+992,Weixu,Weixu,#1D4ED8
+994,Wulei,Wulei,#86EFAC
+1472,Alashankou,Wusun,#fae7c9
+1548,Xi,Xi,#FDE047
+1533,Wangchang,Xi Zhou,#294F28
+169,Xiangkhoang,Xiangkhoang,#A78BFA
+984,Xiaowan,Xiaowan,#7F1D1D
+1458,Urgamal,Xihai,#374151
+1459,Khovd,Xihai,#374151
+1454,Jargalant,Xiongnu,#4D4D4D
+1455,Ulaan-Uul,Xiongnu,#4D4D4D
+1470,Tosontsengel,Xiongnu,#4D4D4D
+1471,Ikh-Uul,Xiongnu,#4D4D4D
+1468,Xi Qiemi,Xiqiemi,#F472B6
+1432,Tumentsogt,Xiru,#8B5CF6
+87,Xitu,Xitu,#FDA1FF
+1526,Xue,Xue,#C4B5FD
+1193,Settsu,Yama,#A16207
+1195,Kawachi,Yamato,#F9A8D4
+1198,Yamato,Yamato,#F9A8D4
+1363,Huludao,Yan,#A16207
+1380,Qinglong,Yan,#A16207
+1381,Zhuolu,Yan,#A16207
+1382,Qinhuandao,Yan,#A16207
+1383,Laoting,Yan,#A16207
+1384,Zunhua,Yan,#A16207
+1385,Tianjin,Yan,#A16207
+1386,Wuqing,Yan,#A16207
+1387,Binhai,Yan,#A16207
+1388,Sanhe,Yan,#A16207
+1389,Langfang,Yan,#A16207
+1390,Yanqing,Yan,#A16207
+1391,Zhangjiakou,Yan,#A16207
+1392,Yuxian,Yan,#A16207
+1393,Gu'an,Yan,#A16207
+1394,Yixian,Yan,#A16207
+1395,Xiong'an,Yan,#A16207
+1396,Mancheng,Yan,#A16207
+1581,Yuzhnny,Yancai,#FDBA74
+1582,Aral,Yancai,#FDBA74
+1583,Maqat,Yancai,#FDBA74
+1584,Inderbor,Yancai,#FDBA74
+1585,Aktobe,Yancai,#FDBA74
+1586,Salqar,Yancai,#FDBA74
+1587,Embi,Yancai,#FDBA74
+1588,Qulsan,Yancai,#FDBA74
+1589,Sokyr-Bulak,Yancai,#FDBA74
+1590,Baysuat,Yancai,#FDBA74
+1591,Temir,Yancai,#FDBA74
+1592,Oyyl,Yancai,#FDBA74
+1593,Aqqystau,Yancai,#FDBA74
+896,Yangyu,Yangyu,#FCA5A5
+877,Yangyue,Yangyue,#EA580C
+991,Yanqi,Yanqi,#93C5FD
+643,Yarlung,Yarlung,#B0BC00
+1201,Eastern Ōmi,Yasu,#FEF5C2
+977,North Kuru,Yaudheya,#FDE047
+978,Trigata,Yaudheya,#FDE047
+907,Yelang,Yelang,#60A5FA
+1297,Daegu,Yeodam,#FACC15
+1298,Ulsan,Yeomhae,#8D6E63
+1544,Yiqu,Yiqu,#FDE047
+622,Yue,Yue,#FDE047
+436,Qijiaojingzhen,Yuezhi,#f8ff9f
+440,Burgastain boomt,Yuezhi,#f8ff9f
+650,Yulimo,Yulimo,#2DD4BF
+1409,Chunhua,Yulou,#2DD4BF
+1410,Fokino,Yulou,#2DD4BF
+982,Yumi,Yumi,#F472B6
+658,Ywa Htin Kon,Ywa Htin Kon,#60A5FA
+1567,Dakhly,Zanthi,#FFEEDD
+1568,Nugunek,Zanthi,#FFEEDD
+86,Zhangzhung,Zhangzhung,#005731
+303,Wuyuan,Zhao,#14B8A6
+1065,Xihe,Zhao,#14B8A6
+1066,Taiyuan,Zhao,#14B8A6
+1068,Handan,Zhao,#14B8A6
+1069,Julu,Zhao,#14B8A6
+1070,Dai,Zhao,#14B8A6
+1518,Linliu,Zhao,#14B8A6
+304,Zhongshan,Zhongshan,#F87171
+1532,Chengzhou,Zhou,#FCC400
+1529,Zou,Zou,#D1D5DB
+1549,Zuo,Zuo,#22C55E
+111,Zygia,Zygia,#dbe6c4
+1169,Ōsumi,Ōsumi,#2DD4BF
+2026,Vytegra,(unowned),
+1036,Western Tien Shan Mountains,(unowned),
+1284,Saturuy,(unowned),
+855,Punt,(unowned),
+1021,Eastern Ad-Dahna Desert,(unowned),
+2494,Gulf of Corinth,(unowned),
+726,Kébec,(unowned),
+2020,Lake Ladoga,(unowned),
+1976,Zamberk,(unowned),
+754,Borikén,(unowned),
+1422,Mukhen,(unowned),
+343,Pillars of Hercules,(unowned),
+402,Kashary,(unowned),
+2062,Krasino,(unowned),
+1364,Kimchaek,(unowned),
+1974,Kletsk,(unowned),
+1662,Zuevka,(unowned),
+586,Topran,(unowned),
+1032,Kokcha,(unowned),
+2061,Balyaga,(unowned),
+2002,Nelidovo,(unowned),
+1935,Panemunis,(unowned),
+305,Oune,(unowned),
+2453,Saone (Corsica),(unowned),
+3595,Lake Ascania,(unowned),
+2088,Dudinka,(unowned),
+1466,Teeli,(unowned),
+694,Amaru Mayu,(unowned),
+1580,Matay,(unowned),
+2387,Alpes Isinisca,(unowned),
+3607,Lake Yay,(unowned),
+3609,Aras Reservoir,(unowned),
+3502,Ech Chiaab (South Phoenicia),(unowned),
+598,Ona Mountains,(unowned),
+751,Cubao,(unowned),
+1566,Sarygamysh Lake,(unowned),
+2048,Shchekur'ya,(unowned),
+2000,Kholm,(unowned),
+2955,Eastern High Atlas Mountains,(unowned),
+1596,Akbulak,(unowned),
+2029,Lipin Bor,(unowned),
+689,Western Bantu,(unowned),
+1626,Buzuluk,(unowned),
+966,Jangtang,(unowned),
+3032,Ida Mountains (Crete),(unowned),
+2108,Dzhamku,(unowned),
+1074,Abag,(unowned),
+2050,Syktyvkar,(unowned),
+591,Ceke,(unowned),
+1132,Tanegashima,(unowned),
+1025,Zhengxiangbai,(unowned),
+2040,Mezen,(unowned),
+3512,Lake Moeris,(unowned),
+35,Chinchorro,(unowned),
+3513,Desert of Sinai (Sinai),(unowned),
+706,Coahuila,(unowned),
+1952,Guben,(unowned),
+2052,Kudymkar,(unowned),
+1031,Toba,(unowned),
+814,Libyan Sea,(unowned),
+2966,Ras Aljamal Desert (Ajdabiya Interior),(unowned),
+1941,Gliwice,(unowned),
+1446,Oog Ondor,(unowned),
+324,West Maya,(unowned),
+808,Beydaglari Mountains (Pamphylia),(unowned),
+2016,Murino,(unowned),
+1134,Kuchinoerabu,(unowned),
+2400,Alpes Cottiae,(unowned),
+1428,Monkhkaan,(unowned),
+1437,Aginskoye,(unowned),
+2677,Sierra de Baza,(unowned),
+318,Amdo,(unowned),
+3303,Phatnitic Nile River,(unowned),
+1993,Rybinsk Lake,(unowned),
+1366,Orang-up,(unowned),
+681,West Africa,(unowned),
+2033,Yurya,(unowned),
+1996,Loknya,(unowned),
+242,Mons Appenninus Boreorientalis,(unowned),
+1137,Kuchino,(unowned),
+1474,Kup,(unowned),
+2071,Bei'an,(unowned),
+1931,Horice,(unowned),
+703,Chinchaysuyu,(unowned),
+25,Olmecs,(unowned),
+3081,South Pindus Mountains (Epirus),(unowned),
+1998,Kunya,(unowned),
+1827,Lake Peipus,(unowned),
+2492,Ligurian Sea,(unowned),
+585,Satbaev,(unowned),
+1027,Faeroe,(unowned),
+1022,Rhub-Al-Khali Desert,(unowned),
+717,West Misi-ziibi,(unowned),
+1556,Narin,(unowned),
+753,Quisqueya,(unowned),
+1494,Talas,(unowned),
+2918,Daydaban (Shatti),(unowned),
+1465,Toopa,(unowned),
+1963,Lentvaris,(unowned),
+731,Pindorama,(unowned),
+1694,Rasskazovo,(unowned),
+630,Yulin,(unowned),
+2421,Tyrrhenian Sea,(unowned),
+2430,Montes Barbaria (Sardinia),(unowned),
+2499,Myrtoan Sea,(unowned),
+2115,Kansk,(unowned),
+2010,Molokovo,(unowned),
+1280,Shumshu,(unowned),
+2820,Er-Rich (Drâa-Tafilalet),(unowned),
+2067,Aoluguya,(unowned),
+12,Persian Gulf,(unowned),
+2321,Histria Mons,(unowned),
+691,Madagascar,(unowned),
+3598,Lake Akrotiri,(unowned),
+1997,Varkhi,(unowned),
+1413,Rakitnoe,(unowned),
+738,Te Waipounamu,(unowned),
+1871,Thum,(unowned),
+2030,Lyubim,(unowned),
+1919,Pilsen,(unowned),
+2329,Alpes Luena,(unowned),
+2483,Adriatic Sea,(unowned),
+1414,Permskoe,(unowned),
+1673,Povorino,(unowned),
+1279,Oyakoba,(unowned),
+1361,Khanka Lake,(unowned),
+24,Zapotec,(unowned),
+873,Arae Philaenorum (Tripolitania),(unowned),
+2957,Eigat,(unowned),
+1624,Mokrous,(unowned),
+1000,Chigu,(unowned),
+720,Guale,(unowned),
+748,Zanzibar,(unowned),
+2005,Spirovo,(unowned),
+1954,Linkuva,(unowned),
+2055,Cheryomukhovo,(unowned),
+1270,Ketoy,(unowned),
+729,Wapusk,(unowned),
+1989,Mahilyow,(unowned),
+36,Tiwanaku Empire,(unowned),
+2006,Kimry,(unowned),
+762,Timor,(unowned),
+1039,Paro Kerchu,(unowned),
+1440,Borzya,(unowned),
+1008,Mauretanian Desert,(unowned),
+1928,Doksy,(unowned),
+2018,Petergof,(unowned),
+1684,Shatsk,(unowned),
+3082,North Pindus Mountains (Epirus),(unowned),
+1969,Svir,(unowned),
+553,Haemodia,(unowned),
+1948,Rudky,(unowned),
+2997,Oros Kallidhromon (Boeotia),(unowned),
+1968,Dusetos,(unowned),
+31,Caspian Sea,(unowned),
+1715,Millerovo,(unowned),
+2015,North Ural Mountains,(unowned),
+2998,Parnassus (Boeotia),(unowned),
+1696,Kalach,(unowned),
+965,Terai,(unowned),
+3479,Milyas Taurus Mountains (Milyas),(unowned),
+1970,Myadzyel,(unowned),
+2019,Mga,(unowned),
+1020,Al-Nafud Desert,(unowned),
+2098,Skovorodino,(unowned),
+3602,Lake Tatta,(unowned),
+3198,Madeira Island,(unowned),
+2085,Nadym,(unowned),
+3599,Lake Carallis,(unowned),
+1037,Eastern Tien Shan Mountains,(unowned),
+3603,Lake Manyas,(unowned),
+2798,Gafait (Jerada),(unowned),
+2028,Okyabrsky,(unowned),
+1415,Terney,(unowned),
+21,English Channel,(unowned),
+1473,Wenquan,(unowned),
+747,Nilotics,(unowned),
+2386,Alpes Laciacum,(unowned),
+950,Nanzhong,(unowned),
+1030,South Sumatra,(unowned),
+2451,Phikaria (Corsica),(unowned),
+708,Kali Forno,(unowned),
+698,chiri,(unowned),
+1310,Taebaek,(unowned),
+2959,Central Libyan Desert,(unowned),
+690,Southern Khoisan,(unowned),
+715,Southern Great Plains,(unowned),
+736,Makarr Yindi,(unowned),
+2038,Leshukonskoe,(unowned),
+582,Karagandy,(unowned),
+693,Wayuu,(unowned),
+1983,Lahojsk,(unowned),
+1953,Lesna,(unowned),
+3517,Desert of Luxor (Kharga),(unowned),
+1400,Eastern Kii Mountains,(unowned),
+707,Sonotl,(unowned),
+2097,Magadan,(unowned),
+2086,Mariinsk,(unowned),
+1966,Sumskas,(unowned),
+2007,Bezhetsk,(unowned),
+2059,Sabetta,(unowned),
+3489,Lake Gennesar,(unowned),
+326,Wankarani,(unowned),
+857,Ichthyophagia,(unowned),
+1002,Pubu,(unowned),
+732,Java,(unowned),
+51,Fennia,(unowned),
+2054,Irbit,(unowned),
+1050,Western Burmese Hills,(unowned),
+1965,Alanta,(unowned),
+3597,Lake Eumeneia,(unowned),
+1130,Hami,(unowned),
+740,Berberia,(unowned),
+2023,Tikhvin,(unowned),
+2104,Ogoron,(unowned),
+1663,Vetluga,(unowned),
+2394,Alpes Lepontinae,(unowned),
+2094,Aldan,(unowned),
+1138,Nakanoshima,(unowned),
+2077,Ulkan,(unowned),
+2200,Montes Corsicae (Corsica),(unowned),
+1964,Sirvintos,(unowned),
+1009,Western Sahara,(unowned),
+1001,Mangya,(unowned),
+727,Kentake,(unowned),
+735,Papua,(unowned),
+0,Dardarnelles,(unowned),
+721,Pahayokee,(unowned),
+701,Chupat,(unowned),
+2017,Kingisepp,(unowned),
+3604,Lake Apolyont,(unowned),
+683,Kwa-Nok,(unowned),
+2113,Birobidzhan,(unowned),
+1408,Hokkaido Mountains,(unowned),
+1977,Opava,(unowned),
+1246,Sado,(unowned),
+2044,Naryan-Mar,(unowned),
+1438,Chuluunkhoroot,(unowned),
+621,Nozaki,(unowned),
+27,Moche,(unowned),
+906,Dingji,(unowned),
+1133,Yakushima,(unowned),
+1441,Kadaya,(unowned),
+712,Asinwati,(unowned),
+1943,Ozd,(unowned),
+1922,Stochov,(unowned),
+2392,Alpes Brigantium (Rhaetica),(unowned),
+1924,Kladno,(unowned),
+1700,Michurinsk,(unowned),
+13,Strait of Hormuz,(unowned),
+791,Thebunte (Tripolitania),(unowned),
+181,Bayankhongor,(unowned),
+571,South Karelia,(unowned),
+584,Amangeldi,(unowned),
+1,Western Southern Ocean,(unowned),
+1982,Stowbtsy,(unowned),
+2009,Brusovo,(unowned),
+23,Northeastern Pacific Ocean,(unowned),
+317,Elban,(unowned),
+83,Mandalgobi,(unowned),
+1276,Makanrushi,(unowned),
+1311,Pocheon,(unowned),
+1271,Rasshua,(unowned),
+2093,Zarya,(unowned),
+687,Eastern Bantu,(unowned),
+185,Southeastern Pacific Ocean,(unowned),
+631,Wuyi,(unowned),
+1981,Poltar,(unowned),
+1594,Yasny,(unowned),
+2106,Torom,(unowned),
+2099,Korf,(unowned),
+1052,Khmu Jungles,(unowned),
+1401,Hokuriki Mountains,(unowned),
+3305,Canal of the Pharaohs,(unowned),
+2908,Tarfawi (Nasamonia),(unowned),
+745,Ethiopic Highlands,(unowned),
+999,Hotan,(unowned),
+723,Patawomeck,(unowned),
+1398,Tsurugi Mountains,(unowned),
+730,Northern Great Plains,(unowned),
+33,Greenland,(unowned),
+2091,Udachny,(unowned),
+1496,Suzak,(unowned),
+743,Zingis,(unowned),
+2100,Uelen,(unowned),
+2495,Egyptian Sea,(unowned),
+2114,Mol'ka,(unowned),
+2501,Thracian Sea,(unowned),
+1406,Ou Mountains,(unowned),
+2025,Cherepovets,(unowned),
+2089,Bukachacha,(unowned),
+1003,Singhanavati,(unowned),
+716,Central Great Plains,(unowned),
+1005,Bahnar,(unowned),
+2389,Alpes Damasia (Rhaetica),(unowned),
+2110,Chegdomyn,(unowned),
+1426,Dutnur,(unowned),
+724,Ninnimissinuok,(unowned),
+3601,Lake Philomelion ,(unowned),
+1405,Eastern Tousan Mountains,(unowned),
+2076,Bayanday,(unowned),
+1273,Shiashkotan,(unowned),
+2046,Pechora,(unowned),
+1029,Ukumachi,(unowned),
+1628,Syzran,(unowned),
+1431,Erdenetsagaan,(unowned),
+1956,Kamajai,(unowned),
+1671,Serdobsk,(unowned),
+696,Uruguay,(unowned),
+1936,Zabreh,(unowned),
+1506,Usaral,(unowned),
+2051,Kirs,(unowned),
+2884,Harawa (Ajdabiya Interior),(unowned),
+2970,Parnon (Argolis),(unowned),
+1927,Nymburk,(unowned),
+162,Chott Melghir,(unowned),
+2502,Icarian Sea,(unowned),
+1495,Shayan,(unowned),
+1404,Toukai Mountains,(unowned),
+2393,Alpes Bergomum (Rhaetica),(unowned),
+1435,Ubur-Tohtor,(unowned),
+3304,Pelusiac Nile River,(unowned),
+2072,Sunwu,(unowned),
+1500,Lake Baiqash,(unowned),
+2,Eastern Southern Ocean,(unowned),
+718,North Misi-ziibi,(unowned),
+1433,Batshireet,(unowned),
+2042,Ukhta,(unowned),
+122,Syrian Desert,(unowned),
+1053,Katu Jungles,(unowned),
+2031,Buy,(unowned),
+1870,Wallenfels,(unowned),
+1984,Barysaw,(unowned),
+1267,Etuworop-sir,(unowned),
+2909,Desert of Cyrene (Cyrenaica),(unowned),
+1701,Zadonsk,(unowned),
+1034,Eastern Taklamakan Desert,(unowned),
+2008,Breytovo,(unowned),
+1942,Zator,(unowned),
+2066,Kaktolga,(unowned),
+2057,Tavda,(unowned),
+596,Kenesary,(unowned),
+559,Strait of Messina,(unowned),
+587,Yrgyz,(unowned),
+1510,Kulunda,(unowned),
+1457,Naushki,(unowned),
+2971,Mainalo (Arcadia),(unowned),
+183,Western Arctic Ocean,(unowned),
+314,Samarga,(unowned),
+1699,Usman,(unowned),
+1713,Biryuch,(unowned),
+856,Gash,(unowned),
+744,Elephas,(unowned),
+1421,Bikin,(unowned),
+1429,Gadabuqi,(unowned),
+1464,Kungurtug,(unowned),
+1035,Western Taklamakan Desert,(unowned),
+2847,Dekrlet (Phazania),(unowned),
+2799,Timlilt (Jerada),(unowned),
+45,Shinkamigoto,(unowned),
+2012,Chagoda,(unowned),
+872,Automalax (Tripolitania),(unowned),
+581,Samiland,(unowned),
+1041,Kongyul,(unowned),
+2013,South Ural Mountains,(unowned),
+1934,Bauska,(unowned),
+1430,Sukhbaatar,(unowned),
+1402,Northern Tousan Mountains,(unowned),
+3600,Tessarakonta Martyron,(unowned),
+1033,Western Tibetan Plateau,(unowned),
+1988,Baybruysk,(unowned),
+1623,Tolyatti,(unowned),
+1932,Skutec,(unowned),
+1268,Urup,(unowned),
+1920,Tepla,(unowned),
+1986,Urechcha,(unowned),
+8,Seto Inland Sea,(unowned),
+2231,Alpes Verona (Venetia),(unowned),
+714,P'osoge,(unowned),
+1450,Sainshand,(unowned),
+1447,Urad,(unowned),
+756,Bahamas,(unowned),
+1937,Zlin,(unowned),
+1555,Chatkal,(unowned),
+1427,Matad,(unowned),
+2673,Sierra Nevada,(unowned),
+1961,Vilkija,(unowned),
+2822,Tifouina,(unowned),
+2103,Shimanovsk,(unowned),
+1480,Ulagan,(unowned),
+1019,Shammar,(unowned),
+2075,Kutulik,(unowned),
+1007,Coastal Sahara,(unowned),
+302,Samjiyon,(unowned),
+63,Aral Sea,(unowned),
+1551,Di Qiang Mountains,(unowned),
+790,Base (Tripolitania),(unowned),
+1994,Novorznev,(unowned),
+1940,Biala,(unowned),
+32,The Maya,(unowned),
+697,Paragua,(unowned),
+3566,North Zagros Mountains,(unowned),
+1992,Bychau,(unowned),
+1973,Iwye,(unowned),
+572,North Karelia,(unowned),
+2022,Naziya,(unowned),
+2963,Tuyur,(unowned),
+2079,Kholodnaya,(unowned),
+2095,Batagay,(unowned),
+2396,Alpes Aventicum,(unowned),
+28,Paracas,(unowned),
+699,Puelmapu,(unowned),
+34,Chorrera,(unowned),
+2105,Chumikan,(unowned),
+569,Lappland,(unowned),
+161,Lake Tritonis,(unowned),
+2401,Alpes Maritimae,(unowned),
+1511,Kupino,(unowned),
+583,Jezqazgan,(unowned),
+1067,Tumed,(unowned),
+1011,Cataphri (Kharga),(unowned),
+3594,Lake Salda,(unowned),
+612,Daqing,(unowned),
+238,Mons Appenninus Aternum (Samnium),(unowned),
+1921,Zdice,(unowned),
+2060,Gorny,(unowned),
+1202,Mimasaka,(unowned),
+1759,Latnaya,(unowned),
+2987,Dirphys Mons (Euboea),(unowned),
+1043,Strait of Sicily,(unowned),
+2487,Sardinian Channel,(unowned),
+688,Khoisan,(unowned),
+1569,Kopet Dag Mountains,(unowned),
+2703,Eastern Hautes Plaines,(unowned),
+1055,Central Malaya,(unowned),
+2704,Western Hautes Plaines,(unowned),
+597,Qusmuryn,(unowned),
+1985,Minsk,(unowned),
+1054,Linyi Jungles,(unowned),
+2043,Izhma,(unowned),
+2037,Pinega,(unowned),
+692,Surinen,(unowned),
+3,South Atlantic Ocean,(unowned),
+3611,Lake Sevan,(unowned),
+1026,Iceland,(unowned),
+1967,Pabrade,(unowned),
+1945,Stryi,(unowned),
+2398,Alpes Graiae,(unowned),
+2958,Western Libyan Desert,(unowned),
+2112,Progress,(unowned),
+1949,Belz,(unowned),
+2612,Rif Mountains (Rif),(unowned),
+1595,Martuk,(unowned),
+1930,Bohemian Forest,(unowned),
+3445,Lake Asphaltites,(unowned),
+746,Cushites,(unowned),
+1887,Abnoba Mons,(unowned),
+3306,Lower Nile,(unowned),
+1508,Zaysan,(unowned),
+1462,Saryg-Sep,(unowned),
+578,Cwaytas,(unowned),
+1018,Ukrush,(unowned),
+1038,Aksay,(unowned),
+315,Bolon,(unowned),
+1951,Lobau,(unowned),
+1565,Derweze,(unowned),
+1439,Baley,(unowned),
+323,Guerrero,(unowned),
+403,Greater Caucasus Mountains,(unowned),
+2395,Alpes Brenodunum,(unowned),
+2034,Pinyug,(unowned),
+2032,Syamzha,(unowned),
+2498,Saronic Gulf,(unowned),
+1505,Karamay,(unowned),
+702,Berú,(unowned),
+1625,Ozinki,(unowned),
+2111,Belogorsk,(unowned),
+1040,Mon Shampo,(unowned),
+1980,Alwernia,(unowned),
+2090,Norilsk,(unowned),
+1695,Rzhaksa,(unowned),
+2102,Snezhnogorskii,(unowned),
+2907,Qabr (Nasamonia),(unowned),
+2064,Barguzin,(unowned),
+413,Gurvantes,(unowned),
+741,Mosylon,(unowned),
+1403,Southern Tousan Mountains,(unowned),
+16,Bospurous,(unowned),
+686,Congo,(unowned),
+20,North Sea,(unowned),
+608,Fushun,(unowned),
+1960,Seta,(unowned),
+2960,Eastern Libyan Desert,(unowned),
+43,Antarctica,(unowned),
+1482,Choya,(unowned),
+904,Gufu,(unowned),
+3401,Sharm El-Sheikh (Sinai),(unowned),
+734,Sulawesi,(unowned),
+18,Bosporus Strait,(unowned),
+17,Black Sea,(unowned),
+2454,Alouka (Corsica),(unowned),
+2995,Mount Giona (Aetolia),(unowned),
+2496,Levantine Sea,(unowned),
+1135,Kuroshimaheiwa,(unowned),
+663,Semien,(unowned),
+2456,Balearic Sea,(unowned),
+2107,Oldjikan,(unowned),
+2493,Ionian Sea,(unowned),
+1012,Eastern Sahara,(unowned),
+1841,Lake Ilmen,(unowned),
+1475,Qaraemil,(unowned),
+1670,Kuznetsk,(unowned),
+444,Pisidian Taurus Mountains (Pisidia),(unowned),
+1251,Tochi-nay,(unowned),
+1365,Hwadae-up,(unowned),
+26,Teotihuacan,(unowned),
+1122,Hong,(unowned),
+2969,Oros Dekaochto (Corinthia),(unowned),
+1929,Mimori,(unowned),
+3268,Hameka (Kharga),(unowned),
+61,Nordici,(unowned),
+2776,Timnoutine,(unowned),
+2954,Central High Atlas Mountains,(unowned),
+722,Shaconage,(unowned),
+737,Lutruwita,(unowned),
+2053,Berezniki,(unowned),
+2846,South Jebil (Phazania),(unowned),
+830,Akdağ Mountains (Milyas),(unowned),
+11,0,(unowned),
+1944,Snina,(unowned),
+1698,Ertil,(unowned),
+1283,Occisi,(unowned),
+56,Ojika,(unowned),
+1288,Yeoju,(unowned),
+865,Tayk Mountains,(unowned),
+1915,Primda,(unowned),
+2953,Western High Atlas Mountains,(unowned),
+2058,Labytnangi,(unowned),
+2964,Anti Atlas Mountains,(unowned),
+3524,Kushite Desert,(unowned),
+3554,Pontic Mountains (Pontus),(unowned),
+593,Uliastai,(unowned),
+909,Jincheng,(unowned),
+1362,Rason,(unowned),
+2821,Ouatab (Drâa-Tafilalet),(unowned),
+1979,Nysa,(unowned),
+580,Janaarqa,(unowned),
+306,Selikhino,(unowned),
+758,Hawaii,(unowned),
+685,Chadians,(unowned),
+2132,Mons Appenninus Amiternum (Sabinia),(unowned),
+1442,Yitulihe,(unowned),
+609,Siping,(unowned),
+1918,Steinach,(unowned),
+742,Aromata,(unowned),
+2001,Peno,(unowned),
+1448,Bayan Qandman,(unowned),
+2087,Igarka,(unowned),
+1959,Krakes,(unowned),
+733,Kalimantan,(unowned),
+82,Etuoke,(unowned),
+1367,Chongjin,(unowned),
+1274,Ekarma,(unowned),
+2962,North Khafur,(unowned),
+1926,Teplice,(unowned),
+1313,Yanggu,(unowned),
+2082,Taksimo,(unowned),
+2021,Babayevo,(unowned),
+3606,Lake Boáne,(unowned),
+1999,Andreapol,(unowned),
+2109,Sofiisk,(unowned),
+57,Red Sea,(unowned),
+1622,Kumertau,(unowned),
+1758,Yelets,(unowned),
+2484,Chersos  (Histria),(unowned),
+682,Mande,(unowned),
+728,Kanadario,(unowned),
+3077,Vihren Mountains,(unowned),
+2491,Algerian Sea,(unowned),
+1006,Kompong,(unowned),
+1469,Koktokay,(unowned),
+2024,Lake Onega,(unowned),
+713,Caddo,(unowned),
+610,Ulanhot,(unowned),
+2490,Alboran Sea,(unowned),
+1501,Baqmas,(unowned),
+2004,Kuvshinovo,(unowned),
+167,Chott el Hodna,(unowned),
+37,Sao,(unowned),
+1028,Svalbard,(unowned),
+1971,Byahoml,(unowned),
+749,Panyupayana,(unowned),
+1509,Charsk,(unowned),
+2706,Central Middle Atlas Mountains (Mauretania),(unowned),
+2063,Khilok,(unowned),
+1916,Cham,(unowned),
+1407,Kitakami Mountains ,(unowned),
+3565,Bingol Mountains,(unowned),
+30,Baltic Sea,(unowned),
+1312,Chuncheon,(unowned),
+709,S'ólh Téméxw,(unowned),
+1136,Jajima,(unowned),
+2455,Rhopikon (Corsica),(unowned),
+2056,Nyagan,(unowned),
+5,Southwestern Pacific Ocean,(unowned),
+2078,Kumora,(unowned),
+2070,Aigun,(unowned),
+2096,Zyryanka,(unowned),
+1436,Gurvanzagal,(unowned),
+14,Red Sea Strait,(unowned),
+1445,Bor-Undur,(unowned),
+1978,Ostrava,(unowned),
+2081,Kondrashina,(unowned),
+1923,Most,(unowned),
+6,Northwestern Pacific Ocean,(unowned),
+1086,Erenhot,(unowned),
+1250,Maku-nay,(unowned),
+1425,Tuvshinshiree,(unowned),
+2011,Kaduy,(unowned),
+792,Annesel (Tripolitania),(unowned),
+2073,Yichun,(unowned),
+1917,Blovice,(unowned),
+3014,Central Pindus Mountains (Epirus),(unowned),
+2391,Alpes Carnium,(unowned),
+2965,Badr Desert (Nalut),(unowned),
+2500,Argolic Gulf,(unowned),
+29,Danish Straits,(unowned),
+316,Dalzha,(unowned),
+1697,Liski,(unowned),
+2968,Taḯyetos Óros (Laconia),(unowned),
+2967,Wadi Banana Desert (Ajdabiya Interior),(unowned),
+2065,Lake Baikal,(unowned),
+1242,Yamado-nay,(unowned),
+1987,Cervien,(unowned),
+2083,Vagay,(unowned),
+1277,Onekotan,(unowned),
+1502,Balpiq bi,(unowned),
+1672,Atkarsk,(unowned),
+2036,Verkhnyaya,(unowned),
+1423,Baruun-Urt,(unowned),
+3608,Vana lič,(unowned),
+1275,Kharimkotan,(unowned),
+1085,Chungyang Mountain Range,(unowned),
+1991,Rahachow,(unowned),
+570,Thule,(unowned),
+798,Auxiu (Tripolitania),(unowned),
+1946,Jaslo,(unowned),
+1140,Suwanozejima,(unowned),
+1100,Eastern Tibetan Plateau,(unowned),
+1434,Bayan-Uul,(unowned),
+964,Kham,(unowned),
+1481,Ust-Kan,(unowned),
+3596,Lake Anaua,(unowned),
+1914,Eslarn,(unowned),
+704,Mokaná,(unowned),
+3307,Upper Nile,(unowned),
+60,North Atlantic Ocean,(unowned),
+2160,Mons Appenninus Meridionalis (Bruttium),(unowned),
+752,Xaymaca,(unowned),
+2845,Jana'in (Phazania),(unowned),
+2705,Eastern Middle Atlas Mountains  (Mauretania),(unowned),
+2047,Vuktyl,(unowned),
+1627,Bazenchuk,(unowned),
+2069,Alihe,(unowned),
+2919,Harakat (Shatti),(unowned),
+3302,Bolbitine Nile River,(unowned),
+1507,Ayagoz,(unowned),
+2503,Thermaic Gulf,(unowned),
+2074,Mnogovershinnyi,(unowned),
+2388,Alpes Quadruvium (Venetia),(unowned),
+2027,Belozersk,(unowned),
+710,Yupik,(unowned),
+1424,Xilinhot,(unowned),
+854,Awash,(unowned),
+2124,Mons Appenninus Cofinium (Samnium),(unowned),
+1975,Ivyanets,(unowned),
+2399,Alpes Eburodunum,(unowned),
+2221,Mons Appenninus Boreoccidentalis,(unowned),
+9,Tarumanagara,(unowned),
+2003,Tver,(unowned),
+1972,Kurhlaye,(unowned),
+325,Chavin,(unowned),
+1397,Kyushu Mountains,(unowned),
+4,Indian Ocean,(unowned),
+725,Gichi-gami,(unowned),
+1252,Chika-nay,(unowned),
+2080,Bagdarin,(unowned),
+700,Falkland,(unowned),
+2035,Mirny,(unowned),
+2068,Amu'er,(unowned),
+2014,Central Ural Mountains,(unowned),
+1925,Neratovice,(unowned),
+2045,Vorkuta,(unowned),
+562,Aegean Sea,(unowned),
+2039,Usogorsk,(unowned),
+2390,Alpes Salurnis (Rhaetica),(unowned),
+1995,Nevel,(unowned),
+1449,Khurmen,(unowned),
+1073,Chaganhada,(unowned),
+1004,Yongchang,(unowned),
+613,Arxan,(unowned),
+10,Strait of Malacca,(unowned),
+719,East Misi-ziibi,(unowned),
+739,Te Ika-A-Maui,(unowned),
+1947,Dynow,(unowned),
+3605,Lake Askania,(unowned),
+1083,Huagangshan,(unowned),
+1955,Vaskai,(unowned),
+568,Gothia,(unowned),
+1278,Paramusir,(unowned),
+2397,Alpes Eudracinum,(unowned),
+761,Nunavut,(unowned),
+1399,Western Kii Mountains,(unowned),
+2092,Tura,(unowned),
+44,Goto,(unowned),
+1272,Matua,(unowned),
+590,Dufar,(unowned),
+1574,Ustyurt,(unowned),
+684,Central Africa,(unowned),
+1129,Shimokoshikishima,(unowned),
+1269,Simusir,(unowned),
+1051,Eastern Burmese Hills,(unowned),
+1024,Western Ad-Dahna Desert,(unowned),
+309,Lidoga,(unowned),
+1990,Klichaw,(unowned),
+3523,Western Egyptian Desert,(unowned),
+2426,Aetna Volcano (Sicily),(unowned),
+592,Erdene,(unowned),
+1553,Uchquduq,(unowned),
+1950,Olesko,(unowned),
+19,Eastern Arctic Ocean,(unowned),
+1962,Kaisiadorys,(unowned),
+188,Guiyang,(unowned),
+3610,Lake Urmia,(unowned),
+2049,Nyrob,(unowned),
+1958,Naujamiestis,(unowned),
+2084,Tobolsk,(unowned),
+2101,Magdagachi,(unowned),
+1453,Jartai,(unowned),
+1957,Baisogala,(unowned),
+2041,Indiga,(unowned),
+2719,Western Middle Atlas Mountains (Tadla),(unowned),
+1714,Aidar,(unowned),
+2452,Pauka (Corsica),(unowned),
+705,Abya-Yala,(unowned),
+2497,Sea of Crete,(unowned),
