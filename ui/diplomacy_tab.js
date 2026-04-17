@@ -150,7 +150,7 @@ function _dpRender() {
   const foreign = _getForeignNations(playerNationId);
 
   el.innerHTML = `
-    <div class="dp-backdrop" onclick="hideDiplomacyOverlay()"></div>
+    <div class="dp-backdrop" data-action-self="hideDiplomacyOverlay"></div>
     <div class="dp-panel">
 
       <!-- ═══ ШАПКА ═══ -->
@@ -181,15 +181,15 @@ function _dpRender() {
         })()}
         <nav class="dp-nav">
           <button class="dp-nav-btn${_dpTab === 'negotiations' ? ' dp-nav-btn--active' : ''}"
-            onclick="dpSwitchTab('negotiations')">
+            data-action="dpSwitchTab" data-arg="negotiations">
             <span class="dp-nav-icon icon-wrap" data-icon="court"></span> Переговоры
           </button>
           <button class="dp-nav-btn${_dpTab === 'treaties' ? ' dp-nav-btn--active' : ''}"
-            onclick="dpSwitchTab('treaties')">
+            data-action="dpSwitchTab" data-arg="treaties">
             <span class="dp-nav-icon icon-wrap" data-icon="laws"></span> Все договоры
           </button>
         </nav>
-        <button class="dp-close" onclick="hideDiplomacyOverlay()" title="Закрыть">✕</button>
+        <button class="dp-close" data-action="hideDiplomacyOverlay" title="Закрыть">✕</button>
       </div>
 
       <!-- ═══ ТЕЛО ═══ -->
@@ -259,7 +259,7 @@ function _dpNationRow(n, playerNationId) {
 
   return `
     <div class="dp-nation-card${active ? ' dp-nation-card--active' : ''}${tier === 3 ? ' dp-nation-card--far' : ''}"
-      onclick="dpSelectNation('${n.id}')">
+      data-action="dpSelectNation" data-arg="${n.id}">
       <div class="dp-nation-avatar" style="background:${rel.color ?? '#9e9e9e'}22; border-color:${rel.color ?? '#9e9e9e'}55">
         ${cultureIconHtml}${n.flag}
       </div>
@@ -322,7 +322,7 @@ function _dpRenderNegotiation(playerNationId, foreign) {
     const isChosen = st.selectedTreaty === key;
     return `<button class="dp-treaty-card${isChosen ? ' dp-treaty-card--on' : ''}"
       title="${def.description ?? ''}"
-      onclick="dtSelectTreaty('${aiId}','${key}')">
+      data-action="dtSelectTreaty" data-arg="${aiId}|${key}">
       <span class="dp-tc-icon">${def.icon}</span>
       <span class="dp-tc-label">${def.label}</span>
     </button>`;
@@ -414,7 +414,7 @@ function _dpRenderNegotiation(playerNationId, foreign) {
     ? `<div class="dp-sel-tag">
         <span>${TREATY_TYPES?.[st.selectedTreaty]?.icon ?? '📜'}</span>
         <span><strong>${TREATY_TYPES?.[st.selectedTreaty]?.label ?? st.selectedTreaty}</strong> — выбран тип договора</span>
-        <button class="dp-sel-rm" onclick="dtSelectTreaty('${aiId}',null)" title="Сбросить">✕</button>
+        <button class="dp-sel-rm" data-action="dtSelectTreaty" data-arg="${aiId}|null" title="Сбросить">✕</button>
       </div>` : '';
 
   return `
@@ -470,7 +470,7 @@ function _dpRenderNegotiation(playerNationId, foreign) {
       <div class="dp-dialogue-hdr">
         <span class="dp-sec-label">История переговоров</span>
         ${dialogue.length > 0
-          ? `<button class="dp-clear-chat" onclick="dtClearDialogue('${aiId}')">Очистить</button>`
+          ? `<button class="dp-clear-chat" data-action="dtClearDialogue" data-arg="${aiId}">Очистить</button>`
           : ''}
       </div>
       <div class="dp-chat" id="dp-chat-${aiId}">${chatContent}</div>
@@ -496,7 +496,7 @@ function _dpRenderNegotiation(playerNationId, foreign) {
           return hint;
         })()}
         <button class="dp-compose-send" id="dp-send-${aiId}"
-          onclick="dtSendMessage('${aiId}')"
+          data-action="dtSendMessage" data-arg="${aiId}"
           ${st.isLoading ? 'disabled' : ''}>
           ${st.isLoading ? _typingDots() : '📨 Отправить'}
         </button>
@@ -529,10 +529,10 @@ function _dpWarPeaceBlock(playerNationId, aiId, atWar, rel) {
       <div class="dp-war-status">⚔️ <b>Состояние войны</b></div>
       ${wsBar}
       <div class="dp-war-actions">
-        <button class="dp-war-btn dp-war-btn--peace" onclick="dpOpenPeaceForm('${aiId}')">
+        <button class="dp-war-btn dp-war-btn--peace" data-action="dpOpenPeaceForm" data-arg="${aiId}">
           📜 Условия мира (форма)
         </button>
-        <button class="dp-war-btn dp-war-btn--peace-chat" onclick="dpOpenPeaceChat('${aiId}')">
+        <button class="dp-war-btn dp-war-btn--peace-chat" data-action="dpOpenPeaceChat" data-arg="${aiId}">
           🤝 Переговоры с ИИ
         </button>
       </div>
@@ -550,7 +550,7 @@ function _dpWarPeaceBlock(playerNationId, aiId, atWar, rel) {
   return `<div class="dp-war-block">
     ${armisticeWarning}
     <button class="dp-war-btn dp-war-btn--declare${hasArmistice ? ' dp-war-btn--armistice' : ''}"
-      onclick="dpDeclareWar('${aiId}')">
+      data-action="dpDeclareWar" data-arg="${aiId}">
       ⚔️ ${hasArmistice ? 'Нарушить перемирие и объявить войну' : 'Объявить войну'}
     </button>
   </div>`;
@@ -622,7 +622,7 @@ function _dpPeaceForm(playerNationId, aiId) {
   return `<div class="dp-peace-form">
     <div class="dp-peace-hdr">
       <span>📜 Условия мира с <b>${_escHtml(aiName)}</b></span>
-      <button class="dp-peace-cancel" onclick="dpClosePeaceForm()">✕</button>
+      <button class="dp-peace-cancel" data-action="dpClosePeaceForm">✕</button>
     </div>
 
     <!-- Стоимость условий -->
@@ -675,7 +675,7 @@ function _dpPeaceForm(playerNationId, aiId) {
     </div>
 
     <button class="dp-peace-submit${canAfford ? '' : ' dp-peace-submit--blocked'}"
-      onclick="dpProposePeace('${aiId}')"
+      data-action="dpProposePeace" data-arg="${aiId}"
       ${canAfford ? '' : 'title="Недостаточно очков войны"'}>
       📨 Предложить условия мира
     </button>
@@ -893,7 +893,7 @@ function _dpCoalitionSection(playerNationId, aiId, relScore) {
     const eLbl  = eScore >= -50 ? '🔴' : '⚔';
     return `<button class="dp-coalition-enemy-btn"
       title="Предложить совместный поход против ${_escHtml(en.name ?? eId)}"
-      onclick="dpSelectCoalitionEnemy('${aiId}','${eId}')">
+      data-action="dpSelectCoalitionEnemy" data-arg="${aiId}|${eId}">
       ${en.flag_emoji ?? '🏛'} ${_escHtml(en.name ?? eId)} ${eLbl}
     </button>`;
   }).join('');
@@ -936,7 +936,7 @@ function _dpBribeSection(playerNationId, aiId) {
 
   const optBtns = goldOptions.map(g =>
     `<button style="${btnStyle};border-radius:5px;padding:4px 10px;font-size:0.8em;cursor:${canBribe ? 'pointer' : 'not-allowed'}"
-      onclick="${canBribe ? `dpBribeNation('${aiId}',${g})` : ''}"
+      data-action="dpBribeNation" data-arg="${aiId}|${g}"
       ${canBribe ? '' : 'disabled'}
       title="${canBribe ? `Потратить ${g} монет и ${cost} ОВ` : `Недостаточно ОВ (нужно ${cost})`}">
       💰 ${g} монет
@@ -956,6 +956,7 @@ function _dpBribeSection(playerNationId, aiId) {
  * Обработчик кнопки подкупа.
  */
 function dpBribeNation(aiId, goldAmount) {
+  goldAmount = Number(goldAmount);
   const playerNationId = GAME_STATE.player_nation;
   if (typeof DiplomacyEngine === 'undefined') return;
   const result = DiplomacyEngine.bribeNation(playerNationId, aiId, goldAmount);
@@ -1027,7 +1028,7 @@ function _dpRenderTreatiesTab(playerNationId) {
     const turn  = t.turn_signed ? `Ход ${t.turn_signed}` : '';
     const dur   = t.duration    ? `${t.duration} лет` : '';
     const breakBtn = t.status === 'active'
-      ? `<button class="dp-arc-break" onclick="dtBreakTreaty('${t.id}')">Разорвать</button>` : '';
+      ? `<button class="dp-arc-break" data-action="dtBreakTreaty" data-arg="${t.id}">Разорвать</button>` : '';
     return `<div class="dp-arc-row">
       <div class="dp-arc-type-icon">${def?.icon ?? '📜'}</div>
       <div class="dp-arc-info">
@@ -1068,7 +1069,7 @@ function _dpRenderTreatiesTab(playerNationId) {
 // ──────────────────────────────────────────────────────────────────────────────
 
 function dtSelectTreaty(aiNationId, key) {
-  _getDtState(aiNationId).selectedTreaty = key || null;
+  _getDtState(aiNationId).selectedTreaty = (key && key !== 'null') ? key : null;
   _dpRender();
 }
 
@@ -1295,7 +1296,7 @@ function _renderChatModal() {
   }
 
   modal.innerHTML = `
-    <div class="dp-cm-backdrop" onclick="hideDipChatModal()"></div>
+    <div class="dp-cm-backdrop" data-action-self="hideDipChatModal"></div>
     <div class="dp-cm-panel">
       <div class="dp-cm-hdr">
         <div class="dp-cm-hdr-left">
@@ -1315,7 +1316,7 @@ function _renderChatModal() {
             ${atWar ? '⚔ ВОЙНА' : (rel.icon ?? '') + ' ' + (rel.label ?? '') + ' (' + (rel.score >= 0 ? '+' : '') + (rel.score ?? 0) + ')'}
           </div>
         </div>
-        <button class="dp-cm-close" onclick="hideDipChatModal()" title="Закрыть">✕</button>
+        <button class="dp-cm-close" data-action="hideDipChatModal" title="Закрыть">✕</button>
       </div>
       ${bodyHtml}
     </div>`;
@@ -1396,7 +1397,7 @@ function _renderCmChatPhase(aiId, st, aiNation, playerNation) {
         ${aiRuler} согласился на «${TREATY_TYPES?.[st.agreedTreaty.type]?.label ?? st.agreedTreaty.type}».
         Перейдите к составлению финального текста.
       </div>
-      <button onclick="dpEndNegotiations('${aiId}')" style="
+      <button data-action="dpEndNegotiations" data-arg="${aiId}" style="
         background: linear-gradient(135deg, rgba(76,175,80,.45), rgba(40,110,45,.3));
         border: 1px solid rgba(76,175,80,.55);
         border-radius: 5px;
@@ -1427,13 +1428,13 @@ function _renderCmChatPhase(aiId, st, aiNation, playerNation) {
             ${st.isLoading ? 'disabled' : ''}></textarea>
           <div class="dp-cm-btns">
             <button class="dp-cm-send" id="dp-cm-send-${aiId}"
-              onclick="dpChatSend('${aiId}')"
+              data-action="dpChatSend" data-arg="${aiId}"
               ${st.isLoading ? 'disabled' : ''}>
               ${st.isLoading
                 ? `<span class="dp-btn-dots"><span></span><span></span><span></span></span>`
                 : '📨 Отправить'}
             </button>
-            <button class="dp-cm-end-btn" onclick="dpEndNegotiations('${aiId}')"
+            <button class="dp-cm-end-btn" data-action="dpEndNegotiations" data-arg="${aiId}"
               ${st.isLoading ? 'disabled' : ''}>
               ${st.agreedTreaty ? '📜 Финализировать →' : dialogue.length > 0 ? '🚪 Прервать' : '✕ Закрыть'}
             </button>
@@ -1516,7 +1517,7 @@ function _renderCmFinalizationPhase(aiId, st, aiNation, playerNation) {
             ${st.isFinLoading ? 'disabled' : ''}></textarea>
           <div class="dp-cm-edit-btns">
             <button class="dp-cm-edit-send"
-              onclick="dpFinalizeSend('${aiId}')"
+              data-action="dpFinalizeSend" data-arg="${aiId}"
               ${st.isFinLoading || !st.draftText ? 'disabled' : ''}>
               💬 Запросить правку
             </button>
@@ -1528,7 +1529,7 @@ function _renderCmFinalizationPhase(aiId, st, aiNation, playerNation) {
               ? '✅ Договор готов к подписанию. Обе стороны могут принять условия.'
               : '⏳ Ожидание текста договора...'}
           </div>
-          <button class="dp-cm-sign-btn" onclick="dpSignTreaty('${aiId}')"
+          <button class="dp-cm-sign-btn" data-action="dpSignTreaty" data-arg="${aiId}"
             ${canSign ? '' : 'disabled'}>
             ✍ Подписать
           </button>
@@ -1552,7 +1553,7 @@ function _renderCmSignedPhase(aiId, st, aiNation) {
         <strong>${aiNation.name}</strong> скреплён печатью.<br>
         ${ruler} благодарит за плодотворные переговоры.
       </div>
-      <button class="dp-cm-signed-close" onclick="hideDipChatModal();_dpRender()">
+      <button class="dp-cm-signed-close" data-action="hideDipChatModal" data-action2="_dpRender">
         Закрыть переговорный зал
       </button>
     </div>`;
@@ -1953,7 +1954,7 @@ function renderDiplomacyTab(regionId) {
       </span>
     </div>
     <div class="dp-redir-treaties">${tagsHtml}</div>
-    <button class="dp-redir-btn" onclick="showDiplomacyOverlay('${aiId}')">
+    <button class="dp-redir-btn" data-action="showDiplomacyOverlay" data-arg="${aiId}">
       🤝 Открыть зал переговоров
     </button>
   </div>`;

@@ -8308,7 +8308,7 @@ refactor(ui): этап 58 — убрать inline onclick из government_tab.js
 
 ---
 
-## ЭТАП 59 — Модули: убрать onclick из `ui/diplomacy_tab.js`
+## ЭТАП 59 — Модули: убрать onclick из `ui/diplomacy_tab.js` ✅ ВЫПОЛНЕНО
 
 **Направление:** B — переход на ES-модули
 **Часть:** 5 из 12
