@@ -13,7 +13,7 @@ let _peaceTargetNationId = null;
 
 // ── Открыть панель ────────────────────────────────────────────────────
 
-function showPeaceOfferPanel(defeatedNationId) {
+export function showPeaceOfferPanel(defeatedNationId) {
   const defeated = GAME_STATE.nations?.[defeatedNationId];
   const player   = GAME_STATE.nations?.[GAME_STATE.player_nation];
   if (!defeated || !player) return;
@@ -25,7 +25,7 @@ function showPeaceOfferPanel(defeatedNationId) {
   if (overlay) overlay.style.display = 'flex';
 }
 
-function closePeacePanel() {
+export function closePeacePanel() {
   _peaceTargetNationId = null;
   const overlay = document.getElementById('peace-offer-overlay');
   if (overlay) overlay.style.display = 'none';
@@ -120,7 +120,7 @@ function _renderPeacePanel(defeatedNationId) {
 /**
  * Контрибуция: деньги + мир, регионы возвращаются.
  */
-function peaceAcceptTribute() {
+export function peaceAcceptTribute() {
   const defeatedId = _peaceTargetNationId;
   if (!defeatedId) return;
 
@@ -154,7 +154,7 @@ function peaceAcceptTribute() {
 /**
  * Аннексия: все регионы переходят к игроку, нация уничтожается.
  */
-function peaceAcceptAnnexation() {
+export function peaceAcceptAnnexation() {
   const defeatedId = _peaceTargetNationId;
   if (!defeatedId) return;
 
@@ -194,7 +194,7 @@ function peaceAcceptAnnexation() {
 /**
  * Вассалитет: регионы возвращаются, нация платит ежегодную дань.
  */
-function peaceAcceptVassal() {
+export function peaceAcceptVassal() {
   const defeatedId = _peaceTargetNationId;
   if (!defeatedId) return;
 
@@ -231,7 +231,7 @@ function peaceAcceptVassal() {
 /**
  * Белый мир: без условий, регионы возвращаются.
  */
-function peaceAcceptPeace() {
+export function peaceAcceptPeace() {
   const defeatedId = _peaceTargetNationId;
   if (!defeatedId) return;
 

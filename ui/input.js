@@ -3,7 +3,7 @@
 let inputHistory = [];
 let historyIndex = -1;
 
-function initInput() {
+export function initInput() {
   const input  = document.getElementById('command-input');
   const sendBtn = document.getElementById('send-btn');
 
@@ -99,7 +99,7 @@ async function handleCommand() {
 // ОБРАБОТКА ОТВЕТА AI
 // ──────────────────────────────────────────────────────────────
 
-function handleAIResponse(parsed, originalText) {
+export function handleAIResponse(parsed, originalText) {
   if (!parsed || typeof parsed !== 'object') {
     showAIResponse('Не удалось разобрать команду. Попробуйте переформулировать.', 'error');
     return;
@@ -150,7 +150,7 @@ function handleAIResponse(parsed, originalText) {
 // ПРИМЕНЕНИЕ ДЕЙСТВИЯ К GAMESTATE
 // ──────────────────────────────────────────────────────────────
 
-function applyParsedAction(parsed) {
+export function applyParsedAction(parsed) {
   const nationId = GAME_STATE.player_nation;
   const action = parsed.parsed_action || {};
 
@@ -181,7 +181,7 @@ function applyParsedAction(parsed) {
   renderAll();
 }
 
-function applyEconomyAction(nationId, action) {
+export function applyEconomyAction(nationId, action) {
   const nation = GAME_STATE.nations[nationId];
 
   if (action.change_tax_rate !== undefined) {
@@ -203,7 +203,7 @@ function applyEconomyAction(nationId, action) {
   }
 }
 
-function applyMilitaryAction(nationId, action) {
+export function applyMilitaryAction(nationId, action) {
   const nation  = GAME_STATE.nations[nationId];
   const military = nation.military;
 
@@ -239,7 +239,7 @@ function applyMilitaryAction(nationId, action) {
   }
 }
 
-function applyDiplomacyAction(nationId, action) {
+export function applyDiplomacyAction(nationId, action) {
   if (!action.target_nation) return;
 
   const relation = GAME_STATE.nations[nationId]?.relations[action.target_nation];
@@ -261,7 +261,7 @@ function applyDiplomacyAction(nationId, action) {
   }
 }
 
-function initiateLawProcess(nationId, action, parsed) {
+export function initiateLawProcess(nationId, action, parsed) {
   // Создаём черновик закона
   const lawDraft = {
     id: `LAW_${String(Date.now()).slice(-6)}`,
@@ -278,7 +278,7 @@ function initiateLawProcess(nationId, action, parsed) {
   showVotingModal(nationId, lawDraft);
 }
 
-function applyBuildAction(nationId, action) {
+export function applyBuildAction(nationId, action) {
   if (!action.region || !action.building) return;
 
   const region = GAME_STATE.regions[action.region];
@@ -310,7 +310,7 @@ function applyBuildAction(nationId, action) {
   addEventLog(`Построено: ${action.building} в регионе ${MAP_REGIONS[action.region]?.name || action.region}. Стоимость: ${cost} монет.`, 'info');
 }
 
-function applyCharacterAction(nationId, action) {
+export function applyCharacterAction(nationId, action) {
   // Действия с персонажами (назначения, ссылки, подарки)
   const nation = GAME_STATE.nations[nationId];
   const char = (nation.characters || []).find(c => c.id === action.target_character);
@@ -336,7 +336,7 @@ function applyCharacterAction(nationId, action) {
 // ГОЛОСОВАНИЕ (упрощённое)
 // ──────────────────────────────────────────────────────────────
 
-function showVotingModal(nationId, law) {
+export function showVotingModal(nationId, law) {
   const overlay = document.getElementById('voting-overlay');
   if (!overlay) return;
 

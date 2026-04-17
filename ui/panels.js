@@ -8,7 +8,7 @@
 // 'overview' | 'army' | 'economy' | 'diplomacy' | 'laws'
 let _currentLeftTab = 'overview';
 
-function renderLeftPanel() {
+export function renderLeftPanel() {
   const panel = document.getElementById('left-panel');
   if (!panel || !GAME_STATE) return;
 
@@ -232,7 +232,7 @@ function _renderLeftPanelContent() {
 
 // Переключает активную вкладку левой панели: обновляет подсветку кнопок
 // в #left-nav и перерисовывает содержимое в #left-panel-content.
-function renderLeftPanelTab(tabName) {
+export function renderLeftPanelTab(tabName) {
   _currentLeftTab = tabName;
 
   // Переключаем active-класс у иконок-вкладок
@@ -340,7 +340,7 @@ function _applyResourceDelta(key, curr) {
   deltaEl.classList.toggle('negative', d < 0);
 }
 
-function updateResourceBar(state) {
+export function updateResourceBar(state) {
   const values = _collectResourceValues(state);
   if (!values) return;
 
@@ -470,7 +470,7 @@ function _pushResourceHistory(state) {
  * Если canvas или его getContext недоступны (headless) — функция
  * тихо завершает работу.
  */
-function drawSparkline(canvas, values, color) {
+export function drawSparkline(canvas, values, color) {
   if (!canvas || typeof canvas.getContext !== 'function') return;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -563,7 +563,7 @@ function _renderResourceSparklines(state) {
   }
 }
 
-function onResourceBarClick(key) {
+export function onResourceBarClick(key) {
   switch (key) {
     case 'gold':
       if (typeof showTreasuryOverlay === 'function') showTreasuryOverlay();
@@ -696,7 +696,7 @@ function _isLawVotingActive(state, nationId) {
   return false;
 }
 
-function updateAlertBadges(state) {
+export function updateAlertBadges(state) {
   if (!state) return;
   const nationId = state.player_nation;
   const nation   = state.nations?.[nationId];
@@ -728,7 +728,7 @@ if (typeof window !== 'undefined') {
   window._hideAlertBadge   = _hideAlertBadge;
 }
 
-function renderPopMiniWidget(pop) {
+export function renderPopMiniWidget(pop) {
   const total    = Math.round(pop.total);
   const hap      = pop.happiness;
   const hapColor = getHappinessColor(hap);
@@ -812,7 +812,7 @@ function renderPopMiniWidget(pop) {
   `;
 }
 
-function renderProfessions(profs) {
+export function renderProfessions(profs) {
   const profLabels = {
     farmers:   { icon: '🌾', name: 'Земледельцы' },
     craftsmen: { icon: '🔨', name: 'Ремесленники' },
@@ -834,7 +834,7 @@ function renderProfessions(profs) {
   }).join('');
 }
 
-function renderCulturePanel(nationId) {
+export function renderCulturePanel(nationId) {
   try {
     // Определяем культуру нации напрямую из данных
     const nation = GAME_STATE.nations[nationId];
@@ -906,7 +906,7 @@ function renderCulturePanel(nationId) {
   }
 }
 
-function renderReligionPanel(nationId) {
+export function renderReligionPanel(nationId) {
   try {
     if (typeof getNationReligionStats !== 'function') return '<div class="no-data">Религия не загружена</div>';
     const stats = getNationReligionStats(nationId);
@@ -945,7 +945,7 @@ function renderReligionPanel(nationId) {
   }
 }
 
-function formatBonusName(key) {
+export function formatBonusName(key) {
   const names = {
     military_morale: 'морали', army_discipline: 'дисципл.', army_strength: 'атака',
     army_upkeep: 'содерж.', garrison_defense: 'гарнизон', army_speed: 'скорость',
@@ -967,7 +967,7 @@ function formatBonusName(key) {
 
 let _cwState = { nationId: null, sort: 'culture', stats: null };
 
-function openCultureWindow(nationId) {
+export function openCultureWindow(nationId) {
   closeCultureWindow();
   _cwState.nationId = nationId;
   _cwState.sort = 'culture';
@@ -982,7 +982,7 @@ function openCultureWindow(nationId) {
   _cwBindEvents();
 }
 
-function closeCultureWindow() {
+export function closeCultureWindow() {
   const el = document.getElementById('culture-window-overlay');
   if (el) el.remove();
   _cwState.stats = null;
@@ -2339,12 +2339,12 @@ function _bestScore(char) {
   return Number.isFinite(best) ? best : 0;
 }
 
-function setRosterFilter(id) {
+export function setRosterFilter(id) {
   _rosterFilter = id;
   renderRightPanel();
 }
 
-function setRosterSort(id) {
+export function setRosterSort(id) {
   _rosterSort = id;
   renderRightPanel();
 }
@@ -2404,7 +2404,7 @@ function _closeRosterMenuOutside(ev) {
  * на #right-panel. Идемпотентно: повторный вызов ничего не
  * делает (флаг data-_dndBound).
  */
-function initCourtDragDrop(panel) {
+export function initCourtDragDrop(panel) {
   if (!panel || panel.dataset._dndBound === '1') return;
   panel.dataset._dndBound = '1';
 
@@ -2651,7 +2651,7 @@ function renderCharacterCard(char) {
 }
 
 // Детальное окно персонажа
-function showCharacterDetail(charId) {
+export function showCharacterDetail(charId) {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const char = (nation.characters || []).find(c => c.id === charId);
   if (!char) return;
@@ -2723,7 +2723,7 @@ function showCharacterDetail(charId) {
   overlay.style.display = 'flex';
 }
 
-function closeCharacterDetail() {
+export function closeCharacterDetail() {
   const overlay = document.getElementById('char-overlay');
   if (overlay) overlay.style.display = 'none';
 }
@@ -2873,7 +2873,7 @@ function setLogFilter(filter) {
   });
 }
 
-function _applyLogFilter() {
+export function _applyLogFilter() {
   const logEl = document.getElementById('event-log');
   if (!logEl) return;
   const entries = logEl.querySelectorAll('.log-entry');
@@ -2947,7 +2947,7 @@ function _actionLabel(action) {
 
 let _currentThemeNation = null;
 
-function preloadTexture(texturePath) {
+export function preloadTexture(texturePath) {
   if (typeof document === 'undefined' || !texturePath) return;
   // Не дублируем preload — если уже есть линк на тот же URL, выходим.
   const existing = document.head.querySelector(
@@ -2961,7 +2961,7 @@ function preloadTexture(texturePath) {
   document.head.appendChild(link);
 }
 
-function applyNationTheme(nationId) {
+export function applyNationTheme(nationId) {
   if (typeof document === 'undefined') return;
   // getCultureGroup определён в data/culture_groups.js (Шаг 55).
   if (typeof getCultureGroup !== 'function') return;
@@ -3018,7 +3018,7 @@ function applyNationTheme(nationId) {
 // в #nation-header. Берёт путь к SVG из getNationIconPath() (Шаг 60).
 // Безопасно вызывать до построения DOM — функция тогда тихо выходит.
 
-function updateNationHeader(nationId, nationName) {
+export function updateNationHeader(nationId, nationName) {
   if (typeof document === 'undefined') return;
   if (typeof getNationIconPath !== 'function') return;
   const iconEl = document.getElementById('nation-icon');
@@ -3047,3 +3047,10 @@ if (typeof module !== 'undefined' && module.exports) {
     updateNationHeader,
   });
 }
+
+// Backward compat for non-module scripts
+window.renderLeftPanel = renderLeftPanel;
+window.renderLeftPanelTab = renderLeftPanelTab;
+window.showCharacterDetail = showCharacterDetail;
+window.closeCharacterDetail = closeCharacterDetail;
+window._applyLogFilter = _applyLogFilter;

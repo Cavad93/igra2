@@ -15,7 +15,7 @@ const _TP_GROUPS = {
 };
 
 // ── Открыть панель ────────────────────────────────────────────
-function showTreasuryOverlay() {
+export function showTreasuryOverlay() {
   const nation = GAME_STATE?.nations?.[GAME_STATE.player_nation];
   if (!nation) return;
 
@@ -39,7 +39,7 @@ function showTreasuryOverlay() {
 }
 
 // ── Закрыть панель ────────────────────────────────────────────
-function hideTreasuryOverlay() {
+export function hideTreasuryOverlay() {
   document.getElementById('treasury-overlay')?.classList.add('hidden');
   _tpPreview   = null;
   _tpExpLevels = null;
@@ -106,7 +106,7 @@ function _tpOnSlider(group, rawVal) {
 }
 
 // ── Применить ставки и уровни расходов к GAME_STATE ──────────
-function applyTreasuryRates() {
+export function applyTreasuryRates() {
   if (!_tpPreview) return;
   const nationId = GAME_STATE.player_nation;
   const eco      = GAME_STATE.nations[nationId].economy;

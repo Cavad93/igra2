@@ -14,8 +14,6 @@
 //
 // DOM-узел #compare-panel создаётся в index.html и управляется классом .hidden.
 
-(function () {
-  'use strict';
 
   const PANEL_ID = 'compare-panel';
 
@@ -70,9 +68,9 @@
   ];
 
   function _getRegionData(regionId) {
-    const game = (typeof GAME_STATE !== 'undefined' && GAME_STATE) || {};
+    const game = (typeof window.GAME_STATE !== 'undefined' && GAME_STATE) || {};
     const regions = game.regions || {};
-    const mapRegs = (typeof MAP_REGIONS !== 'undefined' && MAP_REGIONS) || {};
+    const mapRegs = (typeof window.MAP_REGIONS !== 'undefined' && MAP_REGIONS) || {};
     const mapData  = mapRegs[regionId];
     const gameData = regions[regionId];
     if (!mapData || !gameData) return null;
@@ -148,7 +146,7 @@
            `<div class="cp-col-rows">${rowsHtml}</div>`;
   }
 
-  function renderComparePanel(regionA, regionB) {
+  export function renderComparePanel(regionA, regionB) {
     const dataA = _getRegionData(regionA);
     const dataB = _getRegionData(regionB);
     if (!dataA || !dataB) return false;
@@ -175,13 +173,13 @@
     panel.classList.remove('hidden');
 
     // Закрываем popup региона, если он открыт
-    try { if (typeof closeRegionInfo === 'function') closeRegionInfo(); } catch (_) {}
+    try { if (typeof window.closeRegionInfo === 'function') window.closeRegionInfo(); } catch (_) {}
 
     return true;
   }
 
   // ── pin / unpin ──
-  function pinRegionForCompare(regionId) {
+  export function pinRegionForCompare(regionId) {
     if (!regionId) return;
     // Повторное нажатие на тот же регион снимает pin
     if (_pinnedRegionId === regionId) {
@@ -191,8 +189,8 @@
     }
     _pinnedRegionId = regionId;
     _updatePinnedButtons();
-    if (typeof showToast === 'function') {
-      try { showToast('⚖ Регион закреплён. Кликните второй для сравнения.'); } catch (_) {}
+    if (typeof window.showToast === 'function') {
+      try { window.showToast('⚖ Регион закреплён. Кликните второй для сравнения.'); } catch (_) {}
     }
   }
 
@@ -214,21 +212,21 @@
   // ── Перехват клика на второй регион ──
   // Возвращает true, если клик обработан (открыта панель сравнения) —
   // тогда обычный showRegionInfo вызывать не нужно.
-  function handleRegionClickForCompare(regionId) {
+  export function handleRegionClickForCompare(regionId) {
     if (!_pinnedRegionId) return false;
     if (_pinnedRegionId === regionId) return false; // клик на тот же — не сравниваем
     const ok = renderComparePanel(_pinnedRegionId, regionId);
     return !!ok;
   }
 
-  function closeCompare() {
+  export function closeCompare() {
     _pinnedRegionId = null;
     _updatePinnedButtons();
     const panel = document.getElementById(PANEL_ID);
     if (panel) panel.classList.add('hidden');
   }
 
-  function getPinnedRegionId() {
+  export function getPinnedRegionId() {
     return _pinnedRegionId;
   }
 
@@ -240,4 +238,4 @@
     window.handleRegionClickForCompare = handleRegionClickForCompare;
     window.getPinnedRegionId         = getPinnedRegionId;
   }
-})();
+

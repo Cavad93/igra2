@@ -17,7 +17,6 @@
 //  module.exports.
 // ============================================================================
 
-(function () {
   // ── Палитры тонов кожи (RGB) по культурным группам Шаг 55 ─────────────
   const SKIN_PALETTES = {
     greek:        [[210,175,120],[195,160,105],[225,190,140]],
@@ -80,7 +79,7 @@
    * @param {number} [size]    — размер квадрата в пикселях (default 96)
    * @returns {string} строка SVG
    */
-  function generatePortraitSVG(charId, groupId, size) {
+  export function generatePortraitSVG(charId, groupId, size) {
     const gid  = (groupId && SKIN_PALETTES[groupId]) ? groupId : 'generic';
     const sz   = Number.isFinite(size) && size > 0 ? size : 96;
     const hash = getHasher()(charId == null ? '' : charId);
@@ -160,7 +159,7 @@
    * @param {number} [size]
    * @returns {string}
    */
-  function generatePortraitDataURL(charId, groupId, size) {
+  export function generatePortraitDataURL(charId, groupId, size) {
     const svg = generatePortraitSVG(charId, groupId, size);
     // Кодируем UTF-8 + процентами, чтобы работать с кириллицей и `#`, `&`.
     const enc = encodeURIComponent(svg)
@@ -177,4 +176,3 @@
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = { generatePortraitSVG, generatePortraitDataURL, SKIN_PALETTES };
   }
-})();

@@ -95,7 +95,7 @@ function _dpCalcIpIncome(nationId) {
 // ОТКРЫТЬ / ЗАКРЫТЬ
 // ──────────────────────────────────────────────────────────────────────────────
 
-function showDiplomacyOverlay(aiNationId) {
+export function showDiplomacyOverlay(aiNationId) {
   if (typeof DiplomacyEngine !== 'undefined') DiplomacyEngine.init?.();
 
   const playerNationId = GAME_STATE.player_nation;
@@ -114,7 +114,7 @@ function showDiplomacyOverlay(aiNationId) {
   _dpRender();
 }
 
-function hideDiplomacyOverlay() {
+export function hideDiplomacyOverlay() {
   document.getElementById('diplomacy-overlay')?.classList.add('hidden');
 }
 
@@ -122,9 +122,9 @@ function hideDiplomacyOverlay() {
 // ПЕРЕКЛЮЧЕНИЕ
 // ──────────────────────────────────────────────────────────────────────────────
 
-function dpSwitchTab(tab) { _dpTab = tab; _dpRender(); }
+export function dpSwitchTab(tab) { _dpTab = tab; _dpRender(); }
 
-function dpSelectNation(aiNationId) {
+export function dpSelectNation(aiNationId) {
   _dpSelectedNation = aiNationId;
   _dpTab = 'negotiations';
   _dpShowPeaceForm  = false;

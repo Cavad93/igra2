@@ -134,7 +134,7 @@ async function saveGroqAPIKey(apiKey) {
   CONFIG.GROQ_API_KEY = apiKey;
 }
 
-function deleteEncryptedAPIKey() {
+export function deleteEncryptedAPIKey() {
   localStorage.removeItem(_AK_DATA);
   localStorage.removeItem(_AK_GROQ_DATA);
   localStorage.removeItem(_AK_SALT);
@@ -152,7 +152,7 @@ function _akmSetError(msg) {
   if (el) { el.textContent = msg; el.style.display = msg ? 'block' : 'none'; }
 }
 
-function showAPIKeyModal(onSuccess) {
+export function showAPIKeyModal(onSuccess) {
   const modal = document.getElementById('api-key-modal');
   if (!modal) return;
   modal._cb = onSuccess || null;
@@ -164,7 +164,7 @@ function showAPIKeyModal(onSuccess) {
   if (inp) { inp.value = ''; setTimeout(() => inp.focus(), 80); }
 }
 
-function hideAPIKeyModal() {
+export function hideAPIKeyModal() {
   const modal = document.getElementById('api-key-modal');
   if (modal) modal.style.display = 'none';
 }
@@ -225,14 +225,14 @@ function _akmKeyDown(e) {
 }
 
 // Смена ключа (вызывается из UI)
-function changeAPIKey() {
+export function changeAPIKey() {
   showAPIKeyModal(null);
 }
 
 // ── Инлайн-форма ключей в правой панели ──────────────────────────
 
 // Обновляет статусную строку под инлайн-формой и в нижней панели
-function _updateInlineKeyStatus() {
+export function _updateInlineKeyStatus() {
   const parts = [];
   if (CONFIG.GROQ_API_KEY)  parts.push('Groq');
   if (CONFIG.API_KEY)       parts.push('Anthropic');

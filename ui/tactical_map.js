@@ -200,7 +200,7 @@ function _getBgCanvas(battleState) {
 }
 
 // ── Г6: подсветка зоны движения выбранного юнита ─────
-function renderMovementRange(ctx, unit, battleState) {
+export function renderMovementRange(ctx, unit, battleState) {
   if (!unit || !unit.selected || unit._movedThisTick) return;
   const cavOnElev = unit.type === 'cavalry' &&
     battleState.elevatedCells.has(`${unit.gridX},${unit.gridY}`);
@@ -222,7 +222,7 @@ function renderMovementRange(ctx, unit, battleState) {
   }
 }
 
-function renderGrid(ctx, terrain, elevatedCells = new Set()) {
+export function renderGrid(ctx, terrain, elevatedCells = new Set()) {
   const W = TACTICAL_GRID_COLS * CELL_SIZE;
   const H = TACTICAL_GRID_ROWS * CELL_SIZE;
 
@@ -309,7 +309,7 @@ function renderGrid(ctx, terrain, elevatedCells = new Set()) {
 
 // ── Этап 4: рендер юнита ────────────────────────────
 
-function renderUnit(ctx, unit, battleState) {
+export function renderUnit(ctx, unit, battleState) {
   // A5: анимация атаки — смещаем позицию рисования на 30% пути к цели
   let offsetX = 0, offsetY = 0;
   const anim = _attackAnims.get(unit.id);
@@ -465,7 +465,7 @@ function renderUnit(ctx, unit, battleState) {
 
 // ── Этап 11: стрелка фланговой атаки ─────────────────
 
-function drawFlankArrow(ctx, bs) {
+export function drawFlankArrow(ctx, bs) {
   const a = bs._lastFlankArrow;
   if (!a) return;
   const color = a.type === 'rear' ? '#ff3333' : '#ffaa00';

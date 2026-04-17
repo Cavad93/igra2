@@ -32,7 +32,7 @@ const _armyMoveAnims    = {};   // armyId → requestAnimationFrame id
 
 // ── Инициализация ─────────────────────────────────────────────────────
 
-function initArmyLayers() {
+export function initArmyLayers() {
   if (!leafletMap || armyMarkersLayer) return;
   armyPathsLayer    = L.layerGroup().addTo(leafletMap);
   siegeMarkersLayer = L.layerGroup().addTo(leafletMap);
@@ -48,7 +48,7 @@ function initArmyLayers() {
 let buildMarkersLayer = null;
 const buildMarkers = {};   // regionId → L.Marker
 
-function initBuildMarkersLayer() {
+export function initBuildMarkersLayer() {
   if (!leafletMap || buildMarkersLayer) return;
   buildMarkersLayer = L.layerGroup().addTo(leafletMap);
 }
@@ -117,7 +117,7 @@ function createBuildProgressIcon(entry) {
  *
  * Вызывается после каждого хода из renderAll() в engine/turn.js.
  */
-function renderBuildMarkers() {
+export function renderBuildMarkers() {
   if (!leafletMap) return;
   if (!buildMarkersLayer) initBuildMarkersLayer();
 
@@ -165,7 +165,7 @@ function renderBuildMarkers() {
 /**
  * Формат числа войск для метки маркера: 4200 → "4.2k", 800 → "800".
  */
-function formatArmySize(n) {
+export function formatArmySize(n) {
   n = Math.max(0, Math.round(Number(n) || 0));
   if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
   if (n >= 1000)    return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
@@ -215,7 +215,7 @@ const _ARMY_TYPE_PATHS = {
  * @param {boolean} [opts.selected] — выбрана ли армия (активирует пульс)
  * @param {boolean} [opts.isPlayer] — принадлежит игроку (золотая обводка)
  */
-function createArmyIcon(army, nationColor, opts = {}) {
+export function createArmyIcon(army, nationColor, opts = {}) {
   const isNaval = army?.type === 'naval';
   const units   = army?.units ?? {};
   const total   = isNaval
@@ -267,7 +267,7 @@ function createArmyIcon(army, nationColor, opts = {}) {
  * Fallback-реализация для случая, когда leafletMap.motion (плагин) недоступен.
  * Используется интерполяция через requestAnimationFrame.
  */
-function smoothMoveArmyMarker(marker, fromLatLng, toLatLng, duration = 650) {
+export function smoothMoveArmyMarker(marker, fromLatLng, toLatLng, duration = 650) {
   if (!marker || !fromLatLng || !toLatLng) return;
   // Если доступен плагин Leaflet.Motion — используем его
   if (typeof L !== 'undefined' && L.motion && typeof marker.motion === 'function') {
@@ -311,7 +311,7 @@ function smoothMoveArmyMarker(marker, fromLatLng, toLatLng, duration = 650) {
 
 // ── Полная перерисовка ────────────────────────────────────────────────
 
-function renderAllArmies() {
+export function renderAllArmies() {
   if (!leafletMap) return;
   if (!armyMarkersLayer) initArmyLayers();
 
@@ -1100,7 +1100,7 @@ function _submitAssembleArmy(regionId) {
 
 // ── Утилиты ───────────────────────────────────────────────────────────
 
-function _regionCenter(regionId) {
+export function _regionCenter(regionId) {
   const mr = typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS[regionId] : null;
   if (mr?.center) return mr.center;
   const gr = GAME_STATE.regions?.[regionId];
@@ -1299,13 +1299,26 @@ function assignCommanderFromPicker(armyId, charId, isHire) {
     addEventLog(`👑 ${char.name} назначен командующим армии «${army.name}».`, 'character');
 }
 
-function siegePanelStormDelayed() {
+export function siegePanelStormDelayed() {
   setTimeout(() => { if (typeof siegePanelStorm === 'function') siegePanelStorm(); }, 50);
 }
 window.siegePanelStormDelayed = siegePanelStormDelayed;
 
-function closeAssemblePanel() {
+export function closeAssemblePanel() {
   var el = document.getElementById('assemble-army-panel');
   if (el) el.style.display = 'none';
 }
 window.closeAssemblePanel = closeAssemblePanel;
+
+// Backward compat
+window.initArmyLayers = initArmyLayers;
+window.renderAllArmies = renderAllArmies;
+window.renderBuildMarkers = renderBuildMarkers;
+window.formatArmySize = formatArmySize;
+window.createArmyIcon = createArmyIcon;
+window._regionCenter = _regionCenter;
+window.clearArmyMarkers = clearArmyMarkers;
+window.clearSiegeMarkers = clearSiegeMarkers;
+window.clearBuildMarkers = clearBuildMarkers;
+window.selectArmyInList = selectArmyInList;
+window.showAssemblePanel = showAssemblePanel;

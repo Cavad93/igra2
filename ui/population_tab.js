@@ -5,7 +5,7 @@
 // SVG-СТРОИТЕЛИ
 // ─────────────────────────────────────────────────────────────────────────
 
-function buildGaugeSVG(val) {
+export function buildGaugeSVG(val) {
   // Полукруговая дуга счастья (0–100)
   // Размер 120×70, радиус 50, центр (60, 60)
   const W = 120, H = 68, cx = 60, cy = 62, r = 48;
@@ -104,7 +104,7 @@ function popSatLabel(sat) {
 // КАРТОЧКА КЛАССА
 // ─────────────────────────────────────────────────────────────────────────
 
-function renderClassCard(classId, classDef, classData, totalPop, stockpile, isExpanded, classCohorts) {
+export function renderClassCard(classId, classDef, classData, totalPop, stockpile, isExpanded, classCohorts) {
   const sat    = classData.satisfaction;
   const pop    = classData.population;
   const share  = totalPop > 0 ? (pop / totalPop * 100) : 0;
@@ -311,7 +311,7 @@ function renderModPills(politicalEffects) {
 
 let _popChartMode = 'stacked'; // 'stacked' | 'lines' | 'demography'
 
-function setPopChartMode(mode) {
+export function setPopChartMode(mode) {
   _popChartMode = mode;
   renderPopulationOverlay();
 }
@@ -1775,7 +1775,7 @@ function buildClassIncomeSection(nation) {
     </div>`;
 }
 
-function renderPopulationOverlay() {
+export function renderPopulationOverlay() {
   const overlay = document.getElementById('population-overlay');
   if (!overlay || overlay.classList.contains('hidden')) return;
 

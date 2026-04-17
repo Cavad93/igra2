@@ -13,7 +13,7 @@ let _ecoSelProf = null;
 
 const KEY_GOODS = ['wheat','salt','iron','timber','cloth','olive_oil','wine','horses','marble','papyrus'];
 
-function renderPriceSparkline(priceHistory, width=60, height=20) {
+export function renderPriceSparkline(priceHistory, width=60, height=20) {
   if (!Array.isArray(priceHistory) || priceHistory.length < 2) return '';
   const min   = Math.min(...priceHistory);
   const max   = Math.max(...priceHistory);

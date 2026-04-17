@@ -18,8 +18,7 @@
 // `move`/`zoom`.
 // ══════════════════════════════════════════════════════════════════════
 
-(function () {
-  'use strict';
+// ES module
 
   // Таблица типов событий — иконка + цвет пульсирующего круга.
   // См. arma.md Шаг 41 — таблица иконок событий.
@@ -42,8 +41,8 @@
   // ── 1. Создание/восстановление SVG-overlay ──────────────────────────
 
   function _ensureEventSvg() {
-    if (typeof leafletMap === 'undefined' || !leafletMap) return null;
-    var container = leafletMap.getContainer();
+    if (typeof window.leafletMap === 'undefined' || !window.leafletMap) return null;
+    var container = window.leafletMap.getContainer();
     if (_eventSvg && container.contains(_eventSvg)) return _eventSvg;
 
     if (_eventSvg) { try { _eventSvg.remove(); } catch (_) {} }
@@ -71,9 +70,9 @@
   // Слушатели зум/пана — обновляют координаты активных иконок.
   // Подписка делается ровно один раз (флаг _eventHandlersBound на map).
   function _bindMapHandlers() {
-    if (!leafletMap || leafletMap._eventHandlersBound) return;
-    leafletMap._eventHandlersBound = true;
-    leafletMap.on('zoom move', _scheduleReposition);
+    if (!window.leafletMap || window.leafletMap._eventHandlersBound) return;
+    window.leafletMap._eventHandlersBound = true;
+    window.leafletMap.on('zoom move', _scheduleReposition);
     window.addEventListener('resize', _scheduleReposition);
   }
 
@@ -88,24 +87,24 @@
   // ── 2. Расчёт позиции одной иконки ──────────────────────────────────
 
   function _regionEventCenter(regionId) {
-    if (typeof regionLayers !== 'undefined' &&
-        regionLayers && regionLayers[regionId] &&
-        typeof regionLayers[regionId].getCenter === 'function') {
+    if (typeof window.regionLayers !== 'undefined' &&
+        window.regionLayers && window.regionLayers[regionId] &&
+        typeof window.regionLayers[regionId].getCenter === 'function') {
       try {
-        var c = regionLayers[regionId].getCenter();
+        var c = window.regionLayers[regionId].getCenter();
         if (c && typeof c.lat === 'number') return c;
       } catch (_) {}
     }
     // Fallback: _regionCenter из ui/map_armies.js → [lat, lon]
-    if (typeof _regionCenter === 'function') {
-      var rc = _regionCenter(regionId);
+    if (typeof window._regionCenter === 'function') {
+      var rc = window._regionCenter(regionId);
       if (rc) return L.latLng(rc[0], rc[1]);
     }
     return null;
   }
 
   function _latLngToPx(latLng) {
-    return leafletMap.latLngToContainerPoint(latLng);
+    return window.leafletMap.latLngToContainerPoint(latLng);
   }
 
   // ── 3. Создание SVG-группы иконки события ───────────────────────────
@@ -189,8 +188,8 @@
    * @param {string} type      — ключ из EVENT_TYPES
    * @param {number} duration  — мс до удаления (по умолчанию 3000)
    */
-  function showMapEvent(regionId, type, duration) {
-    if (typeof leafletMap === 'undefined' || !leafletMap) return;
+  export function showMapEvent(regionId, type, duration) {
+    if (typeof window.leafletMap === 'undefined' || !window.leafletMap) return;
     var def = EVENT_TYPES[type];
     if (!def) {
       console.warn('[map_events] unknown event type:', type);
@@ -232,7 +231,7 @@
   /**
    * Очистить все активные события (например, при перезагрузке игры).
    */
-  function clearMapEvents() {
+  export function clearMapEvents() {
     while (_eventEntries.length > 0) _removeEntry(_eventEntries[0]);
   }
 
@@ -242,4 +241,3 @@
     window.clearMapEvents    = clearMapEvents;
     window.MAP_EVENT_TYPES   = EVENT_TYPES;
   }
-})();

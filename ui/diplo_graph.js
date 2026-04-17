@@ -12,8 +12,6 @@
 //   • Esc закрывает оверлей (через window.closeTopModal)
 // ══════════════════════════════════════════════════════════════════════════════
 
-(function () {
-  'use strict';
 
   const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -120,7 +118,7 @@
   // ─────────────────────────────────────────────────────────────
   // Отрисовка графа в SVG
   // ─────────────────────────────────────────────────────────────
-  function renderDiploGraph() {
+  export function renderDiploGraph() {
     const overlay = document.getElementById('diplo-graph-overlay');
     const svg     = document.getElementById('diplo-graph-svg');
     if (!overlay || !svg) return;
@@ -247,7 +245,7 @@
   // ─────────────────────────────────────────────────────────────
   // Обработчик клика на узле — открыть дипломатическую панель
   // ─────────────────────────────────────────────────────────────
-  function onDiploGraphNodeClick(nationId) {
+  export function onDiploGraphNodeClick(nationId) {
     const playerId = window.GAME_STATE && window.GAME_STATE.player_nation;
     if (!nationId || nationId === playerId) return;
     // Закрываем граф перед открытием дипломатической панели
@@ -263,7 +261,7 @@
   // ─────────────────────────────────────────────────────────────
   // Открыть / закрыть / переключить
   // ─────────────────────────────────────────────────────────────
-  function openDiploGraph() {
+  export function openDiploGraph() {
     const overlay = document.getElementById('diplo-graph-overlay');
     if (!overlay) return;
     overlay.classList.remove('hidden');
@@ -271,20 +269,20 @@
     requestAnimationFrame(() => renderDiploGraph());
   }
 
-  function closeDiploGraph() {
+  export function closeDiploGraph() {
     const overlay = document.getElementById('diplo-graph-overlay');
     if (!overlay) return;
     overlay.classList.add('hidden');
   }
 
-  function toggleDiploGraph() {
+  export function toggleDiploGraph() {
     const overlay = document.getElementById('diplo-graph-overlay');
     if (!overlay) return;
     if (overlay.classList.contains('hidden')) openDiploGraph();
     else closeDiploGraph();
   }
 
-  function isDiploGraphOpen() {
+  export function isDiploGraphOpen() {
     const overlay = document.getElementById('diplo-graph-overlay');
     return !!(overlay && !overlay.classList.contains('hidden'));
   }
@@ -296,4 +294,4 @@
   window.toggleDiploGraph     = toggleDiploGraph;
   window.isDiploGraphOpen     = isDiploGraphOpen;
   window.onDiploGraphNodeClick = onDiploGraphNodeClick;
-})();
+

@@ -11,8 +11,6 @@
 // Стили: #turn-summary-card + .tsc-* + @keyframes tsc-appear/tsc-countdown
 // определены в index.html <style>.
 
-(function () {
-  'use strict';
 
   const CARD_ID = 'turn-summary-card';
   const AUTO_CLOSE_MS = 5000;
@@ -32,7 +30,7 @@
   function _formatDate(date) {
     if (!date) return '';
     const month = Math.max(1, Math.min(12, date.month ?? 1));
-    const names = (typeof MONTH_NAMES !== 'undefined' && MONTH_NAMES) ? MONTH_NAMES : FALLBACK_MONTHS;
+    const names = (typeof window.MONTH_NAMES !== 'undefined' && MONTH_NAMES) ? MONTH_NAMES : FALLBACK_MONTHS;
     const monthName = names[month] ?? FALLBACK_MONTHS[month] ?? 'Месяц';
     const year = date.year ?? 0;
     const era = year < 0 ? `${Math.abs(year)} BC` : `${year} AD`;
@@ -40,15 +38,15 @@
   }
 
   function _getSeasonIcon() {
-    if (typeof getCurrentSeason === 'function') {
+    if (typeof window.getCurrentSeason === 'function') {
       try { return SEASON_ICONS[getCurrentSeason() & 3] ?? '🌸'; } catch (_) {}
     }
-    const turn = (typeof GAME_STATE !== 'undefined' && GAME_STATE && GAME_STATE.turn) || 0;
+    const turn = (typeof window.GAME_STATE !== 'undefined' && GAME_STATE && window.GAME_STATE.turn) || 0;
     return SEASON_ICONS[((turn % 4) + 4) % 4];
   }
 
   // ── Снимок состояния нации для расчёта дельт ──
-  function snapshotNationState(nation) {
+  export function snapshotNationState(nation) {
     if (!nation) return { treasury: 0, population: 0, total_troops: 0, happiness: 0, legitimacy: 0 };
     const mil = nation.military ?? {};
     const pop = nation.population ?? {};
@@ -101,7 +99,7 @@
   }
 
   // ── Главный публичный метод ──
-  function showTurnSummaryCard(prevState, newState) {
+  export function showTurnSummaryCard(prevState, newState) {
     const prev = prevState || {};
     const next = newState  || {};
 
@@ -111,8 +109,8 @@
     const turnEl   = card.querySelector('#tsc-turn');
     const dateEl   = card.querySelector('#tsc-date');
     const seasonEl = card.querySelector('#tsc-season');
-    const turnNum  = (typeof GAME_STATE !== 'undefined' && GAME_STATE && GAME_STATE.turn) || 0;
-    const gameDate = (typeof GAME_STATE !== 'undefined' && GAME_STATE && GAME_STATE.date) || null;
+    const turnNum  = (typeof window.GAME_STATE !== 'undefined' && GAME_STATE && window.GAME_STATE.turn) || 0;
+    const gameDate = (typeof window.GAME_STATE !== 'undefined' && GAME_STATE && window.GAME_STATE.date) || null;
     if (turnEl)   turnEl.textContent   = `Ход ${turnNum}`;
     if (dateEl)   dateEl.textContent   = _formatDate(gameDate);
     if (seasonEl) seasonEl.textContent = _getSeasonIcon();
@@ -162,7 +160,7 @@
     _autoCloseTimer = setTimeout(closeTurnSummaryCard, AUTO_CLOSE_MS);
   }
 
-  function closeTurnSummaryCard() {
+  export function closeTurnSummaryCard() {
     if (_autoCloseTimer) { clearTimeout(_autoCloseTimer); _autoCloseTimer = null; }
     const card = document.getElementById(CARD_ID);
     if (!card) return;
@@ -180,4 +178,4 @@
     window.showTurnSummaryCard = showTurnSummaryCard;
     window.closeTurnSummaryCard = closeTurnSummaryCard;
   }
-})();
+

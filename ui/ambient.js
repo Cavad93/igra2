@@ -6,8 +6,7 @@
    одного IIFE, глобально экспортируется `window.AmbientLayer`.
    Вынесен из inline-скрипта index.html в этапе 42.
    ═══════════════════════════════════════════════════════════ */
-(function () {
-  var AmbientLayer = {
+  export var AmbientLayer = {
     canvas: null,
     ctx: null,
     particles: [],
@@ -135,4 +134,3 @@
   } else {
     _initAmbient();
   }
-})();

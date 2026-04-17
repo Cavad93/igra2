@@ -9,7 +9,7 @@
 // А из глобальной области (в других ui/*.js, стадия 6) доступно как
 // window.ICONS и window.icon().
 
-const ICONS = {
+export const ICONS = {
 
   // ── РЕСУРСЫ ──
 
@@ -169,7 +169,7 @@ const ICONS = {
 };
 
 // Хелпер: вернуть иконку как HTML-строку с классом
-function icon(name, cls = '') {
+export function icon(name, cls = '') {
   const svg = ICONS[name];
   if (!svg) return '';
   return svg.replace('<svg ', `<svg class="icon ${cls ? cls : ''}" `);

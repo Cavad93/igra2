@@ -2,9 +2,9 @@
 // Тайлы: https://cawm.lib.uiowa.edu — CC BY 4.0
 // Координаты в формате Leaflet [lat, lng]
 
-let leafletMap = null;          // экземпляр L.Map
-let regionLayers = {};          // { regionId: L.Polygon }
-let selectedRegionId = null;
+export let leafletMap = null;          // экземпляр L.Map
+export let regionLayers = {};          // { regionId: L.Polygon }
+export let selectedRegionId = null;
 let awmcProvinceLayer = null;   // слой границ провинций из AWMC geodata
 let canvasRenderer = null;      // Canvas-рендерер для производительности с 2800+ полигонами
 let svgTradeRenderer = null;    // SVG-рендерер (Шаг 42) — только для торговых маршрутов (CSS-анимация)
@@ -109,7 +109,7 @@ function _getCentroidCell(polygon) {
 // ИНИЦИАЛИЗАЦИЯ КАРТЫ
 // ──────────────────────────────────────────────────────────────
 
-function initLeafletMap() {
+export function initLeafletMap() {
   const container = document.getElementById('map-container');
   if (!container) return;
 
@@ -338,7 +338,7 @@ function _ensureFogPattern() {
 }
 
 let _fogPolygons = {};
-function refreshFogOverlay() {
+export function refreshFogOverlay() {
   if (!leafletMap) return;
   _ensureFogOverlayPane();
   // Убираем старые
@@ -436,7 +436,7 @@ const NON_PLAYABLE_TYPES = new Set(['Ocean', 'Strait', 'Lake', 'Impassible']);
 //   2 — полная информация (свои регионы / союзники / соседи игрока)
 //   1 — частичная (регионы в 2 перехода от игрока, торговые партнёры)
 //   0 — минимум (все остальные далёкие регионы)
-function getIntelLevel(regionId) {
+export function getIntelLevel(regionId) {
   try {
     const playerId = GAME_STATE?.player_nation;
     if (!playerId) return 2; // до инициализации игрока показываем всё
@@ -544,14 +544,14 @@ function _rebuildFogIntelCache(playerId) {
 }
 
 // Текстовая метка уровня разведки
-function getIntelLabel(level) {
+export function getIntelLabel(level) {
   if (level >= 2) return { text: 'полная',    icon: '🔍', hint: 'Свой регион, союзник или сосед' };
   if (level >= 1) return { text: 'частичная', icon: '🔍', hint: 'Торговый партнёр или регион в 2 перехода' };
   return           { text: 'нет данных', icon: '🌫', hint: 'Далёкий регион — отправьте разведчика или установите торговлю' };
 }
 
 // Приблизительная оценка числа (для intel=1 показывает диапазон ~X-Y)
-function roughEstimate(num) {
+export function roughEstimate(num) {
   const n = Math.max(0, Math.round(+num || 0));
   if (n === 0) return '0';
   // Округляем до 2 значащих цифр, формируем диапазон ±30%
@@ -564,7 +564,7 @@ function roughEstimate(num) {
 }
 
 // Инвалидировать кэш извне (например, после смены хода)
-function invalidateFogIntelCache() { _fogIntelCache = null; }
+export function invalidateFogIntelCache() { _fogIntelCache = null; }
 if (typeof window !== 'undefined') {
   window.getIntelLevel          = getIntelLevel;
   window.getIntelLabel          = getIntelLabel;
@@ -587,7 +587,7 @@ const NON_PLAYABLE_STYLES = {
 // ──────────────────────────────────────────────────────────────
 
 /** Hex → HSL [h:0..360, s:0..1, l:0..1] */
-function hexToHsl(hex) {
+export function hexToHsl(hex) {
   if (typeof hex !== 'string') return [0, 0, 0.5];
   let h = hex.trim();
   if (h.startsWith('#')) h = h.slice(1);
@@ -614,7 +614,7 @@ function hexToHsl(hex) {
 }
 
 /** HSL → Hex */
-function hslToHex(hDeg, s, l) {
+export function hslToHex(hDeg, s, l) {
   const h = ((hDeg % 360) + 360) % 360 / 360;
   s = Math.max(0, Math.min(1, s));
   l = Math.max(0, Math.min(1, l));
@@ -644,13 +644,13 @@ function hslToHex(hDeg, s, l) {
 }
 
 /** Снизить насыщенность цвета (amount = 0..1). */
-function desaturateColor(hex, amount = 0.4) {
+export function desaturateColor(hex, amount = 0.4) {
   const [h, s, l] = hexToHsl(hex);
   return hslToHex(h, s * (1 - amount), l);
 }
 
 /** Затемнить цвет (amount = 0..1). */
-function darkenColor(hex, amount = 0.3) {
+export function darkenColor(hex, amount = 0.3) {
   const [h, s, l] = hexToHsl(hex);
   return hslToHex(h, s, l * (1 - amount));
 }
@@ -660,7 +660,7 @@ function darkenColor(hex, amount = 0.3) {
  * Маппинг: сырой hex → {fill, border}.
  */
 const _tabulaColorCache = new Map();
-function tabulaRegionColor(rawHex, nationId) {
+export function tabulaRegionColor(rawHex, nationId) {
   // uisuper hot-fix #1 (v5): КРИТИЧНО. Предыдущие версии v2–v4
   // хэшировали nation.color (hex), но в renderRegionPolygons
   // подставляется blendColor из getProvinceBlendColor — это
@@ -714,7 +714,7 @@ function tabulaRegionColor(rawHex, nationId) {
   return pair;
 }
 
-function renderRegionPolygons() {
+export function renderRegionPolygons() {
   // Удаляем старые слои
   for (const layer of Object.values(regionLayers)) {
     if (leafletMap.hasLayer(layer)) leafletMap.removeLayer(layer);
@@ -807,7 +807,7 @@ function renderRegionPolygons() {
  * @param {string|null} occupierColor  — цвет оккупанта (для границы)
  * @param {number}      intelLevel     — Шаг 48: уровень разведки (0/1/2)
  */
-function buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor = null, occupierColor = null, intelLevel = 2, nationId = null, originalNationId = null, occupierNationId = null) {
+export function buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor = null, occupierColor = null, intelLevel = 2, nationId = null, originalNationId = null, occupierNationId = null) {
   // Этап 17 (Tabula Peutingeriana) + uisuper hot-fix #1 v5:
   // tabulaRegionColor теперь хэширует nationId (не hex), чтобы все
   // регионы одной нации получали один цвет. Передаём nationId явно;
@@ -869,7 +869,7 @@ function buildPolygonStyle(color, isPlayerRegion, isSelected, originalColor = nu
   };
 }
 
-function buildTooltipContent(regionId, mapData, nationId) {
+export function buildTooltipContent(regionId, mapData, nationId) {
   const gameRegion = GAME_STATE.regions[regionId];
 
   // При оккупации — показываем оригинального владельца как основную нацию,
@@ -953,7 +953,7 @@ function _regionOccupationColors(regionId) {
   return [origColor, occColor];
 }
 
-function onRegionClick(regionId) {
+export function onRegionClick(regionId) {
   // Режим выбора цели движения армии — перехватываем клик
   if (typeof handleRegionClickForArmy === 'function' && handleRegionClickForArmy(regionId)) return;
 
@@ -997,7 +997,7 @@ function onRegionClick(regionId) {
   showRegionInfo(regionId);
 }
 
-function onRegionHover(e, regionId, entering, color, isPlayerRegion) {
+export function onRegionHover(e, regionId, entering, color, isPlayerRegion) {
   // Шаг 47: предпросмотр маршрута армии (работает даже если регион "selected")
   if (typeof handleRegionHoverForArmy === 'function') {
     try { handleRegionHoverForArmy(regionId, entering, e); } catch (err) {}
@@ -1423,7 +1423,7 @@ function renderRegionSocialStructure(regionId, gameData) {
 // Активная вкладка панели региона: 'info' | 'build'
 let _activeRegionTab = 'info';
 
-function switchRegionTab(tab) {
+export function switchRegionTab(tab) {
   _activeRegionTab = tab;
   const infoPane  = document.getElementById('region-tab-info');
   const buildPane = document.getElementById('region-tab-build');
@@ -1459,7 +1459,7 @@ function updateTabIndicator(activeBtn) {
   indicator.style.width = activeBtn.clientWidth + 'px';
 }
 
-function showRegionInfo(regionId) {
+export function showRegionInfo(regionId) {
   const panel = document.getElementById('region-info');
   if (!panel) { console.warn('[showRegionInfo] panel not found'); return; }
 
@@ -1720,13 +1720,13 @@ function showRegionInfo(regionId) {
   if (activeBtn) updateTabIndicator(activeBtn);
 }
 
-function selectArmyInRegion(regionId) {
+export function selectArmyInRegion(regionId) {
   const army = (GAME_STATE.armies ?? []).find(a =>
     a.position === regionId && a.nation === GAME_STATE.player_nation && a.state !== 'disbanded');
   if (army && typeof selectArmy === 'function') selectArmy(army.id);
 }
 
-function closeRegionInfo() {
+export function closeRegionInfo() {
   const panel = document.getElementById('region-info');
   if (panel) panel.classList.add('hidden');
 
@@ -1792,7 +1792,7 @@ function sendDiplomaticMissionFromPanel(targetNationId, targetNationName) {
 // ПОДПИСИ МОРЕЙ
 // ──────────────────────────────────────────────────────────────
 
-function renderSeaLabels() {
+export function renderSeaLabels() {
   for (const label of SEA_LABELS) {
     const icon = L.divIcon({
       className: 'sea-label',
@@ -1828,7 +1828,7 @@ function findSharedEdge(coords1, coords2) {
   return segments;
 }
 
-function renderNationBorders() {
+export function renderNationBorders() {
   if (nationBorderLayer) {
     if (leafletMap.hasLayer(nationBorderLayer)) leafletMap.removeLayer(nationBorderLayer);
     nationBorderLayer = null;
@@ -2166,7 +2166,7 @@ function _ensureNationSvg() {
 
 
 // Строит структуры данных: один элемент на кластер (связную территорию)
-function renderNationLabels() {
+export function renderNationLabels() {
   for (const d of nationLabelData) {
     if (d.marker && leafletMap.hasLayer(d.marker)) leafletMap.removeLayer(d.marker);
   }
@@ -2437,7 +2437,7 @@ function scheduleNationLabelUpdate() {
 // Метаданные: { marker, lat, lng, rank, isPlayer, nameLen, name }
 let _cityLabelMarkers = [];
 
-function renderCityLabels() {
+export function renderCityLabels() {
   if (!leafletMap) return;
   // uisuper hot-fix #2: curved SVG-надписи наций уже «встроены» в
   // территории через _updateNationLabelVisibility. Плавающие divIcon-
@@ -2584,7 +2584,7 @@ function _applyCityLabelVisibility() {
   }
 }
 
-function clearCityLabels() {
+export function clearCityLabels() {
   if (!leafletMap) { _cityLabelMarkers = []; return; }
   for (const meta of _cityLabelMarkers) {
     const m = meta && meta.marker ? meta.marker : meta;
@@ -2610,7 +2610,7 @@ if (typeof window !== 'undefined') {
 // ID РЕГИОНОВ (режим отладки/разметки)
 // ──────────────────────────────────────────────────────────────
 
-function renderRegionIdLabels() {
+export function renderRegionIdLabels() {
   clearRegionIdLabels();
   for (const [regionId, mapData] of Object.entries(MAP_REGIONS)) {
     if (NON_PLAYABLE_TYPES.has(mapData.mapType)) continue;
@@ -2670,7 +2670,7 @@ function _classifyTradeRoute(nation) {
   return { category, topGood, volume };
 }
 
-function renderTradeRouteLines() {
+export function renderTradeRouteLines() {
   clearTradeRouteLines();
   if (!window.GAME_STATE?.nations) return;
   const playerNationId = GAME_STATE.player_nation;
@@ -2724,7 +2724,7 @@ function renderTradeRouteLines() {
   }
 }
 
-function clearTradeRouteLines() {
+export function clearTradeRouteLines() {
   for (const l of tradeRouteLines) {
     if (leafletMap && leafletMap.hasLayer(l)) leafletMap.removeLayer(l);
   }
@@ -2787,7 +2787,7 @@ window.clearTradeRouteLines  = clearTradeRouteLines;
 // ЛЁГКОЕ ОБНОВЛЕНИЕ СТИЛЕЙ (без пересоздания слоёв)
 // ──────────────────────────────────────────────────────────────
 
-function refreshRegionStyles() {
+export function refreshRegionStyles() {
   // Шаг 36: очередь повтора для полигонов, которым Canvas-рендерер ещё не
   // успел назначить ._renderer. Race condition: invalidateSize() очищает
   // Canvas уже после того как стили применены, и цвета теряются. Поэтому
@@ -2847,7 +2847,7 @@ function refreshRegionStyles() {
 // ПУБЛИЧНАЯ ФУНКЦИЯ renderMap() — вызывается из turn.js
 // ──────────────────────────────────────────────────────────────
 
-function renderMap() {
+export function renderMap() {
   if (!leafletMap) {
     // Первый вызов — инициализируем Leaflet
     if (typeof L === 'undefined') {
@@ -2970,7 +2970,7 @@ async function loadAWMCProvinceBoundaries() {
 // Алгоритм Чайкина — сглаживание углов полигона.
 // Каждую итерацию заменяет каждый отрезок двумя точками на 1/4 и 3/4.
 // iterations=3 даёт плавные, органичные границы провинций.
-function smoothChaikin(coords, iterations = 3) {
+export function smoothChaikin(coords, iterations = 3) {
   let pts = coords.slice();
   for (let iter = 0; iter < iterations; iter++) {
     const smooth = [];
@@ -2992,7 +2992,7 @@ function smoothChaikin(coords, iterations = 3) {
   return pts;
 }
 
-function getTerrainName(terrain) {
+export function getTerrainName(terrain) {
   const names = {
     coastal_city: 'Прибрежный город',
     plains:       'Равнина',
@@ -3003,7 +3003,7 @@ function getTerrainName(terrain) {
   return names[terrain] || terrain;
 }
 
-function lightenColor(hex, amount) {
+export function lightenColor(hex, amount) {
   if (!hex || !hex.startsWith('#')) return hex;
   try {
     const num = parseInt(hex.slice(1), 16);
@@ -3151,7 +3151,7 @@ window.WindRose = WindRose;
  * лепестков розы ветров. Обрабатывает Enter/Space на focused-лепестке
  * и вызывает setMapMode по data-mode. Вызывается из DOMContentLoaded.
  */
-function initWindRoseKeyboard() {
+export function initWindRoseKeyboard() {
   const petals = document.querySelectorAll('.wr-petal');
   petals.forEach((petal) => {
     if (petal.dataset._wrKbdBound === '1') return;
@@ -3173,7 +3173,7 @@ window.initWindRoseKeyboard = initWindRoseKeyboard;
  * Переключает режим отображения карты.
  * @param {'political'|'economy'|'military'|'population'} mode
  */
-function setMapMode(mode) {
+export function setMapMode(mode) {
   if (!window.MAP_MODES.includes(mode)) return;
   window.CURRENT_MAP_MODE = mode;
 
@@ -3304,7 +3304,7 @@ window.ZOOM_LEVELS = {
  * @param {number} zoom — текущее значение leafletMap.getZoom()
  * @returns {'strategic'|'regional'|'detailed'}
  */
-function getZoomLevel(zoom) {
+export function getZoomLevel(zoom) {
   const z = Number(zoom);
   if (!Number.isFinite(z)) return 'regional';
   if (z < window.ZOOM_LEVELS.strategic.max) return 'strategic';
@@ -3455,7 +3455,7 @@ function _removeDetailLayers() {
  * map-mode-bar, детальных слоёв и подписей наций.
  * @param {number} [zoom] — если не передан, берём из leafletMap.getZoom()
  */
-function onZoomChange(zoom) {
+export function onZoomChange(zoom) {
   if (!leafletMap) return;
   const z = (typeof zoom === 'number') ? zoom : leafletMap.getZoom();
   const level = getZoomLevel(z);
@@ -3527,3 +3527,23 @@ window.onZoomChange        = onZoomChange;
 window._applyZoomFillOpacity = _applyZoomFillOpacity;
 window._buildDetailBuildingsLayer = _buildDetailBuildingsLayer;
 window._buildDetailGarrisonsLayer = _buildDetailGarrisonsLayer;
+
+// Backward compat: expose to non-module scripts
+window.leafletMap = leafletMap;
+window.regionLayers = regionLayers;
+window.initLeafletMap = initLeafletMap;
+window.onRegionClick = onRegionClick;
+window.showRegionInfo = showRegionInfo;
+window.closeRegionInfo = closeRegionInfo;
+window.switchRegionTab = switchRegionTab;
+window.refreshRegionStyles = refreshRegionStyles;
+window.renderMap = renderMap;
+window.renderRegionPolygons = renderRegionPolygons;
+window.renderNationBorders = renderNationBorders;
+window.renderNationLabels = renderNationLabels;
+window.renderSeaLabels = renderSeaLabels;
+window.buildTooltipContent = buildTooltipContent;
+window.desaturateColor = desaturateColor;
+window.selectArmyInRegion = selectArmyInRegion;
+window.refreshFogOverlay = refreshFogOverlay;
+window.renderRegionIdLabels = renderRegionIdLabels;

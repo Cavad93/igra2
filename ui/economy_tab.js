@@ -21,7 +21,7 @@ const _MC_TIER = {
 // HISTORY RECORDING — вызывается из turn.js после runEconomyTick()
 // ─────────────────────────────────────────────────────────────────────────
 
-function recordEconomyHistory() {
+export function recordEconomyHistory() {
   const nId    = GAME_STATE.player_nation;
   const nation = GAME_STATE.nations[nId];
   if (!nation?.economy || !nation?.population?.pops) return;
@@ -90,18 +90,18 @@ function _goodTier(goodId, avgIncomePCap) {
 // STUBS — будут переопределены в economy_react.jsx
 // ─────────────────────────────────────────────────────────────────────────
 
-function showEconomyOverlay() {
+export function showEconomyOverlay() {
   // Заглушка до загрузки React. Babel Standalone заменит эту функцию.
   const el = document.getElementById('economy-overlay');
   if (el) el.classList.remove('hidden');
 }
 
-function hideEconomyOverlay() {
+export function hideEconomyOverlay() {
   const el = document.getElementById('economy-overlay');
   if (el) el.classList.add('hidden');
 }
 
-function refreshEconomyTab() {
+export function refreshEconomyTab() {
   // Переопределяется в economy_react.jsx
   const nation = _econNation();
   const btn    = document.getElementById('eco-open-btn');

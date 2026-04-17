@@ -35,7 +35,7 @@ function _getRbtOpenCats(regionId) {
 // ГЛАВНАЯ ФУНКЦИЯ — возвращает HTML всей вкладки
 // ──────────────────────────────────────────────────────────────
 
-function renderConstructionTab(regionId) {
+export function renderConstructionTab(regionId) {
   const region = GAME_STATE.regions[regionId];
   if (!region) return '<div class="rbt-empty">Данные региона недоступны.</div>';
 
@@ -425,7 +425,7 @@ function _rbtBuiltRow(slot, regionId, region, nation) {
  * Переключает паузу здания (active ↔ paused).
  * Вызывается из HTML кнопки.
  */
-function uiToggleBuildingPause(regionId, slotId) {
+export function uiToggleBuildingPause(regionId, slotId) {
   const region = GAME_STATE.regions?.[regionId];
   if (!region) return;
   const slot = (region.building_slots ?? []).find(s => s.slot_id === slotId);
@@ -593,7 +593,7 @@ function _rbtLandBar(region) {
 // ПУБЛИЧНЫЕ ОБРАБОТЧИКИ СОБЫТИЙ
 // ──────────────────────────────────────────────────────────────
 
-function rbtToggleCategory(regionId, catId) {
+export function rbtToggleCategory(regionId, catId) {
   const openCats = _getRbtOpenCats(regionId);
   if (openCats.has(catId)) openCats.delete(catId);
   else                      openCats.add(catId);

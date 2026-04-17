@@ -110,7 +110,7 @@ function getBiomeAt(heightmap, x, y) {
  * @param {{data: Float32Array, width: number, height: number}} heightmap
  * @returns {Uint8ClampedArray}  — RGBA buffer длиной width*height*4
  */
-function fillTerrainPixels(heightmap) {
+export function fillTerrainPixels(heightmap) {
   const w = heightmap.width | 0;
   const h = heightmap.height | 0;
   const data = heightmap.data;
@@ -142,7 +142,7 @@ function fillTerrainPixels(heightmap) {
  * @param {{data: Float32Array, width: number, height: number}} heightmap
  * @returns {HTMLCanvasElement}
  */
-function buildTerrainCanvas(heightmap) {
+export function buildTerrainCanvas(heightmap) {
   const w = heightmap.width | 0;
   const h = heightmap.height | 0;
 
@@ -186,7 +186,7 @@ function buildTerrainCanvas(heightmap) {
  * @param {{data: Float32Array, width: number, height: number}} heightmap
  * @returns {PIXI.Sprite}
  */
-function renderTerrain(app, layers, heightmap) {
+export function renderTerrain(app, layers, heightmap) {
   if (!app || !layers || !layers.bg) {
     throw new Error('[renderTerrain] app/layers not initialised — call initBattleMap() first');
   }
@@ -249,7 +249,7 @@ function renderTerrain(app, layers, heightmap) {
  * @param {number} seed  — целое, для детерминированного шума
  * @returns {HTMLCanvasElement}
  */
-function buildProceduralParchmentCanvas(size, seed) {
+export function buildProceduralParchmentCanvas(size, seed) {
   const S = (size | 0) || 256;
   if (typeof document === 'undefined') {
     throw new Error('[buildProceduralParchmentCanvas] document is not available');
@@ -330,7 +330,7 @@ async function loadParchmentTexture(url) {
  * @param {PIXI.Texture} texture  — предварительно загруженная парчмент-текстура
  * @returns {PIXI.TilingSprite}
  */
-function renderParchmentOverlay(app, layers, texture) {
+export function renderParchmentOverlay(app, layers, texture) {
   if (!app || !layers || !layers.bg) {
     throw new Error('[renderParchmentOverlay] app/layers not initialised');
   }
@@ -407,7 +407,7 @@ function buildVignetteCanvas(width, height) {
  * @param {{bg: PIXI.Container}} layers
  * @returns {PIXI.Sprite}
  */
-function renderVignette(app, layers) {
+export function renderVignette(app, layers) {
   if (!app || !layers || !layers.bg) {
     throw new Error('[renderVignette] app/layers not initialised');
   }
@@ -2278,7 +2278,7 @@ function clearTerrainCache() {
  * @param {string} cacheKey
  * @returns {PIXI.Sprite}
  */
-function renderTerrainCached(app, layers, heightmap, cacheKey) {
+export function renderTerrainCached(app, layers, heightmap, cacheKey) {
   if (!app || !layers || !layers.bg) {
     throw new Error('[renderTerrainCached] app/layers not initialised');
   }

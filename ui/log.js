@@ -1,7 +1,7 @@
 // Лог событий — хроники игры
 
-const LOG_MAX_ENTRIES = 120;  // сколько записей держим в памяти
-const LOG_DISPLAY = 12;       // сколько показываем в UI
+export const LOG_MAX_ENTRIES = 120;
+const LOG_DISPLAY = 12;
 
 // Типы записей → CSS классы
 const LOG_STYLES = {
@@ -46,23 +46,22 @@ const LOG_CATEGORY_MARKS = {
 const _LOG_COUNTERS = { danger: 0, economy: 0, character: 0 };
 
 // Добавить запись в лог
-function addEventLog(message, type = 'info') {
+export function addEventLog(message, type = 'info') {
+  const gs = window.GAME_STATE;
   const entry = {
-    turn: GAME_STATE ? GAME_STATE.turn : 0,
-    date: GAME_STATE ? formatDate(GAME_STATE.date) : '—',
+    turn: gs ? gs.turn : 0,
+    date: gs ? window.formatDate(gs.date) : '—',
     message,
     type,
     timestamp: Date.now(),
     isNew: true,  // uisuper Этап 26 — метка «новая запись», сбрасывается при раскрытии
   };
 
-  // Добавляем в GAME_STATE для сохранения
-  if (GAME_STATE) {
-    if (!GAME_STATE.events_log) GAME_STATE.events_log = [];
-    GAME_STATE.events_log.unshift(entry);
-    // Обрезаем старые записи
-    if (GAME_STATE.events_log.length > LOG_MAX_ENTRIES) {
-      GAME_STATE.events_log.length = LOG_MAX_ENTRIES;
+  if (gs) {
+    if (!gs.events_log) gs.events_log = [];
+    gs.events_log.unshift(entry);
+    if (gs.events_log.length > LOG_MAX_ENTRIES) {
+      gs.events_log.length = LOG_MAX_ENTRIES;
     }
   }
 
@@ -78,7 +77,7 @@ function addEventLog(message, type = 'info') {
 
 // Шаг 24 / uisuper Этап 25 — обновить свёрнутый вид
 // (последнее событие, счётчики старого вида, точки-нотификации новой таблички)
-function updateLogCollapsed(lastEntry) {
+export function updateLogCollapsed(lastEntry) {
   if (typeof document === 'undefined') return;
 
   // Последняя строка
@@ -135,7 +134,7 @@ function updateLogCollapsed(lastEntry) {
 
 // Шаг 24 / uisuper Этап 26 — переключить свёрнутый/развёрнутый режим лога.
 // При раскрытии — сбрасываем точки-нотификации и метки «новая запись».
-function toggleLog() {
+export function toggleLog() {
   if (typeof document === 'undefined') return;
   const logEl = document.getElementById('event-log');
   const btn = document.getElementById('log-expand-btn');
@@ -162,12 +161,12 @@ function toggleLog() {
 }
 
 // uisuper Этап 26 — сброс нотификаций: счётчики, точки и флаги isNew.
-function resetLogNotifications() {
+export function resetLogNotifications() {
   // 1. Обнуляем счётчики
   for (const k of Object.keys(_LOG_COUNTERS)) _LOG_COUNTERS[k] = 0;
   // 2. Снимаем isNew с прочитанных записей, чтобы новые подсветки не стреляли повторно
-  if (typeof GAME_STATE !== 'undefined' && GAME_STATE && Array.isArray(GAME_STATE.events_log)) {
-    GAME_STATE.events_log.forEach(e => { e.isNew = false; });
+  if (typeof window.GAME_STATE !== 'undefined' && window.GAME_STATE && Array.isArray(window.GAME_STATE.events_log)) {
+    window.GAME_STATE.events_log.forEach(e => { e.isNew = false; });
   }
   if (typeof document === 'undefined') return;
   // 3. Гасим точки в полоске (только если document поддерживает querySelectorAll)
@@ -188,7 +187,7 @@ function resetLogNotifications() {
 
 // uisuper Этап 26 — обновить точки-нотификации по списку записей лога.
 // Экспортируется как window.updateLogDots для внешних вызовов.
-function updateLogDots(entries) {
+export function updateLogDots(entries) {
   if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
   const counts = { danger: 0, economy: 0, character: 0, law: 0 };
   (entries || []).forEach(e => {
@@ -202,12 +201,13 @@ function updateLogDots(entries) {
 
 // uisuper Этап 26 — отрисовка лога в стиле манускрипта.
 // Каждая запись: категорийная метка (⚠/◈/◉/§/·) + текст + номер хода.
-function renderLog() {
+export function renderLog() {
   const container = document.getElementById('log-entries');
-  if (!container || typeof GAME_STATE === 'undefined' || !GAME_STATE) return;
+  const gs = window.GAME_STATE;
+  if (!container || !gs) return;
 
-  if (!GAME_STATE.events_log) GAME_STATE.events_log = [];
-  const entries = GAME_STATE.events_log.slice(0, LOG_DISPLAY);
+  if (!gs.events_log) gs.events_log = [];
+  const entries = gs.events_log.slice(0, LOG_DISPLAY);
 
   container.innerHTML = entries.map(entry => {
     const style = LOG_STYLES[entry.type] || LOG_STYLES.info;
@@ -231,8 +231,8 @@ function renderLog() {
   }
 
   // Применить текущий фильтр если есть
-  if (typeof _applyLogFilter === 'function') {
-    try { _applyLogFilter(); } catch (_) { /* ignore */ }
+  if (typeof window._applyLogFilter === 'function') {
+    try { window._applyLogFilter(); } catch (_) { /* ignore */ }
   }
 }
 
@@ -246,8 +246,7 @@ if (typeof window !== 'undefined') {
   window.resetLogNotifications = resetLogNotifications;
 }
 
-// Экранирование HTML для безопасного вывода
-function escapeHtml(text) {
+export function escapeHtml(text) {
   return String(text)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

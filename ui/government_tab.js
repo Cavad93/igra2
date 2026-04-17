@@ -4,19 +4,19 @@
 // Не падает на нестандартных структурах — если поля нет, блок не рендерится.
 // ══════════════════════════════════════════════════════════════════════
 
-function showGovernmentOverlay() {
+export function showGovernmentOverlay() {
   const overlay = document.getElementById('gov-overlay');
   if (!overlay) return;
   overlay.style.display = 'flex';
   renderGovernmentOverlay();
 }
 
-function hideGovernmentOverlay() {
+export function hideGovernmentOverlay() {
   const overlay = document.getElementById('gov-overlay');
   if (overlay) overlay.style.display = 'none';
 }
 
-function renderGovernmentOverlay() {
+export function renderGovernmentOverlay() {
   const container = document.getElementById('gov-content');
   if (!container) return;
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
@@ -28,7 +28,7 @@ function renderGovernmentOverlay() {
 // ГЛАВНЫЙ РЕНДЕР — генерируется из объекта government
 // ──────────────────────────────────────────────────────────────────────
 
-function renderGovernmentTab(nation) {
+export function renderGovernmentTab(nation) {
   const gov = nation.government;
   if (!gov) return '<div class="gov-empty">Нет данных о правительстве.</div>';
 
@@ -211,7 +211,7 @@ const GOV_INSTITUTION_DESC = {
   prophets_guild:   'Прорицатели · Событийные пророчества',
 };
 
-function renderGovernmentConstructor(nation) {
+export function renderGovernmentConstructor(nation) {
   if (!window._govSetupState) {
     window._govSetupState = { step: 1, type: null, institutions: [] };
   }
@@ -423,12 +423,12 @@ function renderGovSetupStep3(type, institutions, nation) {
 
 // ── Wizard-навигация ──────────────────────────────────────────────────
 
-function govSetupStep2(type) {
+export function govSetupStep2(type) {
   window._govSetupState = { step: 2, type, institutions: [] };
   renderGovernmentOverlay();
 }
 
-function govSetupToggleInst(instId) {
+export function govSetupToggleInst(instId) {
   const state = window._govSetupState;
   if (!state) return;
   const idx = state.institutions.indexOf(instId);
@@ -3783,7 +3783,7 @@ function renderOrdersPanel() {
  * Обновить счётчик активных приказов в #orders-mini-count.
  * Вызывается из renderOrdersPanel().
  */
-function updateOrdersMiniCount() {
+export function updateOrdersMiniCount() {
   const el = document.getElementById('orders-mini-count');
   if (!el) return;
   const active = typeof getActiveOrders === 'function' ? getActiveOrders() : [];
@@ -3798,7 +3798,7 @@ function updateOrdersMiniCount() {
  * Развернуть/свернуть popup #orders-panel над мини-кнопкой.
  * Открывается ВВЕРХ (над bottom-area).
  */
-function toggleOrdersMini() {
+export function toggleOrdersMini() {
   const panel = document.getElementById('orders-panel');
   const btn   = document.getElementById('orders-mini-btn');
   if (!panel) return;

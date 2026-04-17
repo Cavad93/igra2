@@ -24,7 +24,6 @@
 //  Глобально экспортируется как window.renderPortrait / window.renderPortraitHTML.
 // ============================================================================
 
-(function () {
   const FALLBACK = 'assets/portraits/placeholder.svg';
 
   /**
@@ -105,7 +104,7 @@
    * @param {number} sizePx  размер в пикселях (квадрат)
    * @returns {HTMLImageElement}
    */
-  function renderPortrait(char, nationId, sizePx) {
+  export function renderPortrait(char, nationId, sizePx) {
     const size = Number.isFinite(sizePx) ? sizePx : 48;
     const { src, filter } = resolvePortraitInfo(char, nationId);
 
@@ -143,7 +142,7 @@
    * @param {string} [extraClass]   дополнительные классы через пробел
    * @returns {string}
    */
-  function renderPortraitHTML(char, nationId, sizePx, extraClass) {
+  export function renderPortraitHTML(char, nationId, sizePx, extraClass) {
     const size = Number.isFinite(sizePx) ? sizePx : 48;
     const { src, filter } = resolvePortraitInfo(char, nationId);
     const cls  = 'char-portrait' + (extraClass ? ' ' + extraClass : '');
@@ -182,4 +181,3 @@
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = { renderPortrait, renderPortraitHTML };
   }
-})();

@@ -30,7 +30,7 @@ function _applyPanelWidth(panelId, w) {
 }
 
 // Инициализация одного разделителя
-function initPanelResize(resizerId, panelId, minW, maxW) {
+export function initPanelResize(resizerId, panelId, minW, maxW) {
   const resizer = document.getElementById(resizerId);
   const panel = document.getElementById(panelId);
   if (!resizer || !panel) return;
@@ -107,7 +107,7 @@ function initPanelResize(resizerId, panelId, minW, maxW) {
 }
 
 // Инициализация всех разделителей. Вызвать после загрузки DOM.
-function initAllPanelResizers() {
+export function initAllPanelResizers() {
   initPanelResize('left-resizer', 'left-panel', PANEL_RESIZE_MIN_PX, PANEL_RESIZE_MAX_PX);
 }
 

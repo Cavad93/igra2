@@ -5,9 +5,6 @@
    Подключается ПОСЛЕДНИМ в цепочке <script> в index.html.
    Рефакторинг Части II, этап 42.
    ─────────────────────────────────────────────────────────── */
-(function boot() {
-  'use strict';
-
   // ──────────────────────────────────────────
   // ДЕЛЕГИРОВАНИЕ СОБЫТИЙ (uisuper этап 56)
   // ──────────────────────────────────────────
@@ -82,11 +79,11 @@
   // ──────────────────────────────────────────
 
   // Инициализируем ввод
-  initInput();
+  window.initInput();
 
   // SplashMosaic вынесен в ui/splash_mosaic.js (uisuper.md этап 37).
   // Инициализируем сразу (DOM уже готов — скрипт в конце body)
-  try { SplashMosaic.init(); } catch (e) { console.error('[SplashMosaic] init error:', e); }
+  try { window.SplashMosaic.init(); } catch (e) { console.error('[SplashMosaic] init error:', e); }
 
   // Clepsydra вынесен в ui/clepsydra.js (uisuper.md этап 38).
 
@@ -105,8 +102,8 @@
   function _splashHide() {
     if (!_splash) return;
     // Шаг 58 — плавная анимация splashFade через ui/splash.js
-    if (typeof hideSplashWithAnimation === 'function') {
-      hideSplashWithAnimation();
+    if (typeof window.hideSplashWithAnimation === 'function') {
+      window.hideSplashWithAnimation();
       return;
     }
     _splash.style.opacity = '0';
@@ -137,47 +134,47 @@
   // Шаг 58 — инициализируем splash с fallback-фоном
   // (фреска уточнится после initGame, когда станет известна нация игрока).
   try {
-    if (typeof initSplash === 'function') initSplash(null);
+    if (typeof window.initSplash === 'function') window.initSplash(null);
   } catch (e) { console.error('[initSplash] error:', e); }
 
   _splashProgress(10, 'Инициализация...');
-  initGame().then(function () {
+  window.initGame().then(function () {
     _splashProgress(60, 'Загрузка карты...');
-    initAllSenates();
+    window.initAllSenates();
     _splashProgress(80, 'Подготовка наций...');
-    renderNationLegend();
+    window.renderNationLegend();
     _splashProgress(95, 'Готово');
-    initAPIKey();
+    window.initAPIKey();
     // Шаг 56 — применить культурную тему панелей для нации игрока
     try {
-      if (typeof applyNationTheme === 'function' && GAME_STATE && GAME_STATE.player_nation) {
-        applyNationTheme(GAME_STATE.player_nation);
+      if (typeof window.applyNationTheme === 'function' && window.GAME_STATE && window.GAME_STATE.player_nation) {
+        window.applyNationTheme(window.GAME_STATE.player_nation);
       }
     } catch (e) { console.error('[applyNationTheme] error:', e); }
     // Шаг 58 — обновить фреску splash под культуру нации игрока
     try {
-      if (typeof initSplash === 'function' && GAME_STATE && GAME_STATE.player_nation) {
-        initSplash(GAME_STATE.player_nation);
+      if (typeof window.initSplash === 'function' && window.GAME_STATE && window.GAME_STATE.player_nation) {
+        window.initSplash(window.GAME_STATE.player_nation);
       }
     } catch (e) { console.error('[initSplash] error:', e); }
     // Шаг 60 — заголовок нации в топ-баре (иконка + имя)
     try {
-      if (typeof updateNationHeader === 'function' && GAME_STATE && GAME_STATE.player_nation) {
-        var pn = GAME_STATE.nations && GAME_STATE.nations[GAME_STATE.player_nation];
-        updateNationHeader(GAME_STATE.player_nation, pn && pn.name);
+      if (typeof window.updateNationHeader === 'function' && window.GAME_STATE && window.GAME_STATE.player_nation) {
+        var pn = window.GAME_STATE.nations && window.GAME_STATE.nations[window.GAME_STATE.player_nation];
+        window.updateNationHeader(window.GAME_STATE.player_nation, pn && pn.name);
       }
     } catch (e) { console.error('[updateNationHeader] error:', e); }
     // Шаг 29 / Шаг 61 — стартовый режим карты: политический
     // uisuper Этап 20 — WindRose.setActive вызывается внутри setMapMode
     try {
-      if (typeof setMapMode === 'function') {
-        setMapMode('political');
+      if (typeof window.setMapMode === 'function') {
+        window.setMapMode('political');
       }
     } catch (e) { console.error('[setMapMode] error:', e); }
     // uisuper Этап 20 — keyboard navigation для лепестков розы ветров
     try {
-      if (typeof initWindRoseKeyboard === 'function') {
-        initWindRoseKeyboard();
+      if (typeof window.initWindRoseKeyboard === 'function') {
+        window.initWindRoseKeyboard();
       }
     } catch (e) { console.error('[initWindRoseKeyboard] error:', e); }
     // Шаг 58 — показать кнопку «Начать игру» вместо авто-скрытия.
@@ -187,8 +184,8 @@
     // появится сразу.
     var _revealStartBtn = function () {
       try {
-        if (typeof showSplashStartButton === 'function') {
-          showSplashStartButton();
+        if (typeof window.showSplashStartButton === 'function') {
+          window.showSplashStartButton();
         } else {
           setTimeout(_splashHide, 300);
         }
@@ -222,7 +219,7 @@
 
     var mainNations = ['syracuse', 'rome', 'carthage', 'egypt', 'macedon'];
     legend.innerHTML = mainNations.map(function (nId) {
-      var nation = GAME_STATE.nations[nId];
+      var nation = window.GAME_STATE.nations[nId];
       if (!nation) return '';
       return '<div class="nation-legend-item">' +
         '<div class="nation-color-dot" style="background:' + nation.color + '"></div>' +
@@ -246,18 +243,18 @@
 
     btn.disabled = true;
     btn.innerHTML = '<span class="icon-wrap">' + (window.icon ? window.icon('end_turn') : '') + '</span> Генерирую...';
-    if (typeof setAIStatus === 'function') setAIStatus('busy');
+    if (typeof window.setAIStatus === 'function') window.setAIStatus('busy');
 
     try {
-      await generateCharactersForNation(GAME_STATE.player_nation, 7);
+      await generateCharactersForNation(window.GAME_STATE.player_nation, 7);
       btn.textContent = '✅ Советники явились';
-      if (typeof setAIStatus === 'function') setAIStatus('ready');
+      if (typeof window.setAIStatus === 'function') window.setAIStatus('ready');
     } catch (err) {
       console.error('Ошибка генерации персонажей:', err);
       addEventLog('Ошибка генерации персонажей: ' + err.message, 'warning');
       btn.disabled = false;
       btn.innerHTML = '<span class="icon-wrap">' + (window.icon ? window.icon('ai') : '') + '</span> Созвать советников (AI)';
-      if (typeof setAIStatus === 'function') setAIStatus('error');
+      if (typeof window.setAIStatus === 'function') window.setAIStatus('error');
     }
   };
 
@@ -273,12 +270,12 @@
         closeSettingsModal();
         return;
       }
-      closeCharacterDetail();
+      window.closeCharacterDetail();
       var votingOverlay = document.getElementById('voting-overlay');
       if (votingOverlay && votingOverlay.style.display !== 'none') {
         votingOverlay.style.display = 'none';
       }
-      closeRegionInfo();
+      window.closeRegionInfo();
     }
   });
 
@@ -290,5 +287,3 @@
   // Шаг 33 — Строка статуса (#status-bar) → вынесена в ui/status_bar.js (этап 40)
   // Шаг 34 — Поиск по игре → вынесен в ui/top_bar.js (этап 41)
   // (initSearch IIFE удалён — код теперь в ui/top_bar.js)
-
-})();

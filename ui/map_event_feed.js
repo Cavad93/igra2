@@ -8,7 +8,7 @@
 //
 // API:
 //   addMapEvent({ regionId, icon, text, type })
-//     regionId — ID региона (regionLayers[id].getCenter())
+//     regionId — ID региона (window.regionLayers[id].getCenter())
 //     icon     — эмодзи или строка (текст в теге <span>)
 //     text     — описание справа от иконки
 //     type     — опциональный ключ (добавляется как CSS-класс)
@@ -23,9 +23,6 @@
 //     `event-bubble` отрабатывает slideup / видимость / fadeout.
 //   • pointer-events: none — бабблы не перехватывают клики по регионам.
 // ══════════════════════════════════════════════════════════════════════
-
-(function () {
-  'use strict';
 
   // Константы — согласованы с CSS @keyframes event-bubble (2.6s).
   var MAX_ACTIVE_MARKERS = 5;
@@ -42,7 +39,7 @@
    * Добавить событие в ленту.
    * @param {{regionId:string, icon?:string, text?:string, type?:string}} evt
    */
-  function addMapEvent(evt) {
+  export function addMapEvent(evt) {
     if (!evt || typeof evt !== 'object') return;
     if (!evt.regionId) return;
     _queue.push({
@@ -58,7 +55,7 @@
    * Ручной запуск обработчика очереди. В обычной работе не нужен —
    * addMapEvent сам запускает цикл.
    */
-  function processEventFeedQueue() {
+  export function processEventFeedQueue() {
     _scheduleProcess(0);
   }
 
@@ -66,7 +63,7 @@
    * Очистить очередь и снять все активные маркеры. Безопасно вызывать
    * при перезагрузке игры / смене карты.
    */
-  function clearMapEventFeed() {
+  export function clearMapEventFeed() {
     _queue.length = 0;
     if (_processorTid !== null) {
       try { clearTimeout(_processorTid); } catch (_) {}
@@ -107,15 +104,15 @@
   // ── 3. Координаты региона ───────────────────────────────────────────
 
   function _regionLatLng(regionId) {
-    if (typeof regionLayers !== 'undefined' && regionLayers && regionLayers[regionId]) {
+    if (typeof window.regionLayers !== 'undefined' && regionLayers && window.regionLayers[regionId]) {
       try {
-        var c = regionLayers[regionId].getCenter();
+        var c = window.regionLayers[regionId].getCenter();
         if (c && typeof c.lat === 'number') return c;
       } catch (_) {}
     }
     // Fallback: _regionCenter([lat, lon]) из ui/map_armies.js
-    if (typeof _regionCenter === 'function' && typeof L !== 'undefined') {
-      var rc = _regionCenter(regionId);
+    if (typeof window._regionCenter === 'function' && typeof L !== 'undefined') {
+      var rc = window._regionCenter(regionId);
       if (rc && rc.length >= 2) return L.latLng(rc[0], rc[1]);
     }
     return null;
@@ -148,7 +145,7 @@
   }
 
   function _showEventMarker(entry) {
-    if (typeof leafletMap === 'undefined' || !leafletMap) return;
+    if (typeof window.leafletMap === 'undefined' || !window.leafletMap) return;
     if (typeof L === 'undefined') return;
 
     var latLng = _regionLatLng(entry.regionId);
@@ -169,7 +166,7 @@
         keyboard:    false,
         zIndexOffset: 1000
       });
-      marker.addTo(leafletMap);
+      marker.addTo(window.leafletMap);
     } catch (_) {
       return;
     }
@@ -187,9 +184,9 @@
       if (active && active.marker) {
         if (typeof active.marker.remove === 'function') {
           active.marker.remove();
-        } else if (typeof leafletMap !== 'undefined' && leafletMap &&
-                   typeof leafletMap.removeLayer === 'function') {
-          leafletMap.removeLayer(active.marker);
+        } else if (typeof window.leafletMap !== 'undefined' && leafletMap &&
+                   typeof window.leafletMap.removeLayer === 'function') {
+          window.leafletMap.removeLayer(active.marker);
         }
       }
     } catch (_) {}
@@ -214,4 +211,3 @@
     window.EVENT_FEED_DELAY_MS     = QUEUE_DELAY_MS;
     window.EVENT_FEED_LIFETIME_MS  = MARKER_LIFETIME_MS;
   }
-})();

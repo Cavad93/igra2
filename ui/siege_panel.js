@@ -9,7 +9,7 @@ let _activeSiegeId = null;
 
 // ── Открыть панель осады ──────────────────────────────────────────────
 
-function showSiegePanel(siegeId) {
+export function showSiegePanel(siegeId) {
   const siege = (GAME_STATE.sieges ?? []).find(s => s.id === siegeId);
   if (!siege || siege.status !== 'active') return;
 
@@ -27,7 +27,7 @@ function showSiegePanel(siegeId) {
   _startCatapultAnim();
 }
 
-function closeSiegePanel() {
+export function closeSiegePanel() {
   _activeSiegeId = null;
   const panel = document.getElementById('siege-panel');
   if (panel) {
@@ -39,7 +39,7 @@ function closeSiegePanel() {
 }
 
 // Вызывается после каждого хода если панель открыта
-function refreshSiegePanel() {
+export function refreshSiegePanel() {
   if (!_activeSiegeId) return;
   const siege = (GAME_STATE.sieges ?? []).find(s => s.id === _activeSiegeId);
   if (!siege || siege.status !== 'active') {
@@ -164,7 +164,7 @@ function _setBar(id, pct, fillColor) {
 
 // ── Кнопка ШТУРМ ─────────────────────────────────────────────────────
 
-function siegePanelStorm() {
+export function siegePanelStorm() {
   if (!_activeSiegeId) return;
   const siege = (GAME_STATE.sieges ?? []).find(s => s.id === _activeSiegeId);
   if (!siege) return;
@@ -228,7 +228,7 @@ function _fireSiegeProjectile() {
 
 // ── Кнопка снятия осады ───────────────────────────────────────────────
 
-function siegePanelLift() {
+export function siegePanelLift() {
   if (!_activeSiegeId) return;
   const siege = (GAME_STATE.sieges ?? []).find(s => s.id === _activeSiegeId);
   if (!siege) return;

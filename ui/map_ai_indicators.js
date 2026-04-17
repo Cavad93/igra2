@@ -31,8 +31,7 @@
 //     Leaflet tooltip-плагинов).
 // ══════════════════════════════════════════════════════════════════════
 
-(function () {
-  'use strict';
+// ES module
 
   // ── Карта: action → { type, icon } ────────────────────────────────
   // Тип — канонический ключ группы действия (building / recruiting / …).
@@ -87,7 +86,7 @@
    * Зарегистрировать действие AI-нации.
    * @param {{nationId:string, action:string, regionId?:string, detail?:string}} info
    */
-  function recordAIAction(info) {
+  export function recordAIAction(info) {
     if (!info || typeof info !== 'object') return;
     if (!info.nationId || !info.action) return;
     var mapping = ACTION_ICON_MAP[info.action];
@@ -119,7 +118,7 @@
    * Очистить очередь действий и убрать все маркеры с карты.
    * Вызывается в начале processAINations() перед обработкой нового хода.
    */
-  function clearAIIndicators() {
+  export function clearAIIndicators() {
     _aiActions.length = 0;
     _removeAllMarkers();
   }
@@ -129,7 +128,7 @@
    * Если передан массив — он заменит текущий список (режим ручной вставки).
    * @param {Array=} actions
    */
-  function renderAIIndicators(actions) {
+  export function renderAIIndicators(actions) {
     if (actions && typeof actions.length === 'number') {
       // Заменяем текущие действия переданными.
       _aiActions.length = 0;
@@ -140,7 +139,7 @@
     // Снимаем старые маркеры, но _aiActions НЕ трогаем.
     _removeAllMarkers();
 
-    if (typeof leafletMap === 'undefined' || !leafletMap) return;
+    if (typeof window.leafletMap === 'undefined' || !window.leafletMap) return;
     if (typeof L === 'undefined') return;
 
     for (var j = 0; j < _aiActions.length; j++) {
@@ -156,26 +155,26 @@
       try {
         if (m && typeof m.remove === 'function') {
           m.remove();
-        } else if (typeof leafletMap !== 'undefined' && leafletMap &&
-                   typeof leafletMap.removeLayer === 'function') {
-          leafletMap.removeLayer(m);
+        } else if (typeof window.leafletMap !== 'undefined' && leafletMap &&
+                   typeof window.leafletMap.removeLayer === 'function') {
+          window.leafletMap.removeLayer(m);
         }
       } catch (_) {}
     }
   }
 
   function _regionLatLng(regionId) {
-    if (typeof regionLayers !== 'undefined' && regionLayers &&
-        regionLayers[regionId]) {
+    if (typeof window.regionLayers !== 'undefined' && window.regionLayers &&
+        window.regionLayers[regionId]) {
       try {
-        var c = regionLayers[regionId].getCenter();
+        var c = window.regionLayers[regionId].getCenter();
         if (c && typeof c.lat === 'number') return c;
       } catch (_) {}
     }
     // Fallback: _regionCenter([lat, lon]) из ui/map_armies.js
-    if (typeof _regionCenter === 'function' && typeof L !== 'undefined') {
+    if (typeof window._regionCenter === 'function' && typeof L !== 'undefined') {
       try {
-        var rc = _regionCenter(regionId);
+        var rc = window._regionCenter(regionId);
         if (rc && rc.length >= 2) return L.latLng(rc[0], rc[1]);
       } catch (_) {}
     }
@@ -192,31 +191,31 @@
   }
 
   function _nationColor(nationId) {
-    if (typeof GAME_STATE !== 'undefined' && GAME_STATE &&
-        GAME_STATE.nations && GAME_STATE.nations[nationId]) {
-      var n = GAME_STATE.nations[nationId];
+    if (typeof window.GAME_STATE !== 'undefined' && window.GAME_STATE &&
+        window.GAME_STATE.nations && window.GAME_STATE.nations[nationId]) {
+      var n = window.GAME_STATE.nations[nationId];
       if (n && n.color) return String(n.color);
     }
     return '#888';
   }
 
   function _nationName(nationId) {
-    if (typeof GAME_STATE !== 'undefined' && GAME_STATE &&
-        GAME_STATE.nations && GAME_STATE.nations[nationId]) {
-      var n = GAME_STATE.nations[nationId];
+    if (typeof window.GAME_STATE !== 'undefined' && window.GAME_STATE &&
+        window.GAME_STATE.nations && window.GAME_STATE.nations[nationId]) {
+      var n = window.GAME_STATE.nations[nationId];
       if (n && n.name) return String(n.name);
     }
     return String(nationId);
   }
 
   function _regionName(regionId) {
-    if (typeof MAP_REGIONS !== 'undefined' && MAP_REGIONS &&
-        MAP_REGIONS[regionId] && MAP_REGIONS[regionId].name) {
-      return String(MAP_REGIONS[regionId].name);
+    if (typeof window.MAP_REGIONS !== 'undefined' && window.MAP_REGIONS &&
+        window.MAP_REGIONS[regionId] && window.MAP_REGIONS[regionId].name) {
+      return String(window.MAP_REGIONS[regionId].name);
     }
-    if (typeof GAME_STATE !== 'undefined' && GAME_STATE &&
-        GAME_STATE.regions && GAME_STATE.regions[regionId]) {
-      var r = GAME_STATE.regions[regionId];
+    if (typeof window.GAME_STATE !== 'undefined' && window.GAME_STATE &&
+        window.GAME_STATE.regions && window.GAME_STATE.regions[regionId]) {
+      var r = window.GAME_STATE.regions[regionId];
       if (r && r.name) return String(r.name);
     }
     return String(regionId);
@@ -269,9 +268,9 @@
 
   // ── 3. Отладочные геттеры (для тестов и консоли) ──────────────────
 
-  function getAIActions()           { return _aiActions.slice(); }
-  function getAIActionsCount()      { return _aiActions.length; }
-  function getAIIndicatorMarkers()  { return _markers.length; }
+  export function getAIActions()           { return _aiActions.slice(); }
+  export function getAIActionsCount()      { return _aiActions.length; }
+  export function getAIIndicatorMarkers()  { return _markers.length; }
 
   // ── 4. Экспорт ────────────────────────────────────────────────────
 
@@ -285,4 +284,3 @@
     window.AI_INDICATOR_ACTION_MAP   = ACTION_ICON_MAP;
     window.AI_INDICATOR_MAX          = MAX_INDICATORS;
   }
-})();

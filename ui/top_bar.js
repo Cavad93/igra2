@@ -4,13 +4,10 @@
    переключение режимов карты, алерты, модалки, поиск.
    Рефакторинг Части II, этап 41 (uisuper.md).
    ─────────────────────────────────────────────────────────── */
-(function () {
-  'use strict';
-
   // ──────────────────────────────────────────
   // Модал настроек (⚙)
   // ──────────────────────────────────────────
-  function toggleSettingsModal() {
+  export function toggleSettingsModal() {
     var modal = document.getElementById('settings-modal');
     if (!modal) return;
     if (modal.classList.contains('open')) {
@@ -19,18 +16,18 @@
       openSettingsModal();
     }
   }
-  function openSettingsModal() {
+  export function openSettingsModal() {
     var modal = document.getElementById('settings-modal');
     if (!modal) return;
     modal.classList.add('open');
-    if (typeof _updateInlineKeyStatus === 'function') _updateInlineKeyStatus();
+    if (typeof window._updateInlineKeyStatus === 'function') window._updateInlineKeyStatus();
   }
-  function closeSettingsModal() {
+  export function closeSettingsModal() {
     var modal = document.getElementById('settings-modal');
     if (!modal) return;
     modal.classList.remove('open');
   }
-  function switchSettingsTab(name) {
+  export function switchSettingsTab(name) {
     var modal = document.getElementById('settings-modal');
     if (!modal) return;
     modal.querySelectorAll('.sm-tab').forEach(function (t) {
@@ -49,13 +46,13 @@
   // ──────────────────────────────────────────
   // Горячие клавиши — вспомогательные
   // ──────────────────────────────────────────
-  function switchLeftTab(tabName) {
-    if (typeof renderLeftPanelTab === 'function') {
-      renderLeftPanelTab(tabName);
+  export function switchLeftTab(tabName) {
+    if (typeof window.renderLeftPanelTab === 'function') {
+      window.renderLeftPanelTab(tabName);
     }
   }
 
-  function focusCommandInput() {
+  export function focusCommandInput() {
     var inp = document.getElementById('command-input');
     if (inp) {
       inp.focus();
@@ -64,7 +61,7 @@
   }
 
   var _alertCycleIdx = -1;
-  function focusNextAlert() {
+  export function focusNextAlert() {
     var badges = Array.from(document.querySelectorAll('#left-nav .lnav-badge'))
       .filter(function (b) { return b && b.style.display !== 'none'; });
     if (badges.length === 0) return false;
@@ -79,9 +76,9 @@
     return true;
   }
 
-  function closeTopModal() {
-    if (typeof isDiploGraphOpen === 'function' && isDiploGraphOpen()) {
-      closeDiploGraph();
+  export function closeTopModal() {
+    if (typeof window.isDiploGraphOpen === 'function' && window.isDiploGraphOpen()) {
+      window.closeDiploGraph();
       return true;
     }
     if (typeof isSearchOpen === 'function' && isSearchOpen()) {
@@ -93,10 +90,10 @@
       closeSettingsModal();
       return true;
     }
-    if (typeof closeCharacterDetail === 'function') {
+    if (typeof window.closeCharacterDetail === 'function') {
       var co = document.getElementById('char-overlay');
       if (co && co.classList && co.classList.contains('open')) {
-        closeCharacterDetail();
+        window.closeCharacterDetail();
         return true;
       }
     }
@@ -105,35 +102,35 @@
       votingOverlay.style.display = 'none';
       return true;
     }
-    if (typeof closeRegionInfo === 'function') {
-      closeRegionInfo();
+    if (typeof window.closeRegionInfo === 'function') {
+      window.closeRegionInfo();
     }
     var op = document.getElementById('orders-panel');
     if (op && !op.classList.contains('closed')) {
-      if (typeof toggleOrdersMini === 'function') toggleOrdersMini();
+      if (typeof window.toggleOrdersMini === 'function') window.toggleOrdersMini();
       return true;
     }
     return false;
   }
 
-  function cycleMapMode() {
-    if (typeof setMapMode === 'function' && Array.isArray(window.MAP_MODES)) {
+  export function cycleMapMode() {
+    if (typeof window.setMapMode === 'function' && Array.isArray(window.MAP_MODES)) {
       var modes = window.MAP_MODES;
       var cur = window.CURRENT_MAP_MODE || modes[0];
       var i = modes.indexOf(cur);
       var next = modes[(i + 1) % modes.length];
-      setMapMode(next);
+      window.setMapMode(next);
       return;
     }
-    if (typeof showToast === 'function') {
-      showToast('Режимы карты будут добавлены в Шаге 29', 'info');
+    if (typeof window.showToast === 'function') {
+      window.showToast('Режимы карты будут добавлены в Шаге 29', 'info');
     }
   }
 
   // ──────────────────────────────────────────
   // Главный обработчик горячих клавиш
   // ──────────────────────────────────────────
-  function onHotkey(e) {
+  export function onHotkey(e) {
     if (e.ctrlKey || e.altKey || e.metaKey) return;
     var t = e.target;
     if (t) {
@@ -146,7 +143,7 @@
     var key = e.key;
     if (key === ' ' || key === 'Spacebar') {
       e.preventDefault();
-      if (typeof processTurn === 'function') processTurn();
+      if (typeof window.processTurn === 'function') window.processTurn();
       return;
     }
     if (key === 'Escape') { closeTopModal(); return; }
@@ -159,13 +156,13 @@
     }
     if (key === '/') {
       e.preventDefault();
-      if (typeof toggleSearchPanel === 'function') toggleSearchPanel();
+      if (typeof window.toggleSearchPanel === 'function') window.toggleSearchPanel();
       else if (typeof focusCommandInput === 'function') focusCommandInput();
       return;
     }
     if (key === '[') {
       e.preventDefault();
-      if (typeof toggleDiptych === 'function') toggleDiptych();
+      if (typeof window.toggleDiptych === 'function') window.toggleDiptych();
       return;
     }
     var k = key.length === 1 ? key.toLowerCase() : key;
@@ -174,10 +171,10 @@
       case 'd': e.preventDefault(); switchLeftTab('diplomacy'); break;
       case 'a': e.preventDefault(); switchLeftTab('army'); break;
       case 'm': e.preventDefault(); cycleMapMode(); break;
-      case '1': e.preventDefault(); if (typeof setMapMode === 'function') setMapMode('political'); break;
-      case '2': e.preventDefault(); if (typeof setMapMode === 'function') setMapMode('economy'); break;
-      case '3': e.preventDefault(); if (typeof setMapMode === 'function') setMapMode('military'); break;
-      case '4': e.preventDefault(); if (typeof setMapMode === 'function') setMapMode('population'); break;
+      case '1': e.preventDefault(); if (typeof window.setMapMode === 'function') window.setMapMode('political'); break;
+      case '2': e.preventDefault(); if (typeof window.setMapMode === 'function') window.setMapMode('economy'); break;
+      case '3': e.preventDefault(); if (typeof window.setMapMode === 'function') window.setMapMode('military'); break;
+      case '4': e.preventDefault(); if (typeof window.setMapMode === 'function') window.setMapMode('population'); break;
     }
   }
 
@@ -195,8 +192,8 @@
   // ══════════════════════════════════════════════════
   function _buildCtxMenuItems(regionId) {
     var items = [];
-    var gs = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
-    var mr = (typeof MAP_REGIONS !== 'undefined') ? MAP_REGIONS : null;
+    var gs = window.GAME_STATE || null;
+    var mr = (typeof window.MAP_REGIONS !== 'undefined') ? MAP_REGIONS : null;
     var region = gs && gs.regions && gs.regions[regionId] ? gs.regions[regionId] : null;
     var mapData = mr && mr[regionId] ? mr[regionId] : null;
     var playerId = gs ? gs.player_nation : undefined;
@@ -207,8 +204,8 @@
     items.push({
       label: 'Подробности', icon: 'laws',
       action: function () {
-        if (typeof onRegionClick === 'function') onRegionClick(regionId);
-        else if (typeof showRegionInfo === 'function') showRegionInfo(regionId);
+        if (typeof window.onRegionClick === 'function') window.onRegionClick(regionId);
+        else if (typeof window.showRegionInfo === 'function') window.showRegionInfo(regionId);
       }
     });
 
@@ -225,8 +222,8 @@
         items.push({
           label: 'Атаковать', icon: 'army',
           action: function () {
-            if (typeof onRegionClick === 'function') onRegionClick(regionId);
-            if (typeof showToast === 'function') showToast('Выберите армию и цель для атаки', 'info');
+            if (typeof window.onRegionClick === 'function') window.onRegionClick(regionId);
+            if (typeof window.showToast === 'function') window.showToast('Выберите армию и цель для атаки', 'info');
           }
         });
       }
@@ -238,9 +235,9 @@
           label: 'Предложить союз', icon: 'diplomacy',
           action: function () {
             if (typeof switchLeftTab === 'function') switchLeftTab('diplomacy');
-            if (typeof showToast === 'function') {
+            if (typeof window.showToast === 'function') {
               var nn = gs && gs.nations && gs.nations[ownerId] ? (gs.nations[ownerId].name || ownerId) : ownerId;
-              showToast('Дипломатия: ' + nn, 'info');
+              window.showToast('Дипломатия: ' + nn, 'info');
             }
           }
         });
@@ -252,21 +249,21 @@
       items.push({
         label: 'Построить', icon: 'court',
         action: function () {
-          if (typeof onRegionClick === 'function') onRegionClick(regionId);
-          if (typeof switchRegionTab === 'function') switchRegionTab('build');
+          if (typeof window.onRegionClick === 'function') window.onRegionClick(regionId);
+          if (typeof window.switchRegionTab === 'function') window.switchRegionTab('build');
         }
       });
       items.push({
         label: 'Управление', icon: 'orders',
         action: function () {
-          if (typeof onRegionClick === 'function') onRegionClick(regionId);
+          if (typeof window.onRegionClick === 'function') window.onRegionClick(regionId);
         }
       });
     }
     return items;
   }
 
-  function showContextMenu(x, y, regionOrId) {
+  export function showContextMenu(x, y, regionOrId) {
     var menu = document.getElementById('ctx-menu');
     if (!menu) return;
     var regionId = (typeof regionOrId === 'string')
@@ -314,7 +311,7 @@
     menu.style.top  = top  + 'px';
   }
 
-  function closeCtxMenu() {
+  export function closeCtxMenu() {
     var menu = document.getElementById('ctx-menu');
     if (menu) menu.style.display = 'none';
   }
@@ -414,7 +411,7 @@
     function performSearch(query) {
       var q = (query || '').trim().toLowerCase();
       if (!q) return { regions: [], nations: [], characters: [] };
-      var gs = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
+      var gs = window.GAME_STATE || null;
       var regions = [];
       var nations = [];
       var characters = [];
@@ -431,10 +428,10 @@
             }
           }
         }
-        if (typeof MAP_REGIONS !== 'undefined' && MAP_REGIONS) {
+        if (typeof window.MAP_REGIONS !== 'undefined' && MAP_REGIONS) {
           for (var id2 in MAP_REGIONS) {
             if (seen.has(id2)) continue;
-            var md = MAP_REGIONS[id2];
+            var md = window.MAP_REGIONS[id2];
             if (!md) continue;
             var name2 = md.name || id2;
             if (_matches(name2, q)) {
@@ -568,21 +565,21 @@
 
     function _goToRegion(regionId) {
       try {
-        var md = (typeof MAP_REGIONS !== 'undefined') ? MAP_REGIONS[regionId] : null;
-        if (md && md.center && typeof leafletMap !== 'undefined' && leafletMap) {
-          var zoom = Math.max(leafletMap.getZoom() || 5, 6);
-          leafletMap.flyTo([md.center[0], md.center[1]], zoom, { duration: 0.6 });
+        var md = (typeof window.MAP_REGIONS !== 'undefined') ? window.MAP_REGIONS[regionId] : null;
+        if (md && md.center && typeof window.window.leafletMap !== 'undefined' && window.leafletMap) {
+          var zoom = Math.max(window.leafletMap.getZoom() || 5, 6);
+          window.leafletMap.flyTo([md.center[0], md.center[1]], zoom, { duration: 0.6 });
         }
       } catch(_) {}
       try {
-        if (typeof onRegionClick === 'function') onRegionClick(regionId);
-        else if (typeof showRegionInfo === 'function') showRegionInfo(regionId);
+        if (typeof window.onRegionClick === 'function') window.onRegionClick(regionId);
+        else if (typeof window.showRegionInfo === 'function') window.showRegionInfo(regionId);
       } catch(_) {}
     }
 
     function _goToNation(nationId) {
       try {
-        var gs = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
+        var gs = window.GAME_STATE || null;
         var ids = [];
         if (gs && gs.regions) {
           for (var rid in gs.regions) {
@@ -590,40 +587,40 @@
             if (r && r.nation === nationId) ids.push(rid);
           }
         }
-        if (ids.length && typeof MAP_REGIONS !== 'undefined' && typeof leafletMap !== 'undefined' && leafletMap) {
+        if (ids.length && typeof window.MAP_REGIONS !== 'undefined' && typeof window.window.leafletMap !== 'undefined' && window.leafletMap) {
           var sumLat = 0, sumLng = 0, cnt = 0;
           for (var j = 0; j < ids.length; j++) {
-            var c = MAP_REGIONS[ids[j]] && MAP_REGIONS[ids[j]].center;
+            var c = window.MAP_REGIONS[ids[j]] && window.MAP_REGIONS[ids[j]].center;
             if (c) { sumLat += c[0]; sumLng += c[1]; cnt++; }
           }
           if (cnt > 0) {
-            leafletMap.flyTo([sumLat/cnt, sumLng/cnt], Math.max(leafletMap.getZoom() || 4, 5), { duration: 0.6 });
+            window.leafletMap.flyTo([sumLat/cnt, sumLng/cnt], Math.max(window.leafletMap.getZoom() || 4, 5), { duration: 0.6 });
           }
         }
       } catch(_) {}
       try {
-        var gs2 = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
+        var gs2 = window.GAME_STATE || null;
         var n = gs2 && gs2.nations && gs2.nations[nationId] ? gs2.nations[nationId] : null;
-        if (typeof showToast === 'function') {
-          showToast('Нация: ' + (n ? (n.name || nationId) : nationId), 'info');
+        if (typeof window.showToast === 'function') {
+          window.showToast('Нация: ' + (n ? (n.name || nationId) : nationId), 'info');
         }
       } catch(_) {}
     }
 
     function _goToCharacter(charId, nationId) {
       try {
-        var gs = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
-        if (gs && nationId === gs.player_nation && typeof showCharacterDetail === 'function') {
-          showCharacterDetail(charId);
+        var gs = window.GAME_STATE || null;
+        if (gs && nationId === gs.player_nation && typeof window.showCharacterDetail === 'function') {
+          window.showCharacterDetail(charId);
           return;
         }
       } catch(_) {}
       try {
-        var gs2 = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
+        var gs2 = window.GAME_STATE || null;
         var n = gs2 && gs2.nations && gs2.nations[nationId] ? gs2.nations[nationId] : null;
         var ch = (n && n.characters || []).find(function (x) { return x && x.id === charId; });
-        if (typeof showToast === 'function') {
-          showToast('Персонаж: ' + (ch ? (ch.name || charId) : charId) + ' (' + (n ? (n.name || nationId) : nationId) + ')', 'info');
+        if (typeof window.showToast === 'function') {
+          window.showToast('Персонаж: ' + (ch ? (ch.name || charId) : charId) + ' (' + (n ? (n.name || nationId) : nationId) + ')', 'info');
         }
       } catch(_) {}
     }
@@ -669,5 +666,3 @@
     window.renderSearchResults = renderSearchResults;
     window.goToSearchResult    = goToSearchResult;
   })();
-
-})();

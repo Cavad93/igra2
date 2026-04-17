@@ -129,7 +129,7 @@ function _troopIcons(count) {
 
 // ── Главная функция ───────────────────────────────────────────────────
 
-function showBattleResult(r) {
+export function showBattleResult(r) {
   const overlay = document.getElementById('battle-result-overlay');
   if (!overlay) return;
 
@@ -340,7 +340,7 @@ function showBattleResult(r) {
 
 // ── Закрыть ───────────────────────────────────────────────────────────
 
-function closeBattleResult() {
+export function closeBattleResult() {
   if (_brTimer)  { clearTimeout(_brTimer);   _brTimer  = null; }
   if (_brRafId)  { cancelAnimationFrame(_brRafId); _brRafId = null; }
   _brParticles = [];

@@ -16,9 +16,6 @@
 // resource bar is refreshed.
 // ─────────────────────────────────────────────────────────────────
 
-(function () {
-  'use strict';
-
   const RESOURCES = [
     { id: 'gold',   dir: 'up'    },
     { id: 'troops', dir: 'right' },
@@ -29,7 +26,7 @@
   // Maximum live particles per channel — keeps mobile performance safe.
   const MAX_PARTICLES = 80;
 
-  const AquaWidget = {
+  export const AquaWidget = {
     _channels: {},
     _raf: null,
     _lastTs: 0,
@@ -206,9 +203,7 @@
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => AquaWidget.init());
       } else {
-        // Script injected after DOM ready — init on next tick.
         setTimeout(() => AquaWidget.init(), 0);
       }
     }
   }
-})();

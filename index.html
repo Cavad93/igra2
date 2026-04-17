@@ -8776,11 +8776,11 @@
 
   <!-- SVG-глифарий «монетный штамп». defer сохраняет порядок с module-скриптами.
        Файл выставляет window.ICONS и window.icon(). -->
-  <script defer src="ui/icons.js"></script>
-  <script defer src="ui/log.js"></script>
-  <script defer src="ui/toast.js"></script>
-  <script defer src="ui/pulse.js"></script>
-  <script defer src="ui/panel_resize.js"></script>
+  <script type="module" src="ui/icons.js"></script>
+  <script type="module" src="ui/log.js"></script>
+  <script type="module" src="ui/toast.js"></script>
+  <script type="module" src="ui/pulse.js"></script>
+  <script type="module" src="ui/panel_resize.js"></script>
   <script type="module" src="engine/pops.js"></script>
   <script type="module" src="engine/land_capacity.js"></script>
   <script type="module" src="engine/diplomacy.js"></script>
@@ -8826,38 +8826,38 @@
   <script type="module" src="engine/save.js"></script>
   <script type="module" src="engine/turn.js"></script>
   <script type="module" src="engine/init.js"></script>
-  <script defer src="ui/map.js?v=nationhash5"></script>
-  <script defer src="ui/map_armies.js"></script>
-  <script defer src="ui/map_events.js"></script>
-  <script defer src="ui/map_event_feed.js"></script>
-  <script defer src="ui/map_ai_indicators.js"></script>
-  <script defer src="ui/turn_summary_card.js"></script>
-  <script defer src="ui/region_compare.js"></script>
-  <script defer src="ui/region_build_tab.js"></script>
-  <script defer src="ui/diplomacy_tab.js"></script>
-  <script defer src="ui/diplo_graph.js"></script>
+  <script type="module" src="ui/map.js?v=nationhash5"></script>
+  <script type="module" src="ui/map_armies.js"></script>
+  <script type="module" src="ui/map_events.js"></script>
+  <script type="module" src="ui/map_event_feed.js"></script>
+  <script type="module" src="ui/map_ai_indicators.js"></script>
+  <script type="module" src="ui/turn_summary_card.js"></script>
+  <script type="module" src="ui/region_compare.js"></script>
+  <script type="module" src="ui/region_build_tab.js"></script>
+  <script type="module" src="ui/diplomacy_tab.js"></script>
+  <script type="module" src="ui/diplo_graph.js"></script>
   <!-- Шаг 73: детерминированный PRNG + процедурный SVG-портрет -->
   <script defer src="js/rng.js"></script>
-  <script defer src="ui/portrait_svg.js"></script>
-  <script defer src="ui/portrait.js"></script>
-  <script defer src="ui/splash_mosaic.js"></script>
-  <script defer src="ui/clepsydra.js"></script>
-  <script defer src="ui/turn_progress.js"></script>
-  <script defer src="ui/status_bar.js"></script>
-  <script defer src="ui/top_bar.js"></script>
-  <script defer src="ui/splash.js"></script>
-  <script defer src="ui/panels.js?v=nationhash5"></script>
-  <script defer src="ui/aqueduct.js"></script>
-  <script defer src="ui/government_tab.js"></script>
-  <script defer src="ui/population_tab.js"></script>
-  <script defer src="ui/economy_tab.js"></script>
+  <script type="module" src="ui/portrait_svg.js"></script>
+  <script type="module" src="ui/portrait.js"></script>
+  <script type="module" src="ui/splash_mosaic.js"></script>
+  <script type="module" src="ui/clepsydra.js"></script>
+  <script type="module" src="ui/turn_progress.js"></script>
+  <script type="module" src="ui/status_bar.js"></script>
+  <script type="module" src="ui/top_bar.js"></script>
+  <script type="module" src="ui/splash.js"></script>
+  <script type="module" src="ui/panels.js?v=nationhash5"></script>
+  <script type="module" src="ui/aqueduct.js"></script>
+  <script type="module" src="ui/government_tab.js"></script>
+  <script type="module" src="ui/population_tab.js"></script>
+  <script type="module" src="ui/economy_tab.js"></script>
   <!-- economy_react.jsx загружается последним: React+Babel уже доступны,
        все игровые globals (GAME_STATE, GOODS, getConsumptionBasket) готовы -->
-  <script defer src="ui/economy_react.jsx"></script>
-  <script defer src="ui/treasury-panel.js"></script>
-  <script defer src="ui/siege_panel.js"></script>
-  <script defer src="ui/battle_result.js"></script>
-  <script defer src="ui/peace_panel.js"></script>
+  <script type="module" src="ui/economy_react.jsx"></script>
+  <script type="module" src="ui/treasury-panel.js"></script>
+  <script type="module" src="ui/siege_panel.js"></script>
+  <script type="module" src="ui/battle_result.js"></script>
+  <script type="module" src="ui/peace_panel.js"></script>
   <script defer src="ai/prompts.js"></script>
   <script defer src="ai/parser.js"></script>
   <script defer src="ai/claude.js"></script>
@@ -8865,20 +8865,20 @@
   <script defer src="ai/utility_ai.js"></script>
   <script defer src="ai/commander_ai.js"></script>
   <script defer src="ai/treaty_interpreter.js"></script>
-  <script defer src="ui/apikey.js"></script>
-  <script defer src="ui/input.js"></script>
+  <script type="module" src="ui/apikey.js"></script>
+  <script type="module" src="ui/input.js"></script>
   <script type="module" src="engine/tactical_battle.js"></script>
-  <script defer src="ui/tactical_map.js"></script>
+  <script type="module" src="ui/tactical_map.js"></script>
   <script type="module" src="engine/noise.js"></script>
-  <script defer src="ui/battle_map_pixi.js"></script>
+  <script type="module" src="ui/battle_map_pixi.js"></script>
 
   <!-- Порядок загрузки критичен: компоненты → движок → ambient → reactions → diptych → boot.
        См. uisuper.md Этап 42. Менять порядок только после ревью. -->
-  <script defer src="ui/ambient.js"></script>
-  <script defer src="ui/reactions.js"></script>
-  <script defer src="ui/diptych.js"></script>
+  <script type="module" src="ui/ambient.js"></script>
+  <script type="module" src="ui/reactions.js"></script>
+  <script type="module" src="ui/diptych.js"></script>
   <!-- Все компоненты загружены — запускаем монтажный лист -->
-  <script defer src="ui/boot.js"></script>
+  <script type="module" src="ui/boot.js"></script>
 
 </body>
 </html>
