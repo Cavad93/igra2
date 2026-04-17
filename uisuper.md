@@ -9637,7 +9637,7 @@ refactor(ui): этап 74 — вынос CSS региона в ui/styles/regions
 
 ---
 
-## ЭТАП 75 — Рефакторинг: `ui/styles/population.css` и `economy.css`
+## ЭТАП 75 — Рефакторинг: `ui/styles/population.css` и `economy.css` ✅ ВЫПОЛНЕНО
 
 **Улучшение:** Часть IV — финальное расщепление `index.html`
 **Часть:** 4 из 9
