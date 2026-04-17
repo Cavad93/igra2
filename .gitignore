@@ -1,5 +1,6 @@
 node_modules/
 package-lock.json
+dist/
 data/backups/
 
 # Тяжёлые ассеты (JPG) — скачиваются через assets/download.sh, не хранятся в git

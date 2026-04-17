@@ -3281,6 +3281,7 @@ export function setMapMode(mode) {
 // а всё визуальное поведение завязано на CSS-селекторы по этому классу.
 // ══════════════════════════════════════════════════════════════
 
+window.ZOOM_LEVELS = {
   strategic: { max: 4 },
   regional:  { min: 4, max: 6.5 },
   detailed:  { min: 6.5 },

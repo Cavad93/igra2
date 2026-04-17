@@ -403,7 +403,7 @@ try {
 } catch (e) { console.error('[initSplash] error:', e); }
 
 // Прогресс-бар
-var _splash = document.getElementById('splash-screen');
+var _splashEl = document.getElementById('splash-screen');
 function _splashProgress(pct, text) {
   var bar = document.getElementById('splash-bar-fill');
   var lbl = document.getElementById('splash-status');
@@ -411,13 +411,13 @@ function _splashProgress(pct, text) {
   if (lbl) lbl.textContent = text;
 }
 function _splashHide() {
-  if (!_splash) return;
+  if (!_splashEl) return;
   if (typeof window.hideSplashWithAnimation === 'function') {
     window.hideSplashWithAnimation();
     return;
   }
-  _splash.style.opacity = '0';
-  setTimeout(function () { _splash.style.display = 'none'; }, 500);
+  _splashEl.style.opacity = '0';
+  setTimeout(function () { _splashEl.style.display = 'none'; }, 500);
 }
 
 _splashProgress(10, 'Инициализация...');
