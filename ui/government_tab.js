@@ -4,6 +4,8 @@
 // Не падает на нестандартных структурах — если поля нет, блок не рендерится.
 // ══════════════════════════════════════════════════════════════════════
 
+let _govSetupState = null;
+
 export function showGovernmentOverlay() {
   const overlay = document.getElementById('gov-overlay');
   if (!overlay) return;
@@ -212,10 +214,10 @@ const GOV_INSTITUTION_DESC = {
 };
 
 export function renderGovernmentConstructor(nation) {
-  if (!window._govSetupState) {
-    window._govSetupState = { step: 1, type: null, institutions: [] };
+  if (!_govSetupState) {
+    _govSetupState = { step: 1, type: null, institutions: [] };
   }
-  const state = window._govSetupState;
+  const state = _govSetupState;
 
   const stepLabels = [
     { n: 1, label: '1. Тип правления' },
@@ -424,12 +426,12 @@ function renderGovSetupStep3(type, institutions, nation) {
 // ── Wizard-навигация ──────────────────────────────────────────────────
 
 export function govSetupStep2(type) {
-  window._govSetupState = { step: 2, type, institutions: [] };
+  _govSetupState = { step: 2, type, institutions: [] };
   renderGovernmentOverlay();
 }
 
 export function govSetupToggleInst(instId) {
-  const state = window._govSetupState;
+  const state = _govSetupState;
   if (!state) return;
   const idx = state.institutions.indexOf(instId);
   if (idx >= 0) {
@@ -441,14 +443,14 @@ export function govSetupToggleInst(instId) {
 }
 
 function govSetupStep3() {
-  const state = window._govSetupState;
+  const state = _govSetupState;
   if (!state || state.institutions.length < 2) return;
   state.step = 3;
   renderGovernmentOverlay();
 }
 
 function govSetupBack() {
-  const state = window._govSetupState;
+  const state = _govSetupState;
   if (!state) return;
   if (state.step > 1) {
     state.step--;
@@ -461,11 +463,11 @@ function govSetupBack() {
 }
 
 function govSetupConfirm() {
-  const state = window._govSetupState;
+  const state = _govSetupState;
   if (!state) return;
   const nationId = GAME_STATE.player_nation;
   applyGovernmentSetup(nationId, { type: state.type, institutions: state.institutions });
-  window._govSetupState = null;
+  _govSetupState = null;
   renderGovernmentOverlay();
   if (typeof renderLeftPanel === 'function') renderLeftPanel();
 }

@@ -10,7 +10,6 @@ export function safeSet(id, value, attr) {
   if (!el) return;
   el[attr || 'textContent'] = value;
 }
-if (!window.safeSet) window.safeSet = safeSet;
 
 export function updateSbGame() { /* no-op */ }
 

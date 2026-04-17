@@ -534,3 +534,25 @@ ui/boot.js        (точка входа, монтирует всё прилож
 ---
 
 *Конец аудита. Ни один .js или .html файл не изменён.*
+
+---
+
+## Финальные метрики (Этап 66)
+
+| Метрика | Значение | Статус |
+|---------|----------|--------|
+| Inline `onclick=` в HTML | 0 | ✅ |
+| Inline `onclick=` в JS | 0 | ✅ |
+| `type="module"` в HTML | 1 (boot.js) | ✅ |
+| `window.X =` (кроме GAME_STATE) | 4 | ✅ ≤5 |
+| Единая точка входа | ui/boot.js | ✅ |
+| Реестр обработчиков data-action | boot.js | ✅ |
+
+### Оставшиеся window-присваивания
+
+| Файл | Переменная | Причина |
+|------|-----------|---------|
+| data/nations.js | INITIAL_GAME_STATE | Bootstrap — начальное состояние |
+| ui/map.js | CURRENT_MAP_MODE | Cross-module state (top_bar.js читает) |
+| ui/portrait.js | __renderPortraitFallback | Canvas-iframe коммуникация |
+| engine/combat.js | _onTacticalBattleEnd | Cross-module callback (tactical_map.js вызывает) |

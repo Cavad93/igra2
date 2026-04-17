@@ -255,7 +255,7 @@ function _eRenderA(data) {
     }).join('');
 
     return `<div style="margin-bottom:8px;border-radius:10px;overflow:hidden;border:1px solid ${_C.border};background:rgba(15,22,15,0.6);box-shadow:0 4px 24px rgba(0,0,0,0.45)">
-      <button onclick="_eToggleCat('${cat}')" style="width:100%;display:flex;align-items:center;gap:10px;padding:12px 16px;background:transparent;border:none;border-bottom:${isOpen ? `1px solid ${_C.border}` : 'none'};cursor:pointer;text-align:left" onmouseover="this.style.background='rgba(212,175,55,0.07)'" onmouseout="this.style.background='transparent'">
+      <button data-action="_eToggleCat" data-arg="${cat}" style="width:100%;display:flex;align-items:center;gap:10px;padding:12px 16px;background:transparent;border:none;border-bottom:${isOpen ? `1px solid ${_C.border}` : 'none'};cursor:pointer;text-align:left" onmouseover="this.style.background='rgba(212,175,55,0.07)'" onmouseout="this.style.background='transparent'">
         <span style="font-size:20px;line-height:1">${meta.icon}</span>
         <div style="flex:1">
           <span style="font-size:12.5px;font-family:'Cinzel',serif;color:${meta.color};letter-spacing:.6px">${cat}</span>
@@ -355,7 +355,7 @@ function _eRenderC(selProf) {
   const profBtns = availProfs.map(p => {
     const m  = _E_PROF_DISP[p];
     const on = p === prof;
-    return `<button onclick="_eSelectProf('${p}')" style="padding:4px 12px;border-radius:16px;font-size:10px;cursor:pointer;font-family:inherit;background:${on ? 'rgba(74,159,106,0.18)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(74,159,106,0.5)' : _C.border};color:${on ? '#a8d8b0' : _C.ivoryDim}">${m.icon} ${m.name}</button>`;
+    return `<button data-action="_eSelectProf" data-arg="${p}" style="padding:4px 12px;border-radius:16px;font-size:10px;cursor:pointer;font-family:inherit;background:${on ? 'rgba(74,159,106,0.18)' : 'rgba(255,255,255,0.04)'};border:1px solid ${on ? 'rgba(74,159,106,0.5)' : _C.border};color:${on ? '#a8d8b0' : _C.ivoryDim}">${m.icon} ${m.name}</button>`;
   }).join('');
 
   const stackBar = Object.entries(byTier).map(([t, rows]) => {
@@ -410,9 +410,9 @@ let _eMarketSub    = 'world';   // 'world' | 'province' | 'region'
 let _eMarketProvTag = null;
 let _eMarketRegId   = null;
 
-function _eSetMarketSub(s)  { _eMarketSub = s; _eRender(); }
-function _eSetMarketProv(t) { _eMarketProvTag = t; _eRender(); }
-function _eSetMarketReg(id) { _eMarketRegId  = id; _eRender(); }
+export function _eSetMarketSub(s)  { _eMarketSub = s; _eRender(); }
+export function _eSetMarketProv(t) { _eMarketProvTag = t; _eRender(); }
+export function _eSetMarketReg(id) { _eMarketRegId  = id; _eRender(); }
 
 // ─── Загрузка рыночных данных ─────────────────────────────────────────────
 function _eLoadWorldGoods() {
@@ -575,7 +575,7 @@ function _eRenderM_Province() {
   const provNav = provList.map(p => {
     const on      = p.tag === selTag;
     const tierCol = tierColors[p.tier] || _C.ivoryDim;
-    return `<div onclick="_eSetMarketProv('${p.tag}')" style="padding:8px 12px;border-radius:7px;cursor:pointer;background:${on ? 'rgba(74,159,106,0.15)' : _C.bgGhost};border:1px solid ${on ? 'rgba(74,159,106,0.4)' : _C.border};margin-bottom:4px">
+    return `<div data-action="_eSetMarketProv" data-arg="${p.tag}" style="padding:8px 12px;border-radius:7px;cursor:pointer;background:${on ? 'rgba(74,159,106,0.15)' : _C.bgGhost};border:1px solid ${on ? 'rgba(74,159,106,0.4)' : _C.border};margin-bottom:4px">
       <div style="font-size:11px;color:${on ? '#a8d8b0' : _C.ivory};font-family:'Cinzel',serif;text-transform:capitalize">${p.tag}</div>
       <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
         <span style="font-size:9px;color:${tierCol}">${tierLabels[p.tier] || p.tier}</span>
@@ -658,7 +658,7 @@ function _eRenderM_Region() {
     const regItems = regs.map(r => {
       const on     = r.rid === selId;
       const nGoods = Object.keys(r.stocks).length;
-      return `<div onclick="_eSetMarketReg('${r.rid}')" style="padding:6px 10px;border-radius:6px;cursor:pointer;background:${on ? 'rgba(74,159,106,0.15)' : _C.bgGhost};border:1px solid ${on ? 'rgba(74,159,106,0.4)' : _C.border};margin-bottom:3px">
+      return `<div data-action="_eSetMarketReg" data-arg="${r.rid}" style="padding:6px 10px;border-radius:6px;cursor:pointer;background:${on ? 'rgba(74,159,106,0.15)' : _C.bgGhost};border:1px solid ${on ? 'rgba(74,159,106,0.4)' : _C.border};margin-bottom:3px">
         <div style="font-size:10.5px;color:${on ? '#a8d8b0' : _C.ivory}">${r.name}</div>
         <div style="font-size:8.5px;color:${_C.ivoryFade};margin-top:1px">${nGoods} товаров</div>
       </div>`;
@@ -744,7 +744,7 @@ function _eRenderM() {
   const sub = _eMarketSub;
   const nav = subTabs.map(t => {
     const on = t.id === sub;
-    return `<button onclick="_eSetMarketSub('${t.id}')" style="padding:5px 14px;border-radius:5px;font-size:10px;cursor:pointer;font-family:inherit;font-weight:${on ? 700 : 400};background:${on ? 'rgba(212,175,55,0.15)' : 'transparent'};border:${on ? `1px solid ${_C.borderAcc}` : `1px solid ${_C.border}`};color:${on ? _C.gold : _C.ivoryDim};transition:all .15s">${t.label}</button>`;
+    return `<button data-action="_eSetMarketSub" data-arg="${t.id}" style="padding:5px 14px;border-radius:5px;font-size:10px;cursor:pointer;font-family:inherit;font-weight:${on ? 700 : 400};background:${on ? 'rgba(212,175,55,0.15)' : 'transparent'};border:${on ? `1px solid ${_C.borderAcc}` : `1px solid ${_C.border}`};color:${on ? _C.gold : _C.ivoryDim};transition:all .15s">${t.label}</button>`;
   }).join('');
 
   const content =
@@ -865,7 +865,7 @@ function _eRender() {
 
   const tabNav = TABS.map(t => {
     const on = t.id === tab;
-    return `<button onclick="_eSetTab('${t.id}')" style="padding:7px 16px;border-radius:6px;font-size:10.5px;cursor:pointer;font-family:inherit;font-weight:${on ? 700 : 400};background:${on ? 'rgba(74,159,106,0.2)' : 'transparent'};border:${on ? '1px solid rgba(74,159,106,0.5)' : `1px solid ${_C.border}`};color:${on ? '#a8d8b0' : _C.ivoryDim};transition:all .15s" onmouseover="this.style.background='rgba(212,175,55,0.08)'" onmouseout="this.style.background='${on ? 'rgba(74,159,106,0.2)' : 'transparent'}'">
+    return `<button data-action="_eSetTab" data-arg="${t.id}" style="padding:7px 16px;border-radius:6px;font-size:10.5px;cursor:pointer;font-family:inherit;font-weight:${on ? 700 : 400};background:${on ? 'rgba(74,159,106,0.2)' : 'transparent'};border:${on ? '1px solid rgba(74,159,106,0.5)' : `1px solid ${_C.border}`};color:${on ? '#a8d8b0' : _C.ivoryDim};transition:all .15s" onmouseover="this.style.background='rgba(212,175,55,0.08)'" onmouseout="this.style.background='${on ? 'rgba(74,159,106,0.2)' : 'transparent'}'">
       ${t.label}${t.id === 'B' && alert ? ' <span class="eco-alert-blink" style="color:#e05555">●</span>' : ''}
     </button>`;
   }).join('');
@@ -878,7 +878,7 @@ function _eRender() {
                   _eRenderD();
 
   el.innerHTML = `
-    <div style="position:fixed;inset:0;background:rgba(0,0,0,0.84);z-index:3100;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 12px 48px" id="eco-backdrop" onclick="_eBackdropClick(event)">
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,0.84);z-index:3100;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 12px 48px" id="eco-backdrop" data-action-self="hideEconomyOverlay">
       <div style="width:920px;max-width:98vw;background:${_C.bgMain};backdrop-filter:blur(24px) saturate(1.5);border:1px solid ${_C.borderGrn};border-radius:12px;box-shadow:0 28px 90px rgba(0,0,0,0.92),inset 0 1px 0 rgba(74,159,106,0.09)">
 
         <!-- Header -->
@@ -898,7 +898,7 @@ function _eRender() {
             const pct = Math.round(b * 100);
             return `<div title="Технологический дрейф: +${pct}% к производству всех зданий. Растёт на +2% каждые ${window.TECH_DRIFT_INTERVAL || 120} ходов, потолок +${Math.round((window.TECH_DRIFT_MAX || 0.20)*100)}%." style="font-size:10px;color:#aacc66;padding:4px 8px;border:1px solid rgba(170,204,102,0.35);border-radius:6px;background:rgba(100,150,50,0.08)">⚒ Ремёсла: +${pct}%</div>`;
           })()}
-          <button onclick="hideEconomyOverlay()" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid ${_C.border};color:${_C.ivoryDim};font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1" onmouseover="this.style.background='rgba(224,85,85,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">✕</button>
+          <button data-action="hideEconomyOverlay" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid ${_C.border};color:${_C.ivoryDim};font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1" onmouseover="this.style.background='rgba(224,85,85,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">✕</button>
         </div>
 
         <!-- Hero -->
@@ -915,15 +915,15 @@ function _eRender() {
 }
 
 // ─── Обработчики событий (вызываются из inline onclick) ───────────────────
-function _eSetTab(t) {
+export function _eSetTab(t) {
   _ecoTab = t;
   _eRender();
 }
-function _eToggleCat(cat) {
+export function _eToggleCat(cat) {
   _eOpenCats[cat] = !_eOpenCats[cat];
   _eRender();
 }
-function _eSelectProf(p) {
+export function _eSelectProf(p) {
   _ecoSelProf = p;
   _eRender();
 }

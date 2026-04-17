@@ -11,18 +11,6 @@
 // ══════════════════════════════════════════════════════════════════════
 
 // ──────────────────────────────────────────────────────────────────────
-// FALLBACK — _addChronicleEntry (если achievements.js не загружен)
-// ──────────────────────────────────────────────────────────────────────
-if (typeof window._addChronicleEntry !== 'function') {
-  window._addChronicleEntry = function(entry) {
-    if (!GAME_STATE) return;
-    if (!GAME_STATE.chronicle_log) GAME_STATE.chronicle_log = [];
-    GAME_STATE.chronicle_log.push({ turn: GAME_STATE.turn ?? 0, ...entry });
-    if (GAME_STATE.chronicle_log.length > 50) GAME_STATE.chronicle_log.shift();
-  };
-}
-
-// ──────────────────────────────────────────────────────────────────────
 // СЕССИЯ 7 — ИТОГ ПРАВЛЕНИЯ
 // ──────────────────────────────────────────────────────────────────────
 

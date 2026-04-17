@@ -3,6 +3,7 @@
 // Координаты в формате Leaflet [lat, lng]
 
 export let leafletMap = null;          // экземпляр L.Map
+export let CURRENT_MAP_MODE = 'political';
 export let regionLayers = {};          // { regionId: L.Polygon }
 export let selectedRegionId = null;
 let awmcProvinceLayer = null;   // слой границ провинций из AWMC geodata
@@ -3162,6 +3163,7 @@ export function initWindRoseKeyboard() {
  */
 export function setMapMode(mode) {
   if (!MAP_MODES.includes(mode)) return;
+  CURRENT_MAP_MODE = mode;
   window.CURRENT_MAP_MODE = mode;
 
   // ЭТАП 20 (uisuper.md) — синхронизация розы ветров

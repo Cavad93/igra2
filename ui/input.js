@@ -2,6 +2,8 @@
 
 let inputHistory = [];
 let historyIndex = -1;
+let _pendingVoteData = null;
+let _pendingDebateVoteData = null;
 
 export function initInput() {
   const input  = document.getElementById('command-input');
@@ -400,7 +402,7 @@ export function showVotingModal(nationId, law) {
     ? `<div class="vote-senate-note">🏛️ Голосует Сенат (${votesFor + votesAgainst + votesAbstain} голосов)</div>`
     : '';
 
-  window._pendingVoteData = { nationId, law, votesFor: Math.round(votesFor), votesAgainst: Math.round(votesAgainst), votesAbstain: Math.round(votesAbstain), passed };
+  _pendingVoteData = { nationId, law, votesFor: Math.round(votesFor), votesAgainst: Math.round(votesAgainst), votesAbstain: Math.round(votesAbstain), passed };
 
   overlay.innerHTML = `
     <div class="voting-modal">
@@ -861,7 +863,7 @@ async function _runDebateAnimation(nationId, law, playerSpeech, result, speakers
   const btnEl = document.createElement('div');
   btnEl.style.textAlign = 'center';
   btnEl.style.marginTop = '16px';
-  window._pendingDebateVoteData = { nationId, law, votesFor: Math.round(result.for), votesAgainst: Math.round(result.against), votesAbstain: Math.round(result.abstain), passed: result.passed };
+  _pendingDebateVoteData = { nationId, law, votesFor: Math.round(result.for), votesAgainst: Math.round(result.against), votesAbstain: Math.round(result.abstain), passed: result.passed };
   btnEl.innerHTML = `
     <button class="debate-accept-btn" data-action="_pendingFinalizeDebateVote">
       Покинуть зал Сената
@@ -1085,11 +1087,11 @@ function formatEffectPath(path) {
 }
 
 function _pendingFinalizeVote() {
-  var d = window._pendingVoteData;
+  var d = _pendingVoteData;
   if (d) finalizeVote(d.nationId, d.law, d.votesFor, d.votesAgainst, d.votesAbstain, d.passed);
 }
 
 function _pendingFinalizeDebateVote() {
-  var d = window._pendingDebateVoteData;
+  var d = _pendingDebateVoteData;
   if (d) finalizeDebateVote(d.nationId, encodeURIComponent(JSON.stringify(d.law)), d.votesFor, d.votesAgainst, d.votesAbstain, d.passed);
 }
