@@ -163,9 +163,4 @@ export function createTestBattalions() {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.BATTALION_FORMATIONS = BATTALION_FORMATIONS;
-window.BATTALION_SIDES = BATTALION_SIDES;
-window.BATTALION_UNIT_TYPES = BATTALION_UNIT_TYPES;
-window.Battalion = Battalion;
-window.createTestBattalions = createTestBattalions;
 

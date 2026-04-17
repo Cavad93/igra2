@@ -389,16 +389,4 @@ export function _blendHexColors(c1, c2, t) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window._PROVINCE_ROAD_DISCOUNT = _PROVINCE_ROAD_DISCOUNT;
-window._PROVINCE_TRANSPORT_BASE = _PROVINCE_TRANSPORT_BASE;
-window._blendHexColors = _blendHexColors;
-window._provinceCulturalPresence = _provinceCulturalPresence;
-window.buildProvinceMarket = buildProvinceMarket;
-window.calculateProvinceControl = calculateProvinceControl;
-window.checkProvinceControlEvents = checkProvinceControlEvents;
-window.getProvinceBlendColor = getProvinceBlendColor;
-window.getProvinceMarketAccess = getProvinceMarketAccess;
-window.getRegionProvince = getRegionProvince;
-window.initProvinces = initProvinces;
-window.updateProvinceControl = updateProvinceControl;
 

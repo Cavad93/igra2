@@ -63,7 +63,4 @@ export function hideSplashWithAnimation() {
 
 // Backward compat
 if (typeof window !== 'undefined') {
-  window.initSplash               = initSplash;
-  window.showSplashStartButton    = showSplashStartButton;
-  window.hideSplashWithAnimation  = hideSplashWithAnimation;
 }

@@ -106,9 +106,4 @@ export const GameStorage = { save, load, clear, migrate };
 _open().catch(console.warn);
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.GameStorage = GameStorage;
-window.clear = clear;
-window.load = load;
-window.migrate = migrate;
-window.save = save;
 

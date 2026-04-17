@@ -306,12 +306,4 @@ export function applyPopSatisfiedToBuildings(nationId) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.POP_INITIAL_WEALTH = POP_INITIAL_WEALTH;
-window.POP_WEALTH_INERTIA = POP_WEALTH_INERTIA;
-window.applyPopSatisfiedToBuildings = applyPopSatisfiedToBuildings;
-window.calcNationBasketDemand = calcNationBasketDemand;
-window.ensureNationPops = ensureNationPops;
-window.getConsumptionBasket = getConsumptionBasket;
-window.updatePopSatisfied = updatePopSatisfied;
-window.updatePopWealth = updatePopWealth;
 

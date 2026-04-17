@@ -10925,6 +10925,3 @@ export var BUILDING_RECIPES = (function () {
 
   return result;
 })();
-window.CHAINS_DATA = CHAINS_DATA;
-window.RECIPE_DATA = RECIPE_DATA;
-window.BUILDING_RECIPES = BUILDING_RECIPES;

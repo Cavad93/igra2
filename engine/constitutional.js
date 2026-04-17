@@ -545,9 +545,4 @@ export class ConstitutionalEngine {
 export const CONSTITUTIONAL_ENGINE = new ConstitutionalEngine();
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.CONSTITUTIONAL_ENGINE = CONSTITUTIONAL_ENGINE;
-window.CONSUL_POWERS = CONSUL_POWERS;
-window.ConstitutionalEngine = ConstitutionalEngine;
-window.POWER_COMMANDS = POWER_COMMANDS;
-window.VOTING_SYSTEMS = VOTING_SYSTEMS;
 

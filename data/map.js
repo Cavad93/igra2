@@ -4165,5 +4165,3 @@ export const SEA_LABELS = [
   { text: 'ИНДИЙСКИЙ ОКЕАН',    lat:  5.0,  lng: 70.0,  size: 13 },
   { text: 'ТИХИЙ ОКЕАН',        lat: 10.0,  lng:160.0,  size: 13 },
 ];
-window.MAP_REGIONS = MAP_REGIONS;
-window.SEA_LABELS = SEA_LABELS;

@@ -357,13 +357,4 @@ export function poissonDisk(mask, width, height, minDist, maxPoints, seed) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.DEFAULT_N_POINTS = DEFAULT_N_POINTS;
-window.DEFAULT_THRESHOLD = DEFAULT_THRESHOLD;
-window.DEFAULT_TREE_MAX_POINTS = DEFAULT_TREE_MAX_POINTS;
-window.DEFAULT_TREE_MIN_DIST = DEFAULT_TREE_MIN_DIST;
-window.FOREST_MAX = FOREST_MAX;
-window.FOREST_MIN = FOREST_MIN;
-window.generateForestMask = generateForestMask;
-window.poissonDisk = poissonDisk;
-window.worleyNoise = worleyNoise;
 

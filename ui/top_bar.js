@@ -38,10 +38,6 @@
     });
   }
 
-  window.toggleSettingsModal = toggleSettingsModal;
-  window.openSettingsModal   = openSettingsModal;
-  window.closeSettingsModal  = closeSettingsModal;
-  window.switchSettingsTab   = switchSettingsTab;
 
   // ──────────────────────────────────────────
   // Горячие клавиши — вспомогательные
@@ -180,12 +176,6 @@
 
   document.addEventListener('keydown', onHotkey);
 
-  window.onHotkey           = onHotkey;
-  window.switchLeftTab      = switchLeftTab;
-  window.focusCommandInput  = focusCommandInput;
-  window.focusNextAlert     = focusNextAlert;
-  window.closeTopModal      = closeTopModal;
-  window.cycleMapMode       = cycleMapMode;
 
   // ══════════════════════════════════════════════════
   // КОНТЕКСТНОЕ МЕНЮ ПРАВОЙ КНОПКИ МЫШИ
@@ -336,8 +326,6 @@
     }
   });
 
-  window.showContextMenu = showContextMenu;
-  window.closeCtxMenu    = closeCtxMenu;
 
   // ──────────────────────────────────────────
   // Поиск по игре
@@ -657,12 +645,4 @@
       _boot();
     }
 
-    window.toggleSearchPanel   = toggleSearchPanel;
-    window.openSearchPanel     = openSearchPanel;
-    window.closeSearchPanel    = closeSearchPanel;
-    window.isSearchOpen        = isSearchOpen;
-    window.onSearchInput       = onSearchInput;
-    window.performSearch       = performSearch;
-    window.renderSearchResults = renderSearchResults;
-    window.goToSearchResult    = goToSearchResult;
   })();

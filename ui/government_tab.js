@@ -3819,8 +3819,6 @@ export function toggleOrdersMini() {
 }
 
 if (typeof window !== 'undefined') {
-  window.updateOrdersMiniCount = updateOrdersMiniCount;
-  window.toggleOrdersMini      = toggleOrdersMini;
 }
 
 function _renderMpCard(order, isActive) {

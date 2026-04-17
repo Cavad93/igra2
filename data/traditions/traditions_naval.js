@@ -218,4 +218,3 @@ export const TRADITIONS_NAVAL = {
   },
 
 };
-window.TRADITIONS_NAVAL = TRADITIONS_NAVAL;

@@ -760,25 +760,4 @@ export function getCultureInfoForUI(nationId) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.checkCultureMixing = checkCultureMixing;
-window.checkCultureMutations = checkCultureMutations;
-window.countBuildingsByTag = countBuildingsByTag;
-window.countRegionsByTerrain = countRegionsByTerrain;
-window.countRegionsByType = countRegionsByType;
-window.countTreaties = countTreaties;
-window.cultureTick = cultureTick;
-window.evaluateMutationConditions = evaluateMutationConditions;
-window.findNationIdByCulture = findNationIdByCulture;
-window.findWeakestTradition = findWeakestTradition;
-window.getAllCultureBonuses = getAllCultureBonuses;
-window.getCultureBonus = getCultureBonus;
-window.getCultureBonusSum = getCultureBonusSum;
-window.getCultureInfoForUI = getCultureInfoForUI;
-window.getNationCultureStats = getNationCultureStats;
-window.getNationPrimaryCulture = getNationPrimaryCulture;
-window.initCultures = initCultures;
-window.initRegionCultures = initRegionCultures;
-window.processAssimilation = processAssimilation;
-window.shrinkMinorities = shrinkMinorities;
-window.updateCultureExperience = updateCultureExperience;
 

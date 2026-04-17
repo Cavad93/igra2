@@ -779,28 +779,4 @@ export function _findBuildingForGood(good, region) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.ORDER_TYPES = ORDER_TYPES;
-window.OVERSIGHT_FACTOR = OVERSIGHT_FACTOR;
-window.OVERSIGHT_LABELS = OVERSIGHT_LABELS;
-window._applyCommanderDecision = _applyCommanderDecision;
-window._applyOrderEffects = _applyOrderEffects;
-window._checkMidOrderEvents = _checkMidOrderEvents;
-window._completeOrder = _completeOrder;
-window._findBuildingForGood = _findBuildingForGood;
-window._findDeficitGood = _findDeficitGood;
-window._legacyMove = _legacyMove;
-window._orderIdCounter = _orderIdCounter;
-window._processNpcCommanderMove = _processNpcCommanderMove;
-window._progressOrder = _progressOrder;
-window.calcOrderQuality = calcOrderQuality;
-window.cancelOrder = cancelOrder;
-window.getActiveOrders = getActiveOrders;
-window.getCharSkills = getCharSkills;
-window.getCorruptionFactor = getCorruptionFactor;
-window.getEligibleChars = getEligibleChars;
-window.getOrderRoleMatch = getOrderRoleMatch;
-window.getRecentCompletedOrders = getRecentCompletedOrders;
-window.initOrders = initOrders;
-window.issueOrder = issueOrder;
-window.processAllOrders = processAllOrders;
 

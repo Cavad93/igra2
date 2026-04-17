@@ -1302,23 +1302,10 @@ function assignCommanderFromPicker(armyId, charId, isHire) {
 export function siegePanelStormDelayed() {
   setTimeout(() => { if (typeof siegePanelStorm === 'function') siegePanelStorm(); }, 50);
 }
-window.siegePanelStormDelayed = siegePanelStormDelayed;
 
 export function closeAssemblePanel() {
   var el = document.getElementById('assemble-army-panel');
   if (el) el.style.display = 'none';
 }
-window.closeAssemblePanel = closeAssemblePanel;
 
 // Backward compat
-window.initArmyLayers = initArmyLayers;
-window.renderAllArmies = renderAllArmies;
-window.renderBuildMarkers = renderBuildMarkers;
-window.formatArmySize = formatArmySize;
-window.createArmyIcon = createArmyIcon;
-window._regionCenter = _regionCenter;
-window.clearArmyMarkers = clearArmyMarkers;
-window.clearSiegeMarkers = clearSiegeMarkers;
-window.clearBuildMarkers = clearBuildMarkers;
-window.selectArmyInList = selectArmyInList;
-window.showAssemblePanel = showAssemblePanel;

@@ -70,5 +70,4 @@ export function showToast(message, type, duration) {
 
 // Backward compat: expose to non-module scripts (ai/)
 if (typeof window !== 'undefined') {
-  window.showToast = showToast;
 }

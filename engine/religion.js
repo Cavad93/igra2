@@ -1138,37 +1138,4 @@ export function setReligionPersecution(nationId, religionId) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window._addFervor = _addFervor;
-window._applyReligionPolicy = _applyReligionPolicy;
-window._blendColors = _blendColors;
-window._checkReligiousCrisis = _checkReligiousCrisis;
-window._checkSyncretism = _checkSyncretism;
-window._clamp = _clamp;
-window._createSyncreticReligion = _createSyncreticReligion;
-window._evaluateCanonMutation = _evaluateCanonMutation;
-window._findNationForReligion = _findNationForReligion;
-window._getNationDominantReligion = _getNationDominantReligion;
-window._getNeighborRegions = _getNeighborRegions;
-window._getReligionDef = _getReligionDef;
-window._inferReligionFromCulture = _inferReligionFromCulture;
-window._initDogmas = _initDogmas;
-window._isBuildingReligious = _isBuildingReligious;
-window._processCanonMutations = _processCanonMutations;
-window._processDogmaDrift = _processDogmaDrift;
-window._processReligionEvents = _processReligionEvents;
-window._processReligionSpread = _processReligionSpread;
-window._triggerProphet = _triggerProphet;
-window._triggerSchism = _triggerSchism;
-window._updateInstitutionalization = _updateInstitutionalization;
-window.getAllDogmaBonuses = getAllDogmaBonuses;
-window.getAllReligionBonuses = getAllReligionBonuses;
-window.getDogmaBonus = getDogmaBonus;
-window.getDogmaInfoForUI = getDogmaInfoForUI;
-window.getNationReligionStats = getNationReligionStats;
-window.getReligionBonus = getReligionBonus;
-window.initRegionReligions = initRegionReligions;
-window.initReligions = initReligions;
-window.religionTick = religionTick;
-window.setReligionPatronage = setReligionPatronage;
-window.setReligionPersecution = setReligionPersecution;
 

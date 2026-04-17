@@ -382,10 +382,3 @@ export function applyNationDecision(nationId, decision) {
   }
 }
 
-window.parseAIResponse = parseAIResponse;
-window.attemptJSONFix = attemptJSONFix;
-window.validateCommandParse = validateCommandParse;
-window.validateCharacterReaction = validateCharacterReaction;
-window.validateNationDecision = validateNationDecision;
-window.validateCharacters = validateCharacters;
-window.applyNationDecision = applyNationDecision;

@@ -36,6 +36,4 @@ export function triggerPulse(type) {
 
 // Backward compat: expose to non-module scripts (ai/)
 if (typeof window !== 'undefined') {
-  window.triggerPulse = triggerPulse;
-  window.PULSE_TYPES = PULSE_TYPES;
 }

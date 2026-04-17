@@ -2524,52 +2524,6 @@ function destroyBattleMap() {
 // Экспорт: глобалы (браузер) + module.exports (Node.js тесты)
 // ──────────────────────────────────────────────────────────────────────
 if (typeof window !== 'undefined') {
-  window.BIOMES             = BIOMES;
-  window.getBiomeColor      = getBiomeColor;
-  window.getBiomeAt         = getBiomeAt;
-  window.fillTerrainPixels  = fillTerrainPixels;
-  window.buildTerrainCanvas = buildTerrainCanvas;
-  window.renderTerrain      = renderTerrain;
-  window.buildProceduralParchmentCanvas = buildProceduralParchmentCanvas;
-  window.loadParchmentTexture = loadParchmentTexture;
-  window.renderParchmentOverlay = renderParchmentOverlay;
-  window.buildVignetteCanvas  = buildVignetteCanvas;
-  window.renderVignette       = renderVignette;
-  window.renderTerrainOverlays = renderTerrainOverlays;
-  window.chaikinSmooth        = chaikinSmooth;
-  window.mapRiverPathToScreen = mapRiverPathToScreen;
-  window.drawCatmullRomBezier = drawCatmullRomBezier;
-  window.renderRivers         = renderRivers;
-  window.renderRiversPolished = renderRiversPolished;
-  window.buildRiverSparkles   = buildRiverSparkles;
-  window.sampleSparklePosition = sampleSparklePosition;
-  window.drawRiverSparkles    = drawRiverSparkles;
-  window.startRiverSparkleTicker = startRiverSparkleTicker;
-  window.chaikin            = chaikin;
-  window.drawPolyline       = drawPolyline;
-  window.renderRoads        = renderRoads;
-  window.renderForests      = renderForests;
-  window.renderUnit         = renderUnit;
-  window.renderAllUnits     = renderAllUnits;
-  window.createBattleMapState       = createBattleMapState;
-  window.attachBattleMapInteractions = attachBattleMapInteractions;
-  window.selectBattalion             = selectBattalion;
-  window.deselectAll                 = deselectAll;
-  window.onMapClick                  = onMapClick;
-  window.redrawUnit                  = redrawUnit;
-  window.stepBattleMapAnimations     = stepBattleMapAnimations;
-  window.renderFortifications        = renderFortifications;
-  window.emitDamageNumber            = emitDamageNumber;
-  window.drawAimLine                 = drawAimLine;
-  window.removeAimLine               = removeAimLine;
-  window.initBattleMap      = initBattleMap;
-  window.destroyBattleMap   = destroyBattleMap;
-  window.renderTerrainCached = renderTerrainCached;
-  window.clearTerrainCache   = clearTerrainCache;
-  window.addBattleMapTicker  = addBattleMapTicker;
-  window.removeBattleMapTicker = removeBattleMapTicker;
-  window.pauseBattleMap      = pauseBattleMap;
-  window.resumeBattleMap     = resumeBattleMap;
 }
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
   module.exports = {

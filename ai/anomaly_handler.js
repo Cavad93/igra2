@@ -352,8 +352,4 @@ function resetThrottle(nationId) {
 // ─── ЭКСПОРТ ──────────────────────────────────────────────────────────────────
 
 export { handleAnomaly, getAnomalyLog, resetThrottle, ANOMALY_CONFIG };
-
-// Браузерный доступ для non-module скриптов
-if (typeof window !== 'undefined') {
-  window.AnomalyHandler = { handleAnomaly, getAnomalyLog, resetThrottle, ANOMALY_CONFIG };
-}
+export const AnomalyHandler = { handleAnomaly, getAnomalyLog, resetThrottle, ANOMALY_CONFIG };

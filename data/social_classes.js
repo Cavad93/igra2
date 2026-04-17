@@ -1083,14 +1083,3 @@ export function getClassBasedWealthTargets(nation) {
   }
   return result;
 }
-window.CLASS_FROM_PROFESSION = CLASS_FROM_PROFESSION;
-window.SOCIAL_CLASSES = SOCIAL_CLASSES;
-window.CLASS_CONFLICTS = CLASS_CONFLICTS;
-window.CONSUMPTION_TURNS = CONSUMPTION_TURNS;
-window.calculateClassPopulations = calculateClassPopulations;
-window.calculateClassNeeds = calculateClassNeeds;
-window.calculateTotalConsumptionByClass = calculateTotalConsumptionByClass;
-window.calculateClassSatisfaction = calculateClassSatisfaction;
-window.calculatePoliticalEffects = calculatePoliticalEffects;
-window.calculateWeightedHappiness = calculateWeightedHappiness;
-window.getClassBasedWealthTargets = getClassBasedWealthTargets;

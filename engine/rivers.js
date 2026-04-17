@@ -203,9 +203,4 @@ export function generateRivers(heightmap, count, seed) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.MIN_RIVER_LEN = MIN_RIVER_LEN;
-window.MOUNTAIN_H = MOUNTAIN_H;
-window.WATER_H = WATER_H;
-window.generateRivers = generateRivers;
-window.traceRiver = traceRiver;
 

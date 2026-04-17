@@ -228,7 +228,4 @@ export function calcRegionLandCapacity(region, regionId) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.BIOME_LAND_PARAMS = BIOME_LAND_PARAMS;
-window.calcRegionLandCapacity = calcRegionLandCapacity;
-window.getBuildingFootprint = getBuildingFootprint;
 

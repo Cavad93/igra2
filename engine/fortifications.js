@@ -96,8 +96,4 @@ export function generateFortifications(keyPoints, seed) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.FORT_MAX_POINTS = FORT_MAX_POINTS;
-window.FORT_MIN_POINTS = FORT_MIN_POINTS;
-window.FORT_RADIUS = FORT_RADIUS;
-window.generateFortifications = generateFortifications;
 

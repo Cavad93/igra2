@@ -232,10 +232,5 @@
 
   // ── Экспорт в глобал ──
   if (typeof window !== 'undefined') {
-    window.pinRegionForCompare       = pinRegionForCompare;
-    window.closeCompare              = closeCompare;
-    window.renderComparePanel        = renderComparePanel;
-    window.handleRegionClickForCompare = handleRegionClickForCompare;
-    window.getPinnedRegionId         = getPinnedRegionId;
   }
 

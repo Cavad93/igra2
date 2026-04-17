@@ -637,12 +637,6 @@ export function _recordTurnSummary() {
 // initGame, renderAll — вынесены в engine/init.js (Этап 53)
 
 // ── Window binding for data-action="processTurn" delegation in boot.js ──
-window.processTurn = processTurn;
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.IS_PROCESSING_TURN = IS_PROCESSING_TURN;
-window._ensureNationDefaults = _ensureNationDefaults;
-window._recordTurnSummary = _recordTurnSummary;
-window.processAINations = processAINations;
-window.processTurn = processTurn;
 

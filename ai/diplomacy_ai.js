@@ -452,8 +452,3 @@ ${currentDraft}
   return { draftText: currentDraft, comment: raw.slice(0, 300).trim() };
 }
 
-window.callDiplomacyAI = callDiplomacyAI;
-window.parseDiplomacyTreaty = parseDiplomacyTreaty;
-window.stripDiplomacyJSON = stripDiplomacyJSON;
-window.callTreatyDraftAI = callTreatyDraftAI;
-window.callTreatyRevisionAI = callTreatyRevisionAI;

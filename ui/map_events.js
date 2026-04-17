@@ -237,7 +237,4 @@
 
   // Экспорт
   if (typeof window !== 'undefined') {
-    window.showMapEvent      = showMapEvent;
-    window.clearMapEvents    = clearMapEvents;
-    window.MAP_EVENT_TYPES   = EVENT_TYPES;
   }

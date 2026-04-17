@@ -126,7 +126,6 @@
     },
   };
 
-  window.AmbientLayer = AmbientLayer;
 
   function _initAmbient() { AmbientLayer.init(); }
   if (document.readyState === 'loading') {

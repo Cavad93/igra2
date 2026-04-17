@@ -174,8 +174,5 @@
 
   // ── Экспорт в глобал ──
   if (typeof window !== 'undefined') {
-    window.snapshotNationState = snapshotNationState;
-    window.showTurnSummaryCard = showTurnSummaryCard;
-    window.closeTurnSummaryCard = closeTurnSummaryCard;
   }
 

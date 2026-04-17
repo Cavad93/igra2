@@ -2194,27 +2194,3 @@ export function applyLawGameChanges(changes, nationId) {
   return applied;
 }
 
-window.extractJSON = extractJSON;
-window.callClaude = callClaude;
-window.parsePlayerCommand = parsePlayerCommand;
-window.getCharacterReactions = getCharacterReactions;
-window.calculatePersonalImpact = calculatePersonalImpact;
-window.getAINationDecision = getAINationDecision;
-window.getAIBatchDecisions = getAIBatchDecisions;
-window.getAISingleDecision = getAISingleDecision;
-window.getAIWarDecision = getAIWarDecision;
-window.buildAvailableActions = buildAvailableActions;
-window.generateCharactersForNation = generateCharactersForNation;
-window.generateNewCharacter = generateNewCharacter;
-window.getRoleLabel = getRoleLabel;
-window.generateSenatorObituaryViaLLM = generateSenatorObituaryViaLLM;
-window.generateConstitutionalChronicleViaLLM = generateConstitutionalChronicleViaLLM;
-window.generateConspiracyManifestViaLLM = generateConspiracyManifestViaLLM;
-window.generateBloodFeudDialogueViaLLM = generateBloodFeudDialogueViaLLM;
-window.materializeSenatorViaLLM = materializeSenatorViaLLM;
-window.parseGovernmentDescription = parseGovernmentDescription;
-window.getGovernmentChangeReactions = getGovernmentChangeReactions;
-window.simulateInstitutionVote = simulateInstitutionVote;
-window.generateSenateDebateViaLLM = generateSenateDebateViaLLM;
-window.analyzeLawEffectsViaLLM = analyzeLawEffectsViaLLM;
-window.applyLawGameChanges = applyLawGameChanges;

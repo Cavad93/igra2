@@ -638,10 +638,4 @@ ${recentLines ? `ПРЕДЫДУЩИЙ КОНТЕКСТ:\n${recentLines}\n\n` : '
 
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window._DIALOGUE_TEMP_CHARS = _DIALOGUE_TEMP_CHARS;
-window.compressDirect = compressDirect;
-window.compressMemory = compressMemory;
-window.isSessionActive = isSessionActive;
-window.processPlayerInput = processPlayerInput;
-window.tick = tick;
 

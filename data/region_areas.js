@@ -3752,4 +3752,3 @@ export const REGION_AREAS = {
   "4147": 619.7,
   "4148": 994.2
 };
-window.REGION_AREAS = REGION_AREAS;

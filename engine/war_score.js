@@ -480,20 +480,4 @@ export const WarScoreEngine = {
 };
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.WAR_SCORE_CFG = WAR_SCORE_CFG;
-window.WarScoreEngine = WarScoreEngine;
-window.addWarScore = addWarScore;
-window.calcPeaceTermsCost = calcPeaceTermsCost;
-window.endWar = endWar;
-window.ensureWarsArray = ensureWarsArray;
-window.evaluateAIWarPosition = evaluateAIWarPosition;
-window.getActiveWar = getActiveWar;
-window.getWarContextForAI = getWarContextForAI;
-window.getWarScore = getWarScore;
-window.initWar = initWar;
-window.onBattleResult = onBattleResult;
-window.onNavalBattle = onNavalBattle;
-window.onSiegeComplete = onSiegeComplete;
-window.processBlockadeTick = processBlockadeTick;
-window.processHoldingTick = processHoldingTick;
 

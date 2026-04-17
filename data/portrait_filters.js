@@ -36,5 +36,3 @@ export function getPortraitFilter(idx) {
 }
 
 // ── Экспорт ────────────────────────────────────────────────────────────────
-window.PORTRAIT_FILTERS = PORTRAIT_FILTERS;
-window.getPortraitFilter = getPortraitFilter;

@@ -299,6 +299,3 @@ export const RELIGION_CONFIG = {
   PERSECUTION_HAPPINESS_COST: 3,     // цена счастья за гонения
   PATRONAGE_COST_PER_TURN:  50,      // золота за покровительство/ход
 };
-window.RELIGIONS = RELIGIONS;
-window.RELIGION_GROUPS = RELIGION_GROUPS;
-window.RELIGION_CONFIG = RELIGION_CONFIG;

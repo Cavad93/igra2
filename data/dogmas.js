@@ -360,8 +360,3 @@ export const DOGMA_CONFIG = {
   DOCTRINE_DRIFT_MAX: 3,            // максимальный сдвиг за год
   DOCTRINE_INERTIA: 0.3,            // сила притяжения к 50 (центру)
 };
-window.CANON_CATEGORIES = CANON_CATEGORIES;
-window.CANONS = CANONS;
-window.DOCTRINE_AXES = DOCTRINE_AXES;
-window.RELIGION_DOGMAS = RELIGION_DOGMAS;
-window.DOGMA_CONFIG = DOGMA_CONFIG;

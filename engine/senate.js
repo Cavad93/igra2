@@ -1386,12 +1386,4 @@ export function syncSenateConfigFromManager(nationId) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.HIDDEN_INTEREST_POOL = HIDDEN_INTEREST_POOL;
-window.SENATE_MANAGERS = SENATE_MANAGERS;
-window.SenateManager = SenateManager;
-window.VOTE_MODIFIERS = VOTE_MODIFIERS;
-window.getSenateManager = getSenateManager;
-window.initAllSenates = initAllSenates;
-window.initSenateForNation = initSenateForNation;
-window.syncSenateConfigFromManager = syncSenateConfigFromManager;
 

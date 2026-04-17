@@ -366,7 +366,6 @@ function _tpRenderEconomyExtSummary() {
   return `<div class="tp-eco-summary">${parts.join('')}</div>`;
 }
 if (typeof window !== 'undefined') {
-  window._tpRenderEconomyExtSummary = _tpRenderEconomyExtSummary;
 }
 
 // ─── Этап 6 — Усталость армии от недофинансирования ───────────────

@@ -137,4 +137,3 @@ export const CONFIG = {
   MAP_TILE_URL: 'https://cawm.lib.uiowa.edu/tiles/{z}/{x}/{y}.png',
   MAP_TILE_ATTRIBUTION: '© <a href="https://cawm.lib.uiowa.edu/">CAWM</a> CC BY 4.0',
 };
-window.CONFIG = CONFIG;

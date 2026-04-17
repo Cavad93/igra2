@@ -166,8 +166,6 @@
 
   // Экспорт в глобальную область
   if (typeof window !== 'undefined') {
-    window.renderPortrait     = renderPortrait;
-    window.renderPortraitHTML = renderPortraitHTML;
     // Шаг 73: фоллбэк для inline onerror в renderPortraitHTML.
     // Получает id/nation/size как строки (HTML attribute) и возвращает
     // data:URL процедурного SVG-лица или '' если генератор недоступен.

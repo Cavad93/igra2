@@ -382,7 +382,6 @@ export function refreshFogOverlay() {
   }
 }
 if (typeof window !== 'undefined') {
-  window.refreshFogOverlay = refreshFogOverlay;
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -566,10 +565,6 @@ export function roughEstimate(num) {
 // Инвалидировать кэш извне (например, после смены хода)
 export function invalidateFogIntelCache() { _fogIntelCache = null; }
 if (typeof window !== 'undefined') {
-  window.getIntelLevel          = getIntelLevel;
-  window.getIntelLabel          = getIntelLabel;
-  window.roughEstimate          = roughEstimate;
-  window.invalidateFogIntelCache = invalidateFogIntelCache;
 }
 
 // Стили для не-игровых типов регионов.
@@ -2601,9 +2596,6 @@ function _escapeHtml(s) {
 
 // Экспорт в window для вызова из turn.js/renderAll
 if (typeof window !== 'undefined') {
-  window.renderCityLabels          = renderCityLabels;
-  window.clearCityLabels           = clearCityLabels;
-  window._applyCityLabelVisibility = _applyCityLabelVisibility;
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -2780,8 +2772,6 @@ function _hasWorldMarketAccess(nation) {
   return hasCoast && (nation.economy?.trade_routes||[]).length > 0;
 }
 
-window.renderTradeRouteLines = renderTradeRouteLines;
-window.clearTradeRouteLines  = clearTradeRouteLines;
 
 // ──────────────────────────────────────────────────────────────
 // ЛЁГКОЕ ОБНОВЛЕНИЕ СТИЛЕЙ (без пересоздания слоёв)
@@ -3020,8 +3010,7 @@ export function lightenColor(hex, amount) {
 // ШАГ 29 — РЕЖИМЫ КАРТЫ (political / economy / military / population)
 // ══════════════════════════════════════════════════════════════
 
-window.MAP_MODES        = ['political', 'economy', 'military', 'population'];
-window.CURRENT_MAP_MODE = 'political';
+export const MAP_MODES = ['political', 'economy', 'military', 'population'];
 
 /**
  * Линейная интерполяция между двумя hex-цветами.
@@ -3144,7 +3133,6 @@ const WindRose = {
 };
 
 // Экспортируем в глобал для доступа из index.html и тестов
-window.WindRose = WindRose;
 
 /**
  * ЭТАП 20 (uisuper.md) — инициализация keyboard navigation для
@@ -3167,14 +3155,13 @@ export function initWindRoseKeyboard() {
     });
   });
 }
-window.initWindRoseKeyboard = initWindRoseKeyboard;
 
 /**
  * Переключает режим отображения карты.
  * @param {'political'|'economy'|'military'|'population'} mode
  */
 export function setMapMode(mode) {
-  if (!window.MAP_MODES.includes(mode)) return;
+  if (!MAP_MODES.includes(mode)) return;
   window.CURRENT_MAP_MODE = mode;
 
   // ЭТАП 20 (uisuper.md) — синхронизация розы ветров
@@ -3274,7 +3261,6 @@ export function setMapMode(mode) {
   }
 }
 
-window.setMapMode = setMapMode;
 
 // ══════════════════════════════════════════════════════════════
 // ШАГ 44 (arma.md) — СТРАТЕГИЧЕСКИЕ УРОВНИ ЗУМА
@@ -3293,7 +3279,6 @@ window.setMapMode = setMapMode;
 // а всё визуальное поведение завязано на CSS-селекторы по этому классу.
 // ══════════════════════════════════════════════════════════════
 
-window.ZOOM_LEVELS = {
   strategic: { max: 4 },
   regional:  { min: 4, max: 6.5 },
   detailed:  { min: 6.5 },
@@ -3522,28 +3507,5 @@ function _applyZoomFillOpacity(level) {
   }
 }
 
-window.getZoomLevel        = getZoomLevel;
-window.onZoomChange        = onZoomChange;
-window._applyZoomFillOpacity = _applyZoomFillOpacity;
-window._buildDetailBuildingsLayer = _buildDetailBuildingsLayer;
-window._buildDetailGarrisonsLayer = _buildDetailGarrisonsLayer;
 
 // Backward compat: expose to non-module scripts
-window.leafletMap = leafletMap;
-window.regionLayers = regionLayers;
-window.initLeafletMap = initLeafletMap;
-window.onRegionClick = onRegionClick;
-window.showRegionInfo = showRegionInfo;
-window.closeRegionInfo = closeRegionInfo;
-window.switchRegionTab = switchRegionTab;
-window.refreshRegionStyles = refreshRegionStyles;
-window.renderMap = renderMap;
-window.renderRegionPolygons = renderRegionPolygons;
-window.renderNationBorders = renderNationBorders;
-window.renderNationLabels = renderNationLabels;
-window.renderSeaLabels = renderSeaLabels;
-window.buildTooltipContent = buildTooltipContent;
-window.desaturateColor = desaturateColor;
-window.selectArmyInRegion = selectArmyInRegion;
-window.refreshFogOverlay = refreshFogOverlay;
-window.renderRegionIdLabels = renderRegionIdLabels;

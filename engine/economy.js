@@ -1631,30 +1631,4 @@ export function _initEconomyPreview() {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.BUILDING_BONUSES = BUILDING_BONUSES;
-window.GOOD_IMPORTANCE = GOOD_IMPORTANCE;
-window.TAX_CALIBRATION = TAX_CALIBRATION;
-window.TAX_GROUP_CLASSES = TAX_GROUP_CLASSES;
-window._WORLD_IMPORT_GOODS = _WORLD_IMPORT_GOODS;
-window._checkEconomicEventTriggers = _checkEconomicEventTriggers;
-window._estimateNeedForGood = _estimateNeedForGood;
-window._getEffectiveTariffRate = _getEffectiveTariffRate;
-window._getRegionalBuildingProduction = _getRegionalBuildingProduction;
-window._initEconomyPreview = _initEconomyPreview;
-window.applyActiveLaws = applyActiveLaws;
-window.applyDelta = applyDelta;
-window.calculateConsumption = calculateConsumption;
-window.calculateProduction = calculateProduction;
-window.checkSupplyDeficits = checkSupplyDeficits;
-window.computeTaxGroupBases = computeTaxGroupBases;
-window.evaluateCondition = evaluateCondition;
-window.getBuildingBonuses = getBuildingBonuses;
-window.getState = getState;
-window.processTrade = processTrade;
-window.recordEconomyHistory = recordEconomyHistory;
-window.routeProductionToLocalStockpiles = routeProductionToLocalStockpiles;
-window.runEconomyTick = runEconomyTick;
-window.updateHappiness = updateHappiness;
-window.updatePopulationGrowth = updatePopulationGrowth;
-window.updateTreasury = updateTreasury;
 

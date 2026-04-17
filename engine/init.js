@@ -270,6 +270,4 @@ export function renderAll() {
 
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.initGame = initGame;
-window.renderAll = renderAll;
 

@@ -257,7 +257,6 @@ export function renderLeftPanelTab(tabName) {
 
 // Экспорт в window — чтобы inline onclick в index.html видел функцию.
 if (typeof window !== 'undefined') {
-  window.renderLeftPanelTab = renderLeftPanelTab;
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -588,11 +587,7 @@ export function onResourceBarClick(key) {
 
 // Экспорт в window для доступа из inline onclick и из других модулей
 if (typeof window !== 'undefined') {
-  window.updateResourceBar  = updateResourceBar;
-  window.onResourceBarClick = onResourceBarClick;
   // Шаг 46
-  window.drawSparkline        = drawSparkline;
-  window._pushResourceHistory = _pushResourceHistory;
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -724,8 +719,6 @@ function _hideAlertBadge(tab) {
 
 // Экспорт в window для доступа из inline onclick и тестов
 if (typeof window !== 'undefined') {
-  window.updateAlertBadges = updateAlertBadges;
-  window._hideAlertBadge   = _hideAlertBadge;
 }
 
 export function renderPopMiniWidget(pop) {
@@ -2517,12 +2510,6 @@ function _swapCourtPositions(fromRole, toRole, charId) {
 
 // Экспорт в window для data-action делегирования (uisuper этап 57)
 if (typeof window !== 'undefined') {
-  window.setRosterFilter      = setRosterFilter;
-  window.setRosterSort        = setRosterSort;
-  window._showRosterMenu      = _showRosterMenu;
-  window._closeRosterMenu     = _closeRosterMenu;
-  window.initCourtDragDrop    = initCourtDragDrop;
-  window._swapCourtPositions  = _swapCourtPositions;
 }
 
 // Модал назначения на должность
@@ -3031,12 +3018,9 @@ export function updateNationHeader(nationId, nationName) {
 }
 
 if (typeof window !== 'undefined') {
-  window.updateNationHeader = updateNationHeader;
 }
 
 if (typeof window !== 'undefined') {
-  window.applyNationTheme = applyNationTheme;
-  window.preloadTexture   = preloadTexture;
 }
 
 // Экспорт для Node-тестов
@@ -3049,8 +3033,3 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 // Backward compat for non-module scripts
-window.renderLeftPanel = renderLeftPanel;
-window.renderLeftPanelTab = renderLeftPanelTab;
-window.showCharacterDetail = showCharacterDetail;
-window.closeCharacterDetail = closeCharacterDetail;
-window._applyLogFilter = _applyLogFilter;

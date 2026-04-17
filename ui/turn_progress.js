@@ -70,7 +70,3 @@ if (document.readyState === 'loading') {
 }
 
 // Backward compat
-window.TURN_ACTIONS       = TURN_ACTIONS;
-window.markTurnAction     = markTurnAction;
-window.resetTurnProgress  = resetTurnProgress;
-window.renderTurnProgress = renderTurnProgress;

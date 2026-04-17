@@ -370,9 +370,3 @@ export function getPortraitInfoForCharacter(char, nationId) {
 // ── Экспорт для Node (тесты) ────────────────────────────────────────────────
 
 // Экспорт в window для браузера (Шаг 72).
-window.NATION_CULTURE_GROUPS = NATION_CULTURE_GROUPS;
-window.getCultureGroup = getCultureGroup;
-window.getNationIconPath = getNationIconPath;
-window.hashCode = hashCode;
-window.getPortraitForCharacter = getPortraitForCharacter;
-window.getPortraitInfoForCharacter = getPortraitInfoForCharacter;

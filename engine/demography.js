@@ -753,6 +753,4 @@ function _logDemographyChanges(nationId, oldProfs, newProfs) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.processDemography = processDemography;
-window.recordPopulationHistory = recordPopulationHistory;
 

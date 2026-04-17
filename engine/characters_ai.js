@@ -177,7 +177,4 @@ export function _updateInitiativesBadge() {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window._updateInitiativesBadge = _updateInitiativesBadge;
-window.processCharacterAutonomy = processCharacterAutonomy;
-window.respondToCharInitiative = respondToCharInitiative;
 

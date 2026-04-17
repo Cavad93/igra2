@@ -587,4 +587,3 @@ ${senateCtx ? JSON.stringify(senateCtx, null, 2) : '(нет дополнител
   }),
 };
 
-window.PROMPTS = PROMPTS;

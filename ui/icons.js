@@ -181,6 +181,4 @@ export function icon(name, cls = '') {
 // намеренно: под file:// инструкция `export` в классическом скрипте
 // была бы SyntaxError.
 if (typeof window !== 'undefined') {
-  window.ICONS = ICONS;
-  window.icon  = icon;
 }

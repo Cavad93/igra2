@@ -110,4 +110,3 @@ function _nearestFriendlyRegion(army) {
   return null;
 }
 
-window.getCommanderDecisionNow = getCommanderDecisionNow;

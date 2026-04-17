@@ -349,13 +349,4 @@ export function _landTotal(u) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.SIEGE_CFG = SIEGE_CFG;
-window._completeSiege = _completeSiege;
-window._getRegionData = _getRegionData;
-window._landTotal = _landTotal;
-window.beginSiege = beginSiege;
-window.estimateSiegeDuration = estimateSiegeDuration;
-window.liftSiege = liftSiege;
-window.processSiegeTicks = processSiegeTicks;
-window.stormAssault = stormAssault;
 

@@ -141,7 +141,3 @@ if (document.readyState === 'loading') {
 }
 
 // Backward compat
-window.setAIStatus        = setAIStatus;
-window.markSaved          = markSaved;
-window.updateSbGame       = updateSbGame;
-window.updateSaveIndicator = updateSaveIndicator;

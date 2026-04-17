@@ -1036,8 +1036,6 @@ const Messenger = {
 function dismissMessenger() { Messenger.dismiss(); }
 
 if (typeof window !== 'undefined') {
-  window.Messenger = Messenger;
-  window.dismissMessenger = dismissMessenger;
 }
 
 function showAPIKeyPrompt() {

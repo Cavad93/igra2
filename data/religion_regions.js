@@ -355,4 +355,3 @@ export const REGION_RELIGIONS = {
     ],
   },
 };
-window.REGION_RELIGIONS = REGION_RELIGIONS;

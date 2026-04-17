@@ -578,10 +578,7 @@ function _buildFallbackPlan(nation, ou) {
 export { shouldPlan, createPlan, executePlan, _broadcastCoalitionPlan,
          _buildFallbackPlan, _buildStrategicPrompt, _validatePlan,
          STRATEGIC_CONFIG, STRATEGY_TEMPLATES };
-
-if (typeof window !== 'undefined') {
-  window.StrategicLLM = { shouldPlan, createPlan, executePlan,
-                           _broadcastCoalitionPlan,
-                           _buildFallbackPlan, _buildStrategicPrompt,
-                           STRATEGIC_CONFIG };
-}
+export const StrategicLLM = { shouldPlan, createPlan, executePlan,
+                               _broadcastCoalitionPlan,
+                               _buildFallbackPlan, _buildStrategicPrompt,
+                               STRATEGIC_CONFIG };

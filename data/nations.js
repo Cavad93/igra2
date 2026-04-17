@@ -1445,4 +1445,5 @@ export const INITIAL_GAME_STATE = {
     slaves:      { base: 200, price: 200, supply: 50,   demand: 50,   world_stockpile: null, price_history: [], shortage_streak: 0, production_cost: null, price_floor: 100   },
   },
 };
+
 window.INITIAL_GAME_STATE = INITIAL_GAME_STATE;

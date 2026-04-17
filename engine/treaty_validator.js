@@ -248,13 +248,4 @@ export function _escHtmlValidator(s) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.HARD_BLOCK_PATTERNS = HARD_BLOCK_PATTERNS;
-window.MARRIAGE_WHITELIST_RE = MARRIAGE_WHITELIST_RE;
-window.TREATY_LIMITS = TREATY_LIMITS;
-window.WARN_PATTERNS = WARN_PATTERNS;
-window._escHtmlValidator = _escHtmlValidator;
-window._validatorPayerOf = _validatorPayerOf;
-window.formatValidationResult = formatValidationResult;
-window.pct = pct;
-window.validateTreaty = validateTreaty;
 

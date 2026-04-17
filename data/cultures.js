@@ -367,7 +367,3 @@ export const REGION_CULTURES = {
   // Островной полис, рыбаки и пираты.
   r3199: { primary: 'greek_colonial', minorities: [] },
 };
-window.CULTURE_GROUPS = CULTURE_GROUPS;
-window.CULTURE_GROUP_AFFINITY = CULTURE_GROUP_AFFINITY;
-window.CULTURES = CULTURES;
-window.REGION_CULTURES = REGION_CULTURES;

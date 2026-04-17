@@ -70,4 +70,3 @@ export const UIReactions = {
 };
 
 // Backward compat
-window.UIReactions = UIReactions;

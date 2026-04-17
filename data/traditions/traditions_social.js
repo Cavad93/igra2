@@ -281,4 +281,3 @@ export const TRADITIONS_SOCIAL = {
   },
 
 };
-window.TRADITIONS_SOCIAL = TRADITIONS_SOCIAL;

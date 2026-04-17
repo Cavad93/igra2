@@ -220,7 +220,4 @@ export function warmupSaveWorker() {
 
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.loadGame = loadGame;
-window.saveGame = saveGame;
-window.warmupSaveWorker = warmupSaveWorker;
 

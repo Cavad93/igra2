@@ -173,12 +173,4 @@ export function toggleFortressConservation(regionId) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.FORTRESS_GARRISON_MAX = FORTRESS_GARRISON_MAX;
-window.FORTRESS_LEVEL_UPKEEP = FORTRESS_LEVEL_UPKEEP;
-window.GARRISON_UPKEEP_RATE = GARRISON_UPKEEP_RATE;
-window.calcFortressExpenses = calcFortressExpenses;
-window.getFortressCount = getFortressCount;
-window.getFortressLimit = getFortressLimit;
-window.processFortressGarrisons = processFortressGarrisons;
-window.toggleFortressConservation = toggleFortressConservation;
 

@@ -1215,9 +1215,3 @@ export function initLaborLaws(nation) {
     }
   }
 }
-window.LAWS_LABOR = LAWS_LABOR;
-window.DEFAULT_LABOR_LAWS = DEFAULT_LABOR_LAWS;
-window.LABOR_LAW_GROUPS = LABOR_LAW_GROUPS;
-window.applyLaborLaw = applyLaborLaw;
-window.repealLaborLaw = repealLaborLaw;
-window.initLaborLaws = initLaborLaws;

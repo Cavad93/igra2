@@ -237,5 +237,3 @@ function _summariseEffects(ef) {
   return parts.length ? parts.join(' · ') : 'Стандартные условия применены.';
 }
 
-window.interpretCustomTreaty = interpretCustomTreaty;
-window.aiContentFilter = aiContentFilter;

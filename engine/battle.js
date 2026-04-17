@@ -800,17 +800,4 @@ if (typeof getTerrainName === 'undefined') {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.BATTLE = BATTLE;
-window._applyBattleResult = _applyBattleResult;
-window._applySharedLoot = _applySharedLoot;
-window._calcJointAttackBonus = _calcJointAttackBonus;
-window._ensureRelation = _ensureRelation;
-window._isBlockedByNonAggression = _isBlockedByNonAggression;
-window._showTacticalChoiceModal = _showTacticalChoiceModal;
-window.calculateMilitaryStrength = calculateMilitaryStrength;
-window.processAllianceWars = processAllianceWars;
-window.processAttackAction = processAttackAction;
-window.resolveBattle = resolveBattle;
-window.resolveNavalBattle = resolveNavalBattle;
-window.triggerDefensiveAlliances = triggerDefensiveAlliances;
 

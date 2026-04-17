@@ -294,10 +294,4 @@ export function getHeight(heightmap, x, y) {
 
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.PerlinNoise = PerlinNoise;
-window.domainWarp = domainWarp;
-window.fbm = fbm;
-window.generateHeightmap = generateHeightmap;
-window.getHeight = getHeight;
-window.mulberry32 = mulberry32;
 

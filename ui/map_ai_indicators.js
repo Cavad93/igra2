@@ -275,12 +275,4 @@
   // ── 4. Экспорт ────────────────────────────────────────────────────
 
   if (typeof window !== 'undefined') {
-    window.recordAIAction            = recordAIAction;
-    window.renderAIIndicators        = renderAIIndicators;
-    window.clearAIIndicators         = clearAIIndicators;
-    window.getAIActions              = getAIActions;
-    window.getAIActionsCount         = getAIActionsCount;
-    window.getAIIndicatorMarkers     = getAIIndicatorMarkers;
-    window.AI_INDICATOR_ACTION_MAP   = ACTION_ICON_MAP;
-    window.AI_INDICATOR_MAX          = MAX_INDICATORS;
   }

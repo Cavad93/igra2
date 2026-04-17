@@ -832,8 +832,4 @@ function _log(msg) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.applyEmbargo = applyEmbargo;
-window.applyTreatyEffects = applyTreatyEffects;
-window.processAllTreatyTicks = processAllTreatyTicks;
-window.removeTreatyEffects = removeTreatyEffects;
 

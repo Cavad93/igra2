@@ -487,20 +487,4 @@ export function getDiploRangeInfo(nationId) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.DIPLO_CFG = DIPLO_CFG;
-window._cacheComputedAt = _cacheComputedAt;
-window._nationDistCache = _nationDistCache;
-window._prevNationTiers = _prevNationTiers;
-window._regionDistCache = _regionDistCache;
-window.calcLogisticPenalty = calcLogisticPenalty;
-window.canPlayerDiplomate = canPlayerDiplomate;
-window.canPlayerInteract = canPlayerInteract;
-window.checkCoalitionReflex = checkCoalitionReflex;
-window.getDialogueModel = getDialogueModel;
-window.getDiploDistance = getDiploDistance;
-window.getDiploRangeInfo = getDiploRangeInfo;
-window.getNationTier = getNationTier;
-window.processConquestFatigue = processConquestFatigue;
-window.refreshDiploDistances = refreshDiploDistances;
-window.updateArmyLogisticTimer = updateArmyLogisticTimer;
 

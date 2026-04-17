@@ -422,5 +422,4 @@ export function applyFallbackDecision(nationId) {
 
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.applyFallbackDecision = applyFallbackDecision;
 

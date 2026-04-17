@@ -532,19 +532,4 @@ export function recordDemographicHistory(nation) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.AGE_PARAMS = AGE_PARAMS;
-window._getFoodRatio = _getFoodRatio;
-window._getLaborLaws = _getLaborLaws;
-window._nationHasBuilding = _nationHasBuilding;
-window._turnsPerYear = _turnsPerYear;
-window.collectLaborLawBonuses = collectLaborLawBonuses;
-window.computeLaborForce = computeLaborForce;
-window.computeLifeExpectancy = computeLifeExpectancy;
-window.dependencyRatioLabel = dependencyRatioLabel;
-window.estimateClassAgeCohorts = estimateClassAgeCohorts;
-window.getActiveLaborLawForGroup = getActiveLaborLawForGroup;
-window.initAgeCohorts = initAgeCohorts;
-window.processAgeDemographics = processAgeDemographics;
-window.recordDemographicHistory = recordDemographicHistory;
-window.updateAgeCohorts = updateAgeCohorts;
 

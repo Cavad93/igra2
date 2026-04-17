@@ -212,4 +212,3 @@ export const TRADITIONS_EXTRA = {
   },
 
 };
-window.TRADITIONS_EXTRA = TRADITIONS_EXTRA;

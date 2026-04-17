@@ -1091,40 +1091,4 @@ export function processRecruitment() {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.ARMY_MOVE = ARMY_MOVE;
-window.COMMANDER_SKILLS_DEF = COMMANDER_SKILLS_DEF;
-window.COMMANDER_XP_LEVELS = COMMANDER_XP_LEVELS;
-window._armiesAtWar = _armiesAtWar;
-window._armyLandTotal = _armyLandTotal;
-window._calcFleetSpeed = _calcFleetSpeed;
-window._checkSiegeOnArrival = _checkSiegeOnArrival;
-window._getOwnRegions = _getOwnRegions;
-window._getRegionData = _getRegionData;
-window._getRegionSupplyCapacity = _getRegionSupplyCapacity;
-window._getTotalTroopsInRegion = _getTotalTroopsInRegion;
-window._isAtWarWith = _isAtWarWith;
-window._isFortressLineBlocked = _isFortressLineBlocked;
-window._isFriendlyTerritory = _isFriendlyTerritory;
-window._onArmyEnterRegion = _onArmyEnterRegion;
-window._processRout = _processRout;
-window._processSupply = _processSupply;
-window.calcArmySpeed = calcArmySpeed;
-window.captureRegion = captureRegion;
-window.checkNationDefeated = checkNationDefeated;
-window.createArmy = createArmy;
-window.findArmyPath = findArmyPath;
-window.getArmy = getArmy;
-window.getArmyCommander = getArmyCommander;
-window.getArmyTotalUnits = getArmyTotalUnits;
-window.getCommanderLevel = getCommanderLevel;
-window.getNationArmies = getNationArmies;
-window.grantCommanderSkill = grantCommanderSkill;
-window.initRegionGeoData = initRegionGeoData;
-window.mergeArmies = mergeArmies;
-window.orderArmyMove = orderArmyMove;
-window.processArmyMovement = processArmyMovement;
-window.processCommanderAI = processCommanderAI;
-window.processRecruitment = processRecruitment;
-window.recruitToArmy = recruitToArmy;
-window.splitArmy = splitArmy;
 

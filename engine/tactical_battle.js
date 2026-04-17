@@ -725,26 +725,4 @@ function finalizeTacticalBattle(bs, outcome) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.CELL_SIZE = CELL_SIZE;
-window.FORMATION_MULT = FORMATION_MULT;
-window.MAX_UNITS_PER_SIDE = MAX_UNITS_PER_SIDE;
-window.RESERVE_ZONE_COLS = RESERVE_ZONE_COLS;
-window.TACTICAL_GRID_COLS = TACTICAL_GRID_COLS;
-window.TACTICAL_GRID_ROWS = TACTICAL_GRID_ROWS;
-window.UNIT_BASE_SIZE = UNIT_BASE_SIZE;
-window.createUnit = createUnit;
-window.fatigueMultiplier = fatigueMultiplier;
-window.flankBonus = flankBonus;
-window.generateElevatedCells = generateElevatedCells;
-window.getAdjacentUnits = getAdjacentUnits;
-window.getAttackDirection = getAttackDirection;
-window.getTerrainAttackMult = getTerrainAttackMult;
-window.initTacticalBattle = initTacticalBattle;
-window.moraleMultiplier = moraleMultiplier;
-window.processCommanderAura = processCommanderAura;
-window.processCommanderDeath = processCommanderDeath;
-window.processFatigue = processFatigue;
-window.processPanic = processPanic;
-window.resolveArrows = resolveArrows;
-window.resolveMelee = resolveMelee;
 

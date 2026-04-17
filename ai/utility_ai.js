@@ -1277,4 +1277,3 @@ function _bfsDistanceGlobal(fromId, toId) {
   return null;
 }
 
-window.utilityAIDecide = utilityAIDecide;

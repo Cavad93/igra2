@@ -2622,10 +2622,3 @@ export function canBuildInRegion(buildingId, region) {
 
   return { ok: true, reason: null, is_upgrade: false };
 }
-window.BUILDINGS = BUILDINGS;
-window.TERRAIN_MAX_SLOTS = TERRAIN_MAX_SLOTS;
-window.TERRAIN_BASE_CAPACITY = TERRAIN_BASE_CAPACITY;
-window.getBuildingTotalWorkers = getBuildingTotalWorkers;
-window.getRegionMaxSlots = getRegionMaxSlots;
-window.getBuildingsForTerrain = getBuildingsForTerrain;
-window.canBuildInRegion = canBuildInRegion;

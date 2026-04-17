@@ -980,5 +980,3 @@ function getGoodInfo(goodId, market) {
     if (!GOODS[goodId].produced_by) GOODS[goodId].produced_by = [];
   }
 })();
-window.GOODS = GOODS;
-window.REGION_PRODUCTION_BASE = REGION_PRODUCTION_BASE;

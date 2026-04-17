@@ -375,11 +375,4 @@ export function generateRoads(heightmap, keyPoints) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.BinaryHeap = BinaryHeap;
-window.PLAIN_MAX = PLAIN_MAX;
-window.PLAIN_MIN = PLAIN_MIN;
-window.astar = astar;
-window.generateKeyPoints = generateKeyPoints;
-window.generateRoads = generateRoads;
-window.terrainCost = terrainCost;
 

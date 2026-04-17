@@ -288,10 +288,4 @@
   }
 
   // Экспорт
-  window.renderDiploGraph     = renderDiploGraph;
-  window.openDiploGraph       = openDiploGraph;
-  window.closeDiploGraph      = closeDiploGraph;
-  window.toggleDiploGraph     = toggleDiploGraph;
-  window.isDiploGraphOpen     = isDiploGraphOpen;
-  window.onDiploGraphNodeClick = onDiploGraphNodeClick;
 

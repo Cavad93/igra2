@@ -180,16 +180,4 @@ export const _SUPER_OU_ACTION_MAP = {
 
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window._FALLBACK_BUILD_PRIORITY = _FALLBACK_BUILD_PRIORITY;
-window._OU_SIGMA = _OU_SIGMA;
-window._OU_THETA = _OU_THETA;
-window._SUPER_OU_ACTION_MAP = _SUPER_OU_ACTION_MAP;
-window._findBuildTarget = _findBuildTarget;
-window._findDiplomacyPartner = _findDiplomacyPartner;
-window._findWarTarget = _findWarTarget;
-window._ouNaturalMu = _ouNaturalMu;
-window._ouStep = _ouStep;
-window._softmax = _softmax;
-window._tickOU = _tickOU;
-window._weightedPick = _weightedPick;
 

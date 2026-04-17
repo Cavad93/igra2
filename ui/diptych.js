@@ -112,9 +112,6 @@ export function toggleDiptych()        { Diptych.toggle(); }
 export function switchDiptychTab(tab)  { Diptych.switchTab(tab); }
 
 // Backward compat
-window.Diptych           = Diptych;
-window.toggleDiptych     = toggleDiptych;
-window.switchDiptychTab  = switchDiptychTab;
 
 function _initDiptych() { Diptych.init(); }
 if (document.readyState === 'loading') {

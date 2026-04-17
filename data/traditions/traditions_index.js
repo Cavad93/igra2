@@ -108,7 +108,3 @@ if (typeof console !== 'undefined') {
   console.log(`[traditions_index] Загружено ${count} традиций`);
 }
 
-window.ALL_TRADITIONS = ALL_TRADITIONS;
-window.EXPERIENCE_TYPES = EXPERIENCE_TYPES;
-window.EXPERIENCE_RULES = EXPERIENCE_RULES;
-window.CULTURE_CONFIG = CULTURE_CONFIG;

@@ -202,12 +202,4 @@
   // ── 7. Экспорт ──────────────────────────────────────────────────────
 
   if (typeof window !== 'undefined') {
-    window.addMapEvent             = addMapEvent;
-    window.processEventFeedQueue   = processEventFeedQueue;
-    window.clearMapEventFeed       = clearMapEventFeed;
-    window.getActiveMapEventCount  = _getActiveCount;
-    window.getMapEventQueueLength  = _getQueueLength;
-    window.EVENT_FEED_MAX_ACTIVE   = MAX_ACTIVE_MARKERS;
-    window.EVENT_FEED_DELAY_MS     = QUEUE_DELAY_MS;
-    window.EVENT_FEED_LIFETIME_MS  = MARKER_LIFETIME_MS;
   }

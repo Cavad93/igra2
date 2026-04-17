@@ -204,8 +204,4 @@ async function _aiBgProcess() {
 
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window._aiPending = _aiPending;
-window._callGroqViaWorker = _callGroqViaWorker;
-window.startAIBackgroundLoop = startAIBackgroundLoop;
-window.stopAIBackgroundLoop = stopAIBackgroundLoop;
 

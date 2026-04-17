@@ -164,6 +164,4 @@ export function _cleanExpiredCasusBelli() {
 
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window._cleanExpiredCasusBelli = _cleanExpiredCasusBelli;
-window._processEspionageTick = _processEspionageTick;
 

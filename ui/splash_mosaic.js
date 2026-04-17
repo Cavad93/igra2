@@ -304,4 +304,3 @@
     },
   };
 
-  window.SplashMosaic = SplashMosaic;

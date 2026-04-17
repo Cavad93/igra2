@@ -1246,44 +1246,7 @@ export function checkAchievements(nationId) {
 
 // ── window bindings for data-action handlers in HTML templates ──
 if (typeof window !== 'undefined') {
-  window.selectManifestPreset = selectManifestPreset;
-  window.selectManifestCustom = selectManifestCustom;
-  window.takeVow              = takeVow;
-  window.renderVowsModal      = renderVowsModal;
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.ACHIEVEMENTS_LIST = ACHIEVEMENTS_LIST;
-window.MANIFEST_PRESETS = MANIFEST_PRESETS;
-window.VOW_DEFS = VOW_DEFS;
-window._addChronicleEntry = _addChronicleEntry;
-window._buildChronicleText = _buildChronicleText;
-window._ensureAchievements = _ensureAchievements;
-window._ensureVows = _ensureVows;
-window._getNationId = _getNationId;
-window._renderDynamicGoalsInPanel = _renderDynamicGoalsInPanel;
-window._renderManifestInPanel = _renderManifestInPanel;
-window._saveManifest = _saveManifest;
-window._tickChronicle = _tickChronicle;
-window._tickDynamicGoals = _tickDynamicGoals;
-window._tickManifest = _tickManifest;
-window._updateAchievementCounters = _updateAchievementCounters;
-window.calcGrandeur = calcGrandeur;
-window.checkAchievements = checkAchievements;
-window.checkVowViolations = checkVowViolations;
-window.generateDynamicGoals = generateDynamicGoals;
-window.getAchievementCount = getAchievementCount;
-window.getAchievements = getAchievements;
-window.getHistoricalRating = getHistoricalRating;
-window.hideChronicleModal = hideChronicleModal;
-window.hideVowsModal = hideVowsModal;
-window.renderVowsModal = renderVowsModal;
-window.renderVowsPanel = renderVowsPanel;
-window.selectManifestCustom = selectManifestCustom;
-window.selectManifestPreset = selectManifestPreset;
-window.showChronicleModal = showChronicleModal;
-window.showManifestModal = showManifestModal;
-window.showVowsModal = showVowsModal;
-window.takeVow = takeVow;
-window.updateGrandeurDisplay = updateGrandeurDisplay;
 

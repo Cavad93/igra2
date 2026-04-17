@@ -338,15 +338,4 @@ export function getMemoryStats(nationId) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.MEMORY_CFG = MEMORY_CFG;
-window._compressBatchAsync = _compressBatchAsync;
-window._ensureMemory = _ensureMemory;
-window._scheduleCompression = _scheduleCompression;
-window.addDialogueMessage = addDialogueMessage;
-window.addMemoryEvent = addMemoryEvent;
-window.getDecisionContext = getDecisionContext;
-window.getDialogueContext = getDialogueContext;
-window.getHandoffContext = getHandoffContext;
-window.getMemoryStats = getMemoryStats;
-window.processMemoryTick = processMemoryTick;
 

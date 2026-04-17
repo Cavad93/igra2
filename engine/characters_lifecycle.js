@@ -80,7 +80,4 @@ export function maybeSpawnCharacter() {
 
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.agingCharacters = agingCharacters;
-window.checkCharacterDeaths = checkCharacterDeaths;
-window.maybeSpawnCharacter = maybeSpawnCharacter;
 

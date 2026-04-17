@@ -333,5 +333,4 @@ JSON формат:
 };
 
 if (typeof window !== 'undefined') {
-  window.ChronicleSystem = ChronicleSystem;
 }

@@ -169,8 +169,6 @@
 
   // Экспорт в window
   if (typeof window !== 'undefined') {
-    window.generatePortraitSVG     = generatePortraitSVG;
-    window.generatePortraitDataURL = generatePortraitDataURL;
   }
   // CommonJS (тесты Node)
   if (typeof module !== 'undefined' && module.exports) {

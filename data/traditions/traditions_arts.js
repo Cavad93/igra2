@@ -222,4 +222,3 @@ export const TRADITIONS_ARTS = {
   },
 
 };
-window.TRADITIONS_ARTS = TRADITIONS_ARTS;

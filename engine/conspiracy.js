@@ -602,6 +602,4 @@ export class ConspiracyEngine {
 export const CONSPIRACY_ENGINE = new ConspiracyEngine();
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.CONSPIRACY_ENGINE = CONSPIRACY_ENGINE;
-window.ConspiracyEngine = ConspiracyEngine;
 

@@ -2397,47 +2397,4 @@ export function initBuildingOwnership() {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.CONSTRUCTION_LABOR_SURCHARGE = CONSTRUCTION_LABOR_SURCHARGE;
-window.EXPECTED_WAGE_PER_WORKER = EXPECTED_WAGE_PER_WORKER;
-window.PROFIT_CLASS = PROFIT_CLASS;
-window._CLASS_SAFETY_RESERVE = _CLASS_SAFETY_RESERVE;
-window._WAGE_BONUS_SKIP = _WAGE_BONUS_SKIP;
-window._calcBuildingMaintenance = _calcBuildingMaintenance;
-window._calcSlotBaseOutput = _calcSlotBaseOutput;
-window._capitalWearRate = _capitalWearRate;
-window._completeConstruction = _completeConstruction;
-window._cutSlotWorkers = _cutSlotWorkers;
-window._estimateSlotProfit = _estimateSlotProfit;
-window._estimateSlotProfitability = _estimateSlotProfitability;
-window._getBuildingWorkerProfile = _getBuildingWorkerProfile;
-window._getEffectiveWorkers = _getEffectiveWorkers;
-window._logSlotEvent = _logSlotEvent;
-window._restoreSlotWorkers = _restoreSlotWorkers;
-window._slotTotalWorkers = _slotTotalWorkers;
-window._terrainGoodBonus = _terrainGoodBonus;
-window.applyBuildingAdaptiveBehavior = applyBuildingAdaptiveBehavior;
-window.calcConstructionCost = calcConstructionCost;
-window.calcConstructionCostDetailed = calcConstructionCostDetailed;
-window.calcSlaveUpkeepPerPerson = calcSlaveUpkeepPerPerson;
-window.calculateAllBuildingProduction = calculateAllBuildingProduction;
-window.calculateBuildingRevenue = calculateBuildingRevenue;
-window.cancelConstruction = cancelConstruction;
-window.checkClassBankruptcy = checkClassBankruptcy;
-window.deductFoodPurchases = deductFoodPurchases;
-window.demolishBuilding = demolishBuilding;
-window.distributeClassIncome = distributeClassIncome;
-window.distributeWages = distributeWages;
-window.getBuildingOutput = getBuildingOutput;
-window.getUnemploymentRates = getUnemploymentRates;
-window.initBuildingOwnership = initBuildingOwnership;
-window.orderBuildingConstruction = orderBuildingConstruction;
-window.processAllRecipes = processAllRecipes;
-window.processAutonomousBuilding = processAutonomousBuilding;
-window.processBuildingConstruction = processBuildingConstruction;
-window.procureCapitalInputs = procureCapitalInputs;
-window.procureSlaves = procureSlaves;
-window.recalculateAllEmployment = recalculateAllEmployment;
-window.recalculateRegionEmployment = recalculateRegionEmployment;
-window.recomputeAllProductionCosts = recomputeAllProductionCosts;
-window.updateBuildingFinancials = updateBuildingFinancials;
 

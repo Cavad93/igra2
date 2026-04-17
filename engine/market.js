@@ -310,22 +310,4 @@ export function updateRegionalMarketPrices() {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window._BALANCE_SENS = _BALANCE_SENS;
-window._DEFICIT_INTENSITY = _DEFICIT_INTENSITY;
-window._MARKET_SMOOTHING = _MARKET_SMOOTHING;
-window._MISSING_NATIONS_DEMAND_MULT = _MISSING_NATIONS_DEMAND_MULT;
-window._REGIONAL_BALANCE_AMP = _REGIONAL_BALANCE_AMP;
-window._REGIONAL_DEFICIT_MAX = _REGIONAL_DEFICIT_MAX;
-window._REGIONAL_SMOOTH = _REGIONAL_SMOOTH;
-window._REGIONAL_SURPLUS_MAX = _REGIONAL_SURPLUS_MAX;
-window._SURPLUS_RATE = _SURPLUS_RATE;
-window._WORLD_COST_CAP = _WORLD_COST_CAP;
-window._WORLD_MONOPOLY_DISCOUNT = _WORLD_MONOPOLY_DISCOUNT;
-window._WORLD_SEA_COST_BASE = _WORLD_SEA_COST_BASE;
-window._WORLD_TREATY_DISCOUNT = _WORLD_TREATY_DISCOUNT;
-window.canAccessWorldMarket = canAccessWorldMarket;
-window.computeWorldMarketQuotas = computeWorldMarketQuotas;
-window.getWorldMarketTransportCost = getWorldMarketTransportCost;
-window.updateMarketPrices = updateMarketPrices;
-window.updateRegionalMarketPrices = updateRegionalMarketPrices;
 

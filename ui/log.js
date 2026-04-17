@@ -238,12 +238,6 @@ export function renderLog() {
 
 // Экспорт в глобальную область — чтобы onclick в HTML видели функции
 if (typeof window !== 'undefined') {
-  window.addEventLog         = addEventLog;
-  window.renderLog           = renderLog;
-  window.toggleLog           = toggleLog;
-  window.updateLogCollapsed  = updateLogCollapsed;
-  window.updateLogDots       = updateLogDots;
-  window.resetLogNotifications = resetLogNotifications;
 }
 
 export function escapeHtml(text) {

@@ -742,19 +742,4 @@ export function _showArmyTacticalChoice(atkArmy, defArmy, regionId) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.COMBAT = COMBAT;
-window._applyLoss = _applyLoss;
-window._awardCommanderXP = _awardCommanderXP;
-window._getRegionData = _getRegionData;
-window._landTotal = _landTotal;
-window._resolveArmyBattleCore = _resolveArmyBattleCore;
-window._resolveSkirmish = _resolveSkirmish;
-window._setRetreatPath = _setRetreatPath;
-window._showArmyTacticalChoice = _showArmyTacticalChoice;
-window._syncArmyToNation = _syncArmyToNation;
-window._traitSum = _traitSum;
-window.calcArmyCombatStrength = calcArmyCombatStrength;
-window.checkNavalBlockade = checkNavalBlockade;
-window.resolveArmyBattle = resolveArmyBattle;
-window.resolveNavalArmyBattle = resolveNavalArmyBattle;
 

@@ -737,32 +737,6 @@ export function closeLegacyModal() {
 }
 
 // ── data-action / data-action2 / data-action-self handlers need window binding ──
-window.closeLegacyModal            = closeLegacyModal;
-window.showTestamentModal          = showTestamentModal;
-window.hideTestamentModal          = hideTestamentModal;
-window.addTestamentGoal            = addTestamentGoal;
-window.removeTestamentGoal         = removeTestamentGoal;
-window._renderTestamentModalContent = _renderTestamentModalContent;
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.CRISIS_DEFS = CRISIS_DEFS;
-window.TESTAMENT_GOAL_DEFS = TESTAMENT_GOAL_DEFS;
-window._buildLegacyText = _buildLegacyText;
-window._checkTestamentAge = _checkTestamentAge;
-window._evaluateTestament = _evaluateTestament;
-window._renderTestamentModalContent = _renderTestamentModalContent;
-window._resolveCrisis = _resolveCrisis;
-window._tickActiveCrisis = _tickActiveCrisis;
-window.addTestamentGoal = addTestamentGoal;
-window.checkVictoryConditions = checkVictoryConditions;
-window.closeLegacyModal = closeLegacyModal;
-window.generateRulerLegacy = generateRulerLegacy;
-window.getTestamentGoalDefs = getTestamentGoalDefs;
-window.hideTestamentModal = hideTestamentModal;
-window.processCrisisVeha = processCrisisVeha;
-window.removeTestamentGoal = removeTestamentGoal;
-window.renderHistoricalRatingBlock = renderHistoricalRatingBlock;
-window.renderTestamentBlock = renderTestamentBlock;
-window.showLegacyModal = showLegacyModal;
-window.showTestamentModal = showTestamentModal;
 

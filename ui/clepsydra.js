@@ -74,5 +74,4 @@ export const Clepsydra = {
 };
 
 // Backward compat
-window.Clepsydra = Clepsydra;
 try { Clepsydra.progress = 0; } catch (_) {}

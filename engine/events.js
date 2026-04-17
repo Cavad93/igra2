@@ -149,7 +149,4 @@ export function _showEventChoiceOverlay(event, nationId) {
 
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.RANDOM_EVENTS = RANDOM_EVENTS;
-window._showEventChoiceOverlay = _showEventChoiceOverlay;
-window.triggerRandomEvent = triggerRandomEvent;
 

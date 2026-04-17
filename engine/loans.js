@@ -306,19 +306,4 @@ export function getLoanStatus(nationId) {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.BANKRUPTCY_HAPPINESS_HIT = BANKRUPTCY_HAPPINESS_HIT;
-window.BANKRUPTCY_RELATION_HIT = BANKRUPTCY_RELATION_HIT;
-window.BANKRUPTCY_STABILITY_HIT = BANKRUPTCY_STABILITY_HIT;
-window.LOAN_DEFAULT_TERM = LOAN_DEFAULT_TERM;
-window.LOAN_MAX_PAYMENT_RATIO = LOAN_MAX_PAYMENT_RATIO;
-window.LOAN_MIN_AMOUNT = LOAN_MIN_AMOUNT;
-window.calcInterestRate = calcInterestRate;
-window.calcMonthlyPayment = calcMonthlyPayment;
-window.declareBankruptcy = declareBankruptcy;
-window.getLoanCapacity = getLoanCapacity;
-window.getLoanDebtLoad = getLoanDebtLoad;
-window.getLoanStatus = getLoanStatus;
-window.getLoanTotalPayment = getLoanTotalPayment;
-window.processLoanPayments = processLoanPayments;
-window.takeLoan = takeLoan;
 

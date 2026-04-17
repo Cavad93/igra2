@@ -236,13 +236,4 @@ export function updateStele() {
 }
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-window.MONTH_NAMES = MONTH_NAMES;
-window.SEASON_STYLES = SEASON_STYLES;
-window.advanceDate = advanceDate;
-window.applySeasonVisual = applySeasonVisual;
-window.formatDate = formatDate;
-window.getCurrentSeason = getCurrentSeason;
-window.toRomanYear = toRomanYear;
-window.updateDateDisplay = updateDateDisplay;
-window.updateStele = updateStele;
 
