@@ -265,7 +265,7 @@ function renderGovSetupStep1(nation) {
     const isCurrent = type === currentType;
     return `
       <div
-        onclick="govSetupStep2('${type}')"
+        data-action="govSetupStep2" data-arg="${type}"
         style="
           background:${isCurrent ? '#1a2a4a' : '#15151f'};
           border:2px solid ${isCurrent ? '#1565C0' : '#333'};
@@ -307,7 +307,7 @@ function renderGovSetupStep2(type, selected) {
     const isSel = selSet.has(instId);
     return `
       <div
-        onclick="govSetupToggleInst('${instId}')"
+        data-action="govSetupToggleInst" data-arg="${instId}"
         style="
           background:${isSel ? '#1a2a4a' : '#15151f'};
           border:2px solid ${isSel ? '#42A5F5' : '#333'};
@@ -340,11 +340,11 @@ function renderGovSetupStep2(type, selected) {
       ${canNext ? `✓ Выбрано: ${count}` : `Выберите ${count < 2 ? 'ещё ' + (2 - count) : 'не более 3'} института`}
     </div>
     <div style="display:flex;gap:10px">
-      <button onclick="govSetupBack()" style="
+      <button data-action="govSetupBack" style="
         background:#222;border:1px solid #555;color:#ccc;
         padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px
       ">← Назад</button>
-      <button onclick="govSetupStep3()" ${canNext ? '' : 'disabled'} style="
+      <button data-action="govSetupStep3" ${canNext ? '' : 'disabled'} style="
         background:${canNext ? '#1565C0' : '#333'};
         border:none;color:${canNext ? '#fff' : '#666'};
         padding:8px 20px;border-radius:6px;
@@ -409,11 +409,11 @@ function renderGovSetupStep3(type, institutions, nation) {
     </div>
 
     <div style="display:flex;gap:10px">
-      <button onclick="govSetupBack()" style="
+      <button data-action="govSetupBack" style="
         background:#222;border:1px solid #555;color:#ccc;
         padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px
       ">← Назад</button>
-      <button onclick="govSetupConfirm()" style="
+      <button data-action="govSetupConfirm" style="
         background:#2E7D32;border:none;color:#fff;
         padding:8px 24px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:bold
       ">✅ Основать правительство</button>
@@ -591,7 +591,7 @@ function renderPersonRuler(ruler, nation) {
             <span class="gov-metric-val">${ruler.personal_power ?? 50}</span>
           </div>
         </div>
-        ${char ? `<button class="gov-char-link" onclick="showCharacterDetail('${char.id}');hideGovernmentOverlay()">📋 Досье</button>` : ''}
+        ${char ? `<button class="gov-char-link" data-action="showCharacterDetail" data-arg="${char.id}" data-action2="hideGovernmentOverlay">📋 Досье</button>` : ''}
       </div>
     </div>
   `;
@@ -799,7 +799,7 @@ function renderElectionBlock(elections) {
           ? `${c.name} (уже подкуплен +${alreadyBribed.bonus})`
           : c.name;
         return `<button class="gov-btn gov-btn-sm${canAfford ? '' : ' disabled'}"
-          onclick="electionBribeCandidate('${GAME_STATE.player_nation}','${c.id}',${cost})"
+          data-action="electionBribeCandidate" data-arg="${GAME_STATE.player_nation}|${c.id}|${cost}"
           ${canAfford ? '' : 'disabled'}
           title="Влияние: ${c.influence ?? 40}">
           💰 ${label} (${cost} зол.)
@@ -854,7 +854,7 @@ function renderElectionBlock(elections) {
 // GOV_006: обёртка для UI-кнопки подкупа кандидата
 function electionBribeCandidate(nationId, candidateId, cost) {
   if (typeof bribeElectionCandidate !== 'function') return;
-  const result = bribeElectionCandidate(nationId, candidateId, cost);
+  const result = bribeElectionCandidate(nationId, candidateId, +cost);
   if (!result.ok) {
     if (result.reason === 'no_gold') addEventLog('💸 Недостаточно золота для подкупа кандидата.', 'warning');
     return;
@@ -916,7 +916,7 @@ function renderSuccessionBlock(succession, nation) {
           <div class="gov-succ-actions">
             ${!isHeir
               ? `<button class="gov-succ-btn${legitCost ? ' disabled' : ''}"
-                  onclick="doAppointHeir('${c.id}')"
+                  data-action="doAppointHeir" data-arg="${c.id}"
                   title="${legitCost ? 'Нужно ≥20 легитимности' : 'Назначить наследником (−20 легитимности)'}">
                   👑 Наследник (−20 лег.)
                 </button>`
@@ -924,7 +924,7 @@ function renderSuccessionBlock(succession, nation) {
             }
             ${!c.married
               ? `<button class="gov-succ-btn${goldCost ? ' disabled' : ''}"
-                  onclick="doArrangeMarriage('${c.id}')"
+                  data-action="doArrangeMarriage" data-arg="${c.id}"
                   title="${goldCost ? 'Нужно ≥50 золота' : 'Укрепить претензию браком (−50 золота)'}">
                   💍 Женить (−50 зол.)
                 </button>`
@@ -1028,7 +1028,7 @@ function renderConspiracyBlock(conspiracies, nation) {
   const detectedHtml = activeConsp.map(cons => {
     const opts = CONSPIRACY_ENGINE.get_player_options(cons.id, nationId);
     const optBtns = opts.map(opt => `
-      <button class="gov-consp-action-btn" onclick="resolveConspiracy('${cons.id}','${opt.id}')"
+      <button class="gov-consp-action-btn" data-action="resolveConspiracy" data-arg="${cons.id}|${opt.id}"
         title="${opt.risk}">${opt.label}</button>
     `).join('');
     return `
@@ -1074,8 +1074,8 @@ function renderConspiracyBlock(conspiracies, nation) {
               ? `<span class="positive">активна (−${sp.cost_per_turn} монет/ход, −${Math.round(sp.conspiracy_detection_bonus*100)}% риска)</span>`
               : '<span class="dim">неактивна</span>'}
             ${!sp.enabled
-              ? `<button class="gov-sp-btn" onclick="enableSecretPolice()">Активировать (${sp.cost_per_turn} монет/ход)</button>`
-              : `<button class="gov-sp-btn red" onclick="disableSecretPolice()">Расформировать</button>`
+              ? `<button class="gov-sp-btn" data-action="enableSecretPolice">Активировать (${sp.cost_per_turn} монет/ход)</button>`
+              : `<button class="gov-sp-btn red" data-action="disableSecretPolice">Расформировать</button>`
             }
           </div>`
         : ''
@@ -1114,7 +1114,7 @@ function disableSecretPolice() {
 
 function uiHireGuard(size) {
   const nationId = GAME_STATE.player_nation;
-  const result = hirePersonalGuard(nationId, size);
+  const result = hirePersonalGuard(nationId, +size);
   if (!result.ok) {
     const needed = result.needed ?? '?';
     const msgs = {
@@ -1155,8 +1155,8 @@ function renderPlayerConspiracyBlock(nation) {
         <span class="gov-consp-role dim">${c.role}</span>
         <span class="gov-consp-loyalty" style="color:${lColor}">Лояльность: ${loyalty}</span>
         <div class="gov-consp-actions">
-          <button class="gov-consp-btn danger" onclick="dismissConspiratorByPlayer('${c.id}')">🔪 Устранить</button>
-          <button class="gov-consp-btn"        onclick="rewardConspirator('${c.id}')">💰 Наградить</button>
+          <button class="gov-consp-btn danger" data-action="dismissConspiratorByPlayer" data-arg="${c.id}">🔪 Устранить</button>
+          <button class="gov-consp-btn"        data-action="rewardConspirator" data-arg="${c.id}">💰 Наградить</button>
         </div>
       </div>
     `;
@@ -1238,7 +1238,7 @@ function renderTransitionHistory(history) {
   }).join('');
   return `
     <div class="gov-section collapsed">
-      <div class="gov-section-title clickable" onclick="this.parentElement.classList.toggle('collapsed')">
+      <div class="gov-section-title clickable" data-action="govToggleCollapsed" data-pass-event>
         📜 История переходов ▾
       </div>
       <div class="gov-hist-list">${items}</div>
@@ -1263,9 +1263,9 @@ function renderReformInput() {
           id="gov-reform-input"
           class="gov-reform-text"
           placeholder="Ваша реформа..."
-          onkeydown="if(event.key==='Enter') submitGovernmentReform()"
+          data-keydown="govReformKeyHandler"
         >
-        <button class="gov-reform-btn" onclick="submitGovernmentReform()">⚖️ Провести</button>
+        <button class="gov-reform-btn" data-action="submitGovernmentReform">⚖️ Провести</button>
       </div>
       <div id="gov-reform-status" class="gov-reform-status hidden"></div>
     </div>
@@ -1324,7 +1324,7 @@ function renderConstitutionBlock(arch, nation) {
         <div class="gov-const-row"><span class="gov-metric-label">Система голосования:</span><strong>${votingLabels[arch.voting_system] ?? arch.voting_system}</strong></div>
         <div class="gov-const-row"><span class="gov-metric-label">Право вето народа:</span><strong>${arch.veto_rights ? '✅ Да' : '❌ Нет'}</strong></div>
       </div>
-      <button class="gov-sp-btn" onclick="openConstitutionDialog()" style="margin-top:8px">⚖️ Изменить конституцию</button>
+      <button class="gov-sp-btn" data-action="openConstitutionDialog" style="margin-top:8px">⚖️ Изменить конституцию</button>
     </div>
   `;
 }
@@ -1431,8 +1431,8 @@ function openConstitutionDialog() {
       </label>
 
       <div class="slf-buttons">
-        <button class="slf-btn-submit" onclick="submitConstitutionAmendment()">⚖️ Внести на голосование</button>
-        <button class="slf-btn-cancel" onclick="document.getElementById('constitution-dialog-overlay').remove()">Отмена</button>
+        <button class="slf-btn-submit" data-action="submitConstitutionAmendment">⚖️ Внести на голосование</button>
+        <button class="slf-btn-cancel" data-action="closeConstitutionDialog">Отмена</button>
       </div>
     </div>
   `;
@@ -1609,7 +1609,7 @@ function renderGovernmentHall(gov, nation) {
   return `
     <div class="gov-section">
       <div class="gov-section-title">${meta.icon} ${meta.name}</div>
-      <button class="hall-entry-btn" onclick="toggleGovernmentHall('${gov.type}')">
+      <button class="hall-entry-btn" data-action="toggleGovernmentHall" data-arg="${gov.type}">
         ${meta.btnLabel}
       </button>
       <div id="gov-hall-container" style="display:none"></div>
@@ -1686,7 +1686,7 @@ function renderActorCard(actor, govType) {
   const roleLabel = (actor.court_role ?? actor.role ?? '').replace(/_/g,' ');
 
   return `
-    <div class="senator-card" onclick="openActorNegotiation('${actor.id}')">
+    <div class="senator-card" data-action="openActorNegotiation" data-arg="${actor.id}">
       <span class="senator-disp">${dispIcon}</span>
       <div class="senator-card-top">
         <span class="senator-portrait">${actor.portrait ?? '👤'}</span>
@@ -1755,7 +1755,7 @@ function buildThroneRoomContent(gov, nation) {
             ${coupRisk ? '<div class="hall-citadel-warning" style="color:#ff4444">🗡️ ОПАСНО: гвардия может взбунтоваться!</div>' : ''}
             ${guard.size > 60 ? '<div class="hall-citadel-info" style="color:#aaa;font-size:11px">🛡 Беспорядки подавляются автоматически (счастье −10)</div>' : ''}
             <div style="margin-top:6px">
-              <button class="hall-btn" onclick="uiDisbandGuard()" style="background:#5a1010;border-color:#aa3333;font-size:11px;padding:3px 10px">
+              <button class="hall-btn" data-action="uiDisbandGuard" style="background:#5a1010;border-color:#aa3333;font-size:11px;padding:3px 10px">
                 Распустить гвардию
               </button>
             </div>
@@ -1765,9 +1765,9 @@ function buildThroneRoomContent(gov, nation) {
         <div class="hall-citadel-section-title">⚔️ Личная гвардия</div>
         <div class="hall-citadel-guard-empty" style="color:#888;margin-bottom:6px">Гвардия не набрана</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
-          <button class="hall-btn" onclick="uiHireGuard(25)" style="font-size:11px;padding:3px 10px">Нанять 25 чел. (500 зол.)</button>
-          <button class="hall-btn" onclick="uiHireGuard(50)" style="font-size:11px;padding:3px 10px">Нанять 50 чел. (1000 зол.)</button>
-          <button class="hall-btn" onclick="uiHireGuard(100)" style="font-size:11px;padding:3px 10px">Нанять 100 чел. (2000 зол.)</button>
+          <button class="hall-btn" data-action="uiHireGuard" data-arg="25" style="font-size:11px;padding:3px 10px">Нанять 25 чел. (500 зол.)</button>
+          <button class="hall-btn" data-action="uiHireGuard" data-arg="50" style="font-size:11px;padding:3px 10px">Нанять 50 чел. (1000 зол.)</button>
+          <button class="hall-btn" data-action="uiHireGuard" data-arg="100" style="font-size:11px;padding:3px 10px">Нанять 100 чел. (2000 зол.)</button>
         </div>
        </div>`;
 
@@ -1954,7 +1954,7 @@ function buildSenateContent(gov, nation) {
         <span class="parl-faction-dot" style="background:${color}"></span>
         <span class="parl-faction-name">${faction.name || 'Сенат'}</span>
         <span class="parl-faction-count">${seatCount}</span>
-        ${leader ? `<button class="parl-leader-btn" onclick="openActorNegotiation('${leader.id}')"
+        ${leader ? `<button class="parl-leader-btn" data-action="openActorNegotiation" data-arg="${leader.id}"
           title="Переговоры с лидером фракции">${leader.portrait ?? '👤'} ${leaderFirst}</button>` : ''}
       </div>`;
   }).join('');
@@ -2029,7 +2029,7 @@ function _buildParliamentSVG(groups, total) {
           : `stroke="rgba(255,255,255,0.5)" stroke-width="1.2"`;
         circles.push(
           `<circle cx="${x}" cy="${y}" r="${SR_NAMED}" fill="${seat.color}" ${ring} ` +
-          `class="parl-seat" onclick="openActorNegotiation('${seat.id}')">` +
+          `class="parl-seat" data-action="openActorNegotiation" data-arg="${seat.id}">` +
           `<title>${seat.name}${seat.isLeader ? ' ★ лидер' : ''}</title></circle>`
         );
       } else {
@@ -2189,7 +2189,7 @@ function buildPeoplesAssemblyContent(gov, nation) {
     const satColor = sat > 65 ? '#4CAF50' : sat > 40 ? '#FF9800' : '#f44336';
     const fmtSize = g.size > 999999 ? (g.size/1000000).toFixed(1)+'М' : g.size > 999 ? Math.round(g.size/1000)+'К' : g.size;
     return `
-      <div class="hall-pop-group" onclick="openGroupNegotiation('${g.id}','${gov.type}')">
+      <div class="hall-pop-group" data-action="openGroupNegotiation" data-arg="${g.id}|${gov.type}">
         <span class="hall-pop-icon">${g.icon}</span>
         <div class="hall-pop-info">
           <div class="hall-pop-name">${g.name}</div>
@@ -2256,7 +2256,7 @@ function buildElderCouncilContent(gov, nation) {
 
   // --- Показатель 3: Кнопка «Объявить набег» при престиже < 50 ---
   const raidBtn = prestige < 50
-    ? `<button class="hall-tribal-raid-btn" onclick="declareTribeRaid()"
+    ? `<button class="hall-tribal-raid-btn" data-action="declareTribeRaid"
          title="Набег восстановит престиж вождя (+15)" style="margin-top:6px">
         ⚔️ Объявить набег ${prestige < 20 ? '(СРОЧНО!)' : '(восстановить престиж)'}
       </button>`
@@ -2275,11 +2275,11 @@ function buildElderCouncilContent(gov, nation) {
           Победа вернёт престиж +25. Откажетесь — уступите часть власти.
           Истекает через ${Math.max(0, (challenge.expires_turn ?? 0) - (GAME_STATE.turn ?? 0))} хода.
         </div>
-        <button onclick="acceptTribalDuel('${challenge.rival_name}')"
+        <button data-action="acceptTribalDuel" data-arg="${challenge.rival_name}"
           style="background:#c62828;color:#fff;padding:6px 14px;border:none;border-radius:5px;cursor:pointer;margin-right:8px">
           ⚔️ Принять поединок
         </button>
-        <button onclick="yieldTribalPower()"
+        <button data-action="yieldTribalPower"
           style="background:#555;color:#ccc;padding:6px 14px;border:none;border-radius:5px;cursor:pointer">
           🏳️ Уступить власть
         </button>
@@ -2446,7 +2446,7 @@ function buildPriestlySynodContent(gov, nation) {
   const cards  = sorted.map(a => {
     const rankLabel = a.court_rank === 1 ? 'Верховный жрец' : a.court_rank === 2 ? 'Жрец высшего круга' : 'Жрец';
     return `
-      <div class="senator-card" onclick="openActorNegotiation('${a.id}')">
+      <div class="senator-card" data-action="openActorNegotiation" data-arg="${a.id}">
         <span class="senator-disp">${getDispositionIcon(a.disposition??50)}</span>
         <div class="senator-card-top">
           <span class="senator-portrait">${a.portrait??'🕊️'}</span>
@@ -2484,7 +2484,7 @@ function buildCustomHallContent(gov, nation) {
     return `
       <div class="hall-inner-circle">${custom.icon??'⚙️'} ${custom.hall_name??'Кастомный зал'}</div>
       <div class="custom-hall-actors-display">${cards}</div>
-      <button class="custom-hall-add-btn" onclick="openCustomHallBuilder()">✏️ Редактировать структуру</button>`;
+      <button class="custom-hall-add-btn" data-action="openCustomHallBuilder">✏️ Редактировать структуру</button>`;
   }
 
   return renderCustomHallBuilder(gov, nation);
@@ -2519,12 +2519,12 @@ function renderCustomHallBuilder(gov, nation) {
             <input class="custom-hall-input custom-hall-actor-input" placeholder="Имя актора..." data-field="name">
             <input class="custom-hall-input" placeholder="Роль..." data-field="role" style="width:80px">
             <input class="custom-hall-input" placeholder="🧙" data-field="icon" style="width:40px">
-            <button class="custom-hall-actor-remove" onclick="removeCustomActor(this)">✕</button>
+            <button class="custom-hall-actor-remove" data-action="removeCustomActorByEvent" data-pass-event>✕</button>
           </div>
         </div>
-        <button class="custom-hall-add-btn" onclick="addCustomActorRow()">+ Добавить актора</button>
+        <button class="custom-hall-add-btn" data-action="addCustomActorRow">+ Добавить актора</button>
       </div>
-      <button class="custom-hall-save-btn" onclick="saveCustomHall()">💾 Сохранить структуру</button>
+      <button class="custom-hall-save-btn" data-action="saveCustomHall">💾 Сохранить структуру</button>
     </div>
   `;
 }
@@ -2538,7 +2538,7 @@ function addCustomActorRow() {
     <input class="custom-hall-input custom-hall-actor-input" placeholder="Имя актора..." data-field="name">
     <input class="custom-hall-input" placeholder="Роль..." data-field="role" style="width:80px">
     <input class="custom-hall-input" placeholder="🧙" data-field="icon" style="width:40px">
-    <button class="custom-hall-actor-remove" onclick="removeCustomActor(this)">✕</button>
+    <button class="custom-hall-actor-remove" data-action="removeCustomActorByEvent" data-pass-event>✕</button>
   `;
   container.appendChild(row);
 }
@@ -2635,7 +2635,7 @@ function renderActorNegotiationPanel(actor, nation, extraHtml = '') {
   const actionsHtml = actions.map(a => {
     const chanceClass = a.chance >= 70 ? 'good' : a.chance >= 45 ? 'ok' : 'risky';
     return `
-      <button class="senator-action-btn" onclick="executeActorAction('${actor.id}','${a.id}')"
+      <button class="senator-action-btn" data-action="executeActorAction" data-arg="${actor.id}|${a.id}"
               ${a.disabled ? 'disabled' : ''}>
         <span class="senator-action-title">${a.icon} ${a.label}</span>
         <span class="senator-action-cost">${a.costText}</span>
@@ -2657,7 +2657,7 @@ function renderActorNegotiationPanel(actor, nation, extraHtml = '') {
           <div class="senator-neg-name">${actor.name}</div>
           <div class="senator-neg-faction">${roleLabel}${factionStr} · ${actor.age} лет</div>
         </div>
-        <button class="senator-neg-close" onclick="closeActorNegotiation()">✕</button>
+        <button class="senator-neg-close" data-action="closeActorNegotiation">✕</button>
       </div>
       <div class="senator-neg-body">
         <div class="senator-neg-desc">${actor.description ?? ''}</div>
@@ -2887,7 +2887,7 @@ function renderSenateLazyBlock(nationId) {
       : 'senate-senator-card senate-senator-materialized';
     return `
       <div class="${cardClass}"
-           onclick="openSenatorCard('${s.id}', '${nationId}')"
+           data-action="openSenatorCard" data-arg="${s.id}|${nationId}"
            title="${s.biography ?? ''}">
         <span class="senate-senator-portrait">${s.portrait ?? '👤'}${leaderBadge}</span>
         <div class="senate-senator-info">
@@ -2907,7 +2907,7 @@ function renderSenateLazyBlock(nationId) {
     const topGhost = ghosts.sort((a, b) => b.ambition_level - a.ambition_level)[0];
     return `
       <div class="senate-senator-card senate-senator-ghost"
-           onclick="onSenatorGhostClick('${topGhost.id}', '${nationId}')"
+           data-action="onSenatorGhostClick" data-arg="${topGhost.id}|${nationId}"
            title="Нажмите, чтобы узнать личность · Фракция: ${f.name}">
         <span class="senate-senator-portrait">❓</span>
         <div class="senate-senator-info">
@@ -2941,7 +2941,7 @@ function renderSenateLazyBlock(nationId) {
       ${ghostSummary ? `<div class="senate-senators-list senate-ghosts">${ghostSummary}</div>` : ''}
 
       <div style="margin-top:8px;">
-        <button onclick="openSenateLawProposal('${nationId}')"
+        <button data-action="openSenateLawProposal" data-arg="${nationId}"
                 style="width:100%;padding:7px;background:rgba(100,180,255,0.1);border:1px solid rgba(100,180,255,0.3);
                        border-radius:4px;color:#88ccff;cursor:pointer;font-size:12px;">
           📋 Вынести закон на голосование Сената
@@ -3107,7 +3107,7 @@ function openSenatorCard(senatorId, nationId) {
     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
       <button style="background:rgba(100,180,255,0.1);border:1px solid #4499ff;color:#88ccff;
                      padding:5px 10px;border-radius:4px;cursor:pointer;font-size:11px;"
-              onclick="senateReveal('${s.id}','${nationId}')">
+              data-action="senateReveal" data-arg="${s.id}|${nationId}">
         🔍 Разведать интересы
       </button>
     </div>
@@ -3223,9 +3223,9 @@ function openSenateLawProposal(nationId) {
                 placeholder="Отцы-сенаторы! Обращаюсь к вам с этим законом потому...&#10;Упомяните торговлю, войну, народ, традиции — сенаторы заметят."></textarea>
 
       <div class="slf-btns">
-        <button onclick="document.getElementById('senate-law-overlay').style.display='none'"
+        <button data-action="closeSenateLawOverlay"
                 class="slf-btn-cancel">Отмена</button>
-        <button onclick="submitSenateLaw('${nationId}')" class="slf-btn-submit">
+        <button data-action="submitSenateLaw" data-arg="${nationId}" class="slf-btn-submit">
           ⚖️ Войти в зал Сената
         </button>
       </div>
@@ -3293,7 +3293,7 @@ function renderDialogueBlock(charId, charName, nationId) {
     </div>`;
   }).join('');
 
-  const natArg = nId ? `'${nId}'` : 'null';
+  const natVal = nId || '';
 
   return `
     <div class="dlg-section">
@@ -3313,8 +3313,8 @@ function renderDialogueBlock(charId, charName, nationId) {
       <div class="dlg-input-row">
         <textarea class="dlg-input" id="dlg-input-${charId}"
           placeholder="Говорите с ${_escHtml(charName)}… (союз, подкуп, угроза, просьба — своими словами)"
-          rows="2" onkeydown="dlgHandleKey(event,'${charId}',${natArg})"></textarea>
-        <button class="dlg-send-btn" onclick="dlgSend('${charId}',${natArg})" title="Отправить (Enter)">➤</button>
+          rows="2" data-keydown="dlgHandleKeyWrapper" data-dlg-char="${charId}" data-dlg-nation="${natVal}"></textarea>
+        <button class="dlg-send-btn" data-action="dlgSend" data-arg="${charId}|${natVal}" title="Отправить (Enter)">➤</button>
       </div>
       <div class="dlg-status" id="dlg-status-${charId}"></div>
     </div>`;
@@ -3329,6 +3329,7 @@ function dlgHandleKey(event, charId, nationId) {
 }
 
 async function dlgSend(charId, nationId) {
+  nationId = nationId || GAME_STATE.player_nation;
   const input  = document.getElementById(`dlg-input-${charId}`);
   const status = document.getElementById(`dlg-status-${charId}`);
   const history = document.getElementById(`dlg-history-${charId}`);
@@ -3408,7 +3409,7 @@ function renderOrdersSection(nation) {
   return `
     <div class="gov-section" id="orders-section">
       <div class="gov-section-title"><span class="icon-wrap" data-icon="orders"></span> Приказы и делегирование
-        <button class="orders-new-btn" onclick="showIssueOrderPanel()"
+        <button class="orders-new-btn" data-action="showIssueOrderPanel"
                 title="Выдать новый приказ">+ Новый приказ</button>
       </div>
 
@@ -3459,7 +3460,7 @@ function renderOrderCard(order, nation, isActive) {
       <div class="order-card-header">
         <span class="order-label">${_escHtml(order.label)}</span>
         ${statusBadge}
-        ${isActive ? `<button class="order-cancel-btn" onclick="cancelOrder('${order.id}');renderOrdersPanel();renderGovernmentOverlay()">✕</button>` : ''}
+        ${isActive ? `<button class="order-cancel-btn" data-action="cancelOrderAndRefresh" data-arg="${order.id}">✕</button>` : ''}
       </div>
       <div class="order-meta">
         👤 <b>${_escHtml(order.assigned_char_name)}</b>
@@ -3516,7 +3517,7 @@ function renderIssueOrderForm(nation) {
 
   return `
     <div class="gov-section-title">📋 Выдать новый приказ
-      <button class="orders-new-btn" onclick="hideIssueOrderPanel()">✕ Закрыть</button>
+      <button class="orders-new-btn" data-action="hideIssueOrderPanel">✕ Закрыть</button>
     </div>
 
     <div class="order-form">
@@ -3568,7 +3569,7 @@ function renderIssueOrderForm(nation) {
       </div>
 
       <div class="order-form-row">
-        <button class="gov-action-btn primary" onclick="submitIssueOrder()">📋 Выдать приказ</button>
+        <button class="gov-action-btn primary" data-action="submitIssueOrder">📋 Выдать приказ</button>
       </div>
     </div>
   `;
@@ -3841,7 +3842,7 @@ function _renderMpCard(order, isActive) {
         <span class="op-card-label">${_escHtml(order.label)}</span>
         ${badgeText}
         ${isActive ? `<button class="op-card-cancel"
-          onclick="cancelOrder('${order.id}');renderOrdersPanel();renderGovernmentOverlay()" title="Отменить">✕</button>` : ''}
+          data-action="cancelOrderAndRefresh" data-arg="${order.id}" title="Отменить">✕</button>` : ''}
       </div>
       <div class="op-card-meta">👤 ${_escHtml(order.assigned_char_name)} · 🎯 ${_escHtml(order.target_label)} · ${_escHtml(oversight)}</div>
       ${isActive ? `
@@ -3879,7 +3880,7 @@ function showMpOrderForm() {
   formEl.innerHTML = `
     <div class="op-form-hdr">
       📋 Новый приказ
-      <button class="op-form-close" onclick="hideMpOrderForm()">✕</button>
+      <button class="op-form-close" data-action="hideMpOrderForm">✕</button>
     </div>
     <div class="op-form-grid">
       <div class="op-form-field">
@@ -3905,7 +3906,7 @@ function showMpOrderForm() {
     </div>
     <div class="op-form-bottom">
       <span class="op-form-quality" id="mp-quality-preview">Ожидаемое качество: —</span>
-      <button class="op-form-submit" onclick="submitMpOrder()">📋 Выдать приказ</button>
+      <button class="op-form-submit" data-action="submitMpOrder">📋 Выдать приказ</button>
     </div>`;
 
   formEl.style.display = 'block';
@@ -4037,4 +4038,43 @@ function submitMpOrder() {
     renderOrdersPanel();
     renderGovernmentOverlay();
   }
+}
+
+// ── Wrapper-функции для data-action делегирования (этап 58) ──────────
+
+function govToggleCollapsed(e) {
+  var el = e.target.closest('[data-action="govToggleCollapsed"]');
+  if (el && el.parentElement) el.parentElement.classList.toggle('collapsed');
+}
+
+function closeConstitutionDialog() {
+  var el = document.getElementById('constitution-dialog-overlay');
+  if (el) el.remove();
+}
+
+function closeSenateLawOverlay() {
+  var el = document.getElementById('senate-law-overlay');
+  if (el) el.style.display = 'none';
+}
+
+function cancelOrderAndRefresh(orderId) {
+  if (typeof cancelOrder === 'function') cancelOrder(orderId);
+  if (typeof renderOrdersPanel === 'function') renderOrdersPanel();
+  renderGovernmentOverlay();
+}
+
+function removeCustomActorByEvent(e) {
+  var btn = e.target.closest('.custom-hall-actor-remove');
+  if (btn) removeCustomActor(btn);
+}
+
+function dlgHandleKeyWrapper(e) {
+  var el = e.target;
+  var charId = el.dataset.dlgChar;
+  var nationId = el.dataset.dlgNation || null;
+  dlgHandleKey(e, charId, nationId);
+}
+
+function govReformKeyHandler(e) {
+  if (e.key === 'Enter') submitGovernmentReform();
 }
