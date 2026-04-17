@@ -27,7 +27,7 @@
 **Шаги:** написать Node-скрипт, который импортирует `engine/turn.js` логику в jsdom, прогоняет `initGame()` + 10 `processTurn()`, печатает: общее время, p50/p95 per-turn, разбивку по шагам (через `console.time` уже расставленные в [engine/turn.js:63](engine/turn.js#L63)). Сохранить результат в markdown.
 **Верификация:** `node perf/profile.mjs` выводит таблицу и пишет в файл; число в baseline не 0 и не ∞.
 
-### Session 2 — Кэш `Object.entries(GAME_STATE.nations)` в hot loops
+### Session 2 — Кэш `Object.entries(GAME_STATE.nations)` в hot loops   ✅ Выполнено (2026-04-17)
 **Цель:** убрать 7+ повторных `Object.entries(...)` за один tick в [engine/economy.js](engine/economy.js) (экспертный отчёт нашёл `for...Object.entries(GAME_STATE.nations)` 23 раза через engine/).
 **Файлы:** [engine/economy.js](engine/economy.js), [engine/turn.js](engine/turn.js).
 **Шаги:** в начале `processTurn()` один раз собрать `const _nationEntries = Object.entries(GAME_STATE.nations)`, пробросить в нижележащие функции параметром. Grep'нуть `Object.entries\(GAME_STATE\.nations\)` и заменить на переменную.

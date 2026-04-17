@@ -616,6 +616,9 @@ export function processTrade(nationId) {
   //   Квота и транспортные расходы те же, что в procureCapitalInputs.
   if (typeof canAccessWorldMarket === 'function' && canAccessWorldMarket(nationId)) {
     const stockpile = nation.economy.stockpile;
+    // Session 2 (perf): Object.keys(...) в теле внешнего цикла — 11×N alloc'ов.
+    // Значение одинаково для всех good, вычисляем один раз на вызов processTrade.
+    const _nationCount = Math.max(1, Object.keys(GAME_STATE.nations).length);
 
     for (const good of _WORLD_IMPORT_GOODS) {
       const mktEntry = GAME_STATE.market[good];
@@ -623,7 +626,7 @@ export function processTrade(nationId) {
 
       const currentStock = stockpile[good] || 0;
       const demandPerTick = mktEntry.demand
-                          ? mktEntry.demand / Math.max(1, Object.keys(GAME_STATE.nations).length)
+                          ? mktEntry.demand / _nationCount
                           : 0;
 
       // Только если запас < 2 тика потребления
@@ -1044,13 +1047,18 @@ export function evaluateCondition(value, condition) {
 // Балансировочные коэффициенты в CONFIG.BALANCE (config.js) — ECO_010
 // При изменении — тестируй на 100 ходах: доход должен расти ~5%/10 ходов
 export function runEconomyTick() {
+  // Session 2 (perf): снимок наций один раз на тик — иначе ниже 17+ обходов
+  // Object.keys/entries(GAME_STATE.nations) на 900+ ключах. Ни один шаг ниже
+  // не добавляет/удаляет нации, поэтому снимок стабилен в пределах тика.
+  const _nationEntries = Object.entries(GAME_STATE.nations);
+  const _nationKeys    = _nationEntries.map(e => e[0]);
 
   // ════════════════════════════════════════════════════════════
   // ШАГ 0: POP-эффективность зданий
   // прошлотиковая satisfied → slot._pop_eff
   // ════════════════════════════════════════════════════════════
   if (typeof applyPopSatisfiedToBuildings === 'function') {
-    for (const _nId of Object.keys(GAME_STATE.nations)) {
+    for (const _nId of _nationKeys) {
       try { applyPopSatisfiedToBuildings(_nId); } catch (e) { console.warn('[pops_eff]', e); }
     }
   }
@@ -1066,7 +1074,7 @@ export function runEconomyTick() {
     try { computeWorldMarketQuotas(); } catch (e) { console.warn('[world_quotas]', e); }
   }
   if (typeof procureCapitalInputs === 'function') {
-    for (const nationId of Object.keys(GAME_STATE.nations)) {
+    for (const nationId of _nationKeys) {
       try { procureCapitalInputs(nationId); } catch (e) { console.warn('[capital_inputs]', e); }
     }
   }
@@ -1077,7 +1085,7 @@ export function runEconomyTick() {
   //   → nation.population.by_profession.slaves
   // ════════════════════════════════════════════════════════════
   if (typeof procureSlaves === 'function') {
-    for (const nationId of Object.keys(GAME_STATE.nations)) {
+    for (const nationId of _nationKeys) {
       try { procureSlaves(nationId); } catch (e) { console.warn('[procure_slaves]', e); }
     }
   }
@@ -1090,14 +1098,14 @@ export function runEconomyTick() {
   // ════════════════════════════════════════════════════════════
   for (const m of Object.values(GAME_STATE.market)) { m.production_cost = null; }
   if (typeof processAllRecipes === 'function') {
-    for (const nationId of Object.keys(GAME_STATE.nations)) {
+    for (const nationId of _nationKeys) {
       try { processAllRecipes(nationId); } catch (e) { console.warn('[recipes]', e); }
     }
   }
 
   const allProduced = calculateProduction();
 
-  for (const nationId of Object.keys(GAME_STATE.nations)) {
+  for (const nationId of _nationKeys) {
     try { routeProductionToLocalStockpiles(nationId, allProduced); } catch (e) { console.warn('[route_prod]', e); }
   }
 
@@ -1126,7 +1134,7 @@ export function runEconomyTick() {
   const allConsumed       = {};
   const allActualConsumed = {};
 
-  for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
+  for (const [nationId, nation] of _nationEntries) {
     allConsumed[nationId] = calculateConsumption(nation);   // wealth-basket (Stage 6) или flat
 
     const consumed  = allConsumed[nationId];
@@ -1166,7 +1174,7 @@ export function runEconomyTick() {
   }
 
   // 2d. Проверка дефицитов по всем товарам
-  for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
+  for (const [nationId, nation] of _nationEntries) {
     checkSupplyDeficits(nation);
   }
 
@@ -1176,12 +1184,12 @@ export function runEconomyTick() {
   //   3b. Адаптивное поведение: сокращение рабочих, приостановка, закрытие
   // ════════════════════════════════════════════════════════════
   if (typeof updateBuildingFinancials === 'function') {
-    for (const nationId of Object.keys(GAME_STATE.nations)) {
+    for (const nationId of _nationKeys) {
       try { updateBuildingFinancials(nationId); } catch (e) { console.warn('[bld_fin]', e); }
     }
   }
   if (typeof applyBuildingAdaptiveBehavior === 'function') {
-    for (const nationId of Object.keys(GAME_STATE.nations)) {
+    for (const nationId of _nationKeys) {
       try { applyBuildingAdaptiveBehavior(nationId); } catch (e) { console.warn('[bld_adapt]', e); }
     }
   }
@@ -1192,7 +1200,7 @@ export function runEconomyTick() {
   //   4b. Обновить pop.wealth на основе incomeAdequacy + priceRatio
   // ════════════════════════════════════════════════════════════
   if (typeof distributeWages === 'function') {
-    for (const nationId of Object.keys(GAME_STATE.nations)) {
+    for (const nationId of _nationKeys) {
       try { distributeWages(nationId); } catch (e) { console.warn('[wages]', e); }
     }
   }
@@ -1201,7 +1209,7 @@ export function runEconomyTick() {
   // updatePopWealth зависит только от _wage_bonuses (шаг 4а) и рыночных цен.
   // class_capital здесь не читается → можно вызывать до distributeClassIncome.
   if (typeof updatePopWealth === 'function') {
-    for (const nationId of Object.keys(GAME_STATE.nations)) {
+    for (const nationId of _nationKeys) {
       try { updatePopWealth(nationId); } catch (e) { console.warn('[pops_wealth]', e); }
     }
   }
@@ -1215,7 +1223,7 @@ export function runEconomyTick() {
   // ════════════════════════════════════════════════════════════
   for (const m of Object.values(GAME_STATE.market)) { m.production_cost = null; }
   if (typeof recomputeAllProductionCosts === 'function') {
-    for (const nationId of Object.keys(GAME_STATE.nations)) {
+    for (const nationId of _nationKeys) {
       try { recomputeAllProductionCosts(nationId); } catch (e) { console.warn('[prod_cost]', e); }
     }
   }
@@ -1235,7 +1243,7 @@ export function runEconomyTick() {
   //   арендная зарплата фермеров   → class_capital.farmers_class
   //   военная зарплата солдат      → treasury → class_capital.soldiers_class
   if (typeof distributeClassIncome === 'function') {
-    for (const nationId of Object.keys(GAME_STATE.nations)) {
+    for (const nationId of _nationKeys) {
       try { distributeClassIncome(nationId); } catch (e) { console.warn('[class_income]', e); }
     }
   }
@@ -1245,7 +1253,7 @@ export function runEconomyTick() {
   // Subsistence-фермеры (не в зданиях) кормят себя напрямую — без транзакции.
   // Вызывается сразу после distributeClassIncome (class_capital уже пополнен).
   if (typeof deductFoodPurchases === 'function') {
-    for (const nationId of Object.keys(GAME_STATE.nations)) {
+    for (const nationId of _nationKeys) {
       try { deductFoodPurchases(nationId); } catch (e) { console.warn('[food_purchases]', e); }
     }
   }
@@ -1257,12 +1265,12 @@ export function runEconomyTick() {
   //   Затем проверяем банкротства классов.
   // ════════════════════════════════════════════════════════════
   if (typeof processAutonomousBuilding === 'function') {
-    for (const nationId of Object.keys(GAME_STATE.nations)) {
+    for (const nationId of _nationKeys) {
       try { processAutonomousBuilding(nationId); } catch (e) { console.warn('[auto_build]', e); }
     }
   }
   if (typeof checkClassBankruptcy === 'function') {
-    for (const nationId of Object.keys(GAME_STATE.nations)) {
+    for (const nationId of _nationKeys) {
       try { checkClassBankruptcy(nationId); } catch (e) { console.warn('[class_bankrupt]', e); }
     }
   }
@@ -1273,7 +1281,7 @@ export function runEconomyTick() {
   //   6b. Применение активных законов
   //   6c. Триггеры событий: затяжной дефицит, банкротство
   // ════════════════════════════════════════════════════════════
-  for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
+  for (const [nationId, nation] of _nationEntries) {
     const tradeProfit = processTrade(nationId);
     const { income, expense, delta } = updateTreasury(
       nationId,
@@ -1289,7 +1297,7 @@ export function runEconomyTick() {
       );
     }
   }
-  for (const nationId of Object.keys(GAME_STATE.nations)) {
+  for (const nationId of _nationKeys) {
     applyActiveLaws(nationId);
   }
   _checkEconomicEventTriggers();
