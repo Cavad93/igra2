@@ -615,7 +615,7 @@ export function rbtToggleCategory(regionId, catId) {
   }
 }
 
-function uiOrderConstruction(regionId, buildingId) {
+export function uiOrderConstruction(regionId, buildingId) {
   const result = (typeof orderBuildingConstruction === 'function')
     ? orderBuildingConstruction(GAME_STATE.player_nation, regionId, buildingId)
     : { ok: false, reason: 'Движок зданий не загружен' };
@@ -640,7 +640,7 @@ function uiOrderConstruction(regionId, buildingId) {
   }
 }
 
-function uiCancelConstruction(regionId, slotId) {
+export function uiCancelConstruction(regionId, slotId) {
   if (typeof cancelConstruction === 'function') {
     cancelConstruction(GAME_STATE.player_nation, regionId, slotId);
   }
@@ -648,7 +648,7 @@ function uiCancelConstruction(regionId, slotId) {
   showRegionInfo(regionId);
 }
 
-function uiDemolishBuilding(regionId, slotId) {
+export function uiDemolishBuilding(regionId, slotId) {
   const region = GAME_STATE.regions[regionId];
   const slot   = (region?.building_slots || []).find(s => s.slot_id === slotId);
   const level  = slot?.level ?? 1;

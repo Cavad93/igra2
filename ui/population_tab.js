@@ -1444,7 +1444,7 @@ function _buildLaborLawsPanel(nation) {
   `;
 }
 
-function uiToggleLaborLaw(lawId) {
+export function uiToggleLaborLaw(lawId) {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   if (!nation || typeof LAWS_LABOR === 'undefined') return;
 
@@ -1484,13 +1484,13 @@ let _cidExpanded       = new Set(); // "cls|ptype" keys
 // СЕКЦИЯ "ДОХОДЫ И ИНВЕСТИЦИИ КЛАССОВ"
 // ─────────────────────────────────────────────────────────────────────────
 
-function _popSetIncomeFilter(type) {
+export function _popSetIncomeFilter(type) {
   if (type === undefined) type = null;
   _popIncomeFilter = (_popIncomeFilter === type) ? null : type;
   renderPopulationOverlay();
 }
 
-function _cidToggle(cls, ptype) {
+export function _cidToggle(cls, ptype) {
   const key = cls + '|' + ptype;
   if (_cidExpanded.has(key)) _cidExpanded.delete(key);
   else _cidExpanded.add(key);

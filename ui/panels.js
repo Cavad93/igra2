@@ -1254,7 +1254,7 @@ function _cwPlural(n, one, few, many) {
 
 let _rwState = { nationId: null, sort: 'fervor', stats: null };
 
-function openReligionWindow(nationId) {
+export function openReligionWindow(nationId) {
   closeReligionWindow();
   _rwState.nationId = nationId;
   _rwState.sort = 'fervor';
@@ -2344,7 +2344,7 @@ export function setRosterSort(id) {
 
 // ─── Всплывающее меню «Назначить в…» ───────────────────────────
 
-function _showRosterMenu(ev, charId) {
+export function _showRosterMenu(ev, charId) {
   _closeRosterMenu();
   const menu = document.createElement('div');
   menu.className = 'roster-menu';
@@ -2375,7 +2375,7 @@ function _showRosterMenu(ev, charId) {
   }, 0);
 }
 
-function _closeRosterMenu() {
+export function _closeRosterMenu() {
   document.querySelectorAll('.roster-menu').forEach(m => m.remove());
 }
 
@@ -2513,7 +2513,7 @@ if (typeof window !== 'undefined') {
 }
 
 // Модал назначения на должность
-function openAssignModal(roleId) {
+export function openAssignModal(roleId) {
   const overlay = document.getElementById('assign-modal-overlay');
   if (!overlay) return;
   const posDef = COURT_POSITIONS.find(p => p.id === roleId);
@@ -2570,12 +2570,12 @@ function openAssignModal(roleId) {
   overlay.style.display = 'flex';
 }
 
-function closeAssignModal() {
+export function closeAssignModal() {
   const overlay = document.getElementById('assign-modal-overlay');
   if (overlay) overlay.style.display = 'none';
 }
 
-function assignCharacter(charId, roleId) {
+export function assignCharacter(charId, roleId) {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const positions = _getCourtPositions(nation);
   // Если этот персонаж уже занимал другую должность — освобождаем её
@@ -2592,7 +2592,7 @@ function assignCharacter(charId, roleId) {
   renderRightPanel();
 }
 
-function unassignCharacter(roleId) {
+export function unassignCharacter(roleId) {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const positions = _getCourtPositions(nation);
   const charId = positions[roleId];
@@ -2783,7 +2783,7 @@ function formatNumber(n) {
 // ИТОГИ ХОДА — оверлей с кратким отчётом
 // ──────────────────────────────────────────────────────────────
 
-function showTurnSummary() {
+export function showTurnSummary() {
   const overlay = document.getElementById('turn-summary-overlay');
   if (!overlay) return;
 
@@ -2840,7 +2840,7 @@ function showTurnSummary() {
   overlay.style.display = 'flex';
 }
 
-function hideTurnSummary() {
+export function hideTurnSummary() {
   const overlay = document.getElementById('turn-summary-overlay');
   if (overlay) overlay.style.display = 'none';
 }
@@ -2851,7 +2851,7 @@ function hideTurnSummary() {
 
 let _activeLogFilter = 'all';
 
-function setLogFilter(filter) {
+export function setLogFilter(filter) {
   _activeLogFilter = filter;
   _applyLogFilter();
   // Обновляем стиль кнопок

@@ -1035,7 +1035,7 @@ const Messenger = {
   },
 };
 
-function dismissMessenger() { Messenger.dismiss(); }
+export function dismissMessenger() { Messenger.dismiss(); }
 
 if (typeof window !== 'undefined') {
 }
@@ -1086,12 +1086,12 @@ function formatEffectPath(path) {
   return labels[last] || last.replace(/_/g, ' ');
 }
 
-function _pendingFinalizeVote() {
+export function _pendingFinalizeVote() {
   var d = _pendingVoteData;
   if (d) finalizeVote(d.nationId, d.law, d.votesFor, d.votesAgainst, d.votesAbstain, d.passed);
 }
 
-function _pendingFinalizeDebateVote() {
+export function _pendingFinalizeDebateVote() {
   var d = _pendingDebateVoteData;
   if (d) finalizeDebateVote(d.nationId, encodeURIComponent(JSON.stringify(d.law)), d.votesFor, d.votesAgainst, d.votesAbstain, d.passed);
 }

@@ -1745,7 +1745,7 @@ export function closeRegionInfo() {
 /**
  * Отправляет дипломатическую миссию прямо из панели региона.
  */
-function sendDiplomaticMissionFromPanel(targetNationId, targetNationName) {
+export function sendDiplomaticMissionFromPanel(targetNationId, targetNationName) {
   const charId    = document.getElementById('ri-dipl-char-sel')?.value;
   const oversight = document.getElementById('ri-dipl-oversight-sel')?.value ?? 'direct';
 

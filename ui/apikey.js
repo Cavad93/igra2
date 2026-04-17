@@ -169,7 +169,7 @@ export function hideAPIKeyModal() {
   if (modal) modal.style.display = 'none';
 }
 
-async function submitAPIKey() {
+export async function submitAPIKey() {
   const inpAnthropic = document.getElementById('akm-input');
   const inpGroq      = document.getElementById('akm-groq-input');
   const btn          = document.getElementById('akm-btn');
@@ -253,7 +253,7 @@ export function _updateInlineKeyStatus() {
 }
 
 // Сохраняет ключи из инлайн-формы (без удаления существующих)
-async function saveInlineAPIKeys() {
+export async function saveInlineAPIKeys() {
   const groqVal      = (document.getElementById('inline-groq-key')?.value ?? '').trim();
   const anthropicVal = (document.getElementById('inline-anthropic-key')?.value ?? '').trim();
 

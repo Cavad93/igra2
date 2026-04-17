@@ -736,7 +736,7 @@ function updateUnitPanel(unit, bs) {
 
 // ── Этап 13: засада командира ─────────────────────────
 
-function _triggerAmbush() {
+export function _triggerAmbush() {
   if (!_battleState || _battleState.ambushUsed) return;
   const cmd = _battleState.playerUnits.find(u => u.isCommander && u.strength > 0);
   if (!cmd || !cmd.commander?.skills?.includes('cunning')) return;
@@ -758,7 +758,7 @@ function _triggerAmbush() {
   redrawAll(_ctx, _battleState);
 }
 
-function _setFormation(unitId, formation) {
+export function _setFormation(unitId, formation) {
   const unit = _battleState?.playerUnits.find(u => u.id === unitId);
   if (unit) {
     unit.formation = formation;
@@ -769,7 +769,7 @@ function _setFormation(unitId, formation) {
 
 // ── Этап 15: резерв — полная реализация ───────────────
 
-function _sendReserve(unitId) {
+export function _sendReserve(unitId) {
   const unit = _battleState?.playerUnits.find(u => u.id === unitId);
   if (!unit || unit.isCommander) return;
 
@@ -790,7 +790,7 @@ function _sendReserve(unitId) {
   redrawAll(_ctx, _battleState);
 }
 
-function _withdrawReserve(unitId) {
+export function _withdrawReserve(unitId) {
   const unit = _battleState?.playerUnits.find(u => u.id === unitId);
   if (!unit) return;
 
@@ -1180,13 +1180,13 @@ export function openTacticalMap(atkArmy, defArmy, region) {
   }
 }
 
-function _confirmRetreat() {
+export function _confirmRetreat() {
   var el = document.getElementById('retreat-confirm');
   if (el) el.remove();
   if (typeof executeRetreat === 'function') executeRetreat(_battleState);
 }
 
-function _cancelRetreat() {
+export function _cancelRetreat() {
   var el = document.getElementById('retreat-confirm');
   if (el) el.remove();
 }

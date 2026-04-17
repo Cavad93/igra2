@@ -704,7 +704,7 @@ function _dpWarScoreBar(playerScore, opponentScore) {
 
 // ── Обработчики войны / мира ─────────────────────────────────────────────────
 
-function dpDeclareWar(aiId) {
+export function dpDeclareWar(aiId) {
   const playerNationId = GAME_STATE.player_nation;
   const aiNation  = GAME_STATE.nations[aiId];
   const armistice = typeof DiplomacyEngine !== 'undefined'
@@ -722,7 +722,7 @@ function dpDeclareWar(aiId) {
   _dpRender();
 }
 
-function dpOpenPeaceForm(aiId) {
+export function dpOpenPeaceForm(aiId) {
   _dpPeaceRegions   = new Set();
   _dpPeaceVassalize = false;
   _dpPeaceRepTurns  = 0;
@@ -732,7 +732,7 @@ function dpOpenPeaceForm(aiId) {
 }
 
 /** Открыть переговоры о мире через AI-чат (Claude Sonnet). */
-function dpOpenPeaceChat(aiId) {
+export function dpOpenPeaceChat(aiId) {
   const playerNationId = GAME_STATE.player_nation;
   const aiNation = GAME_STATE.nations[aiId];
   const ws = typeof WarScoreEngine !== 'undefined'
@@ -748,12 +748,12 @@ function dpOpenPeaceChat(aiId) {
   }
 }
 
-function dpClosePeaceForm() {
+export function dpClosePeaceForm() {
   _dpShowPeaceForm = false;
   _dpRender();
 }
 
-function dpTogglePeaceRegion(regionId) {
+export function dpTogglePeaceRegion(regionId) {
   if (_dpPeaceRegions.has(regionId)) _dpPeaceRegions.delete(regionId);
   else _dpPeaceRegions.add(regionId);
   // Перерисовываем только форму, не весь оверлей
@@ -763,12 +763,12 @@ function dpTogglePeaceRegion(regionId) {
   else _dpRender();
 }
 
-function dpSetPeaceVassalize(v) { _dpPeaceVassalize = v; }
-function dpSetPeaceRep(v)       { _dpPeaceRepTurns  = v; _dpRender(); }
-function dpSetPeaceArmistice(v) { _dpPeaceArmistice = v; }
-function dpUpdatePeaceCost(aiId) { _dpRender(); }
+export function dpSetPeaceVassalize(v) { _dpPeaceVassalize = v; }
+export function dpSetPeaceRep(v)       { _dpPeaceRepTurns  = v; _dpRender(); }
+export function dpSetPeaceArmistice(v) { _dpPeaceArmistice = v; }
+export function dpUpdatePeaceCost(aiId) { _dpRender(); }
 
-function dpProposePeace(aiId) {
+export function dpProposePeace(aiId) {
   if (typeof DiplomacyEngine === 'undefined') return;
 
   const playerNationId = GAME_STATE.player_nation;
@@ -955,7 +955,7 @@ function _dpBribeSection(playerNationId, aiId) {
 /**
  * Обработчик кнопки подкупа.
  */
-function dpBribeNation(aiId, goldAmount) {
+export function dpBribeNation(aiId, goldAmount) {
   goldAmount = Number(goldAmount);
   const playerNationId = GAME_STATE.player_nation;
   if (typeof DiplomacyEngine === 'undefined') return;
@@ -971,7 +971,7 @@ function dpBribeNation(aiId, goldAmount) {
  * Игрок выбирает общего врага для коалиции:
  * сохраняет в pending, выбирает тип joint_campaign, открывает AI-чат.
  */
-function dpSelectCoalitionEnemy(aiId, enemyId) {
+export function dpSelectCoalitionEnemy(aiId, enemyId) {
   if (typeof DiplomacyEngine === 'undefined') return;
 
   const playerNationId = GAME_STATE.player_nation;
@@ -1068,12 +1068,12 @@ function _dpRenderTreatiesTab(playerNationId) {
 // ОБРАБОТЧИКИ
 // ──────────────────────────────────────────────────────────────────────────────
 
-function dtSelectTreaty(aiNationId, key) {
+export function dtSelectTreaty(aiNationId, key) {
   _getDtState(aiNationId).selectedTreaty = (key && key !== 'null') ? key : null;
   _dpRender();
 }
 
-function dtSendMessage(aiNationId) {
+export function dtSendMessage(aiNationId) {
   const inputEl = document.getElementById(`dp-input-${aiNationId}`);
   if (!inputEl) return;
 
@@ -1089,7 +1089,7 @@ function dtSendMessage(aiNationId) {
   showDipChatModal(aiNationId, text);
 }
 
-function dtClearDialogue(aiNationId) {
+export function dtClearDialogue(aiNationId) {
   const playerNationId = GAME_STATE.player_nation;
   if (typeof DiplomacyEngine !== 'undefined') {
     DiplomacyEngine.clearDialogue(playerNationId, aiNationId);
@@ -1098,7 +1098,7 @@ function dtClearDialogue(aiNationId) {
   _dpRender();
 }
 
-function dtBreakTreaty(treatyId) {
+export function dtBreakTreaty(treatyId) {
   const playerNationId = GAME_STATE.player_nation;
   if (typeof DiplomacyEngine !== 'undefined') {
     // ST_017: определить тип договора до разрыва
@@ -1211,7 +1211,7 @@ function showDipChatModal(aiNationId, firstMessage) {
   }
 }
 
-function hideDipChatModal() {
+export function hideDipChatModal() {
   // Записываем исход переговоров в память до закрытия
   if (_dpChatModalNation && typeof addMemoryEvent === 'function') {
     const aiId         = _dpChatModalNation;
@@ -1560,7 +1560,7 @@ function _renderCmSignedPhase(aiId, st, aiNation) {
 }
 
 // ── Отправить сообщение в фазе 1 ─────────────────────────────
-function dpChatSend(aiNationId) {
+export function dpChatSend(aiNationId) {
   const inputEl = document.getElementById(`dp-cm-input-${aiNationId}`);
   if (!inputEl) return;
   const text = inputEl.value.trim();
@@ -1676,7 +1676,7 @@ async function _dpChatSendActual(aiNationId, text) {
 }
 
 // ── Завершить фазу 1 переговоров ─────────────────────────────
-function dpEndNegotiations(aiNationId) {
+export function dpEndNegotiations(aiNationId) {
   const st = _getDtState(aiNationId);
   if (st.isLoading) return;
   const dialogue = typeof DiplomacyEngine !== 'undefined'
@@ -1726,7 +1726,7 @@ async function _dpRequestDraftFromAI(aiNationId) {
 }
 
 // ── Отправить правку в фазе финализации ──────────────────────
-async function dpFinalizeSend(aiNationId) {
+export async function dpFinalizeSend(aiNationId) {
   const inputEl = document.getElementById(`dp-cm-edit-input-${aiNationId}`);
   if (!inputEl) return;
   const text = inputEl.value.trim();
@@ -1762,7 +1762,7 @@ async function dpFinalizeSend(aiNationId) {
 }
 
 // ── Подписать договор (с валидацией и AI интерпретацией) ─────
-async function dpSignTreaty(aiNationId) {
+export async function dpSignTreaty(aiNationId) {
   const playerNationId = GAME_STATE.player_nation;
   const st = _getDtState(aiNationId);
   if (!st.agreedTreaty || !st.draftText) return;

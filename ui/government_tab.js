@@ -442,14 +442,14 @@ export function govSetupToggleInst(instId) {
   renderGovernmentOverlay();
 }
 
-function govSetupStep3() {
+export function govSetupStep3() {
   const state = _govSetupState;
   if (!state || state.institutions.length < 2) return;
   state.step = 3;
   renderGovernmentOverlay();
 }
 
-function govSetupBack() {
+export function govSetupBack() {
   const state = _govSetupState;
   if (!state) return;
   if (state.step > 1) {
@@ -462,7 +462,7 @@ function govSetupBack() {
   }
 }
 
-function govSetupConfirm() {
+export function govSetupConfirm() {
   const state = _govSetupState;
   if (!state) return;
   const nationId = GAME_STATE.player_nation;
@@ -854,7 +854,7 @@ function renderElectionBlock(elections) {
 }
 
 // GOV_006: обёртка для UI-кнопки подкупа кандидата
-function electionBribeCandidate(nationId, candidateId, cost) {
+export function electionBribeCandidate(nationId, candidateId, cost) {
   if (typeof bribeElectionCandidate !== 'function') return;
   const result = bribeElectionCandidate(nationId, candidateId, +cost);
   if (!result.ok) {
@@ -995,7 +995,7 @@ function renderSuccessionBlock(succession, nation) {
 }
 
 // Обёртки вызовов из onclick — работают с player nation
-function doAppointHeir(candidateId) {
+export function doAppointHeir(candidateId) {
   const result = appointSuccessionHeir(GAME_STATE.player_nation, candidateId);
   if (!result.ok) {
     const msgs = { no_legitimacy: 'Недостаточно легитимности (нужно 20)', no_candidate: 'Претендент не найден', no_succession: 'Нет системы наследования' };
@@ -1004,7 +1004,7 @@ function doAppointHeir(candidateId) {
   renderGovernmentOverlay();
 }
 
-function doArrangeMarriage(candidateId) {
+export function doArrangeMarriage(candidateId) {
   const result = arrangeMarriageForClaimant(GAME_STATE.player_nation, candidateId);
   if (!result.ok) {
     const msgs = { no_gold: 'Недостаточно золота (нужно 50)', no_candidate: 'Претендент не найден' };
@@ -1087,14 +1087,14 @@ function renderConspiracyBlock(conspiracies, nation) {
   `;
 }
 
-async function resolveConspiracy(conspiracyId, outcome) {
+export async function resolveConspiracy(conspiracyId, outcome) {
   const nationId = GAME_STATE.player_nation;
   const result = await CONSPIRACY_ENGINE.resolve_conspiracy(nationId, conspiracyId, outcome);
   renderGovernmentOverlay();
   renderRightPanel();
 }
 
-function enableSecretPolice() {
+export function enableSecretPolice() {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const sp = nation.government.conspiracies?.secret_police;
   if (!sp) return;
@@ -1103,7 +1103,7 @@ function enableSecretPolice() {
   renderGovernmentOverlay();
 }
 
-function disableSecretPolice() {
+export function disableSecretPolice() {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const sp = nation.government.conspiracies?.secret_police;
   if (!sp) return;
@@ -1114,7 +1114,7 @@ function disableSecretPolice() {
 
 // ── GOV_008: ГВАРДИЯ — кнопки UI ──────────────────────────────────────
 
-function uiHireGuard(size) {
+export function uiHireGuard(size) {
   const nationId = GAME_STATE.player_nation;
   const result = hirePersonalGuard(nationId, +size);
   if (!result.ok) {
@@ -1128,7 +1128,7 @@ function uiHireGuard(size) {
   renderGovernmentOverlay();
 }
 
-function uiDisbandGuard() {
+export function uiDisbandGuard() {
   const nationId = GAME_STATE.player_nation;
   const result = disbandPersonalGuard(nationId);
   if (!result.ok) {
@@ -1172,7 +1172,7 @@ function renderPlayerConspiracyBlock(nation) {
   `;
 }
 
-function dismissConspiratorByPlayer(charId) {
+export function dismissConspiratorByPlayer(charId) {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const char   = (nation.characters ?? []).find(c => c.id === charId);
   if (!char) return;
@@ -1188,7 +1188,7 @@ function dismissConspiratorByPlayer(charId) {
   renderGovernmentOverlay();
 }
 
-function rewardConspirator(charId) {
+export function rewardConspirator(charId) {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const char   = (nation.characters ?? []).find(c => c.id === charId);
   if (!char) return;
@@ -1274,7 +1274,7 @@ function renderReformInput() {
   `;
 }
 
-async function submitGovernmentReform() {
+export async function submitGovernmentReform() {
   const input  = document.getElementById('gov-reform-input');
   const status = document.getElementById('gov-reform-status');
   if (!input || !input.value.trim()) return;
@@ -1380,7 +1380,7 @@ function _getConstProvisionDefs(arch) {
   };
 }
 
-function openConstitutionDialog() {
+export function openConstitutionDialog() {
   const nationId = GAME_STATE.player_nation;
   const arch = GAME_STATE.nations[nationId]?.senate_config?.state_architecture;
   if (!arch) return;
@@ -1443,7 +1443,7 @@ function openConstitutionDialog() {
 }
 
 // Обновляет список вариантов при смене пункта конституции
-function updateConstitutionValueOptions() {
+export function updateConstitutionValueOptions() {
   const arch = GAME_STATE.nations[GAME_STATE.player_nation]?.senate_config?.state_architecture;
   if (!arch) return;
   const key = document.getElementById('cd-provision')?.value;
@@ -1459,7 +1459,7 @@ function updateConstitutionValueOptions() {
 }
 
 // Отправляет поправку на голосование Сената (порог 2/3)
-function submitConstitutionAmendment() {
+export function submitConstitutionAmendment() {
   const nationId = GAME_STATE.player_nation;
   const arch = GAME_STATE.nations[nationId]?.senate_config?.state_architecture;
   if (!arch) return;
@@ -1619,7 +1619,7 @@ function renderGovernmentHall(gov, nation) {
   `;
 }
 
-function toggleGovernmentHall(govType) {
+export function toggleGovernmentHall(govType) {
   const container = document.getElementById('gov-hall-container');
   if (!container) return;
   if (container.style.display !== 'none') { container.style.display = 'none'; return; }
@@ -2306,7 +2306,7 @@ function buildElderCouncilContent(gov, nation) {
   `;
 }
 
-function declareTribeRaid() {
+export function declareTribeRaid() {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const gov    = nation?.government;
   if (!gov) return;
@@ -2334,7 +2334,7 @@ function handleTribalChallengeYield() {
 }
 
 // GOV_010: Принять поединок от соперника-вождя
-function acceptTribalDuel(rivalName) {
+export function acceptTribalDuel(rivalName) {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const gov    = nation?.government;
   if (!gov || !gov.tribal?.rival_challenge) return;
@@ -2531,7 +2531,7 @@ function renderCustomHallBuilder(gov, nation) {
   `;
 }
 
-function addCustomActorRow() {
+export function addCustomActorRow() {
   const container = document.getElementById('ch-actors');
   if (!container) return;
   const row = document.createElement('div');
@@ -2549,7 +2549,7 @@ function removeCustomActor(btn) {
   btn.closest('.custom-hall-actor-row')?.remove();
 }
 
-function saveCustomHall() {
+export function saveCustomHall() {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const gov    = nation.government;
 
@@ -2574,7 +2574,7 @@ function saveCustomHall() {
   }
 }
 
-function openCustomHallBuilder() {
+export function openCustomHallBuilder() {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const container = document.getElementById('gov-hall-container');
   if (container) {
@@ -2583,7 +2583,7 @@ function openCustomHallBuilder() {
 }
 
 // ── ПЕРЕГОВОРЫ С АКТОРОМ ─────────────────────────────────────────────
-function openActorNegotiation(charId) {
+export function openActorNegotiation(charId) {
   const nation  = GAME_STATE.nations[GAME_STATE.player_nation];
   const actor   = (nation.characters ?? []).find(c => c.id === charId);
   if (!actor) return;
@@ -2601,7 +2601,7 @@ function openActorNegotiation(charId) {
   overlay.style.display = 'flex';
 }
 
-function closeActorNegotiation() {
+export function closeActorNegotiation() {
   const overlay = document.getElementById('senator-negotiate-overlay');
   if (overlay) overlay.style.display = 'none';
 
@@ -2746,7 +2746,7 @@ function getActorActions(actor, govType, nation) {
   return set.map(id => ACTIONS[id]).filter(Boolean);
 }
 
-function executeActorAction(charId, actionId) {
+export function executeActorAction(charId, actionId) {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const actor  = (nation.characters ?? []).find(c => c.id === charId);
   if (!actor) return;
@@ -2787,7 +2787,7 @@ function executeActorAction(charId, actionId) {
 }
 
 // Переговоры с народной группой (демократия)
-function openGroupNegotiation(groupId, govType) {
+export function openGroupNegotiation(groupId, govType) {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const groups = {
     farmers:   { name:'Земледельцы',  icon:'🌾', wants:['land_reform'], fears:['drought'] },
@@ -3023,7 +3023,7 @@ function _generateTyrannyCouncil() {
 }
 
 // Клик по призраку — запускает материализацию
-async function onSenatorGhostClick(senatorId, nationId) {
+export async function onSenatorGhostClick(senatorId, nationId) {
   const mgr = getSenateManager(nationId);
   if (!mgr) return;
 
@@ -3044,7 +3044,7 @@ async function onSenatorGhostClick(senatorId, nationId) {
 }
 
 // Открыть карточку материализованного сенатора
-function openSenatorCard(senatorId, nationId) {
+export function openSenatorCard(senatorId, nationId) {
   const mgr = getSenateManager(nationId);
   if (!mgr) return;
   const s = mgr.getSenatorById(senatorId);
@@ -3168,7 +3168,7 @@ function senateBribe(senatorId, nationId, amount) {
 }
 
 // ── Разведка интересов сенатора ─────────────────────────────────────
-function senateReveal(senatorId, nationId) {
+export function senateReveal(senatorId, nationId) {
   const mgr = getSenateManager(nationId);
   if (!mgr) return;
   const revealed = mgr.reveal_interests(senatorId);
@@ -3186,7 +3186,7 @@ function senateReveal(senatorId, nationId) {
 }
 
 // ── «Предложить закон в Сенат» — выбор типа ─────────────────────────
-function openSenateLawProposal(nationId) {
+export function openSenateLawProposal(nationId) {
   let overlay = document.getElementById('senate-law-overlay');
   if (!overlay) {
     overlay = document.createElement('div');
@@ -3236,7 +3236,7 @@ function openSenateLawProposal(nationId) {
   overlay.style.display = 'flex';
 }
 
-function submitSenateLaw(nationId) {
+export function submitSenateLaw(nationId) {
   const nameEl   = document.getElementById('slf-law-name');
   const textEl   = document.getElementById('slf-law-text');
   const typeEl   = document.getElementById('slf-law-type');
@@ -3330,7 +3330,7 @@ function dlgHandleKey(event, charId, nationId) {
   }
 }
 
-async function dlgSend(charId, nationId) {
+export async function dlgSend(charId, nationId) {
   nationId = nationId || GAME_STATE.player_nation;
   const input  = document.getElementById(`dlg-input-${charId}`);
   const status = document.getElementById(`dlg-status-${charId}`);
@@ -3577,7 +3577,7 @@ function renderIssueOrderForm(nation) {
   `;
 }
 
-function showIssueOrderPanel() {
+export function showIssueOrderPanel() {
   const panel = document.getElementById('issue-order-panel');
   if (panel) {
     panel.style.display = 'block';
@@ -3586,12 +3586,12 @@ function showIssueOrderPanel() {
   }
 }
 
-function hideIssueOrderPanel() {
+export function hideIssueOrderPanel() {
   const panel = document.getElementById('issue-order-panel');
   if (panel) panel.style.display = 'none';
 }
 
-function onOrderTypeChange() {
+export function onOrderTypeChange() {
   const type = document.getElementById('order-type-sel')?.value;
   const targetRow = document.getElementById('order-target-row');
   if (!targetRow) return;
@@ -3653,7 +3653,7 @@ function onOrderTypeChange() {
   updateOrderQualityPreview();
 }
 
-function onOrderCharChange() {
+export function onOrderCharChange() {
   updateOrderQualityPreview();
 }
 
@@ -3699,7 +3699,7 @@ function updateOrderQualityPreview() {
   `;
 }
 
-function submitIssueOrder() {
+export function submitIssueOrder() {
   const type      = document.getElementById('order-type-sel')?.value;
   const charId    = document.getElementById('order-char-sel')?.value;
   const targetId  = document.getElementById('order-target-sel')?.value || null;
@@ -3854,7 +3854,7 @@ function _renderMpCard(order, isActive) {
 }
 
 /** Показать инлайн-форму нового приказа на главном экране */
-function showMpOrderForm() {
+export function showMpOrderForm() {
   const formEl = document.getElementById('mp-order-form');
   if (!formEl) return;
 
@@ -3913,12 +3913,12 @@ function showMpOrderForm() {
   onMpTypeChange();
 }
 
-function hideMpOrderForm() {
+export function hideMpOrderForm() {
   const formEl = document.getElementById('mp-order-form');
   if (formEl) { formEl.style.display = 'none'; formEl.innerHTML = ''; }
 }
 
-function onMpTypeChange() {
+export function onMpTypeChange() {
   const type      = document.getElementById('mp-order-type')?.value;
   const targetFld = document.getElementById('mp-target-field');
   const targetSel = document.getElementById('mp-order-target');
@@ -3981,9 +3981,9 @@ function onMpTypeChange() {
   updateMpQuality();
 }
 
-function onMpCharChange() { updateMpQuality(); }
+export function onMpCharChange() { updateMpQuality(); }
 
-function updateMpQuality() {
+export function updateMpQuality() {
   const preview   = document.getElementById('mp-quality-preview');
   if (!preview) return;
   const type      = document.getElementById('mp-order-type')?.value;
@@ -4011,7 +4011,7 @@ function updateMpQuality() {
   preview.innerHTML = `Ожидаемое качество: <b style="color:${color}">${quality}/100</b>`;
 }
 
-function submitMpOrder() {
+export function submitMpOrder() {
   const type      = document.getElementById('mp-order-type')?.value;
   const charId    = document.getElementById('mp-order-char')?.value;
   const targetId  = document.getElementById('mp-order-target')?.value || null;
@@ -4042,28 +4042,28 @@ function submitMpOrder() {
 
 // ── Wrapper-функции для data-action делегирования (этап 58) ──────────
 
-function govToggleCollapsed(e) {
+export function govToggleCollapsed(e) {
   var el = e.target.closest('[data-action="govToggleCollapsed"]');
   if (el && el.parentElement) el.parentElement.classList.toggle('collapsed');
 }
 
-function closeConstitutionDialog() {
+export function closeConstitutionDialog() {
   var el = document.getElementById('constitution-dialog-overlay');
   if (el) el.remove();
 }
 
-function closeSenateLawOverlay() {
+export function closeSenateLawOverlay() {
   var el = document.getElementById('senate-law-overlay');
   if (el) el.style.display = 'none';
 }
 
-function cancelOrderAndRefresh(orderId) {
+export function cancelOrderAndRefresh(orderId) {
   if (typeof cancelOrder === 'function') cancelOrder(orderId);
   if (typeof renderOrdersPanel === 'function') renderOrdersPanel();
   renderGovernmentOverlay();
 }
 
-function removeCustomActorByEvent(e) {
+export function removeCustomActorByEvent(e) {
   var btn = e.target.closest('.custom-hall-actor-remove');
   if (btn) removeCustomActor(btn);
 }

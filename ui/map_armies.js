@@ -522,7 +522,7 @@ function selectArmy(armyId) {
   renderAllArmies(); // обновить подсветку
 }
 
-function closeArmyPanel() {
+export function closeArmyPanel() {
   _selectedArmyId    = null;
   _activeMoveHandler = null;
   _clearRoutePreview();
@@ -677,7 +677,7 @@ function _renderArmyPanel(armyId) {
 
 // ── Режим движения ────────────────────────────────────────────────────
 
-function enterMoveMode(armyId) {
+export function enterMoveMode(armyId) {
   const army = typeof getArmy === 'function' ? getArmy(armyId) : null;
   if (!army || army.nation !== GAME_STATE.player_nation) return;
 
@@ -754,7 +754,7 @@ function _hideMoveBanner() {
   if (banner) banner.style.display = 'none';
 }
 
-function cancelMoveMode(armyId) {
+export function cancelMoveMode(armyId) {
   _activeMoveHandler = null;
   _clearRoutePreview();
   if (leafletMap) leafletMap.getContainer().classList.remove('map--move-mode');
@@ -938,7 +938,7 @@ function _clearRoutePreview() {
 
 // ── Диалоги ───────────────────────────────────────────────────────────
 
-function showFormationPicker(armyId) {
+export function showFormationPicker(armyId) {
   const army = typeof getArmy === 'function' ? getArmy(armyId) : null;
   if (!army) return;
 
@@ -964,7 +964,7 @@ function showFormationPicker(armyId) {
   }
 }
 
-function disbandArmyUI(armyId) {
+export function disbandArmyUI(armyId) {
   const army = typeof getArmy === 'function' ? getArmy(armyId) : null;
   if (!army || army.nation !== GAME_STATE.player_nation) return;
   if (!confirm(`Распустить ${army.name}? Войска вернутся в резерв.`)) return;
@@ -991,7 +991,7 @@ function disbandArmyUI(armyId) {
  * Показать диалог сборки новой армии из резервов нации.
  * @param {string} regionId - исходный регион
  */
-function showAssembleArmyDialog(regionId) {
+export function showAssembleArmyDialog(regionId) {
   const nat    = GAME_STATE.nations[GAME_STATE.player_nation];
   const mil    = nat?.military;
   if (!mil) return;
@@ -1048,7 +1048,7 @@ function showAssembleArmyDialog(regionId) {
   panel.style.display = 'block';
 }
 
-function _submitAssembleArmy(regionId) {
+export function _submitAssembleArmy(regionId) {
   const inf  = parseInt(document.getElementById('asm-inf')?.value  ?? 0);
   const cav  = parseInt(document.getElementById('asm-cav')?.value  ?? 0);
   const merc = parseInt(document.getElementById('asm-merc')?.value ?? 0);
@@ -1223,7 +1223,7 @@ function _cmdCardHtml(char, armyId, isHire) {
     </div>`;
 }
 
-function showCommanderPicker(armyId) {
+export function showCommanderPicker(armyId) {
   closeCommanderPicker();
   const army = typeof getArmy === 'function' ? getArmy(armyId) : null;
   if (!army) return;
@@ -1262,11 +1262,11 @@ function showCommanderPicker(armyId) {
   overlay._hireGens = hireGens;
 }
 
-function closeCommanderPicker() {
+export function closeCommanderPicker() {
   document.getElementById('cmd-picker-overlay')?.remove();
 }
 
-function assignCommanderFromPicker(armyId, charId, isHire) {
+export function assignCommanderFromPicker(armyId, charId, isHire) {
   const army = typeof getArmy === 'function' ? getArmy(armyId) : null;
   if (!army) return;
 
