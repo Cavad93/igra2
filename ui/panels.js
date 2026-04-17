@@ -3017,19 +3017,3 @@ export function updateNationHeader(nationId, nationName) {
   nameEl.textContent = nationName || '';
 }
 
-if (typeof window !== 'undefined') {
-}
-
-if (typeof window !== 'undefined') {
-}
-
-// Экспорт для Node-тестов
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = Object.assign(module.exports || {}, {
-    applyNationTheme,
-    preloadTexture,
-    updateNationHeader,
-  });
-}
-
-// Backward compat for non-module scripts

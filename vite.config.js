@@ -17,6 +17,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    minify: true,
+    target: 'es2020',
   },
   server: {
     open: '/index.html',

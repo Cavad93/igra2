@@ -175,7 +175,3 @@
     };
   }
 
-  // CommonJS-экспорт для Node-тестов
-  if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { renderPortrait, renderPortraitHTML };
-  }

@@ -167,10 +167,3 @@
     return 'data:image/svg+xml;charset=utf-8,' + enc;
   }
 
-  // Экспорт в window
-  if (typeof window !== 'undefined') {
-  }
-  // CommonJS (тесты Node)
-  if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { generatePortraitSVG, generatePortraitDataURL, SKIN_PALETTES };
-  }
