@@ -11,7 +11,7 @@
 
 // ── КАТЕГОРИИ КАНОНОВ ──────────────────────────────────────────────────
 
-const CANON_CATEGORIES = {
+export const CANON_CATEGORIES = {
   marriage: { name: 'Брак и семья', icon: '💍' },
   afterlife: { name: 'Загробный мир', icon: '💀' },
   sacrifice: { name: 'Жертвоприношения', icon: '🔪' },
@@ -34,7 +34,7 @@ const CANON_CATEGORIES = {
 //        group            — группа религии (hellenic, punic, indigenous, mystery, syncretic)
 // ══════════════════════════════════════════════════════════════════════════
 
-const CANONS = {
+export const CANONS = {
 
   // ══════════════ БРАК И СЕМЬЯ ══════════════
 
@@ -218,7 +218,7 @@ const CANONS = {
 //    compare: 'lte' (≤) или 'gte' (≥)
 // ══════════════════════════════════════════════════════════════════════════
 
-const DOCTRINE_AXES = {
+export const DOCTRINE_AXES = {
   tolerance: {
     name: 'Толерантность',
     icon: '🤝',
@@ -290,7 +290,7 @@ const DOCTRINE_AXES = {
 //  locked_canon: индекс канона который не мутирует (0/1/2 или null)
 // ══════════════════════════════════════════════════════════════════════════
 
-const RELIGION_DOGMAS = {
+export const RELIGION_DOGMAS = {
 
   olympian: {
     canons: ['sacred_monogamy', 'cult_of_heroes', 'animal_sacrifice'],
@@ -349,7 +349,7 @@ const RELIGION_DOGMAS = {
 
 // ── КОНФИГУРАЦИЯ ДОГМ ──────────────────────────────────────────────────
 
-const DOGMA_CONFIG = {
+export const DOGMA_CONFIG = {
   // Мутация канонов
   CANON_MUTATION_INTERVAL: 12,       // проверка каждые 12 ходов (1 год)
   CANON_MUTATION_COOLDOWN: 600,      // минимум 600 ходов (50 лет) между мутациями
@@ -360,3 +360,8 @@ const DOGMA_CONFIG = {
   DOCTRINE_DRIFT_MAX: 3,            // максимальный сдвиг за год
   DOCTRINE_INERTIA: 0.3,            // сила притяжения к 50 (центру)
 };
+window.CANON_CATEGORIES = CANON_CATEGORIES;
+window.CANONS = CANONS;
+window.DOCTRINE_AXES = DOCTRINE_AXES;
+window.RELIGION_DOGMAS = RELIGION_DOGMAS;
+window.DOGMA_CONFIG = DOGMA_CONFIG;

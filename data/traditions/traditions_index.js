@@ -3,25 +3,19 @@
 //  Итого: ~198 уникальных традиций
 // ============================================================================
 
-// В браузере файлы подключаются через <script>, переменные уже глобальные.
-// В Node.js — загружаем через require.
-
-if (typeof module !== 'undefined' && typeof require === 'function') {
-  // Node.js environment
-  if (typeof TRADITIONS_MILITARY   === 'undefined') TRADITIONS_MILITARY   = require('./traditions_military');
-  if (typeof TRADITIONS_ECONOMIC   === 'undefined') TRADITIONS_ECONOMIC   = require('./traditions_economic');
-  if (typeof TRADITIONS_SOCIAL     === 'undefined') TRADITIONS_SOCIAL     = require('./traditions_social');
-  if (typeof TRADITIONS_RELIGIOUS  === 'undefined') TRADITIONS_RELIGIOUS  = require('./traditions_religious');
-  if (typeof TRADITIONS_NAVAL      === 'undefined') TRADITIONS_NAVAL      = require('./traditions_naval');
-  if (typeof TRADITIONS_ARTS       === 'undefined') TRADITIONS_ARTS       = require('./traditions_arts');
-  if (typeof TRADITIONS_DIPLOMATIC === 'undefined') TRADITIONS_DIPLOMATIC = require('./traditions_diplomatic');
-  if (typeof TRADITIONS_SURVIVAL   === 'undefined') TRADITIONS_SURVIVAL   = require('./traditions_survival');
-  if (typeof TRADITIONS_EXTRA      === 'undefined') TRADITIONS_EXTRA      = require('./traditions_extra');
-}
+import { TRADITIONS_MILITARY }   from './traditions_military.js';
+import { TRADITIONS_ECONOMIC }   from './traditions_economic.js';
+import { TRADITIONS_SOCIAL }     from './traditions_social.js';
+import { TRADITIONS_RELIGIOUS }  from './traditions_religious.js';
+import { TRADITIONS_NAVAL }      from './traditions_naval.js';
+import { TRADITIONS_ARTS }       from './traditions_arts.js';
+import { TRADITIONS_DIPLOMATIC } from './traditions_diplomatic.js';
+import { TRADITIONS_SURVIVAL }   from './traditions_survival.js';
+import { TRADITIONS_EXTRA }      from './traditions_extra.js';
 
 // ── Единый реестр всех традиций ───────────────────────────────────────────────
 
-const ALL_TRADITIONS = Object.assign({},
+export const ALL_TRADITIONS = Object.assign({},
   TRADITIONS_MILITARY,
   TRADITIONS_ECONOMIC,
   TRADITIONS_SOCIAL,
@@ -37,7 +31,7 @@ const ALL_TRADITIONS = Object.assign({},
 // Счётчики растут каждый ход от событий в игре.
 // Движок культуры (engine/culture.js) начисляет очки по правилам ниже.
 
-const EXPERIENCE_TYPES = {
+export const EXPERIENCE_TYPES = {
   exp_war:         { name: 'Военный опыт',       icon: '⚔️' },
   exp_naval:       { name: 'Морской опыт',       icon: '⚓' },
   exp_trade:       { name: 'Торговый опыт',      icon: '💰' },
@@ -51,7 +45,7 @@ const EXPERIENCE_TYPES = {
 
 // ── Базовые правила начисления опыта за ход ───────────────────────────────────
 
-const EXPERIENCE_RULES = {
+export const EXPERIENCE_RULES = {
   at_war:             { type: 'exp_war', amount: 2 },
   battle_won:         { type: 'exp_war', amount: 8 },
   battle_lost:        { type: 'exp_war', amount: 4 },
@@ -94,7 +88,7 @@ const EXPERIENCE_RULES = {
 
 // ── Конфигурация мутаций ──────────────────────────────────────────────────────
 
-const CULTURE_CONFIG = {
+export const CULTURE_CONFIG = {
   TRADITION_SLOTS: 8,
   LOCKED_TRADITIONS_MAX: 2,
   MUTATION_COOLDOWN_TURNS: 600,
@@ -113,3 +107,8 @@ if (typeof console !== 'undefined') {
   const count = Object.keys(ALL_TRADITIONS).length;
   console.log(`[traditions_index] Загружено ${count} традиций`);
 }
+
+window.ALL_TRADITIONS = ALL_TRADITIONS;
+window.EXPERIENCE_TYPES = EXPERIENCE_TYPES;
+window.EXPERIENCE_RULES = EXPERIENCE_RULES;
+window.CULTURE_CONFIG = CULTURE_CONFIG;

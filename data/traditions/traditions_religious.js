@@ -3,7 +3,7 @@
 //  Культы, обряды, духовная жизнь
 // ============================================================================
 
-const TRADITIONS_RELIGIOUS = {
+export const TRADITIONS_RELIGIOUS = {
 
   // ── БОГИ И КУЛЬТЫ ───────────────────────────────────────────────────────────
 
@@ -274,5 +274,4 @@ const TRADITIONS_RELIGIOUS = {
   },
 
 };
-
-if (typeof module !== 'undefined') module.exports = TRADITIONS_RELIGIOUS;
+window.TRADITIONS_RELIGIOUS = TRADITIONS_RELIGIOUS;

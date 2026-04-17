@@ -2,7 +2,7 @@
 // При старте пустой массив — заполняется через AI или стартовым набором
 
 // Заглушка стартовых персонажей Сиракуз (до генерации через Claude)
-const INITIAL_CHARACTERS_SYRACUSE = [
+export const INITIAL_CHARACTERS_SYRACUSE = [
   {
     id: 'CHAR_0001',
     name: 'Менон из Акрай',
@@ -222,7 +222,7 @@ const INITIAL_CHARACTERS_SYRACUSE = [
 // Совет Ста Карфагена — олигархи (6 чел., 4 клана)
 // court_role — роль в совете; court_rank — ранг влияния (1=высший)
 // ──────────────────────────────────────────────────────────────────────
-const INITIAL_COUNCIL_CARTHAGE = [
+export const INITIAL_COUNCIL_CARTHAGE = [
   {
     id: 'CARTH_OLI_001',
     name: 'Ганнибал Барка',
@@ -319,7 +319,7 @@ const INITIAL_COUNCIL_CARTHAGE = [
 // Царский двор Египта — монархия (5 чел.)
 // court_rank — место при дворе (1 = ближайший к трону)
 // ──────────────────────────────────────────────────────────────────────
-const INITIAL_COURT_EGYPT = [
+export const INITIAL_COURT_EGYPT = [
   {
     id: 'EGY_CRT_001',
     name: 'Агафокл из Александрии',
@@ -400,7 +400,7 @@ const INITIAL_COURT_EGYPT = [
 // ──────────────────────────────────────────────────────────────────────
 // Гетайры Македонии — монархия/военный двор (5 чел.)
 // ──────────────────────────────────────────────────────────────────────
-const INITIAL_HETAIROI_MACEDON = [
+export const INITIAL_HETAIROI_MACEDON = [
   {
     id: 'MAC_HTR_001',
     name: 'Антигон Одноглазый',
@@ -482,7 +482,7 @@ const INITIAL_HETAIROI_MACEDON = [
 // Совет старейшин Нумидии — племенной вождизм (4 чел.)
 // honor (честь) отображается вместо лояльности в зале племени
 // ──────────────────────────────────────────────────────────────────────
-const INITIAL_ELDERS_NUMIDIA = [
+export const INITIAL_ELDERS_NUMIDIA = [
   {
     id: 'NUM_ELD_001',
     name: 'Такфаринас',
@@ -555,7 +555,7 @@ const INITIAL_ELDERS_NUMIDIA = [
 // disposition — отношение к игроку/правителю (0–100, 50 = нейтрал)
 // ambition_goal — личная цель-амбиция (короткая строка)
 // ──────────────────────────────────────────────────────────────────────
-const INITIAL_SENATORS_ROME = [
+export const INITIAL_SENATORS_ROME = [
 
   // ── ОПТИМАТЫ (старая аристократия) ────────────────────────────────
   {
@@ -745,7 +745,7 @@ const INITIAL_SENATORS_ROME = [
 ];
 
 // Схема для генерации персонажей через AI
-const CHARACTER_SCHEMA = {
+export const CHARACTER_SCHEMA = {
   id: 'string (CHAR_XXXX)',
   name: 'string (греческое имя и происхождение)',
   age: 'number (25-75)',
@@ -774,3 +774,10 @@ const CHARACTER_SCHEMA = {
   portrait: 'emoji',
   description: 'string (1-2 предложения)',
 };
+window.INITIAL_CHARACTERS_SYRACUSE = INITIAL_CHARACTERS_SYRACUSE;
+window.INITIAL_COUNCIL_CARTHAGE = INITIAL_COUNCIL_CARTHAGE;
+window.INITIAL_COURT_EGYPT = INITIAL_COURT_EGYPT;
+window.INITIAL_HETAIROI_MACEDON = INITIAL_HETAIROI_MACEDON;
+window.INITIAL_ELDERS_NUMIDIA = INITIAL_ELDERS_NUMIDIA;
+window.INITIAL_SENATORS_ROME = INITIAL_SENATORS_ROME;
+window.CHARACTER_SCHEMA = CHARACTER_SCHEMA;

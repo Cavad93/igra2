@@ -12,7 +12,7 @@
 //  чтобы лицо оставалось узнаваемым, но «разного» персонажа.
 // ============================================================================
 
-const PORTRAIT_FILTERS = [
+export const PORTRAIT_FILTERS = [
   '',                                                   // 0 — оригинал
   'hue-rotate(20deg) brightness(1.05)',                 // 1 — теплее
   'hue-rotate(-15deg) saturate(0.85)',                  // 2 — холоднее
@@ -29,17 +29,12 @@ const PORTRAIT_FILTERS = [
  * @param {number} idx
  * @returns {string}
  */
-function getPortraitFilter(idx) {
+export function getPortraitFilter(idx) {
   if (!Number.isFinite(idx)) return '';
   const i = ((idx % PORTRAIT_FILTERS.length) + PORTRAIT_FILTERS.length) % PORTRAIT_FILTERS.length;
   return PORTRAIT_FILTERS[i] || '';
 }
 
 // ── Экспорт ────────────────────────────────────────────────────────────────
-if (typeof window !== 'undefined') {
-  window.PORTRAIT_FILTERS = PORTRAIT_FILTERS;
-  window.getPortraitFilter = getPortraitFilter;
-}
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { PORTRAIT_FILTERS, getPortraitFilter };
-}
+window.PORTRAIT_FILTERS = PORTRAIT_FILTERS;
+window.getPortraitFilter = getPortraitFilter;

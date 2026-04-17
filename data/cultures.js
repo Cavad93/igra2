@@ -12,7 +12,7 @@
 //  - image: URL свободного изображения (Wikimedia Commons, Public Domain)
 // ============================================================================
 
-const CULTURE_GROUPS = {
+export const CULTURE_GROUPS = {
   hellenic:    { name: 'Эллинская',       assimilation_modifier: 1.0 },
   punic:       { name: 'Пунийская',       assimilation_modifier: 0.8 },
   italic:      { name: 'Италийская',      assimilation_modifier: 0.9 },
@@ -22,7 +22,7 @@ const CULTURE_GROUPS = {
   persian:     { name: 'Персидская',      assimilation_modifier: 0.5 },
 };
 
-const CULTURE_GROUP_AFFINITY = {
+export const CULTURE_GROUP_AFFINITY = {
   'hellenic-punic':      0.4,
   'hellenic-italic':     0.6,
   'hellenic-indigenous': 0.7,
@@ -35,7 +35,7 @@ const CULTURE_GROUP_AFFINITY = {
 
 // ── Определения культур ───────────────────────────────────────────────────────
 
-const CULTURES = {
+export const CULTURES = {
 
   // ══════════════════════════════════════════════════════════════════════════
   //  ГРЕЧЕСКИЕ КУЛЬТУРЫ
@@ -229,7 +229,7 @@ const CULTURES = {
 //  - Север: Мелкие полисы — Тиндарис, Калактея — эллинизированное побережье
 // ══════════════════════════════════════════════════════════════════════════
 
-const REGION_CULTURES = {
+export const REGION_CULTURES = {
 
   // ── СИРАКУЗСКАЯ ДЕРЖАВА (Восточная Сицилия) ──────────────────────────────
 
@@ -367,3 +367,7 @@ const REGION_CULTURES = {
   // Островной полис, рыбаки и пираты.
   r3199: { primary: 'greek_colonial', minorities: [] },
 };
+window.CULTURE_GROUPS = CULTURE_GROUPS;
+window.CULTURE_GROUP_AFFINITY = CULTURE_GROUP_AFFINITY;
+window.CULTURES = CULTURES;
+window.REGION_CULTURES = REGION_CULTURES;

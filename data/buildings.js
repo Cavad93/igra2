@@ -16,7 +16,7 @@
 // needs_satisfaction_bonus, war_mortality_mod, slave_mortality_mod,
 // epidemic_chance_mod, mobility_speed_mod
 
-const BUILDINGS = {
+export const BUILDINGS = {
 
   // ══════════════════════════════════════════════════════════════
   // ИНФРАСТРУКТУРА
@@ -2438,7 +2438,7 @@ const BUILDINGS = {
 // Максимальное количество зданий, которое можно возвести в регионе
 // ══════════════════════════════════════════════════════════════
 
-const TERRAIN_MAX_SLOTS = {
+export const TERRAIN_MAX_SLOTS = {
   coastal_city:  20,
   river_valley:  18,
   plains:        15,
@@ -2453,7 +2453,7 @@ const TERRAIN_MAX_SLOTS = {
 // ЁМКОСТЬ НАСЕЛЕНИЯ ПО МЕСТНОСТИ (без построек)
 // ══════════════════════════════════════════════════════════════
 
-const TERRAIN_BASE_CAPACITY = {
+export const TERRAIN_BASE_CAPACITY = {
   coastal_city:  8000,
   plains:        6000,
   hills:         4000,
@@ -2468,7 +2468,7 @@ const TERRAIN_BASE_CAPACITY = {
 // Возвращает суммарное число рабочих мест здания
 // ══════════════════════════════════════════════════════════════
 
-function getBuildingTotalWorkers(buildingId) {
+export function getBuildingTotalWorkers(buildingId) {
   const b = BUILDINGS[buildingId];
   if (!b || !b.worker_profession) return 0;
   return b.worker_profession.reduce((sum, wp) => sum + wp.count, 0);
@@ -2481,14 +2481,14 @@ function getBuildingTotalWorkers(buildingId) {
 // ══════════════════════════════════════════════════════════════
 
 // Максимум слотов для региона (с учётом его типа местности)
-function getRegionMaxSlots(terrain) {
+export function getRegionMaxSlots(terrain) {
   return TERRAIN_MAX_SLOTS[terrain] ?? TERRAIN_MAX_SLOTS.default;
 }
 
 // Список зданий, совместимых с местностью и (опционально) тегами региона.
 // region — объект региона (необязательно), нужен для фильтрации по region_tag_restriction.
 // Здания с region_tag_restriction показываются только в регионах с подходящими тегами.
-function getBuildingsForTerrain(terrain, region = null) {
+export function getBuildingsForTerrain(terrain, region = null) {
   const regionTags = region?.tags || [];
   return Object.entries(BUILDINGS)
     .filter(([, b]) => {
@@ -2505,7 +2505,7 @@ function getBuildingsForTerrain(terrain, region = null) {
 
 // Проверка: можно ли построить здание в регионе
 // Возвращает { ok: bool, reason: string | null, is_upgrade?, to_level?, target_slot_id? }
-function canBuildInRegion(buildingId, region) {
+export function canBuildInRegion(buildingId, region) {
   const b = BUILDINGS[buildingId];
   if (!b) return { ok: false, reason: 'Здание не найдено' };
 
@@ -2622,3 +2622,10 @@ function canBuildInRegion(buildingId, region) {
 
   return { ok: true, reason: null, is_upgrade: false };
 }
+window.BUILDINGS = BUILDINGS;
+window.TERRAIN_MAX_SLOTS = TERRAIN_MAX_SLOTS;
+window.TERRAIN_BASE_CAPACITY = TERRAIN_BASE_CAPACITY;
+window.getBuildingTotalWorkers = getBuildingTotalWorkers;
+window.getRegionMaxSlots = getRegionMaxSlots;
+window.getBuildingsForTerrain = getBuildingsForTerrain;
+window.canBuildInRegion = canBuildInRegion;

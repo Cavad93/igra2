@@ -6,7 +6,7 @@
 //        war/peace — состояние, coastal/mountain — наличие типа регионов
 // ============================================================================
 
-const TRADITIONS_MILITARY = {
+export const TRADITIONS_MILITARY = {
 
   // ── ПЕХОТНАЯ ВЕТКА ──────────────────────────────────────────────────────────
 
@@ -312,6 +312,4 @@ const TRADITIONS_MILITARY = {
   },
 
 };
-
-// Экспорт
-if (typeof module !== 'undefined') module.exports = TRADITIONS_MILITARY;
+window.TRADITIONS_MILITARY = TRADITIONS_MILITARY;

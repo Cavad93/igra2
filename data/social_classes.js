@@ -8,7 +8,7 @@
 // ─────────────────────────────────────────────────────────────────────────
 // МАТРИЦА: доля каждой профессии, образующей соответствующий класс
 // ─────────────────────────────────────────────────────────────────────────
-const CLASS_FROM_PROFESSION = {
+export const CLASS_FROM_PROFESSION = {
   aristocrats:     { merchants: 0.12, craftsmen: 0.02 },
   officials:       { merchants: 0.20, clergy: 0.10 },
   clergy_class:    { clergy: 0.80 },
@@ -62,7 +62,7 @@ const CLASS_FROM_PROFESSION = {
 //            Катон — полевой раб ~280-320 кг ячменя/год.
 //   Вино:    Аристократы ~0.5 л/день = ~180 кг/год. Солдаты ~0.07 л/день.
 // ─────────────────────────────────────────────────────────────────────────
-const SOCIAL_CLASSES = {
+export const SOCIAL_CLASSES = {
 
   // ── АРИСТОКРАТЫ ────────────────────────────────────────────────────────
   // Сидячий труд, ~2000 ккал/день. Зерна мало — калории покрывают мясо,
@@ -807,7 +807,7 @@ const SOCIAL_CLASSES = {
 // trigger: событие которое усиливает конфликт
 // escalation: что происходит при tension > 80
 // ─────────────────────────────────────────────────────────────────────────
-const CLASS_CONFLICTS = {
+export const CLASS_CONFLICTS = {
 
   aristocrats_vs_citizens: {
     tension: 45,
@@ -870,7 +870,7 @@ const CLASS_CONFLICTS = {
 // ВЫЧИСЛЕНИЕ НАСЕЛЕНИЯ КАЖДОГО КЛАССА
 // Принимает объект by_profession, возвращает { class_id: count }
 // ─────────────────────────────────────────────────────────────────────────
-function calculateClassPopulations(by_profession) {
+export function calculateClassPopulations(by_profession) {
   const result = {};
   for (const [classId, profShares] of Object.entries(CLASS_FROM_PROFESSION)) {
     let count = 0;
@@ -887,9 +887,9 @@ function calculateClassPopulations(by_profession) {
 // Возвращает { good: amount } для одного класса заданного размера
 // ─────────────────────────────────────────────────────────────────────────
 // CONSUMPTION_TURNS: per_100 задан как годовая норма, делим на 12 для ежемесячного потребления
-const CONSUMPTION_TURNS = 12;
+export const CONSUMPTION_TURNS = 12;
 
-function calculateClassNeeds(classId, classPopulation) {
+export function calculateClassNeeds(classId, classPopulation) {
   const classDef = SOCIAL_CLASSES[classId];
   if (!classDef) return {};
   const needs = {};
@@ -903,7 +903,7 @@ function calculateClassNeeds(classId, classPopulation) {
 // ОБЩЕЕ ПОТРЕБЛЕНИЕ НАЦИИ (все классы суммарно)
 // Возвращает { good: totalAmount }
 // ─────────────────────────────────────────────────────────────────────────
-function calculateTotalConsumptionByClass(by_profession) {
+export function calculateTotalConsumptionByClass(by_profession) {
   const classPops = calculateClassPopulations(by_profession);
   const total = {};
   for (const [classId, pop] of Object.entries(classPops)) {
@@ -921,7 +921,7 @@ function calculateTotalConsumptionByClass(by_profession) {
 // возвращает { class_id: { satisfaction: 0-100, basic_met: bool,
 //                           standard_met: bool, luxury_met: bool } }
 // ─────────────────────────────────────────────────────────────────────────
-function calculateClassSatisfaction(by_profession, stockpile) {
+export function calculateClassSatisfaction(by_profession, stockpile) {
   const classPops = calculateClassPopulations(by_profession);
   const result = {};
 
@@ -979,7 +979,7 @@ function calculateClassSatisfaction(by_profession, stockpile) {
 // Принимает classSatisfaction (вывод calculateClassSatisfaction),
 // возвращает суммарные модификаторы для нации
 // ─────────────────────────────────────────────────────────────────────────
-function calculatePoliticalEffects(classSatisfaction) {
+export function calculatePoliticalEffects(classSatisfaction) {
   const effects = {
     happiness_base_mod:      0,
     tax_efficiency_mod:      0,
@@ -1015,7 +1015,7 @@ function calculatePoliticalEffects(classSatisfaction) {
 // ─────────────────────────────────────────────────────────────────────────
 // ВЗВЕШЕННОЕ СЧАСТЬЕ НАЦИИ (с учётом политического веса классов)
 // ─────────────────────────────────────────────────────────────────────────
-function calculateWeightedHappiness(classSatisfaction) {
+export function calculateWeightedHappiness(classSatisfaction) {
   let totalWeight = 0;
   let weightedSum = 0;
 
@@ -1048,7 +1048,7 @@ function calculateWeightedHappiness(classSatisfaction) {
 //   wealthTarget    = Σ(classWealthBase × classSat × classWeight) / Σweight
 // ══════════════════════════════════════════════════════════════
 
-function getClassBasedWealthTargets(nation) {
+export function getClassBasedWealthTargets(nation) {
   if (!nation?.population?.by_profession || !nation?.economy?.stockpile) return {};
 
   // Вычисляем удовлетворённость классов по текущему складу
@@ -1083,3 +1083,14 @@ function getClassBasedWealthTargets(nation) {
   }
   return result;
 }
+window.CLASS_FROM_PROFESSION = CLASS_FROM_PROFESSION;
+window.SOCIAL_CLASSES = SOCIAL_CLASSES;
+window.CLASS_CONFLICTS = CLASS_CONFLICTS;
+window.CONSUMPTION_TURNS = CONSUMPTION_TURNS;
+window.calculateClassPopulations = calculateClassPopulations;
+window.calculateClassNeeds = calculateClassNeeds;
+window.calculateTotalConsumptionByClass = calculateTotalConsumptionByClass;
+window.calculateClassSatisfaction = calculateClassSatisfaction;
+window.calculatePoliticalEffects = calculatePoliticalEffects;
+window.calculateWeightedHappiness = calculateWeightedHappiness;
+window.getClassBasedWealthTargets = getClassBasedWealthTargets;

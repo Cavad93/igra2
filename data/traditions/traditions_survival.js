@@ -3,7 +3,7 @@
 //  Стойкость, приспособление, кризисные стратегии
 // ============================================================================
 
-const TRADITIONS_SURVIVAL = {
+export const TRADITIONS_SURVIVAL = {
 
   // ── СТОЙКОСТЬ ───────────────────────────────────────────────────────────────
 
@@ -221,5 +221,4 @@ const TRADITIONS_SURVIVAL = {
   },
 
 };
-
-if (typeof module !== 'undefined') module.exports = TRADITIONS_SURVIVAL;
+window.TRADITIONS_SURVIVAL = TRADITIONS_SURVIVAL;

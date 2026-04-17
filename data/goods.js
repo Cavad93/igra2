@@ -13,7 +13,7 @@
 //   processed    — изготовляется из других товаров (requires_building обязателен)
 //   livestock    — живой ресурс; получается разведением или военным захватом
 
-var GOODS = {
+export var GOODS = {
 
   // ── ЗЕРНОВЫЕ И ПРОДОВОЛЬСТВИЕ ────────────────────────────────────────────
 
@@ -813,7 +813,7 @@ var GOODS = {
 // Производство каждого региона по типу местности.
 // Коэффициенты показывают единиц товара на 1000 жителей данной профессии.
 // Используется как fallback; биомные регионы работают через BIOME_META.goods_bonus.
-const REGION_PRODUCTION_BASE = {
+export const REGION_PRODUCTION_BASE = {
   coastal_city: {
     fish:        { per: 'sailors',   rate: 120 },
     cloth:       { per: 'craftsmen', rate: 70  },
@@ -980,3 +980,5 @@ function getGoodInfo(goodId, market) {
     if (!GOODS[goodId].produced_by) GOODS[goodId].produced_by = [];
   }
 })();
+window.GOODS = GOODS;
+window.REGION_PRODUCTION_BASE = REGION_PRODUCTION_BASE;

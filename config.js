@@ -1,5 +1,5 @@
 // Конфигурация игры — API ключ и константы баланса
-const CONFIG = {
+export const CONFIG = {
   // ── Anthropic (Claude Sonnet — только диалоги с игроком) ────────────
   API_KEY: '',
   API_URL: 'https://api.anthropic.com/v1/messages',
@@ -137,3 +137,4 @@ const CONFIG = {
   MAP_TILE_URL: 'https://cawm.lib.uiowa.edu/tiles/{z}/{x}/{y}.png',
   MAP_TILE_ATTRIBUTION: '© <a href="https://cawm.lib.uiowa.edu/">CAWM</a> CC BY 4.0',
 };
+window.CONFIG = CONFIG;

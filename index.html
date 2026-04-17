@@ -26,11 +26,11 @@
   <!-- Leaflet.js — интерактивные карты, без npm.
        Без integrity= чтобы корректно загружаться с file:// -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
 
   <!-- Pixi.js v8 — battle map renderer -->
-  <script src="https://cdn.jsdelivr.net/npm/pixi.js@8.17.1/dist/pixi.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/pixi.js@8.17.1/dist/pixi.min.js"></script>
 
   <!-- Этап 6 — SVG-глифарий (монетный штамп).
        ВАЖНО: не используем <script type="module"> — под file:// браузеры
@@ -8739,149 +8739,146 @@
   <!-- ═══════════════════════════
        СКРИПТЫ (порядок важен!)
   ═══════════════════════════ -->
-  <script src="config.js"></script>
-  <script src="data/goods.js"></script>
-  <script src="data/chains_data.js"></script>
-  <script src="data/buildings.js"></script>
-  <script src="data/laws_labor.js"></script>
-  <script src="data/social_classes.js"></script>
-  <script src="data/map.js"></script>
-  <script src="data/nations.js"></script>
-  <script src="data/regions_data.js"></script>
-  <script src="data/biomes.js"></script>
-  <script src="data/region_areas.js"></script>
-  <script src="data/characters.js"></script>
-  <script src="data/traditions/traditions_military.js"></script>
-  <script src="data/traditions/traditions_economic.js"></script>
-  <script src="data/traditions/traditions_social.js"></script>
-  <script src="data/traditions/traditions_religious.js"></script>
-  <script src="data/traditions/traditions_naval.js"></script>
-  <script src="data/traditions/traditions_arts.js"></script>
-  <script src="data/traditions/traditions_diplomatic.js"></script>
-  <script src="data/traditions/traditions_survival.js"></script>
-  <script src="data/traditions/traditions_extra.js"></script>
-  <script src="data/traditions/traditions_index.js"></script>
-  <script src="data/cultures.js"></script>
-  <script src="data/portrait_filters.js"></script>
-  <script src="data/culture_groups.js"></script>
-  <script src="data/religions.js"></script>
-  <script src="data/dogmas.js"></script>
-  <script src="data/religion_regions.js"></script>
+  <script type="module" src="config.js"></script>
+  <script type="module" src="data/goods.js"></script>
+  <script type="module" src="data/chains_data.js"></script>
+  <script type="module" src="data/buildings.js"></script>
+  <script type="module" src="data/laws_labor.js"></script>
+  <script type="module" src="data/social_classes.js"></script>
+  <script type="module" src="data/map.js"></script>
+  <script type="module" src="data/nations.js"></script>
+  <script type="module" src="data/regions_data.js"></script>
+  <script type="module" src="data/biomes.js"></script>
+  <script type="module" src="data/region_areas.js"></script>
+  <script type="module" src="data/characters.js"></script>
+  <script type="module" src="data/traditions/traditions_military.js"></script>
+  <script type="module" src="data/traditions/traditions_economic.js"></script>
+  <script type="module" src="data/traditions/traditions_social.js"></script>
+  <script type="module" src="data/traditions/traditions_religious.js"></script>
+  <script type="module" src="data/traditions/traditions_naval.js"></script>
+  <script type="module" src="data/traditions/traditions_arts.js"></script>
+  <script type="module" src="data/traditions/traditions_diplomatic.js"></script>
+  <script type="module" src="data/traditions/traditions_survival.js"></script>
+  <script type="module" src="data/traditions/traditions_extra.js"></script>
+  <script type="module" src="data/traditions/traditions_index.js"></script>
+  <script type="module" src="data/cultures.js"></script>
+  <script type="module" src="data/portrait_filters.js"></script>
+  <script type="module" src="data/culture_groups.js"></script>
+  <script type="module" src="data/religions.js"></script>
+  <script type="module" src="data/dogmas.js"></script>
+  <script type="module" src="data/religion_regions.js"></script>
 
   <!-- Инициализируем GAME_STATE из INITIAL_GAME_STATE -->
-  <script>
+  <script type="module">
     // GAME_STATE — единственный источник правды
-    var GAME_STATE = JSON.parse(JSON.stringify(INITIAL_GAME_STATE));
+    window.GAME_STATE = JSON.parse(JSON.stringify(window.INITIAL_GAME_STATE));
   </script>
 
-  <!-- Этап 5 (uisuper.md): SVG-глифарий «монетный штамп».
-       Подключается как обычный скрипт (не type="module"), чтобы страница
-       открывалась в т.ч. по протоколу file:// — там ES-модули блокируются
-       CORS. Файл выставляет window.ICONS и window.icon() для остального
-       plain-script окружения (стадия 6 и далее). -->
-  <script src="ui/icons.js"></script>
-  <script src="ui/log.js"></script>
-  <script src="ui/toast.js"></script>
-  <script src="ui/pulse.js"></script>
-  <script src="ui/panel_resize.js"></script>
-  <script src="engine/pops.js"></script>
-  <script src="engine/land_capacity.js"></script>
-  <script src="engine/diplomacy.js"></script>
-  <script src="engine/treaty_validator.js"></script>
-  <script src="engine/treaty_effects.js"></script>
-  <script src="engine/war_score.js"></script>
-  <script src="engine/diplomacy_range.js"></script>
-  <script src="engine/memory.js"></script>
-  <script src="engine/buildings.js"></script>
-  <script src="engine/fortress.js"></script>
-  <script src="engine/market.js"></script>
-  <script src="engine/provinces.js"></script>
-  <script src="engine/economy.js"></script>
-  <script src="engine/economy_ext.js"></script>
-  <script src="engine/loans.js"></script>
-  <script src="engine/demography.js"></script>
-  <script src="engine/age_demographics.js"></script>
-  <script src="engine/government.js"></script>
-  <script src="engine/dialogue.js"></script>
-  <script src="engine/constitutional.js"></script>
-  <script src="engine/conspiracy.js"></script>
-  <script src="engine/senate.js"></script>
-  <script src="engine/battle.js"></script>
-  <script src="engine/armies.js"></script>
-  <script src="engine/combat.js"></script>
-  <script src="engine/siege.js"></script>
-  <script src="engine/victory.js"></script>
-  <script src="engine/characters_ai.js"></script>
-  <script src="engine/orders.js"></script>
-  <script src="engine/culture.js"></script>
-  <script src="engine/religion.js"></script>
-  <script src="engine/storage.js"></script>
-  <script src="engine/super_ou.js"></script>
-  <script src="engine/achievements.js"></script>
-  <script src="ai/chronicle.js"></script>
-  <script src="engine/date.js"></script>
-  <script src="engine/characters_lifecycle.js"></script>
-  <script src="engine/espionage.js"></script>
-  <script src="engine/ai_scoring.js"></script>
-  <script src="engine/ai_fallback.js"></script>
-  <script src="engine/ai_worker.js"></script>
-  <script src="engine/events.js"></script>
-  <script src="engine/save.js"></script>
-  <script src="engine/turn.js"></script>
-  <script src="engine/init.js"></script>
-  <script src="ui/map.js?v=nationhash5"></script>
-  <script src="ui/map_armies.js"></script>
-  <script src="ui/map_events.js"></script>
-  <script src="ui/map_event_feed.js"></script>
-  <script src="ui/map_ai_indicators.js"></script>
-  <script src="ui/turn_summary_card.js"></script>
-  <script src="ui/region_compare.js"></script>
-  <script src="ui/region_build_tab.js"></script>
-  <script src="ui/diplomacy_tab.js"></script>
-  <script src="ui/diplo_graph.js"></script>
+  <!-- SVG-глифарий «монетный штамп». defer сохраняет порядок с module-скриптами.
+       Файл выставляет window.ICONS и window.icon(). -->
+  <script defer src="ui/icons.js"></script>
+  <script defer src="ui/log.js"></script>
+  <script defer src="ui/toast.js"></script>
+  <script defer src="ui/pulse.js"></script>
+  <script defer src="ui/panel_resize.js"></script>
+  <script defer src="engine/pops.js"></script>
+  <script defer src="engine/land_capacity.js"></script>
+  <script defer src="engine/diplomacy.js"></script>
+  <script defer src="engine/treaty_validator.js"></script>
+  <script defer src="engine/treaty_effects.js"></script>
+  <script defer src="engine/war_score.js"></script>
+  <script defer src="engine/diplomacy_range.js"></script>
+  <script defer src="engine/memory.js"></script>
+  <script defer src="engine/buildings.js"></script>
+  <script defer src="engine/fortress.js"></script>
+  <script defer src="engine/market.js"></script>
+  <script defer src="engine/provinces.js"></script>
+  <script defer src="engine/economy.js"></script>
+  <script defer src="engine/economy_ext.js"></script>
+  <script defer src="engine/loans.js"></script>
+  <script defer src="engine/demography.js"></script>
+  <script defer src="engine/age_demographics.js"></script>
+  <script defer src="engine/government.js"></script>
+  <script defer src="engine/dialogue.js"></script>
+  <script defer src="engine/constitutional.js"></script>
+  <script defer src="engine/conspiracy.js"></script>
+  <script defer src="engine/senate.js"></script>
+  <script defer src="engine/battle.js"></script>
+  <script defer src="engine/armies.js"></script>
+  <script defer src="engine/combat.js"></script>
+  <script defer src="engine/siege.js"></script>
+  <script defer src="engine/victory.js"></script>
+  <script defer src="engine/characters_ai.js"></script>
+  <script defer src="engine/orders.js"></script>
+  <script defer src="engine/culture.js"></script>
+  <script defer src="engine/religion.js"></script>
+  <script defer src="engine/storage.js"></script>
+  <script defer src="engine/super_ou.js"></script>
+  <script defer src="engine/achievements.js"></script>
+  <script defer src="ai/chronicle.js"></script>
+  <script defer src="engine/date.js"></script>
+  <script defer src="engine/characters_lifecycle.js"></script>
+  <script defer src="engine/espionage.js"></script>
+  <script defer src="engine/ai_scoring.js"></script>
+  <script defer src="engine/ai_fallback.js"></script>
+  <script defer src="engine/ai_worker.js"></script>
+  <script defer src="engine/events.js"></script>
+  <script defer src="engine/save.js"></script>
+  <script defer src="engine/turn.js"></script>
+  <script defer src="engine/init.js"></script>
+  <script defer src="ui/map.js?v=nationhash5"></script>
+  <script defer src="ui/map_armies.js"></script>
+  <script defer src="ui/map_events.js"></script>
+  <script defer src="ui/map_event_feed.js"></script>
+  <script defer src="ui/map_ai_indicators.js"></script>
+  <script defer src="ui/turn_summary_card.js"></script>
+  <script defer src="ui/region_compare.js"></script>
+  <script defer src="ui/region_build_tab.js"></script>
+  <script defer src="ui/diplomacy_tab.js"></script>
+  <script defer src="ui/diplo_graph.js"></script>
   <!-- Шаг 73: детерминированный PRNG + процедурный SVG-портрет -->
-  <script src="js/rng.js"></script>
-  <script src="ui/portrait_svg.js"></script>
-  <script src="ui/portrait.js"></script>
-  <script src="ui/splash_mosaic.js"></script>
-  <script src="ui/clepsydra.js"></script>
-  <script src="ui/turn_progress.js"></script>
-  <script src="ui/status_bar.js"></script>
-  <script src="ui/top_bar.js"></script>
-  <script src="ui/splash.js"></script>
-  <script src="ui/panels.js?v=nationhash5"></script>
-  <script src="ui/aqueduct.js"></script>
-  <script src="ui/government_tab.js"></script>
-  <script src="ui/population_tab.js"></script>
-  <script src="ui/economy_tab.js"></script>
+  <script defer src="js/rng.js"></script>
+  <script defer src="ui/portrait_svg.js"></script>
+  <script defer src="ui/portrait.js"></script>
+  <script defer src="ui/splash_mosaic.js"></script>
+  <script defer src="ui/clepsydra.js"></script>
+  <script defer src="ui/turn_progress.js"></script>
+  <script defer src="ui/status_bar.js"></script>
+  <script defer src="ui/top_bar.js"></script>
+  <script defer src="ui/splash.js"></script>
+  <script defer src="ui/panels.js?v=nationhash5"></script>
+  <script defer src="ui/aqueduct.js"></script>
+  <script defer src="ui/government_tab.js"></script>
+  <script defer src="ui/population_tab.js"></script>
+  <script defer src="ui/economy_tab.js"></script>
   <!-- economy_react.jsx загружается последним: React+Babel уже доступны,
        все игровые globals (GAME_STATE, GOODS, getConsumptionBasket) готовы -->
-  <script src="ui/economy_react.jsx"></script>
-  <script src="ui/treasury-panel.js"></script>
-  <script src="ui/siege_panel.js"></script>
-  <script src="ui/battle_result.js"></script>
-  <script src="ui/peace_panel.js"></script>
-  <script src="ai/prompts.js"></script>
-  <script src="ai/parser.js"></script>
-  <script src="ai/claude.js"></script>
-  <script src="ai/diplomacy_ai.js"></script>
-  <script src="ai/utility_ai.js"></script>
-  <script src="ai/commander_ai.js"></script>
-  <script src="ai/treaty_interpreter.js"></script>
-  <script src="ui/apikey.js"></script>
-  <script src="ui/input.js"></script>
-  <script src="engine/tactical_battle.js"></script>
-  <script src="ui/tactical_map.js"></script>
-  <script src="engine/noise.js"></script>
-  <script src="ui/battle_map_pixi.js"></script>
+  <script defer src="ui/economy_react.jsx"></script>
+  <script defer src="ui/treasury-panel.js"></script>
+  <script defer src="ui/siege_panel.js"></script>
+  <script defer src="ui/battle_result.js"></script>
+  <script defer src="ui/peace_panel.js"></script>
+  <script defer src="ai/prompts.js"></script>
+  <script defer src="ai/parser.js"></script>
+  <script defer src="ai/claude.js"></script>
+  <script defer src="ai/diplomacy_ai.js"></script>
+  <script defer src="ai/utility_ai.js"></script>
+  <script defer src="ai/commander_ai.js"></script>
+  <script defer src="ai/treaty_interpreter.js"></script>
+  <script defer src="ui/apikey.js"></script>
+  <script defer src="ui/input.js"></script>
+  <script defer src="engine/tactical_battle.js"></script>
+  <script defer src="ui/tactical_map.js"></script>
+  <script defer src="engine/noise.js"></script>
+  <script defer src="ui/battle_map_pixi.js"></script>
 
   <!-- Порядок загрузки критичен: компоненты → движок → ambient → reactions → diptych → boot.
        См. uisuper.md Этап 42. Менять порядок только после ревью. -->
-  <script src="ui/ambient.js"></script>
-  <script src="ui/reactions.js"></script>
-  <script src="ui/diptych.js"></script>
+  <script defer src="ui/ambient.js"></script>
+  <script defer src="ui/reactions.js"></script>
+  <script defer src="ui/diptych.js"></script>
   <!-- Все компоненты загружены — запускаем монтажный лист -->
-  <script src="ui/boot.js"></script>
+  <script defer src="ui/boot.js"></script>
 
 </body>
 </html>

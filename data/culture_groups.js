@@ -21,7 +21,7 @@
 //    getPortraitInfoForCharacter(char, nationId) → { src, filter }   (Шаг 72)
 // ============================================================================
 
-const NATION_CULTURE_GROUPS = {
+export const NATION_CULTURE_GROUPS = {
   // ── ЭЛЛИНСКАЯ (греки, эллинистические царства)
   greek: {
     label: 'Эллинская',
@@ -288,7 +288,7 @@ const NATION_CULTURE_GROUPS = {
  * @returns {{groupId:string, label:string, nations:string[], portrait_pool:string[],
  *            texture:string, panel_tint:string, border:string, icon:string, splash_bg:string}}
  */
-function getCultureGroup(nationId) {
+export function getCultureGroup(nationId) {
   if (nationId) {
     for (const [groupId, group] of Object.entries(NATION_CULTURE_GROUPS)) {
       if (groupId === 'generic') continue;
@@ -304,7 +304,7 @@ function getCultureGroup(nationId) {
  * @param {string} nationId
  * @returns {string} путь вида 'assets/icons/owl_athena.svg'
  */
-function getNationIconPath(nationId) {
+export function getNationIconPath(nationId) {
   const group = getCultureGroup(nationId);
   const iconId = (group && group.icon) || 'generic_sword';
   return `assets/icons/${iconId}.svg`;
@@ -314,7 +314,7 @@ function getNationIconPath(nationId) {
  * Детерминированный 32-битный хэш строки (FNV/Daniel-J-Bernstein-style).
  * Один и тот же id всегда даёт одно и то же число.
  */
-function hashCode(str) {
+export function hashCode(str) {
   if (str == null) return 0;
   const s = String(str);
   let h = 0;
@@ -331,7 +331,7 @@ function hashCode(str) {
  * @param {string} nationId
  * @returns {string}
  */
-function getPortraitForCharacter(char, nationId) {
+export function getPortraitForCharacter(char, nationId) {
   const group = getCultureGroup(nationId);
   const pool = group.portrait_pool && group.portrait_pool.length
     ? group.portrait_pool
@@ -352,7 +352,7 @@ function getPortraitForCharacter(char, nationId) {
  * @param {string} nationId
  * @returns {{src:string, filter:string}}
  */
-function getPortraitInfoForCharacter(char, nationId) {
+export function getPortraitInfoForCharacter(char, nationId) {
   const src = getPortraitForCharacter(char, nationId);
 
   // PORTRAIT_FILTERS задаётся data/portrait_filters.js; при отсутствии
@@ -368,18 +368,11 @@ function getPortraitInfoForCharacter(char, nationId) {
 }
 
 // ── Экспорт для Node (тесты) ────────────────────────────────────────────────
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    NATION_CULTURE_GROUPS,
-    getCultureGroup,
-    getPortraitForCharacter,
-    getPortraitInfoForCharacter,
-    getNationIconPath,
-    hashCode,
-  };
-}
 
 // Экспорт в window для браузера (Шаг 72).
-if (typeof window !== 'undefined') {
-  window.getPortraitInfoForCharacter = getPortraitInfoForCharacter;
-}
+window.NATION_CULTURE_GROUPS = NATION_CULTURE_GROUPS;
+window.getCultureGroup = getCultureGroup;
+window.getNationIconPath = getNationIconPath;
+window.hashCode = hashCode;
+window.getPortraitForCharacter = getPortraitForCharacter;
+window.getPortraitInfoForCharacter = getPortraitInfoForCharacter;

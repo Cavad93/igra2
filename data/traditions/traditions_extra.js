@@ -3,7 +3,7 @@
 //  Мелкие специализации, уникальные черты, перекрёстные пути
 // ============================================================================
 
-const TRADITIONS_EXTRA = {
+export const TRADITIONS_EXTRA = {
 
   // ── СЕЛЬСКОЕ ────────────────────────────────────────────────────────────────
 
@@ -212,5 +212,4 @@ const TRADITIONS_EXTRA = {
   },
 
 };
-
-if (typeof module !== 'undefined') module.exports = TRADITIONS_EXTRA;
+window.TRADITIONS_EXTRA = TRADITIONS_EXTRA;

@@ -3,7 +3,7 @@
 //  Управление, закон, общество, семья
 // ============================================================================
 
-const TRADITIONS_SOCIAL = {
+export const TRADITIONS_SOCIAL = {
 
   // ── УПРАВЛЕНИЕ ──────────────────────────────────────────────────────────────
 
@@ -281,5 +281,4 @@ const TRADITIONS_SOCIAL = {
   },
 
 };
-
-if (typeof module !== 'undefined') module.exports = TRADITIONS_SOCIAL;
+window.TRADITIONS_SOCIAL = TRADITIONS_SOCIAL;

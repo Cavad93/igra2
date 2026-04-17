@@ -3,7 +3,7 @@
 //  Торговля, сельское хозяйство, ремёсла, ресурсодобыча
 // ============================================================================
 
-const TRADITIONS_ECONOMIC = {
+export const TRADITIONS_ECONOMIC = {
 
   // ── СЕЛЬСКОЕ ХОЗЯЙСТВО ─────────────────────────────────────────────────────
 
@@ -308,5 +308,4 @@ const TRADITIONS_ECONOMIC = {
   },
 
 };
-
-if (typeof module !== 'undefined') module.exports = TRADITIONS_ECONOMIC;
+window.TRADITIONS_ECONOMIC = TRADITIONS_ECONOMIC;

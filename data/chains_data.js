@@ -2,7 +2,7 @@
 // Дата: 2026-03-24T18:17:41.280Z
 // Не редактировать вручную
 
-var CHAINS_DATA = {
+export var CHAINS_DATA = {
   "wheat": {
     "good_id": "wheat",
     "generated_at": "2026-03-24T17:10:36.244Z",
@@ -10741,7 +10741,7 @@ var CHAINS_DATA = {
 // ]
 // ══════════════════════════════════════════════════════════════
 
-var RECIPE_DATA = {
+export var RECIPE_DATA = {
   wheat         : { inputs: [ { good: 'wheat', amount: 0.20 }, { good: 'tools', amount: 0.005 } ], labor: 3 },
   barley        : { inputs: [ { good: 'barley', amount: 0.20 }, { good: 'tools', amount: 0.005 } ], labor: 3 },
   fish          : { inputs: [], labor: 5 },
@@ -10785,7 +10785,7 @@ var RECIPE_DATA = {
   trade_goods   : { inputs: [ { good: 'silver', amount: 0.05 } ], labor: 10 },
 };
 
-var BUILDING_RECIPES = (function () {
+export var BUILDING_RECIPES = (function () {
   var result = {};
 
   // ── Основные рецепты из CHAINS_DATA ───────────────────────
@@ -10925,3 +10925,6 @@ var BUILDING_RECIPES = (function () {
 
   return result;
 })();
+window.CHAINS_DATA = CHAINS_DATA;
+window.RECIPE_DATA = RECIPE_DATA;
+window.BUILDING_RECIPES = BUILDING_RECIPES;

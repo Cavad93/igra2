@@ -3,7 +3,7 @@
 //  Искусство, философия, наука, архитектура
 // ============================================================================
 
-const TRADITIONS_ARTS = {
+export const TRADITIONS_ARTS = {
 
   // ── ЛИТЕРАТУРА И РИТОРИКА ───────────────────────────────────────────────────
 
@@ -222,5 +222,4 @@ const TRADITIONS_ARTS = {
   },
 
 };
-
-if (typeof module !== 'undefined') module.exports = TRADITIONS_ARTS;
+window.TRADITIONS_ARTS = TRADITIONS_ARTS;

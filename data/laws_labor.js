@@ -16,7 +16,7 @@
 //   Малые значения: +3/−3 = ощутимо, +8/−8 = значительно.
 // ═══════════════════════════════════════════════════════════════════════════
 
-const LAWS_LABOR = {
+export const LAWS_LABOR = {
 
   // ══════════════════════════════════════════════════════
   // МИНИМАЛЬНЫЙ ВОЗРАСТ ТРУДА
@@ -1068,7 +1068,7 @@ const LAWS_LABOR = {
 // ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ — стандартная практика греческого полиса ~300 г. до н.э.
 // ══════════════════════════════════════════════════════════════
 
-const DEFAULT_LABOR_LAWS = {
+export const DEFAULT_LABOR_LAWS = {
   // ── Существующие поля ──
   min_work_age:           12,
   child_labor_intensity:  0.40,
@@ -1104,7 +1104,7 @@ const DEFAULT_LABOR_LAWS = {
 };
 
 // Порядок отображения групп законов в UI
-const LABOR_LAW_GROUPS = [
+export const LABOR_LAW_GROUPS = [
   { id: 'min_work_age',             name: 'Минимальный возраст труда',    icon: '👶' },
   { id: 'child_intensity',          name: 'Интенсивность детского труда', icon: '⚒' },
   { id: 'elder_threshold',          name: 'Порог старости',               icon: '👴' },
@@ -1121,7 +1121,7 @@ const LABOR_LAW_GROUPS = [
 // API: применить / отменить трудовой закон
 // ══════════════════════════════════════════════════════════════
 
-function applyLaborLaw(nation, lawId) {
+export function applyLaborLaw(nation, lawId) {
   const law = LAWS_LABOR[lawId];
   if (!law) return { ok: false, reason: 'Закон не найден' };
 
@@ -1160,7 +1160,7 @@ function applyLaborLaw(nation, lawId) {
   return { ok: true };
 }
 
-function repealLaborLaw(nation, lawId) {
+export function repealLaborLaw(nation, lawId) {
   const law = LAWS_LABOR[lawId];
   if (!law) return;
 
@@ -1183,7 +1183,7 @@ function repealLaborLaw(nation, lawId) {
 }
 
 // Инициализация трудовых законов — применяет все is_default законы
-function initLaborLaws(nation) {
+export function initLaborLaws(nation) {
   if (!nation.labor_laws) {
     nation.labor_laws = { ...DEFAULT_LABOR_LAWS };
   }
@@ -1215,3 +1215,9 @@ function initLaborLaws(nation) {
     }
   }
 }
+window.LAWS_LABOR = LAWS_LABOR;
+window.DEFAULT_LABOR_LAWS = DEFAULT_LABOR_LAWS;
+window.LABOR_LAW_GROUPS = LABOR_LAW_GROUPS;
+window.applyLaborLaw = applyLaborLaw;
+window.repealLaborLaw = repealLaborLaw;
+window.initLaborLaws = initLaborLaws;

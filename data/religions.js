@@ -16,7 +16,7 @@
 //    'mystery'    — тайно, через инициацию (не зависит от государства)
 // ══════════════════════════════════════════════════════════════════════════
 
-const RELIGIONS = {
+export const RELIGIONS = {
 
   // ── ЭЛЛИНСКИЕ ──────────────────────────────────────────────────────────
 
@@ -257,7 +257,7 @@ const RELIGIONS = {
 //  РЕЛИГИОЗНЫЕ ГРУППЫ — модификаторы распространения
 // ══════════════════════════════════════════════════════════════════════════
 
-const RELIGION_GROUPS = {
+export const RELIGION_GROUPS = {
   hellenic:   { name: 'Эллинская',      spread_modifier: 1.0,  resistance: 0.3 },
   punic:      { name: 'Пунийская',      spread_modifier: 0.8,  resistance: 0.5 },
   indigenous: { name: 'Коренная',       spread_modifier: 0.4,  resistance: 0.8 },
@@ -269,7 +269,7 @@ const RELIGION_GROUPS = {
 //  КОНФИГУРАЦИЯ
 // ══════════════════════════════════════════════════════════════════════════
 
-const RELIGION_CONFIG = {
+export const RELIGION_CONFIG = {
   // Распространение
   SPREAD_BASE_RATE:          0.003,  // базовая скорость распространения/год
   SPREAD_TRADE_MULTIPLIER:   0.8,    // множитель по торговым путям
@@ -299,3 +299,6 @@ const RELIGION_CONFIG = {
   PERSECUTION_HAPPINESS_COST: 3,     // цена счастья за гонения
   PATRONAGE_COST_PER_TURN:  50,      // золота за покровительство/ход
 };
+window.RELIGIONS = RELIGIONS;
+window.RELIGION_GROUPS = RELIGION_GROUPS;
+window.RELIGION_CONFIG = RELIGION_CONFIG;

@@ -3,7 +3,7 @@
 //  Отношения, альянсы, шпионаж, внешняя политика
 // ============================================================================
 
-const TRADITIONS_DIPLOMATIC = {
+export const TRADITIONS_DIPLOMATIC = {
 
   // ── МИРНАЯ ДИПЛОМАТИЯ ───────────────────────────────────────────────────────
 
@@ -194,5 +194,4 @@ const TRADITIONS_DIPLOMATIC = {
   },
 
 };
-
-if (typeof module !== 'undefined') module.exports = TRADITIONS_DIPLOMATIC;
+window.TRADITIONS_DIPLOMATIC = TRADITIONS_DIPLOMATIC;

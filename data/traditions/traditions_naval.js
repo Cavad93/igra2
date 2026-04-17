@@ -3,7 +3,7 @@
 //  Мореходство, флот, прибрежная жизнь
 // ============================================================================
 
-const TRADITIONS_NAVAL = {
+export const TRADITIONS_NAVAL = {
 
   // ── ОСНОВЫ МОРЕХОДСТВА ──────────────────────────────────────────────────────
 
@@ -218,5 +218,4 @@ const TRADITIONS_NAVAL = {
   },
 
 };
-
-if (typeof module !== 'undefined') module.exports = TRADITIONS_NAVAL;
+window.TRADITIONS_NAVAL = TRADITIONS_NAVAL;
