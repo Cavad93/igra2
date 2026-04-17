@@ -64,7 +64,7 @@ function _tpTaxTotal() {
 }
 
 // ── Цвет ставки: зел/жёл/красн ───────────────────────────────
-function _tpRateColor(rate) {
+export function _tpRateColor(rate) {
   if (rate <= 0.15) return 'var(--positive)';
   if (rate <= 0.22) return 'var(--warning)';
   return 'var(--negative)';
@@ -76,7 +76,7 @@ function _tpPenalty(rate) {
 }
 
 // ── Обработчик слайдера расходов ─────────────────────────────
-function _tpOnExpSlider(category, rawVal) {
+export function _tpOnExpSlider(category, rawVal) {
   _tpExpLevels[category] = parseFloat(rawVal) / 100;
   _tpDirty = true;
   const col = document.getElementById('tp-expense-col');
@@ -90,7 +90,7 @@ function _tpOnExpSlider(category, rawVal) {
 }
 
 // ── Обработчик слайдера налогов ───────────────────────────────
-function _tpOnSlider(group, rawVal) {
+export function _tpOnSlider(group, rawVal) {
   _tpPreview[group] = parseFloat(rawVal) / 100;
   _tpDirty = true;
   // Частичная перерисовка: только колонка доходов
@@ -997,7 +997,7 @@ function _tpAdvisorText() {
 }
 
 // ── Переключение панели советника ────────────────────────────
-function _tpToggleAdvisor() {
+export function _tpToggleAdvisor() {
   const panel = document.getElementById('tp-advisor-panel');
   if (!panel) return;
   if (panel.classList.contains('tp-hidden')) {
@@ -1175,7 +1175,7 @@ function _tpRenderLoans() {
     </div>`;
 }
 
-function _tpUpdateLoanPreview() {
+export function _tpUpdateLoanPreview() {
   const el = document.getElementById('tp-loan-preview');
   if (!el || typeof calcMonthlyPayment !== 'function') return;
 
@@ -1195,7 +1195,7 @@ function _tpUpdateLoanPreview() {
   el.innerHTML = `Платёж: <b>${payment} ₴/мес</b> · После займа нагрузка: <b>${loadAfter}%</b> дохода`;
 }
 
-function _tpTakeLoan() {
+export function _tpTakeLoan() {
   const amount = parseInt(document.getElementById('tp-loan-amount')?.value ?? 0);
   const term   = parseInt(document.getElementById('tp-loan-term')?.value ?? 24);
   const nId    = GAME_STATE.player_nation;
@@ -1213,7 +1213,7 @@ function _tpTakeLoan() {
   }
 }
 
-function _tpConfirmBankruptcy() {
+export function _tpConfirmBankruptcy() {
   const nId    = GAME_STATE.player_nation;
   const status = getLoanStatus(nId);
   if (!status.totalDebt) return;
