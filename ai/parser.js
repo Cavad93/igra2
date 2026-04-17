@@ -1,10 +1,16 @@
 // Парсинг ответов AI в структуры GameState
 
+import { addEventLog } from '../ui/log.js';
+import { createTreaty, declareWar, concludePeace, getArmistice } from '../engine/diplomacy.js';
+import { orderArmyMove } from '../engine/armies.js';
+import { processAttackAction } from '../engine/battle.js';
+import { orderBuildingConstruction } from '../engine/buildings.js';
+
 // ──────────────────────────────────────────────────────────────
 // ОСНОВНАЯ ФУНКЦИЯ ПАРСИНГА
 // ──────────────────────────────────────────────────────────────
 
-function parseAIResponse(rawText) {
+export function parseAIResponse(rawText) {
   if (!rawText) throw new Error('Пустой ответ от AI');
 
   // Убираем возможный markdown-фencing (```json ... ```)
@@ -52,7 +58,7 @@ function parseAIResponse(rawText) {
 }
 
 // Попытка починить частые проблемы JSON от LLM
-function attemptJSONFix(text) {
+export function attemptJSONFix(text) {
   try {
     // Убираем trailing commas (часто встречаются)
     let fixed = text.replace(/,\s*([}\]])/g, '$1');
@@ -70,7 +76,7 @@ function attemptJSONFix(text) {
 // ВАЛИДАЦИЯ ОТВЕТОВ
 // ──────────────────────────────────────────────────────────────
 
-function validateCommandParse(parsed) {
+export function validateCommandParse(parsed) {
   const validTypes = ['law', 'military', 'diplomacy', 'economy', 'character', 'build'];
 
   if (!parsed || typeof parsed !== 'object') return false;
@@ -88,7 +94,7 @@ function validateCommandParse(parsed) {
   return true;
 }
 
-function validateCharacterReaction(parsed) {
+export function validateCharacterReaction(parsed) {
   const validPositions = ['strongly_for', 'for', 'neutral', 'against', 'strongly_against'];
 
   if (!parsed || typeof parsed !== 'object') return false;
@@ -100,7 +106,7 @@ function validateCharacterReaction(parsed) {
   return true;
 }
 
-function validateNationDecision(parsed) {
+export function validateNationDecision(parsed) {
   const validActions = [
     'trade', 'build', 'recruit', 'recruit_mercs', 'diplomacy',
     'attack', 'fortify', 'wait',
@@ -124,7 +130,7 @@ function validateNationDecision(parsed) {
   return true;
 }
 
-function validateCharacters(parsed) {
+export function validateCharacters(parsed) {
   if (!Array.isArray(parsed)) return [];
 
   return parsed.filter(char => {
@@ -161,11 +167,11 @@ function validateCharacters(parsed) {
 // ПРИМЕНЕНИЕ AI РЕШЕНИЯ НАЦИИ К GAMESTATE
 // ──────────────────────────────────────────────────────────────
 
-function applyNationDecision(nationId, decision) {
+export function applyNationDecision(nationId, decision) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
-  const _log = (msg, type = 'info') => { if (typeof addEventLog === 'function') addEventLog(msg, type); };
+  const _log = (msg, type = 'info') => { addEventLog(msg, type); };
   const _name = (id) => GAME_STATE.nations?.[id]?.name ?? id;
 
   // Шаг 51: регистрируем действие AI для индикаторов на карте (если загружен модуль).
@@ -375,3 +381,11 @@ function applyNationDecision(nationId, decision) {
       break;
   }
 }
+
+window.parseAIResponse = parseAIResponse;
+window.attemptJSONFix = attemptJSONFix;
+window.validateCommandParse = validateCommandParse;
+window.validateCharacterReaction = validateCharacterReaction;
+window.validateNationDecision = validateNationDecision;
+window.validateCharacters = validateCharacters;
+window.applyNationDecision = applyNationDecision;

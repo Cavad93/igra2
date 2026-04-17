@@ -3,6 +3,11 @@
  * Каждые 50 ходов анализирует мир и генерирует живые события через Sonnet.
  */
 
+import { CONFIG } from '../config.js';
+import { callClaude } from './claude.js';
+import { SuperOU } from '../engine/super_ou.js';
+import { addEventLog } from '../ui/log.js';
+
 // ── Вспомогательные функции ───────────────────────────────────────────────────
 
 function _detectEra(year) {
@@ -38,7 +43,7 @@ function _playerReputation(playerNation, nations) {
 
 // ── Основной объект ───────────────────────────────────────────────────────────
 
-const ChronicleSystem = {
+export const ChronicleSystem = {
   INTERVAL:      50,
   MAX_EVENTS:    5,
   MAX_TOKENS:    600,
@@ -326,8 +331,6 @@ JSON формат:
     return parsed.events ?? [];
   },
 };
-
-// export default ChronicleSystem;
 
 if (typeof window !== 'undefined') {
   window.ChronicleSystem = ChronicleSystem;

@@ -12,7 +12,8 @@
 //     → возвращает { safe: bool, reason: string }
 // ══════════════════════════════════════════════════════════════════
 
-'use strict';
+import { CONFIG } from '../config.js';
+import { TREATY_TYPES } from '../engine/diplomacy.js';
 
 // ──────────────────────────────────────────────────────────────
 // СИСТЕМНЫЙ ПРОМПТ ИНТЕРПРЕТАТОРА
@@ -75,7 +76,7 @@ function _buildInterpreterPrompt(treaty, playerNationId, aiNationId) {
  * Анализирует conditions.notes договора и заполняет _interpreted_effects.
  * @returns {Promise<{ok: boolean, effects: object, humanSummary: string}>}
  */
-async function interpretCustomTreaty(treaty, playerNationId, aiNationId) {
+export async function interpretCustomTreaty(treaty, playerNationId, aiNationId) {
   if (!CONFIG.API_KEY) {
     return { ok: true, effects: {}, humanSummary: 'AI интерпретатор недоступен (нет API ключа).' };
   }
@@ -148,7 +149,7 @@ async function interpretCustomTreaty(treaty, playerNationId, aiNationId) {
  * Используется только если rule-based фильтр не перехватил.
  * @returns {Promise<{safe: boolean, reason: string}>}
  */
-async function aiContentFilter(notes) {
+export async function aiContentFilter(notes) {
   if (!CONFIG.API_KEY || !notes?.trim()) return { safe: true, reason: '' };
 
   const prompt = `Ты — модератор контента для исторической стратегии.
@@ -235,3 +236,6 @@ function _summariseEffects(ef) {
   if (ef.preferential_goods?.length) parts.push(`🥇 Приоритет: ${ef.preferential_goods.join(', ')}`);
   return parts.length ? parts.join(' · ') : 'Стандартные условия применены.';
 }
+
+window.interpretCustomTreaty = interpretCustomTreaty;
+window.aiContentFilter = aiContentFilter;

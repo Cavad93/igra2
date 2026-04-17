@@ -1,6 +1,11 @@
 // Все вызовы Anthropic API
 // Каждый вызов получает полный снимок нужной части GameState
 
+import { CONFIG } from '../config.js';
+import { PROMPTS } from './prompts.js';
+import { parseAIResponse, validateCommandParse, validateCharacterReaction, validateNationDecision, validateCharacters, applyNationDecision } from './parser.js';
+import { addEventLog } from '../ui/log.js';
+
 // ──────────────────────────────────────────────────────────────
 // УТИЛИТА: НАДЁЖНЫЙ ПАРСИНГ JSON ИЗ ОТВЕТА МОДЕЛИ
 // ──────────────────────────────────────────────────────────────
@@ -9,7 +14,7 @@
  * Извлекает и парсит первый JSON-объект или массив из строки ответа модели.
  * Устойчив к markdown-обёрткам (```json...```) и хвостовым запятым.
  */
-function extractJSON(raw) {
+export function extractJSON(raw) {
   let s = raw ?? '';
 
   // 1. Убираем markdown-блок кода, если есть
@@ -197,7 +202,7 @@ async function _callGroq(system, user, maxTokens) {
 // MODEL_WAR_AI (llama-3.3-70b)    → Groq     (война с игроком)
 // MODEL_SONNET (claude-sonnet-4-6) → Anthropic (диалоги с игроком)
 // Фоновые нации → Super-OU (engine/super_ou.js), без LLM
-async function callClaude(system, user, maxTokens = 1024, model = CONFIG.MODEL_SONNET) {
+export async function callClaude(system, user, maxTokens = 1024, model = CONFIG.MODEL_SONNET) {
   if (model && model.startsWith('claude-')) {
     return _callAnthropic(system, user, maxTokens, model);
   }
@@ -209,7 +214,7 @@ async function callClaude(system, user, maxTokens = 1024, model = CONFIG.MODEL_S
 // 1. ПАРСИНГ КОМАНДЫ ИГРОКА
 // ──────────────────────────────────────────────────────────────
 
-async function parsePlayerCommand(playerInput) {
+export async function parsePlayerCommand(playerInput) {
   // Формируем минимальный снимок состояния (не весь GameState — слишком большой)
   const nationId = GAME_STATE.player_nation;
   const nation = GAME_STATE.nations[nationId];
@@ -260,7 +265,7 @@ async function parsePlayerCommand(playerInput) {
 // 2. РЕАКЦИЯ ПЕРСОНАЖЕЙ НА ДЕЙСТВИЕ
 // ──────────────────────────────────────────────────────────────
 
-async function getCharacterReactions(action, characters, politicalContext) {
+export async function getCharacterReactions(action, characters, politicalContext) {
   const results = [];
 
   // Реакции персонажей параллельно (но не больше 3 одновременно)
@@ -308,7 +313,7 @@ async function getCharacterReactions(action, characters, politicalContext) {
 }
 
 // Оценка личных последствий для персонажа (детерминированно)
-function calculatePersonalImpact(char, action) {
+export function calculatePersonalImpact(char, action) {
   const impact = {};
 
   if (action.action_type === 'military' && action.parsed_action?.recruit_infantry) {
@@ -346,7 +351,7 @@ function calculatePersonalImpact(char, action) {
 // 3. РЕШЕНИЕ AI-НАЦИИ
 // ──────────────────────────────────────────────────────────────
 
-async function getAINationDecision(nationId, model = CONFIG.MODEL_HAIKU) {
+export async function getAINationDecision(nationId, model = CONFIG.MODEL_HAIKU) {
   const nation = GAME_STATE.nations[nationId];
 
   // ── #1 Улучшение: детальная информация о соседях ──────────────
@@ -535,7 +540,7 @@ async function getAINationDecision(nationId, model = CONFIG.MODEL_HAIKU) {
 // ── Батч-решения: N наций → 1 Groq запрос ─────────────────────────────
 // Возвращает Map<nationId, decision> для всех наций в батче.
 // Нации у которых LLM не вернул решение получат fallback снаружи.
-async function getAIBatchDecisions(nationIds, model = CONFIG.MODEL_HAIKU) {
+export async function getAIBatchDecisions(nationIds, model = CONFIG.MODEL_HAIKU) {
   if (!nationIds.length) return new Map();
 
   // ── Компактный блок нации (оптимизирован для 3B модели) ──────────────
@@ -808,7 +813,7 @@ Avoid: ${traits.avoid}.
 ${prioNote}`;
 }
 
-async function getAISingleDecision(nationId) {
+export async function getAISingleDecision(nationId) {
   const n = GAME_STATE.nations?.[nationId];
   if (!n) return null;
 
@@ -1588,7 +1593,7 @@ function _parseWarDecision(raw, nationId) {
   }
 }
 
-async function getAIWarDecision(nationId) {
+export async function getAIWarDecision(nationId) {
   const prompts = _buildWarPrompts(nationId);
   if (!prompts) return null;
   const raw = await _callGroq(prompts.system, prompts.user, 400);
@@ -1625,7 +1630,7 @@ function _calcStrategicPhase(nation, milSummary, internalSummary, activeWars) {
   return { phase: 'steady_growth', advice: 'Стабильный рост. Расширять торговлю и армию умеренными темпами.' };
 }
 
-function buildAvailableActions(nationId, nation) {
+export function buildAvailableActions(nationId, nation) {
   const actions = [];
   const mil      = nation.military ?? {};
   const eco      = nation.economy  ?? {};
@@ -1730,7 +1735,7 @@ function buildAvailableActions(nationId, nation) {
 // 4. ГЕНЕРАЦИЯ ПЕРСОНАЖЕЙ
 // ──────────────────────────────────────────────────────────────
 
-async function generateCharactersForNation(nationId, count = 7) {
+export async function generateCharactersForNation(nationId, count = 7) {
   const nation = GAME_STATE.nations[nationId];
   const existing = nation.characters || [];
 
@@ -1755,7 +1760,7 @@ async function generateCharactersForNation(nationId, count = 7) {
 }
 
 // Генерация одного нового персонажа (случайное появление)
-async function generateNewCharacter(nationId) {
+export async function generateNewCharacter(nationId) {
   const nation = GAME_STATE.nations[nationId];
   const existing = nation.characters || [];
 
@@ -1801,7 +1806,7 @@ async function generateNewCharacter(nationId) {
 // ──────────────────────────────────────────────────────────────
 // УТИЛИТА: getRoleLabel (дублируем здесь, т.к. claude.js загружается раньше panels.js)
 // ──────────────────────────────────────────────────────────────
-function getRoleLabel(role) {
+export function getRoleLabel(role) {
   const labels = {
     senator:  'Сенатор',
     advisor:  'Советник',
@@ -1819,7 +1824,7 @@ function getRoleLabel(role) {
 // Вызывается ТОЛЬКО из SenateManager._runYearlyLifeCycle() и damage_senator()
 // при смерти материализованного сенатора от болезни или заговора.
 // Возвращает строку-некролог (plain text, не JSON).
-async function generateSenatorObituaryViaLLM(senator, factionName, senateState) {
+export async function generateSenatorObituaryViaLLM(senator, factionName, senateState) {
   const { system, user } = PROMPTS.senatorObituary(senator, factionName, senateState);
   // Некролог — очень маленький ответ, 150 токенов достаточно
   const raw = await callClaude(system, user, 150, CONFIG.MODEL_HAIKU);
@@ -1832,7 +1837,7 @@ async function generateSenatorObituaryViaLLM(senator, factionName, senateState) 
 // ──────────────────────────────────────────────────────────────
 // Вызывается из ConstitutionalEngine._triggerChronicle() (async, не блокирует).
 // Добавляет нарратив в eventLog как 'law' запись.
-async function generateConstitutionalChronicleViaLLM(ctx) {
+export async function generateConstitutionalChronicleViaLLM(ctx) {
   try {
     const { system, user } = PROMPTS.constitutionalChronicle(ctx);
     const raw = await callClaude(system, user, 250, CONFIG.MODEL_HAIKU);
@@ -1848,7 +1853,7 @@ async function generateConstitutionalChronicleViaLLM(ctx) {
 // ──────────────────────────────────────────────────────────────
 // Вызывается из ConspiracyEngine._generateManifest() (async, fire-and-forget).
 // Возвращает { name, goal, manifesto, symbol } или null при ошибке.
-async function generateConspiracyManifestViaLLM(ctx) {
+export async function generateConspiracyManifestViaLLM(ctx) {
   try {
     const { system, user } = PROMPTS.conspiracyManifest(ctx);
     const raw = await callClaude(system, user, 350, CONFIG.MODEL_HAIKU);
@@ -1870,7 +1875,7 @@ async function generateConspiracyManifestViaLLM(ctx) {
 // ──────────────────────────────────────────────────────────────
 // Вызывается из materialize_senator если senator.hidden_interests содержит Blood_Feud.
 // Возвращает строку (plain text) или null.
-async function generateBloodFeudDialogueViaLLM(senator, clanName, victimNames, lawsAfterFeud) {
+export async function generateBloodFeudDialogueViaLLM(senator, clanName, victimNames, lawsAfterFeud) {
   try {
     const { system, user } = PROMPTS.bloodFeudDialogue(senator, clanName, victimNames, lawsAfterFeud);
     const raw = await callClaude(system, user, 200, CONFIG.MODEL_HAIKU);
@@ -1887,7 +1892,7 @@ async function generateBloodFeudDialogueViaLLM(senator, clanName, victimNames, l
 
 // Вызывается ТОЛЬКО из SenateManager.materialize_senator().
 // Возвращает { name, traits, biography, portrait, influence }.
-async function materializeSenatorViaLLM(senator, context, reason) {
+export async function materializeSenatorViaLLM(senator, context, reason) {
   const { system, user } = PROMPTS.materializeSenator(senator, context, reason);
   const raw = await callClaude(system, user, 250, CONFIG.MODEL_HAIKU);
 
@@ -1903,7 +1908,7 @@ async function materializeSenatorViaLLM(senator, context, reason) {
 // ──────────────────────────────────────────────────────────────
 
 // 1. ПАРСИНГ ПРОИЗВОЛЬНОГО ОПИСАНИЯ ПРАВИТЕЛЬСТВА
-async function parseGovernmentDescription(playerInput) {
+export async function parseGovernmentDescription(playerInput) {
   const nation     = GAME_STATE.nations[GAME_STATE.player_nation];
   const gov        = nation.government;
   const charsSummary = (nation.characters ?? [])
@@ -1930,7 +1935,7 @@ async function parseGovernmentDescription(playerInput) {
 }
 
 // 2. РЕАКЦИЯ ПЕРСОНАЖЕЙ НА СМЕНУ ФОРМЫ ПРАВЛЕНИЯ
-async function getGovernmentChangeReactions(fromType, toType) {
+export async function getGovernmentChangeReactions(fromType, toType) {
   const nation     = GAME_STATE.nations[GAME_STATE.player_nation];
   const characters = (nation.characters ?? []).filter(c => c.alive);
   if (!characters.length) return [];
@@ -1972,7 +1977,7 @@ async function getGovernmentChangeReactions(fromType, toType) {
 
 // 3. ГОЛОСОВАНИЕ В КОЛЛЕГИАЛЬНОМ ОРГАНЕ (Claude пишет речи)
 //    proposal: { text, law_type, faction_modifiers, threshold }
-async function simulateInstitutionVote(proposalText, institutionId, calculatedEffects, proposal = {}) {
+export async function simulateInstitutionVote(proposalText, institutionId, calculatedEffects, proposal = {}) {
   const nation = GAME_STATE.nations[GAME_STATE.player_nation];
   const gov    = nation.government;
   const inst   = (gov.institutions ?? []).find(i => i.id === institutionId);
@@ -2041,7 +2046,7 @@ async function simulateInstitutionVote(proposalText, institutionId, calculatedEf
 // Генерирует динамические речи сенаторов для дебатного зала.
 // speakers — массив материализованных сенаторов из SenateManager.getMaterialized()
 // Возвращает: { opening_cry, speaker_lines[], radicalism, dramatic_event } или null при ошибке
-async function generateSenateDebateViaLLM(law, speakers, playerSpeech, senateCtx) {
+export async function generateSenateDebateViaLLM(law, speakers, playerSpeech, senateCtx) {
   if (!CONFIG.API_KEY || !speakers.length) return null;
   try {
     const { system, user } = PROMPTS.senateDebate(law, speakers, playerSpeech, senateCtx ?? {});
@@ -2063,7 +2068,7 @@ async function generateSenateDebateViaLLM(law, speakers, playerSpeech, senateCtx
 // После принятия закона — анализирует текст и возвращает список
 // конкретных изменений игровой механики.
 // Возвращает: { changes[], narrative } или null при ошибке
-async function analyzeLawEffectsViaLLM(law, nationId) {
+export async function analyzeLawEffectsViaLLM(law, nationId) {
   if (!CONFIG.GROQ_API_KEY && !CONFIG.API_KEY) return null;
   try {
     const nation = GAME_STATE.nations[nationId];
@@ -2081,7 +2086,7 @@ async function analyzeLawEffectsViaLLM(law, nationId) {
 
 // Применяет массив изменений из analyzeLawEffectsViaLLM к GAME_STATE.
 // Безопасно: только допустимые пути, с проверкой типов и диапазонов.
-function applyLawGameChanges(changes, nationId) {
+export function applyLawGameChanges(changes, nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation || !Array.isArray(changes)) return [];
 
@@ -2188,3 +2193,28 @@ function applyLawGameChanges(changes, nationId) {
 
   return applied;
 }
+
+window.extractJSON = extractJSON;
+window.callClaude = callClaude;
+window.parsePlayerCommand = parsePlayerCommand;
+window.getCharacterReactions = getCharacterReactions;
+window.calculatePersonalImpact = calculatePersonalImpact;
+window.getAINationDecision = getAINationDecision;
+window.getAIBatchDecisions = getAIBatchDecisions;
+window.getAISingleDecision = getAISingleDecision;
+window.getAIWarDecision = getAIWarDecision;
+window.buildAvailableActions = buildAvailableActions;
+window.generateCharactersForNation = generateCharactersForNation;
+window.generateNewCharacter = generateNewCharacter;
+window.getRoleLabel = getRoleLabel;
+window.generateSenatorObituaryViaLLM = generateSenatorObituaryViaLLM;
+window.generateConstitutionalChronicleViaLLM = generateConstitutionalChronicleViaLLM;
+window.generateConspiracyManifestViaLLM = generateConspiracyManifestViaLLM;
+window.generateBloodFeudDialogueViaLLM = generateBloodFeudDialogueViaLLM;
+window.materializeSenatorViaLLM = materializeSenatorViaLLM;
+window.parseGovernmentDescription = parseGovernmentDescription;
+window.getGovernmentChangeReactions = getGovernmentChangeReactions;
+window.simulateInstitutionVote = simulateInstitutionVote;
+window.generateSenateDebateViaLLM = generateSenateDebateViaLLM;
+window.analyzeLawEffectsViaLLM = analyzeLawEffectsViaLLM;
+window.applyLawGameChanges = applyLawGameChanges;

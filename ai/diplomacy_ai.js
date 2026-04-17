@@ -2,7 +2,12 @@
 // Claude отвечает от имени лидера иностранной нации в переговорах
 // Использует мультитёрн API (messages[]) с MODEL_SONNET для высокого качества ответов
 
-'use strict';
+import { CONFIG } from '../config.js';
+import { DiplomacyEngine, TREATY_TYPES } from '../engine/diplomacy.js';
+import { WarScoreEngine } from '../engine/war_score.js';
+import { getDialogueContext, getDecisionContext, getHandoffContext } from '../engine/memory.js';
+import { getDialogueModel } from '../engine/diplomacy_range.js';
+import { SuperOU } from '../engine/super_ou.js';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // СИСТЕМНЫЙ ПРОМПТ ЛИДЕРА
@@ -170,7 +175,7 @@ preferential_goods: товары с преимущественным право�
  * @param {Array<{role: 'user'|'assistant', content: string}>} messages — история диалога
  * @returns {Promise<string>} — текст ответа AI-лидера
  */
-async function callDiplomacyAI(aiNationId, playerNationId, messages, model) {
+export async function callDiplomacyAI(aiNationId, playerNationId, messages, model) {
   if (!messages || messages.length === 0) throw new Error('Пустая история диалога');
 
   // Если модель не передана — берём из тира, иначе Sonnet по умолчанию
@@ -249,7 +254,7 @@ async function callDiplomacyAI(aiNationId, playerNationId, messages, model) {
  * @param {string} responseText
  * @returns {{ agreed: boolean, treaty_type?: string, conditions?: object, reason?: string }|null}
  */
-function parseDiplomacyTreaty(responseText) {
+export function parseDiplomacyTreaty(responseText) {
   if (!responseText) return null;
 
   // Ищем ```json ... ``` блок
@@ -292,7 +297,7 @@ function parseDiplomacyTreaty(responseText) {
  * @param {string} text
  * @returns {string}
  */
-function stripDiplomacyJSON(text) {
+export function stripDiplomacyJSON(text) {
   return text.replace(/```(?:json)?\s*[\s\S]*?```/g, '').trim();
 }
 
@@ -304,7 +309,7 @@ function stripDiplomacyJSON(text) {
  * Просит AI составить официальный текст договора на основе переговоров.
  * @returns {Promise<string>} — полный текст договора
  */
-async function callTreatyDraftAI(aiNationId, playerNationId, chatHistory, treatyType, conditions) {
+export async function callTreatyDraftAI(aiNationId, playerNationId, chatHistory, treatyType, conditions) {
   if (!CONFIG.API_KEY) throw new Error('API ключ не установлен');
 
   const aiNation     = GAME_STATE.nations[aiNationId];
@@ -379,7 +384,7 @@ ${chatSummary}
  * Просит AI внести правки в существующий черновик договора.
  * @returns {Promise<{draftText: string, comment: string}>}
  */
-async function callTreatyRevisionAI(aiNationId, playerNationId, currentDraft, editHistory, treatyType) {
+export async function callTreatyRevisionAI(aiNationId, playerNationId, currentDraft, editHistory, treatyType) {
   if (!CONFIG.API_KEY) throw new Error('API ключ не установлен');
 
   const aiNation     = GAME_STATE.nations[aiNationId];
@@ -446,3 +451,9 @@ ${currentDraft}
   // Если разделитель не найден — вернуть оригинал с комментарием
   return { draftText: currentDraft, comment: raw.slice(0, 300).trim() };
 }
+
+window.callDiplomacyAI = callDiplomacyAI;
+window.parseDiplomacyTreaty = parseDiplomacyTreaty;
+window.stripDiplomacyJSON = stripDiplomacyJSON;
+window.callTreatyDraftAI = callTreatyDraftAI;
+window.callTreatyRevisionAI = callTreatyRevisionAI;

@@ -9,8 +9,6 @@
 // Работает за ~0 мс, полностью offline, детерминировано.
 // ══════════════════════════════════════════════════════════════════════
 
-'use strict';
-
 // ── Веса факторов (настройка баланса) ────────────────────────────────
 
 const UAI_W = {
@@ -85,7 +83,7 @@ function _phrase(key) {
  * @param {object} order — активный приказ (или фиктивный с target_id)
  * @returns {{ action, target_id, reasoning, score }}
  */
-function utilityAIDecide(army, order) {
+export function utilityAIDecide(army, order) {
   const char       = typeof getArmyCommander === 'function' ? getArmyCommander(army) : null;
   const mods       = _personalityMods(char);
   const readiness  = _calcReadiness(army);
@@ -1278,3 +1276,5 @@ function _bfsDistanceGlobal(fromId, toId) {
   }
   return null;
 }
+
+window.utilityAIDecide = utilityAIDecide;

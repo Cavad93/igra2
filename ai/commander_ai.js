@@ -9,19 +9,17 @@
 //   → utilityAIDecide(army, order)
 // ══════════════════════════════════════════════════════════════════════
 
-'use strict';
+import { utilityAIDecide } from './utility_ai.js';
 
 // ─────────────────────────────────────────────────────────────────────
 // ГЛАВНАЯ ФУНКЦИЯ
 // Возвращает решение немедленно через Utility AI.
 // ─────────────────────────────────────────────────────────────────────
-function getCommanderDecisionNow(army, order) {
-  if (typeof utilityAIDecide === 'function') {
-    try {
-      return utilityAIDecide(army, order);
-    } catch (e) {
-      console.warn('[commander_ai] utilityAIDecide error:', e.message);
-    }
+export function getCommanderDecisionNow(army, order) {
+  try {
+    return utilityAIDecide(army, order);
+  } catch (e) {
+    console.warn('[commander_ai] utilityAIDecide error:', e.message);
   }
   return _heuristicDecision(army, order);
 }
@@ -111,3 +109,5 @@ function _nearestFriendlyRegion(army) {
   }
   return null;
 }
+
+window.getCommanderDecisionNow = getCommanderDecisionNow;

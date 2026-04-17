@@ -12,6 +12,8 @@
  *   5. _buildFallbackPlan(nation, ou)   — локальный план без LLM
  */
 
+import { CONFIG } from '../config.js';
+
 // ─── НАСТРОЙКИ ────────────────────────────────────────────────────────────────
 
 const STRATEGIC_CONFIG = {
