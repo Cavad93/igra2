@@ -495,9 +495,16 @@ main-thread save-work, оставшийся после S7. Снижаем час
 > - 1 ресурсная единица = 1 кг — визуал не влияет на экономику.
 > - Публичное API (`resolveBattle` в armies.js, `window.TacticalBattle.*`)
 >   не ломать, только надстраивать UI-слой.
-> - Ассеты (`assets/battle/*`, `*.jpg`, `*.png`) — в [.gitignore](.gitignore)
->   по правилам проекта; коммитим только placeholder'ы/каркас, большие
->   текстуры и сгенерированные спрайты — наружу (CDN или локально на диск).
+> - Ассеты разделены по размеру:
+>   - **SVG-иконки** юнитов и объектов (`assets/battle/units/*.svg`,
+>     `assets/battle/objects/*.svg`) — **в git**, маленькие (~1-5 KB),
+>     CC-BY 3.0 атрибуция в [assets/battle/README.md](../assets/battle/README.md).
+>   - **Terrain тайлы** (`assets/battle/terrain/*.png/*.jpg`) — **НЕ в git**
+>     (gitignored), скачиваются через [assets/battle/download_battle_assets.sh](../assets/battle/download_battle_assets.sh).
+>   - **Платные паки** (`assets/battle/raw/**`) — **НЕ в git**, пользователь
+>     вручную распаковывает после покупки.
+>   - **Референс-скрины** (`docs/battle_ui/refs/*.png/*.gif`) — **НЕ в git**
+>     (копирайт YouTube), пользователь собирает вручную.
 
 ## Формат сессии (Track B)
 
@@ -521,28 +528,63 @@ main-thread save-work, оставшийся после S7. Снижаем час
 текстуры/спрайты единообразно. Без этого каждая сессия начнёт рисовать
 что-то своё.
 
-**Файлы:** новый `docs/battle_ui/brief.md`, `docs/battle_ui/refs/` (5–10
-скринов с History Flywheel, Ultimate General, Kings & Generals, Cossacks
-3), новый `scripts/gen_unit_sprites.mjs`, `scripts/gen_terrain_tiles.mjs`.
+**Уже готово в репозитории (пре-сессия, см. коммит от 2026-04-18):**
+- [assets/battle/](../assets/battle/) — структура + атрибуции (CC-BY 3.0).
+- [assets/battle/units/](../assets/battle/units/) — **15 CC-BY SVG-иконок**
+  (hoplite, phalangite, archer, slinger, heavy_cavalry, light_cavalry,
+  light_infantry, melee_generic, cavalry_melee, mounted, war_elephant,
+  artillery_siege, naval_trireme, naval_galley, general_standard).
+- [assets/battle/objects/](../assets/battle/objects/) — **7 CC-BY SVG**
+  (camp_tent, fortification, watchtower, palisade_wood, bridge_stone,
+  victory_marker, siege_horse).
+- [assets/battle/download_battle_assets.sh](../assets/battle/download_battle_assets.sh)
+  — идемпотентный фетч (game-icons.net + Wikimedia PD + OpenGameArt).
+- [assets/battle/README.md](../assets/battle/README.md) — полная
+  атрибуция авторов (Lorc + Delapouite) + ссылки на платные паки.
+
+**Файлы (в рамках самой сессии):** новый `docs/battle_ui/brief.md`,
+`docs/battle_ui/refs/` (5–10 скринов с History Flywheel, Ultimate General,
+Kings & Generals, Cossacks 3 — собираются вручную, копирайт), новый
+`scripts/gen_terrain_tiles.mjs`, опционально
+`scripts/convert_paid_packs.mjs` если пользователь купил платные паки.
 
 **Шаги:**
-1. Собрать 10 референсных кадров, подписать в `brief.md`: какой слой
-   (terrain / units / fortifications / labels / vignette) мы забираем.
-2. Написать каталог видов юнитов античности: `hoplite, phalangite, peltast,
-   archer, slinger, light_cavalry, heavy_cavalry, cataphract, elephant,
-   ballista, general_standard` (11 штук покроют Сиракузы+соседей).
-3. Каталог биомов: `grassland, forest, hills, mountain, coast, desert,
-   river, road_dirt, road_paved, bridge, palisade_wood, wall_stone`.
-4. `scripts/gen_unit_sprites.mjs` — CLI, который через OpenAI DALL·E 3
-   (или через Claude Sonnet + Stable Diffusion HTTP) генерирует PNG 64×96
-   на прозрачном фоне по заданному списку. Сохраняет в
-   `assets/battle/units/<id>_template.png` (один PNG на тип — цвет
-   накладывается tint'ом в Pixi).
-5. `scripts/gen_terrain_tiles.mjs` — то же для биомов, 256×256 seamless.
+1. Запустить `bash assets/battle/download_battle_assets.sh` — идемпотентно
+   добивает недостающие ассеты (если Wikimedia/OpenGameArt доступны из CI,
+   скачает и terrain-тайлы; иначе пропустит с FAIL).
+2. Собрать 8–10 референсных кадров вручную в `docs/battle_ui/refs/`
+   (battlemaps.eu, K&G YouTube — скрины не автоматизируем, авторское).
+   Подписать в `brief.md`: какой слой (terrain/units/fortifications/
+   labels/vignette) мы забираем. **Источники:**
+   - [battlemaps.eu — Gaugamela](https://www.battlemaps.eu/battles/gaugamela.html)
+   - [battlemaps.eu — Cannae](http://www.battlemaps.eu/battles/cannae.html)
+   - [Wikimedia Commons — Battle of Cannae maps](https://commons.wikimedia.org/wiki/Category:Maps_of_the_Battle_of_Cannae)
+   - [American Battlefield Trust — Animated Maps](https://www.battlefields.org/learn/maps/animated-battle-maps)
+3. **Каталог юнитов уже реализован** как файлы в `assets/battle/units/*.svg`
+   (15 базовых типов). При необходимости расширить — добавить строчку в
+   `ICONS=(...)` массиве внутри `download_battle_assets.sh`.
+4. Каталог биомов (для `scripts/gen_terrain_tiles.mjs` или fetch'а):
+   `grassland, forest, hills, mountain, coast, desert, river, road_dirt,
+   road_paved, bridge, palisade_wood, wall_stone` — 256×256 seamless.
+5. `scripts/gen_terrain_tiles.mjs` — CLI (опционально): через Stable
+   Diffusion HTTP или готовые CC0-тайлы с OpenGameArt генерирует/качает
+   PNG в `assets/battle/terrain/<biome>.png` (уже в .gitignore, не
+   коммитим).
+6. Если куплены платные паки ([Legendary War Symbols €5](https://cartographyassets.com/assets/101939/legendary-war-symbols-pack-king-generals-like-map/),
+   [Old Cartography Megapack €9.50](https://cartographyassets.com/assets/56529/)) —
+   распаковать ZIP в `assets/battle/raw/` (gitignored), написать
+   `scripts/convert_paid_packs.mjs` для маппинга `raw/*.png → units/<id>.png`
+   (заменяет SVG-плейсхолдеры на production-ассеты).
 
-**Верификация:** `node scripts/gen_unit_sprites.mjs --dry-run` печатает
-список промптов без вызова API; каталоги юнитов/биомов согласованы с
-текущими данными в [data/army_profiles.js](data/army_profiles.js).
+**Верификация:**
+- `bash assets/battle/download_battle_assets.sh` → в первом прогоне OK≥0,
+  при повторном SKIP=22 (все уже на диске), FAIL=0 на локальных ресурсах.
+- Просмотр [assets/battle/README.md](../assets/battle/README.md) — все
+  22 файла упомянуты в атрибуции (CC-BY 3.0 compliance).
+- Типы юнитов в `assets/battle/units/*.svg` согласованы с категориями в
+  [data/army_profiles.js](data/army_profiles.js) (hoplite/phalangite/
+  archer/slinger/light_cavalry/heavy_cavalry/war_elephant покрывают
+  Syracuse+Carthage+Ptolemaic roster).
 
 ## B-2 — Terrain layer (painted подложка)
 
@@ -550,14 +592,19 @@ main-thread save-work, оставшийся после S7. Снижаем час
 многослойную painted-подложку с виньеткой.
 
 **Файлы:** [ui/battle_map_pixi.js](ui/battle_map_pixi.js) (новый слой
-`terrainLayer`), новый `ui/battle/terrain_renderer.js`, assets из B-1.
+`terrainLayer`), новый `ui/battle/terrain_renderer.js`, тайлы из
+`assets/battle/terrain/*.png` (фетчатся `download_battle_assets.sh`,
+не в git).
 
 **Шаги:**
 1. В Pixi Application создать 4 именованных контейнера:
    `terrain`, `objects`, `units`, `effects`. Сейчас всё в одном root.
 2. `TerrainRenderer` берёт биомную карту из
    [data/map.js](data/map.js) MAP_REGIONS для конкретного региона боя,
-   мозаично стелет seamless-тайлы.
+   мозаично стелет seamless-тайлы из `assets/battle/terrain/<biome>.png`
+   (grassland, forest, hills, coast, desert). Fallback — плейсхолдер
+   из `nation.color` если тайл отсутствует (graceful degradation при
+   первом запуске до `download_battle_assets.sh`).
 3. Поверх — overlay реки/дороги (SVG path, сгенерированный из geojson
    [data/world_bc300.geojson](data/world_bc300.geojson) или из
    [data/pleiades_300bc.json](data/pleiades_300bc.json)).
@@ -581,10 +628,23 @@ main-thread save-work, оставшийся после S7. Снижаем час
 **Шаги:**
 1. `UnitSpriteFactory.create({ type, nationId, role })` возвращает
    Pixi.Container:
-   - base PNG (64×96, `assets/battle/units/<type>_template.png`)
-   - tint через `sprite.tint = Number('0x' + nation.color.slice(1))`
-   - иконка рода войск (центр)
-   - officer-маркер (звёздочка/крест сверху) если `role === 'general'`
+   - base плашка 64×96 (Pixi.Graphics + rounded rect, цвет =
+     `nation.color`), поверх — иконка рода войск из
+     [assets/battle/units/](../assets/battle/units/) (SVG загружается
+     через `PIXI.Assets.load('assets/battle/units/hoplite.svg')`). Маппинг
+     `type → svg`:
+     - infantry_heavy → `hoplite.svg` или `phalangite.svg` (по culture)
+     - infantry_light → `light_infantry.svg`
+     - archer → `archer.svg`
+     - slinger → `slinger.svg`
+     - cavalry_light → `light_cavalry.svg`
+     - cavalry_heavy → `heavy_cavalry.svg`
+     - elephant → `war_elephant.svg`
+     - artillery → `artillery_siege.svg`
+     - naval → `naval_trireme.svg` | `naval_galley.svg`
+     - (role === 'general') → оверлей [general_standard.svg](../assets/battle/units/general_standard.svg)
+   - tint иконки через `sprite.tint = Number('0x' + nation.color.slice(1))` —
+     SVG с белым заливом (`ffffff`) идеально тинтится.
    - `DropShadowFilter({ distance: 4, blur: 2, alpha: 0.45, angle: 135 })`
 2. Кэшировать скомпонованные контейнеры через `RenderTexture` — чтобы
    не строить фильтр каждый кадр. Ключ кэша:
@@ -660,15 +720,24 @@ Chromium headless с 30 юнитами на экране.
 `battlefield.objects[]`.
 
 **Шаги:**
-1. Каталог объектов: `palisade_wood, wall_stone, tower, camp_tent,
-   bridge, road_dirt, road_paved, earthwork, watchtower`.
+1. Каталог объектов уже в [assets/battle/objects/](../assets/battle/objects/):
+   - [palisade_wood.svg](../assets/battle/objects/palisade_wood.svg)
+   - [fortification.svg](../assets/battle/objects/fortification.svg) (замок/стены)
+   - [watchtower.svg](../assets/battle/objects/watchtower.svg)
+   - [camp_tent.svg](../assets/battle/objects/camp_tent.svg)
+   - [bridge_stone.svg](../assets/battle/objects/bridge_stone.svg)
+   - [victory_marker.svg](../assets/battle/objects/victory_marker.svg) (лавровый трофей)
+   - [siege_horse.svg](../assets/battle/objects/siege_horse.svg) (троянский конь — для спец.сценариев)
 2. `ObjectsRenderer` расставляет их по данным региона:
-   - `region.fortification_level` >= 1 → `palisade_wood` по периметру
-   - `>= 2` → `wall_stone`, сторожевые башни по углам
-   - `region.has_road` → `road_dirt` от одного края до другого
-   - `region.is_river_crossing` → `bridge`
-3. Лагерь атакующего/обороняющегося: 3–5 `camp_tent` + штандарт в
-   центре, в тылу строя.
+   - `region.fortification_level` >= 1 → `palisade_wood.svg` по периметру
+   - `>= 2` → `fortification.svg` + `watchtower.svg` по углам
+   - `region.has_road` → road (генерится линией Pixi.Graphics, не из SVG)
+   - `region.is_river_crossing` → `bridge_stone.svg`
+3. Лагерь атакующего/обороняющегося: 3–5 `camp_tent.svg` + штандарт
+   ([general_standard.svg](../assets/battle/units/general_standard.svg))
+   в центре, в тылу строя.
+4. Tint через `nation.color` — все SVG с белой заливкой поддерживают
+   `sprite.tint`.
 
 **Верификация:** [docs/battle_ui/session-B6.png] — полевой бой около
 укреплённого города показывает стены + ворота + частокол + лагерь

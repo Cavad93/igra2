@@ -17,6 +17,21 @@ assets/portraits/**/*.jpg
 assets/textures/*.jpg
 assets/backgrounds/*.jpg
 
+# Тактическая битва (Track B): terrain-тайлы и raw-паки — через
+# assets/battle/download_battle_assets.sh. SVG-иконки в units/ и objects/
+# коммитим как обычный код (маленькие, CC-BY 3.0, атрибуция в README).
+assets/battle/terrain/*.jpg
+assets/battle/terrain/*.jpeg
+assets/battle/terrain/*.png
+assets/battle/terrain/*.webp
+assets/battle/raw/**
+docs/battle_ui/refs/*.jpg
+docs/battle_ui/refs/*.jpeg
+docs/battle_ui/refs/*.png
+docs/battle_ui/refs/*.gif
+docs/battle_ui/refs/*.webp
+docs/battle_ui/refs/*.mp4
+
 # Локальные AI модели (большие файлы, не коммитить)
 models/
 *.gguf
