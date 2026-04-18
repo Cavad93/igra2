@@ -105,6 +105,41 @@ export function _getEffectiveWorkers(slot, bDef, nation) {
 }
 
 // ──────────────────────────────────────────────────────────────
+// Session 24 (perf): per-tick memo агрегаций building-производства.
+// `_getRegionalBuildingProduction(nationId)` и `calculateAllBuildingProduction(nationId)`
+// вызываются в runEconomyTick по очереди в шагах 1b и 1c: обе обходят
+// ВСЕ регионы нации + ВСЕ активные слоты. Хотя `_calcSlotBaseOutput`
+// закеширован после S13, внешние циклы по 737 активным нациям × ~5
+// регионов × ~3 слота = ~10k обходов × 2 прохода.
+//
+// Решение: единая per-tick карта `{nation → {region → {good → amount}}}`.
+// calculateAllBuildingProduction выводит total-сумму из неё без повторного
+// обхода. Инвалидация — раз-за-тик бампом `_bumpRegionalProdCacheTick()`
+// из runEconomyTick (до шага 1).
+// ──────────────────────────────────────────────────────────────
+let _regionalProdCacheTick = 1;
+const _REGIONAL_PROD_CACHE = new Map(); // nationId → { t, byRegion }
+const _ALL_BLD_PROD_CACHE  = new Map(); // nationId → { t, totals }
+
+export function _bumpRegionalProdCacheTick() {
+  _regionalProdCacheTick = (_regionalProdCacheTick + 1) | 0;
+  if (_regionalProdCacheTick === 0) _regionalProdCacheTick = 1;
+}
+
+export function _getRegionalProdCacheTick() {
+  return _regionalProdCacheTick;
+}
+
+export function _cacheRegionalBuildingProduction(nationId, byRegion) {
+  _REGIONAL_PROD_CACHE.set(nationId, { t: _regionalProdCacheTick, byRegion });
+}
+
+export function _getCachedRegionalBuildingProduction(nationId) {
+  const hit = _REGIONAL_PROD_CACHE.get(nationId);
+  return (hit && hit.t === _regionalProdCacheTick) ? hit.byRegion : null;
+}
+
+// ──────────────────────────────────────────────────────────────
 // Session 13 (perf): intra-tick memoization of `_calcSlotBaseOutput`.
 // В пределах одного processTurn() функция вызывается на каждый активный
 // слот ~5 раз:
@@ -428,24 +463,50 @@ export function recomputeAllProductionCosts(nationId) {
 // ──────────────────────────────────────────────────────────────
 
 export function calculateAllBuildingProduction(nationId) {
+  // Session 24: per-tick cache totals (вычисляются один раз из byRegion).
+  const allHit = _ALL_BLD_PROD_CACHE.get(nationId);
+  if (allHit && allHit.t === _regionalProdCacheTick) return allHit.totals;
+
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return {};
 
-  const totals = {};
+  // Если byRegion-кэш уже заполнен шагом 1c (или прошлым вызовом в этом
+  // тике) — суммируем готовые значения вместо повторного обхода слотов.
+  const cachedByRegion = _getCachedRegionalBuildingProduction(nationId);
+  if (cachedByRegion) {
+    const totals = {};
+    for (const regionOut of Object.values(cachedByRegion)) {
+      for (const good in regionOut) {
+        totals[good] = (totals[good] || 0) + regionOut[good];
+      }
+    }
+    _ALL_BLD_PROD_CACHE.set(nationId, { t: _regionalProdCacheTick, totals });
+    return totals;
+  }
+
+  // Кэш пуст — считаем byRegion и totals одним обходом.
+  const byRegion = {};
+  const totals   = {};
 
   for (const rid of nation.regions) {
     const region = GAME_STATE.regions[rid];
     if (!region?.building_slots?.length) continue;
 
+    const regionOut = {};
     for (const slot of region.building_slots) {
       if (slot.status !== 'active') continue;
       const out = getBuildingOutput(slot, region, nation);
-      for (const [good, amount] of Object.entries(out)) {
-        totals[good] = (totals[good] || 0) + amount;
+      for (const good in out) {
+        const amt = out[good];
+        regionOut[good] = (regionOut[good] || 0) + amt;
+        totals[good]    = (totals[good]    || 0) + amt;
       }
     }
+    if (Object.keys(regionOut).length > 0) byRegion[rid] = regionOut;
   }
 
+  _cacheRegionalBuildingProduction(nationId, byRegion);
+  _ALL_BLD_PROD_CACHE.set(nationId, { t: _regionalProdCacheTick, totals });
   return totals;
 }
 

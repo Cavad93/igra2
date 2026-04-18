@@ -204,8 +204,24 @@ export function _isStubNation(nation, nationId) {
 // Для AI-наций применяется только схема B (у них нет building_slots).
 // ──────────────────────────────────────────────────────────────
 
+// Session 24 (perf): пре-вычисленные Object.entries() по терренам.
+// REGION_PRODUCTION_BASE статичен, но иначе Object.entries перевыделялся
+// на каждый регион каждой нации каждый тик (~10k новых массивов/тик).
+// Lazy-заполнение: первый обход регионов терраина заполняет cache.
+const _REGION_PROD_ENTRIES_CACHE = new Map(); // terrain → Array<[good, spec]>
+function _getRegionProdEntries(terrain) {
+  let e = _REGION_PROD_ENTRIES_CACHE.get(terrain);
+  if (e !== undefined) return e;
+  const tbl = REGION_PRODUCTION_BASE[terrain];
+  e = tbl ? Object.entries(tbl) : [];
+  _REGION_PROD_ENTRIES_CACHE.set(terrain, e);
+  return e;
+}
+
 export function calculateProduction(stubSet) {
   const produced = {};  // { nation: { good: amount } }
+  // Session 24: SUBSISTENCE_FACTOR — константа, вынесена из внутреннего цикла.
+  const SUBSISTENCE_FACTOR = 0.65;
 
   for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
     // Session 3 (perf): пропускаем stub-нации целиком — у них нет
@@ -215,21 +231,30 @@ export function calculateProduction(stubSet) {
       produced[nationId] = {};
       continue;
     }
-    produced[nationId] = {};
+    const nationProd = produced[nationId] = {};
     const bldBonuses = getBuildingBonuses(nationId);
 
     // ── A) Производство из зданий (только для наций с building_slots) ──────
     if (typeof calculateAllBuildingProduction === 'function') {
       const bldProd = calculateAllBuildingProduction(nationId);
-      for (const [good, amount] of Object.entries(bldProd)) {
-        produced[nationId][good] = (produced[nationId][good] || 0) + amount;
+      for (const good in bldProd) {
+        nationProd[good] = (nationProd[good] || 0) + bldProd[good];
       }
     }
 
     // ── B) Неорганизованное производство ────────────────────────────────────
-    // Рабочие, не занятые в зданиях, работают на себя с пониженной отдачей.
-    // SUBSISTENCE_FACTOR = 0.65: неорганизованные менее эффективны, чем здания.
-    const SUBSISTENCE_FACTOR = 0.65;
+    // Session 24 (perf): ВЫНЕСЕННЫЕ нация-уровневые инварианты (раньше
+    // читались на каждой итерации per-good). Все stub-нации сюда не
+    // доходят; нации без регионов проходят пустой цикл ниже.
+    const nationPop    = nation.population.total;
+    const byProf       = nation.population.by_profession || {};
+    const classMod     = nation.population._production_mod ?? 1;
+    const laborMod     = nation.demographics?.labor_productivity_mod ?? 1.0;
+    const bldMult      = bldBonuses.production_mult;
+    // Постоянная нация-уровневая часть множителя (без terrainMult × fertility × spec.rate).
+    const nationConst  = bldMult * classMod * SUBSISTENCE_FACTOR * laborMod;
+
+    if (nationPop <= 0) continue;
 
     for (const regionId of nation.regions) {
       const region  = GAME_STATE.regions[regionId];
@@ -239,37 +264,35 @@ export function calculateProduction(stubSet) {
       const multipliers  = CONFIG.BALANCE.TERRAIN_MULTIPLIERS?.[terrain]
                         || CONFIG.BALANCE.TERRAIN_MULTIPLIERS?.plains || {};
       const fertility    = region.fertility || 0.7;
-      const classMod     = nation.population._production_mod ?? 1;
 
       // Доля региона в общем населении нации
-      const nationPop       = nation.population.total;
-      const regionShareRaw  = nationPop > 0 ? region.population / nationPop : 0;
+      const regionShareRaw  = region.population / nationPop;
 
       // Занятость в зданиях этого региона
       const employment  = region.employment || {};
 
-      const regionProduction = REGION_PRODUCTION_BASE[terrain] || {};
+      // Session 24: cached entries (избегаем Object.entries на каждый регион).
+      const entries = _getRegionProdEntries(terrain);
+      const regionConst = fertility * nationConst;
 
-      for (const [good, spec] of Object.entries(regionProduction)) {
-        const professionPop = nation.population.by_profession[spec.per] || 0;
+      for (let i = 0; i < entries.length; i++) {
+        const good = entries[i][0];
+        const spec = entries[i][1];
+        const professionPop = byProf[spec.per] || 0;
         const localWorkers  = professionPop * regionShareRaw;
 
         // Сколько из local workers уже задействованы в организованных зданиях.
-        // employment[prof] — АКТУАЛЬНОЕ число занятых в зданиях ЭТОГО региона.
-        // Вычитаем напрямую из оценочного localWorkers (без повторного умножения на share).
         const employedOfProf = employment[spec.per] || 0;
 
         // Неорганизованные рабочие = свободные от зданий (min 0)
-        const freeWorkers = Math.max(0, localWorkers - employedOfProf);
+        const freeWorkers = localWorkers - employedOfProf;
+        if (freeWorkers <= 0) continue;
 
         const terrainMult = multipliers[spec.per] || 1.0;
-        const dem      = nation.demographics;
-        const laborMod = dem?.labor_productivity_mod ?? 1.0;
-        const amount = (freeWorkers / 1000) * spec.rate * terrainMult * fertility
-                     * bldBonuses.production_mult * classMod * SUBSISTENCE_FACTOR * laborMod;
+        const amount = (freeWorkers * 0.001) * spec.rate * terrainMult * regionConst;
 
         if (amount > 0) {
-          produced[nationId][good] = (produced[nationId][good] || 0) + amount;
+          nationProd[good] = (nationProd[good] || 0) + amount;
         }
       }
     }
@@ -289,7 +312,17 @@ export function calculateProduction(stubSet) {
 
 // Возвращает производство зданий по регионам: { regionId: { good: amount } }
 // Вызывается только из routeProductionToLocalStockpiles.
+//
+// Session 24 (perf): читает per-tick кэш buildings.js, если он заполнен
+// предшествующим calculateAllBuildingProduction в шаге 1 того же тика.
+// При кэш-хите обход слотов пропускается полностью.
 export function _getRegionalBuildingProduction(nationId) {
+  // Cache-hit: return byRegion прямо из buildings.js module cache.
+  if (typeof _getCachedRegionalBuildingProduction === 'function') {
+    const cached = _getCachedRegionalBuildingProduction(nationId);
+    if (cached) return cached;
+  }
+
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return {};
 
@@ -303,11 +336,17 @@ export function _getRegionalBuildingProduction(nationId) {
       if (slot.status !== 'active') continue;
       if (typeof getBuildingOutput !== 'function') continue;
       const out = getBuildingOutput(slot, region, nation);
-      for (const [good, amt] of Object.entries(out)) {
-        regionOut[good] = (regionOut[good] || 0) + amt;
+      for (const good in out) {
+        regionOut[good] = (regionOut[good] || 0) + out[good];
       }
     }
     if (Object.keys(regionOut).length > 0) result[rid] = regionOut;
+  }
+
+  // Записываем в кэш, чтобы последующие вызовы (например, повторный
+  // routeProductionToLocalStockpiles от другой нации) не дублировали работу.
+  if (typeof _cacheRegionalBuildingProduction === 'function') {
+    _cacheRegionalBuildingProduction(nationId, result);
   }
   return result;
 }
@@ -1113,6 +1152,11 @@ export function runEconomyTick() {
   // и параметры региона остаются стабильными до последнего вызова в шаге 3a,
   // поэтому все 5 обращений к _calcSlotBaseOutput переиспользуют кэш.
   if (typeof _bumpBaseOutputCacheTick === 'function') _bumpBaseOutputCacheTick();
+
+  // Session 24 (perf): бампаем счётчик кэша агрегаций building-производства.
+  // Шаги 1b (calculateAllBuildingProduction) и 1c (_getRegionalBuildingProduction)
+  // переиспользуют один byRegion-map — второй обход слотов исключается.
+  if (typeof _bumpRegionalProdCacheTick === 'function') _bumpRegionalProdCacheTick();
 
   // Session 2 (perf): снимок наций один раз на тик — иначе ниже 17+ обходов
   // Object.keys/entries(GAME_STATE.nations) на 900+ ключах. Ни один шаг ниже

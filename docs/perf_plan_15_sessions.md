@@ -285,6 +285,22 @@ mutations **−5×** по `MutationObserver`. Функциональный ре�
 вероятно 15-25). При zoom ≥ 6 — все регионы видны. Визуально: крупные
 полисы (Сиракузы, Афины, Александрия) не исчезают.
 
+### Session 24 — Per-tick memo building-производства + hoist subsistence-инвариантов   ✅ Выполнено (2026-04-18)
+**Цель:** устранить дублирование обхода building_slots между шагами 1b
+(`calculateAllBuildingProduction`) и 1c (`_getRegionalBuildingProduction`),
+плюс вынос нация-уровневых инвариантов из горячего subsistence-цикла.
+**Файлы:** [engine/buildings.js](engine/buildings.js) (per-tick byRegion/totals
+кэш), [engine/economy.js](engine/economy.js) (read-через-кэш +
+`_REGION_PROD_ENTRIES_CACHE` + hoist, бамп в `runEconomyTick`).
+**Шаги:**
+1. Добавить `_bumpRegionalProdCacheTick`, `_getCachedRegionalBuildingProduction`,
+   `_cacheRegionalBuildingProduction`.
+2. `calculateAllBuildingProduction`: cache-first путь через byRegion-суммирование.
+3. `_getRegionalBuildingProduction`: cache-first путь с fallback на полный обход.
+4. `calculateProduction`: hoist nation-уровня, `nationConst`/`regionConst`,
+   индексированный цикл по закэшированным `Object.entries`.
+**Верификация:** eco audit тесты + perf budget — зелёные; Econ p50 **−5 %**.
+
 ### Session 23 — Агрессивный skip stub-наций (pop<10k + ≤1 регион)   ✅ Выполнено (2026-04-18)
 **Цель:** расширить `_isStubNation` вторичным критерием — «малое племя»
 с населением < 10 000 и ≤ 1 регионом пропускается так же, как нация без
