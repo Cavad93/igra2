@@ -495,16 +495,19 @@ main-thread save-work, оставшийся после S7. Снижаем час
 > - 1 ресурсная единица = 1 кг — визуал не влияет на экономику.
 > - Публичное API (`resolveBattle` в armies.js, `window.TacticalBattle.*`)
 >   не ломать, только надстраивать UI-слой.
+> - **Все ассеты — только CC0 / CC-BY / Public Domain** с разрешённым
+>   коммерческим использованием. Платные, CC-BY-NC, share-alike —
+>   не используем.
 > - Ассеты разделены по размеру:
 >   - **SVG-иконки** юнитов и объектов (`assets/battle/units/*.svg`,
 >     `assets/battle/objects/*.svg`) — **в git**, маленькие (~1-5 KB),
 >     CC-BY 3.0 атрибуция в [assets/battle/README.md](../assets/battle/README.md).
 >   - **Terrain тайлы** (`assets/battle/terrain/*.png/*.jpg`) — **НЕ в git**
->     (gitignored), скачиваются через [assets/battle/download_battle_assets.sh](../assets/battle/download_battle_assets.sh).
->   - **Платные паки** (`assets/battle/raw/**`) — **НЕ в git**, пользователь
->     вручную распаковывает после покупки.
+>     (gitignored), скачиваются через [assets/battle/download_battle_assets.sh](../assets/battle/download_battle_assets.sh)
+>     с CC0-источников (Kenney.nl, OpenGameArt).
 >   - **Референс-скрины** (`docs/battle_ui/refs/*.png/*.gif`) — **НЕ в git**
->     (копирайт YouTube), пользователь собирает вручную.
+>     (копирайт YouTube), пользователь собирает вручную, используются
+>     только как brief, не встраиваются в игру.
 
 ## Формат сессии (Track B)
 
@@ -540,13 +543,13 @@ main-thread save-work, оставшийся после S7. Снижаем час
 - [assets/battle/download_battle_assets.sh](../assets/battle/download_battle_assets.sh)
   — идемпотентный фетч (game-icons.net + Wikimedia PD + OpenGameArt).
 - [assets/battle/README.md](../assets/battle/README.md) — полная
-  атрибуция авторов (Lorc + Delapouite) + ссылки на платные паки.
+  атрибуция авторов (Lorc + Delapouite) + политика «только CC0/CC-BY/PD».
 
 **Файлы (в рамках самой сессии):** новый `docs/battle_ui/brief.md`,
 `docs/battle_ui/refs/` (5–10 скринов с History Flywheel, Ultimate General,
 Kings & Generals, Cossacks 3 — собираются вручную, копирайт), новый
-`scripts/gen_terrain_tiles.mjs`, опционально
-`scripts/convert_paid_packs.mjs` если пользователь купил платные паки.
+`scripts/gen_terrain_tiles.mjs` (опциональный wrapper над
+`download_battle_assets.sh` для расширения каталога биомов).
 
 **Шаги:**
 1. Запустить `bash assets/battle/download_battle_assets.sh` — идемпотентно
@@ -566,15 +569,15 @@ Kings & Generals, Cossacks 3 — собираются вручную, копир
 4. Каталог биомов (для `scripts/gen_terrain_tiles.mjs` или fetch'а):
    `grassland, forest, hills, mountain, coast, desert, river, road_dirt,
    road_paved, bridge, palisade_wood, wall_stone` — 256×256 seamless.
-5. `scripts/gen_terrain_tiles.mjs` — CLI (опционально): через Stable
-   Diffusion HTTP или готовые CC0-тайлы с OpenGameArt генерирует/качает
-   PNG в `assets/battle/terrain/<biome>.png` (уже в .gitignore, не
-   коммитим).
-6. Если куплены платные паки ([Legendary War Symbols €5](https://cartographyassets.com/assets/101939/legendary-war-symbols-pack-king-generals-like-map/),
-   [Old Cartography Megapack €9.50](https://cartographyassets.com/assets/56529/)) —
-   распаковать ZIP в `assets/battle/raw/` (gitignored), написать
-   `scripts/convert_paid_packs.mjs` для маппинга `raw/*.png → units/<id>.png`
-   (заменяет SVG-плейсхолдеры на production-ассеты).
+5. `scripts/gen_terrain_tiles.mjs` — CLI (опционально): качает
+   **CC0-тайлы с Kenney.nl** или OpenGameArt (фильтр: CC0 / CC-BY) в
+   `assets/battle/terrain/<biome>.png` (уже в .gitignore, не коммитим).
+   CC0 предпочтительнее — без требования атрибуции.
+
+**Политика ассетов:** **только CC0 / CC-BY / Public Domain** с
+разрешённым коммерческим использованием. Платные паки и ассеты с
+CC-BY-NC / SA / проприетарными лицензиями в проекте **не используем**.
+Подробности — в [assets/battle/README.md](../assets/battle/README.md).
 
 **Верификация:**
 - `bash assets/battle/download_battle_assets.sh` → в первом прогоне OK≥0,

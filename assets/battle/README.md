@@ -61,6 +61,8 @@ assets/battle/
 
 Full license: https://creativecommons.org/licenses/by/3.0/
 
+**Коммерческое использование разрешено** CC-BY 3.0 при соблюдении атрибуции.
+
 ## Terrain-текстуры (НЕ в git)
 
 Для painted-подложки (Session B-2) нужны seamless-тайлы биомов +
@@ -68,32 +70,28 @@ Full license: https://creativecommons.org/licenses/by/3.0/
 git (правило из [CLAUDE.md](../../CLAUDE.md): `assets/textures/*.jpg`
 уже в [.gitignore](../../.gitignore) с момента Шага 54).
 
-**Источники для `terrain/`:**
+**Источники для `terrain/` (все свободные, commercial-friendly):**
 
-1. **[Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:Maps_of_the_Battle_of_Cannae)** — public domain исторические карты (Cannae, Gaugamela, Zama) как референсы и фоны.
-2. **[OpenGameArt — Terrain tiles](https://opengameart.org/art-search?keys=terrain+grass+seamless)** — CC0 / CC-BY seamless-тайлы.
-3. **[Kenney.nl — Environment packs](https://kenney.nl/assets?q=environment)** — CC0 готовые наборы.
-4. **[Stamen Watercolor tiles](https://maps.stamen.com/)** — CC-BY 3.0, живописный стиль.
+1. **[Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:Maps_of_the_Battle_of_Cannae)** — Public Domain исторические карты (Cannae, Gaugamela, Zama) как референсы и фоны. PD = commercial OK без ограничений.
+2. **[OpenGameArt — Terrain tiles](https://opengameart.org/art-search?keys=terrain+grass+seamless)** — фильтровать по CC0 / CC-BY для коммерческого использования.
+3. **[Kenney.nl — Environment packs](https://kenney.nl/assets?q=environment)** — **CC0** готовые наборы (public domain, коммерческое без ограничений, без требования атрибуции).
+4. **[Stamen Watercolor tiles](https://maps.stamen.com/)** — CC-BY 3.0, живописный стиль (commercial OK при атрибуции).
 
 **Скачать все доступные:** `bash assets/battle/download_battle_assets.sh`.
 
-## Платные паки (для production-качества, user buys then drops in)
+## Политика репозитория: только свободные ассеты
 
-Если нужен полный production-уровень (не MVP на иконках), купить и
-распаковать в `assets/battle/raw/` (тоже gitignored):
+Все коммитимые ассеты **исключительно CC0 / CC-BY / Public Domain** с
+разрешённым коммерческим использованием. Платные паки и assets с
+некоммерческими лицензиями (CC-BY-NC, проприетарные) **не используются**.
 
-1. **[Legendary War Symbols Pack — €5](https://cartographyassets.com/assets/101939/legendary-war-symbols-pack-king-generals-like-map/)** — **буквально заявлен «K&G-like»**. Ancient / Classical / Medieval / Gunpowder + kings, generals, command hierarchy.
-2. **[Old Cartography Battlefield Units Megapack — €9.50](https://cartographyassets.com/assets/56529/old-cartography-battlefield-units-and-war-assets-megapack-medieval-units-napoleonic-symbols-nato-symbols-battalions-towns-trajectory-arrows-corpses-etc-commercial-use-allowed-copy/)** — **649 ассетов**, commercial use allowed. Включает лагеря, крепости, трупы, руины — покрывает `objects/`.
-
-После покупки:
-```
-mkdir -p assets/battle/raw/
-# Распаковать ZIP'ы туда, структура произвольная
-# Конвертация в используемые спрайты — через scripts/convert_paid_packs.mjs (создаётся в B-1)
-```
+При добавлении нового ассета — указать лицензию в этом README и
+источник; если лицензия запрещает commercial или требует share-alike
+(CC-BY-SA) — **не коммитить**, искать альтернативу.
 
 ## Референсы (скрины/анимации для brief'а Session B-1)
 
 Лежат в [docs/battle_ui/refs/](../../docs/battle_ui/refs/). Тоже частично
 фетчатся `download_battle_assets.sh`, частично — ручное сохранение
-скриншотов (копирайт видео нельзя автоматически скачивать).
+скриншотов (копирайт видео нельзя автоматически скачивать, используются
+только как визуальный brief, не встраиваются в игру).

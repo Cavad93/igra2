@@ -140,7 +140,8 @@ if [ $FAIL -gt 0 ]; then
     echo "  - $f"
   done
   echo ""
-  echo "Платные паки (не скачиваются автоматически, купить и положить в assets/battle/raw/):"
-  echo "  - Legendary War Symbols Pack €5   https://cartographyassets.com/assets/101939/"
-  echo "  - Old Cartography Battlefield €9.50  https://cartographyassets.com/assets/56529/"
+  echo "Альтернативные бесплатные источники (CC0/CC-BY, commercial-friendly):"
+  echo "  - https://kenney.nl/assets?q=environment     (CC0, без атрибуции)"
+  echo "  - https://opengameart.org/art-search         (фильтр: CC0 / CC-BY)"
+  echo "  - https://commons.wikimedia.org              (Public Domain карты)"
 fi
