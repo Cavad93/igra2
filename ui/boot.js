@@ -31,7 +31,11 @@ import * as _lawsLabor from '../data/laws_labor.js';
 import * as _socialCls from '../data/social_classes.js';
 import * as _dataMap from '../data/map.js';
 import * as _nations from '../data/nations.js';
-import * as _regionsData from '../data/regions_data.js';
+// data/regions_data.js — lazy-loaded (Session 12 perf): 7 MB IIFE
+// выносится из initial bundle. Модуль запускается параллельно с
+// остальным boot и его завершение дожидается перед window.initGame().
+var _regionsDataReady = import('../data/regions_data.js');
+window._regionsDataReady = _regionsDataReady;
 import * as _biomes from '../data/biomes.js';
 import * as _regionAreas from '../data/region_areas.js';
 import * as _chars from '../data/characters.js';
@@ -175,7 +179,7 @@ import * as _rng from '../js/rng.js';
 _reg(
   _config,
   _goods, _chainsData, _dataBuild, _lawsLabor, _socialCls, _dataMap,
-  _nations, _regionsData, _biomes, _regionAreas, _chars,
+  _nations, _biomes, _regionAreas, _chars,
   _tradMil, _tradEco, _tradSoc, _tradRel, _tradNav, _tradArt,
   _tradDip, _tradSur, _tradExt, _tradIdx,
   _cultures, _portFilt, _cultGrps, _religions, _dogmas, _relRegions,
@@ -543,7 +547,11 @@ function _splashHide() {
 
 _splashProgress(10, 'Инициализация...');
 
-window.initGame().then(function () {
+// Ждём, пока подгрузится lazy-импортированный regions_data.js
+// (он мутирует INITIAL_GAME_STATE.regions, который читается внутри initGame()).
+_regionsDataReady.then(function () {
+  return window.initGame();
+}).then(function () {
   _splashProgress(60, 'Загрузка карты...');
   if (typeof window.initAllSenates === 'function') window.initAllSenates();
   _splashProgress(80, 'Подготовка наций...');

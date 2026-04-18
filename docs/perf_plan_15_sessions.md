@@ -87,7 +87,7 @@
 **Шаги:** `processTurn()` начинается → `AmbientLayer.pause()` + `AquaWidget.pause()`; заканчивается — `.resume()`. Использовать существующий `IS_PROCESSING_TURN` флаг в [engine/turn.js:6](engine/turn.js#L6).
 **Верификация:** во время tick'а CPU браузера падает; FPS анимаций до/после тика нормальный.
 
-### Session 12 — Lazy-load `data/regions_data.js` и `data/nation_enriched.js`
+### Session 12 — Lazy-load `data/regions_data.js` и `data/nation_enriched.js`   ✅ Выполнено (2026-04-18)
 **Цель:** эти два файла (~7 MB суммарно) грузятся синхронно при boot. Многие из них нужны только при открытии вкладки «Регионы» / «Нации».
 **Файлы:** [ui/boot.js](ui/boot.js), места первого использования в [engine/init.js](engine/init.js).
 **Шаги:** заменить `import * as _regionsData from '../data/regions_data.js'` на `async function getRegions() { return (await import('../data/regions_data.js')) }`. Прокачать callers через `await`.
