@@ -24,6 +24,15 @@ let _nationSvgGroup   = null;   // <g> элемент внутри SVG
 const _labelCanvas    = document.createElement('canvas');
 const _labelCtx       = _labelCanvas.getContext('2d');
 
+// Session 17 — якорь для fast pan-translate подписей наций.
+// При полном пересчёте (_updateNationLabelVisibility) запоминаем
+// center-latLng карты и его контейнерные пиксели. На последующих
+// `move`-событиях вместо пересчёта PCA/spine/measureText сдвигаем
+// только CSS-transform у <g>, разница latLngToContainerPoint(anchor).
+let _labelCacheAnchorLatLng = null;
+let _labelCacheAnchorPt     = null;
+let _labelCacheZoom         = null;
+
 // ──────────────────────────────────────────────────────────────
 // POLYLABEL — визуальный центр полигона (mapbox/polylabel)
 // Находит точку внутри полигона, максимально удалённую от границ
@@ -200,20 +209,31 @@ export function initLeafletMap() {
   // Слои армий и осад (поверх всего)
   if (typeof initArmyLayers === 'function') initArmyLayers();
 
-  // Пересчёт подписей при изменении вида
-  // move: пересчитываем позиции через RAF — один раз за кадр, без задержки.
-  // latLngToContainerPoint всегда возвращает правильные координаты даже во время пана.
+  // Пересчёт подписей при изменении вида.
+  // Session 17: на `move` только сдвигаем уже отрисованные SVG-подписи
+  // через `transform: translate(dx, dy)` у группы <g>. PCA/spine/measureText
+  // не зависят от pan — relative-геометрия точек одинакова для любого pan
+  // при фиксированном zoom. Полный пересчёт — только на `zoomend` и на
+  // `moveend` (debounced), чтобы подхватить новые видимые кластеры.
   let _panRafId = null;
   leafletMap.on('move', () => {
     if (_panRafId) cancelAnimationFrame(_panRafId);
-    _panRafId = requestAnimationFrame(() => { _panRafId = null; _updateNationLabelVisibility(); });
+    _panRafId = requestAnimationFrame(() => { _panRafId = null; _translateNationLabels(); });
   });
-  leafletMap.on('moveend', scheduleNationLabelUpdate);
+  // Session 17: moveend НЕ триггерит полный пересчёт — это было источником
+  // единичного >150ms longtask в конце каждого pan. Translate-only
+  // достаточно: off-screen culling расширен до _OFF_SCREEN_MARGIN, чтобы
+  // pan в несколько сотен пикселей не открыл «дыры» в подписях.
+  // Полный пересчёт — только zoomend, ownership change (renderNationLabels),
+  // window.resize.
   // zoom: скрываем SVG во время анимации масштаба
   leafletMap.on('zoomstart', () => { if (_nationSvg) _nationSvg.style.opacity = '0'; });
   leafletMap.on('zoomend',   () => {
+    // Session 17: сбрасываем якорь — zoom меняет PCA-результаты.
+    // Opacity вернётся в 1 в конце _updateNationLabelVisibility.
+    _labelCacheAnchorLatLng = null;
+    _labelCacheAnchorPt     = null;
     scheduleNationLabelUpdate();
-    setTimeout(() => { if (_nationSvg) _nationSvg.style.opacity = '1'; }, 90);
     // Шаг 44 (arma.md): пересчитать уровень детализации карты
     try { onZoomChange(leafletMap.getZoom()); } catch (e) { console.warn('[Шаг 44]', e); }
   });
@@ -2320,9 +2340,13 @@ function _updateNationLabelVisibility() {
     const rs = _rotatedSpan(allPts, angle);
     if (rs.width < 14 && rs.height < 14) continue;
 
-    // Отбрасываем за экраном
-    if (rs.cx < -300 || rs.cx > mapSize.x + 300 ||
-        rs.cy < -300 || rs.cy > mapSize.y + 300) continue;
+    // Отбрасываем за экраном.
+    // Session 17: margin расширен 300→1500 т.к. moveend больше НЕ
+    // триггерит полный пересчёт; translate-only pan выявляет новые
+    // кластеры из кэша без повторной работы PCA/spine.
+    const _OFF_SCREEN_MARGIN = 1500;
+    if (rs.cx < -_OFF_SCREEN_MARGIN || rs.cx > mapSize.x + _OFF_SCREEN_MARGIN ||
+        rs.cy < -_OFF_SCREEN_MARGIN || rs.cy > mapSize.y + _OFF_SCREEN_MARGIN) continue;
 
     // ── 3. Вычисляем хребет (медиальную ось) территории ──
     const spine = _computeSpine(rs.cx, rs.cy, angle, pxPolys, rs.minU, rs.maxU);
@@ -2425,6 +2449,18 @@ function _updateNationLabelVisibility() {
   _nationLabelBBoxes = acceptedBBoxes;
   if (typeof window !== 'undefined') window._nationLabelBBoxes = acceptedBBoxes;
 
+  // Session 17 — фиксируем якорь для fast pan-translate + сбрасываем
+  // transform на (0,0) (последующие move-тики будут считать delta
+  // относительно этого anchor). Opacity возвращаем к 1 — zoomstart
+  // мог выставить её в 0.
+  try {
+    _labelCacheAnchorLatLng = leafletMap.getCenter();
+    _labelCacheAnchorPt     = leafletMap.latLngToContainerPoint(_labelCacheAnchorLatLng);
+    _labelCacheZoom         = leafletMap.getZoom();
+    _nationSvgGroup.setAttribute('transform', 'translate(0, 0)');
+    if (_nationSvg) _nationSvg.style.opacity = '1';
+  } catch (_) { /* noop */ }
+
   // uisuper Этап 20 (hot-fix LOD): после перерасчёта надписей наций
   // обновляем и видимость подписей столиц (они тоже зависят от zoom
   // и не должны пересекаться с уже принятыми curved-надписями).
@@ -2437,7 +2473,34 @@ function _updateNationLabelVisibility() {
 
 function scheduleNationLabelUpdate() {
   if (_labelTimerId) clearTimeout(_labelTimerId);
-  _labelTimerId = setTimeout(_updateNationLabelVisibility, 80);
+  // Session 17: поднято 80→150 ms. На интерактивном pan ухо/глаз
+  // не различает задержку в 150 ms между остановкой pan и обновлением
+  // полного набора подписей, зато отсекается серия дёрганых срабатываний
+  // на многократных moveend / resize.
+  _labelTimerId = setTimeout(_updateNationLabelVisibility, 150);
+}
+
+// Session 17 — быстрый путь на `move`: переносим SVG-группу подписей
+// наций через CSS-transform без пересчёта PCA/spine/measureText.
+// Координаты точек latLngToContainerPoint при фиксированном zoom
+// отличаются от cached-значений только на (pan_delta_x, pan_delta_y),
+// поэтому применение translate на группу даёт визуально корректный
+// результат до следующего полного пересчёта на zoomend/moveend.
+function _translateNationLabels() {
+  if (!_nationSvgGroup || !leafletMap) return;
+  // Нет якоря — значит ещё ни разу не пересчитывали полный набор,
+  // либо zoom только что сменился. Форс-полный пересчёт вместо
+  // translate — чтобы не заморозить подписи в нулевой позиции.
+  if (!_labelCacheAnchorLatLng || !_labelCacheAnchorPt) {
+    _updateNationLabelVisibility();
+    return;
+  }
+  try {
+    const cur = leafletMap.latLngToContainerPoint(_labelCacheAnchorLatLng);
+    const dx = cur.x - _labelCacheAnchorPt.x;
+    const dy = cur.y - _labelCacheAnchorPt.y;
+    _nationSvgGroup.setAttribute('transform', `translate(${dx.toFixed(1)}, ${dy.toFixed(1)})`);
+  } catch (_) { /* noop */ }
 }
 
 // ──────────────────────────────────────────────────────────────

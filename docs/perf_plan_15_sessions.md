@@ -174,7 +174,7 @@ input-to-paint latency на клик/keystroke, FPS во время `map.panBy()
 **Верификация:** `node perf/interactive.mjs` — mean-FPS при pan **+10…20 %**,
 сумма longtask на pan **−20 %**. `tests/audit/*_test.cjs` — зелёные.
 
-### Session 17 — Throttle + кэш `_updateNationLabelVisibility()`
+### Session 17 — Throttle + кэш `_updateNationLabelVisibility()`   ✅ Выполнено (2026-04-18)
 **Цель:** убрать тяжелейший handler pan/zoom — PCA + `canvas.measureText()` +
 SVG DOM для всех видимых наций запускается на каждый RAF-frame pan'а.
 **Файлы:** [ui/map.js](ui/map.js) (функции `_updateNationLabelVisibility`,
