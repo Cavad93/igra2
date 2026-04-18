@@ -152,35 +152,74 @@ export function handleAIResponse(parsed, originalText) {
 // ПРИМЕНЕНИЕ ДЕЙСТВИЯ К GAMESTATE
 // ──────────────────────────────────────────────────────────────
 
+// Session 20: bitmask для точечной перерисовки после applyParsedAction.
+// Полный renderAll() зовём только для изменений, затрагивающих карту/армии —
+// иначе keystroke-handler блокирует main-thread на renderMap() (> 50 ms).
+const _DIRTY_ECONOMY    = 1 << 0;
+const _DIRTY_ARMIES     = 1 << 1;
+const _DIRTY_DIPLOMACY  = 1 << 2;
+const _DIRTY_REGIONS    = 1 << 3;
+const _DIRTY_CHARACTERS = 1 << 4;
+
 export function applyParsedAction(parsed) {
   const nationId = GAME_STATE.player_nation;
   const action = parsed.parsed_action || {};
 
+  // Какие подсистемы action реально изменил — определяет, что нужно перерисовать.
+  let dirty = 0;
+
   switch (parsed.action_type) {
     case 'economy':
       applyEconomyAction(nationId, action);
+      dirty |= _DIRTY_ECONOMY;
       break;
     case 'military':
       applyMilitaryAction(nationId, action);
+      // Рекрут меняет казну и количество войск → обновить карту армий.
+      dirty |= _DIRTY_ARMIES | _DIRTY_ECONOMY;
       break;
     case 'diplomacy':
       applyDiplomacyAction(nationId, action);
+      // Подарок тратит казну, договор меняет отношения.
+      dirty |= _DIRTY_DIPLOMACY | _DIRTY_ECONOMY;
       break;
     case 'law':
+      // Открывает модал голосования; финальный рендер — в finalizeVote().
       initiateLawProcess(nationId, action, parsed);
-      break;
+      return;
     case 'build':
       applyBuildAction(nationId, action);
+      // Новое здание в регионе → обновить маркеры стройки на карте.
+      dirty |= _DIRTY_REGIONS | _DIRTY_ECONOMY;
       break;
     case 'character':
       applyCharacterAction(nationId, action);
+      dirty |= _DIRTY_CHARACTERS | _DIRTY_ECONOMY;
       break;
     default:
-      // Неизвестное действие — просто логируем
+      // Chit-chat / неизвестный тип — state не менялся, рендер не нужен.
       console.info('Неизвестный тип действия:', parsed.action_type, action);
+      return;
   }
 
-  renderAll();
+  // Карта/армии меняются → полный рендер (renderMap + маркеры армий).
+  if (dirty & (_DIRTY_REGIONS | _DIRTY_ARMIES)) {
+    renderAll();
+    return;
+  }
+
+  // Точечный refresh — без дорогой renderMap()/refreshRegionStyles().
+  try { renderLeftPanel(); }  catch (e) { console.error('renderLeftPanel error:', e); }
+  try { renderRightPanel(); } catch (e) { console.error('renderRightPanel error:', e); }
+
+  if (dirty & _DIRTY_ECONOMY) {
+    try { if (typeof refreshEconomyTab === 'function') refreshEconomyTab(); } catch (e) {}
+  }
+  if (dirty & _DIRTY_CHARACTERS) {
+    try { if (typeof renderCharInitiativesPanel === 'function') renderCharInitiativesPanel(); } catch (e) {}
+  }
+  // _DIRTY_DIPLOMACY обновляется через renderLeftPanel/renderRightPanel
+  // (вкладка дипломатии рендерится в _renderLeftPanelContent).
 }
 
 export function applyEconomyAction(nationId, action) {
