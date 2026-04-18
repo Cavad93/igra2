@@ -66,6 +66,20 @@
       this._initialized = false;
     },
 
+    // Session 6: кэш DOM-рефов + skip-if-same для sub-turn вызовов.
+    _labelEls: {},
+
+    _getLabelEls(id) {
+      let refs = this._labelEls[id];
+      if (!refs || !refs.val?.isConnected) {
+        refs = this._labelEls[id] = {
+          val:   document.getElementById(`aq-${id}-val`),
+          delta: document.getElementById(`aq-${id}-delta`),
+        };
+      }
+      return refs;
+    },
+
     // Refresh numeric labels + delta badges and update channel speed.
     update(data) {
       if (!data || typeof document === 'undefined') return;
@@ -85,21 +99,23 @@
 
       for (const id of Object.keys(vals)) {
         const v = vals[id];
-        const valEl = document.getElementById(`aq-${id}-val`);
+        const { val: valEl, delta: deltaEl } = this._getLabelEls(id);
         if (valEl) {
-          valEl.textContent = (v != null && Number.isFinite(v))
+          const next = (v != null && Number.isFinite(v))
             ? this._formatNum(v)
             : '—';
+          if (valEl.textContent !== next) valEl.textContent = next;
         }
 
         const d = deltas[id];
-        const deltaEl = document.getElementById(`aq-${id}-delta`);
         if (deltaEl) {
-          if (d > 0)      deltaEl.textContent = '+' + this._formatNum(d);
-          else if (d < 0) deltaEl.textContent = this._formatNum(d);
-          else            deltaEl.textContent = '';
-          deltaEl.className = 'aqua-delta'
+          const nextText = d > 0 ? '+' + this._formatNum(d)
+                        : d < 0 ? this._formatNum(d)
+                        : '';
+          if (deltaEl.textContent !== nextText) deltaEl.textContent = nextText;
+          const nextCls = 'aqua-delta'
             + (d > 0 ? ' positive' : d < 0 ? ' negative' : '');
+          if (deltaEl.className !== nextCls) deltaEl.className = nextCls;
         }
 
         const ch = this._channels[id];

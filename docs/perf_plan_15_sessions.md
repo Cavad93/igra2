@@ -51,7 +51,7 @@
 **Шаги:** ввести `GAME_STATE._dirtyRegions = new Set()`; при смене owner/control/intel в turn.js добавлять id региона; `refreshRegionStyles()` стилит только регионы из Set, затем чистит Set. При смене map-mode — форсирует полный рендер (как сейчас).
 **Верификация:** ручной тест — владелец региона меняется, цвет обновляется; профайлер рендер-части хода −70-90%.
 
-### Session 6 — Убрать `innerHTML=` в `updateResourceBar`
+### Session 6 — Убрать `innerHTML=` в `updateResourceBar`   ✅ Выполнено (2026-04-18)
 **Цель:** [ui/panels.js:342](ui/panels.js#L342) `updateResourceBar` и [ui/panels.js:2119](ui/panels.js#L2119) `renderRightPanel` каждый ход пересобирают DOM через innerHTML. Точечно обновлять только `.textContent` нужных `<span>`.
 **Файлы:** [ui/panels.js](ui/panels.js).
 **Шаги:** кэшировать ссылки на `#aq-gold-val` / `#aq-gold-delta` и т.п. в замыкание при первом вызове; далее только `el.textContent = ...`. Для `renderRightPanel` — перевести на шаблон один раз, дальше обновлять точечно.

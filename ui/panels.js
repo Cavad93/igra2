@@ -272,6 +272,37 @@ const _resourceBarPrev = { gold: null, troops: null, food: null, pop: null, _tur
 // Пересчитываются только при смене хода, чтобы частицы не «мигали» в рамках одного хода.
 const _aquaLastDelta = { gold: 0, troops: 0, food: 0, pop: 0 };
 
+// Session 6 — кэш DOM-рефов ресурс-бара. Ленивая инициализация при первом
+// вызове `_getResEls()`; пересбор, если ссылка оторвалась от document
+// (редко: возможно только при ручной пересборке #resource-bar).
+const _resourceBarEls = {
+  gold:   { val: null, delta: null, spark: null },
+  troops: { val: null, delta: null, spark: null },
+  food:   { val: null, delta: null, spark: null },
+  pop:    { val: null, delta: null, spark: null },
+};
+
+function _elAttached(el) {
+  if (!el) return false;
+  if (typeof el.isConnected === 'boolean') return el.isConnected;
+  return true; // jsdom/FakeEl без isConnected — считаем, что прикреплён
+}
+
+function _getResEls(key) {
+  const cache = _resourceBarEls[key];
+  if (!cache) return null;
+  if (!_elAttached(cache.val)) {
+    cache.val = document.querySelector(`#res-${key} > span:first-of-type`);
+  }
+  if (!_elAttached(cache.delta)) {
+    cache.delta = document.querySelector(`#res-${key} .res-delta`);
+  }
+  if (!_elAttached(cache.spark)) {
+    cache.spark = document.querySelector(`#res-${key} .res-sparkline`);
+  }
+  return cache;
+}
+
 function _formatResBarNum(n) {
   if (n === null || n === undefined || Number.isNaN(n)) return '—';
   const v = Math.round(n);
@@ -319,22 +350,26 @@ function _collectResourceValues(state) {
 }
 
 function _applyResourceDelta(key, curr) {
-  const deltaEl = document.querySelector(`#res-${key} .res-delta`);
+  const deltaEl = _getResEls(key)?.delta;
   if (!deltaEl) return;
   const prev = _resourceBarPrev[key];
   if (prev === null || prev === undefined || prev === curr) {
-    deltaEl.textContent = '';
+    if (deltaEl.textContent !== '') deltaEl.textContent = '';
     deltaEl.classList.remove('positive', 'negative');
     return;
   }
   const d = curr - prev;
-  if (d === 0) { deltaEl.textContent = ''; return; }
+  if (d === 0) {
+    if (deltaEl.textContent !== '') deltaEl.textContent = '';
+    return;
+  }
   const sign = d > 0 ? '+' : '';
   // Шаг 46 — стрелка тренда рядом с числом: "+45 ↗" / "-12 ↘"
   // (arrow идёт ПОСЛЕ числа, чтобы сохранить совместимость с тестами Шага 21,
   // которые ожидают, что .res-delta.textContent начинается с "+" или "-")
   const arrow = d > 0 ? ' ↗' : ' ↘';
-  deltaEl.textContent = sign + _formatResBarNum(d) + arrow;
+  const next = sign + _formatResBarNum(d) + arrow;
+  if (deltaEl.textContent !== next) deltaEl.textContent = next;
   deltaEl.classList.toggle('positive', d > 0);
   deltaEl.classList.toggle('negative', d < 0);
 }
@@ -343,14 +378,21 @@ export function updateResourceBar(state) {
   const values = _collectResourceValues(state);
   if (!values) return;
 
-  const setVal = (id, v) => {
-    const el = document.querySelector(`#${id} > span:first-of-type`);
-    if (el) el.textContent = _formatResBarNum(v);
+  // Session 6: используем кэш DOM-рефов вместо 4 querySelector-ов.
+  // Пропускаем мутацию, если отформатированное значение не изменилось —
+  // это убирает 4 textContent-присваивания при повторных рендерах
+  // в рамках одного хода (updateResourceBar часто дёргается несколько
+  // раз между ходами через renderLeftPanel).
+  const setVal = (key, v) => {
+    const el = _getResEls(key)?.val;
+    if (!el) return;
+    const formatted = _formatResBarNum(v);
+    if (el.textContent !== formatted) el.textContent = formatted;
   };
-  setVal('res-gold',   values.gold);
-  setVal('res-troops', values.troops);
-  setVal('res-food',   values.food);
-  setVal('res-pop',    values.pop);
+  setVal('gold',   values.gold);
+  setVal('troops', values.troops);
+  setVal('food',   values.food);
+  setVal('pop',    values.pop);
 
   const currentTurn = state?.turn ?? 0;
   const prevTurn    = _resourceBarPrev._turn;
@@ -365,9 +407,9 @@ export function updateResourceBar(state) {
       _aquaLastDelta[key]   = 0;
     }
     _resourceBarPrev._turn = currentTurn;
-    // Очистить badge-и на первой отрисовке
+    // Очистить badge-и на первой отрисовке (Session 6: через кэш)
     for (const key of ['gold', 'troops', 'food', 'pop']) {
-      const el = document.querySelector(`#res-${key} .res-delta`);
+      const el = _getResEls(key)?.delta;
       if (el) { el.textContent = ''; el.classList.remove('positive', 'negative'); }
     }
   } else if (prevTurn !== currentTurn) {
@@ -553,7 +595,8 @@ function _renderResourceSparklines(state) {
   if (typeof document === 'undefined') return;
   const hist = state?.history;
   for (const key of ['gold', 'troops', 'food', 'pop']) {
-    const el = document.querySelector(`#res-${key} .res-sparkline`);
+    // Session 6: кэш DOM-рефов снижает querySelector/per-turn до 0 после первого вызова
+    const el = _getResEls(key)?.spark;
     if (!el) continue;
     const arrKey = _RES_HISTORY_KEYS[key];
     const series = (hist && Array.isArray(hist[arrKey])) ? hist[arrKey] : [];
@@ -2116,6 +2159,39 @@ function _courtEscJs(s) {
   return String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
+// Session 6: кэш сигнатуры тела панели двора + реф на `.court-era` для
+// инкрементального обновления года без полной перестройки DOM.
+// Сигнатура отражает ВСЁ, кроме года — если совпадает, можно просто
+// обновить `.court-era` textContent и выйти без innerHTML=.
+let _rightPanelSig = null;
+let _rightPanelYearEl = null;
+
+function _computeRightPanelBodySig(nation, characters, positions, nationId) {
+  // Дешёвая сигнатура: зависит от того, что реально меняет итоговый HTML
+  // (слоты коллегии, roster, фильтр/сортировка, rulerName, capital).
+  const parts = [];
+  parts.push(nationId || '');
+  parts.push(nation.ruler?.name || nation.name || '');
+  parts.push(nation.capital_name || nation.name || '');
+  parts.push(_rosterFilter);
+  parts.push(_rosterSort);
+  // positions: порядок ключей фиксирован COURT_POSITIONS
+  for (const p of COURT_POSITIONS) {
+    parts.push(p.id + '=' + (positions[p.id] || ''));
+  }
+  // characters: id:name:age:role + сумма релевантных trait-полей
+  // (score-бейджи в roster чувствительны к traits)
+  for (const c of characters) {
+    const t = c.traits || {};
+    parts.push(
+      c.id + ':' + (c.name || '') + ':' + (c.age || 0) + ':' + (c.role || '') +
+      ':' + (t.loyalty || 0) + ':' + (t.military || 0) + ':' +
+      (t.trade || 0) + ':' + (t.diplomacy || 0) + ':' + (t.piety || 0)
+    );
+  }
+  return parts.join('|');
+}
+
 export function renderRightPanel() {
   const panel = document.getElementById('right-panel');
   if (!panel || !GAME_STATE) return;
@@ -2135,6 +2211,18 @@ export function renderRightPanel() {
                       : '301 BC';
 
   const nationIdForPortraits = GAME_STATE.player_nation;
+
+  // Session 6: если тело панели структурно не изменилось — точечно
+  // обновляем только год (единственная часть, которая меняется каждый ход)
+  // и выходим без пересборки DOM.
+  const bodySig = _computeRightPanelBodySig(nation, characters, positions, nationIdForPortraits);
+  if (_rightPanelSig === bodySig && _rightPanelYearEl && _elAttached(_rightPanelYearEl)) {
+    const desired = `${capital} · ${year}`;
+    if (_rightPanelYearEl.textContent !== desired) {
+      _rightPanelYearEl.textContent = desired;
+    }
+    return;
+  }
 
   // ─── Slotы коллегии (Шаг 57: используем renderPortraitHTML) ───
   // Переменная slotsHtml/паттерн сохранены для test_arma_stage57.mjs.
@@ -2220,6 +2308,11 @@ export function renderRightPanel() {
 
   // Проставляем drag-n-drop биндинги (идемпотентно)
   initCourtDragDrop(panel);
+
+  // Session 6: обновляем сигнатуру и реф на `.court-era` для
+  // инкрементального обновления года на следующих вызовах.
+  _rightPanelSig = bodySig;
+  _rightPanelYearEl = panel.querySelector ? panel.querySelector('.court-era') : null;
 }
 
 /**
