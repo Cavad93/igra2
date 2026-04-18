@@ -63,7 +63,7 @@
 **Шаги:** добавить fallback на localStorage, если IDB недоступен. Использовать structured clone через `postMessage(state)` вместо stringify на main.
 **Верификация:** ход завершается без «заморозки» UI; профайлер save-части −90%. `saveGame`/`loadGame` round-trip даёт идентичный объект.
 
-### Session 8 — Инкрементальный `refreshDiploDistances`
+### Session 8 — Инкрементальный `refreshDiploDistances`   ✅ Выполнено (2026-04-18)
 **Цель:** [engine/diplomacy_range.js](engine/diplomacy_range.js) пересчитывает дистанции по парам наций при каждом ходе. Кэшировать матрицу; инвалидировать только изменённые строки/столбцы.
 **Файлы:** [engine/diplomacy_range.js](engine/diplomacy_range.js).
 **Шаги:** хранить `GAME_STATE._diploDistMatrix` + версию signature регионов. BFS/Dijkstra запускать только из регионов, сменивших владельца; остальные дистанции сохранить.

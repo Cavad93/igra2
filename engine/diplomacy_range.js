@@ -54,20 +54,130 @@ export let _nationDistCache  = {};  // nationId → минимальное ра�
 export let _cacheComputedAt  = -999;
 export let _prevNationTiers  = {};  // nationId → предыдущий tier (для детекции изменений)
 
+// Сигнатуры состава регионов — инвалидируют кэш точечно вместо CACHE_INTERVAL.
+// _playerRegionsSig: хэш сортированного списка регионов игрока.
+//   При изменении → нужен полный re-BFS (территория-источник изменилась).
+// _allNationsRegionsSig: хэш сортированного [(nationId, regionId)*].
+//   При изменении только этого (а не player) → достаточно пересобрать
+//   _nationDistCache по уже посчитанному _regionDistCache (BFS не нужен).
+let _playerRegionsSig    = null;
+let _allNationsRegionsSig = null;
+// Дешёвый guard: если на этом ходу уже проверяли — пропустить пересчёт сигнатур.
+// 902 нации в processAINations() вызывают getNationTier→getDiploDistance→
+// refreshDiploDistances. Без guard'а это 902 hash-прохода/ход.
+// Связываем с player_nation чтобы loadGame с другим игроком сбрасывал guard.
+let _checkedAtTurn    = -1;
+let _checkedAtPlayer  = null;
+
 // ══════════════════════════════════════════════════════════════════════
 // BFS — расстояния от территории игрока
 // ══════════════════════════════════════════════════════════════════════
 
+// FNV-1a над списком ID регионов (предварительно отсортированных).
+// Возвращает строку: hex-хэш + ":" + длина — длина исключает редкие коллизии
+// в которых порядок и набор отличаются, но FNV-хэш совпал.
+function _hashRegionList(regions) {
+  let h = 2166136261;
+  for (let i = 0; i < regions.length; i++) {
+    const s = regions[i];
+    if (typeof s !== 'string') continue;
+    for (let j = 0; j < s.length; j++) {
+      h ^= s.charCodeAt(j);
+      h = Math.imul(h, 16777619);
+    }
+    h ^= 0x2c; // ',' разделитель
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(16) + ':' + regions.length;
+}
+
+function _computePlayerRegionsSig() {
+  const playerNation = GAME_STATE.nations?.[GAME_STATE.player_nation];
+  if (!playerNation) return '0:0';
+  const regions = (playerNation.regions ?? []).slice().sort();
+  return _hashRegionList(regions);
+}
+
+// Сигнатура границ всех наций. Хэшируем nationId + список регионов нации.
+// Отсортировано по nId — стабильно. Внутри нации регионы сортируются.
+function _computeAllNationsRegionsSig() {
+  const nations = GAME_STATE.nations ?? {};
+  const nationIds = Object.keys(nations).sort();
+  // FNV-1a поверх отсортированных «nationId:r1,r2,...».
+  let h = 2166136261;
+  for (let i = 0; i < nationIds.length; i++) {
+    const nId = nationIds[i];
+    const regions = nations[nId]?.regions ?? [];
+    // Хэшируем nId
+    for (let j = 0; j < nId.length; j++) {
+      h ^= nId.charCodeAt(j); h = Math.imul(h, 16777619);
+    }
+    h ^= 0x3a; h = Math.imul(h, 16777619); // ':'
+    // Хэшируем регионы (уже sorted на сборке регионов? нет — копируем)
+    if (regions.length > 0) {
+      const sorted = regions.slice().sort();
+      for (let k = 0; k < sorted.length; k++) {
+        const s = sorted[k];
+        if (typeof s !== 'string') continue;
+        for (let j = 0; j < s.length; j++) {
+          h ^= s.charCodeAt(j); h = Math.imul(h, 16777619);
+        }
+        h ^= 0x2c; h = Math.imul(h, 16777619); // ','
+      }
+    }
+    h ^= 0x3b; h = Math.imul(h, 16777619); // ';'
+  }
+  return (h >>> 0).toString(16) + ':' + nationIds.length;
+}
+
 /**
  * Пересчитать кэш расстояний (BFS от всех регионов игрока).
  * Вызывается автоматически при обращении к getDiploDistance().
+ *
+ * Инвалидация по сигнатурам, а не по фиксированному CACHE_INTERVAL:
+ *   1. Player regions sig изменилась → полный re-BFS + rebuild nation cache.
+ *   2. Только sig по всем нациям изменилась (player не менялся) → rebuild
+ *      nation cache без BFS (используем существующий _regionDistCache).
+ *   3. Ничего не изменилось → ранний выход.
  */
 export function refreshDiploDistances(forceRefresh) {
   const turn = GAME_STATE.turn ?? 1;
-  if (!forceRefresh && turn - _cacheComputedAt < DIPLO_CFG.CACHE_INTERVAL) return;
 
-  _regionDistCache = _bfsFromNationRegions(GAME_STATE.player_nation);
+  const playerId = GAME_STATE.player_nation;
 
+  // O(1) guard: на этом ходу (и при том же player_nation) уже звали refresh —
+  // кэш гарантированно валиден, если ничего не изменилось. Пропускаем даже
+  // sig-вычисление (~ms). Conquest'ы бывают между ходами, не внутри — guard
+  // безопасен. loadGame со сменой player_nation гарантированно инвалидирует.
+  if (!forceRefresh
+      && _checkedAtTurn === turn
+      && _checkedAtPlayer === playerId
+      && _cacheComputedAt >= 0) {
+    return;
+  }
+
+  const playerSig  = _computePlayerRegionsSig();
+  const nationsSig = _computeAllNationsRegionsSig();
+
+  const firstRun       = _cacheComputedAt < 0;
+  const playerChanged  = _playerRegionsSig    !== playerSig;
+  const nationsChanged = _allNationsRegionsSig !== nationsSig;
+
+  if (!forceRefresh && !firstRun && !playerChanged && !nationsChanged) {
+    // Точечный апдейт: ничего не изменилось — кэш валиден.
+    _checkedAtTurn   = turn;
+    _checkedAtPlayer = playerId;
+    return;
+  }
+
+  // Полный re-BFS только если изменилась территория игрока.
+  // Если изменилась только чужая территория — _regionDistCache корректен
+  // (BFS от регионов игрока не зависит от чужих владений).
+  if (forceRefresh || firstRun || playerChanged) {
+    _regionDistCache = _bfsFromNationRegions(GAME_STATE.player_nation);
+  }
+
+  // Пересборка nation→min dist (дёшево: ~902 нации × ~4 региона = ~3.6k lookups).
   _nationDistCache = {};
   for (const [nId, nation] of Object.entries(GAME_STATE.nations ?? {})) {
     if (nId === GAME_STATE.player_nation) { _nationDistCache[nId] = 0; continue; }
@@ -80,7 +190,11 @@ export function refreshDiploDistances(forceRefresh) {
     _nationDistCache[nId] = isFinite(minDist) ? minDist : 999;
   }
 
-  _cacheComputedAt = turn;
+  _playerRegionsSig     = playerSig;
+  _allNationsRegionsSig = nationsSig;
+  _cacheComputedAt      = turn;
+  _checkedAtTurn        = turn;
+  _checkedAtPlayer      = playerId;
 
   // ── Детекция смены тира ──────────────────────────────────────────
   for (const nId of Object.keys(_nationDistCache)) {
