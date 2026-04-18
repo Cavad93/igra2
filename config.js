@@ -15,6 +15,12 @@ export const CONFIG = {
   OLLAMA_MODEL: 'phi4-mini',  // рекомендуется; альтернативы: qwen2.5:7b, gemma3:4b
   OLLAMA_BATCH: 5,            // наций за 1 запрос (оптимально для 3B модели)
 
+  // Session 10 — round-robin batch per turn для AI-наций.
+  // В processAINations() за один ход обрабатывается этот срез из tier2+tier3
+  // (tier1, warWithPlayer, hot-nations всегда идут критическим путём без батча).
+  // Меньше → быстрее ход, но дольше «тишина» провинциальных наций.
+  AI_TURN_BATCH: 50,
+
   // ── Модели ───────────────────────────────────────────────────────────
   MODEL_HAIKU:     'phi4-mini',                        // → Ollama   (фоновые нации)
   MODEL_WAR_AI:    'llama-3.3-70b-versatile',          // → Groq     (война с игроком)

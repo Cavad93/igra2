@@ -75,7 +75,7 @@
 **Шаги:** обертка `addEventLog` уже есть — добавить `if (arr.length > 500) arr.shift()`. `_turn_summary_history` cap = 200. Спарклайн-история уже capped = 10 в [panels.js:_RES_HISTORY_MAX](ui/panels.js#L417).
 **Верификация:** save-файл после 100 ходов весит <N MB (зафиксировать N до/после).
 
-### Session 10 — AI-нации: round-robin по ходам
+### Session 10 — AI-нации: round-robin по ходам   ✅ Выполнено (2026-04-18)
 **Цель:** [engine/turn.js processAINations](engine/turn.js) обрабатывает tier1+tier2 каждый ход. Вместо этого распределить обработку: каждый ход — 1/N часть наций.
 **Файлы:** [engine/turn.js](engine/turn.js), [engine/ai_worker.js](engine/ai_worker.js).
 **Шаги:** добавить `GAME_STATE._aiTurnCursor`, на каждый ход брать batch = 50 наций начиная с cursor, cursor += batch (mod total). Критичные решения (война, мир, атака игрока) — обрабатываются немедленно через отдельную ветку.

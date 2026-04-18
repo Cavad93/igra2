@@ -452,6 +452,24 @@ export async function processAINations() {
   const MAX_STALE    = 3;
   const playerNationId = GAME_STATE.player_nation;
 
+  // ── Session 10: round-robin по ходам ──────────────────────────────
+  // Из tier2+tier3 за один ход обрабатываем только срез BATCH_SIZE.
+  // Критический путь (warWithPlayer + tier1 + hot-nations с недавними
+  // военными/дипломатическими событиями) ИГНОРИРУЕТ батч — обрабатываются
+  // всегда. Нация, пропущенная в этом ходу, получит ход через N/batch ходов
+  // либо немедленно, если попадёт в hot-list.
+  const BATCH_SIZE = Math.max(1, CONFIG.AI_TURN_BATCH ?? 50);
+
+  // hot-list: нации, чей id фигурирует в events_log (≤2 хода) в типах
+  // military/diplomacy. Игрок задел нацию → она обязана отреагировать в тот
+  // же ход, не ждать своего слота в round-robin.
+  const hotAI = new Set(
+    (GAME_STATE.events_log ?? [])
+      .filter(e => (currentTurn - (e.turn ?? 0)) <= 2
+        && (e.type === 'military' || e.type === 'diplomacy'))
+      .flatMap(e => [e.actor, e.target, e.nation].filter(Boolean))
+  );
+
   // ── ST_018: Гегемониальный страх — каждые 5 ходов ─────────────────────────
   if (currentTurn % 5 === 0 && typeof window !== 'undefined' && window.SuperOU?.applyHegemonModifier) {
     try { window.SuperOU.applyHegemonModifier(GAME_STATE); } catch (e) { console.warn('[super_ou] applyHegemonModifier:', e); }
@@ -508,7 +526,35 @@ export async function processAINations() {
     addEventLog(`⚔ Военный AI обработал ${warResults.size} нации`, 'ai');
   }
 
-  let fromCache = 0, fromFallback = 0, fromWarAI = 0;
+  let fromCache = 0, fromFallback = 0, fromWarAI = 0, skippedByBatch = 0;
+
+  // ── Session 10: формируем набор наций для обработки в ЭТОМ ходу ───
+  // Критический путь: war с игроком + tier1 + hot-nations (игрок задел
+  // их военными/дипломатическими действиями). Остальные (batchable) идут
+  // через round-robin cursor с шагом BATCH_SIZE.
+  const criticalAI = new Set(warWithPlayer);
+  for (const nId of tier1) criticalAI.add(nId);
+  for (const nId of rotationList) if (hotAI.has(nId)) criticalAI.add(nId);
+  for (const nId of tier3)       if (hotAI.has(nId)) criticalAI.add(nId);
+
+  // batchablePool: tier2 + tier3 без критических.
+  // tier2 из rotationList, tier3 — отдельный массив.
+  const batchablePool = [];
+  for (const nId of tier2) if (!criticalAI.has(nId)) batchablePool.push(nId);
+  for (const nId of tier3) if (!criticalAI.has(nId)) batchablePool.push(nId);
+
+  // Round-robin срез. Cursor хранится в GAME_STATE для сохранения между ходами.
+  const processThisTurn = new Set(criticalAI);
+  if (batchablePool.length > 0) {
+    let cursor = (GAME_STATE._aiTurnCursor | 0);
+    if (cursor < 0 || cursor >= batchablePool.length) cursor = 0;
+    const take = Math.min(BATCH_SIZE, batchablePool.length);
+    for (let i = 0; i < take; i++) {
+      processThisTurn.add(batchablePool[(cursor + i) % batchablePool.length]);
+    }
+    GAME_STATE._aiTurnCursor = (cursor + take) % batchablePool.length;
+    skippedByBatch = batchablePool.length - take;
+  }
 
   // ── #20 Логирование стратегии в UI ────────────────────────────────
   // Показываем игроку reasoning для важных решений (война, альянс, мир)
@@ -543,8 +589,11 @@ export async function processAINations() {
   }
 
   // ── Применяем кэшированные решения phi4-mini (мгновенно) ──────────
+  // Session 10: обрабатываем только нации, попавшие в processThisTurn
+  // (критические + round-robin срез BATCH_SIZE из tier2+tier3).
   for (const nId of rotationList) {
     if (warSet.has(nId)) continue; // уже обработано Haiku
+    if (!processThisTurn.has(nId)) continue; // не в батче и не критичный
     const cached = _aiPending.get(nId);
     if (cached && (currentTurn - cached.turn) <= MAX_STALE && validateNationDecision(cached.decision)) {
       _logAIStrategy(nId, cached.decision, 'llm');
@@ -558,8 +607,9 @@ export async function processAINations() {
     }
   }
 
-  // Tier3 — всегда только OU Fallback
+  // Tier3 — OU Fallback, но только для наций из processThisTurn
   for (const nId of tier3) {
+    if (!processThisTurn.has(nId)) continue;
     applyFallbackDecision(nId);
   }
 
@@ -580,7 +630,7 @@ export async function processAINations() {
     }
   }
 
-  console.log(`[ai_nations] ход ${currentTurn}: warAI(Haiku):${fromWarAI} cache(phi4):${fromCache} fallback(OU):${fromFallback} tier3:${tier3.length}`);
+  console.log(`[ai_nations] ход ${currentTurn}: warAI(Haiku):${fromWarAI} cache(phi4):${fromCache} fallback(OU):${fromFallback} tier3:${tier3.length} batch_skip:${skippedByBatch}`);
 
   // Шаг 51: отрисовываем собранные за ход AI-индикаторы на карте.
   if (typeof window !== 'undefined' && typeof window.renderAIIndicators === 'function') {
