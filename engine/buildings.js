@@ -104,11 +104,55 @@ export function _getEffectiveWorkers(slot, bDef, nation) {
   return w;
 }
 
+// ──────────────────────────────────────────────────────────────
+// Session 13 (perf): intra-tick memoization of `_calcSlotBaseOutput`.
+// В пределах одного processTurn() функция вызывается на каждый активный
+// слот ~5 раз:
+//   1) processAllRecipes                             (шаг 1a)
+//   2) calculateAllBuildingProduction → getBuildingOutput (шаг 1b)
+//   3) _getRegionalBuildingProduction → getBuildingOutput (шаг 1c)
+//   4) updateBuildingFinancials → calculateBuildingRevenue → getBuildingOutput (шаг 3a)
+//   5) updateBuildingFinancials прямой _calcSlotBaseOutput (шаг 3a)
+//
+// Параметры, влияющие на результат (building_id, level, workers,
+// production_eff, _pop_eff, _capital_ratio, terrain/fertility/deposits,
+// _production_mod, slave fallback-переключатель), заморожены внутри тика:
+//   • _pop_eff      — шаг 0 (до hot window)
+//   • _capital_ratio — шаг 0.5 (до hot window)
+//   • production_eff — меняется только в applyBuildingAdaptiveBehavior (шаг 3b),
+//                      ПОСЛЕ последнего вызова _calcSlotBaseOutput
+//   • workers/level  — мутируются только в applyBuildingAdaptiveBehavior /
+//                      processAutonomousBuilding (после шага 3a)
+//
+// Используем монотонный счётчик тика + WeakMap. WeakMap даёт нулевую нагрузку
+// на saveGame (структурно не сериализуется), авто-очищается GC, и не мешает
+// временным слотам из _estimateSlotProfit (tempSlot отбрасывается после выхода
+// из функции — запись в WeakMap уходит вместе с ним).
+//
+// Тик бампается вручную через _bumpBaseOutputCacheTick() в начале
+// runEconomyTick(): первое обращение в тике = промах, затем все вызовы —
+// попадания. Переполнение 32-бит (~2 млрд ходов) невозможно на практике.
+// ──────────────────────────────────────────────────────────────
+const _BASE_OUTPUT_CACHE = new WeakMap();
+let _baseOutputCacheTick = 1;   // стартуем с 1: undefined !== 1 → промах по умолчанию
+
+export function _bumpBaseOutputCacheTick() {
+  _baseOutputCacheTick = (_baseOutputCacheTick + 1) | 0;
+  // Защита от обнуления (при ~2^31 тиков): undefined === 0 = false, но
+  // все ранее закэшированные записи с tick=0 станут ложными попаданиями,
+  // если счётчик когда-нибудь придёт в 0. Перепрыгиваем через 0.
+  if (_baseOutputCacheTick === 0) _baseOutputCacheTick = 1;
+}
+
 export function _calcSlotBaseOutput(slot, region, nation) {
   if (!slot || slot.status !== 'active') return {};
 
   const bDef = BUILDINGS[slot.building_id];
   if (!bDef || !bDef.production_output?.length) return {};
+
+  // ── Session 13: intra-tick cache hit ──────────────────────────────────
+  const cached = _BASE_OUTPUT_CACHE.get(slot);
+  if (cached !== undefined && cached.t === _baseOutputCacheTick) return cached.o;
 
   // Биом имеет приоритет над старым terrain-типом для бонусов к урожаю
   const terrain    = region.biome || region.terrain || region.type || 'plains';
@@ -122,11 +166,20 @@ export function _calcSlotBaseOutput(slot, region, nation) {
   // workers — на одно здание; умножаем на level чтобы получить суммарную рабочую силу.
   const workers = Object.values(effectiveWorkers).reduce((s, v) => s + v, 0) * level;
 
-  if (workers <= 0) return {};
+  // Пустой выход тоже кэшируем — чтобы не пересчитывать 4 раза при workers=0.
+  // Используем один общий заморознный объект (ссылочная идентичность не важна,
+  // но экономит аллокацию при 600+ stub-зданий в тесте).
+  if (workers <= 0) {
+    _BASE_OUTPUT_CACHE.set(slot, { t: _baseOutputCacheTick, o: _EMPTY_OUT });
+    return _EMPTY_OUT;
+  }
 
   // production_eff: 0.0–1.0, снижается при убытках (Stage 4).
   const eff = slot.production_eff ?? 1.0;
-  if (eff <= 0) return {};
+  if (eff <= 0) {
+    _BASE_OUTPUT_CACHE.set(slot, { t: _baseOutputCacheTick, o: _EMPTY_OUT });
+    return _EMPTY_OUT;
+  }
 
   // _pop_eff: 0.7–1.0, зависит от удовлетворённости рабочих (Stage 6).
   const popEff = slot._pop_eff ?? 1.0;
@@ -154,8 +207,13 @@ export function _calcSlotBaseOutput(slot, region, nation) {
     if (amount > 0.1) output[good] = (output[good] || 0) + amount;
   }
 
+  _BASE_OUTPUT_CACHE.set(slot, { t: _baseOutputCacheTick, o: output });
   return output;
 }
+
+// Общий frozen-объект для «нулевого» выхода. Callers только читают через
+// Object.entries/for-in — запись в него невозможна.
+const _EMPTY_OUT = Object.freeze({});
 
 // ──────────────────────────────────────────────────────────────
 // 2б. ВЫХОД ЗДАНИЯ С УЧЁТОМ РЕЦЕПТОВ

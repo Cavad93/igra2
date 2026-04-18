@@ -93,7 +93,7 @@
 **Шаги:** заменить `import * as _regionsData from '../data/regions_data.js'` на `async function getRegions() { return (await import('../data/regions_data.js')) }`. Прокачать callers через `await`.
 **Верификация:** начальная загрузка splash`a меньше; игра стартует быстрее; открытие «Регионы» может быть на 200мс дольше первый раз — это ок.
 
-### Session 13 — Мемоизация `_computeRegionProduction`
+### Session 13 — Мемоизация `_computeRegionProduction`   ✅ Выполнено (2026-04-18)
 **Цель:** [engine/economy.js:124](engine/economy.js#L124) пересчитывает производство региона целиком даже если ничего не изменилось. Кэшировать по (region_id, buildings_hash, pop_hash).
 **Файлы:** [engine/economy.js](engine/economy.js).
 **Шаги:** вычислить дешёвый hash входа → если совпадает с прошлым ходом, вернуть кэш. Инвалидировать при стройке/сносе здания, при миграции населения.

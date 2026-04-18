@@ -1087,6 +1087,12 @@ export function evaluateCondition(value, condition) {
 // Балансировочные коэффициенты в CONFIG.BALANCE (config.js) — ECO_010
 // При изменении — тестируй на 100 ходах: доход должен расти ~5%/10 ходов
 export function runEconomyTick() {
+  // Session 13 (perf): бампаем счётчик кэша `_calcSlotBaseOutput`. Внутри
+  // тика `_pop_eff`, `_capital_ratio`, `production_eff`, `workers`, `level`
+  // и параметры региона остаются стабильными до последнего вызова в шаге 3a,
+  // поэтому все 5 обращений к _calcSlotBaseOutput переиспользуют кэш.
+  if (typeof _bumpBaseOutputCacheTick === 'function') _bumpBaseOutputCacheTick();
+
   // Session 2 (perf): снимок наций один раз на тик — иначе ниже 17+ обходов
   // Object.keys/entries(GAME_STATE.nations) на 900+ ключах. Ни один шаг ниже
   // не добавляет/удаляет нации, поэтому снимок стабилен в пределах тика.
