@@ -81,7 +81,7 @@
 **Шаги:** добавить `GAME_STATE._aiTurnCursor`, на каждый ход брать batch = 50 наций начиная с cursor, cursor += batch (mod total). Критичные решения (война, мир, атака игрока) — обрабатываются немедленно через отдельную ветку.
 **Верификация:** 50 ходов — каждая AI-нация получила хотя бы 1 tick; профайлер AI-части −80%.
 
-### Session 11 — Пауза RAF-циклов на время обсчёта хода
+### Session 11 — Пауза RAF-циклов на время обсчёта хода   ✅ Выполнено (2026-04-18)
 **Цель:** [ui/ambient.js](ui/ambient.js), [ui/aqueduct.js](ui/aqueduct.js) крутят RAF 60 FPS даже когда идёт processTurn(). Ставить их на паузу на время хода.
 **Файлы:** [ui/ambient.js](ui/ambient.js), [ui/aqueduct.js](ui/aqueduct.js), [engine/turn.js](engine/turn.js).
 **Шаги:** `processTurn()` начинается → `AmbientLayer.pause()` + `AquaWidget.pause()`; заканчивается — `.resume()`. Использовать существующий `IS_PROCESSING_TURN` флаг в [engine/turn.js:6](engine/turn.js#L6).

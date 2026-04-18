@@ -97,6 +97,21 @@ export async function processTurn() {
   if (btn) btn.disabled = true;
   _setStep('Ход идёт...');
 
+  // Session 11 — пауза фоновых RAF-анимаций на время обсчёта хода.
+  // AmbientLayer (фоновые точки) и AquaWidget (частицы ресурс-бара) продолжают
+  // крутиться при tab-visible, отнимая CPU main-thread у processTurn().
+  // Пауза идемпотентна; resume() в finally.
+  try {
+    if (typeof window !== 'undefined') {
+      if (window.AmbientLayer && typeof window.AmbientLayer.pause === 'function') {
+        window.AmbientLayer.pause();
+      }
+      if (window.AquaWidget && typeof window.AquaWidget.pause === 'function') {
+        window.AquaWidget.pause();
+      }
+    }
+  } catch (_) {}
+
   // uisuper Этап 12 — анимация переворота клепсидры перед расчётом хода
   try {
     if (typeof window !== 'undefined' && window.Clepsydra && typeof window.Clepsydra.flip === 'function') {
@@ -405,6 +420,18 @@ export async function processTurn() {
     if (btn) {
       btn.disabled = false;
     }
+    // Session 11 — возобновить фоновые RAF-анимации после tick'а.
+    // Запускается даже если тик упал — идемпотентно.
+    try {
+      if (typeof window !== 'undefined') {
+        if (window.AmbientLayer && typeof window.AmbientLayer.resume === 'function') {
+          window.AmbientLayer.resume();
+        }
+        if (window.AquaWidget && typeof window.AquaWidget.resume === 'function') {
+          window.AquaWidget.resume();
+        }
+      }
+    } catch (_) {}
     // uisuper Этап 12 — новый ход: сброс состояния «готов» клепсидры
     try {
       if (typeof window !== 'undefined' && window.Clepsydra && typeof window.Clepsydra.setReady === 'function') {

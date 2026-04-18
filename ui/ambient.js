@@ -14,6 +14,7 @@
     _intensity: 0.3,        // 0 = покой, 1 = война
     _dpr: 1,
     _visible: true,
+    _paused: false,         // Session 11 — форс-пауза на время processTurn()
 
     PARTICLE_COUNT: 120,
 
@@ -84,8 +85,29 @@
       };
     },
 
+    // Session 11 — остановить RAF на время обсчёта хода.
+    // Идемпотентно: повторный pause() безопасен.
+    pause: function () {
+      this._paused = true;
+      if (this._raf != null) {
+        cancelAnimationFrame(this._raf);
+        this._raf = null;
+      }
+    },
+
+    // Session 11 — возобновить RAF после processTurn().
+    // Учитывает _visible (вкладка в фоне) и _inited.
+    resume: function () {
+      if (!this._paused) return;
+      this._paused = false;
+      if (this._inited && this._visible && this._raf == null) {
+        this._loop();
+      }
+    },
+
     _loop: function () {
       if (!this.ctx || !this.canvas) return;
+      if (this._paused) { this._raf = null; return; }
       if (!this._visible) { this._raf = null; return; }
 
       var W = window.innerWidth;

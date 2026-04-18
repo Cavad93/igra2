@@ -33,6 +33,7 @@
     _raf: null,
     _lastTs: 0,
     _initialized: false,
+    _paused: false,  // Session 11 — пауза RAF на время processTurn()
 
     init() {
       if (typeof document === 'undefined') return;
@@ -64,6 +65,27 @@
         this._raf = null;
       }
       this._initialized = false;
+    },
+
+    // Session 11 — остановить RAF без сброса _initialized.
+    // Отличается от stop() тем, что сохраняет инициализацию, частицы и refs.
+    // Идемпотентно: повторный pause() безопасен.
+    pause() {
+      this._paused = true;
+      if (this._raf != null) {
+        cancelAnimationFrame(this._raf);
+        this._raf = null;
+      }
+    },
+
+    // Session 11 — возобновить RAF после processTurn().
+    resume() {
+      if (!this._paused) return;
+      this._paused = false;
+      if (this._initialized && this._raf == null) {
+        this._lastTs = 0;   // сброс dt-scale, чтобы не прыгнуть на большой delta
+        this._raf = requestAnimationFrame((t) => this._loop(t));
+      }
     },
 
     // Session 6: кэш DOM-рефов + skip-if-same для sub-turn вызовов.
@@ -161,6 +183,7 @@
 
     _loop(ts) {
       if (!this._initialized) return;
+      if (this._paused) { this._raf = null; return; }
 
       // Frame-rate independent motion scale (1.0 at 60fps).
       let scale = 1;
