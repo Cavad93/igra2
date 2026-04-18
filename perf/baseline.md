@@ -178,14 +178,22 @@ node tests/perf/turn_budget_test.cjs
 
 ## Что дальше (следующая итерация, если понадобится)
 
-1. **Более агрессивный skip stub-наций** в `engine/economy.js`:
-   добавить критерий «< 5k населения И без активных зданий» — ожидаемо
-   минус ещё 200-300 ms с экономики.
-2. **Полный мемо `_computeRegionProduction`** на уровне региона с
-   fine-grained invalidation (pop-миграция, стройка/снос здания).
-3. **Разбить `engine-ai` чанк** (520 kB, крупнейший после data-): вынести
-   `characters_*`, `super_ou` в отдельный engine-chars.
-4. **Throttle `saveGame` до раз в 3-5 ходов** (не каждый ход) — упирается
-   в UX-решение: игрок ожидает, что автосейв всегда актуален.
+1. ~~**Более агрессивный skip stub-наций**~~ — **Session 23 выполнена**
+   (pop<10k + ≤1 регион → 138 новых stub, Econ p50 −14.9 %).
+2. ~~**Полный мемо `_computeRegionProduction`**~~ — **Session 24 выполнена**
+   (per-tick byRegion cache + hoist subsistence-инвариантов,
+   Econ p50 ~−5 % дополнительно).
+3. ~~**Разбить `engine-ai` чанк**~~ — **Session 25 выполнена**
+   (520 → 404 kB, + engine-gov 110 kB, + engine-chars 6 kB).
+4. ~~**Throttle `saveGame` до раз в 3-5 ходов**~~ — **Session 26 выполнена**
+   (`SAVE_INTERVAL_TURNS=5`, Сохранение p50 2.5 → 0.5 ms, −80 %).
 5. **preview-замер first-interaction** на `npm run build:vite && npm run preview`
-   с реальным браузером — для S14 не делался.
+   с реальным браузером — для S14 не делался, остаётся.
+
+### Накопленный прогресс Sessions 23–26
+
+- Econ p50: baseline S15 ~742 → **~645 ms** (–13 %).
+- Сохранение p50: 2.5 → **0.5 ms** (–80 %).
+- Крупнейший non-data чанк: 520 → **404 kB** (–22 %).
+- Исправлены предсуществующие поломки в `ai_{integration,unit}_test.cjs`
+  (import regex не стрипал ES-import строки).

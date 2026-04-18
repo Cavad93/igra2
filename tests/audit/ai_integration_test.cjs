@@ -26,9 +26,16 @@ global.MAP_REGIONS = {};
 
 function loadScript(relPath) {
   const code     = fs.readFileSync(path.join(root, relPath), 'utf8');
+  // Убираем ES-import/export — тест работает через vm.runInContext и
+  // шимит зависимости через global (CONFIG, SENATE_MANAGERS, etc.).
   const stripped = code
+    .replace(/^import\s+[^;]*;?\s*$/gm, '')
     .replace(/^export\s+\{[^}]*\};?/gm, '')
     .replace(/^export\s+(default\s+)?/gm, '');
+  // CONFIG может понадобиться strategic_llm — передаём заглушку, если ещё не в global.
+  if (typeof global.CONFIG === 'undefined') {
+    global.CONFIG = { MODEL_SONNET: '', MODEL_WAR_AI: '', MODEL_HAIKU: '' };
+  }
   const ctx = vm.createContext({ ...global, module: {}, exports: {}, require });
   vm.runInContext(stripped, ctx, { filename: relPath });
   return ctx;

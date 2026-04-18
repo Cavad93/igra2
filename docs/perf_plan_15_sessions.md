@@ -285,6 +285,25 @@ mutations **−5×** по `MutationObserver`. Функциональный ре�
 вероятно 15-25). При zoom ≥ 6 — все регионы видны. Визуально: крупные
 полисы (Сиракузы, Афины, Александрия) не исчезают.
 
+### Session 26 — Throttle saveGame (раз в CONFIG.SAVE_INTERVAL_TURNS=5 ходов)   ✅ Выполнено (2026-04-18)
+**Цель:** `_buildSavePayload` + `postMessage(payload)` — единственный
+main-thread save-work, оставшийся после S7. Снижаем частоту вызова:
+при interval=5 на 10 ходов happens 2 full-save вместо 10.
+**Файлы:** [config.js](config.js) (`SAVE_INTERVAL_TURNS`),
+[engine/save.js](engine/save.js) (`saveGame(opts)` + throttle state),
+[tests/test_save_roundtrip.mjs](tests/test_save_roundtrip.mjs)
+(передаёт `{ force: true }`).
+**Шаги:**
+1. Добавить `CONFIG.SAVE_INTERVAL_TURNS = 5`.
+2. `saveGame({force=false})`: при `!force && throttle` возвращает
+   `{ skipped: true }` без работы.
+3. Ревизия `test_save_roundtrip.mjs` и исправление пре-существующего
+   бага в `ai_{integration,unit}_test.cjs` loadScript regex (стрипал
+   только `export`, ломался на `import`).
+**Верификация:** Сохранение p50 **2.5 → 0.5 ms (−80 %)**; все audit
+тесты (включая исправленные ai_*) + save-roundtrip + budget guard
+зелёные; syracuse.treasury = 21389 (детерминистично).
+
 ### Session 25 — Разбить engine-ai чанк (520 kB) на engine-ai/gov/chars   ✅ Выполнено (2026-04-18)
 **Цель:** опустить крупнейший non-data чанк ниже порога 500 kB vite,
 изолировать редко-меняющиеся «политические» подсистемы для независимого

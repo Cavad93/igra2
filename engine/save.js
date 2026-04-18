@@ -71,7 +71,41 @@ function _buildSavePayload() {
   return { ...base, _senate: senateData };
 }
 
-export async function saveGame() {
+// Session 26 (perf): trottle-автосохранение.
+// Без { force: true } сохранение пропускается, если (GAME_STATE.turn-1)
+// не кратно CONFIG.SAVE_INTERVAL_TURNS и это не первый ход.
+// Вызовы turn.js — throttled; тесты (test_save_roundtrip) и manual UI-кнопка
+// (если появится) должны передавать `{ force: true }`.
+let _lastSavedTurn = 0;
+
+function _shouldSaveThisTurn() {
+  const turn     = GAME_STATE?.turn ?? 1;
+  const interval = Math.max(1, CONFIG.SAVE_INTERVAL_TURNS ?? 1);
+  // Всегда сохраняем на первом ходу (начальный snapshot) и на последнем
+  // сохранённом + interval (чтобы lose на крэше был ограничен).
+  if (turn === 1) return true;
+  if (turn - _lastSavedTurn >= interval) return true;
+  return false;
+}
+
+export function _forceNextSave() {
+  // Сбрасывает последний-сохранённый курсор; следующий saveGame() без force
+  // всё равно сработает. Используется, когда extern UI хочет триггернуть save.
+  _lastSavedTurn = -Infinity;
+}
+
+export function _getLastSavedTurn() {
+  return _lastSavedTurn;
+}
+
+export async function saveGame(opts) {
+  const force = !!(opts && opts.force);
+  if (!force && !_shouldSaveThisTurn()) {
+    // Сохранение пропущено по throttle-расписанию. Возвращаемся без работы.
+    return { skipped: true };
+  }
+  _lastSavedTurn = GAME_STATE?.turn ?? _lastSavedTurn;
+
   const payload = _buildSavePayload();
   const worker  = _getSaveWorker();
 

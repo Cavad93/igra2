@@ -26,10 +26,15 @@ const root = path.join(__dirname, '..', '..');
 
 function loadScript(relPath) {
   const code    = fs.readFileSync(path.join(root, relPath), 'utf8');
-  // Remove ESM export statements so CJS vm can run the file
+  // Remove ESM import/export statements so CJS vm can run the file.
+  // Шимим CONFIG через global, если нужен (например, ai/strategic_llm.js).
   const stripped = code
+    .replace(/^import\s+[^;]*;?\s*$/gm, '')
     .replace(/^export\s+\{[^}]*\};?/gm, '')
     .replace(/^export\s+(default\s+)?/gm, '');
+  if (typeof global.CONFIG === 'undefined') {
+    global.CONFIG = { MODEL_SONNET: '', MODEL_WAR_AI: '', MODEL_HAIKU: '' };
+  }
   const ctx = vm.createContext({ ...global, module: {}, exports: {}, require });
   vm.runInContext(stripped, ctx, { filename: relPath });
   return ctx;

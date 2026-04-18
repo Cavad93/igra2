@@ -130,6 +130,14 @@ export const CONFIG = {
 
   // Сохранение
   SAVE_KEY: 'ancient_strategy_save',
+  // Session 26 (perf): автосохранение выполняется каждые N ходов,
+  // а не после каждого хода. При крэше теряется максимум (N-1) ходов.
+  // Save-payload создаётся на main thread (_buildSavePayload + structured
+  // clone в postMessage) и стоит ~3-5 ms/ход на 10-15 МБ state; при
+  // N=5 это даёт −80% веса этого шага в сумме.
+  // Игрок всегда сохраняется на ходах: 1 (инициализация), каждом N-м,
+  // и через window.forceSaveGame() (UI-хук для будущей кнопки «Save»).
+  SAVE_INTERVAL_TURNS: 5,
 
   // Шанс случайного события за ход
   RANDOM_EVENT_CHANCE: 0.10,

@@ -72,9 +72,11 @@ const before = await page.evaluate(() => ({
   relations: Object.keys(GAME_STATE?.diplomacy?.relations ?? {}).length,
 }));
 
-// Сохраняем (worker path) и ждём, пока запись дойдёт до IDB
+// Сохраняем (worker path) и ждём, пока запись дойдёт до IDB.
+// Session 26: throttle пропускает save, если ход не N-кратен — тест
+// форсирует запись через { force: true } независимо от номера хода.
 await page.evaluate(async () => {
-  await saveGame();
+  await saveGame({ force: true });
   await new Promise(r => setTimeout(r, 600));   // setTimeout(0) + worker + IDB round-trip
 });
 
