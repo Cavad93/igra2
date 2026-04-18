@@ -111,6 +111,80 @@ export function getBuildingFootprint(buildingId) {
   return 0;
 }
 
+// ── Session 27: предвычисленные footprint'ы для can_build[] ─────────────────
+// BUILDINGS статичны — считать лукапы по 7 id на каждый регион каждый ход
+// бессмысленно. Кэшируем один раз. MAP заменяем на plain object для v8.
+const CAN_BUILD_IDS = Object.freeze([
+  'wheat_family_farm', 'wheat_villa', 'wheat_latifundium',
+  'farm', 'latifundium', 'mine', 'granary',
+]);
+let _canBuildFootprints = null;
+function _getCanBuildFootprints() {
+  if (_canBuildFootprints) return _canBuildFootprints;
+  const map = {};
+  for (let i = 0; i < CAN_BUILD_IDS.length; i++) {
+    const id = CAN_BUILD_IDS[i];
+    map[id] = getBuildingFootprint(id) || 0;
+  }
+  _canBuildFootprints = map;
+  return map;
+}
+
+// ── Session 27: region-constant инварианты (биом, площадь-производные) ─────
+// biome и area_ha неизменны в рантайме (engine/init.js + engine/save.js
+// записывают биом лишь если его ещё нет). Все поля, зависящие только от
+// этих двух входов, считаем один раз и кэшируем на region._landConst.
+// Ключ валидности — пара (_biome, _area).
+function _ensureLandConst(region, regionId) {
+  const cached = region._landConst;
+  const biomeHint = region.biome;
+  const areaHint  = region.area_ha;
+
+  // Быстрый выход: если кэш уже заполнен и базовые поля не поменялись —
+  // ни одной лукап-операции по REGION_BIOMES/REGION_AREAS не делаем.
+  if (cached && cached._biome === biomeHint && cached._area === areaHint) {
+    return cached;
+  }
+
+  const numId = String(regionId).replace('r', '');
+  const biome = biomeHint
+    ?? (typeof REGION_BIOMES !== 'undefined' ? REGION_BIOMES[numId] : null)
+    ?? 'mediterranean_hills';
+  const area  = areaHint
+    ?? (typeof REGION_AREAS !== 'undefined' ? (REGION_AREAS[numId] ?? 0) * 100 : 0);
+
+  if (cached && cached._biome === biome && cached._area === area) {
+    return cached;
+  }
+
+  const params = BIOME_LAND_PARAMS[biome] ?? BIOME_LAND_PARAMS['mediterranean_hills'];
+
+  if (!area) {
+    region._landConst = {
+      _biome: biome, _area: 0,
+      total_ha: 0, unsuitable_ha: 0, reserve_ha: 0,
+      max_arable_ha: 0, max_buildings_ha: 0, buildable_ha: 0,
+      per_person_ha: params.ha_per_person, biome,
+    };
+    return region._landConst;
+  }
+
+  const unsuitable_ha    = Math.round(area * params.unsuitable_pct);
+  const reserve_ha       = Math.round(area * params.reserve_pct);
+  const max_arable_ha    = area - unsuitable_ha - reserve_ha;
+  const max_buildings_ha = Math.floor(area * 0.70); // MAX_BUILDING_PCT=0.70
+  const buildable_ha     = Math.min(max_arable_ha, max_buildings_ha);
+
+  region._landConst = {
+    _biome: biome, _area: area,
+    total_ha: area,
+    unsuitable_ha, reserve_ha,
+    max_arable_ha, max_buildings_ha, buildable_ha,
+    per_person_ha: params.ha_per_person, biome,
+  };
+  return region._landConst;
+}
+
 // ── ОСНОВНАЯ ФУНКЦИЯ ─────────────────────────────────────────────────────────
 /**
  * Вычисляет земельную ёмкость региона.
@@ -120,20 +194,9 @@ export function getBuildingFootprint(buildingId) {
  */
 export function calcRegionLandCapacity(region, regionId) {
 
-  // Определяем биом: из объекта региона или из REGION_BIOMES
-  const numId  = String(regionId).replace('r', '');
-  const biome  = region.biome
-              ?? (typeof REGION_BIOMES !== 'undefined' ? REGION_BIOMES[numId] : null)
-              ?? 'mediterranean_hills';
-
-  const params = BIOME_LAND_PARAMS[biome]
-              ?? BIOME_LAND_PARAMS['mediterranean_hills'];
-
-  // Площадь: region.area_ha если есть, иначе из REGION_AREAS (км² → га)
-  const total = region.area_ha
-             ?? (typeof REGION_AREAS !== 'undefined'
-                 ? (REGION_AREAS[numId] ?? 0) * 100
-                 : 0);
+  // Session 27: константы региона — из кэша (без Math.round, без лукапов).
+  const c = _ensureLandConst(region, regionId);
+  const total = c.total_ha;
 
   if (total === 0) {
     return {
@@ -145,85 +208,73 @@ export function calcRegionLandCapacity(region, regionId) {
 
   const pop = region.population ?? 0;
 
-  // ── A: Непригодная земля (константа биома) ───────────────────────────────
-  const unsuitable_ha = Math.round(total * params.unsuitable_pct);
-
   // ── B: Земля под поселения (информационная, НЕ вычитается из пашни) ──────
   // Исторически: города строились на холмах, побережье, склонах — не на
   // пахотных равнинах. Поэтому settlement_ha не конкурирует с farmland.
-  const settlement_ha = Math.round(pop * params.ha_per_person);
-
-  // ── C: Обязательный резерв леса и пастбищ (константа биома) ─────────────
-  const reserve_ha = Math.round(total * params.reserve_pct);
-
-  // ── D: Пахотный фонд региона (константа — зависит от площади и биома) ───
-  // settlement_ha НЕ вычитается: поселения занимают непригодную/склонную
-  // землю, а не пашню. Пашня — это только равнины и долины.
-  const max_arable_ha = total - unsuitable_ha - reserve_ha;
-  const arable_ha     = max_arable_ha;   // одно значение, без динамики
+  const settlement_ha = Math.round(pop * c.per_person_ha);
 
   // ── E: Занято зданиями ───────────────────────────────────────────────────
-  // Читаем footprint_ha из BUILDINGS[id] — единственный источник истины.
-  const buildings_ha = (region.building_slots ?? [])
-    .filter(s => s.status !== 'demolished')
-    .reduce((sum, s) => {
-      return sum + getBuildingFootprint(s.building_id) * (s.level ?? 1);
-    }, 0);
+  // Session 27: однопроходный for без filter().reduce() аллокаций.
+  let buildings_ha = 0;
+  const slots = region.building_slots;
+  if (slots && slots.length) {
+    for (let i = 0; i < slots.length; i++) {
+      const s = slots[i];
+      if (!s || s.status === 'demolished') continue;
+      const fp = getBuildingFootprint(s.building_id);
+      if (fp) buildings_ha += fp * (s.level ?? 1);
+    }
+  }
 
-  // ── F: Жёсткий лимит застройки — не более 70% площади региона ──────────
-  // Критическое условие: здания (все, любого типа) в сумме не должны
-  // занимать более 70% полной площади региона (total_ha), а не только пашни.
-  const MAX_BUILDING_PCT  = 0.70;
-  const max_buildings_ha  = Math.floor(total * MAX_BUILDING_PCT);
-
-  // Реальный лимит свободной земли = минимум из пашни и 70%-порога.
-  const buildable_ha = Math.min(arable_ha, max_buildings_ha);
-  const free_ha      = Math.max(0, buildable_ha - buildings_ha);
-
-  // ── G: Степень освоения (0.0 — пусто, 1.0 — полностью застроено) ────────
-  // Считаем относительно жёсткого лимита (70% площади), а не только пашни.
-  const exploitation = max_buildings_ha > 0
-    ? Math.min(1.0, buildings_ha / max_buildings_ha)
+  // ── F: Свободная земля ───────────────────────────────────────────────────
+  const free_ha      = Math.max(0, c.buildable_ha - buildings_ha);
+  const exploitation = c.max_buildings_ha > 0
+    ? Math.min(1.0, buildings_ha / c.max_buildings_ha)
     : 1.0;
 
   // ── H: Плотность населения (предупреждения) ──────────────────────────────
-  // settlement_ha используем только для информационных предупреждений,
-  // не как ограничитель строительства.
-  const pop_density = total > 0 ? Math.round(pop / (total / 100)) : 0; // чел/км²
+  const pop_density = Math.round(pop / (total / 100)); // чел/км²
   const warnings = [];
-  if (settlement_ha > arable_ha * 0.8) {
+  if (settlement_ha > c.max_arable_ha * 0.8) {
     warnings.push('ПЕРЕНАСЕЛЕНИЕ: жилая зона занимает более 80% пахотного фонда');
   }
-  if (buildings_ha >= max_buildings_ha) {
+  if (buildings_ha >= c.max_buildings_ha) {
     warnings.push('ЛИМИТ ЗАСТРОЙКИ: здания занимают 70% площади региона — строительство запрещено');
-  } else if (free_ha < buildable_ha * 0.05) {
+  } else if (free_ha < c.buildable_ha * 0.05) {
     warnings.push('ЗЕМЛЯ ЗАКАНЧИВАЕТСЯ: осталось менее 5% от допустимого лимита застройки');
   }
 
-  return {
-    total_ha:     total,
-    unsuitable_ha,              // константа биома
-    settlement_ha,              // информационно (не ограничивает строительство)
-    reserve_ha,                 // константа биома
-    max_arable_ha,              // = arable_ha (сохранено для совместимости)
-    arable_ha,                  // пахотный фонд (константа биома + площади)
-    max_buildings_ha,           // ЖЁСТКИЙ ЛИМ: 70% от total_ha
-    buildable_ha,               // эффективный лимит = min(arable_ha, max_buildings_ha)
-    buildings_ha,               // занято зданиями
-    free_ha,                    // СВОБОДНО ДЛЯ СТРОИТЕЛЬСТВА (с учётом 70%-лимита)
-    exploitation,               // коэффициент освоения 0.0-1.0 (отн. 70%-лимита)
-    pop_density,                // чел/км² (для отладки)
-    warnings,
-    biome,                      // для отладки
+  // can_build — 7 заранее посчитанных footprint'ов.
+  const fp = _getCanBuildFootprints();
+  const can_build = {};
+  if (free_ha > 0) {
+    for (let i = 0; i < CAN_BUILD_IDS.length; i++) {
+      const id = CAN_BUILD_IDS[i];
+      const f  = fp[id];
+      can_build[id] = f > 0 ? Math.floor(free_ha / f) : 0;
+    }
+  } else {
+    for (let i = 0; i < CAN_BUILD_IDS.length; i++) {
+      can_build[CAN_BUILD_IDS[i]] = 0;
+    }
+  }
 
-    // Сколько единиц каждого здания ещё можно построить (уровней)
-    can_build: Object.fromEntries(
-      ['wheat_family_farm', 'wheat_villa', 'wheat_latifundium',
-       'farm', 'latifundium', 'mine', 'granary']
-        .map(id => [id, free_ha > 0
-          ? Math.floor(free_ha / (getBuildingFootprint(id) || Infinity))
-          : 0])
-    ),
+  return {
+    total_ha:         total,
+    unsuitable_ha:    c.unsuitable_ha,      // константа биома
+    settlement_ha,                           // информационно (не ограничивает строительство)
+    reserve_ha:       c.reserve_ha,          // константа биома
+    max_arable_ha:    c.max_arable_ha,       // = arable_ha (сохранено для совместимости)
+    arable_ha:        c.max_arable_ha,       // пахотный фонд (константа биома + площади)
+    max_buildings_ha: c.max_buildings_ha,    // ЖЁСТКИЙ ЛИМ: 70% от total_ha
+    buildable_ha:     c.buildable_ha,        // эффективный лимит = min(arable_ha, max_buildings_ha)
+    buildings_ha,                            // занято зданиями
+    free_ha,                                 // СВОБОДНО ДЛЯ СТРОИТЕЛЬСТВА
+    exploitation,                            // коэффициент освоения 0.0-1.0
+    pop_density,                             // чел/км² (для отладки)
+    warnings,
+    biome:            c.biome,               // для отладки
+    can_build,
   };
 }
 

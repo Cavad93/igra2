@@ -285,6 +285,29 @@ mutations **−5×** по `MutationObserver`. Функциональный ре�
 вероятно 15-25). При zoom ≥ 6 — все регионы видны. Визуально: крупные
 полисы (Сиракузы, Афины, Александрия) не исчезают.
 
+### Session 27 — Memoize region-invariants в `calcRegionLandCapacity`   ✅ Выполнено (2026-04-18)
+**Цель:** `engine/turn.js:267` вызывает `calcRegionLandCapacity` для всех
+3734 регионов каждый ход. Внутри — три `Math.round(total*pct)`,
+`filter().reduce()` по `building_slots`, `Object.fromEntries(['wheat_family_farm',…].map(...))`
+с 7× `getBuildingFootprint` и `REGION_BIOMES`/`REGION_AREAS` лукапами.
+Всё это для констант от `(biome, area_ha)` — неизменных в рантайме
+(grep `region.biome =` → только init/save-load при `!r.biome`).
+**Файлы:** [engine/land_capacity.js](engine/land_capacity.js)
+(новые `_ensureLandConst`, `_getCanBuildFootprints`).
+**Шаги:**
+1. Кэш `region._landConst` с полями `total_ha`, `unsuitable_ha`,
+   `reserve_ha`, `max_arable_ha`, `max_buildings_ha`, `buildable_ha`,
+   `per_person_ha`, `biome` — ключ валидности пара (`_biome`, `_area`).
+2. Замена `filter().reduce()` на однопроходный `for (let i…)` без
+   временных массивов.
+3. Замена `Object.fromEntries(['wheat_family_farm',…].map)` + 7×
+   `getBuildingFootprint` на предвычисленную таблицу `_canBuildFootprints`
+   и плоский `for`.
+**Результат:** full turn mean **2090.7 → 1864.5 ms (−10.8 %)**, p50
+**1812.8 → 1593.8 ms (−12.1 %)**, p95 **4674.6 → 3910.5 ms (−16.3 %)**.
+Econ p50 **655.5 → 540.9 ms (−17.4 %)**. Treasury=21389 идентично
+baseline. `perf/session-27.md`.
+
 ### Session 26 — Throttle saveGame (раз в CONFIG.SAVE_INTERVAL_TURNS=5 ходов)   ✅ Выполнено (2026-04-18)
 **Цель:** `_buildSavePayload` + `postMessage(payload)` — единственный
 main-thread save-work, оставшийся после S7. Снижаем частоту вызова:
