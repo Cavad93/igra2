@@ -285,6 +285,34 @@ mutations **−5×** по `MutationObserver`. Функциональный ре�
 вероятно 15-25). При zoom ≥ 6 — все регионы видны. Визуально: крупные
 полисы (Сиракузы, Афины, Александрия) не исчезают.
 
+### Session 29 — Per-tick memo стоимости входов рецептов по building_id   ✅ Выполнено (2026-04-18)
+**Цель:** `Σ(input.amount × market.price)` для каждого рецепта считается
+**трижды** независимо на каждый активный слот каждого экономического тика:
+в `processAllRecipes` (шаг 1a), `updateBuildingFinancials` (шаг 3a) и
+`recomputeAllProductionCosts` (шаг 5a). На baseline-пресете это ~10k
+слот-обходов × 1-3 входа × 3 раза = ~60-100k избыточных `market[g]?.price`
+lookups за тик, хотя сумма зависит только от `(building_id, recipe, market)`,
+а рыночные цены стабильны между шагами 1a и 5a (updateMarketPrices — в 5d).
+**Файлы:** [engine/buildings.js](engine/buildings.js) (новые
+`_bumpRecipeCostCacheTick`, `_getRecipeInputCostsByBuilding` + замены в 5
+callsite'ах), [engine/economy.js](engine/economy.js) (бамп в начале
+`runEconomyTick`).
+**Шаги:**
+1. Ключ кэша — `building_id`; значение — `Array<inputCostPerUnit[rIdx]>`.
+   ~50 уникальных building_id делят одну запись вместо 10k слот-обходов.
+2. Инвалидация раз-за-тик бампом `_bumpRecipeCostCacheTick()` из
+   `runEconomyTick` (до шага 1).
+3. Замена внутренних per-input loop'ов на cache-read в
+   `processAllRecipes`, `updateBuildingFinancials`,
+   `recomputeAllProductionCosts`, `_estimateSlotProfit`,
+   `_estimateSlotProfitability`. Математика идентична, `treasury = 21389`.
+**Результат:** total mean **2398 → 2320–2371 ms** (−1.1…−3.3 %), econ mean
+**986 → 925–978 ms** (−0.8…−6.2 %) — в пределах noise (±3 %), но знак
+положительный на всех трёх прогонах. Главный осязаемый итог — чистое
+удаление трёх продублированных внутренних циклов и подготовка cost-функции
+как переиспользуемого хелпера. Все audit тесты (14×PASS) + budget guard
+20/20 зелёные. `perf/session-29.md`.
+
 ### Session 28 — Log-spam gate в `updateRegionSpecialization` (turn-10 p95)   ✅ Выполнено (2026-04-18)
 **Цель:** `perf/last_run.json` показывал p95 Экономики **2782 ms** vs p50 **541 ms**
 — одиночный шип на 10-м ходу. Session 27 notes подозревали AI tier2,

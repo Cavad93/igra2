@@ -140,6 +140,61 @@ export function _getCachedRegionalBuildingProduction(nationId) {
 }
 
 // ──────────────────────────────────────────────────────────────
+// Session 29 (perf): per-tick memo стоимости входов рецептов по building_id.
+// Σ(input.amount × market[input.good].price) зависит только от (buildingId,
+// recipe_index, market_prices). Рыночные цены стабильны между шагами 1a
+// (processAllRecipes) и 5a (recomputeAllProductionCosts) — `updateMarketPrices`
+// вызывается строго после 5a. Те же самые входы считаются также в
+// updateBuildingFinancials (шаг 3a) и в _estimateSlotProfit/Profitability.
+// Ключ кэша — building_id (не слот), поэтому ~50 уникальных building_id
+// делят одну запись, а не 10k отдельных слот-обходов.
+// ──────────────────────────────────────────────────────────────
+let _recipeCostCacheTick = 1;
+const _RECIPE_INPUT_COST_CACHE = new Map(); // buildingId → { t, costs: number[] }
+
+export function _bumpRecipeCostCacheTick() {
+  _recipeCostCacheTick = (_recipeCostCacheTick + 1) | 0;
+  if (_recipeCostCacheTick === 0) _recipeCostCacheTick = 1;
+}
+
+export function _getRecipeCostCacheTick() {
+  return _recipeCostCacheTick;
+}
+
+// Возвращает массив `inputCostPerUnit[rIdx]` = Σ(input.amount × price) для
+// каждого рецепта здания (совпадает по индексу с BUILDING_RECIPES[buildingId]).
+// Если рецептов нет — возвращает пустой массив. Цены тянутся из GAME_STATE.market
+// с fallback на GOODS[input.good].base_price и константу 10 (как в исходных loop'ах).
+export function _getRecipeInputCostsByBuilding(buildingId) {
+  const cached = _RECIPE_INPUT_COST_CACHE.get(buildingId);
+  if (cached && cached.t === _recipeCostCacheTick) return cached.costs;
+
+  const recipes = (typeof BUILDING_RECIPES !== 'undefined')
+    ? (BUILDING_RECIPES[buildingId] || [])
+    : [];
+  const market = (typeof GAME_STATE !== 'undefined' && GAME_STATE.market) || {};
+  const GOODS_ = (typeof GOODS !== 'undefined') ? GOODS : null;
+  const costs = new Array(recipes.length);
+
+  for (let i = 0; i < recipes.length; i++) {
+    const inputs = recipes[i]?.inputs || [];
+    let sum = 0;
+    for (let j = 0; j < inputs.length; j++) {
+      const inp = inputs[j];
+      const mp = market[inp.good]?.price;
+      const price = (mp != null)
+        ? mp
+        : ((GOODS_ ? GOODS_[inp.good]?.base_price : null) ?? 10);
+      sum += inp.amount * price;
+    }
+    costs[i] = sum;
+  }
+
+  _RECIPE_INPUT_COST_CACHE.set(buildingId, { t: _recipeCostCacheTick, costs });
+  return costs;
+}
+
+// ──────────────────────────────────────────────────────────────
 // Session 13 (perf): intra-tick memoization of `_calcSlotBaseOutput`.
 // В пределах одного processTurn() функция вызывается на каждый активный
 // слот ~5 раз:
@@ -325,7 +380,12 @@ export function processAllRecipes(nationId) {
       const baseOutput = _calcSlotBaseOutput(slot, region, nation);
       const ratios     = {};
 
-      for (const recipe of recipes) {
+      // Session 29 (perf): Σ(input.amount × market.price) per-recipe кэшируется
+      // по building_id на один тик — сотни слотов одного типа переиспользуют.
+      const inputCosts = _getRecipeInputCostsByBuilding(slot.building_id);
+
+      for (let rIdx = 0; rIdx < recipes.length; rIdx++) {
+        const recipe         = recipes[rIdx];
         const good           = recipe.output_good;
         const expectedOutput = baseOutput[good] || 0;
 
@@ -372,14 +432,8 @@ export function processAllRecipes(nationId) {
           }
         }
 
-        // ── Себестоимость: Σ(input.amount × price) + labor_cost ───────────
-        let cost = recipe.labor_cost_per_worker;
-        for (const input of recipe.inputs) {
-          const price = market[input.good]?.price
-                     ?? (typeof GOODS !== 'undefined' ? GOODS[input.good]?.base_price : null)
-                     ?? 10;
-          cost += input.amount * price;
-        }
+        // ── Себестоимость: labor + Σ(input.amount × price) из кэша ─────────
+        const cost = recipe.labor_cost_per_worker + (inputCosts[rIdx] || 0);
         if (!goodCosts[good]) goodCosts[good] = [];
         goodCosts[good].push(cost);
       }
@@ -429,16 +483,19 @@ export function recomputeAllProductionCosts(nationId) {
     for (const slot of region.building_slots) {
       if (slot.status !== 'active') continue;
 
-      for (const recipe of (recipes[slot.building_id] || [])) {
-        const good = recipe.output_good;
-        let cost   = recipe.labor_cost_per_worker;
+      const slotRecipes = recipes[slot.building_id] || [];
+      if (!slotRecipes.length) continue;
 
-        for (const input of (recipe.inputs || [])) {
-          const price = market[input.good]?.price
-            ?? (typeof GOODS !== 'undefined' ? GOODS[input.good]?.base_price : null)
-            ?? 10;
-          cost += input.amount * price;
-        }
+      // Session 29 (perf): Σ(input.amount × market.price) кэшируется по
+      // building_id на один тик. Цены стабильны между шагами 1a и 5a
+      // (updateMarketPrices запускается после 5a), поэтому результат
+      // идентичен полной переборке входов.
+      const inputCosts = _getRecipeInputCostsByBuilding(slot.building_id);
+
+      for (let rIdx = 0; rIdx < slotRecipes.length; rIdx++) {
+        const recipe = slotRecipes[rIdx];
+        const good   = recipe.output_good;
+        const cost   = recipe.labor_cost_per_worker + (inputCosts[rIdx] || 0);
 
         if (!goodCosts[good]) goodCosts[good] = [];
         goodCosts[good].push(cost);
@@ -1249,14 +1306,15 @@ export function _estimateSlotProfit(buildingId, region, nation) {
   let inputCosts = 0;
   const recipes = (typeof BUILDING_RECIPES !== 'undefined')
     ? (BUILDING_RECIPES[buildingId] ?? []) : [];
-  for (const recipe of recipes) {
+  // Session 29 (perf): переиспользуем per-tick кэш «стоимости входов» —
+  // _estimateSlotProfit вызывается в processAutonomousBuilding внутри
+  // runEconomyTick, цены рынка стабильны, кэш валиден.
+  const cachedInputs = recipes.length ? _getRecipeInputCostsByBuilding(buildingId) : null;
+  for (let rIdx = 0; rIdx < recipes.length; rIdx++) {
+    const recipe  = recipes[rIdx];
     const baseAmt = baseOut[recipe.output_good] || 0;
-    for (const input of recipe.inputs) {
-      const price = market[input.good]?.price
-        ?? (typeof GOODS !== 'undefined' ? GOODS[input.good]?.base_price : null)
-        ?? 10;
-      inputCosts += baseAmt * input.amount * price;
-    }
+    if (baseAmt <= 0) continue;
+    inputCosts += baseAmt * (cachedInputs[rIdx] || 0);
   }
 
   return gross - inputCosts - wages - _calcBuildingMaintenance(bDef, 1);
@@ -1478,7 +1536,6 @@ export function updateBuildingFinancials(nationId) {
   const nation = GAME_STATE.nations[nationId];
   if (!nation) return;
 
-  const market    = GAME_STATE.market;
   for (const rid of nation.regions) {
     const region = GAME_STATE.regions[rid];
     if (!region?.building_slots?.length) continue;
@@ -1503,18 +1560,18 @@ export function updateBuildingFinancials(nationId) {
       const baseOutput = _calcSlotBaseOutput(slot, region, nation);
       const ratios     = slot._recipe_ratios ?? {};
 
-      for (const recipe of recipes) {
+      // Session 29 (perf): inputCostPerUnit[rIdx] = Σ(input.amount × market.price)
+      // кэшируется по building_id на тик. input_costs = actualOut × inputCostPerUnit.
+      const inputCosts = recipes.length ? _getRecipeInputCostsByBuilding(slot.building_id) : null;
+
+      for (let rIdx = 0; rIdx < recipes.length; rIdx++) {
+        const recipe    = recipes[rIdx];
         const good      = recipe.output_good;
         const baseAmt   = baseOutput[good] || 0;
         const ratio     = Object.prototype.hasOwnProperty.call(ratios, good) ? ratios[good] : 1.0;
         const actualOut = baseAmt * ratio;
-
-        for (const input of recipe.inputs) {
-          const price = market[input.good]?.price
-                     ?? (typeof GOODS !== 'undefined' ? GOODS[input.good]?.base_price : null)
-                     ?? 10;
-          input_costs += actualOut * input.amount * price;
-        }
+        if (actualOut <= 0) continue;
+        input_costs += actualOut * (inputCosts[rIdx] || 0);
       }
 
       // Содержание занятых рабов по рыночной стоимости корзин
@@ -1652,14 +1709,15 @@ export function _estimateSlotProfitability(slot, bDef, region, nation) {
   let inputCosts = 0;
   const recipes = (typeof BUILDING_RECIPES !== 'undefined')
                   ? (BUILDING_RECIPES[slot.building_id] ?? []) : [];
-  for (const recipe of recipes) {
+  // Session 29 (perf): per-tick кэш стоимости входов по building_id.
+  // _estimateSlotProfitability вызывается в applyBuildingAdaptiveBehavior
+  // на паузированных/закрытых слотах во время runEconomyTick.
+  const cachedInputs = recipes.length ? _getRecipeInputCostsByBuilding(slot.building_id) : null;
+  for (let rIdx = 0; rIdx < recipes.length; rIdx++) {
+    const recipe  = recipes[rIdx];
     const baseAmt = baseOut[recipe.output_good] || 0;
-    for (const input of recipe.inputs) {
-      const price = market[input.good]?.price
-                 ?? (typeof GOODS !== 'undefined' ? GOODS[input.good]?.base_price : null)
-                 ?? 10;
-      inputCosts += baseAmt * input.amount * price;
-    }
+    if (baseAmt <= 0) continue;
+    inputCosts += baseAmt * (cachedInputs[rIdx] || 0);
   }
 
   return (gross - inputCosts - wages - maint) > 0;

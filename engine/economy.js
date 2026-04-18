@@ -1158,6 +1158,14 @@ export function runEconomyTick() {
   // переиспользуют один byRegion-map — второй обход слотов исключается.
   if (typeof _bumpRegionalProdCacheTick === 'function') _bumpRegionalProdCacheTick();
 
+  // Session 29 (perf): инвалидируем per-tick кэш стоимости входов рецептов
+  // (`Σ(input.amount × market.price)` по building_id). Шаги 1a (processAllRecipes),
+  // 3a (updateBuildingFinancials) и 5a (recomputeAllProductionCosts) делят одну
+  // таблицу — ~50 уникальных building_id × 1-3 рецепта вместо ~10k слот-обходов.
+  // Цены стабильны между шагами 1a и 5a; updateMarketPrices запускается после 5a,
+  // поэтому кэш корректен на всём экономическом тике.
+  if (typeof _bumpRecipeCostCacheTick === 'function') _bumpRecipeCostCacheTick();
+
   // Session 2 (perf): снимок наций один раз на тик — иначе ниже 17+ обходов
   // Object.keys/entries(GAME_STATE.nations) на 900+ ключах. Ни один шаг ниже
   // не добавляет/удаляет нации, поэтому снимок стабилен в пределах тика.
