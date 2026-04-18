@@ -111,6 +111,191 @@
 **Шаги:** написать тест, который запускает 10 ходов на фикстурных данных и падает если p95 > X ms (X = baseline после Session 14 × 1.2). Запустить профайлер всех 14 предыдущих сессий, собрать финальный отчёт с графиком «baseline → S1 → … → S14».
 **Верификация:** `node tests/perf/turn_budget_test.cjs` падает, если искусственно замедлить любой step >20%.
 
+---
+
+## Расширение: Sessions 16–22 — Interactive latency
+
+Sessions 1–15 сфокусированы на per-turn времени (`processTurn()`). Жалоба игрока:
+**лагает zoom/pan карты, клики по вкладкам и ввод текста в диалогах** —
+это отдельное измерение производительности, которое per-turn не покрывает.
+
+### Контекст (на основе аудита ui/map.js, ui/ambient.js, ui/aqueduct.js,
+### ui/input.js, ui/government_tab.js, engine/init.js)
+
+Главные источники interactive-lag:
+
+1. **`_updateNationLabelVisibility()` [ui/map.js:2244](ui/map.js#L2244)** — запускается
+   на каждый pan/zoom через RAF. Внутри: PCA по всем полигонам каждой нации,
+   `canvas.measureText()` для fontSize, SVG-манипуляции. Debounce 80ms не хватает.
+2. **`_applyZoomFillOpacity()` [ui/map.js:3574](ui/map.js#L3574)** — на `zoomend`
+   итерирует по всем ~3734 `regionLayers` и вызывает `setStyle()` на каждый
+   (даже при `preferCanvas: true` это не бесплатно).
+3. **RAF-циклы `AmbientLayer` / `AquaWidget`** — Session 11 ставит на паузу
+   только во время `processTurn()`. Во время zoom/pan они крутятся 60 FPS и
+   отнимают CPU у label/style handler'ов.
+4. **`renderAll()` [engine/init.js:234](engine/init.js#L234)** — 12+ рендер-функций
+   подряд, вызывается синхронно из input-хэндлеров: `ui/input.js:183,483`,
+   `ui/government_tab.js:864,3167`, `ui/panels.js:1936,1966,2019`.
+5. **Горячие `innerHTML =`** после Session 6 осталось: `ui/government_tab.js` —
+   33 вхождений (в т.ч. диалоги персонажей, 3345-3389), `ui/panels.js` — 12,
+   `ui/input.js` — 10. Полный тир-даун панели на каждое действие.
+
+### Новый метрический harness
+
+`perf/profile.mjs` измеряет per-turn, а не interactive. Session 16 создаёт
+`perf/interactive.mjs` (Playwright + CDP Performance domain): измеряет
+input-to-paint latency на клик/keystroke, FPS во время `map.panBy()` / `zoomIn()`,
+количество long-tasks (>50 ms) на main thread. Базовая линия фиксируется в
+`perf/interactive_baseline.md` перед Session 17.
+
+### Session 16 — Interactive harness + pause RAF на zoom/pan
+**Цель:** получить численную базу для interactive-lag и убрать первую простую
+конкуренцию за CPU — `AmbientLayer` / `AquaWidget` RAF-циклы крутятся во
+время zoom/pan, удваивая нагрузку на main thread.
+**Файлы:** новый `perf/interactive.mjs`, новый `perf/interactive_baseline.md`,
+[ui/map.js](ui/map.js) (регистрация listener'ов `zoomstart/movestart` +
+`zoomend/moveend` с debounce 150 ms).
+**Шаги:**
+1. Написать `perf/interactive.mjs`: открывает игру в headless Chromium,
+   эмулирует 30 zoomIn, 30 panBy, 60 клика по случайной вкладке, 100 keystroke
+   в input. Снимает `performance.getEntriesByType('longtask')`, FPS через
+   `requestAnimationFrame`-таймер, input-to-paint через `performance.mark`.
+2. Сохранить в `perf/interactive_baseline.md` три числа: mean-FPS при pan,
+   p95 input-to-paint, сумма longtask > 50 ms за сценарий.
+3. В `ui/map.js` добавить:
+   ```js
+   leafletMap.on('zoomstart movestart', () => {
+     window.AmbientLayer?.pause(); window.AquaWidget?.pause();
+   });
+   leafletMap.on('zoomend moveend', debounce(() => {
+     window.AmbientLayer?.resume(); window.AquaWidget?.resume();
+   }, 150));
+   ```
+**Верификация:** `node perf/interactive.mjs` — mean-FPS при pan **+10…20 %**,
+сумма longtask на pan **−20 %**. `tests/audit/*_test.cjs` — зелёные.
+
+### Session 17 — Throttle + кэш `_updateNationLabelVisibility()`
+**Цель:** убрать тяжелейший handler pan/zoom — PCA + `canvas.measureText()` +
+SVG DOM для всех видимых наций запускается на каждый RAF-frame pan'а.
+**Файлы:** [ui/map.js](ui/map.js) (функции `_updateNationLabelVisibility`,
+`scheduleNationLabelUpdate`, `_pcaAnglePx`).
+**Шаги:**
+1. Кэшировать PCA-результат и bbox **на нацию**:
+   `nation._labelCache = { regionsSig, pcaAngle, spine, bboxPx }`. Инвалидировать
+   только при смене `regionsSig` (hash nation.regions) или при zoom-change.
+2. Разделить «paint» и «layout»: на `move` пересчитывать ТОЛЬКО позицию/видимость
+   существующих SVG-элементов через `transform: translate(...)` — без
+   `innerHTML=''`, без PCA. Полная пересборка подписей — только на `zoomend` и
+   при смене владельцев регионов.
+3. Поднять debounce `scheduleNationLabelUpdate` с 80 ms до 150 ms (ухо на это
+   не среагирует при прокрутке).
+**Верификация:** mean-FPS при pan **≥ 50 FPS** (сейчас вероятно 20-30 FPS).
+Визуально — подписи наций не пропадают и не «скачут» при прокрутке.
+Регрессия: открыть окно — подписи читаемые на всех zoom-уровнях.
+
+### Session 18 — CSS-class zoom-tier вместо `setStyle()` на 3734 полигонах
+**Цель:** заменить imperative `polygon.setStyle({ fillOpacity })` в
+`_applyZoomFillOpacity()` на смену CSS-класса у parent-элемента — браузер
+применит стили батчем через CSS cascade за O(1).
+**Файлы:** [ui/map.js](ui/map.js) (функции `onZoomChange`,
+`_applyZoomFillOpacity`), [ui/styles/map.css](ui/styles/map.css).
+**Шаги:**
+1. Ввести CSS-переменную `--zoom-tier: strategic | regional | detailed` на
+   контейнер карты (уже есть body-класс — использовать его).
+2. В CSS:
+   ```css
+   .zoom-strategic .leaflet-interactive.region { fill-opacity: 0.9; }
+   .zoom-regional  .leaflet-interactive.region { fill-opacity: 0.6; }
+   .zoom-detailed  .leaflet-interactive.region { fill-opacity: 0.3; }
+   ```
+3. Удалить цикл по `regionLayers` в `_applyZoomFillOpacity()`, оставить
+   только смену класса.
+**Верификация:** `zoomend` callback **< 5 ms** (сейчас оцениваем 50-150 ms
+при 3734 полигонах). Визуально — прозрачность полигонов соответствует
+стратегическому/региональному/детальному zoom'у как сейчас.
+
+### Session 19 — `renderAll()` → `renderCritical()` + `renderDeferred()`
+**Цель:** `renderAll()` блокирует main thread на ~5-15 ms при каждом клике
+(12+ функций синхронно). Разделить на критичное (то, что видит игрок сразу)
+и отложенное (через `requestIdleCallback`).
+**Файлы:** [engine/init.js](engine/init.js) (функция `renderAll`).
+**Шаги:**
+1. Разбить:
+   - `renderCritical()` — `updateDateDisplay`, `updateStele`, `renderLeftPanel`,
+     `renderRightPanel` (видимые немедленно).
+   - `renderDeferred()` — `refreshPopulationTab`, `refreshEconomyTab`,
+     `renderAllArmies`, `renderBuildMarkers`, `renderCityLabels`,
+     `renderTradeRouteLines`.
+2. `renderAll` = `renderCritical()` + `requestIdleCallback(renderDeferred, {timeout: 200})`.
+3. Кнопка «Следующий ход» ждёт обе части (await), но UI-клики — только
+   critical.
+**Верификация:** input-to-paint p95 **< 50 ms** на клик по вкладке
+(сейчас оцениваем 100-200 ms). Визуальный тест — переключение вкладок Army /
+Economy / Diplomacy не рвёт FPS RAF-анимаций.
+
+### Session 20 — Убрать `renderAll()` из keystroke-пути input-хэндлеров
+**Цель:** `ui/input.js:183,483` вызывает `renderAll()` на каждый enter в
+диалоге. На практике изменились 1-2 поля — нужен точечный refresh, не
+полная перерисовка.
+**Файлы:** [ui/input.js](ui/input.js) (`handleAIResponse`, `applyParsedAction`).
+**Шаги:**
+1. Добавить в `applyParsedAction` bitmask `_dirty = { economy: bool,
+   armies: bool, diplomacy: bool, regions: bool }` на основании типа
+   применённого эффекта.
+2. В конце обработки — вызывать только те `refresh*Tab()`, что помечены dirty;
+   полный `renderAll()` — только если `_dirty.regions || _dirty.armies`.
+3. Для «пустых» ответов AI (chit-chat без изменения state) — не звать
+   renderAll вообще.
+**Верификация:** keystroke в диалоге — **< 16 ms** input-to-paint (один
+кадр 60 FPS). `tests/audit/*_test.cjs` — зелёные.
+
+### Session 21 — `innerHTML=` → DOM API в `ui/government_tab.js`
+**Цель:** 33 вхождений `innerHTML=` в ui/government_tab.js, включая диалоги
+персонажей (3345-3389) и список сенаторов (3611-3694). Каждый клик на
+зал / реплика персонажа = полный teardown поддерева.
+**Файлы:** [ui/government_tab.js](ui/government_tab.js).
+**Шаги:**
+1. Инвентаризация: разбить 33 места на 3 группы — (а) статический шаблон
+   (написал раз, клонируй), (б) list-render (DocumentFragment + append),
+   (в) точечный text/атрибут (`el.textContent=`, `el.dataset.x=`).
+2. Переписать категорию (в) первой — это cheapest win (~15 из 33). Следом
+   (б) через `<template>`-элементы. (а) оставить как есть (редкие редирективы).
+3. Замеры до/после через `MutationObserver` счётчик — как в Session 6.
+**Верификация:** смена вкладки Government / клик по «Зал сената» —
+mutations **−5×** по `MutationObserver`. Функциональный регресс: все диалоги
+открываются, кнопки работают.
+
+### Session 22 — Region culling при стратегическом zoom
+**Цель:** при zoom ≤ 5 (стратегический вид мира) все 3734 полигона всё ещё
+в DOM, даже если мелкие регионы едва видны пиксельно. Скрыть ~70 % самых
+мелких — FPS при pan на мировом масштабе вырастет значительно.
+**Файлы:** [ui/map.js](ui/map.js) (функция `refreshRegionStyles` из Session 5,
+`onZoomChange`), [data/map.js](data/map.js) (выставить статическую метрику
+`areaPx` при инициализации).
+**Шаги:**
+1. Один раз при старте посчитать площадь каждого региона в пикселях на
+   мировом zoom (через `L.polygon.getBounds() → latLngToContainerPoint`).
+2. В `onZoomChange`: при zoom ≤ 5 — у regions с `areaPx < 20` ставить
+   `display: none` через CSS-класс `.region-culled`; при zoom ≥ 6 —
+   снимать класс.
+3. Интеграция с Session 8 (`refreshDiploDistances`) и Session 5
+   (`refreshRegionStyles`): culled-регионы всё равно существуют в
+   GAME_STATE — только скрыты из DOM.
+**Верификация:** FPS при `panBy(500, 500)` на zoom=3 **≥ 50 FPS** (сейчас
+вероятно 15-25). При zoom ≥ 6 — все регионы видны. Визуально: крупные
+полисы (Сиракузы, Афины, Александрия) не исчезают.
+
+### Общие принципы Sessions 16-22
+
+- **Метрика** — не per-turn, а interactive: FPS при pan, input-to-paint,
+  longtask-sum за сценарий (`perf/interactive.mjs`).
+- **Kill switch** тот же — `git reset --hard HEAD~1` + причина в
+  `perf/session-N.md`. Но критерий отката мягче: если interactive
+  улучшилось, а per-turn просел **< 10 %**, это приемлемо (цели разные).
+- **Риск регрессии** — выше, чем у 1-15: zoom-label handler, dialogue
+  rendering — UI-тонкости, которые легко сломать косметически. Ручная
+  проверка в браузере обязательна перед push'ем в каждой из 16-22.
+
 ## Настройка Routine (`/schedule`)
 
 Рекомендую **ручной триггер между сессиями**, не cron. Причина: часть сессий (3, 5, 7, 10) потенциально меняет поведение и требует визуального подтверждения игроком, что ничего не сломалось. Cron-режим рискует накопить 3-4 broken-сессии за ночь.
@@ -125,10 +310,11 @@
 
 Для autonomous-режима (все 15 подряд) — запустить `/loop 30m <тот же prompt с переменной N=N+1>`, но только если предыдущая сессия зелёная. Проверка `git log -1 --pretty=%s` на содержит "Session (N-1)" — условие запуска Session N.
 
-## Верификация всего плана (после 15 сессий)
+## Верификация всего плана (после 22 сессий)
 
 1. `node perf/profile.mjs` сравнивается с `perf/baseline.md` — per-turn p50 должен упасть в **>5 раз**.
 2. `npm run dev`, сыграть 20 ходов в браузере: кнопка "Следующий ход" возвращает фокус менее чем за 1 сек.
 3. DevTools Performance Recording одного хода — нет блокирующих JS-тасков >200ms на main thread.
 4. `npm run build:vite && npm run preview` — first-meaningful-paint < 2 сек.
 5. `tests/audit/*_test.cjs` — все по-прежнему зелёные (ни одна оптимизация не сломала игровую логику).
+6. **После 16-22** — `node perf/interactive.mjs`: mean-FPS при pan ≥ 50, input-to-paint p95 < 50 ms, keystroke-to-paint p95 < 16 ms, сумма longtask за сценарий **−60 %** относительно interactive-baseline.
