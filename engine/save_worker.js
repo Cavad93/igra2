@@ -1,9 +1,14 @@
 // engine/save_worker.js
 // Сохраняет игровое состояние в IndexedDB из отдельного потока.
 //
+// Session 7: теперь принимает payload-объект напрямую (structured clone через
+// postMessage). JSON.stringify на main-треде убран. Если кто-то всё ещё
+// посылает ArrayBuffer (старый протокол), мы декодируем и парсим — это
+// сохраняет совместимость.
+//
 // Протокол:
-//   Получает: ArrayBuffer (UTF-8 JSON игрового состояния)
-//   Отправляет: { ok: true } | { ok: false, error: string }
+//   Получает: object (payload game state) | ArrayBuffer (legacy UTF-8 JSON)
+//   Отправляет: { ok: true, backend: 'idb' } | { ok: false, error: string }
 
 'use strict';
 
@@ -29,8 +34,15 @@ function _openDB() {
 
 self.onmessage = async ({ data }) => {
   try {
-    const json    = new TextDecoder().decode(data);
-    const payload = JSON.parse(json);
+    let payload;
+    if (data instanceof ArrayBuffer) {
+      // Легаси-путь — до Session 7 main-тред отправлял UTF-8 JSON.
+      const json = new TextDecoder().decode(data);
+      payload = JSON.parse(json);
+    } else {
+      // Session 7: structured-clone объект — кладём в IDB как есть.
+      payload = data;
+    }
 
     const db = await _openDB();
     await new Promise((resolve, reject) => {
@@ -40,7 +52,7 @@ self.onmessage = async ({ data }) => {
       req.onerror   = (e) => reject(e.target.error);
     });
 
-    self.postMessage({ ok: true });
+    self.postMessage({ ok: true, backend: 'idb' });
   } catch (e) {
     self.postMessage({ ok: false, error: e.message });
   }

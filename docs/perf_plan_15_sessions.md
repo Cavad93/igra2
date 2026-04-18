@@ -57,7 +57,7 @@
 **Шаги:** кэшировать ссылки на `#aq-gold-val` / `#aq-gold-delta` и т.п. в замыкание при первом вызове; далее только `el.textContent = ...`. Для `renderRightPanel` — перевести на шаблон один раз, дальше обновлять точечно.
 **Верификация:** снять «replaced node» events в DevTools (или ставить `MutationObserver` в тесте) — после моей правки количество мутаций должно упасть в 10+ раз.
 
-### Session 7 — Save в IndexedDB через Web Worker
+### Session 7 — Save в IndexedDB через Web Worker   ✅ Выполнено (2026-04-18)
 **Цель:** [engine/save.js](engine/save.js) делает синхронный `JSON.stringify` на ~10-15 MB state в конце каждого хода. Перевести сериализацию в уже существующий [engine/save_worker.js](engine/save_worker.js), хранилище — IndexedDB вместо localStorage.
 **Файлы:** [engine/save.js](engine/save.js), [engine/save_worker.js](engine/save_worker.js), новый тонкий helper `engine/idb_storage.js`.
 **Шаги:** добавить fallback на localStorage, если IDB недоступен. Использовать structured clone через `postMessage(state)` вместо stringify на main.

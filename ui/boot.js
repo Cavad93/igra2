@@ -96,6 +96,7 @@ import * as _orders from '../engine/orders.js';
 import * as _culture from '../engine/culture.js';
 import * as _religion from '../engine/religion.js';
 import * as _storage from '../engine/storage.js';
+import * as _idbStorage from '../engine/idb_storage.js';
 import * as _superOu from '../engine/super_ou.js';
 import * as _achieve from '../engine/achievements.js';
 import * as _date from '../engine/date.js';
@@ -184,7 +185,7 @@ _reg(
   _economy, _economyExt, _loans, _demography, _ageDem, _government,
   _dialogue, _constitutional, _conspiracy, _senate, _battle, _armies,
   _combat, _siege, _victory, _charsAi, _orders, _culture, _religion,
-  _storage, _superOu, _achieve, _date, _charsLife, _espionage,
+  _storage, _idbStorage, _superOu, _achieve, _date, _charsLife, _espionage,
   _aiScoring, _aiFallback, _aiWorker, _events, _save, _turn, _init,
   _noise,
   _map, _mapArmies, _mapEvents, _mapFeed, _mapAiInd,

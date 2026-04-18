@@ -2,9 +2,15 @@
 // Вынесено из engine/turn.js (Этап 52)
 
 import { CONFIG } from '../config.js';
+import { idbSave } from './idb_storage.js';
 
 // SaveWorker — сохранение в фоне, не блокирует главный поток.
-// JSON.stringify + transfer ArrayBuffer быстрее, чем IndexedDB structured clone на главном потоке.
+//
+// Session 7: на main-треде больше не делаем JSON.stringify + TextEncoder;
+// payload уходит в воркер structured clone'ом через postMessage(payload).
+// Нативный клон быстрее связки stringify+encode на 10-15 МБ state и не
+// создаёт промежуточной строки в памяти. JSON.parse в воркере тоже
+// отпадает — IDB хранит объект как есть.
 let _saveWorker        = null;   // Worker instance
 let _saveWorkerFailed  = false;  // не повторять попытку после первого сбоя
 let _saveInFlight      = false;  // идёт ли сохранение прямо сейчас
@@ -73,19 +79,24 @@ export async function saveGame() {
     _saveInFlight = true;
     setTimeout(() => {
       try {
-        const buffer = new TextEncoder().encode(JSON.stringify(payload)).buffer;
-        worker.postMessage(buffer, [buffer]);
+        // Session 7: structured clone объекта — без JSON.stringify на main.
+        worker.postMessage(payload);
       } catch (e) {
         _saveInFlight = false;
         console.warn('[save] Ошибка передачи данных воркеру:', e);
-        GameStorage.save(payload).catch(console.warn);
+        idbSave(payload).catch(console.warn);
       }
     }, 0);
   } else {
     setTimeout(() => {
-      GameStorage.save(payload).then(() => {
-        if (typeof window !== 'undefined' && typeof window.markSaved === 'function') {
+      idbSave(payload).then((res) => {
+        if (res && res.ok && typeof window !== 'undefined' && typeof window.markSaved === 'function') {
           window.markSaved();
+        } else if (res && !res.ok) {
+          console.warn('[save] idbSave не смог сохранить:', res.error);
+          if (typeof addEventLog === 'function') {
+            addEventLog('⚠ Автосохранение не удалось: ' + (res.error || 'неизвестная ошибка'), 'warning');
+          }
         }
       }).catch(e => {
         console.warn('[save] Ошибка сохранения:', e);
