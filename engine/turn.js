@@ -109,9 +109,13 @@ export async function processTurn() {
     // 0.95. Провинциальный контроль — пересчёт area_control + influence_bonus
     //       + effective_control ДО расчёта экономики (провинциальный рынок
     //       зависит от контроля, поэтому обновляем после военного шага).
+    // Session 4: внутри функции стоит кэш по сигнатуре владельцев регионов —
+    // если никто не менял nation, пересчёт пропускается.
+    _setStep('Провинции...');
     if (typeof calculateProvinceControl === 'function') {
       try { calculateProvinceControl(); } catch (e) { console.warn('[province_control]', e); }
     }
+    _endStep('Провинции...');
 
     // 1. Экономика (детерминировано)
     _setStep('Экономика...');

@@ -39,7 +39,7 @@
 **Шаги:** в начале каждого per-nation цикла — `if (!nation.regions?.length || !hasAnyBuilding(nation)) continue;` с комментарием, что stub пропускается. Сохранить налог/население минимальный тик (без рынка/амортизации).
 **Верификация:** зарплаты/казна крупных наций (syracuse/carthage/ptolemaic_kingdom) не изменились ±1% за 10 ходов; профайлер −30-40% экономики.
 
-### Session 4 — Кэш `calculateProvinceControl`
+### Session 4 — Кэш `calculateProvinceControl`   ✅ Выполнено (2026-04-18)
 **Цель:** [engine/provinces.js](engine/provinces.js) пересчитывает control по всем провинциям каждый ход. Инвалидировать кэш только если хоть один регион сменил owner.
 **Файлы:** [engine/provinces.js](engine/provinces.js), [engine/turn.js](engine/turn.js) (точка вызова).
 **Шаги:** хранить `GAME_STATE._provinceControlCache` + `GAME_STATE._regionOwnerSig` (хеш owner'ов регионов). При `processTurn` сравнивать signature; если не изменилась — пропустить `calculateProvinceControl()`.

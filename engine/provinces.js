@@ -91,6 +91,29 @@ export function _provinceCulturalPresence(nationId, provRegions) {
 }
 
 // ──────────────────────────────────────────────────────────────
+// _computeRegionOwnerSig()
+//
+// Дешёвая сигнатура: rid:owner|rid:owner|... по всем регионам,
+// входящим в провинции. Используется для кэширования
+// calculateProvinceControl — если владельцы не менялись,
+// area_control (и следовательно effective_control) не меняется.
+//
+// Влияние относительных отношений (score) и культурного присутствия
+// на influence_bonus тут игнорируется — они drift'ят медленно и
+// пересчёт 1 раз в несколько ходов (при захвате региона) приемлем.
+// ──────────────────────────────────────────────────────────────
+export function _computeRegionOwnerSig() {
+  if (!GAME_STATE.provinces || !GAME_STATE.regions) return '';
+  const parts = [];
+  for (const prov of Object.values(GAME_STATE.provinces)) {
+    for (const rid of prov.regions) {
+      parts.push(rid, GAME_STATE.regions[rid]?.nation ?? '');
+    }
+  }
+  return parts.join(',');
+}
+
+// ──────────────────────────────────────────────────────────────
 // calculateProvinceControl()
 //
 // Полная формула контроля (вызывается каждый тик, шаг 1.5а).
@@ -106,9 +129,17 @@ export function _provinceCulturalPresence(nationId, provRegions) {
 //
 // effective_control[n] = area_control[n] × 0.70
 //                      + min(1, influence_bonus[n]) × 0.30
+//
+// Оптимизация (Session 4): кэш по сигнатуре владельцев регионов.
+// Если ни один регион не сменил nation — пропускаем весь пересчёт,
+// effective_control/control/has_roads остаются с прошлого тика.
 // ──────────────────────────────────────────────────────────────
 export function calculateProvinceControl() {
   if (!GAME_STATE.provinces) return;
+
+  const sig = _computeRegionOwnerSig();
+  if (GAME_STATE._regionOwnerSig === sig) return;
+  GAME_STATE._regionOwnerSig = sig;
 
   for (const prov of Object.values(GAME_STATE.provinces)) {
     // ── 1. Площадные доли ─────────────────────────────────────
