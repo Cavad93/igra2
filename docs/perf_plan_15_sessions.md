@@ -285,6 +285,20 @@ mutations **−5×** по `MutationObserver`. Функциональный ре�
 вероятно 15-25). При zoom ≥ 6 — все регионы видны. Визуально: крупные
 полисы (Сиракузы, Афины, Александрия) не исчезают.
 
+### Session 25 — Разбить engine-ai чанк (520 kB) на engine-ai/gov/chars   ✅ Выполнено (2026-04-18)
+**Цель:** опустить крупнейший non-data чанк ниже порога 500 kB vite,
+изолировать редко-меняющиеся «политические» подсистемы для независимого
+кэширования браузером.
+**Файлы:** [vite.config.js](vite.config.js) (`manualChunks`).
+**Шаги:**
+1. `engine-gov` ← government.js, senate.js, constitutional.js (110.75 kB).
+2. `engine-chars` ← characters_ai.js, characters_lifecycle.js, super_ou.js,
+   memory.js (6.29 kB после tree-shaking).
+3. `engine-ai` (остался) ← ai_worker, ai_fallback, ai_scoring, ai/*
+   (404.06 kB вместо 520.96 kB).
+**Верификация:** `npm run build:vite` — `engine-ai` **−22 %** (520 → 404 kB),
+нет чанков > 500 kB кроме `index`/data-; eco/ai/gov audit тесты зелёные.
+
 ### Session 24 — Per-tick memo building-производства + hoist subsistence-инвариантов   ✅ Выполнено (2026-04-18)
 **Цель:** устранить дублирование обхода building_slots между шагами 1b
 (`calculateAllBuildingProduction`) и 1c (`_getRegionalBuildingProduction`),

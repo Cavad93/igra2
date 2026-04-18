@@ -71,17 +71,27 @@ export default defineConfig({
               id.includes('/engine/war_score.js') ||
               id.includes('/engine/victory.js')) return 'engine-war';
 
-          // engine-ai — локальный и фоновый ИИ + диалоги
+          // Session 25 (perf): разбили бывший engine-ai (520 kB) на три
+          // логических чанка. Мотивация: super_ou + government + senate
+          // — это редко меняющиеся "политические" подсистемы, грузятся
+          // вместе с главным бандлом только из-за общего чанка. Вынос
+          // сокращает путь критического рендера первого кадра.
+
+          // engine-gov — правительство, сенат, конституционные реформы.
+          if (id.includes('/engine/government.js') ||
+              id.includes('/engine/senate.js') ||
+              id.includes('/engine/constitutional.js')) return 'engine-gov';
+
+          // engine-chars — персонажи (династии, биографии), super_ou, memory.
+          if (id.includes('/engine/characters_ai.js') ||
+              id.includes('/engine/characters_lifecycle.js') ||
+              id.includes('/engine/super_ou.js') ||
+              id.includes('/engine/memory.js')) return 'engine-chars';
+
+          // engine-ai — AI-решения (ai_worker, fallback, scoring) + LLM-мост ai/*.
           if (id.includes('/engine/ai_worker.js') ||
               id.includes('/engine/ai_fallback.js') ||
               id.includes('/engine/ai_scoring.js') ||
-              id.includes('/engine/characters_ai.js') ||
-              id.includes('/engine/characters_lifecycle.js') ||
-              id.includes('/engine/super_ou.js') ||
-              id.includes('/engine/government.js') ||
-              id.includes('/engine/senate.js') ||
-              id.includes('/engine/constitutional.js') ||
-              id.includes('/engine/memory.js') ||
               id.includes('/ai/')) return 'engine-ai';
 
           // engine-core — тик хода, инициализация, сохранение
