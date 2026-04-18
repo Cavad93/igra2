@@ -99,7 +99,7 @@
 **Шаги:** вычислить дешёвый hash входа → если совпадает с прошлым ходом, вернуть кэш. Инвалидировать при стройке/сносе здания, при миграции населения.
 **Верификация:** прод. уровни у базовой нации за 10 ходов без действий игрока — детерминированы и совпадают с baseline ±0.01%.
 
-### Session 14 — Vite prod-build: manualChunks + preload
+### Session 14 — Vite prod-build: manualChunks + preload   ✅ Выполнено (2026-04-18)
 **Цель:** [vite.config.js](vite.config.js) уже имеет minimal manualChunks. Добавить engine-level split (economy / diplomacy / combat / save), preload критических чанков.
 **Файлы:** [vite.config.js](vite.config.js), [index.html](index.html) (возможный `<link rel="modulepreload">`).
 **Шаги:** в `manualChunks` добавить группы: `'engine-core'`, `'engine-econ'`, `'engine-dip'`, `'engine-war'`, `'engine-ai'`. Прогнать `npm run build:vite`, замерить total JS и largest chunk.
