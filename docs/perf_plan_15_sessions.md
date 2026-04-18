@@ -457,3 +457,295 @@ main-thread save-work, оставшийся после S7. Снижаем час
 4. `npm run build:vite && npm run preview` — first-meaningful-paint < 2 сек.
 5. `tests/audit/*_test.cjs` — все по-прежнему зелёные (ни одна оптимизация не сломала игровую логику).
 6. **После 16-22** — `node perf/interactive.mjs`: mean-FPS при pan ≥ 50, input-to-paint p95 < 50 ms, keystroke-to-paint p95 < 16 ms, сумма longtask за сценарий **−60 %** относительно interactive-baseline.
+
+---
+
+# Track B — Редизайн тактического боя в стиле «Kings & Generals / Ultimate General»
+
+> **Это отдельный трек**, не перф-сессии. Референс — кадры с YouTube канала
+> **History Flywheel** (painted top-down карта + прямоугольные «отрядные плашки»
+> с гербами/иконками родов войск + укрепления и топонимика) и механика
+> управления в духе **Total War**, но без 1:1-детализации спрайтов-солдатиков.
+>
+> **Желаемый визуальный эффект:**
+> - карта-подложка в стиле живописной топо-съёмки (виньетка по краям, реки,
+>   леса, дороги, видимые укрепления)
+> - армии — прямоугольные токены с цветом фракции, иконкой рода войск и
+>   drop-shadow'ом
+> - большие юниты рисуются **матрицей из токенов** в строю (3×6, 5×4 и т.п.)
+> - лейблы местности («Будищенский лес», «Яковцы» в референсе)
+>
+> **Желаемый контроль:**
+> - **click** — выбрать отряд; **shift+click** — добавить к выбору
+> - **right-click-drag** (как в Total War) — переместить строй: длина drag'а
+>   = фронт, направление = facing; `Alt+drag` сохраняет форму предыдущего
+>   построения
+> - **double-click по юниту** — переформировать (line/column/square)
+> - **Tab** — tactical camera (zoom-out + viewport-overview)
+> - `Q/E` — rotate selection; `F` — fire-at-will toggle; `H` — hold position
+>
+> Полностью заменяет текущий примитивный Canvas-рендер
+> [ui/tactical_map.js](ui/tactical_map.js) + встраивается в существующий
+> [ui/battle_map_pixi.js](ui/battle_map_pixi.js) (Pixi.js v8 уже в проекте —
+> см. [vite.config.js](vite.config.js) `manualChunks.tactical`).
+>
+> **Важные ограничения (read before start):**
+> - 1 ход = 1 месяц (инвариант проекта) — тактический бой развязывается
+>   внутри одного хода, не требует отдельной таймлайн-анимации между ходами.
+> - 1 ресурсная единица = 1 кг — визуал не влияет на экономику.
+> - Публичное API (`resolveBattle` в armies.js, `window.TacticalBattle.*`)
+>   не ломать, только надстраивать UI-слой.
+> - Ассеты (`assets/battle/*`, `*.jpg`, `*.png`) — в [.gitignore](.gitignore)
+>   по правилам проекта; коммитим только placeholder'ы/каркас, большие
+>   текстуры и сгенерированные спрайты — наружу (CDN или локально на диск).
+
+## Формат сессии (Track B)
+
+1. `git fetch && git checkout claude/exciting-fermat-KVLXr && git pull`
+2. Прочесть секцию Session B-N, «Цель/Файлы/Шаги/Верификация».
+3. WebSearch/WebFetch для актуальных паттернов Pixi.js v8 (фильтры, spine,
+   particles) — это обязательно для B-1, B-3, B-7.
+4. Правки атомарные; новые файлы создавать `Write` каркаса + `Edit` секции.
+5. **Визуальная верификация**: для каждой сессии делать скрин результата,
+   класть в `docs/battle_ui/session-B{N}.png` — на PR/коммит достаточно
+   ссылки. UI-фичи не проверяются только через unit-тесты.
+6. Коммит: `feat(battle-ui): Session B-N — <summary>`. Ветка та же.
+
+**Kill switch:** если тесты `tests/audit/mil_*_test.cjs` падают или
+`resolveBattle()` бросает в консоли на типичных сценариях — `git reset
+--hard HEAD~1`, записать причину в `docs/battle_ui/session-B{N}.md`.
+
+## B-1 — Ассет-пайплайн + brief
+
+**Цель:** собрать банк референсов и скриптов, которые будут генерировать
+текстуры/спрайты единообразно. Без этого каждая сессия начнёт рисовать
+что-то своё.
+
+**Файлы:** новый `docs/battle_ui/brief.md`, `docs/battle_ui/refs/` (5–10
+скринов с History Flywheel, Ultimate General, Kings & Generals, Cossacks
+3), новый `scripts/gen_unit_sprites.mjs`, `scripts/gen_terrain_tiles.mjs`.
+
+**Шаги:**
+1. Собрать 10 референсных кадров, подписать в `brief.md`: какой слой
+   (terrain / units / fortifications / labels / vignette) мы забираем.
+2. Написать каталог видов юнитов античности: `hoplite, phalangite, peltast,
+   archer, slinger, light_cavalry, heavy_cavalry, cataphract, elephant,
+   ballista, general_standard` (11 штук покроют Сиракузы+соседей).
+3. Каталог биомов: `grassland, forest, hills, mountain, coast, desert,
+   river, road_dirt, road_paved, bridge, palisade_wood, wall_stone`.
+4. `scripts/gen_unit_sprites.mjs` — CLI, который через OpenAI DALL·E 3
+   (или через Claude Sonnet + Stable Diffusion HTTP) генерирует PNG 64×96
+   на прозрачном фоне по заданному списку. Сохраняет в
+   `assets/battle/units/<id>_template.png` (один PNG на тип — цвет
+   накладывается tint'ом в Pixi).
+5. `scripts/gen_terrain_tiles.mjs` — то же для биомов, 256×256 seamless.
+
+**Верификация:** `node scripts/gen_unit_sprites.mjs --dry-run` печатает
+список промптов без вызова API; каталоги юнитов/биомов согласованы с
+текущими данными в [data/army_profiles.js](data/army_profiles.js).
+
+## B-2 — Terrain layer (painted подложка)
+
+**Цель:** убрать плоский однотонный фон тактической карты, заменить на
+многослойную painted-подложку с виньеткой.
+
+**Файлы:** [ui/battle_map_pixi.js](ui/battle_map_pixi.js) (новый слой
+`terrainLayer`), новый `ui/battle/terrain_renderer.js`, assets из B-1.
+
+**Шаги:**
+1. В Pixi Application создать 4 именованных контейнера:
+   `terrain`, `objects`, `units`, `effects`. Сейчас всё в одном root.
+2. `TerrainRenderer` берёт биомную карту из
+   [data/map.js](data/map.js) MAP_REGIONS для конкретного региона боя,
+   мозаично стелет seamless-тайлы.
+3. Поверх — overlay реки/дороги (SVG path, сгенерированный из geojson
+   [data/world_bc300.geojson](data/world_bc300.geojson) или из
+   [data/pleiades_300bc.json](data/pleiades_300bc.json)).
+4. Виньетка: `PIXI.Filter` с radial-gradient шейдером или
+   `PIXI.Graphics` с альфа-градиентом от краёв. На референсе чётко видна.
+5. Лёгкий `ColorMatrixFilter` для «патины» — +5% sepia, -3% saturation.
+
+**Верификация:** [docs/battle_ui/session-B2.png] — карта выглядит как
+живописная топо-съёмка, а не как однотонная подложка. Производительность
+не упала >5% (`perf/profile.mjs` остаётся в рамках).
+
+## B-3 — Unit sprite factory + drop shadow
+
+**Цель:** заменить текущие примитивы (круги/квадраты) на
+стилизованные плашки юнитов с иконкой рода войск и фракционным
+тинтом.
+
+**Файлы:** новый `ui/battle/unit_sprite_factory.js`,
+[ui/battle_map_pixi.js](ui/battle_map_pixi.js).
+
+**Шаги:**
+1. `UnitSpriteFactory.create({ type, nationId, role })` возвращает
+   Pixi.Container:
+   - base PNG (64×96, `assets/battle/units/<type>_template.png`)
+   - tint через `sprite.tint = Number('0x' + nation.color.slice(1))`
+   - иконка рода войск (центр)
+   - officer-маркер (звёздочка/крест сверху) если `role === 'general'`
+   - `DropShadowFilter({ distance: 4, blur: 2, alpha: 0.45, angle: 135 })`
+2. Кэшировать скомпонованные контейнеры через `RenderTexture` — чтобы
+   не строить фильтр каждый кадр. Ключ кэша:
+   `${type}:${nationId}:${role}`.
+3. Подменить рендер в [ui/battle_map_pixi.js](ui/battle_map_pixi.js)
+   для `renderUnit()`: вместо `Graphics.drawRect` — `factory.create(...)`.
+
+**Верификация:** [docs/battle_ui/session-B3.png] — видны плашки с
+иконками и тенью, цвет совпадает с `nation.color`. FPS ≥ 50 на
+Chromium headless с 30 юнитами на экране.
+
+## B-4 — Formations (матрица токенов)
+
+**Цель:** большой юнит («фаланга 5000») рисуется не как 1 плашка, а как
+матрица плашек поменьше в строю, как на референсе.
+
+**Файлы:** новый `ui/battle/formation_renderer.js`,
+[engine/tactical_battle.js](engine/tactical_battle.js) (добавить поля
+`formation`, `frontWidth`, `depth`).
+
+**Шаги:**
+1. Модель строя:
+   - `line`: широкий фронт, глубина 2–3 (лучники, легкая пехота)
+   - `column`: узкий фронт, глубина 6–8 (штурмовая колонна)
+   - `square`: квадрат (оборонительный против кавалерии)
+   - `phalanx`: плотный прямоугольник, глубина 6–8
+2. `FormationRenderer.render(unit, origin, facing)` раскладывает
+   `Math.ceil(size × 0.025)` токенов (коэффициент из Ultimate General)
+   в сетку по `frontWidth × depth`, поворачивает всю сетку на `facing`.
+3. Все токены одного юнита — дочерние элементы одного
+   `PIXI.Container`, чтобы перемещать как один объект.
+4. Предел: не более 40 токенов на юнит — иначе 5000 копейщиков съедят
+   GPU. Сцейлим коэффициент динамически по общему числу юнитов на поле.
+
+**Верификация:** сражение 6 юнитов × 3000 чел каждая сторона рисует
+≤ 240 токенов; строй фаланги визуально отличим от колонны.
+
+## B-5 — Total-War-like drag-controls
+
+**Цель:** right-click-drag управление как в Total War, без необходимости
+писать отдельный туториал.
+
+**Файлы:** новый `ui/battle/input_controller.js`,
+[ui/battle_map_pixi.js](ui/battle_map_pixi.js) (mouse/keyboard hooks).
+
+**Шаги:**
+1. `InputController` слушает Pixi-события + документный `keydown`:
+   - `pointerdown` правой кнопкой по карте при активном selection →
+     сохранить `origin`; `pointermove` → рисовать preview-линию (длина
+     = фронт, угол = facing); `pointerup` → выдать `MoveOrder(unit,
+     line, facing)`.
+   - `Alt + pointerdown-drag` → preserveFormation: все юниты selection
+     двигаются коллективно, сохраняя относительные позиции.
+   - `double-click` на юните из selection → открыть радиальное меню
+     переформирования.
+   - `Tab` → `camera.setZoom(0.4)`; `Shift+Tab` → вернуть.
+   - `Q/E` → rotate selection на ±15°; `H` → `holdPosition`; `F` →
+     `fireAtWill`.
+2. Preview-линия — `PIXI.Graphics`, пунктирная, цвет = faction.
+3. Все события пишутся через существующий `engine/tactical_battle.js`
+   API (issueOrder), UI не ломает игровую логику.
+
+**Верификация:** [docs/battle_ui/session-B5.gif] — запись управления
+4 юнитами через right-drag и Alt-drag. `tests/audit/mil_unit_test.cjs`
+— зелёный (мы не трогаем battle resolution).
+
+## B-6 — Укрепления и объекты на поле
+
+**Цель:** частоколы / редуты / палатки / дороги / мосты из референса.
+
+**Файлы:** новый `ui/battle/objects_renderer.js`, расширение
+[engine/tactical_battle.js](engine/tactical_battle.js) под
+`battlefield.objects[]`.
+
+**Шаги:**
+1. Каталог объектов: `palisade_wood, wall_stone, tower, camp_tent,
+   bridge, road_dirt, road_paved, earthwork, watchtower`.
+2. `ObjectsRenderer` расставляет их по данным региона:
+   - `region.fortification_level` >= 1 → `palisade_wood` по периметру
+   - `>= 2` → `wall_stone`, сторожевые башни по углам
+   - `region.has_road` → `road_dirt` от одного края до другого
+   - `region.is_river_crossing` → `bridge`
+3. Лагерь атакующего/обороняющегося: 3–5 `camp_tent` + штандарт в
+   центре, в тылу строя.
+
+**Верификация:** [docs/battle_ui/session-B6.png] — полевой бой около
+укреплённого города показывает стены + ворота + частокол + лагерь
+атакующего в тылу.
+
+## B-7 — Атмосфера (bloom, particles, labels)
+
+**Цель:** финальный «живой» слой: лейблы топонимики, пыль от кавалерии,
+дым от костров, лёгкий bloom на флагах.
+
+**Файлы:** новый `ui/battle/atmosphere.js`, использует
+`@pixi/particle-emitter` (в package.json надо будет добавить).
+
+**Шаги:**
+1. Лейблы местности (как «Будищенский лес» на референсе): берутся из
+   [data/pleiades_300bc.json](data/pleiades_300bc.json) ближайшие POI
+   в радиусе, рендерятся как `PIXI.Text` с outline + opacity 0.7.
+2. Particle-emitters:
+   - `dust_cloud` под движущейся кавалерией (fade-out ~600 мс)
+   - `smoke_rise` над каждым `camp_tent` (медленный)
+   - `arrow_flight` при залпе лучников (короткие trail'ы)
+3. `AdvancedBloomFilter` на штандартах офицеров
+   (`@pixi/filter-advanced-bloom`) — лёгкий, `threshold: 0.7, intensity: 0.4`.
+4. Лёгкий screen-shake при попаданиях баллисты (1 из 4 выстрелов).
+
+**Верификация:** [docs/battle_ui/session-B7.gif] — 10-секундная запись
+боя показывает пыль, дым, летящие стрелы и лейблы. 60 FPS на среднем
+ноутбуке.
+
+## B-8 — Polish + интеграция
+
+**Цель:** собрать все слои в единый pipeline, починить края, задокументировать.
+
+**Файлы:** [docs/bitva.md](docs/bitva.md) (обновить — этап B-8),
+[ui/battle_map_pixi.js](ui/battle_map_pixi.js) (финальная сборка),
+`docs/battle_ui/architecture.md` (новый — диаграмма слоёв).
+
+**Шаги:**
+1. Единый event-flow: `tactical_battle.js` эмитит `battleUpdate` →
+   `battle_map_pixi.js` диспатчит в `TerrainRenderer /
+   ObjectsRenderer / FormationRenderer / Atmosphere` по изменениям.
+2. Hook в `engine/armies.js` `resolveBattle()`: если игрок — участник,
+   открывать новый pixi-рендер; иначе — старый авто-резолв.
+3. Retro-совместимость: [ui/tactical_map.js](ui/tactical_map.js)
+   оставлен как fallback для `?tactical=legacy` URL-параметра
+   (QA, debug).
+4. В README/[docs/bitva.md](docs/bitva.md) описать новый UI, скрины.
+
+**Верификация:** полный сценарий боя (движение → формирование → залп
+→ рукопашная → отступление) проигрывается визуально правильно;
+`tests/audit/mil_*_test.cjs` — зелёные; профайлер
+(`perf/profile.mjs`) не деградировал относительно пост-S15 baseline.
+
+## Верификация Track B (после B-1 … B-8)
+
+1. Рядом с [docs/battle_ui/refs/](docs/battle_ui/refs/) лежат 8 скринов
+   `session-B{1..8}.png/gif`, визуально сходимся с целевым референсом
+   на 80%+.
+2. `npm run dev` → запустить бой в браузере: картинка ощущается
+   как на скрине-референсе, управление в духе Total War, без
+   обучения через туториал.
+3. Все ключевые слои (terrain/objects/units/effects) изолированы в
+   своих файлах, не переплетены с игровой логикой.
+4. `tests/audit/mil_*_test.cjs` — 100% pass.
+5. Перф: FPS ≥ 55 в головой битве с 20 юнитами, ≥ 45 с 40 юнитами.
+
+## Замечания по Track B
+
+- **Не путать с перф-сессиями.** Track B — UX/визуал. Ресурсы и время
+  отдельные; если perf-сессии (9–15) нужны срочно — делай их первыми.
+- **Сторонние ассеты.** Большие PNG/JPG (терен, спрайты) — НЕ коммитить
+  в репо (правило из [CLAUDE.md](CLAUDE.md):
+  `assets/textures/*.jpg` в .gitignore). Кладём на CDN или локально;
+  в коде используем плейсхолдеры + `scripts/gen_*` для воспроизводимости.
+- **Total War-контролы — MVP.** Не повторять все 80 шорткатов Rome II.
+  5–7 ключевых (right-drag, Alt-drag, Tab, Q/E, double-click) — уже
+  даёт ощущение «управляется как TW».
+- **History Flywheel-стиль — стилизация, не 1:1.** Мы не собираем
+  видеопродакшн (AE/Blender). Мы собираем real-time рендер, который
+  _выглядит_ как их кадр.
