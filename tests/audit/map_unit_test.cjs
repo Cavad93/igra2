@@ -60,17 +60,25 @@ assert(missingNations.length === 0,
 
 assert(!regionsDataRaw.includes("nation:'hadhramaut'"),
   'r470: нет опечатки hadhramaut (исправлено → hadramaut)');
+// Проверка, что старые опечатки в nation-id (minaeans вместо main, wey вместо
+// wei, hadhramaut вместо hadramaut) не вернулись в regions_data.js.
 assert(!regionsDataRaw.includes("nation:'minaeans'"),
-  'r472: нет опечатки minaeans (исправлено → main)');
+  'regions_data: нет опечатки minaeans');
 assert(!regionsDataRaw.includes("nation:'wey'"),
-  'r1061: нет опечатки wey (исправлено → wei)');
+  'regions_data: нет опечатки wey');
+assert(!regionsDataRaw.includes("nation:'hadhramaut'"),
+  'regions_data: нет опечатки hadhramaut');
 
-const r470M = regionsDataRaw.match(/R\['r470'\]=\{nation:'([^']+)'/);
-assert(r470M && r470M[1] === 'hadramaut', 'r470 = hadramaut', r470M ? r470M[1] : 'not found');
-const r472M = regionsDataRaw.match(/R\['r472'\]=\{nation:'([^']+)'/);
-assert(r472M && r472M[1] === 'main', "r472 = main (Ма'ин)", r472M ? r472M[1] : 'not found');
+// После Pax Historia-обновления (commit 4a8c9d4) владельцы r472/r1061
+// назначены по карте Legacy of Alexander 304 BC: r472 (регион «Saba»,
+// Йемен) принадлежит saba, r1061 (регион «Dong») — qi. r470 остался
+// за hadramaut. Проверяем соответствие текущей канонической раскладке.
+const r470M  = regionsDataRaw.match(/R\['r470'\]=\{nation:'([^']+)'/);
+const r472M  = regionsDataRaw.match(/R\['r472'\]=\{nation:'([^']+)'/);
 const r1061M = regionsDataRaw.match(/R\['r1061'\]=\{nation:'([^']+)'/);
-assert(r1061M && r1061M[1] === 'wei', 'r1061 = wei (Вэй)', r1061M ? r1061M[1] : 'not found');
+assert(r470M  && r470M[1]  === 'hadramaut', 'r470 = hadramaut',  r470M  ? r470M[1]  : 'not found');
+assert(r472M  && r472M[1]  === 'saba',      'r472 = saba',       r472M  ? r472M[1]  : 'not found');
+assert(r1061M && r1061M[1] === 'qi',        'r1061 = qi',        r1061M ? r1061M[1] : 'not found');
 
 // ─── 2. Целостность MAP_REGIONS ────────────────────
 console.log('\n--- 2. Целостность MAP_REGIONS ---');

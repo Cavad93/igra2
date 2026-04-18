@@ -62,12 +62,18 @@ for (const [rid, natId] of Object.entries(rdMap)) {
 assert(orphanNations.size === 0, 'regions_data → nations.js: нет "осиротевших" nation ID',
   `Orphans: ${[...orphanNations].join(', ')}`);
 
-assert(rdMap['r470'] === 'hadramaut',   'r470 → hadramaut', `Текущее: ${rdMap['r470']}`);
-assert(rdMap['r472'] === 'main',        'r472 → main',      `Текущее: ${rdMap['r472']}`);
-assert(rdMap['r1061'] === 'wei',        'r1061 → wei',      `Текущее: ${rdMap['r1061']}`);
-assert(allNatIds.has('hadramaut'),      'hadramaut присутствует в nations.js');
-assert(allNatIds.has('main'),           'main присутствует в nations.js');
-assert(allNatIds.has('wei'),            'wei присутствует в nations.js');
+// Владение выставлено по Pax Historia (commit 4a8c9d4): r472 (Саба) →
+// saba; r1061 (Dong) → qi; r470 → hadramaut. Проверяем согласованность
+// regions_data.js ↔ nations.js.
+assert(rdMap['r470']  === 'hadramaut', 'r470 → hadramaut', `Текущее: ${rdMap['r470']}`);
+assert(rdMap['r472']  === 'saba',      'r472 → saba',      `Текущее: ${rdMap['r472']}`);
+assert(rdMap['r1061'] === 'qi',        'r1061 → qi',       `Текущее: ${rdMap['r1061']}`);
+assert(allNatIds.has('hadramaut'),     'hadramaut присутствует в nations.js');
+assert(allNatIds.has('saba'),          'saba присутствует в nations.js');
+assert(allNatIds.has('qi'),            'qi присутствует в nations.js');
+// main и wei — валидные nation-id, но r472/r1061 им не принадлежат.
+assert(allNatIds.has('main'),          'main присутствует в nations.js');
+assert(allNatIds.has('wei'),           'wei присутствует в nations.js');
 
 // ─── B. MAP_REGIONS ↔ regions_data.js ─────────────
 console.log('\n--- B. MAP_REGIONS ↔ regions_data.js ---');
