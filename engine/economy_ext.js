@@ -367,9 +367,17 @@ export function updateRegionSpecialization() {
   const spec = ext.region_specialization;
 
   const regions = GAME_STATE?.regions || {};
+  // Session 28 (perf): события специализации логируем только для регионов
+  // игрока. На streak=10 срабатывает newBonus>prev для ~3000 ИИ-регионов
+  // одновременно — addEconomicEvent → addEventLog → renderLog каждый раз
+  // добавлял 2500+ ms к 10-му ходу (Экономика p95 3910 → 3679 вырастало
+  // из-за DOM-мутаций). Лог событий виден только игроку, поэтому
+  // события по чужим регионам в UI всё равно не отображаются.
+  const playerId = GAME_STATE?.player_nation ?? null;
   for (const rid of Object.keys(regions)) {
     const region = regions[rid];
     const prod   = region?._production_last_tick || {};
+    const isPlayerRegion = (playerId !== null) && (region?.nation === playerId);
 
     // Ищем топ-товар тика.
     let topGood = null;
@@ -384,7 +392,7 @@ export function updateRegionSpecialization() {
       if (spec[rid]) {
         // Логируем только значимые потери (streak достиг бонуса).
         const prev = spec[rid];
-        if ((prev.bonus || 1.0) > 1.0) {
+        if (isPlayerRegion && (prev.bonus || 1.0) > 1.0) {
           addEconomicEvent(
             `⚙ Регион '${rid}' утратил специализацию (${prev.good}): производство остановлено.`
           );
@@ -398,7 +406,7 @@ export function updateRegionSpecialization() {
     if (cur && cur.good === topGood) {
       cur.streak = (Number(cur.streak) || 0) + 1;
     } else {
-      if (cur && (cur.bonus || 1.0) > 1.0) {
+      if (isPlayerRegion && cur && (cur.bonus || 1.0) > 1.0) {
         addEconomicEvent(
           `⚙ Регион '${rid}' сменил специализацию: ${cur.good} → ${topGood}.`
         );
@@ -411,7 +419,7 @@ export function updateRegionSpecialization() {
     const newBonus = 1.0 + Math.min(SPEC_MAX_BONUS, steps * SPEC_STEP_BONUS);
 
     // Лог только на моментах повышения порога.
-    if (newBonus > (entry.bonus || 1.0) + 1e-9) {
+    if (isPlayerRegion && newBonus > (entry.bonus || 1.0) + 1e-9) {
       addEconomicEvent(
         `⚙ Регион '${rid}' (${entry.good}) — специализация +${Math.round((newBonus - 1) * 100)}% (streak=${entry.streak}).`
       );

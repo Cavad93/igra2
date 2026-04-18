@@ -23,10 +23,19 @@ function assert(cond, msg) {
 function approx(a, b, eps = 1e-9) { return Math.abs(a - b) < eps; }
 
 // ── Подготовить минимальное окружение и загрузить economy_ext.js ──────
-const src = fs.readFileSync(
+// Файл — ES-модуль (import/export). vm не поддерживает ESM, поэтому
+// стрипаем их так же, как tests/audit/ai_*_test.cjs делает с engine/ai/*.
+const srcRaw = fs.readFileSync(
   path.join(__dirname, '..', 'engine', 'economy_ext.js'),
   'utf8',
 );
+const src = srcRaw
+  .replace(/^import\s+[^;]*;?\s*$/gm, '')
+  .replace(/^export\s+\{[^}]*\};?/gm, '')
+  // `export const X = …` → `var X = …` чтобы биндинг попал на глобал vm-контекста.
+  // `const` на top-level vm.runInContext не виден через sandbox, `var` — виден.
+  .replace(/^export\s+const\s+/gm, 'var ')
+  .replace(/^export\s+(default\s+)?/gm, '');
 
 const sandbox = {
   console,
@@ -34,6 +43,9 @@ const sandbox = {
   STRATEGIC_GOODS: ['iron', 'horses', 'salt', 'timber'],
   // addEventLog stub — чтобы addEconomicEvent не падал.
   addEventLog: () => {},
+  // Stubs для ESM-импортов (CONFIG, GOODS) — их imports стрипнулись выше.
+  CONFIG: {},
+  GOODS:  {},
 };
 sandbox.window = sandbox;
 vm.createContext(sandbox);

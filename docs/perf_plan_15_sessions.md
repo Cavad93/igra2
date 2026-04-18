@@ -285,6 +285,30 @@ mutations **−5×** по `MutationObserver`. Функциональный ре�
 вероятно 15-25). При zoom ≥ 6 — все регионы видны. Визуально: крупные
 полисы (Сиракузы, Афины, Александрия) не исчезают.
 
+### Session 28 — Log-spam gate в `updateRegionSpecialization` (turn-10 p95)   ✅ Выполнено (2026-04-18)
+**Цель:** `perf/last_run.json` показывал p95 Экономики **2782 ms** vs p50 **541 ms**
+— одиночный шип на 10-м ходу. Session 27 notes подозревали AI tier2,
+но `ИИ думает` в p95 был всего 203 ms. Инструментация
+`runEconomyExtTick` выявила: 2568 ms тратится в
+`updateRegionSpecialization()`. На `streak = 10` у ~2500 из 3734 регионов
+одновременно `newBonus (1.05) > prev (1.0)` → каждый триггерил
+`addEconomicEvent` → `addEventLog` → `renderLog` (пересборка DOM).
+События чужих регионов игроку в UI всё равно не показывались.
+**Файлы:** [engine/economy_ext.js](engine/economy_ext.js)
+(3 места в `updateRegionSpecialization`),
+[tests/eco_stage3_specialization_test.cjs](tests/eco_stage3_specialization_test.cjs)
+(ESM-стрип для vm — pre-existing баг, падал до фикса).
+**Шаги:**
+1. Хойст `playerId = GAME_STATE.player_nation`, `isPlayerRegion = region.nation === playerId`.
+2. Гейтировать 3 `addEconomicEvent`-вызова (смена/потеря/повышение спеца)
+   через `isPlayerRegion`. Расчёт `streak`/`bonus` — без изменений.
+3. Исправлен pre-existing ESM-баг в `tests/eco_stage3_specialization_test.cjs`
+   (стрип import/export + `export const` → `var` для vm-совместимости).
+**Результат:** full turn mean **1864.5 → 1669.3 ms (−10.5 %)**, p95
+**4674.6 → 2112.1 ms (−54.8 %)**. Экономика p95 **2782.7 → 980.9 ms (−64.7 %)**.
+Ход 10 (spike) **3910.5 → 1804.7 ms (−53.8 %)**. Treasury=21389
+идентично baseline. `perf/session-28.md`.
+
 ### Session 27 — Memoize region-invariants в `calcRegionLandCapacity`   ✅ Выполнено (2026-04-18)
 **Цель:** `engine/turn.js:267` вызывает `calcRegionLandCapacity` для всех
 3734 регионов каждый ход. Внутри — три `Math.round(total*pct)`,
