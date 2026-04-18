@@ -148,7 +148,7 @@ input-to-paint latency на клик/keystroke, FPS во время `map.panBy()
 количество long-tasks (>50 ms) на main thread. Базовая линия фиксируется в
 `perf/interactive_baseline.md` перед Session 17.
 
-### Session 16 — Interactive harness + pause RAF на zoom/pan
+### Session 16 — Interactive harness + pause RAF на zoom/pan   ✅ Выполнено (2026-04-18)
 **Цель:** получить численную базу для interactive-lag и убрать первую простую
 конкуренцию за CPU — `AmbientLayer` / `AquaWidget` RAF-циклы крутятся во
 время zoom/pan, удваивая нагрузку на main thread.

@@ -133,7 +133,12 @@ export function initLeafletMap() {
   // - wheelDebounceTime: 60 — быстрый отклик колеса
   // - inertia + inertiaDeceleration — инерция панорамирования
   // - bounceAtZoomLimits: false — не "пружинит" на min/maxZoom
-  leafletMap = L.map('map-container', {
+  // _reg() в boot.js снапшотит `export let leafletMap` в window один раз
+  // (когда значение ещё `null`). Ниже мы явно публикуем актуальный
+  // экземпляр — чтобы window.leafletMap-проверки (map_event_feed.js,
+  // map_ai_indicators.js, map_events.js) и perf/interactive.mjs харнесс
+  // видели живую ссылку.
+  leafletMap = window.leafletMap = L.map('map-container', {
     center: [37.5, 18.0],
     zoom: 5,
     minZoom: 3,
@@ -212,6 +217,29 @@ export function initLeafletMap() {
     // Шаг 44 (arma.md): пересчитать уровень детализации карты
     try { onZoomChange(leafletMap.getZoom()); } catch (e) { console.warn('[Шаг 44]', e); }
   });
+
+  // Session 16 — пауза фоновых RAF-виджетов на время pan/zoom.
+  // AmbientLayer (точки фона) и AquaWidget (частицы ресурс-бара) конкурируют
+  // за main-thread с Leaflet'овым handler'ом move/zoom (label visibility PCA,
+  // tile reposition). Пауза: немедленно на movestart/zoomstart; resume
+  // отложен на 150 ms после moveend/zoomend — чтобы рывки pan не порождали
+  // лавину pause→resume→pause. pause/resume идемпотентны.
+  let _bgRafResumeTimer = null;
+  const _pauseBgRaf = () => {
+    if (_bgRafResumeTimer) { clearTimeout(_bgRafResumeTimer); _bgRafResumeTimer = null; }
+    try { window.AmbientLayer?.pause?.(); } catch (_) {}
+    try { window.AquaWidget?.pause?.(); } catch (_) {}
+  };
+  const _resumeBgRaf = () => {
+    if (_bgRafResumeTimer) clearTimeout(_bgRafResumeTimer);
+    _bgRafResumeTimer = setTimeout(() => {
+      _bgRafResumeTimer = null;
+      try { window.AmbientLayer?.resume?.(); } catch (_) {}
+      try { window.AquaWidget?.resume?.(); } catch (_) {}
+    }, 150);
+  };
+  leafletMap.on('movestart zoomstart', _pauseBgRaf);
+  leafletMap.on('moveend zoomend',     _resumeBgRaf);
   // Шаг 44: первичное применение уровня сразу после инициализации.
   try { onZoomChange(leafletMap.getZoom()); } catch (_) {}
   window.addEventListener('resize', scheduleNationLabelUpdate);
