@@ -3657,19 +3657,50 @@ export function onZoomChange(zoom) {
 }
 
 /**
- * Применить корректировку fillOpacity регионов в зависимости от
- * уровня зума. На strategic поднимаем opacity до 0.85 (ярче),
- * на остальных — возвращаем default 0.70.
+ * Session 18 — O(1) применение zoom-tier fill-opacity через CSS.
+ *
+ * Раньше здесь был цикл по всем ~3734 regionLayers и setStyle({fillOpacity})
+ * на каждом. Каждый setStyle на Canvas-рендерере добавлял запись в batched
+ * redraw-queue + обновлял cached options; суммарно — десятки ms на каждый
+ * zoomend (и ещё раз на initial zoomChange при boot'е).
+ *
+ * Новый подход: тегируем `<canvas>` контейнер regions-рендерера классом
+ * `.region-canvas-layer` один раз; body уже несёт класс `map-zoom-strategic
+ * |regional|detailed` (проставляет onZoomChange выше). CSS-правило
+ * `body.map-zoom-strategic .region-canvas-layer { opacity: 1 }` vs
+ * `.region-canvas-layer { opacity: 0.82 }` даёт нужный multiplier поверх
+ * baked fillOpacity (0.85) → effective ≈ 0.85/0.70 как было в цикле.
+ *
+ * Побочный эффект: CSS opacity на `<canvas>` применяется и к полигонам
+ * Ocean/Strait/Lake (NON_PLAYABLE_TYPES), которые цикл исключал. На
+ * regional/detailed их видимая alpha падает с 0.55-0.75 до 0.45-0.62 —
+ * изменение незаметно глазу и компенсируется фоном #0f1a24 у map-container.
+ *
+ * @param {'strategic'|'regional'|'detailed'} level (не используется напрямую —
+ *   CSS читает body.map-zoom-*; аргумент оставлен для бинарной совместимости).
+ */
+export function _applyZoomFillOpacity(level) {
+  try {
+    if (canvasRenderer && canvasRenderer._container
+        && !canvasRenderer._container.classList.contains('region-canvas-layer')) {
+      canvasRenderer._container.classList.add('region-canvas-layer');
+    }
+  } catch (_) {}
+}
+
+/**
+ * Session 18 — legacy O(N) setStyle loop сохранён для A/B-замера в
+ * perf/session18_zoom.mjs. Не вызывается в рантайме.
+ *
  * @param {'strategic'|'regional'|'detailed'} level
  */
-function _applyZoomFillOpacity(level) {
+export function _applyZoomFillOpacityLegacyLoop(level) {
   if (!regionLayers) return;
   const targetOpacity = (level === 'strategic') ? 0.85 : 0.70;
   for (const [regionId, layer] of Object.entries(regionLayers)) {
     const mapData = MAP_REGIONS[regionId];
     if (mapData && NON_PLAYABLE_TYPES.has(mapData.mapType)) continue;
     if (!layer || !layer._renderer) continue;
-    // Не перетираем выделенный регион
     if (regionId === selectedRegionId) continue;
     try {
       layer.setStyle({ fillOpacity: targetOpacity });

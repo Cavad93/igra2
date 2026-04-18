@@ -863,6 +863,22 @@
       pointer-events: none;
     }
 
+    /* ── Session 18 — zoom-tier fill-opacity через CSS ──
+       Вместо цикла setStyle({fillOpacity}) по 3734 полигонам в
+       _applyZoomFillOpacity() (ui/map.js) тегируем canvas-контейнер
+       регион-рендерера классом .region-canvas-layer и крутим прозрачность
+       CSS-правилом. Baked fillOpacity ≈ 0.85 × CSS opacity = effective
+       fillOpacity. 1.0 на strategic, 0.82 на regional/detailed ≈ 0.85/0.70.
+       Бенефит: O(1) вместо O(N) на каждый zoomend.
+       Transition даёт плавное затухание между уровнями как в setStyle-цикле. */
+    .region-canvas-layer {
+      opacity: 0.82;
+      transition: opacity 0.35s ease;
+    }
+    body.map-zoom-strategic .region-canvas-layer {
+      opacity: 1.0;
+    }
+
     /* Strategic view (zoom < 4): уменьшенные маркеры армий.
        Показываем только флаг нации — .army-count прячется. */
     body.map-zoom-strategic .army-marker {

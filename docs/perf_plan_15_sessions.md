@@ -193,7 +193,7 @@ SVG DOM для всех видимых наций запускается на к
 Визуально — подписи наций не пропадают и не «скачут» при прокрутке.
 Регрессия: открыть окно — подписи читаемые на всех zoom-уровнях.
 
-### Session 18 — CSS-class zoom-tier вместо `setStyle()` на 3734 полигонах
+### Session 18 — CSS-class zoom-tier вместо `setStyle()` на 3734 полигонах   ✅ Выполнено (2026-04-18)
 **Цель:** заменить imperative `polygon.setStyle({ fillOpacity })` в
 `_applyZoomFillOpacity()` на смену CSS-класса у parent-элемента — браузер
 применит стили батчем через CSS cascade за O(1).
