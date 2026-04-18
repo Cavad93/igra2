@@ -353,7 +353,9 @@ export async function processTurn() {
     _endStep('Сохранение...');
 
     // 8. Обновляем весь UI
+    _setStep('Рендер...');
     renderAll();
+    _endStep('Рендер...');
 
   } catch (err) {
     console.error('Ошибка в processTurn:', err);

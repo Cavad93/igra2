@@ -45,7 +45,7 @@
 **Шаги:** хранить `GAME_STATE._provinceControlCache` + `GAME_STATE._regionOwnerSig` (хеш owner'ов регионов). При `processTurn` сравнивать signature; если не изменилась — пропустить `calculateProvinceControl()`.
 **Верификация:** contrl_test (если есть) + визуальная проверка — при захвате региона панель провинции всё ещё обновляется.
 
-### Session 5 — Инкрементальный `refreshRegionStyles`
+### Session 5 — Инкрементальный `refreshRegionStyles`   ✅ Выполнено (2026-04-18)
 **Цель:** [ui/map.js:2781](ui/map.js#L2781) сейчас вызывает `.setStyle()` на всех 2700 полигонах после каждого хода. Перейти на diff-подход.
 **Файлы:** [ui/map.js](ui/map.js).
 **Шаги:** ввести `GAME_STATE._dirtyRegions = new Set()`; при смене owner/control/intel в turn.js добавлять id региона; `refreshRegionStyles()` стилит только регионы из Set, затем чистит Set. При смене map-mode — форсирует полный рендер (как сейчас).

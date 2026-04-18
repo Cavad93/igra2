@@ -2789,6 +2789,20 @@ export function refreshRegionStyles() {
   // Шаг 48: инвалидируем кэш разведки (новый ход / смена владельцев)
   try { invalidateFogIntelCache(); } catch (_) {}
 
+  // Session 5: инкрементальный рестайл. Хранит последний применённый
+  // styleKey для каждого регион-слоя на GAME_STATE (чтобы пережить
+  // полную пересборку регион-графа в saveGame/loadGame не мешало — при
+  // необходимости достаточно сбросить _renderStyleCache). Пропускаем
+  // setStyle если styleKey не изменился — в большинстве ходов владельцы
+  // и разведка не меняются для подавляющего большинства регионов.
+  if (!GAME_STATE._renderStyleCache) GAME_STATE._renderStyleCache = {};
+  const styleCache = GAME_STATE._renderStyleCache;
+  const forceFull = GAME_STATE._forceFullRestyle === true;
+  const dirtySet = (GAME_STATE._dirtyRegions instanceof Set) ? GAME_STATE._dirtyRegions : null;
+  const curSelected = selectedRegionId;
+  const prevSelected = GAME_STATE._renderSelectedId;
+  let _applied = 0, _skipped = 0;
+
   for (const [regionId, layer] of Object.entries(regionLayers)) {
     const mapData = MAP_REGIONS[regionId];
     // Не-игровые регионы не меняют стиль
@@ -2808,17 +2822,42 @@ export function refreshRegionStyles() {
                        ? getProvinceBlendColor(regionId) : null;
     const color = blendColor ?? (nation ? nation.color : '#A8A898');
     const isPlayer = (nationId === GAME_STATE.player_nation);
-    const isSelected = (regionId === selectedRegionId);
+    const isSelected = (regionId === curSelected);
     const [origC, occC] = _regionOccupationColors(regionId);
-    const intelLevel = getIntelLevel(regionId);
+    const intelLevel = (typeof getIntelLevel === 'function') ? getIntelLevel(regionId) : 2;
     const origNat = gameRegion?.original_nation ?? null;
     const occNat  = gameRegion?.occupied_by ?? null;
+
+    // Session 5 — компактный ключ стиля. Если он совпадает с тем, что
+    // был применён в прошлый refreshRegionStyles(), пропускаем setStyle.
+    const styleKey = color + '|' + (isPlayer?1:0) + '|' + (isSelected?1:0)
+      + '|' + (origC||'') + '|' + (occC||'') + '|' + intelLevel
+      + '|' + (nationId||'') + '|' + (origNat||'') + '|' + (occNat||'');
+
+    const selectionChanged = (curSelected !== prevSelected)
+      && (regionId === curSelected || regionId === prevSelected);
+    const explicitDirty = !!(dirtySet && dirtySet.has(regionId));
+
+    if (!forceFull && !selectionChanged && !explicitDirty
+        && styleCache[regionId] === styleKey) {
+      _skipped++;
+      continue;
+    }
+
     layer.setStyle(buildPolygonStyle(color, isPlayer, isSelected, origC, occC, intelLevel, nationId, origNat, occNat));
+    styleCache[regionId] = styleKey;
+    _applied++;
 
     if (layer.getTooltip && layer.getTooltip()) {
       layer.setTooltipContent(buildTooltipContent(regionId, mapData, nationId));
     }
   }
+
+  // Сбрасываем накопленные флаги. Кэш styleCache остаётся заполненным —
+  // он источник истины для следующего вызова.
+  GAME_STATE._renderSelectedId = curSelected;
+  if (dirtySet) dirtySet.clear();
+  GAME_STATE._forceFullRestyle = false;
 
   // Если часть слоёв не получила рендерер — повторяем через 120мс
   if (_hadMissingRenderer) {
@@ -2832,6 +2871,22 @@ export function refreshRegionStyles() {
   // Шаг 48: обновляем слой тумана войны (SVG хэтчинг для intel=0)
   try { refreshFogOverlay(); }
   catch (e) { console.warn('[Шаг 48] refreshFogOverlay', e); }
+}
+
+// Session 5: явная инвалидация стиле-кэша (например после setMapMode,
+// смены персонажа или batch-изменения владельцев).
+export function invalidateRegionStyleCache() {
+  if (typeof GAME_STATE === 'undefined') return;
+  GAME_STATE._renderStyleCache = {};
+  GAME_STATE._forceFullRestyle = true;
+}
+
+// Session 5: пометить регион как "грязный" — следующий refreshRegionStyles
+// гарантированно применит к нему setStyle даже если styleKey совпал.
+export function markRegionDirty(regionId) {
+  if (typeof GAME_STATE === 'undefined' || regionId == null) return;
+  if (!(GAME_STATE._dirtyRegions instanceof Set)) GAME_STATE._dirtyRegions = new Set();
+  GAME_STATE._dirtyRegions.add(String(regionId));
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -3177,6 +3232,15 @@ export function setMapMode(mode) {
   if (!MAP_MODES.includes(mode)) return;
   CURRENT_MAP_MODE = mode;
   window.CURRENT_MAP_MODE = mode;
+
+  // Session 5: переключение map-mode переопределяет стиль полигонов
+  // через _restorePoliticalStyle / локальный setStyle, поэтому наш кэш
+  // устарел. Сбрасываем — следующий refreshRegionStyles сделает полный
+  // проход и восстановит политическую раскраску.
+  if (typeof GAME_STATE !== 'undefined') {
+    GAME_STATE._renderStyleCache = {};
+    GAME_STATE._forceFullRestyle = true;
+  }
 
   // ЭТАП 20 (uisuper.md) — синхронизация розы ветров
   try { WindRose.setActive(mode); } catch (e) { /* noop */ }
