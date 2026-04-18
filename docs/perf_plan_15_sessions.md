@@ -285,6 +285,21 @@ mutations **−5×** по `MutationObserver`. Функциональный ре�
 вероятно 15-25). При zoom ≥ 6 — все регионы видны. Визуально: крупные
 полисы (Сиракузы, Афины, Александрия) не исчезают.
 
+### Session 23 — Агрессивный skip stub-наций (pop<10k + ≤1 регион)   ✅ Выполнено (2026-04-18)
+**Цель:** расширить `_isStubNation` вторичным критерием — «малое племя»
+с населением < 10 000 и ≤ 1 регионом пропускается так же, как нация без
+зданий. В пресете таких наций ~138 (из 902). Игрок защищён по
+`nationId === GAME_STATE.player_nation`.
+**Файлы:** [engine/economy.js](engine/economy.js) (`_isStubNation`,
+`runEconomyTick`).
+**Шаги:**
+1. Экспортировать `STUB_POP_THRESHOLD = 10000`.
+2. В `_isStubNation(nation, nationId)` добавить раннюю ветвь:
+   `if (!isPlayer && pop < threshold && regs.length <= 1) return true;`.
+3. В `runEconomyTick` передать `nId` вторым аргументом.
+**Верификация:** `tests/audit/eco_*` зелёные, syracuse treasury после 10
+ходов = 21389 (детерминистично), Экономика p50 **−14.9 %**.
+
 ### Общие принципы Sessions 16-22
 
 - **Метрика** — не per-turn, а interactive: FPS при pan, input-to-paint,

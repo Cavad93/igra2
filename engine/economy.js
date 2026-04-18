@@ -141,18 +141,39 @@ export function getBuildingBonuses(nationId) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// Session 3 (perf): детектор stub-наций.
+// Session 3 + 23 (perf): детектор stub-наций.
 // ~600 из 902 наций — племенные «призраки» без продуктивной экономики
 // (пустые регионы или отсутствие зданий). Их прогон через per-nation
 // циклы runEconomyTick занимал ~30–40% экономического такта, хотя
 // результаты нигде не использовались. Считаем один раз в начале тика
 // и пропускаем тяжёлые шаги (производство/потребление/рынок/зарплаты).
 // Налоги и active_laws всё равно считаются в шаге 6.
+//
+// Session 23: добавлен агрессивный критерий — «малое племя» с
+// населением < STUB_POP_THRESHOLD и <= 1 регионом классифицируется
+// как stub даже при наличии 1-2 активных слотов. Таких наций в пресете
+// ~138; их субсистентное производство не влияет на мировой рынок, а
+// per-nation проходы по всем тяжёлым шагам обходились значительно.
+// Игрок защищён: GAME_STATE.player_nation никогда не становится stub.
 // ──────────────────────────────────────────────────────────────
-export function _isStubNation(nation) {
+export const STUB_POP_THRESHOLD = 10000;
+
+export function _isStubNation(nation, nationId) {
   if (!nation) return true;
   const regs = nation.regions;
   if (!Array.isArray(regs) || regs.length === 0) return true;
+
+  // Session 23: защита игрока — никогда не пропускаем его экономику.
+  // Сравниваем по id; is_player в пресете зеркалирует это, но id
+  // авторитетнее, если игрок сменился в рантайме.
+  const isPlayer = nationId != null
+    ? (nationId === GAME_STATE.player_nation)
+    : Boolean(nation.is_player);
+
+  if (!isPlayer) {
+    const pop = nation.population?.total ?? 0;
+    if (pop < STUB_POP_THRESHOLD && regs.length <= 1) return true;
+  }
 
   // Legacy nation-level flat buildings (стены, ранние постройки)
   if (Array.isArray(nation.buildings) && nation.buildings.length > 0) return false;
@@ -1111,7 +1132,7 @@ export function runEconomyTick() {
   const _activeEntries = [];
   for (let i = 0; i < _nationEntries.length; i++) {
     const [nId, nation] = _nationEntries[i];
-    if (_isStubNation(nation)) {
+    if (_isStubNation(nation, nId)) {
       _stubSet.add(nId);
     } else {
       _activeKeys.push(nId);
