@@ -27,6 +27,14 @@ const STRATEGIC_CONFIG = {
   tier1Threshold:    3,     // Tier ≤ 3 → получает стратегический план
 };
 
+// Session 9 — ring buffer для events_log.
+// Эти push'ы идут мимо обёртки addEventLog, поэтому трим обязан быть здесь.
+// Верхний предел совпадает с PERSIST_CAPS.events_log (engine/turn.js).
+const _EVENTS_LOG_MAX = 500;
+function _trimEventsLog(arr) {
+  if (Array.isArray(arr) && arr.length > _EVENTS_LOG_MAX) arr.length = _EVENTS_LOG_MAX;
+}
+
 // ─── ШАБЛОНЫ СТРАТЕГИЙ ────────────────────────────────────────────────────────
 
 const STRATEGY_TEMPLATES = {
@@ -265,9 +273,13 @@ async function createPlan(nation, ou, gameState) {
     phases:   plan.phases.length,
     fallback: plan.fallback,
   };
-  if (Array.isArray(gameState?.events_log)) gameState.events_log.push(logEntry);
+  if (Array.isArray(gameState?.events_log)) {
+    gameState.events_log.push(logEntry);
+    _trimEventsLog(gameState.events_log);
+  }
   if (typeof events_log !== 'undefined' && Array.isArray(events_log)) {
     events_log.push(logEntry);
+    _trimEventsLog(events_log);
   }
 
   return plan;
@@ -522,9 +534,13 @@ function _broadcastCoalitionPlan(nation, plan, gameState) {
     alliesNotified: broadcastCount,
     allies:         allies.slice(),
   };
-  if (Array.isArray(gameState?.events_log)) gameState.events_log.push(logEntry);
+  if (Array.isArray(gameState?.events_log)) {
+    gameState.events_log.push(logEntry);
+    _trimEventsLog(gameState.events_log);
+  }
   if (typeof events_log !== 'undefined' && Array.isArray(events_log)) {
     events_log.push(logEntry);
+    _trimEventsLog(events_log);
   }
 
   return { broadcastCount, allies };

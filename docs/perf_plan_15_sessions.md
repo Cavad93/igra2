@@ -69,7 +69,7 @@
 **Шаги:** хранить `GAME_STATE._diploDistMatrix` + версию signature регионов. BFS/Dijkstra запускать только из регионов, сменивших владельца; остальные дистанции сохранить.
 **Верификация:** `tests/audit/dip_integration_test.cjs` зелёный; профайлер дипломатии −60-80%.
 
-### Session 9 — Ring buffer для `events_log` и history
+### Session 9 — Ring buffer для `events_log` и history   ✅ Выполнено (2026-04-18)
 **Цель:** `GAME_STATE.events_log` растёт без ограничения. После 500+ ходов save ворочает мегабайты. Срезать на уровне runtime.
 **Файлы:** [engine/turn.js](engine/turn.js) (addEventLog), [ui/panels.js](ui/panels.js) (sparklines).
 **Шаги:** обертка `addEventLog` уже есть — добавить `if (arr.length > 500) arr.shift()`. `_turn_summary_history` cap = 200. Спарклайн-история уже capped = 10 в [panels.js:_RES_HISTORY_MAX](ui/panels.js#L417).

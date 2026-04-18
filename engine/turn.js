@@ -11,6 +11,37 @@ export let IS_PROCESSING_TURN = false;
 // updateDateDisplay, updateStele, toRomanYear — вынесены в engine/date.js (Этап 45)
 
 // ──────────────────────────────────────────────────────────────
+// Session 9 — верхние границы для журналов/истории (ring buffer).
+// Защита от неограниченного роста, когда запись идёт мимо обёртки
+// addEventLog (ai/strategic_llm.js, загрузка старых сейвов и т.п.).
+// Внутренние обёртки ставят более жёсткие лимиты:
+//   ui/log.js       → events_log       = 120 (отображаются последние 12)
+//   engine/turn.js  → _turn_summary_history = 24 (2 года)
+//   ui/panels.js    → history.*        = 10 (спарклайны)
+// Эти константы — аварийный предохранитель.
+// ──────────────────────────────────────────────────────────────
+export const PERSIST_CAPS = Object.freeze({
+  events_log:             500,
+  turn_summary_history:   200,
+});
+
+function _trimFromTail(arr, max) {
+  if (!Array.isArray(arr) || arr.length <= max) return;
+  // events_log хранит свежие записи в голове (unshift), поэтому срезаем хвост.
+  arr.length = max;
+}
+
+export function _enforcePersistentLogCaps(gs) {
+  if (!gs) return;
+  _trimFromTail(gs.events_log, PERSIST_CAPS.events_log);
+  const summary = gs._turn_summary_history;
+  if (Array.isArray(summary) && summary.length > PERSIST_CAPS.turn_summary_history) {
+    // _turn_summary_history: push в конец (свежие — в хвосте), срезаем начало.
+    summary.splice(0, summary.length - PERSIST_CAPS.turn_summary_history);
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
 // ГЛАВНАЯ ФУНКЦИЯ ХОДА
 // ──────────────────────────────────────────────────────────────
 
@@ -74,6 +105,11 @@ export async function processTurn() {
   } catch (e) { console.warn('[clepsydra_flip]', e); }
 
   try {
+    // Session 9 — ring-buffer: трим журналов до начала хода.
+    // Ловит неограниченный рост events_log (прямые push в ai/strategic_llm.js)
+    // и _turn_summary_history (если сейв загружен со старой версии).
+    try { _enforcePersistentLogCaps(GAME_STATE); } catch (_) {}
+
     // Инициализируем поля у всех наций перед обработкой
     for (const nation of Object.values(GAME_STATE.nations ?? {})) {
       _ensureNationDefaults(nation);
