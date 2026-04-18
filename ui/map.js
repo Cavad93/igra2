@@ -278,6 +278,18 @@ export function initLeafletMap() {
   };
   leafletMap.on('movestart zoomstart', _pauseBgRaf);
   leafletMap.on('moveend zoomend',     _resumeBgRaf);
+
+  // Session 33: скрыть fog-pane во время zoom (visibility: hidden).
+  // Во время zoom Leaflet реппроецирует d-атрибуты всех 3666 SVG-path'ей;
+  // visibility:hidden не останавливает reprojection, но убирает paint/layout
+  // для скрытых элементов и блокирует визуальное «мерцание». Для pan
+  // оставляем видимым — pan'ы короткие и фог полезен при перемещении.
+  const _toggleFogVisibility = (hide) => {
+    const pane = leafletMap.getPane && leafletMap.getPane('fogOverlayPane');
+    if (pane) pane.style.visibility = hide ? 'hidden' : 'visible';
+  };
+  leafletMap.on('zoomstart', () => _toggleFogVisibility(true));
+  leafletMap.on('zoomend',   () => _toggleFogVisibility(false));
   // Шаг 44: первичное применение уровня сразу после инициализации.
   try { onZoomChange(leafletMap.getZoom()); } catch (_) {}
   window.addEventListener('resize', scheduleNationLabelUpdate);
