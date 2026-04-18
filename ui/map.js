@@ -33,6 +33,20 @@ let _labelCacheAnchorLatLng = null;
 let _labelCacheAnchorPt     = null;
 let _labelCacheZoom         = null;
 
+// Session 22 — Region culling при стратегическом zoom.
+// Canvas-рендерер проходит по ._layers при каждом redraw; ~70 %
+// полигонов при z<4 занимают <1 % экрана → draw-цикл тратится зря.
+// Один раз на init считаем areaPx каждого региона при ref-zoom,
+// выбираем 70-й перцентиль как threshold. На strategic-уровне
+// removeLayer для мелких, на regional/detailed — addLayer обратно.
+// `display:none` на Canvas не работает (нет per-polygon DOM), поэтому
+// используем leafletMap.removeLayer/addLayer — это единственный путь
+// исключить полигон из Canvas draw-loop.
+let _cullableRegionIds        = null;   // Set<regionId> — мелкие регионы
+let _cullCurrentlyApplied     = false;  // текущее состояние culling
+const _CULL_REF_ZOOM          = 3;      // проекция для стабильного areaPx
+const _CULL_PERCENTILE        = 0.70;   // доля регионов к скрытию на strategic
+
 // ──────────────────────────────────────────────────────────────
 // POLYLABEL — визуальный центр полигона (mapbox/polylabel)
 // Находит точку внутри полигона, максимально удалённую от границ
@@ -193,6 +207,10 @@ export function initLeafletMap() {
 
   // Регионы
   renderRegionPolygons();
+
+  // Session 22 — один раз считаем cullable-список на стабильном ref-zoom.
+  try { _computeCullableRegions(); }
+  catch (e) { console.warn('[Session 22] _computeCullableRegions', e); }
 
   // Подписи морей
   renderSeaLabels();
@@ -1931,6 +1949,84 @@ function _pxPolyArea(pxPoly) {
   return Math.abs(area / 2);
 }
 
+// ──────────────────────────────────────────────────────────────
+// Session 22 — Region culling helpers
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Один раз после renderRegionPolygons вычисляем стабильный areaPx
+ * (в пикселях при _CULL_REF_ZOOM) для каждого playable-региона.
+ * Порог — 70-й перцентиль распределения, чтобы культ-лист составил
+ * ~70% самых мелких. Ocean/Strait/Lake/Impassible — не трогаем, они
+ * образуют фоновую заливку морей.
+ */
+function _computeCullableRegions() {
+  if (!leafletMap || typeof MAP_REGIONS === 'undefined') return;
+  const areas = [];
+  const perRegion = {};
+  for (const [regionId, mapData] of Object.entries(MAP_REGIONS)) {
+    if (!mapData || !mapData.coords || mapData.coords.length < 3) continue;
+    if (NON_PLAYABLE_TYPES.has(mapData.mapType)) continue;
+    let pts;
+    try {
+      pts = mapData.coords.map(c => leafletMap.project([c[0], c[1]], _CULL_REF_ZOOM));
+    } catch (_) { continue; }
+    const a = _pxPolyArea(pts);
+    perRegion[regionId] = a;
+    areas.push(a);
+  }
+  if (!areas.length) { _cullableRegionIds = new Set(); return; }
+  areas.sort((x, y) => x - y);
+  const idx = Math.min(areas.length - 1, Math.floor(areas.length * _CULL_PERCENTILE));
+  const threshold = Math.max(20, areas[idx]);
+  const set = new Set();
+  for (const [rid, a] of Object.entries(perRegion)) {
+    if (a < threshold) set.add(rid);
+  }
+  _cullableRegionIds = set;
+  try { GAME_STATE._cullableRegionIds = set; } catch (_) {}
+}
+
+/**
+ * На strategic — убираем мелкие layer'ы из leafletMap; на regional/detailed —
+ * возвращаем. Идемпотентно: повторный вызов с тем же флагом — no-op.
+ * regionLayers[id] сохраняется: GAME_STATE не трогается, только DOM/canvas.
+ * @param {boolean} shouldCull — true при strategic level
+ */
+function _applyRegionCulling(shouldCull) {
+  if (!leafletMap || !_cullableRegionIds) return;
+  if (shouldCull === _cullCurrentlyApplied) return;
+  let touched = 0;
+  for (const rid of _cullableRegionIds) {
+    const layer = regionLayers[rid];
+    if (!layer) continue;
+    try {
+      if (shouldCull) {
+        if (leafletMap.hasLayer(layer)) { leafletMap.removeLayer(layer); touched++; }
+      } else {
+        if (!leafletMap.hasLayer(layer)) { leafletMap.addLayer(layer); touched++; }
+      }
+    } catch (_) {}
+  }
+  _cullCurrentlyApplied = shouldCull;
+  // При возврате слоёв — сбросим style cache для них, чтобы следующий
+  // refreshRegionStyles (который дёрнет layeradd-listener) точно применил
+  // актуальные цвета (в т.ч. если владелец сменился пока были culled).
+  if (!shouldCull && GAME_STATE && GAME_STATE._renderStyleCache) {
+    for (const rid of _cullableRegionIds) {
+      delete GAME_STATE._renderStyleCache[rid];
+    }
+  }
+}
+
+/**
+ * Пересчитать culling (например после renderRegionPolygons() в renderMap()
+ * заново пересоздал layers — старые removeLayer уже не применимы).
+ */
+export function resetRegionCullingState() {
+  _cullCurrentlyApplied = false;
+}
+
 function _pointInPolyPx(pt, poly) {
   let inside = false;
   const n = poly.length;
@@ -3641,6 +3737,12 @@ export function onZoomChange(zoom) {
   //    Реализовано через пере-применение refreshRegionStyles с
   //    внешним множителем.
   _applyZoomFillOpacity(level);
+
+  // Session 22 — скрываем мелкие регионы на strategic (≈70% самых
+  // мелких). На regional/detailed — возвращаем. FPS panBy на z=3
+  // растёт в 2-3 раза т.к. Canvas draw-loop короче.
+  try { _applyRegionCulling(level === 'strategic'); }
+  catch (e) { console.warn('[Session 22] _applyRegionCulling', e); }
 
   // 4. Детальный уровень: строим слои иконок построек и гарнизонов.
   //    Иначе — убираем детальные слои с карты.
