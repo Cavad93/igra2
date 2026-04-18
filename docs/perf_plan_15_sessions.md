@@ -105,7 +105,7 @@
 **Шаги:** в `manualChunks` добавить группы: `'engine-core'`, `'engine-econ'`, `'engine-dip'`, `'engine-war'`, `'engine-ai'`. Прогнать `npm run build:vite`, замерить total JS и largest chunk.
 **Верификация:** `dist/` размер chunks более ровный; в `npm run preview` время до first-interaction замерить.
 
-### Session 15 — Регрессионный guard + финальный баланс
+### Session 15 — Регрессионный guard + финальный баланс   ✅ Выполнено (2026-04-18)
 **Цель:** закрепить достигнутое, чтобы будущие коммиты не откатили прогресс.
 **Файлы:** новый `tests/perf/turn_budget_test.cjs`, обновить [perf/baseline.md](perf/baseline.md).
 **Шаги:** написать тест, который запускает 10 ходов на фикстурных данных и падает если p95 > X ms (X = baseline после Session 14 × 1.2). Запустить профайлер всех 14 предыдущих сессий, собрать финальный отчёт с графиком «baseline → S1 → … → S14».
