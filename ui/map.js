@@ -405,9 +405,30 @@ function _ensureFogPattern() {
 }
 
 let _fogPolygons = {};
+let _fogSig = null;
+export function invalidateFogOverlayCache() { _fogSig = null; }
 export function refreshFogOverlay() {
   if (!leafletMap) return;
   _ensureFogOverlayPane();
+
+  // Session 30: signature-кэш. Туман меняется только при смене intel хотя бы
+  // одного региона (открытие дипконтакта, разведка). Без изменений intel —
+  // на повторный вызов (pan/zoom/layeradd-каскад) делаем ранний возврат.
+  // 2700 регионов × ~5 символов id = ~14 KB сравнение строк, дешевле любой
+  // из 3700 операций remove/addTo внутри тела функции.
+  const fogIds = [];
+  for (const [regionId, mapData] of Object.entries(MAP_REGIONS)) {
+    if (!mapData?.coords || mapData.coords.length < 3) continue;
+    if (NON_PLAYABLE_TYPES.has(mapData.mapType)) continue;
+    if (getIntelLevel(regionId) !== 0) continue;
+    fogIds.push(regionId);
+  }
+  const sig = fogIds.join(',');
+  if (sig === _fogSig && Object.keys(_fogPolygons).length === fogIds.length) {
+    return;
+  }
+  _fogSig = sig;
+
   // Убираем старые
   for (const poly of Object.values(_fogPolygons)) {
     try { if (leafletMap.hasLayer(poly)) leafletMap.removeLayer(poly); } catch (_) {}
@@ -415,11 +436,8 @@ export function refreshFogOverlay() {
   _fogPolygons = {};
 
   // Рендерим полупрозрачные полигоны SVG над регионами intel=0
-  for (const [regionId, mapData] of Object.entries(MAP_REGIONS)) {
-    if (!mapData?.coords || mapData.coords.length < 3) continue;
-    if (NON_PLAYABLE_TYPES.has(mapData.mapType)) continue;
-    const intel = getIntelLevel(regionId);
-    if (intel !== 0) continue;
+  for (const regionId of fogIds) {
+    const mapData = MAP_REGIONS[regionId];
     const coords = mapData.coords.length <= 60
       ? smoothChaikin(mapData.coords, 2)
       : mapData.coords;

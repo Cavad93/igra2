@@ -8,6 +8,10 @@ data/backups/
 .env.*
 !.env.example
 
+# Локальная конфигурация MCP-серверов (у каждого разработчика своя)
+.mcp.json
+.playwright-mcp/
+
 # macOS
 .DS_Store
 **/.DS_Store
