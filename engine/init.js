@@ -230,8 +230,14 @@ export async function initGame() {
   if (typeof warmupSaveWorker === 'function') warmupSaveWorker();
 }
 
-// Рендерим всё разом — каждая функция изолирована, чтобы ошибка в одной не ломала остальные
-export function renderAll() {
+// Session 19 — renderAll() разделён на critical + deferred.
+// renderCritical() — немедленно видимые части (карта, топ-бар, левая/правая панели, стела, сезон).
+// renderDeferred() — вкладки и маркеры, которые игрок видит только при открытии панели или
+// при разглядывании карты: их можно считать «eventually consistent».
+// renderAll() по-прежнему API: выполняет critical синхронно и планирует deferred через rIC.
+
+// Немедленная (критичная) часть — то, что игрок видит сразу после клика/хода.
+export function renderCritical() {
   try { renderMap(); }                    catch (e) { console.error('renderMap error:', e); }
   try { renderLeftPanel(); }              catch (e) { console.error('renderLeftPanel error:', e); }
   try { renderRightPanel(); }             catch (e) { console.error('renderRightPanel error:', e); }
@@ -240,6 +246,10 @@ export function renderAll() {
   try { updateStele(); }                  catch (e) { console.error('updateStele error:', e); }
   // Шаг 45 — сезонный визуал (фильтр карты, оверлей, иконка в топ-баре)
   try { if (typeof applySeasonVisual === 'function') applySeasonVisual(); } catch (e) { console.error('applySeasonVisual error:', e); }
+}
+
+// Отложенная часть — вкладки, маркеры, ambient. Запускается из requestIdleCallback.
+export function renderDeferred() {
   try { renderCharInitiativesPanel(); }   catch (e) { console.error('renderCharInitiativesPanel error:', e); }
   try { if (typeof renderOrdersPanel    === 'function') renderOrdersPanel();    } catch (e) {}
   try { if (typeof _applyLogFilter      === 'function') _applyLogFilter();      } catch (e) {}
@@ -274,6 +284,34 @@ export function renderAll() {
       window.AmbientLayer.setIntensity(intensity);
     }
   } catch (e) {}
+}
+
+// Идентификатор уже запланированного idle-callback'а — чтобы несколько renderAll()
+// в одном фрейме не плодили дубль-deferred вызовов (важно на input-флудах).
+let _deferredRenderHandle = null;
+
+function _scheduleDeferredRender() {
+  // Коалесцируем: если уже запланировано — пропускаем.
+  if (_deferredRenderHandle !== null) return;
+  const g = (typeof window !== 'undefined') ? window : (typeof globalThis !== 'undefined' ? globalThis : null);
+  const ric = g && typeof g.requestIdleCallback === 'function' ? g.requestIdleCallback.bind(g) : null;
+  const run = () => {
+    _deferredRenderHandle = null;
+    try { renderDeferred(); } catch (e) { console.error('renderDeferred error:', e); }
+  };
+  if (ric) {
+    _deferredRenderHandle = ric(run, { timeout: 200 });
+  } else {
+    // Fallback: setTimeout(0) — тесты в jsdom, Safari (нет rIC).
+    _deferredRenderHandle = setTimeout(run, 0);
+  }
+}
+
+// Полный рендер (сохраняем API) — critical немедленно, deferred через rIC.
+// Используется из initGame() и processTurn().
+export function renderAll() {
+  renderCritical();
+  _scheduleDeferredRender();
 }
 
 
