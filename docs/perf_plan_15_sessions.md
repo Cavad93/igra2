@@ -33,7 +33,7 @@
 **Шаги:** в начале `processTurn()` один раз собрать `const _nationEntries = Object.entries(GAME_STATE.nations)`, пробросить в нижележащие функции параметром. Grep'нуть `Object.entries\(GAME_STATE\.nations\)` и заменить на переменную.
 **Верификация:** `node tests/audit/eco_integration_test.cjs` зелёный + профайлер показывает −10-15% per-turn.
 
-### Session 3 — Skip stub-наций в экономике
+### Session 3 — Skip stub-наций в экономике   ✅ Выполнено (2026-04-18)
 **Цель:** ~600 из 902 наций — племенные stub'ы с 1 регионом и без зданий. Они не имеют продуктивной экономики, но сейчас проходят все loops. Early-exit.
 **Файлы:** [engine/economy.js](engine/economy.js) (runEconomyTick), [engine/pops.js](engine/pops.js).
 **Шаги:** в начале каждого per-nation цикла — `if (!nation.regions?.length || !hasAnyBuilding(nation)) continue;` с комментарием, что stub пропускается. Сохранить налог/население минимальный тик (без рынка/амортизации).

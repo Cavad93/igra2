@@ -141,6 +141,39 @@ export function getBuildingBonuses(nationId) {
 }
 
 // ──────────────────────────────────────────────────────────────
+// Session 3 (perf): детектор stub-наций.
+// ~600 из 902 наций — племенные «призраки» без продуктивной экономики
+// (пустые регионы или отсутствие зданий). Их прогон через per-nation
+// циклы runEconomyTick занимал ~30–40% экономического такта, хотя
+// результаты нигде не использовались. Считаем один раз в начале тика
+// и пропускаем тяжёлые шаги (производство/потребление/рынок/зарплаты).
+// Налоги и active_laws всё равно считаются в шаге 6.
+// ──────────────────────────────────────────────────────────────
+export function _isStubNation(nation) {
+  if (!nation) return true;
+  const regs = nation.regions;
+  if (!Array.isArray(regs) || regs.length === 0) return true;
+
+  // Legacy nation-level flat buildings (стены, ранние постройки)
+  if (Array.isArray(nation.buildings) && nation.buildings.length > 0) return false;
+
+  const regionsMap = GAME_STATE?.regions;
+  if (!regionsMap) return true;
+  for (let i = 0; i < regs.length; i++) {
+    const region = regionsMap[regs[i]];
+    if (!region) continue;
+    if (Array.isArray(region.buildings) && region.buildings.length > 0) return false;
+    const slots = region.building_slots;
+    if (Array.isArray(slots) && slots.length > 0) {
+      for (let j = 0; j < slots.length; j++) {
+        if (slots[j] && slots[j].status === 'active') return false;
+      }
+    }
+  }
+  return true;
+}
+
+// ──────────────────────────────────────────────────────────────
 // ШАГ 1: ПРОИЗВОДСТВО
 // Гибридная модель:
 //   A) Организованное — суммируется из building_slots регионов игрока.
@@ -150,10 +183,17 @@ export function getBuildingBonuses(nationId) {
 // Для AI-наций применяется только схема B (у них нет building_slots).
 // ──────────────────────────────────────────────────────────────
 
-export function calculateProduction() {
+export function calculateProduction(stubSet) {
   const produced = {};  // { nation: { good: amount } }
 
   for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
+    // Session 3 (perf): пропускаем stub-нации целиком — у них нет
+    // зданий, а subsistence-производство без регионов с building_slots
+    // не формирует значимого вклада в мировой рынок.
+    if (stubSet && stubSet.has(nationId)) {
+      produced[nationId] = {};
+      continue;
+    }
     produced[nationId] = {};
     const bldBonuses = getBuildingBonuses(nationId);
 
@@ -1053,12 +1093,32 @@ export function runEconomyTick() {
   const _nationEntries = Object.entries(GAME_STATE.nations);
   const _nationKeys    = _nationEntries.map(e => e[0]);
 
+  // Session 3 (perf): раз-за-тик классификация stub/активная нация.
+  // Stub — племенной «призрак» без building-slots и без legacy-buildings
+  // (~600 из 902 в baseline-пресете). Heavy-шаги (производство, рынок,
+  // зарплаты, бюджеты зданий, автономное строительство) для них пустые,
+  // но съедают O(N) накладных расходов на поиск/ветвления внутри каждой
+  // под-функции. Пропускаем их по списку `_activeKeys`, а налоги/законы
+  // считаем в шаге 6 по полному `_nationEntries` через проверку _stubSet.
+  const _stubSet = new Set();
+  const _activeKeys = [];
+  const _activeEntries = [];
+  for (let i = 0; i < _nationEntries.length; i++) {
+    const [nId, nation] = _nationEntries[i];
+    if (_isStubNation(nation)) {
+      _stubSet.add(nId);
+    } else {
+      _activeKeys.push(nId);
+      _activeEntries.push(_nationEntries[i]);
+    }
+  }
+
   // ════════════════════════════════════════════════════════════
   // ШАГ 0: POP-эффективность зданий
   // прошлотиковая satisfied → slot._pop_eff
   // ════════════════════════════════════════════════════════════
   if (typeof applyPopSatisfiedToBuildings === 'function') {
-    for (const _nId of _nationKeys) {
+    for (const _nId of _activeKeys) {
       try { applyPopSatisfiedToBuildings(_nId); } catch (e) { console.warn('[pops_eff]', e); }
     }
   }
@@ -1074,7 +1134,7 @@ export function runEconomyTick() {
     try { computeWorldMarketQuotas(); } catch (e) { console.warn('[world_quotas]', e); }
   }
   if (typeof procureCapitalInputs === 'function') {
-    for (const nationId of _nationKeys) {
+    for (const nationId of _activeKeys) {
       try { procureCapitalInputs(nationId); } catch (e) { console.warn('[capital_inputs]', e); }
     }
   }
@@ -1085,7 +1145,7 @@ export function runEconomyTick() {
   //   → nation.population.by_profession.slaves
   // ════════════════════════════════════════════════════════════
   if (typeof procureSlaves === 'function') {
-    for (const nationId of _nationKeys) {
+    for (const nationId of _activeKeys) {
       try { procureSlaves(nationId); } catch (e) { console.warn('[procure_slaves]', e); }
     }
   }
@@ -1098,14 +1158,14 @@ export function runEconomyTick() {
   // ════════════════════════════════════════════════════════════
   for (const m of Object.values(GAME_STATE.market)) { m.production_cost = null; }
   if (typeof processAllRecipes === 'function') {
-    for (const nationId of _nationKeys) {
+    for (const nationId of _activeKeys) {
       try { processAllRecipes(nationId); } catch (e) { console.warn('[recipes]', e); }
     }
   }
 
-  const allProduced = calculateProduction();
+  const allProduced = calculateProduction(_stubSet);
 
-  for (const nationId of _nationKeys) {
+  for (const nationId of _activeKeys) {
     try { routeProductionToLocalStockpiles(nationId, allProduced); } catch (e) { console.warn('[route_prod]', e); }
   }
 
@@ -1134,7 +1194,11 @@ export function runEconomyTick() {
   const allConsumed       = {};
   const allActualConsumed = {};
 
-  for (const [nationId, nation] of _nationEntries) {
+  // Session 3 (perf): stub-нации не потребляют — у них нет производства,
+  // а вызов famine-ветки при пустом stockpile уничтожал бы их население.
+  // Их pops/by_profession остаются статичными (как было до нашей правки,
+  // когда subsistence + consumption балансировались).
+  for (const [nationId, nation] of _activeEntries) {
     allConsumed[nationId] = calculateConsumption(nation);   // wealth-basket (Stage 6) или flat
 
     const consumed  = allConsumed[nationId];
@@ -1174,7 +1238,7 @@ export function runEconomyTick() {
   }
 
   // 2d. Проверка дефицитов по всем товарам
-  for (const [nationId, nation] of _nationEntries) {
+  for (const [nationId, nation] of _activeEntries) {
     checkSupplyDeficits(nation);
   }
 
@@ -1184,12 +1248,12 @@ export function runEconomyTick() {
   //   3b. Адаптивное поведение: сокращение рабочих, приостановка, закрытие
   // ════════════════════════════════════════════════════════════
   if (typeof updateBuildingFinancials === 'function') {
-    for (const nationId of _nationKeys) {
+    for (const nationId of _activeKeys) {
       try { updateBuildingFinancials(nationId); } catch (e) { console.warn('[bld_fin]', e); }
     }
   }
   if (typeof applyBuildingAdaptiveBehavior === 'function') {
-    for (const nationId of _nationKeys) {
+    for (const nationId of _activeKeys) {
       try { applyBuildingAdaptiveBehavior(nationId); } catch (e) { console.warn('[bld_adapt]', e); }
     }
   }
@@ -1200,7 +1264,7 @@ export function runEconomyTick() {
   //   4b. Обновить pop.wealth на основе incomeAdequacy + priceRatio
   // ════════════════════════════════════════════════════════════
   if (typeof distributeWages === 'function') {
-    for (const nationId of _nationKeys) {
+    for (const nationId of _activeKeys) {
       try { distributeWages(nationId); } catch (e) { console.warn('[wages]', e); }
     }
   }
@@ -1209,7 +1273,7 @@ export function runEconomyTick() {
   // updatePopWealth зависит только от _wage_bonuses (шаг 4а) и рыночных цен.
   // class_capital здесь не читается → можно вызывать до distributeClassIncome.
   if (typeof updatePopWealth === 'function') {
-    for (const nationId of _nationKeys) {
+    for (const nationId of _activeKeys) {
       try { updatePopWealth(nationId); } catch (e) { console.warn('[pops_wealth]', e); }
     }
   }
@@ -1223,7 +1287,7 @@ export function runEconomyTick() {
   // ════════════════════════════════════════════════════════════
   for (const m of Object.values(GAME_STATE.market)) { m.production_cost = null; }
   if (typeof recomputeAllProductionCosts === 'function') {
-    for (const nationId of _nationKeys) {
+    for (const nationId of _activeKeys) {
       try { recomputeAllProductionCosts(nationId); } catch (e) { console.warn('[prod_cost]', e); }
     }
   }
@@ -1243,7 +1307,7 @@ export function runEconomyTick() {
   //   арендная зарплата фермеров   → class_capital.farmers_class
   //   военная зарплата солдат      → treasury → class_capital.soldiers_class
   if (typeof distributeClassIncome === 'function') {
-    for (const nationId of _nationKeys) {
+    for (const nationId of _activeKeys) {
       try { distributeClassIncome(nationId); } catch (e) { console.warn('[class_income]', e); }
     }
   }
@@ -1253,7 +1317,7 @@ export function runEconomyTick() {
   // Subsistence-фермеры (не в зданиях) кормят себя напрямую — без транзакции.
   // Вызывается сразу после distributeClassIncome (class_capital уже пополнен).
   if (typeof deductFoodPurchases === 'function') {
-    for (const nationId of _nationKeys) {
+    for (const nationId of _activeKeys) {
       try { deductFoodPurchases(nationId); } catch (e) { console.warn('[food_purchases]', e); }
     }
   }
@@ -1265,12 +1329,12 @@ export function runEconomyTick() {
   //   Затем проверяем банкротства классов.
   // ════════════════════════════════════════════════════════════
   if (typeof processAutonomousBuilding === 'function') {
-    for (const nationId of _nationKeys) {
+    for (const nationId of _activeKeys) {
       try { processAutonomousBuilding(nationId); } catch (e) { console.warn('[auto_build]', e); }
     }
   }
   if (typeof checkClassBankruptcy === 'function') {
-    for (const nationId of _nationKeys) {
+    for (const nationId of _activeKeys) {
       try { checkClassBankruptcy(nationId); } catch (e) { console.warn('[class_bankrupt]', e); }
     }
   }
@@ -1282,11 +1346,15 @@ export function runEconomyTick() {
   //   6c. Триггеры событий: затяжной дефицит, банкротство
   // ════════════════════════════════════════════════════════════
   for (const [nationId, nation] of _nationEntries) {
-    const tradeProfit = processTrade(nationId);
+    // Stub-нации: без торговых маршрутов и производства processTrade всё
+    // равно возвращает 0, но внутренний цикл по GAME_STATE.market × партнёрам
+    // аллоцирует массивы. Пропускаем — казна (налоги) обновится ниже.
+    const isStub = _stubSet.has(nationId);
+    const tradeProfit = isStub ? 0 : processTrade(nationId);
     const { income, expense, delta } = updateTreasury(
       nationId,
       allProduced[nationId] || {},
-      allConsumed[nationId],
+      allConsumed[nationId] || {},
       tradeProfit,
     );
     if (nationId === GAME_STATE.player_nation) {
