@@ -249,7 +249,7 @@ Economy / Diplomacy не рвёт FPS RAF-анимаций.
 **Верификация:** keystroke в диалоге — **< 16 ms** input-to-paint (один
 кадр 60 FPS). `tests/audit/*_test.cjs` — зелёные.
 
-### Session 21 — `innerHTML=` → DOM API в `ui/government_tab.js`
+### Session 21 — `innerHTML=` → DOM API в `ui/government_tab.js`   ✅ Выполнено (2026-04-18)
 **Цель:** 33 вхождений `innerHTML=` в ui/government_tab.js, включая диалоги
 персонажей (3345-3389) и список сенаторов (3611-3694). Каждый клик на
 зал / реплика персонажа = полный teardown поддерева.

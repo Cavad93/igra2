@@ -1453,9 +1453,11 @@ export function updateConstitutionValueOptions() {
   const sel = document.getElementById('cd-new-value');
   if (!sel) return;
   const cur = String(def.current);
-  sel.innerHTML = def.options.map(o =>
-    `<option value="${o.value}" ${String(o.value) === cur ? 'selected' : ''}>${o.label}</option>`
-  ).join('');
+  const frag = document.createDocumentFragment();
+  for (const o of def.options) {
+    frag.appendChild(_mkOption(o.value, o.label, { selected: String(o.value) === cur }));
+  }
+  sel.replaceChildren(frag);
 }
 
 // Отправляет поправку на голосование Сената (порог 2/3)
@@ -2536,12 +2538,31 @@ export function addCustomActorRow() {
   if (!container) return;
   const row = document.createElement('div');
   row.className = 'custom-hall-actor-row';
-  row.innerHTML = `
-    <input class="custom-hall-input custom-hall-actor-input" placeholder="Имя актора..." data-field="name">
-    <input class="custom-hall-input" placeholder="Роль..." data-field="role" style="width:80px">
-    <input class="custom-hall-input" placeholder="🧙" data-field="icon" style="width:40px">
-    <button class="custom-hall-actor-remove" data-action="removeCustomActorByEvent" data-pass-event>✕</button>
-  `;
+
+  const nameInp = document.createElement('input');
+  nameInp.className = 'custom-hall-input custom-hall-actor-input';
+  nameInp.placeholder = 'Имя актора...';
+  nameInp.dataset.field = 'name';
+
+  const roleInp = document.createElement('input');
+  roleInp.className = 'custom-hall-input';
+  roleInp.placeholder = 'Роль...';
+  roleInp.dataset.field = 'role';
+  roleInp.style.width = '80px';
+
+  const iconInp = document.createElement('input');
+  iconInp.className = 'custom-hall-input';
+  iconInp.placeholder = '🧙';
+  iconInp.dataset.field = 'icon';
+  iconInp.style.width = '40px';
+
+  const rmBtn = document.createElement('button');
+  rmBtn.className = 'custom-hall-actor-remove';
+  rmBtn.dataset.action = 'removeCustomActorByEvent';
+  rmBtn.setAttribute('data-pass-event', '');
+  rmBtn.textContent = '✕';
+
+  row.append(nameInp, roleInp, iconInp, rmBtn);
   container.appendChild(row);
 }
 
@@ -2766,14 +2787,19 @@ export function executeActorAction(charId, actionId) {
   // Показываем результат
   const resultEl = document.getElementById('senator-neg-result');
   if (resultEl) {
-    resultEl.innerHTML = `
-      <div class="senator-neg-result ${result.outcome}">
-        ${result.message}
-        ${result.loyalty_delta !== 0 ? `<div style="font-size:10px;margin-top:4px">
-          Лояльность: ${result.loyalty_delta > 0?'+':''}${result.loyalty_delta} ·
-          Расположение: ${result.disposition_delta > 0?'+':''}${result.disposition_delta}
-        </div>` : ''}
-      </div>`;
+    const box = document.createElement('div');
+    box.className = `senator-neg-result ${result.outcome}`;
+    box.append(result.message);
+    if (result.loyalty_delta !== 0) {
+      const details = document.createElement('div');
+      details.style.fontSize = '10px';
+      details.style.marginTop = '4px';
+      const lSign = result.loyalty_delta > 0 ? '+' : '';
+      const dSign = result.disposition_delta > 0 ? '+' : '';
+      details.textContent = `Лояльность: ${lSign}${result.loyalty_delta} · Расположение: ${dSign}${result.disposition_delta}`;
+      box.appendChild(details);
+    }
+    resultEl.replaceChildren(box);
   }
 
   // Обновляем зал
@@ -3029,7 +3055,9 @@ export async function onSenatorGhostClick(senatorId, nationId) {
 
   const card = event?.currentTarget ?? document.querySelector(`[onclick*="${senatorId}"]`);
   if (card) {
-    card.innerHTML = `<span style="padding:8px;color:#aaa">⏳ Выясняем личность…</span>`;
+    const spinner = _mkSpan(null, '⏳ Выясняем личность…', '#aaa');
+    spinner.style.padding = '8px';
+    card.replaceChildren(spinner);
     card.onclick = null;
   }
 
@@ -3342,7 +3370,7 @@ export async function dlgSend(charId, nationId) {
 
   // Блокируем кнопку на время запроса
   input.disabled = true;
-  status.innerHTML = '<span class="dlg-thinking">⏳ Персонаж обдумывает ответ…</span>';
+  status.replaceChildren(_mkSpan('dlg-thinking', '⏳ Персонаж обдумывает ответ…'));
 
   try {
     const result = await DIALOGUE_ENGINE.processPlayerInput(charId, text, nationId);
@@ -3355,14 +3383,17 @@ export async function dlgSend(charId, nationId) {
 
       const playerDiv = document.createElement('div');
       playerDiv.className = 'dlg-msg dlg-player';
-      playerDiv.innerHTML = `<span class="dlg-msg-label">👑 Вы</span><span class="dlg-msg-text">${_escHtml(text)}</span>`;
+      playerDiv.append(_mkSpan('dlg-msg-label', '👑 Вы'), _mkSpan('dlg-msg-text', text));
       history.appendChild(playerDiv);
 
       const charDiv = document.createElement('div');
       charDiv.className = `dlg-msg dlg-char${result.blocked ? ' dlg-blocked' : ''}`;
       const nation = GAME_STATE.nations[nationId ?? GAME_STATE.player_nation];
       const char   = (nation?.characters ?? []).find(c => c.id === charId);
-      charDiv.innerHTML = `<span class="dlg-msg-label">${char?.name ?? '?'}</span><span class="dlg-msg-text">${_escHtml(result.reply ?? result.error ?? '…')}</span>`;
+      charDiv.append(
+        _mkSpan('dlg-msg-label', char?.name ?? '?'),
+        _mkSpan('dlg-msg-text', result.reply ?? result.error ?? '…'),
+      );
       history.appendChild(charDiv);
 
       // Скроллим вниз
@@ -3379,14 +3410,21 @@ export async function dlgSend(charId, nationId) {
     }).filter(Boolean);
 
     const pColor = (result.patience ?? 100) > 60 ? '#4CAF50' : (result.patience ?? 100) > 30 ? '#FF9800' : '#f44336';
-    status.innerHTML = effectLines.length
-      ? `<span class="dlg-effects">${effectLines.join(' · ')}</span> <span style="color:${pColor}">Терпение: ${result.patience ?? 100}%</span>`
-      : `<span style="color:${pColor}">Терпение: ${result.patience ?? 100}%</span>`;
+    const patienceSpan = _mkSpan(null, `Терпение: ${result.patience ?? 100}%`, pColor);
+    if (effectLines.length) {
+      status.replaceChildren(
+        _mkSpan('dlg-effects', effectLines.join(' · ')),
+        document.createTextNode(' '),
+        patienceSpan,
+      );
+    } else {
+      status.replaceChildren(patienceSpan);
+    }
 
     input.value = '';
   } catch (err) {
     console.error('[dlgSend]', err);
-    status.innerHTML = '<span style="color:#f44">Ошибка связи с персонажем.</span>';
+    status.replaceChildren(_mkSpan(null, 'Ошибка связи с персонажем.', '#f44'));
   } finally {
     input.disabled = false;
     input.focus();
@@ -3395,6 +3433,60 @@ export async function dlgSend(charId, nationId) {
 
 function _escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Session 21: DOM-helpers — чтобы не пересобирать поддерево через innerHTML
+function _mkSpan(className, text, color) {
+  const el = document.createElement('span');
+  if (className) el.className = className;
+  if (text != null) el.textContent = text;
+  if (color) el.style.color = color;
+  return el;
+}
+
+function _mkBold(text, color) {
+  const el = document.createElement('b');
+  if (text != null) el.textContent = text;
+  if (color) el.style.color = color;
+  return el;
+}
+
+function _mkOption(value, label, { selected = false, disabled = false } = {}) {
+  const o = document.createElement('option');
+  o.value = String(value);
+  o.textContent = String(label);
+  if (selected) o.selected = true;
+  if (disabled) o.disabled = true;
+  return o;
+}
+
+function _fillOptions(sel, items, placeholder) {
+  const frag = document.createDocumentFragment();
+  if (placeholder != null) frag.appendChild(_mkOption('', placeholder));
+  for (const it of items) frag.appendChild(it);
+  sel.replaceChildren(frag);
+}
+
+// Кэшируем структуру preview (head + <b> + tail) на самом элементе.
+// Повторные вызовы меняют только characterData/attributes — дешевле,
+// чем replaceChildren (который создаёт childList mutations).
+function _ensurePreviewStructure(el) {
+  if (el._s21preview) return el._s21preview;
+  const head = document.createTextNode('');
+  const bold = document.createElement('b');
+  const tail = document.createTextNode('');
+  el.replaceChildren(head, bold, tail);
+  const s = { head, bold, tail };
+  el._s21preview = s;
+  return s;
+}
+
+function _updateQualityPreview(el, headText, qualityText, color, tailText) {
+  const s = _ensurePreviewStructure(el);
+  if (s.head.data !== headText)         s.head.data = headText;
+  if (s.bold.textContent !== qualityText) s.bold.textContent = qualityText;
+  if (s.bold.style.color !== color)     s.bold.style.color = color;
+  if (s.tail.data !== tailText)         s.tail.data = tailText;
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -3605,16 +3697,18 @@ export function onOrderTypeChange() {
     const nationId = GAME_STATE.player_nation;
     const nation   = GAME_STATE.nations[nationId];
     if (needsForeignTarget || isMilitary) {
-      const opts = Object.entries(GAME_STATE.nations ?? {})
+      const items = Object.entries(GAME_STATE.nations ?? {})
         .filter(([id]) => id !== nationId).slice(0, 30)
-        .map(([id, n]) => `<option value="${id}">${n.name}</option>`).join('');
-      targetSel.innerHTML = `<option value="">— не указана —</option>${opts}`;
+        .map(([id, n]) => _mkOption(id, n.name));
+      _fillOptions(targetSel, items, '— не указана —');
       targetRow.style.display = '';
     } else if (needsRegionTarget) {
-      const opts = (nation?.regions ?? []).slice(0, 20)
-        .map(rid => { const r = GAME_STATE.regions?.[rid]; return `<option value="${rid}">${r?.name ?? rid}</option>`; })
-        .join('');
-      targetSel.innerHTML = `<option value="">— любой регион —</option>${opts}`;
+      const items = (nation?.regions ?? []).slice(0, 20)
+        .map(rid => {
+          const r = GAME_STATE.regions?.[rid];
+          return _mkOption(rid, r?.name ?? rid);
+        });
+      _fillOptions(targetSel, items, '— любой регион —');
       targetRow.style.display = '';
     } else {
       targetRow.style.display = 'none';
@@ -3629,8 +3723,10 @@ export function onOrderTypeChange() {
         .filter(a => a.nation === GAME_STATE.player_nation && a.state !== 'disbanded');
       const armySel = document.getElementById('order-army-sel');
       if (armySel) {
-        armySel.innerHTML = `<option value="">— выберите армию —</option>` +
-          armies.map(a => `<option value="${a.id}">${a.name} (${MAP_REGIONS?.[a.position]?.name ?? a.position})</option>`).join('');
+        const items = armies.map(a =>
+          _mkOption(a.id, `${a.name} (${MAP_REGIONS?.[a.position]?.name ?? a.position})`),
+        );
+        _fillOptions(armySel, items, '— выберите армию —');
       }
       armyRow.style.display = '';
     } else {
@@ -3666,7 +3762,7 @@ function updateOrderQualityPreview() {
   const oversight = document.getElementById('order-oversight-sel')?.value ?? 'direct';
 
   if (!type || !charId || typeof calcOrderQuality !== 'function') {
-    preview.textContent = 'Ожидаемое качество: —';
+    _updateQualityPreview(preview, 'Ожидаемое качество: —', '', '', '');
     return;
   }
 
@@ -3677,12 +3773,16 @@ function updateOrderQualityPreview() {
     const pp = nation?.government?.ruler?.personal_power ?? 60;
     const q  = Math.min(100, Math.round(pp * 1.05));
     const color = q >= 70 ? '#4CAF50' : q >= 45 ? '#FF9800' : '#f44336';
-    preview.innerHTML = `Ожидаемое качество: <b style="color:${color}">${q}/100</b> · 👑 Личное командование · Личная власть: ${pp}`;
+    _updateQualityPreview(preview, 'Ожидаемое качество: ', `${q}/100`, color,
+      ` · 👑 Личное командование · Личная власть: ${pp}`);
     return;
   }
 
   const char   = (nation?.characters ?? []).find(c => c.id === charId);
-  if (!char) { preview.textContent = 'Ожидаемое качество: —'; return; }
+  if (!char) {
+    _updateQualityPreview(preview, 'Ожидаемое качество: —', '', '', '');
+    return;
+  }
 
   const typeDef   = ORDER_TYPES[type];
   const quality   = calcOrderQuality(char, typeDef?.skill ?? 'admin', oversight, nation);
@@ -3691,12 +3791,8 @@ function updateOrderQualityPreview() {
   const skillVal  = skills[typeDef?.skill] ?? 50;
 
   const color = quality >= 70 ? '#4CAF50' : quality >= 45 ? '#FF9800' : '#f44336';
-  preview.innerHTML = `
-    Ожидаемое качество: <b style="color:${color}">${quality}/100</b>
-    · ${roleMatch}
-    · Навык «${typeDef?.skill ?? 'admin'}»: ${skillVal}/100
-    · Лояльность: ${char.traits?.loyalty ?? 50}/100
-  `;
+  _updateQualityPreview(preview, 'Ожидаемое качество: ', `${quality}/100`, color,
+    ` · ${roleMatch} · Навык «${typeDef?.skill ?? 'admin'}»: ${skillVal}/100 · Лояльность: ${char.traits?.loyalty ?? 50}/100`);
 }
 
 export function submitIssueOrder() {
@@ -3932,14 +4028,17 @@ export function onMpTypeChange() {
   const needsRegion  = ['govern_region', 'economic_project'].includes(type);
 
   if (needsForeign) {
-    const opts = Object.entries(GAME_STATE.nations ?? {}).filter(([id]) => id !== nationId).slice(0, 30)
-      .map(([id, n]) => `<option value="${id}">${_escHtml(n.name)}</option>`).join('');
-    targetSel.innerHTML = `<option value="">— не указана —</option>${opts}`;
+    const items = Object.entries(GAME_STATE.nations ?? {}).filter(([id]) => id !== nationId).slice(0, 30)
+      .map(([id, n]) => _mkOption(id, n.name));
+    _fillOptions(targetSel, items, '— не указана —');
     targetFld.style.display = '';
   } else if (needsRegion) {
-    const opts = (nation?.regions ?? []).slice(0, 20)
-      .map(rid => { const r = GAME_STATE.regions?.[rid] ?? MAP_REGIONS?.[rid]; return `<option value="${rid}">${_escHtml(r?.name ?? rid)}</option>`; }).join('');
-    targetSel.innerHTML = `<option value="">— любой регион —</option>${opts}`;
+    const items = (nation?.regions ?? []).slice(0, 20)
+      .map(rid => {
+        const r = GAME_STATE.regions?.[rid] ?? MAP_REGIONS?.[rid];
+        return _mkOption(rid, r?.name ?? rid);
+      });
+    _fillOptions(targetSel, items, '— любой регион —');
     targetFld.style.display = '';
   } else {
     targetFld.style.display = 'none';
@@ -3952,15 +4051,20 @@ export function onMpTypeChange() {
       armyFld = document.createElement('div');
       armyFld.id = 'mp-army-field';
       armyFld.className = 'op-form-row';
-      armyFld.innerHTML = `<label>Армия</label>
-        <select id="mp-order-army" class="op-form-sel"></select>`;
+      const lbl = document.createElement('label');
+      lbl.textContent = 'Армия';
+      const armySel = document.createElement('select');
+      armySel.id = 'mp-order-army';
+      armySel.className = 'op-form-sel';
+      armyFld.append(lbl, armySel);
       targetFld.insertAdjacentElement('afterend', armyFld);
     }
     const armies = (GAME_STATE.armies ?? [])
       .filter(a => a.nation === nationId && a.state !== 'disbanded');
-    document.getElementById('mp-order-army').innerHTML =
-      `<option value="">— выберите армию —</option>` +
-      armies.map(a => `<option value="${a.id}">${_escHtml(a.name)} (${_escHtml(MAP_REGIONS?.[a.position]?.name ?? a.position)})</option>`).join('');
+    const armyItems = armies.map(a =>
+      _mkOption(a.id, `${a.name} (${MAP_REGIONS?.[a.position]?.name ?? a.position})`),
+    );
+    _fillOptions(document.getElementById('mp-order-army'), armyItems, '— выберите армию —');
     armyFld.style.display = '';
   } else if (armyFld) {
     armyFld.style.display = 'none';
@@ -3989,7 +4093,10 @@ export function updateMpQuality() {
   const type      = document.getElementById('mp-order-type')?.value;
   const charId    = document.getElementById('mp-order-char')?.value;
   const oversight = document.getElementById('mp-order-oversight')?.value ?? 'direct';
-  if (!type || !charId) { preview.textContent = 'Ожидаемое качество: —'; return; }
+  if (!type || !charId) {
+    _updateQualityPreview(preview, 'Ожидаемое качество: —', '', '', '');
+    return;
+  }
 
   const nation  = GAME_STATE.nations?.[GAME_STATE.player_nation];
 
@@ -3998,17 +4105,23 @@ export function updateMpQuality() {
     const pp = nation?.government?.ruler?.personal_power ?? 60;
     const q  = Math.min(100, Math.round(pp * 1.05));
     const color = q >= 70 ? '#4CAF50' : q >= 45 ? '#FF9800' : '#f44336';
-    preview.innerHTML = `Ожидаемое качество: <b style="color:${color}">${q}/100</b> (личное командование)`;
+    _updateQualityPreview(preview, 'Ожидаемое качество: ', `${q}/100`, color, ' (личное командование)');
     return;
   }
 
-  if (typeof calcOrderQuality !== 'function') { preview.textContent = 'Ожидаемое качество: —'; return; }
+  if (typeof calcOrderQuality !== 'function') {
+    _updateQualityPreview(preview, 'Ожидаемое качество: —', '', '', '');
+    return;
+  }
   const char    = (nation?.characters ?? []).find(c => c.id === charId);
-  if (!char) { preview.textContent = 'Ожидаемое качество: —'; return; }
+  if (!char) {
+    _updateQualityPreview(preview, 'Ожидаемое качество: —', '', '', '');
+    return;
+  }
   const typeDef = ORDER_TYPES?.[type];
   const quality = calcOrderQuality(char, typeDef?.skill ?? 'admin', oversight, nation);
   const color   = quality >= 70 ? '#4CAF50' : quality >= 45 ? '#FF9800' : '#f44336';
-  preview.innerHTML = `Ожидаемое качество: <b style="color:${color}">${quality}/100</b>`;
+  _updateQualityPreview(preview, 'Ожидаемое качество: ', `${quality}/100`, color, '');
 }
 
 export function submitMpOrder() {
