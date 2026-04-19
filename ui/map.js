@@ -3722,11 +3722,13 @@ export function onZoomChange(zoom) {
   try { _applyRegionCulling(level === 'strategic'); }
   catch (e) { console.warn('[Session 22] _applyRegionCulling', e); }
 
-  // 4. Детальный уровень: строим слои иконок построек и гарнизонов.
-  //    Иначе — убираем детальные слои с карты.
+  // 4. Детальный уровень: строим слой иконок построек.
+  //    Числовая табличка гарнизона (⚔ N) отключена — та же цифра есть
+  //    в карточке провинции, дублировать на карте нет смысла.
+  //    _buildDetailGarrisonsLayer и _detailGarrisonsLayer сохранены
+  //    в файле на случай реактивации.
   if (level === 'detailed') {
     try { _buildDetailBuildingsLayer(); } catch (e) { console.warn('[Шаг 44] detail buildings:', e); }
-    try { _buildDetailGarrisonsLayer(); } catch (e) { console.warn('[Шаг 44] detail garrisons:', e); }
   } else {
     _removeDetailLayers();
   }
