@@ -724,5 +724,16 @@ function finalizeTacticalBattle(bs, outcome) {
   };
 }
 
-// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
-
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js).
+// Эти функции — локальные в модуле, но UI обращается к ним по
+// window.tacticalTick и т.п. (исторически, ещё до миграции в ES-модули).
+export {
+  tacticalTick,
+  executeRetreat,
+  calcRetreatSurvival,
+  finalizeTacticalBattle,
+  moveTowards,
+  runEnemyAI,
+  checkVictory,
+  checkStandardCapture
+};

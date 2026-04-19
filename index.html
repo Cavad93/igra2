@@ -839,7 +839,9 @@
   </div>
 
   <!-- ═══════════════════════════
-       ТАКТИЧЕСКИЙ БОЙ — оверлей
+       ТАКТИЧЕСКИЙ БОЙ — оверлей (Pixi.js v8)
+       Полная миграция: старый Canvas 2D удалён, рендер — через
+       ui/battle_pixi_render.js в #pixi-battle-map.
   ═══════════════════════════ -->
   <div id="tactical-overlay">
     <div id="tactical-top-bar">
@@ -847,9 +849,8 @@
       <span id="tac-terrain"></span>
       <span id="tac-ratio"></span>
     </div>
-    <div id="tactical-canvas-wrap">
-      <canvas id="tactical-canvas"></canvas>
-    </div>
+    <!-- Pixi.js battle map (единственный рендерер боевой сцены) -->
+    <div id="pixi-battle-map"></div>
     <div id="tactical-unit-panel">
       <div id="tup-name"></div>
       <div id="tup-strength"></div>
@@ -869,8 +870,6 @@
     <div id="tactical-log"></div>
     <canvas id="tac-minimap"></canvas>
     <div id="tac-tooltip"></div>
-    <!-- Pixi.js battle map container (arma.md Шаг 1) -->
-    <div id="pixi-battle-map"></div>
   </div>
 
   <!-- Этап 65: единственная точка входа — ui/boot.js импортирует все модули -->

@@ -295,16 +295,21 @@ window._eSetMarketReg = function (id) {
 window.renderPriceSparkline = function () { return ''; };
 
 // ── Tactical group ───────────────────────────────────────
+// После миграции на Pixi (arma.md) — tactical_map.js это glue-слой
+// вокруг battle_map_pixi.js (low-level Pixi API) + battle_pixi_render.js
+// (рендер сцены из engine battle state).
 function _lazyTactical() {
   if (!_lazyCache['tactical']) {
     _lazyCache['tactical'] = Promise.all([
       import('../engine/tactical_battle.js'),
       import('./tactical_map.js'),
-      import('./battle_map_pixi.js')
+      import('./battle_map_pixi.js'),
+      import('./battle_pixi_render.js')
     ]).then(function (mods) {
       _reg(mods[0]);
       _reg(mods[1]);
       _reg(mods[2]);
+      _reg(mods[3]);
       return mods;
     });
   }

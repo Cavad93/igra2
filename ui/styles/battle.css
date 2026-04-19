@@ -227,14 +227,18 @@
 }
 #tactical-overlay.visible { display: flex; }
 #tactical-overlay.visible.faded-in { opacity: 1; }
-#tactical-canvas-wrap {
-  flex: 1; min-height: 0; overflow: auto;
+/* Pixi.js battle map — единственный рендерер. Растягивается на всё
+   пространство между top-bar и bottom-bar; canvas внутри центрируется. */
+#pixi-battle-map {
+  flex: 1; min-height: 0; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
   background: var(--tac-bg);
 }
-#tactical-canvas {
+#pixi-battle-map canvas {
   display: block; cursor: crosshair;
   max-width: 100%; max-height: 100%;
+  /* HiDPI — Pixi сам выставит width/height; CSS ограничивает масштаб. */
+  object-fit: contain;
 }
 #tactical-top-bar {
   height: 34px; background: var(--tac-bar); color: var(--tac-text);
