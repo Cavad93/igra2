@@ -334,7 +334,7 @@ function _calcUnemploymentMod(nation) {
 
 function _calcGeoMod(nation) {
   const regions   = nation.regions || [];
-  const regData   = (typeof REGIONS !== 'undefined') ? REGIONS : {};
+  const regData   = (typeof window.REGIONS !== 'undefined') ? window.REGIONS : {};
   const profMod   = {};
   const terrains  = { coastal_city: 0, plains: 0, hills: 0, mountains: 0, river_valley: 0 };
   let   total     = 0;
@@ -379,7 +379,7 @@ function _calcGeoMod(nation) {
 // ─────────────────────────────────────────────────────────────────────────
 
 function _calcCapacityFactor(nation) {
-  const regData  = (typeof REGIONS  !== 'undefined') ? REGIONS  : {};
+  const regData  = (typeof window.REGIONS  !== 'undefined') ? window.REGIONS  : {};
   const cap      = (typeof TERRAIN_BASE_CAPACITY !== 'undefined') ? TERRAIN_BASE_CAPACITY : {};
 
   // Суммируем ёмкость регионов

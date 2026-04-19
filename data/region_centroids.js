@@ -88482,3 +88482,8 @@ var REGION_CENTROIDS = {
     ]
   }
 };
+
+// ── Auto-bridge to window (see eslint.config.mjs / collect_window_globals.cjs) ──
+if (typeof window !== 'undefined') {
+  window.REGION_CENTROIDS = REGION_CENTROIDS;
+}

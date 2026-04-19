@@ -209,8 +209,8 @@ export async function submitAPIKey() {
       anthropicKey ? 'Anthropic' : null,
       groqKey      ? 'Groq'      : null,
     ].filter(Boolean).join(' + ');
-    if (typeof showAIResponse === 'function') {
-      showAIResponse(`✅ Ключи сохранены и зашифрованы: ${saved}`, 'success');
+    if (typeof window.showAIResponse === 'function') {
+      window.showAIResponse(`✅ Ключи сохранены и зашифрованы: ${saved}`, 'success');
     }
   } catch (e) {
     _akmSetError('Ошибка шифрования: ' + e.message);

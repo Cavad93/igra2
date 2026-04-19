@@ -288,8 +288,8 @@ function _endWar(nationA, nationB) {
   if (natB?.relations?.[nationA]) natB.relations[nationA].at_war = false;
 
   // Перемирие 5 лет через relations engine
-  if (typeof _rel === 'function') {
-    const rel = _rel(nationA, nationB);
+  if (typeof window._rel === 'function') {
+    const rel = window._rel(nationA, nationB);
     if (rel) {
       rel.war = false;
       rel.flags = rel.flags ?? {};

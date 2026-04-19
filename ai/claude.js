@@ -2194,3 +2194,8 @@ export function applyLawGameChanges(changes, nationId) {
   return applied;
 }
 
+// ── Auto-bridge to window (see eslint.config.mjs / collect_window_globals.cjs) ──
+if (typeof window !== 'undefined') {
+  window._buildWarPrompts = _buildWarPrompts;
+  window._parseWarDecision = _parseWarDecision;
+}

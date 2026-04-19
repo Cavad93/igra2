@@ -639,3 +639,11 @@ ${recentLines ? `ПРЕДЫДУЩИЙ КОНТЕКСТ:\n${recentLines}\n\n` : '
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
 
+
+
+// ── Auto-bridge to window (see eslint.config.mjs / collect_window_globals.cjs) ──
+// DIALOGUE_ENGINE — namespace used by turn.js / government_tab.js. Все члены
+// уже экспортируются по отдельности, но вызовы сгруппированы через
+// DIALOGUE_ENGINE.*, поэтому собираем объект здесь.
+export const DIALOGUE_ENGINE = { processPlayerInput, compressMemory, tick, isSessionActive, compressDirect };
+if (typeof window !== 'undefined') window.DIALOGUE_ENGINE = DIALOGUE_ENGINE;

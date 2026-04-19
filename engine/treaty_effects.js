@@ -833,3 +833,7 @@ function _log(msg) {
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
 
+// ── Auto-bridge to window (see eslint.config.mjs / collect_window_globals.cjs) ──
+if (typeof window !== 'undefined') {
+  window._rel = _rel;
+}

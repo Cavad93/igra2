@@ -780,3 +780,9 @@ var STRATEGIC_GOODS = [
 // IMPORT_ONLY_GOODS — товары без производства на карте
 var IMPORT_ONLY_GOODS = ['tin', 'amber', 'furs', 'incense'];
 
+// ── Auto-bridge to window (see eslint.config.mjs / collect_window_globals.cjs) ──
+if (typeof window !== 'undefined') {
+  window.STRATEGIC_GOODS = STRATEGIC_GOODS;
+  window.GOODS_META = GOODS_META;
+  window.IMPORT_ONLY_GOODS = IMPORT_ONLY_GOODS;
+}

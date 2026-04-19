@@ -9,7 +9,9 @@
     "build": "node agents/chain_builder.js",
     "ui": "node agents/server.js",
     "validate": "node agents/validate_inputs.js",
-    "geo": "node scripts/geo_server.js"
+    "geo": "node scripts/geo_server.js",
+    "lint:refresh-globals": "node scripts/collect_window_globals.cjs > .eslint-window-globals.json",
+    "lint": "npm run lint:refresh-globals && eslint ui engine ai config.js"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -19,6 +21,8 @@
     "@turf/helpers": "^7.3.4"
   },
   "devDependencies": {
+    "eslint": "^9.39.4",
+    "globals": "^16.5.0",
     "vite": "^8.0.8"
   }
 }

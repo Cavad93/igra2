@@ -217,8 +217,8 @@ export async function initGame() {
 
   // Fix #4: Гарантируем, что все товары из GOODS присутствуют в GAME_STATE.market.
   // Нужно при добавлении новых товаров в GOODS без правки INITIAL_GAME_STATE.
-  if (typeof initializeAllMarketEntries === 'function') {
-    initializeAllMarketEntries(GAME_STATE.market);
+  if (typeof window.initializeAllMarketEntries === 'function') {
+    window.initializeAllMarketEntries(GAME_STATE.market);
   }
 
   // Запускаем фоновый AI-цикл — phi4-mini обрабатывает нации непрерывно,
@@ -251,7 +251,7 @@ export function renderCritical() {
 // Отложенная часть — вкладки, маркеры, ambient. Запускается из requestIdleCallback.
 export function renderDeferred() {
   try { renderCharInitiativesPanel(); }   catch (e) { console.error('renderCharInitiativesPanel error:', e); }
-  try { if (typeof renderOrdersPanel    === 'function') renderOrdersPanel();    } catch (e) {}
+  try { if (typeof window.renderOrdersPanel    === 'function') window.renderOrdersPanel();    } catch (e) {}
   try { if (typeof _applyLogFilter      === 'function') _applyLogFilter();      } catch (e) {}
   try { if (typeof refreshPopulationTab === 'function') refreshPopulationTab(); } catch (e) {}
   try { if (typeof refreshEconomyTab    === 'function') refreshEconomyTab();    } catch (e) {}
@@ -262,7 +262,7 @@ export function renderDeferred() {
   try { if (typeof renderCityLabels     === 'function') renderCityLabels();     } catch (e) {}
   // ECO_009: обновить торговые маршруты если панель открыта
   try {
-    if (typeof showTradeRoutes !== 'undefined' && showTradeRoutes) {
+    if (typeof window.showTradeRoutes !== 'undefined' && window.showTradeRoutes) {
       clearTradeRouteLines?.();
       renderTradeRouteLines?.();
     }

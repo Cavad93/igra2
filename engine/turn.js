@@ -286,13 +286,13 @@ export async function processTurn() {
         // nation.characters (советники, генералы, жрецы, купцы...)
         const _nChars = GAME_STATE.nations[nId]?.characters ?? [];
         const hasHotMem = _nChars.some(c => c.alive && c.dialogue?.hot_memory?.length);
-        if (hasHotMem) await DIALOGUE_ENGINE.tick(nId);
+        if (hasHotMem) await window.DIALOGUE_ENGINE.tick(nId);
 
         // Сенаторы и члены советов (хранятся вне nation.characters)
         const _mgr = getSenateManager(nId);
         if (_mgr) {
           for (const sen of (_mgr.senators ?? [])) {
-            if (sen.dialogue?.hot_memory?.length) await DIALOGUE_ENGINE.compressDirect(sen);
+            if (sen.dialogue?.hot_memory?.length) await window.DIALOGUE_ENGINE.compressDirect(sen);
           }
         }
       } catch (e) { console.warn('[dialogue]', nId, e); }
@@ -392,7 +392,7 @@ export async function processTurn() {
     // 6.55. Шаг 46 — история ресурсов игрока (для спарклайнов в топ-баре)
     {
       const _pushHist = (typeof window !== 'undefined' && window._pushResourceHistory)
-        || (typeof _pushResourceHistory === 'function' ? _pushResourceHistory : null);
+        || (typeof window._pushResourceHistory === 'function' ? window._pushResourceHistory : null);
       if (typeof _pushHist === 'function') {
         try { _pushHist(GAME_STATE); } catch (e) { console.warn('[res-history]', e); }
       }

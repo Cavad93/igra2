@@ -1563,7 +1563,7 @@ export function _applyReligionModifier(nation, ou, gameState) {
   if (isGreek && Math.random() < 0.02) {
     _mod(ou, `ORACLE_BLESSING_${ou.tick}`, 'military', 'military_readiness', +0.12, 8);
     if (typeof addEventLog === 'function') {
-      addEventLog(`[🏛] Оракул благословил ${nation.name ?? nationId} — армия усилена`);
+      addEventLog(`[🏛] Оракул благословил ${nation?.name ?? nation?.id ?? "?"} — армия усилена`);
     }
   }
 }

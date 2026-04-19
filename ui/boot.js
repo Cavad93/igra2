@@ -464,7 +464,7 @@ async function handleGenerateChars() {
   var btn = document.getElementById('generate-chars-btn');
   if (!btn) return;
   if (!CONFIG.GROQ_API_KEY && !CONFIG.API_KEY) {
-    showAPIKeyPrompt();
+    window.showAPIKeyPrompt();
     return;
   }
   btn.disabled = true;
@@ -612,3 +612,8 @@ _regionsDataReady.then(function () {
   console.error('[initGame] Критическая ошибка:', e);
   _splashProgress(100, 'Ошибка инициализации');
 });
+
+// ── Auto-bridge to window (see eslint.config.mjs / collect_window_globals.cjs) ──
+if (typeof window !== 'undefined') {
+  window.renderNationLegend = renderNationLegend;
+}

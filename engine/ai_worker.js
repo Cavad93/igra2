@@ -117,15 +117,15 @@ async function _aiBgProcess() {
       const cached = _aiPending.get(nId);
       const isFresh = cached && cached.source === 'war_bg' && (currentTurn - cached.turn) <= 1;
       if (isFresh) continue;
-      const prompts = typeof _buildWarPrompts === 'function' ? _buildWarPrompts(nId) : null;
+      const prompts = typeof window._buildWarPrompts === 'function' ? window._buildWarPrompts(nId) : null;
       if (!prompts) continue;
       const workerPromise = _callGroqViaWorker(prompts.system, prompts.user, 400);
       if (!workerPromise) break;
       workerPromise
         .then(raw => {
           if (!raw) return;
-          const decision = typeof _parseWarDecision === 'function'
-            ? _parseWarDecision(raw, nId)
+          const decision = typeof window._parseWarDecision === 'function'
+            ? window._parseWarDecision(raw, nId)
             : null;
           if (decision) {
             _aiPending.set(nId, { decision, turn: currentTurn, source: 'war_bg', processedAt: Date.now() });

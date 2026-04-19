@@ -27,7 +27,7 @@ const STRATEGIC_CONFIG = {
   tier1Threshold:    3,     // Tier ≤ 3 → получает стратегический план
 };
 
-// Session 9 — ring buffer для events_log.
+// Session 9 — ring buffer для window.events_log.
 // Эти push'ы идут мимо обёртки addEventLog, поэтому трим обязан быть здесь.
 // Верхний предел совпадает с PERSIST_CAPS.events_log (engine/turn.js).
 const _EVENTS_LOG_MAX = 500;
@@ -262,7 +262,7 @@ async function createPlan(nation, ou, gameState) {
   // Сохраняем план в нацию
   nation._strategic_plan = plan;
 
-  // Логируем в events_log
+  // Логируем в window.events_log
   const tick = ou?.tick ?? 0;
   const logEntry = {
     tick,
@@ -277,9 +277,9 @@ async function createPlan(nation, ou, gameState) {
     gameState.events_log.push(logEntry);
     _trimEventsLog(gameState.events_log);
   }
-  if (typeof events_log !== 'undefined' && Array.isArray(events_log)) {
-    events_log.push(logEntry);
-    _trimEventsLog(events_log);
+  if (typeof window.events_log !== 'undefined' && Array.isArray(window.events_log)) {
+    window.events_log.push(logEntry);
+    _trimEventsLog(window.events_log);
   }
 
   return plan;
@@ -524,7 +524,7 @@ function _broadcastCoalitionPlan(nation, plan, gameState) {
     nation._strategic_plan.commitments = allies.slice();
   }
 
-  // Логируем в events_log
+  // Логируем в window.events_log
   const tick = nation._ou?.tick ?? plan.createdAt ?? 0;
   const logEntry = {
     tick,
@@ -538,9 +538,9 @@ function _broadcastCoalitionPlan(nation, plan, gameState) {
     gameState.events_log.push(logEntry);
     _trimEventsLog(gameState.events_log);
   }
-  if (typeof events_log !== 'undefined' && Array.isArray(events_log)) {
-    events_log.push(logEntry);
-    _trimEventsLog(events_log);
+  if (typeof window.events_log !== 'undefined' && Array.isArray(window.events_log)) {
+    window.events_log.push(logEntry);
+    _trimEventsLog(window.events_log);
   }
 
   return { broadcastCount, allies };

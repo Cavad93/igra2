@@ -1141,10 +1141,10 @@ function _dtFinalizeTreaty(playerNationId, aiNationId, treaty, dialogueLog) {
     dialogueLog,
   );
   const def = TREATY_TYPES?.[treaty.treaty_type];
-  if (typeof addLogEntry === 'function') {
+  if (typeof window.addLogEntry === 'function') {
     const pName = GAME_STATE.nations[playerNationId]?.name ?? 'вами';
     const aName = GAME_STATE.nations[aiNationId]?.name ?? aiNationId;
-    addLogEntry('diplomacy', `${def?.icon ?? '📜'} Подписан «${def?.label ?? treaty.treaty_type}» между ${pName} и ${aName}.`);
+    window.addLogEntry('diplomacy', `${def?.icon ?? '📜'} Подписан «${def?.label ?? treaty.treaty_type}» между ${pName} и ${aName}.`);
   } else if (typeof addEventLog === 'function') {
     const pName = GAME_STATE.nations[playerNationId]?.name ?? 'вами';
     const aName = GAME_STATE.nations[aiNationId]?.name ?? aiNationId;

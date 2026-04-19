@@ -621,7 +621,7 @@ export function uiOrderConstruction(regionId, buildingId) {
     : { ok: false, reason: 'Движок зданий не загружен' };
 
   if (result.ok) {
-    _activeRegionTab = 'build';
+    window._activeRegionTab = 'build';
     showRegionInfo(regionId);
   } else {
     // Краткое уведомление в шапке панели (если есть rbt-hdr)
@@ -644,7 +644,7 @@ export function uiCancelConstruction(regionId, slotId) {
   if (typeof cancelConstruction === 'function') {
     cancelConstruction(GAME_STATE.player_nation, regionId, slotId);
   }
-  _activeRegionTab = 'build';
+  window._activeRegionTab = 'build';
   showRegionInfo(regionId);
 }
 
@@ -659,7 +659,7 @@ export function uiDemolishBuilding(regionId, slotId) {
   if (typeof demolishBuilding === 'function') {
     demolishBuilding(GAME_STATE.player_nation, regionId, slotId);
   }
-  _activeRegionTab = 'build';
+  window._activeRegionTab = 'build';
   showRegionInfo(regionId);
 }
 

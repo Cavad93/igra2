@@ -812,7 +812,7 @@ export function _withdrawReserve(unitId) {
 // ── Этап 17: диалог отступления ──────────────────────
 
 function showRetreatConfirm(bs) {
-  const pct           = calcRetreatSurvival(bs);
+  const pct           = window.calcRetreatSurvival(bs);
   const totalStrength = bs.playerUnits.reduce((s, u) => s + u.strength, 0);
   const survivors     = Math.floor(totalStrength * pct);
 
@@ -872,7 +872,7 @@ function endTacticalBattle(bs, outcome) {
     }
     const mm = document.getElementById('tac-minimap');
     if (mm) mm.style.display = 'none';
-    const result = finalizeTacticalBattle(bs, outcome);
+    const result = window.finalizeTacticalBattle(bs, outcome);
     if (typeof showBattleResult === 'function') showBattleResult(result);
     if (typeof window !== 'undefined' && typeof window._onTacticalBattleEnd === 'function') {
       window._onTacticalBattleEnd(result);
@@ -1140,7 +1140,7 @@ export function openTacticalMap(atkArmy, defArmy, region) {
   const btnNext = document.getElementById('tac-btn-next');
   if (btnNext) {
     btnNext.onclick = () => {
-      if (_battleState?.phase === 'battle') tacticalTick(_battleState);
+      if (_battleState?.phase === 'battle') window.tacticalTick(_battleState);
     };
   }
 
@@ -1183,10 +1183,26 @@ export function openTacticalMap(atkArmy, defArmy, region) {
 export function _confirmRetreat() {
   var el = document.getElementById('retreat-confirm');
   if (el) el.remove();
-  if (typeof executeRetreat === 'function') executeRetreat(_battleState);
+  if (typeof window.executeRetreat === 'function') window.executeRetreat(_battleState);
 }
 
 export function _cancelRetreat() {
   var el = document.getElementById('retreat-confirm');
   if (el) el.remove();
+}
+
+// ── window-мост для функций, которые зовутся из engine/tactical_battle.js
+//    и других ES-модулей по bare-имени. Без этого моста такие вызовы
+//    падают ReferenceError в strict-mode ES-модуля (см. перехват ESLint
+//    правилом no-undef). Для переменной _ctx используем геттер, чтобы
+//    window.X всегда отражал актуальное значение модульного let.
+if (typeof window !== 'undefined') {
+  window.addLog            = addLog;
+  window.findUnitAt        = findUnitAt;
+  window.endTacticalBattle = endTacticalBattle;
+  window.emitDamageNumber  = emitDamageNumber;
+  window.emitHitParticles  = emitHitParticles;
+  window.startAttackAnim   = startAttackAnim;
+  window.redrawAll         = redrawAll;
+  Object.defineProperty(window, '_ctx', { get: () => _ctx, configurable: true });
 }

@@ -845,7 +845,7 @@ function handleRegionHoverForArmy(regionId, entering, e) {
     weight:    5,
     opacity:   0.55,
     interactive: false,
-    renderer:  (typeof svgTradeRenderer !== 'undefined' && svgTradeRenderer) ? svgTradeRenderer : undefined,
+    renderer:  (typeof window.svgTradeRenderer !== 'undefined' && window.svgTradeRenderer) ? window.svgTradeRenderer : undefined,
   }).addTo(armyPathsLayer);
 
   // Основная пунктирная линия — с CSS-анимацией stroke-dashoffset
@@ -857,7 +857,7 @@ function handleRegionHoverForArmy(regionId, entering, e) {
     opacity:   0.7,
     className: 'army-route-preview',
     interactive: false,
-    renderer:  (typeof svgTradeRenderer !== 'undefined' && svgTradeRenderer) ? svgTradeRenderer : undefined,
+    renderer:  (typeof window.svgTradeRenderer !== 'undefined' && window.svgTradeRenderer) ? window.svgTradeRenderer : undefined,
   }).addTo(armyPathsLayer);
 
   // Оценка длительности в ходах (скорость армии может быть < 1)
@@ -1309,3 +1309,10 @@ export function closeAssemblePanel() {
 }
 
 // Backward compat
+
+// ── Auto-bridge to window (see eslint.config.mjs / collect_window_globals.cjs) ──
+if (typeof window !== 'undefined') {
+  window.handleRegionClickForArmy = handleRegionClickForArmy;
+  window.handleRegionHoverForArmy = handleRegionHoverForArmy;
+  window.selectArmy = selectArmy;
+}

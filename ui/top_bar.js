@@ -77,8 +77,8 @@
       window.closeDiploGraph();
       return true;
     }
-    if (typeof isSearchOpen === 'function' && isSearchOpen()) {
-      closeSearchPanel();
+    if (typeof window.isSearchOpen === 'function' && window.isSearchOpen()) {
+      window.closeSearchPanel();
       return true;
     }
     var sm = document.getElementById('settings-modal');
@@ -643,6 +643,14 @@
       document.addEventListener('DOMContentLoaded', _boot);
     } else {
       _boot();
+    }
+
+    // Пробрасываем наружу — используется closeTopModal() на Esc
+    // (см. top_bar.js:80). Без моста bare-вызов из внешней функции
+    // падает ReferenceError.
+    if (typeof window !== 'undefined') {
+      window.isSearchOpen     = isSearchOpen;
+      window.closeSearchPanel = closeSearchPanel;
     }
 
   })();

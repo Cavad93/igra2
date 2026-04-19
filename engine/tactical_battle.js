@@ -204,7 +204,7 @@ export function resolveArrows(archer, target, bs) {
   if (target.strength === 0) target.morale = 0;
 
   if (archer.ammo === 0) {
-    addLog(bs, `⚠️ Лучники ${archer.id} израсходовали стрелы!`);
+    window.addLog(bs, `⚠️ Лучники ${archer.id} израсходовали стрелы!`);
   }
   return dmg;
 }
@@ -274,7 +274,7 @@ export function resolveMelee(attacker, defender, bs) {
 
   if (dir !== 'front' && fb.morale < 0) {
     const dirLabel = dir === 'flank' ? 'во фланг' : 'в тыл';
-    addLog(bs, `⚔️ Удар ${dirLabel}! ${defender.type} деморализован (${fb.morale} мораль)`);
+    window.addLog(bs, `⚔️ Удар ${dirLabel}! ${defender.type} деморализован (${fb.morale} мораль)`);
     bs._lastFlankArrow = {
       fromX: attacker.gridX, fromY: attacker.gridY,
       toX: defender.gridX,   toY: defender.gridY,
@@ -311,7 +311,7 @@ export function processCommanderAura(bs) {
       const prev = u.morale;
       u.morale = Math.min(100, u.morale + auraBonus * 0.1); // +1.5 (или +2.5) за тик
       if (prev < 60 && u.morale > prev)
-        addLog(bs, `★ ${cmd.commander?.name ?? 'Командир'} воодушевляет войска`);
+        window.addLog(bs, `★ ${cmd.commander?.name ?? 'Командир'} воодушевляет войска`);
     }
   }
 }
@@ -323,7 +323,7 @@ export function processCommanderDeath(cmd, bs) {
 
   if (Math.random() < 0.10) { // 10% шанс гибели за атаку
     cmd.strength = 0;
-    addLog(bs, `💀 КОМАНДИР ПАЛ В БОЮ! Армия в смятении! (-30 мораль всем)`);
+    window.addLog(bs, `💀 КОМАНДИР ПАЛ В БОЮ! Армия в смятении! (-30 мораль всем)`);
     for (const u of units) {
       u.morale = Math.max(0, u.morale - 30);
     }
@@ -341,7 +341,7 @@ export function processPanic(bs) {
     // Новые routing-юниты (мораль ≤ 20)
     if (!unit.isRouting && unit.morale <= 20) {
       unit.isRouting = true;
-      addLog(bs, `💀 ${unit.type} (${unit.side === 'player' ? 'наши' : 'враги'}) обратились в бегство!`);
+      window.addLog(bs, `💀 ${unit.type} (${unit.side === 'player' ? 'наши' : 'враги'}) обратились в бегство!`);
 
       // Эффект домино: соседи теряют мораль
       const allies = (unit.side === 'player' ? bs.playerUnits : bs.enemyUnits)
@@ -350,7 +350,7 @@ export function processPanic(bs) {
       for (const ally of allies) {
         ally.morale = Math.max(0, ally.morale - 15);
         if (allies.length > 0)
-          addLog(bs, `😱 Паника распространяется на ${ally.type}! (-15 мораль)`);
+          window.addLog(bs, `😱 Паника распространяется на ${ally.type}! (-15 мораль)`);
       }
     }
 
@@ -360,9 +360,9 @@ export function processPanic(bs) {
       const nx = unit.gridX + retreatDir;
       if (nx < 0 || nx >= TACTICAL_GRID_COLS) {
         // Вышел за карту — потерян
-        addLog(bs, `🏃 ${unit.type} покинули поле боя (потеряны)`);
+        window.addLog(bs, `🏃 ${unit.type} покинули поле боя (потеряны)`);
         unit.strength = 0;
-      } else if (!findUnitAt(nx, unit.gridY, bs)) {
+      } else if (!window.findUnitAt(nx, unit.gridY, bs)) {
         unit.gridX = nx;
       }
     }
@@ -383,7 +383,7 @@ function processCommanderRally(bs) {
       if (Math.random() < 0.30) {
         ru.isRouting = false;
         ru.morale    = 30;
-        addLog(bs, `★ Командир остановил бегущих ${ru.type}!`);
+        window.addLog(bs, `★ Командир остановил бегущих ${ru.type}!`);
       }
     }
   }
@@ -410,10 +410,10 @@ function checkStandardCapture(bs) {
     const captor = bs.playerUnits.find(u =>
       u.strength > 0 && !u.isRouting && u.gridX === eStd.x && u.gridY === eStd.y);
     if (captor) {
-      addLog(bs, `🏴 СТАНДАРТ ЗАХВАЧЕН! Враг деморализован — ПОБЕДА!`);
+      window.addLog(bs, `🏴 СТАНДАРТ ЗАХВАЧЕН! Враг деморализован — ПОБЕДА!`);
       bs.enemyUnits.forEach(u => { u.isRouting = true; u.morale = 0; });
       bs.phase = 'ended';
-      setTimeout(() => endTacticalBattle(bs, 'player_captured_standard'), 1500);
+      setTimeout(() => window.endTacticalBattle(bs, 'player_captured_standard'), 1500);
       return;
     }
   }
@@ -423,10 +423,10 @@ function checkStandardCapture(bs) {
     const captor = bs.enemyUnits.find(u =>
       u.strength > 0 && !u.isRouting && u.gridX === pStd.x && u.gridY === pStd.y);
     if (captor) {
-      addLog(bs, `🏴 Враг захватил наш стандарт — ПОРАЖЕНИЕ!`);
+      window.addLog(bs, `🏴 Враг захватил наш стандарт — ПОРАЖЕНИЕ!`);
       bs.playerUnits.forEach(u => { u.isRouting = true; u.morale = 0; });
       bs.phase = 'ended';
-      setTimeout(() => endTacticalBattle(bs, 'player_loses'), 1500);
+      setTimeout(() => window.endTacticalBattle(bs, 'player_loses'), 1500);
     }
   }
 }
@@ -462,8 +462,8 @@ function executeRetreat(bs) {
     u.strength = Math.floor(u.strength * pct);
   }
   bs.phase = 'ended';
-  addLog(bs, `🏃 Армия отступила. Спаслось ~${Math.round(pct * 100)}% войск.`);
-  endTacticalBattle(bs, 'player_retreat');
+  window.addLog(bs, `🏃 Армия отступила. Спаслось ~${Math.round(pct * 100)}% войск.`);
+  window.endTacticalBattle(bs, 'player_retreat');
 }
 
 // ── Этап 18: многоуровневый ИИ противника ────────────
@@ -478,7 +478,7 @@ function moveTowards(unit, tx, ty, bs) {
   for (const opt of options) {
     if (opt.x >= 0 && opt.x < TACTICAL_GRID_COLS &&
         opt.y >= 0 && opt.y < TACTICAL_GRID_ROWS &&
-        !findUnitAt(opt.x, opt.y, bs)) {
+        !window.findUnitAt(opt.x, opt.y, bs)) {
       unit.gridX = opt.x; unit.gridY = opt.y;
       return;
     }
@@ -550,11 +550,11 @@ function tacticalTick(bs) {
     );
     const dmg = resolveArrows(pu, target, bs);
     if (dmg > 0) {
-      addLog(bs, `🏹 Лучники выпустили залп: −${dmg} (осталось ${pu.ammo})`);
+      window.addLog(bs, `🏹 Лучники выпустили залп: −${dmg} (осталось ${pu.ammo})`);
       pu._foughtThisTick = true;
       // C1: число урона над целью
-      if (typeof emitDamageNumber === 'function') emitDamageNumber(target.gridX, target.gridY, dmg, false);
-      if (typeof emitHitParticles === 'function') emitHitParticles(target.gridX, target.gridY, false);
+      if (typeof window.emitDamageNumber === 'function') window.emitDamageNumber(target.gridX, target.gridY, dmg, false);
+      if (typeof window.emitHitParticles === 'function') window.emitHitParticles(target.gridX, target.gridY, false);
     }
   }
   for (const eu of bs.enemyUnits) {
@@ -573,10 +573,10 @@ function tacticalTick(bs) {
     );
     const dmg = resolveArrows(eu, target, bs);
     if (dmg > 0) {
-      addLog(bs, `🏹 Вражеские лучники: −${dmg} (осталось ${eu.ammo})`);
+      window.addLog(bs, `🏹 Вражеские лучники: −${dmg} (осталось ${eu.ammo})`);
       eu._foughtThisTick = true;
-      if (typeof emitDamageNumber === 'function') emitDamageNumber(target.gridX, target.gridY, dmg, true);
-      if (typeof emitHitParticles === 'function') emitHitParticles(target.gridX, target.gridY, false);
+      if (typeof window.emitDamageNumber === 'function') window.emitDamageNumber(target.gridX, target.gridY, dmg, true);
+      if (typeof window.emitHitParticles === 'function') window.emitHitParticles(target.gridX, target.gridY, false);
     }
   }
 
@@ -590,12 +590,12 @@ function tacticalTick(bs) {
     for (const eu of enemies) {
       const dmg = resolveMelee(pu, eu, bs);
       if (dmg > 0) {
-        addLog(bs, `⚔ ${pu.type} → ${eu.type}: −${dmg}`);
+        window.addLog(bs, `⚔ ${pu.type} → ${eu.type}: −${dmg}`);
         pu._foughtThisTick = true;
         eu._foughtThisTick = true;
-        if (typeof startAttackAnim   === 'function') startAttackAnim(pu, eu);
-        if (typeof emitDamageNumber  === 'function') emitDamageNumber(eu.gridX, eu.gridY, dmg, false);
-        if (typeof emitHitParticles  === 'function') emitHitParticles(eu.gridX, eu.gridY, true);
+        if (typeof window.startAttackAnim   === 'function') window.startAttackAnim(pu, eu);
+        if (typeof window.emitDamageNumber  === 'function') window.emitDamageNumber(eu.gridX, eu.gridY, dmg, false);
+        if (typeof window.emitHitParticles  === 'function') window.emitHitParticles(eu.gridX, eu.gridY, true);
       }
     }
   }
@@ -610,12 +610,12 @@ function tacticalTick(bs) {
     for (const pu of players) {
       const dmg = resolveMelee(eu, pu, bs);
       if (dmg > 0) {
-        addLog(bs, `🛡 ${eu.type} бьёт ${pu.type}: −${dmg}`);
+        window.addLog(bs, `🛡 ${eu.type} бьёт ${pu.type}: −${dmg}`);
         eu._foughtThisTick = true;
         pu._foughtThisTick = true;
-        if (typeof startAttackAnim   === 'function') startAttackAnim(eu, pu);
-        if (typeof emitDamageNumber  === 'function') emitDamageNumber(pu.gridX, pu.gridY, dmg, true);
-        if (typeof emitHitParticles  === 'function') emitHitParticles(pu.gridX, pu.gridY, true);
+        if (typeof window.startAttackAnim   === 'function') window.startAttackAnim(eu, pu);
+        if (typeof window.emitDamageNumber  === 'function') window.emitDamageNumber(pu.gridX, pu.gridY, dmg, true);
+        if (typeof window.emitHitParticles  === 'function') window.emitHitParticles(pu.gridX, pu.gridY, true);
       }
     }
   }
@@ -629,10 +629,10 @@ function tacticalTick(bs) {
         for (let x = TACTICAL_GRID_COLS - RESERVE_ZONE_COLS - 2; x >= 14; x--) {
           let placed = false;
           for (let y = 0; y < TACTICAL_GRID_ROWS; y++) {
-            if (!findUnitAt(x, y, bs)) {
+            if (!window.findUnitAt(x, y, bs)) {
               reserveUnit.gridX = x; reserveUnit.gridY = y;
               reserveUnit.isReserve = false;
-              addLog(bs, `⚔ Враг вводит резерв в бой!`);
+              window.addLog(bs, `⚔ Враг вводит резерв в бой!`);
               placed = true;
               break;
             }
@@ -669,13 +669,13 @@ function tacticalTick(bs) {
   const outcome = checkVictory(bs);
   if (outcome) {
     bs.phase = 'ended';
-    addLog(bs, outcome === 'player_wins' ? '🏆 Победа!' : '💀 Поражение!');
-    endTacticalBattle(bs, outcome);
+    window.addLog(bs, outcome === 'player_wins' ? '🏆 Победа!' : '💀 Поражение!');
+    window.endTacticalBattle(bs, outcome);
     return;
   }
 
   document.getElementById('tac-turn').textContent = `Ход ${bs.turn}`;
-  redrawAll(_ctx, bs);
+  window.redrawAll(window._ctx, bs);
 }
 
 // ── Этап 19: финализация боя ──────────────────────────

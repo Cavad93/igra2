@@ -1134,3 +1134,10 @@ export function _pendingFinalizeDebateVote() {
   var d = _pendingDebateVoteData;
   if (d) finalizeDebateVote(d.nationId, encodeURIComponent(JSON.stringify(d.law)), d.votesFor, d.votesAgainst, d.votesAbstain, d.passed);
 }
+
+// ── Auto-bridge to window (see eslint.config.mjs / collect_window_globals.cjs) ──
+if (typeof window !== 'undefined') {
+  window.startSenateDebate = startSenateDebate;
+  window.showAIResponse = showAIResponse;
+  window.showAPIKeyPrompt = showAPIKeyPrompt;
+}

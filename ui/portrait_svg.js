@@ -37,7 +37,11 @@
     if (typeof window !== 'undefined' && typeof window.seededRNG === 'function') {
       return window.seededRNG;
     }
+    // CommonJS dual-mode (Node-тесты). typeof-guard защищает bare-вызов
+    // `require` в браузерной сборке; на ESLint нужен явный disable для
+    // самого вызова.
     if (typeof require === 'function') {
+      // eslint-disable-next-line no-undef
       try { return require('../js/rng.js').seededRNG; } catch (_) {}
     }
     // Fallback — простой LCG, чтобы генератор всегда работал
@@ -56,6 +60,7 @@
       return window.hashCode;
     }
     if (typeof require === 'function') {
+      // eslint-disable-next-line no-undef
       try { return require('../data/culture_groups.js').hashCode; } catch (_) {}
     }
     // Локальный fallback (совместим с hashCode из data/culture_groups.js)
