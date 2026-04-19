@@ -355,106 +355,10 @@
       <div id="center-panel">
         <div id="map-container">
           <!-- Leaflet монтируется сюда в renderMap() -->
-          <!-- Шаг 29 (arma): панель режимов карты — скрыта визуально с этапа 19 (uisuper),
-               оставлена в DOM для совместимости с setMapMode/onZoomChange. -->
-          <div id="map-mode-bar" aria-hidden="true">
-            <button class="mm-btn active" data-mode="political" title="Политический [1]" data-action="setMapMode" data-arg="political"><span class="icon-wrap" data-icon="overview"></span></button>
-            <button class="mm-btn"        data-mode="economy"   title="Экономика [2]"    data-action="setMapMode" data-arg="economy"><span class="icon-wrap" data-icon="economy"></span></button>
-            <button class="mm-btn"        data-mode="military"  title="Военный [3]"       data-action="setMapMode" data-arg="military"><span class="icon-wrap" data-icon="army"></span></button>
-            <button class="mm-btn"        data-mode="population" title="Население [4]"    data-action="setMapMode" data-arg="population"><span class="icon-wrap" data-icon="population"></span></button>
-          </div>
-
-          <!-- ЭТАП 19/20 (uisuper.md) + hot-fix #7: Роза ветров = селектор режима карты.
-               Лепестки расширены вдвое, под каждым — прозрачный <rect>.wr-hit
-               размером ~50×40 px для надёжной hit-area (раньше узкие ромбы
-               шириной ~20 px трудно ловились мышью). Хоткеи 1-4 (см.
-               ui/top_bar.js:170) переключают режимы без клика. -->
-          <div id="wind-rose" role="group" aria-label="Режим карты">
-            <div class="wr-caption">
-              Режим карты: <span id="wr-caption-mode">Политический</span>
-            </div>
-            <svg id="wind-rose-svg" viewBox="-60 -60 120 120"
-                 xmlns="http://www.w3.org/2000/svg">
-
-              <!-- Hit-зоны (прозрачные прямоугольники, ловят клик по всему сектору).
-                   Рисуются ДО лепестков, чтобы лепестки были видны поверх. -->
-              <rect class="wr-hit" x="-26" y="-52" width="52" height="42"
-                    data-action="setMapMode" data-arg="political"
-                    aria-label="Политический режим [1]">
-                <title>Политический режим [1] — цвета фракций</title>
-              </rect>
-              <rect class="wr-hit" x="10" y="-26" width="42" height="52"
-                    data-action="setMapMode" data-arg="economy"
-                    aria-label="Режим экономики [2]">
-                <title>Режим экономики [2] — богатство регионов</title>
-              </rect>
-              <rect class="wr-hit" x="-26" y="10" width="52" height="42"
-                    data-action="setMapMode" data-arg="military"
-                    aria-label="Военный режим [3]">
-                <title>Военный режим [3] — дислокация армий</title>
-              </rect>
-              <rect class="wr-hit" x="-52" y="-26" width="42" height="52"
-                    data-action="setMapMode" data-arg="population"
-                    aria-label="Режим населения [4]">
-                <title>Режим населения [4] — плотность населения</title>
-              </rect>
-
-              <!-- Центральная точка -->
-              <circle cx="0" cy="0" r="8" class="wr-center"/>
-              <circle cx="0" cy="0" r="5" class="wr-center-dot"/>
-
-              <!-- Лепесток Север: Политика (расширен с 20→40 px) -->
-              <path id="wr-political"
-                    d="M0,0 L-20,-22 L0,-46 L20,-22 Z"
-                    class="wr-petal active" data-mode="political"
-                    data-action="setMapMode" data-arg="political"
-                    role="button" tabindex="0"
-                    aria-label="Политический режим [1]">
-                <title>Политический режим [1] — цвета фракций</title>
-              </path>
-              <text x="0" y="-52" class="wr-label" text-anchor="middle">ПОЛИТ</text>
-
-              <!-- Лепесток Восток: Экономика -->
-              <path id="wr-economy"
-                    d="M0,0 L22,-20 L46,0 L22,20 Z"
-                    class="wr-petal" data-mode="economy"
-                    data-action="setMapMode" data-arg="economy"
-                    role="button" tabindex="0"
-                    aria-label="Режим экономики [2]">
-                <title>Режим экономики [2] — богатство регионов</title>
-              </path>
-              <text x="52" y="4" class="wr-label" text-anchor="start">ЭКОН</text>
-
-              <!-- Лепесток Юг: Военный -->
-              <path id="wr-military"
-                    d="M0,0 L20,22 L0,46 L-20,22 Z"
-                    class="wr-petal" data-mode="military"
-                    data-action="setMapMode" data-arg="military"
-                    role="button" tabindex="0"
-                    aria-label="Военный режим [3]">
-                <title>Военный режим [3] — дислокация армий</title>
-              </path>
-              <text x="0" y="58" class="wr-label" text-anchor="middle">ВОЙ</text>
-
-              <!-- Лепесток Запад: Население -->
-              <path id="wr-population"
-                    d="M0,0 L-22,20 L-46,0 L-22,-20 Z"
-                    class="wr-petal" data-mode="population"
-                    data-action="setMapMode" data-arg="population"
-                    role="button" tabindex="0"
-                    aria-label="Режим населения [4]">
-                <title>Режим населения [4] — плотность населения</title>
-              </path>
-              <text x="-52" y="4" class="wr-label" text-anchor="end">НАР</text>
-
-              <!-- Диагональные засечки (декор) -->
-              <line x1="-6" y1="-6" x2="-14" y2="-14" class="wr-notch"/>
-              <line x1="6"  y1="-6" x2="14"  y2="-14" class="wr-notch"/>
-              <line x1="6"  y1="6"  x2="14"  y2="14"  class="wr-notch"/>
-              <line x1="-6" y1="6"  x2="-14" y2="14"  class="wr-notch"/>
-
-            </svg>
-          </div>
+          <!-- Роза ветров и #map-mode-bar удалены: селектор режимов карты
+               переехал в правую панель под список советников (см.
+               #right-panel #map-mode-selector). Хоткеи 1-4 (см.
+               ui/top_bar.js:170) продолжают переключать режимы. -->
           <!-- Легенда наций -->
           <div id="nation-legend">
             <!-- Заполняется динамически -->
@@ -557,6 +461,10 @@
         <div class="characters-list">
           <div style="color:var(--text-dim);font-size:11px;padding:4px;">Загрузка...</div>
         </div>
+        <!-- Селектор режимов карты (#map-mode-selector) инжектируется
+             из ui/panels.js renderRightPanel() — панель полностью
+             перерисовывается по ходу игры, статический DOM тут
+             не выживает. -->
       </div>
     </main>
 

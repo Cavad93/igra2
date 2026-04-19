@@ -3,6 +3,13 @@ package-lock.json
 dist/
 data/backups/
 
+# Автогенерится `npm run lint:refresh-globals` — см. eslint.config.mjs
+.eslint-window-globals.json
+
+# Playwright screenshots в корне (сохраняются MCP-агентом во время отладки)
+/*.png
+/*.jpeg
+
 # Секреты (GitHub PAT и т.п.) — никогда не коммитить
 .env
 .env.*

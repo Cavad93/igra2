@@ -2274,6 +2274,36 @@ export function renderRightPanel() {
     ? '<div class="roster-empty">Нет подходящих персонажей</div>'
     : displayChars.map(c => renderAdvisorChip(c, nationIdForPortraits)).join('');
 
+  // Селектор режимов карты — держим здесь, чтобы он пересобирался
+  // вместе с правой панелью. Active-состояние читаем из глобала
+  // CURRENT_MAP_MODE (проставлен через setMapMode в ui/map.js).
+  const currentMode = (typeof window !== 'undefined' && window.CURRENT_MAP_MODE) || 'political';
+  const mmsLabels = { political: 'Политический', economy: 'Экономика', military: 'Военный', population: 'Население' };
+  const mmsBtns = [
+    { mode: 'political',  title: 'Политический [1] — цвета фракций',  label: 'ПОЛИТ', icon: 'overview'   },
+    { mode: 'economy',    title: 'Экономика [2] — богатство регионов', label: 'ЭКОН',  icon: 'economy'    },
+    { mode: 'military',   title: 'Военный [3] — дислокация армий',     label: 'ВОЙ',   icon: 'army'       },
+    { mode: 'population', title: 'Население [4] — плотность населения', label: 'НАР',  icon: 'population' },
+  ];
+  const mmsBtnsHtml = mmsBtns.map(b => `
+    <button class="mms-btn ${b.mode === currentMode ? 'active' : ''}"
+            data-mode="${b.mode}"
+            data-action="setMapMode" data-arg="${b.mode}"
+            title="${b.title}">
+      <span class="icon-wrap" data-icon="${b.icon}"></span>
+      <span class="mms-label">${b.label}</span>
+    </button>
+  `).join('');
+  const mapModeSelectorHtml = `
+    <div id="map-mode-selector" role="group" aria-label="Режим карты">
+      <div class="mms-caption">
+        <span class="icon-wrap" data-icon="overview"></span>
+        Режим карты: <span id="mms-caption-mode">${mmsLabels[currentMode] || 'Политический'}</span>
+      </div>
+      <div class="mms-grid">${mmsBtnsHtml}</div>
+    </div>
+  `;
+
   panel.innerHTML = `
     <div class="court-board">
       <div class="court-header">
@@ -2303,11 +2333,20 @@ export function renderRightPanel() {
           </section>
         `
       }
+      ${mapModeSelectorHtml}
     </div>
   `;
 
   // Проставляем drag-n-drop биндинги (идемпотентно)
   initCourtDragDrop(panel);
+
+  // Пере-привязываем keyboard-handler к новым кнопкам селектора режимов
+  // (DOM только что пересобрался — старые ref'ы мертвы).
+  try {
+    if (typeof window !== 'undefined' && typeof window.initWindRoseKeyboard === 'function') {
+      window.initWindRoseKeyboard();
+    }
+  } catch (_) {}
 
   // Session 6: обновляем сигнатуру и реф на `.court-era` для
   // инкрементального обновления года на следующих вызовах.
@@ -2794,8 +2833,8 @@ export function showCharacterDetail(charId) {
         </div>
       </div>` : ''}
 
-      ${typeof renderDialogueBlock === 'function'
-          ? renderDialogueBlock(char.id, char.name, GAME_STATE.player_nation)
+      ${typeof window.renderDialogueBlock === 'function'
+          ? window.renderDialogueBlock(char.id, char.name, GAME_STATE.player_nation)
           : ''}
     </div>
   `;
@@ -3110,3 +3149,7 @@ export function updateNationHeader(nationId, nationName) {
   nameEl.textContent = nationName || '';
 }
 
+// ── Auto-bridge to window (see eslint.config.mjs / collect_window_globals.cjs) ──
+if (typeof window !== 'undefined') {
+  window._pushResourceHistory = _pushResourceHistory;
+}

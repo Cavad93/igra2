@@ -6,6 +6,10 @@
 
 let _govSetupState = null;
 
+// Локально, чтобы не зависеть от window.formatWant:
+// такая же функция лежит в ui/panels.js:2904, но там не экспортируется.
+const formatWant = (want) => String(want ?? '').replace(/_/g, ' ');
+
 export function showGovernmentOverlay() {
   const overlay = document.getElementById('gov-overlay');
   if (!overlay) return;
@@ -1512,7 +1516,7 @@ export function submitConstitutionAmendment() {
     },
   };
 
-  startSenateDebate(nationId, law, speech);
+  window.startSenateDebate(nationId, law, speech);
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -3295,7 +3299,7 @@ export function submitSenateLaw(nationId) {
     vote:             null,
   };
 
-  startSenateDebate(nationId, law, speech);
+  window.startSenateDebate(nationId, law, speech);
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -3373,7 +3377,7 @@ export async function dlgSend(charId, nationId) {
   status.replaceChildren(_mkSpan('dlg-thinking', '⏳ Персонаж обдумывает ответ…'));
 
   try {
-    const result = await DIALOGUE_ENGINE.processPlayerInput(charId, text, nationId);
+    const result = await window.DIALOGUE_ENGINE.processPlayerInput(charId, text, nationId);
 
     // Добавляем реплики в DOM
     if (history) {
@@ -4190,4 +4194,10 @@ function dlgHandleKeyWrapper(e) {
 
 function govReformKeyHandler(e) {
   if (e.key === 'Enter') submitGovernmentReform();
+}
+
+// ── Auto-bridge to window (see eslint.config.mjs / collect_window_globals.cjs) ──
+if (typeof window !== 'undefined') {
+  window.renderOrdersPanel = renderOrdersPanel;
+  window.renderDialogueBlock = renderDialogueBlock;
 }

@@ -1047,7 +1047,7 @@ function _regionOccupationColors(regionId) {
 
 export function onRegionClick(regionId) {
   // Режим выбора цели движения армии — перехватываем клик
-  if (typeof handleRegionClickForArmy === 'function' && handleRegionClickForArmy(regionId)) return;
+  if (typeof window.handleRegionClickForArmy === 'function' && window.handleRegionClickForArmy(regionId)) return;
 
   // Шаг 53 (arma.md): режим сравнения регионов. Если первый регион уже
   // закреплён (pinnedRegionId) — открываем панель сравнения вместо popup.
@@ -1091,8 +1091,8 @@ export function onRegionClick(regionId) {
 
 export function onRegionHover(e, regionId, entering, color, isPlayerRegion) {
   // Шаг 47: предпросмотр маршрута армии (работает даже если регион "selected")
-  if (typeof handleRegionHoverForArmy === 'function') {
-    try { handleRegionHoverForArmy(regionId, entering, e); } catch (err) {}
+  if (typeof window.handleRegionHoverForArmy === 'function') {
+    try { window.handleRegionHoverForArmy(regionId, entering, e); } catch (err) {}
   }
 
   if (regionId === selectedRegionId) return;
@@ -1764,7 +1764,7 @@ export function showRegionInfo(regionId) {
           <div class="region-stat">🏔 Тип: <strong>${getTerrainName(gameData.terrain)}</strong></div>
         </div>
         ${(() => {
-          const biome = typeof getRegionBiome === 'function' ? getRegionBiome(regionId) : null;
+          const biome = typeof window.getRegionBiome === 'function' ? window.getRegionBiome(regionId) : null;
           if (!biome) return '';
           return `<div><span class="region-biome-badge" style="background:${biome.color}22; border-color:${biome.color}55" title="${biome.description}">${biome.icon} ${biome.name}</span></div>`;
         })()}
@@ -1815,7 +1815,7 @@ export function showRegionInfo(regionId) {
 export function selectArmyInRegion(regionId) {
   const army = (GAME_STATE.armies ?? []).find(a =>
     a.position === regionId && a.nation === GAME_STATE.player_nation && a.state !== 'disbanded');
-  if (army && typeof selectArmy === 'function') selectArmy(army.id);
+  if (army && typeof window.selectArmy === 'function') window.selectArmy(army.id);
 }
 
 export function closeRegionInfo() {
@@ -1864,7 +1864,7 @@ export function sendDiplomaticMissionFromPanel(targetNationId, targetNationName)
 
   if (result) {
     // Обновляем панели
-    if (typeof renderOrdersPanel === 'function')     renderOrdersPanel();
+    if (typeof window.renderOrdersPanel === 'function')     window.renderOrdersPanel();
     if (typeof renderGovernmentOverlay === 'function') {
       // Только если overlay открыт
       const govEl = document.getElementById('government-overlay');
@@ -2662,7 +2662,6 @@ export function renderCityLabels() {
   // название не совпадает с nation.name).
   clearCityLabels();
   return;
-  // eslint-disable-next-line no-unreachable
   const nations = GAME_STATE?.nations ?? {};
   const playerId = GAME_STATE?.player_nation;
 
@@ -3157,7 +3156,7 @@ export function renderMap() {
   }
 
   // Легенда наций (DOM вне Leaflet)
-  renderNationLegend && renderNationLegend();
+  window.renderNationLegend && window.renderNationLegend();
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -3358,24 +3357,14 @@ function _restorePoliticalStyle(regionId) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// uisuper.md ЭТАП 20 — РОЗА ВЕТРОВ: логика переключения режимов
+// Селектор режимов карты в правой панели (#map-mode-selector).
+// Раньше это была «роза ветров» в правом нижнем углу карты —
+// см. историю в uisuper.md этап 19/20. Теперь — кнопочная
+// сетка 2×2 под списком советников. MapModeSync обновляет
+// визуальное состояние кнопок при смене режима и ставит
+// keyboard-handler (Enter/Space).
 // ──────────────────────────────────────────────────────────────
-// WindRose — модуль синхронизации визуального состояния лепестков
-// SVG-розы (см. разметку в index.html #wind-rose) с текущим
-// режимом карты. Вызывается из setMapMode() при каждом
-// переключении режима.
-const WindRose = {
-  _current: 'political',
-
-  // Карта: mode → id лепестка SVG
-  PETALS: {
-    political:  'wr-political',
-    economy:    'wr-economy',
-    military:   'wr-military',
-    population: 'wr-population',
-  },
-
-  // Русское имя режима для подписи
+const MapModeSync = {
   LABELS: {
     political:  'Политический',
     economy:    'Экономика',
@@ -3383,56 +3372,32 @@ const WindRose = {
     population: 'Население',
   },
 
-  /**
-   * Установить активный лепесток по режиму карты.
-   * @param {'political'|'economy'|'military'|'population'} mode
-   */
+  /** @param {'political'|'economy'|'military'|'population'} mode */
   setActive(mode) {
-    if (!this.PETALS[mode]) return;
-    this._current = mode;
+    if (!this.LABELS[mode]) return;
 
-    // Обновить текст подписи
-    const caption = document.getElementById('wr-caption-mode');
-    if (caption) caption.textContent = this.LABELS[mode] ?? mode;
+    const caption = document.getElementById('mms-caption-mode');
+    if (caption) caption.textContent = this.LABELS[mode];
 
-    // Снять active со всех лепестков
-    const petals = document.querySelectorAll('.wr-petal');
-    if (!petals.length) return;
-    petals.forEach((p) => p.classList.remove('active'));
-
-    // Активировать нужный
-    const petal = document.getElementById(this.PETALS[mode]);
-    if (!petal) return;
-    petal.classList.add('active');
-
-    // Анимация «пульса» при активации: кратко scale(1.1) → scale(1)
-    try {
-      petal.style.transition = 'none';
-      petal.setAttribute('transform', 'scale(1.1)');
-      requestAnimationFrame(() => {
-        petal.style.transition = 'fill 0.25s, stroke 0.25s, transform 0.3s';
-        petal.setAttribute('transform', 'scale(1)');
-      });
-    } catch (e) { /* SVG transform может не поддерживаться в тестовой среде */ }
+    const btns = document.querySelectorAll('#map-mode-selector .mms-btn');
+    btns.forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
   },
 };
 
-// Экспортируем в глобал для доступа из index.html и тестов
-
 /**
- * ЭТАП 20 (uisuper.md) — инициализация keyboard navigation для
- * лепестков розы ветров. Обрабатывает Enter/Space на focused-лепестке
- * и вызывает setMapMode по data-mode. Вызывается из DOMContentLoaded.
+ * Keyboard navigation для кнопок селектора режимов:
+ * Enter/Space на focused-кнопке вызывает setMapMode(data-mode).
+ * Вызывается из DOMContentLoaded (ui/boot.js).
  */
 export function initWindRoseKeyboard() {
-  const petals = document.querySelectorAll('.wr-petal');
-  petals.forEach((petal) => {
-    if (petal.dataset._wrKbdBound === '1') return;
-    petal.dataset._wrKbdBound = '1';
-    petal.addEventListener('keydown', (e) => {
+  const btns = document.querySelectorAll('#map-mode-selector .mms-btn');
+  btns.forEach((btn) => {
+    if (btn.dataset._mmsKbdBound === '1') return;
+    btn.dataset._mmsKbdBound = '1';
+    btn.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
         e.preventDefault();
-        const mode = petal.dataset.mode;
+        const mode = btn.dataset.mode;
         if (mode && typeof setMapMode === 'function') {
           setMapMode(mode);
         }
@@ -3459,16 +3424,8 @@ export function setMapMode(mode) {
     GAME_STATE._forceFullRestyle = true;
   }
 
-  // ЭТАП 20 (uisuper.md) — синхронизация розы ветров
-  try { WindRose.setActive(mode); } catch (e) { /* noop */ }
-
-  // Синхронизируем состояние кнопок
-  const bar = document.getElementById('map-mode-bar');
-  if (bar) {
-    bar.querySelectorAll('.mm-btn').forEach((btn) => {
-      btn.classList.toggle('active', btn.dataset.mode === mode);
-    });
-  }
+  // Синхронизация кнопок селектора режимов в правой панели
+  try { MapModeSync.setActive(mode); } catch (e) { /* noop */ }
 
   if (!regionLayers || Object.keys(regionLayers).length === 0) return;
 
@@ -3562,8 +3519,8 @@ export function setMapMode(mode) {
 // ──────────────────────────────────────────────────────────────
 // Три уровня детализации карты в зависимости от текущего zoom:
 //   strategic  (zoom < 4)   — вид сверху: крупные цветные зоны,
-//                              скрыт #map-mode-bar, подписи регионов
-//                              скрываются, армии уменьшены до 18px.
+//                              подписи регионов скрываются,
+//                              армии уменьшены до 18px.
 //   regional   (4 .. 6.5)   — текущий (default) вид.
 //   detailed   (zoom > 6.5) — иконки построек на регионах игрока,
 //                              числовая численность гарнизона под флагом,
@@ -3733,7 +3690,7 @@ function _removeDetailLayers() {
 /**
  * Обработчик смены зума. Определяет уровень, применяет CSS-класс к
  * <body>, корректирует fillOpacity регионов и показ/скрытие
- * map-mode-bar, детальных слоёв и подписей наций.
+ * детальных слоёв и подписей наций.
  * @param {number} [zoom] — если не передан, берём из leafletMap.getZoom()
  */
 export function onZoomChange(zoom) {
@@ -3753,16 +3710,7 @@ export function onZoomChange(zoom) {
     }
   } catch (_) {}
 
-  // 2. #map-mode-bar скрывается на strategic (не нужен на мелком зуме).
-  try {
-    const bar = document.getElementById('map-mode-bar');
-    if (bar) {
-      bar.style.opacity    = (level === 'strategic') ? '0' : '1';
-      bar.style.pointerEvents = (level === 'strategic') ? 'none' : 'auto';
-    }
-  } catch (_) {}
-
-  // 3. Регионы: на strategic увеличиваем fillOpacity до 0.85 (цвета
+  // 2. Регионы: на strategic увеличиваем fillOpacity до 0.85 (цвета
   //    наций становятся ярче). На остальных — возвращаем стандарт.
   //    Реализовано через пере-применение refreshRegionStyles с
   //    внешним множителем.
@@ -3842,3 +3790,10 @@ export function _applyZoomFillOpacityLegacyLoop(level) {
 
 
 // Backward compat: expose to non-module scripts
+
+// ── Auto-bridge to window (see eslint.config.mjs / collect_window_globals.cjs) ──
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'svgTradeRenderer', { get: () => svgTradeRenderer, set: (v) => { svgTradeRenderer = v; }, configurable: true });
+  Object.defineProperty(window, 'showTradeRoutes', { get: () => showTradeRoutes, set: (v) => { showTradeRoutes = v; }, configurable: true });
+  Object.defineProperty(window, '_activeRegionTab', { get: () => _activeRegionTab, set: (v) => { _activeRegionTab = v; }, configurable: true });
+}

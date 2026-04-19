@@ -450,6 +450,95 @@ body.resizing-panel * { user-select: none !important; cursor: col-resize !import
 #right-panel::-webkit-scrollbar-thumb { background: var(--border-gold); border-radius: 2px; }
 
 /* ══════════════════════════════════════════════════
+   Селектор режимов карты в правой панели
+   (переехал сюда из правого нижнего угла карты — была
+   «роза ветров», см. ui/panels.js renderRightPanel()).
+   Компактный: иконки + подписи в одну строку, чтобы
+   не съедать вертикаль у .court-roster.
+   ══════════════════════════════════════════════════ */
+#map-mode-selector {
+  margin-top: 6px;
+  padding: 6px 4px 4px;
+  border-top: 1px solid var(--border-gold);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+#map-mode-selector .mms-caption {
+  font-family: var(--font-display);
+  font-size: 9px;
+  color: var(--gold-bright);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#map-mode-selector .mms-caption .icon-wrap {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+#map-mode-selector #mms-caption-mode {
+  color: var(--text-light);
+  font-weight: 600;
+}
+#map-mode-selector .mms-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+}
+.mms-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 2px 3px;
+  background: rgba(13,10,5,0.7);
+  border: 1px solid var(--border-gold);
+  border-radius: 3px;
+  cursor: pointer;
+  color: var(--text-light);
+  font-family: var(--font-display);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+}
+.mms-btn:hover {
+  background: rgba(42,32,16,0.9);
+  border-color: var(--gold-bright);
+  color: var(--gold-bright);
+}
+.mms-btn:active {
+  transform: scale(0.95);
+}
+.mms-btn.active {
+  background: rgba(107,79,26,0.55);
+  border-color: var(--gold-bright);
+  color: var(--gold-bright);
+  box-shadow: 0 0 4px rgba(201,169,97,0.4), inset 0 0 6px rgba(201,169,97,0.15);
+}
+.mms-btn .icon-wrap {
+  width: 14px;
+  height: 14px;
+}
+.mms-btn .mms-label {
+  font-weight: 700;
+}
+
+/* Даём списку советников возможность корректно шринкаться
+   в flex-родителе .court-board, чтобы селектор карты внизу
+   не выдавливал .roster-list в 0px. */
+.court-roster { min-height: 0; }
+
+/* ══════════════════════════════════════════════════
    ПАНЕЛЬ ПОИСКА (#search-panel)
    ══════════════════════════════════════════════════ */
 #search-panel {
