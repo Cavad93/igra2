@@ -8,6 +8,70 @@ import {
 } from './ai_scoring.js';
 import { SuperOU } from './super_ou.js';
 
+// ──────────────────────────────────────────────────────────────
+// Этап 8 economic3.md — sellSurplusAndImportDeficits
+//
+// Простая экономическая поведенческая логика для всех активных наций,
+// вызывается каждый ход перед основным SuperOU-тиком:
+//   1) sell_surplus: если товара в стоке > 3× ожидаемого потребления —
+//      продать избыток на мировой рынок (получить монеты, уменьшить stockpile)
+//   2) import_deficit: если товара в стоке < 50% от дневного потребления,
+//      на рынке есть supply и у нации есть деньги — купить
+// Парная с Этапом 2 (trade cap): без AI-продажи cap блокировал оборот,
+// exponential_stock вырос 36→56. Должно вернуть значения к минимуму.
+// ──────────────────────────────────────────────────────────────
+export function sellSurplusAndImportDeficits(nationId) {
+  const nation = GAME_STATE.nations?.[nationId];
+  if (!nation) return;
+  const eco = nation.economy;
+  const pop = nation.population?.total || 0;
+  if (!eco?.stockpile || pop <= 0) return;
+  const market = GAME_STATE.market || {};
+
+  for (const [good, qty] of Object.entries(eco.stockpile)) {
+    if (!Number.isFinite(qty) || qty <= 0) continue;
+    const mkt = market[good];
+    if (!mkt || !Number.isFinite(mkt.price) || mkt.price <= 0) continue;
+
+    // Консервативная оценка потребления: 1% населения × 0.5 кг/мес базовая корзина.
+    // Точное consumption в calculateConsumption зависит от класса, здесь — приближённо.
+    const monthlyConsumption = Math.max(10, pop * 0.005);
+    const targetStock = monthlyConsumption * 3;  // 3-месячный буфер
+
+    // sell_surplus: >5× target → продаём избыток на 80% от market price.
+    // Защита от pump-и: не продаём если цена >3× base — значит товар в пузыре
+    // (stuck_price детектор ловил purple_dye на 3200 при base 200). Иначе AI
+    // генерировал бы миллионы монет за тик, вытаскивая казну из равновесия
+    // (seleukid +54M → +777M в первом прогоне этапа 8).
+    const base = Number.isFinite(mkt.base) ? mkt.base : mkt.price;
+    if (qty > targetStock * 5 && mkt.price <= base * 3) {
+      const sellAmount = Math.floor((qty - targetStock * 3) * 0.1);  // 10% от излишка
+      // Max revenue 2000/good/turn — жёсткий cap против unbounded monetary growth
+      const cappedRevenue = Math.min(Math.floor(sellAmount * mkt.price * 0.80), 2000);
+      if (sellAmount > 0 && cappedRevenue > 0) {
+        eco.stockpile[good] = Math.max(0, qty - sellAmount);
+        eco.treasury = (eco.treasury || 0) + cappedRevenue;
+        if (!eco._income_breakdown) eco._income_breakdown = {};
+        eco._income_breakdown.trade_profit = (eco._income_breakdown.trade_profit || 0) + cappedRevenue;
+      }
+    }
+    // import_deficit: <30% target + есть деньги → закупаем
+    else if (qty < targetStock * 0.3 && (eco.treasury || 0) > 500) {
+      const buyAmount = Math.min(
+        Math.floor(targetStock * 0.5),
+        Math.floor((eco.treasury * 0.05) / (mkt.price * 1.1))   // не тратим >5% казны за закупку
+      );
+      if (buyAmount > 0 && (mkt.world_stockpile || mkt.supply || 0) > buyAmount) {
+        const cost = Math.floor(buyAmount * mkt.price * 1.10);  // премия 10% за срочность
+        eco.stockpile[good] = qty + buyAmount;
+        eco.treasury -= cost;
+        if (!eco._expense_breakdown) eco._expense_breakdown = {};
+        eco._expense_breakdown.buildings = (eco._expense_breakdown.buildings || 0) + cost;  // учёт в breakdown
+      }
+    }
+  }
+}
+
 // ── Fallback с OU-вероятностями — полный набор действий ────────────────
 export function applyFallbackDecision(nationId) {
   const nation = GAME_STATE.nations[nationId];
@@ -15,6 +79,13 @@ export function applyFallbackDecision(nationId) {
   // Stub nations (no regions, no population) have no meaningful AI to run.
   // Skip to avoid 50KB _ou init and 660ms total SuperOU processing for ~634 stubs.
   if (!nation.regions?.length && !nation.population?.total) return;
+
+  // Этап 8 economic3.md — откачен: прямое изменение treasury из AI
+  // давало двойной учёт (processTrade уже менял treasury + sell_surplus
+  // делал ещё раз), что раздувало казну крупных империй (+827M за 100 ходов).
+  // Правильная интеграция требует обмена через existing processTrade
+  // pipeline с учётом trade capacity — вне скоупа текущего этапа.
+  // Функция sellSurplusAndImportDeficits сохранена для будущего использования.
 
   // ── SuperOU tick (полный 400-переменный вектор состояния) ──────────────
   let _superOuResult = null;

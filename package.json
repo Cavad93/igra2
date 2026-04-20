@@ -11,7 +11,12 @@
     "validate": "node agents/validate_inputs.js",
     "geo": "node scripts/geo_server.js",
     "lint:refresh-globals": "node scripts/collect_window_globals.cjs > .eslint-window-globals.json",
-    "lint": "npm run lint:refresh-globals && eslint ui engine ai config.js"
+    "lint": "npm run lint:refresh-globals && eslint ui engine ai config.js",
+    "eco:stress": "node tests/eco_stress_harness.cjs",
+    "eco:stress:browser": "node tests/eco_playwright_harness.mjs",
+    "eco:analyze": "node tests/eco_stress_analyze.cjs",
+    "eco:report": "node tests/eco_stress_harness.cjs --turns=100 --seed=1 --mode=fast --output=perf/eco_run.ndjson && node tests/eco_stress_analyze.cjs perf/eco_run.ndjson --report=perf/eco_report.md",
+    "eco:report:browser": "node tests/eco_playwright_harness.mjs --turns=100 --seed=1 --output=perf/eco_browser.ndjson && node tests/eco_stress_analyze.cjs perf/eco_browser.ndjson --report=perf/eco_browser_report.md"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -23,6 +28,7 @@
   "devDependencies": {
     "eslint": "^9.39.4",
     "globals": "^16.5.0",
+    "playwright": "^1.59.1",
     "vite": "^8.0.8"
   }
 }

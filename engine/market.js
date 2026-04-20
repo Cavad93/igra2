@@ -21,7 +21,7 @@
 import { CONFIG } from '../config.js';
 import { GOODS } from '../data/goods.js';
 
-export const _MARKET_SMOOTHING  = 0.30;   // скорость сглаживания (30% за тик)
+export const _MARKET_SMOOTHING  = 0.30;   // 0.50 давал ложные hyper_inflation-скачки из-за усиления дефицитных пиков; возврат к 0.30 — stuck_price решается убранным Math.round (см. ниже)
 export const _BALANCE_SENS      = 0.05;   // чувствительность зоны баланса (±5% / тик)
 export const _SURPLUS_RATE      = 0.03;   // скорость снижения цены в зоне избытка
 export const _DEFICIT_INTENSITY = 0.10;   // базовый множитель дельты в зоне дефицита
@@ -132,12 +132,23 @@ export function updateMarketPrices(totalProduced, totalConsumed) {
       market.shortage_streak = Math.max(0, streak - 1);
     }
 
-    // ── 2d. Ограничители + сглаживание ──────────────────────────────────
-    const rawNew    = market.price + price_delta;
-    const clamped   = Math.max(floor, Math.min(ceiling, rawNew));
-    const newPrice  = market.price + (clamped - market.price) * _MARKET_SMOOTHING;
+    // ── 2d. Сглаживание → clamp → decay на потолке ──────────────────────
+    // Порядок важен: сначала сглаживаем к RAW-цели (price + delta), затем
+    // clamp к [floor, ceiling]. Раньше clamp шёл первым — из-за этого цена
+    // на ceiling'е «прилипала»: clamped==price==ceiling → (clamped-price)=0,
+    // сглаживание не давало цене уходить вниз даже при избытке.
+    const rawNew       = market.price + price_delta;
+    const smoothedRaw  = market.price + (rawNew - market.price) * _MARKET_SMOOTHING;
+    let   newPrice     = Math.max(floor, Math.min(ceiling, smoothedRaw));
 
-    market.price = Math.round(newPrice * 10) / 10;
+    // Если цена держится на ceiling'е, но supply покрывает хотя бы 80% спроса —
+    // принудительный decay −2% за тик. Выдёргивает товар из price-cap trap
+    // (wheat/purple_dye/slaves сидели на ceiling 50+ ходов в stress-тесте).
+    if (newPrice >= ceiling * 0.98 && supply >= demand * 0.8) {
+      newPrice = Math.max(floor, newPrice * 0.98);
+    }
+
+    market.price = Math.round(newPrice * 100) / 100;   // до 0.01 для стабильности UI; dead-zone ±0.005 приемлема после фикса smoothing
 
     // ── 2e. История цен (последние 24 тика) ──────────────────────────────
     if (!Array.isArray(market.price_history)) market.price_history = [];

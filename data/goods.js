@@ -288,9 +288,9 @@ export var GOODS = {
   wax: {
     name: 'Воск',
     name_gen: 'воска',
-    base_price: 25,
+    base_price: 22,             // было 25, совпадало с trade_goods — разведено
     price_elasticity: 0.8,
-    price_floor: 8,
+    price_floor: 7,
     unit: 'фунт',
     category: 'raw_material',
     resource_type: 'biome',
@@ -522,8 +522,8 @@ export var GOODS = {
   cloth: {
     name: 'Ткань',
     name_gen: 'ткани',
-    base_price: 28,
-    price_elasticity: 0.9,
+    base_price: 26,             // было 28, совпадало с leather — разведено
+    price_elasticity: 0.85,     // было 0.9, cloth чуть менее эластичен (базовый товар)
     price_floor: 8,
     unit: 'тюк',
     category: 'goods_processed',
@@ -541,9 +541,9 @@ export var GOODS = {
   leather: {
     name: 'Кожа',
     name_gen: 'кожи',
-    base_price: 28,
+    base_price: 30,             // было 28, совпадало с cloth — разведено
     price_elasticity: 0.9,
-    price_floor: 8,
+    price_floor: 9,             // было 8, синхронизировано с base_price
     unit: 'тюк',
     category: 'goods_processed',
     resource_type: 'processed',   // шкуры → дубление (с серой или дубовой корой)
@@ -792,9 +792,9 @@ export var GOODS = {
   trade_goods: {
     name: 'Торговые товары',
     name_gen: 'торговых товаров',
-    base_price: 25,
-    price_elasticity: 0.8,
-    price_floor: 8,
+    base_price: 35,             // было 25, совпадало с wax — разведено (смешанная категория, дороже)
+    price_elasticity: 0.7,      // было 0.8, менее эластичен (предметы роскоши)
+    price_floor: 11,
     unit: 'партия',
     category: 'trade',
     resource_type: 'processed',   // смешанные мелкие товары через торговый порт

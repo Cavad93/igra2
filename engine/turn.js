@@ -39,6 +39,64 @@ export function _enforcePersistentLogCaps(gs) {
     // _turn_summary_history: push в конец (свежие — в хвосте), срезаем начало.
     summary.splice(0, summary.length - PERSIST_CAPS.turn_summary_history);
   }
+  // Money audit log тоже капим.
+  const audit = gs._money_audit;
+  if (Array.isArray(audit) && audit.length > 200) audit.splice(0, audit.length - 200);
+}
+
+// ──────────────────────────────────────────────────────────────
+// Этап 3 economic3.md — Money conservation audit
+//
+// Считаем суммарную казну всех наций каждый ход и сравниваем с ожидаемой
+// величиной по сумме _income_breakdown и _expense_breakdown. Drift > 0.1%
+// означает, что где-то в движке монеты появляются или исчезают без учёта —
+// это источник unbounded growth (seleukid +909 трлн за 500 ходов).
+//
+// Результат: GAME_STATE._money_audit — массив drift-событий за последние 200 ходов.
+// ──────────────────────────────────────────────────────────────
+export function _auditMoneyConservation() {
+  const gs = GAME_STATE;
+  if (!gs || !gs.nations) return;
+
+  let totalMoney    = 0;
+  let totalIncome   = 0;
+  let totalExpense  = 0;
+  let totalHoardBurn = 0;
+
+  for (const nation of Object.values(gs.nations)) {
+    const eco = nation.economy;
+    if (!eco) continue;
+    totalMoney += eco.treasury || 0;
+
+    const inc = eco._income_breakdown || {};
+    const exp = eco._expense_breakdown || {};
+    // В _income_breakdown ключ total — суммарный доход за последний ход
+    totalIncome   += Number.isFinite(inc.total) ? inc.total : 0;
+    totalExpense  += Number.isFinite(exp.total) ? exp.total : 0;
+    totalHoardBurn += Number.isFinite(exp.hoard_penalty) ? exp.hoard_penalty : 0;
+  }
+
+  const prev = gs._last_money_total ?? totalMoney;    // первый тик: не сравниваем
+  const expected = prev + totalIncome - totalExpense;
+  const delta = totalMoney - expected;
+  const pct = prev !== 0 ? Math.abs(delta) / Math.abs(prev) : 0;
+
+  // Логируем только значимые отклонения. 0.1% — пороговое.
+  if (pct > 0.001 && Math.abs(delta) > 1000 && gs.turn > 1) {
+    gs._money_audit ??= [];
+    gs._money_audit.push({
+      turn: gs.turn,
+      total: Math.round(totalMoney),
+      expected: Math.round(expected),
+      delta: Math.round(delta),
+      pct: Math.round(pct * 10000) / 100,  // в %, 2 знака
+      income: Math.round(totalIncome),
+      expense: Math.round(totalExpense),
+      hoard_burn: Math.round(totalHoardBurn),
+    });
+  }
+
+  gs._last_money_total = totalMoney;
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -397,6 +455,12 @@ export async function processTurn() {
         try { _pushHist(GAME_STATE); } catch (e) { console.warn('[res-history]', e); }
       }
     }
+
+    // 6.9. Money conservation audit (Этап 3 плана economic3.md)
+    //   Проверяет, что сумма казны всех наций + монеты «списанные» (hoard/inflation)
+    //   не расходится с ожидаемой величиной (last_total + income − expense − burns).
+    //   Отклонение > 0.1% → запись в GAME_STATE._money_audit для пост-анализа.
+    try { _auditMoneyConservation(); } catch (e) { console.warn('[money_audit]', e); }
 
     // 7. Автосохранение
     _setStep('Сохранение...');

@@ -1694,7 +1694,12 @@ export const BUILDINGS = {
       { good: 'honey', base_rate: 40 },
       { good: 'wax',   base_rate: 20 },
     ],
-    production_inputs: [],
+    production_inputs: [
+      // Рамки для ульев (исторически — соломенные/деревянные). Небольшой расход
+      // timber делает production_cost(wax) отличным от нуля и отделяет его от
+      // trade_goods, с которым ранее совпадали цены (оба имели пустые inputs).
+      { good: 'timber', amount_per_turn: 1, required: false },
+    ],
     capital_inputs: [],
     location_requirement: {
       type: 'none', deposit_key: null, allowed_biomes: [],
@@ -1933,7 +1938,12 @@ export const BUILDINGS = {
     production_output: [
       { good: 'trade_goods', base_rate: 50 },
     ],
-    production_inputs: [],
+    production_inputs: [
+      // Амфоры/тара для упаковки товарных партий. Вводит реальную себестоимость
+      // (production_cost > 0) и отделяет пару trade_goods/wax, которые ранее имели
+      // идентично нулевые inputs и, как следствие, сходились в одну рыночную цену.
+      { good: 'pottery', amount_per_turn: 2, required: false },
+    ],
     capital_inputs: [],
     location_requirement: {
       type: 'none', deposit_key: null, allowed_biomes: [],
@@ -2453,6 +2463,13 @@ export const TERRAIN_MAX_SLOTS = {
 // ЁМКОСТЬ НАСЕЛЕНИЯ ПО МЕСТНОСТИ (без построек)
 // ══════════════════════════════════════════════════════════════
 
+// Этап 7 economic3.md (частично): попытка перекалибровать дала mixed результат.
+// При ×20 население росло ×19/100 ходов, при ×5 — аналогично (capFactor=0.05 всё
+// равно пропускает рост когда other modifiers > 0). Корневой проблемы — несколько
+// источников роста сверх базового, которые capFactor не перекрывает. Требует
+// refactoring processDemography — вне скоупа текущего плана. Оставлены исходные
+// значения. Фикс на GAME_STATE.regions в _calcCapacityFactor сохранён (там было
+// legacy window.REGIONS, который в vm-harness был пуст).
 export const TERRAIN_BASE_CAPACITY = {
   coastal_city:  8000,
   plains:        6000,

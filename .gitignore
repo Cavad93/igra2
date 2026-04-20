@@ -49,3 +49,13 @@ models/
 llm_server.log
 llm_server.pid
 llm_model.path
+
+# Результаты стресс-прогонов экономики (NDJSON-логи + stdout + markdown-отчёты).
+# Регенерируются через `npm run eco:stress` / `eco:report`. NDJSON-файлы
+# одного 100-ходового прогона ~100 МБ, 500-ходового — 500+ МБ, в git не место.
+# Markdown-отчёты (*_report.md) — мелкие, полезные как снимки состояния по этапам,
+# их коммитим.
+perf/*.ndjson
+perf/*.ndjson.meta.json
+perf/*.log
+perf/eco_report.md

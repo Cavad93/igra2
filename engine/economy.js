@@ -664,6 +664,25 @@ export function processTrade(nationId) {
   let tradeProfit = 0;
   let tariffIncome = 0;
 
+  // ── Этап 2 economic3.md: физический cap на общий торговый объём ──────
+  //   До фикса nation могла торговать до 54k кг/мес (900 пар × 1000 cap).
+  //   Физически ограничено количеством merchants + sailors + ships.
+  //   Калибровка по Полибию / Rathbone: 1 merchant обрабатывает ~0.3-0.5 кг
+  //   товара в день × 30 = ~10-15 кг/мес. Корабль corbita (~100-400 тонн)
+  //   ходит 4-6 раз в год → 100-400 кг/мес чистого оборота на корабль.
+  //   Минимум 200 кг/мес на нацию — пограничная «торговля на ослах».
+  const merchants = nation.population?.by_profession?.merchants || 0;
+  const sailors   = nation.population?.by_profession?.sailors   || 0;
+  const ships     = nation.military?.ships || 0;
+  const nationTradeCapacity = Math.max(
+    200,
+    Math.min(
+      (merchants + sailors) * 2.5,   // 2.5 кг/чел/мес (средне консервативно)
+      ships * 400 + 500              // 400 кг/корабль/мес + 500 базовая
+    )
+  );
+  let usedCapacity = 0;
+
   // ── 1. Экспортная прибыль от торговых маршрутов ───────────────────────
   for (const partnerNationId of (nation.economy.trade_routes || [])) {
     const partner = GAME_STATE.nations[partnerNationId];
@@ -676,7 +695,13 @@ export function processTrade(nationId) {
       const surplus = nationStock - 500;
       if (surplus <= 0) continue;
 
-      const tradeVolume = Math.min(surplus * 0.1, 1000);
+      // Остаточная capacity за тик — исчерпали → пропускаем
+      const remainingCap = Math.max(0, nationTradeCapacity - usedCapacity);
+      if (remainingCap <= 0) break;
+
+      const tradeVolume = Math.min(surplus * 0.1, 1000, remainingCap);
+      if (tradeVolume <= 0) continue;
+      usedCapacity += tradeVolume;
 
       const tariffRate = _getEffectiveTariffRate(nationId, partnerNationId);
       // Заблокировать торговлю если эффективная пошлина ≥ 99%
@@ -695,8 +720,13 @@ export function processTrade(nationId) {
       const monopolyMult = (typeof getMonopolyPriceMult === 'function')
         ? getMonopolyPriceMult(nationId, good) : 1.0;
 
-      const grossProfit = tradeVolume * mkt.price * 0.05 * (1 + prefBonus)
-                        * (1 - CONFIG.BALANCE.PIRACY_BASE) * monopolyMult;
+      const grossProfitRaw = tradeVolume * mkt.price * 0.05 * (1 + prefBonus)
+                           * (1 - CONFIG.BALANCE.PIRACY_BASE) * monopolyMult;
+      // Cap: прибыль одной сделки не превышает 15% от её "нормальной" оценки по base_price.
+      // Останавливает экспоненциальный feedback `price растёт → выручка растёт → цена растёт`
+      // когда нация оказывается монополистом по товару с разогнанной ценой (×10 от base).
+      const grossProfitCap = tradeVolume * (mkt.base ?? mkt.price) * 0.15;
+      const grossProfit = Math.min(grossProfitRaw, grossProfitCap);
       const tariffAmount = grossProfit * tariffRate;
       const netProfit = grossProfit - tariffAmount;
 
@@ -851,6 +881,10 @@ export function updateTreasury(nationId, produced, consumed, tradeProfit) {
   const totalIncome = Math.round((taxIncomeTotal + effPortDuties + effTradeProfit + tariffIncome) * transitionMod);
 
   // ── РАСХОДЫ: АРМИЯ ─────────────────────────────────────────
+  // Примечание: grace ramp на первые 12 ходов (0.2→1.0) пробовался как фикс startup-
+  // дефицита (86% наций в минусе на ходе 2), но вызывал регресс в exponential_stock
+  // (47→90) — армия потребляла меньше food/tools, запасы росли. Оставлено как есть;
+  // startup-дефицит лучше чинить через стартовый treasury buffer в data/nations.js.
   const expArmyInfantry    = (military.infantry    || 0) * CONFIG.BALANCE.INFANTRY_UPKEEP;
   const expArmyCavalry     = (military.cavalry     || 0) * CONFIG.BALANCE.CAVALRY_UPKEEP;
   const expArmyMercenaries = (military.mercenaries || 0) * CONFIG.BALANCE.MERCENARY_UPKEEP;
@@ -940,9 +974,25 @@ export function updateTreasury(nationId, produced, consumed, tradeProfit) {
   const effFortresses   = Math.round(expFortresses * fortressLvl) + expFortressesConserved;
   const effBuildings    = Math.round(expBuildings        * buildingsLvl);
 
-  const totalExpense = effArmyInf + effArmyCav + effArmyMerc
-                     + effNavyExp + effCourtExp + effAdvisorsExp + effStabExp
-                     + effFortresses + effBuildings;
+  const totalExpenseBase = effArmyInf + effArmyCav + effArmyMerc
+                         + effNavyExp + effCourtExp + effAdvisorsExp + effStabExp
+                         + effFortresses + effBuildings;
+
+  // ── ПРОГРЕССИВНЫЙ ШТРАФ ЗА ХОАРД ───────────────────────────
+  // Когда казна превышает 10× годового дохода, 2% "избытка" списывается каждый ход.
+  // Причина: без этого cap'а при монополии + гиперинфляции казна растёт экспоненциально
+  // (seleukid_empire копил 909 трлн за 500 ходов). Исторически это коррупция, потери
+  // на хранение, обесценивание лежащих сокровищ. INFLATION_MAX=25% не помогает —
+  // 25% от триллиона оставляет 750 млрд свободных.
+  // 2%@10× подобрано эмпирически: даёт maurya_empire −51% роста казны за 100 ходов
+  // без регрессии в exponential_stock (что происходило при усилении до 5%@5×).
+  let hoardPenalty = 0;
+  if (totalIncome > 0 && economy.treasury > 10 * totalIncome) {
+    const excess = economy.treasury - 10 * totalIncome;
+    hoardPenalty = Math.round(excess * 0.02);
+  }
+
+  const totalExpense = totalExpenseBase + hoardPenalty;
 
   // ── ОБНОВЛЯЕМ КАЗНУ ────────────────────────────────────────
   const delta = totalIncome - totalExpense;
@@ -1040,6 +1090,7 @@ export function updateTreasury(nationId, produced, consumed, tradeProfit) {
     buildings_level:   buildingsLvl,
     soldier_salary:    soldierSalary,
     food_soldiers:     foodSoldiers,
+    hoard_penalty:     hoardPenalty,
     total:             totalExpense + soldierSalary + foodSoldiers,
   });
 
@@ -1146,6 +1197,52 @@ export function evaluateCondition(value, condition) {
 
 // Балансировочные коэффициенты в CONFIG.BALANCE (config.js) — ECO_010
 // При изменении — тестируй на 100 ходах: доход должен расти ~5%/10 ходов
+// ──────────────────────────────────────────────────────────────
+// SPOILAGE TABLE (Этап 1 economic3.md)
+// Ставка убыли за 1 ход (1 месяц). За год ×12 (примерно).
+// Калибровка: классические силосы теряли 5-15% зерна/год → ~1% в месяц;
+// фрукты/рыба портятся быстрее; металлы почти не ржавеют; вино зреет в
+// плюс, но мы моделируем средний стокпайл, не отдельные амфоры.
+// Значения консервативные: не провоцируют голод, но убивают накопления.
+// ──────────────────────────────────────────────────────────────
+export const SPOILAGE_RATES = {
+  // Еда с коротким сроком хранения
+  wheat: 0.015, barley: 0.015,  // 1.5%/мес = ~17%/год — в античных силосах
+  fish:  0.06,  tuna:   0.04,   // быстро, соль помогает частично
+  olives: 0.03, olive_oil: 0.004,  // оливки киснут, масло хранится долго
+  honey: 0.003, wine: 0.001,       // мёд и вино практически не портятся
+  // Живые существа — естественная смертность
+  cattle: 0.008,   // 8%/год природной убыли + болезни
+  horses: 0.006,   // ~7%/год
+  slaves: 0.004,   // ~5%/год естественной смертности в рабстве (исторически)
+  // Промтовары — износ / устаревание
+  tools: 0.012,    // ~14%/год — орудия ломаются в работе
+  pottery: 0.004,  // амфоры бьются, но медленно
+  cloth: 0.006, leather: 0.008,    // моль, гниль, износ
+  // Инертные / металлы
+  iron: 0.001, bronze: 0.0005,     // ржавчина, но медленно
+  timber: 0.004, wool: 0.005,
+  salt: 0, sulfur: 0,              // соль и сера — практически вечные
+  charcoal: 0.003, stone: 0,
+  // Роскошь / специализированные
+  incense: 0.004, purple_dye: 0.002, papyrus: 0.008,
+  wax: 0.003, trade_goods: 0.005,
+};
+
+export function processSpoilage(activeEntries) {
+  for (const [, nation] of activeEntries) {
+    const sp = nation.economy?.stockpile;
+    if (!sp) continue;
+    for (const good in SPOILAGE_RATES) {
+      const rate = SPOILAGE_RATES[good];
+      if (!rate || !sp[good] || sp[good] <= 0) continue;
+      // Округляем до целого — stockpile целочисленный в кг/единицах.
+      const loss = Math.floor(sp[good] * rate);
+      if (loss > 0) sp[good] -= loss;
+    }
+  }
+}
+
 export function runEconomyTick() {
   // Session 13 (perf): бампаем счётчик кэша `_calcSlotBaseOutput`. Внутри
   // тика `_pop_eff`, `_capital_ratio`, `production_eff`, `workers`, `level`
@@ -1320,6 +1417,16 @@ export function runEconomyTick() {
   for (const [nationId, nation] of _activeEntries) {
     checkSupplyDeficits(nation);
   }
+
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 2.5: SPOILAGE — естественная убыль товаров (Этап 1 economic3.md)
+  //   Еда портится, инструменты изнашиваются, скот болеет. Устраняет
+  //   exponential_stock, который на 500-ходовом прогоне ловил 60+
+  //   случаев ×10-67 накоплений. Исторически нормально: до эпохи
+  //   консервирования 5-15% годовой потери зерна в силосах — норма.
+  //   Ставки на 1 месяц (UNIT_KG=1, TURNS_PER_YEAR=12).
+  // ════════════════════════════════════════════════════════════
+  processSpoilage(_activeEntries);
 
   // ════════════════════════════════════════════════════════════
   // ШАГ 3: ФИНАНСЫ ЗДАНИЙ

@@ -931,8 +931,28 @@ export function updateTechDrift() {
 // ──────────────────────────────────────────────────────────────
 export function getTechDriftMult() {
   const b = Number(GAME_STATE?.economy_ext?.tech_drift?.bonus);
-  if (!Number.isFinite(b) || b <= 0) return 1.0;
-  return 1.0 + Math.min(TECH_DRIFT_MAX, b);
+  const drift = Number.isFinite(b) && b > 0 ? Math.min(TECH_DRIFT_MAX, b) : 0;
+  // Этап 6 economic3.md — эпохальный множитель перемножается с tech_drift.
+  // 777 лет (301 BC → 476 AD) нельзя моделировать одним набором констант.
+  // Классика (до −150): base; поздняя республика (−150…−27): +10%;
+  // ранняя империя (Pax Romana, −27…180): +20%; кризис III века (180…284): −10%
+  // от классики; поздняя античность (284…476): возврат к норме −10%.
+  return (1.0 + drift) * getEraMultipliers().prod;
+}
+
+// ──────────────────────────────────────────────────────────────
+// getEraMultipliers (Этап 6 economic3.md)
+// Возвращает множители {prod, trade, tax} для текущего исторического
+// периода (по GAME_STATE.date.year). Используется в getTechDriftMult
+// и может применяться в processTrade/updateTreasury.
+// ──────────────────────────────────────────────────────────────
+export function getEraMultipliers() {
+  const y = GAME_STATE?.date?.year ?? -301;
+  if (y < -150) return { prod: 1.00, trade: 1.00, tax: 1.00, era: 'classic' };      // 301..150 BC
+  if (y <  -27) return { prod: 1.10, trade: 1.05, tax: 1.00, era: 'late_republic' };// 150..27 BC
+  if (y <   180) return { prod: 1.20, trade: 1.20, tax: 1.10, era: 'early_empire' };// 27 BC..180 AD
+  if (y <   284) return { prod: 1.10, trade: 1.00, tax: 0.85, era: 'crisis_iii' };  // 180..284 AD
+  return               { prod: 1.00, trade: 0.85, tax: 0.95, era: 'dominate' };     // 284..476 AD
 }
 
 // ──────────────────────────────────────────────────────────────

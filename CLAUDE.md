@@ -6,7 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Ancient Strategy (igra2 / Syracuse 301 BC)** — браузерная историческая стратегия на ванильном JS без фреймворков (кроме Leaflet и Pixi.js по CDN). Игровая нация по умолчанию — Сиракузы, старт — 301 г. до н.э. Параллельно в репозитории живёт Node-агент **Pax Historia Chain Builder** в [agents/](agents/), который генерирует производственные цепочки через Claude API.
 
-Язык кода и комментариев — русский. Общение с пользователем — на русском, если явно не указано иначе.
+**Исторический диапазон игры:** с **301 г. до н.э.** до **развала Западной Римской империи (476 г. н.э.)** — 777 лет × 12 ходов = **9324 хода** максимум. Все экономические, демографические и военные модели должны оставаться стабильными на этом интервале (без unbounded growth, NaN, банкротства подавляющей части наций и т.п.). Любые константы баланса выбирать так, чтобы долгосрочные прогоны (1000+ ходов) не ломали инварианты.
+
+Язык кода и комментариев — русский.
+
+**КРИТИЧЕСКОЕ ПРАВИЛО: всё общение с пользователем — ТОЛЬКО на русском языке.** Любые вопросы, пояснения, уточнения, предложения, сводки, отчёты о проделанной работе и сообщения об ошибках пишутся исключительно по-русски. Английский в ответах пользователю запрещён (технические термины, имена файлов, команды и идентификаторы кода — допустимы).
 
 ## Основные команды
 
@@ -50,7 +54,7 @@ node test_diag.mjs                    # расширенная диагност�
 
 ### Граф загрузки игры
 
-Единственная точка входа — `<script type="module" src="ui/boot.js">` в [index.html:926](index.html#L926). [ui/boot.js](ui/boot.js) импортирует ~119 ES-модулей (config → data → ui base → engine → ai → ui overlays) и затем вручную регистрирует все именованные экспорты на `window` через утилиту `_reg(...)`. Это намеренный архитектурный компромисс:
+Единственная точка входа — `<script type="module" src="ui/boot.js">` в [index.html:876](index.html#L876). [ui/boot.js](ui/boot.js) импортирует ~119 ES-модулей (config → data → ui base → engine → ai → ui overlays) и затем вручную регистрирует все именованные экспорты на `window` через утилиту `_reg(...)`. Это намеренный архитектурный компромисс:
 
 - **Файлы — ES-модули** (`import`/`export`), но кросс-модульные вызовы идут через `window.X(...)`.
 - Причина — `data-action` атрибуты в HTML и старый код, написанный до миграции (см. [docs/refactor_modules.md](docs/refactor_modules.md) — этап 55+ миграции).
@@ -79,9 +83,9 @@ node test_diag.mjs                    # расширенная диагност�
 
 Все вызовы идут через [ai/claude.js](ai/claude.js) (Anthropic), [engine/ai_worker.js](engine/ai_worker.js) (Groq через Web Worker для неблокирующего тика), [ai/strategic_llm.js](ai/strategic_llm.js). Есть детерминистский fallback [engine/ai_fallback.js](engine/ai_fallback.js) — когда ключей нет и Ollama выключена.
 
-### Тактический бой — отдельный рендерер
+### Тактический бой — Pixi-рендер
 
-Движок тактического боя — [engine/tactical_battle.js](engine/tactical_battle.js); рендер — [ui/battle_map_pixi.js](ui/battle_map_pixi.js) (Pixi.js v8, подключается с CDN) + fallback на Canvas 2D в [ui/tactical_map.js](ui/tactical_map.js). Vite собирает тактику в отдельный чанк `tactical` (см. [vite.config.js](vite.config.js)). Интеграция — перехват `resolveBattle()` в [engine/armies.js](engine/armies.js) только для армий игрока; детали плана — [docs/bitva.md](docs/bitva.md).
+Движок — [engine/tactical_battle.js](engine/tactical_battle.js); рендер полностью на Pixi.js v8 (CDN): [ui/battle_map_pixi.js](ui/battle_map_pixi.js) — инициализация `Application` + слои (`terrainLayer`, `unitsLayer`, `fxLayer`, `uiLayer`), [ui/battle_pixi_render.js](ui/battle_pixi_render.js) — отрисовка сетки/юнитов/FX читает напрямую из battle state движка, [ui/tactical_map.js](ui/tactical_map.js) — тонкая glue-прослойка (клики, лог, резерв, отступление, HTML-панели). Canvas 2D fallback удалён (коммит `521060e`). Vite собирает тактику в отдельный чанк `tactical` (см. [vite.config.js](vite.config.js)). Интеграция — перехват `resolveBattle()` в [engine/armies.js](engine/armies.js) только для армий игрока; детали плана — [docs/bitva.md](docs/bitva.md).
 
 ### Карта и геоданные — источник истины
 
@@ -89,7 +93,7 @@ node test_diag.mjs                    # расширенная диагност�
 
 ### CSS — миграция в процессе
 
-CSS был монолитом в `<style>` внутри [index.html](index.html) на ~11k строк. Этапы 32–80 выносили его в [ui/styles/*.css](ui/styles/) по подсистемам (base, top, panels, map, diplomacy, ...). Сейчас index.html ~930 строк, inline-CSS практически не осталось. При добавлении стилей — идти в соответствующий `.css` файл, не плодить inline.
+CSS был монолитом в `<style>` внутри [index.html](index.html) на ~11k строк. Этапы 32–80 выносили его в [ui/styles/*.css](ui/styles/) по подсистемам (base, top, panels, map, diplomacy, ...). Сейчас index.html ~880 строк, inline-CSS практически не осталось. При добавлении стилей — идти в соответствующий `.css` файл, не плодить inline.
 
 ## Соглашения
 

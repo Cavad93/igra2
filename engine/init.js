@@ -102,6 +102,36 @@ export async function initGame() {
         sp[good] = Math.max(sp[good] || 0, min);
       }
     }
+
+    // ── НОРМАЛИЗАЦИЯ СТАРТОВОЙ КАЗНЫ ──────────────────────────
+    // Фикс бага «86% наций в минусе на ходе 2».
+    // Крупные нации (например zhao с 146k инфантерии) имеют armyUpkeep ≈ 520k/ход
+    // при стартовой treasury 8107 и income 1.5k — разрыв 1:343. Нация банкротится
+    // мгновенно. Устанавливаем минимум = 12 × месячного upkeep + 20% маржа.
+    // Math.max: не понижаем казну у тех кто уже богат.
+    if (!GAME_STATE._startup_treasury_normalized) {
+      const INFANTRY_UPKEEP  = CONFIG.BALANCE?.INFANTRY_UPKEEP  ?? 2;
+      const CAVALRY_UPKEEP   = CONFIG.BALANCE?.CAVALRY_UPKEEP   ?? 5;
+      const MERCENARY_UPKEEP = CONFIG.BALANCE?.MERCENARY_UPKEEP ?? 4;
+      const SHIP_UPKEEP      = CONFIG.BALANCE?.SHIP_UPKEEP      ?? 10;
+
+      for (const nation of Object.values(GAME_STATE.nations)) {
+        const mil = nation.military;
+        const eco = nation.economy;
+        if (!mil || !eco) continue;
+
+        const annualArmy = 12 * (
+          (mil.infantry    ?? 0) * INFANTRY_UPKEEP  +
+          (mil.cavalry     ?? 0) * CAVALRY_UPKEEP   +
+          (mil.mercenaries ?? 0) * MERCENARY_UPKEEP +
+          (mil.ships       ?? 0) * SHIP_UPKEEP
+        );
+        const minTreasury = Math.round(annualArmy * 1.2);
+        eco.treasury = Math.max(eco.treasury ?? 0, minTreasury);
+      }
+
+      GAME_STATE._startup_treasury_normalized = true;
+    }
   }
 
   // Гарантируем обязательные поля для всех регионов (lazy init для старых данных)

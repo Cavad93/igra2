@@ -97,6 +97,51 @@ export const RANDOM_EVENTS = [
       }
     },
   },
+
+  // Этап 5 economic3.md — рыночные шоки для variance цен.
+  // Текущий набор событий не влиял на stockpile товаров (только население/казна),
+  // из-за чего на 100+ ходовых прогонах 18-22 цен застывали на равновесии
+  // (stuck_price detector). Drought + volcanic_winter убирают зерно из складов,
+  // цены пшеницы/ячменя резко прыгают, торговля оживает.
+  {
+    id: 'DROUGHT',
+    name: 'Засуха',
+    description: 'Жестокая засуха уничтожила значительную часть урожая.',
+    probability: 0.12,
+    effect: (nationId) => {
+      const nation = GAME_STATE.nations[nationId];
+      const sp = nation.economy?.stockpile;
+      if (!sp) return;
+      const wheatLoss  = Math.floor((sp.wheat  || 0) * 0.30);
+      const barleyLoss = Math.floor((sp.barley || 0) * 0.30);
+      const olivesLoss = Math.floor((sp.olives || 0) * 0.20);
+      sp.wheat  = Math.max(0, (sp.wheat  || 0) - wheatLoss);
+      sp.barley = Math.max(0, (sp.barley || 0) - barleyLoss);
+      sp.olives = Math.max(0, (sp.olives || 0) - olivesLoss);
+      applyDelta(`nations.${nationId}.population.happiness`, Math.max(0, nation.population.happiness - 8));
+      addEventLog(`${nation.name}: Засуха уничтожила ${wheatLoss} пшеницы, ${barleyLoss} ячменя, ${olivesLoss} оливок.`, 'danger');
+    },
+  },
+  {
+    id: 'VOLCANIC_WINTER',
+    name: 'Вулканическая зима',
+    description: 'Извержение в далёких землях закрыло небо пеплом. Урожай по всему миру пострадал.',
+    probability: 0.03,   // редкое глобальное событие, ~1 раз в 100-300 ходов
+    effect: (nationId) => {
+      // Глобально по всем нациям: −15% к еде и +дисбаланс рынка
+      let affectedCount = 0;
+      for (const n of Object.values(GAME_STATE.nations)) {
+        const sp = n.economy?.stockpile;
+        if (!sp) continue;
+        for (const good of ['wheat', 'barley', 'olives', 'fish']) {
+          if (sp[good]) sp[good] = Math.floor(sp[good] * 0.85);
+        }
+        if (n.population) n.population.happiness = Math.max(0, (n.population.happiness || 50) - 4);
+        affectedCount++;
+      }
+      addEventLog(`🌋 Вулканическая зима! Урожай пострадал по всему миру (${affectedCount} наций, −15% еды).`, 'danger');
+    },
+  },
 ];
 
 export function triggerRandomEvent() {

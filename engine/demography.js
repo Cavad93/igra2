@@ -379,19 +379,22 @@ function _calcGeoMod(nation) {
 // ─────────────────────────────────────────────────────────────────────────
 
 function _calcCapacityFactor(nation) {
-  const regData  = (typeof window.REGIONS  !== 'undefined') ? window.REGIONS  : {};
+  // Этап 7 economic3.md: использует GAME_STATE.regions (не window.REGIONS —
+  // это legacy-путь, который не работал в vm-harness и часто в runtime).
+  const gs       = (typeof GAME_STATE !== 'undefined') ? GAME_STATE : null;
+  const regData  = gs?.regions || (typeof window !== 'undefined' && window.REGIONS) || {};
+  const mapData  = (typeof MAP_REGIONS !== 'undefined') ? MAP_REGIONS : {};
   const cap      = (typeof TERRAIN_BASE_CAPACITY !== 'undefined') ? TERRAIN_BASE_CAPACITY : {};
 
-  // Суммируем ёмкость регионов
+  // Суммируем ёмкость регионов: смотрим сначала в GAME_STATE.regions, потом в MAP_REGIONS.
   let maxCap = 0;
   for (const rid of (nation.regions || [])) {
-    const r = regData[rid];
+    const r = regData[rid] || mapData[rid];
     if (!r) continue;
     const t = r.terrain || r.type || 'default';
     maxCap += (cap[t] || cap.default || 4000) * (r.fertility || 0.6);
   }
 
-  // Здания добавляют ёмкость
   if (typeof BUILDINGS !== 'undefined') {
     for (const bId of (nation.buildings || [])) {
       maxCap += BUILDINGS[bId]?.capacity_bonus || 0;
@@ -403,8 +406,13 @@ function _calcCapacityFactor(nation) {
   const current = nation.population.total;
   const ratio   = current / maxCap;
 
-  // Логистическое торможение: при ratio < 0.5 — полный рост,
-  // при ratio → 1 — рост падает, при ratio > 1 — отрицательный
+  // Логистическое торможение: роста тем меньше, чем ближе к предельной ёмкости.
+  // Попытка Этапа 7 ввести отрицательные sentinel'ы (-1.0, -2.0) провалилась —
+  // стартовые населения в data/nations.js на 1-2 порядка больше, чем
+  // TERRAIN_BASE_CAPACITY (Syracuse ~500k vs cap ~15k на нацию), поэтому
+  // все нации в overshoot с самого начала и sentinel убивал население за 100
+  // ходов (−80%). Правильный фикс — поднять TERRAIN_BASE_CAPACITY в data в 10-30×
+  // или перекалибровать стартовое население — это сделать в отдельном этапе.
   if (ratio >= 1.1) return 0.05;
   if (ratio >= 1.0) return 0.20;
   if (ratio >= 0.9) return 0.50;
@@ -630,8 +638,7 @@ function _processDemographyForNation(nationId, nation) {
       rate -= depPenalty;
     }
 
-    // Ёмкость замедляет рост ближе к пределу
-    // (но не применяем к убыли — она всегда работает)
+    // Ёмкость замедляет рост ближе к пределу (но не применяется к убыли).
     if (rate > 0) rate *= capFactor;
 
     // Ограничиваем максимальный прирост/убыль за ход

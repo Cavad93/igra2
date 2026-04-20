@@ -2701,6 +2701,9 @@ export function onDiplomacyEvent(nationId, eventType, data = {}) {
       if (!ou._betrayal_memory) ou._betrayal_memory = [];
       const severity = varName ?? data?.severity ?? 'normal'; // varName reused as severity here
       ou._betrayal_memory.push({ severity, turn: ou.tick ?? 0 });
+      // Этап 9 economic3.md — cap 50 последних предательств. На 9324 ходах
+      // без cap'а массив может разрастись до тысяч записей и замедлить OU-тик.
+      if (ou._betrayal_memory.length > 50) ou._betrayal_memory.splice(0, ou._betrayal_memory.length - 50);
       // Immediate trust/coalition penalties
       _mod(ou, `BETRAYAL_${ou.tick}`, 'diplomacy', 'alliance_reliability', -0.25, 60);
       _mod(ou, `BETRAY_TRUST_${ou.tick}`, 'diplomacy', 'international_trust', -0.20, 80);
