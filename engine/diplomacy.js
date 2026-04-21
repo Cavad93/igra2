@@ -1,5 +1,6 @@
 import { CONFIG } from '../config.js';
 import { MAP_REGIONS } from '../data/map.js';
+import { mutateTreasury } from './economy.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ДВИЖОК ДИПЛОМАТИИ
@@ -424,8 +425,8 @@ export function processDiplomacyTick(nationId) {
       const payerNation = GAME_STATE.nations[payer];
       if (payerNation && payerNation.economy) {
         const amount = treaty.conditions.reparations_per_turn;
-        payerNation.economy.treasury -= amount;
-        nation.economy.treasury      += amount;
+        mutateTreasury(payerNation, -amount, 'diplomacy_reparations_paid');
+        mutateTreasury(nation,      +amount, 'diplomacy_reparations_received');
       }
     }
   }
@@ -1226,7 +1227,7 @@ export function _warMobilizationResponse(nationId, nation) {
     // Платим только за то, что финансируется казной (ополчение бесплатно)
     const paidRecruits = Math.min(recruits, maxByGold);
     const cost = paidRecruits * (CONFIG?.BALANCE?.INFANTRY_UPKEEP ?? 2) * 3;
-    nation.economy.treasury = Math.max(0, treasury - cost);
+    mutateTreasury(nation, -Math.min(cost, treasury), 'diplomacy_recruit_infantry');
 
     if (typeof addEventLog === 'function') {
       addEventLog(
@@ -1275,7 +1276,7 @@ export function _warMobilizationResponse(nationId, nation) {
     const mercs = Math.min(200, Math.floor((treasury - 4000) / 25));
     if (mercs > 0) {
       military.mercenaries = (military.mercenaries ?? 0) + mercs;
-      nation.economy.treasury -= mercs * (CONFIG?.BALANCE?.MERCENARY_UPKEEP ?? 5) * 3;
+      mutateTreasury(nation, -mercs * (CONFIG?.BALANCE?.MERCENARY_UPKEEP ?? 5) * 3, 'diplomacy_recruit_mercs');
       if (typeof addEventLog === 'function') {
         addEventLog(
           `⚔️ ${nation.name ?? nationId} нанимает ${mercs} наёмников.`,

@@ -21,6 +21,7 @@ import { BUILDINGS } from '../data/buildings.js';
 import { CONFIG } from '../config.js';
 import { GOODS } from '../data/goods.js';
 import { MAP_REGIONS } from '../data/map.js';
+import { mutateTreasury } from './economy.js';
 
 // ──────────────────────────────────────────────────────────────
 // ВСПОМОГАТЕЛЬНЫЕ УТИЛИТЫ
@@ -1959,7 +1960,7 @@ export function orderBuildingConstruction(nationId, regionId, buildingId) {
   if (nation.economy.treasury < cost) {
     return { ok: false, reason: `Нужно ${cost} монет, в казне ${Math.round(nation.economy.treasury)}` };
   }
-  nation.economy.treasury -= cost;
+  mutateTreasury(nation, -cost, 'construction_start');
 
   // Формируем запись очереди
   // Детерминированный ID: ход + количество существующих слотов (без Date.now())
@@ -2238,7 +2239,7 @@ export function procureCapitalInputs(nationId) {
                 const inflMult = (typeof getInflationMult === 'function')
                   ? getInflationMult(nationId) : 1.0;
                 const provPayment   = fromProv * (GAME_STATE.market[buyGood]?.price || 0) * provTotalCost * inflMult;
-                nation.economy.treasury = (nation.economy.treasury || 0) - provPayment;
+                mutateTreasury(nation, -provPayment, 'capital_input_provincial');
 
                 slot._capital_stock[buyGood] = (slot._capital_stock[buyGood] || 0) + fromProv;
                 provEntry.available = Math.max(0, provEntry.available - fromProv);
@@ -2277,7 +2278,7 @@ export function procureCapitalInputs(nationId) {
 
                 // Транспортные расходы списываем с казны
                 const payment = fromWorld * (mktEntry.price || 0) * transportCost;
-                nation.economy.treasury = (nation.economy.treasury || 0) - payment;
+                mutateTreasury(nation, -payment, 'capital_input_world');
 
                 mktEntry.world_stockpile = Math.max(0, mktEntry.world_stockpile - fromWorld);
                 if (!mktEntry._world_bought_tick) mktEntry._world_bought_tick = {};
@@ -2379,7 +2380,7 @@ export function procureSlaves(nationId) {
   if (toBuy <= 0) return;
 
   const cost = toBuy * price;
-  nation.economy.treasury              -= cost;
+  mutateTreasury(nation, -cost, 'procure_slaves');
   byProf.slaves                         = currentSlaves + toBuy;
   nation.population.total               = (nation.population.total || 0) + toBuy;
   slaveGood.world_stockpile             = Math.max(0, worldAvailable - toBuy);

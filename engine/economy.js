@@ -80,6 +80,40 @@ export function applyDelta(path, value) {
   }
 }
 
+// ──────────────────────────────────────────────────────────────
+// Этап 10 economic3.md — единая точка мутации казны с трекингом.
+//
+// Проблема: updateTreasury() каждый ход ПЕРЕЗАПИСЫВАЕТ _income_breakdown и
+// _expense_breakdown через applyDelta({...}), поэтому писать туда напрямую
+// из событий/дипломатии бесполезно — данные будут стёрты.
+//
+// Решение: отдельные аккумуляторы _income_adj / _expense_adj, которые
+// учитываются в _auditMoneyConservation() ПЛЮСОМ к `..._breakdown.total` и
+// сбрасываются после каждого аудита.
+//
+// Использование:
+//   mutateTreasury(nation, +500,  'merchant_windfall_event');   // доход
+//   mutateTreasury(nation, -250,  'recruit_infantry');          // расход
+//   mutateTreasury(nation, +loss, 'reparation_received');
+//
+// Возвращает новое значение казны.
+// ──────────────────────────────────────────────────────────────
+export function mutateTreasury(nation, delta, source) {
+  if (!nation || !nation.economy || !Number.isFinite(delta) || delta === 0) {
+    return nation?.economy?.treasury || 0;
+  }
+  if (!source || typeof source !== 'string') source = 'unknown';
+
+  const eco = nation.economy;
+  eco.treasury = (eco.treasury || 0) + delta;
+
+  const bucket = delta >= 0 ? '_income_adj' : '_expense_adj';
+  eco[bucket] ??= {};
+  eco[bucket][source] = (eco[bucket][source] || 0) + Math.abs(delta);
+
+  return eco.treasury;
+}
+
 // Получить значение из GameState по пути
 export function getState(path) {
   return path.split('.').reduce((obj, key) => obj && obj[key], GAME_STATE);

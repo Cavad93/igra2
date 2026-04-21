@@ -1,4 +1,5 @@
 import { MAP_REGIONS } from '../data/map.js';
+import { mutateTreasury } from './economy.js';
 
 // ══════════════════════════════════════════════════════════════════════
 // BATTLE ENGINE — разрешение военных столкновений
@@ -406,8 +407,9 @@ export function _applySharedLoot(attackerNationId, defenderNationId, capturedReg
     if (!allyNation?.economy) continue;
 
     // Вычитаем у атакующего, зачисляем союзнику
-    attacker.economy.treasury  = Math.max(0, (attacker.economy.treasury ?? 0) - allyShare);
-    allyNation.economy.treasury = (allyNation.economy.treasury ?? 0) + allyShare;
+    const actualShare = Math.min(allyShare, attacker.economy.treasury ?? 0);
+    mutateTreasury(attacker, -actualShare, 'battle_ally_loot_paid');
+    mutateTreasury(allyNation, +actualShare, 'battle_ally_loot_received');
 
     const isPlayerInvolved = attackerNationId === GAME_STATE.player_nation
                           || ally.id          === GAME_STATE.player_nation;

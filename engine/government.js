@@ -5,6 +5,7 @@
 
 import { CONFIG } from '../config.js';
 import { MAP_REGIONS } from '../data/map.js';
+import { mutateTreasury } from './economy.js';
 
 // ──────────────────────────────────────────────────────────────────────
 // ХОД: вызывается из turn.js для всех наций
@@ -970,9 +971,8 @@ export function triggerGovernmentTransition(nationId, fromType, toType, cause) {
   if (eff.legitimacy) gov.legitimacy = Math.max(0, (gov.legitimacy ?? 50) + eff.legitimacy);
 
   if (eff.treasury_pct && nation.economy) {
-    nation.economy.treasury = Math.round(
-      (nation.economy.treasury ?? 0) * (1 + eff.treasury_pct)
-    );
+    const treasuryDelta = Math.round((nation.economy.treasury ?? 0) * eff.treasury_pct);
+    mutateTreasury(nation, treasuryDelta, 'government_coup_treasury_pct');
   }
 
   if (eff.army_split && nation.military) {
@@ -1580,7 +1580,7 @@ export function applyCustomMechanics(nationId, trigger) {
     switch (mech.effect) {
       case 'redirect_010_income_to_temple':
         // 10% дохода уходит в храм
-        nation.economy.treasury -= nation.economy.income_per_turn * 0.10;
+        mutateTreasury(nation, -Math.round(nation.economy.income_per_turn * 0.10), 'government_tithe_temple');
         break;
       case 'require_oracle_roll':
         // Обрабатывается при объявлении войны
@@ -2244,7 +2244,7 @@ export function processPersonalGuardTick(nation, nationId, isPlayer) {
   guard.cost_per_turn = cost;
 
   if ((nation.economy?.treasury ?? 0) >= cost) {
-    nation.economy.treasury -= cost;
+    mutateTreasury(nation, -cost, 'personal_guard_upkeep');
     guard.unpaid_turns = 0;
     // Лояльность немного растёт при стабильной оплате
     guard.loyalty = Math.min(100, guard.loyalty + 0.3);
@@ -2385,7 +2385,8 @@ export function processSecretPoliceTick(nation, nationId, isPlayer) {
 
   // Списываем содержание
   const cost = sp.cost_per_turn ?? 200;
-  nation.economy.treasury = Math.max(0, (nation.economy?.treasury ?? 0) - cost);
+  const actual = Math.min(cost, nation.economy?.treasury ?? 0);
+  mutateTreasury(nation, -actual, 'secret_police_upkeep');
 
   const isFalse = Math.random() < 0.15; // 15% ложный донос
 

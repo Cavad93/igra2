@@ -28,6 +28,7 @@
 import { BUILDINGS } from '../data/buildings.js';
 import { GOODS } from '../data/goods.js';
 import { MAP_REGIONS } from '../data/map.js';
+import { mutateTreasury } from './economy.js';
 
 // ──────────────────────────────────────────────────────────────────────
 // КОНСТАНТЫ
@@ -517,7 +518,7 @@ export function _applyOrderEffects(order, quality, char, nation) {
       // Разовый налоговый доход от хорошо управляемой провинции
       if (quality >= 50) {
         const incomeBonus = Math.round(qf * 300);
-        nation.economy.treasury = (nation.economy.treasury ?? 0) + incomeBonus;
+        mutateTreasury(nation, +incomeBonus, 'order_province_tax_bonus');
         if (quality >= 70) {
           return `Провинция процветает под управлением наместника. Стабильность +${stabDelta}, счастье +${happyDelta}, налоги +${incomeBonus} монет.`;
         }
@@ -525,7 +526,7 @@ export function _applyOrderEffects(order, quality, char, nation) {
       } else {
         // Наместник злоупотребляет — крадёт из казны
         const stolen = Math.round(300 * (0.5 - qf));
-        nation.economy.treasury = Math.max(0, (nation.economy.treasury ?? 0) - stolen);
+        mutateTreasury(nation, -Math.min(stolen, nation.economy.treasury ?? 0), 'order_province_embezzlement');
         char.resources = char.resources ?? {};
         char.resources.gold = (char.resources.gold ?? 0) + stolen;
         return `Наместник злоупотребляет положением. Счастье ${happyDelta}, стабильность ${stabDelta}. Похищено ${stolen} монет из казны.`;
@@ -602,7 +603,7 @@ export function _applyOrderEffects(order, quality, char, nation) {
           owner:        'nation',
         });
       }
-      nation.economy.treasury = Math.max(0, (nation.economy.treasury ?? 0) - totalCost);
+      mutateTreasury(nation, -Math.min(totalCost, nation.economy.treasury ?? 0), 'order_economic_project');
 
       const rName   = MAP_REGIONS?.[regionId]?.name ?? regionId;
       const gName   = typeof GOODS !== 'undefined' ? (GOODS[deficitGood]?.name ?? deficitGood) : deficitGood;

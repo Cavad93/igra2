@@ -1,4 +1,5 @@
 'use strict';
+import { mutateTreasury } from './economy.js';
 // engine/loans.js — Система государственных займов у граждан
 //
 // Механика:
@@ -174,7 +175,7 @@ export function takeLoan(nationId, amount, term = LOAN_DEFAULT_TERM) {
   };
 
   GAME_STATE.loans.push(loan);
-  nation.economy.treasury = (nation.economy.treasury ?? 0) + amount;
+  mutateTreasury(nation, +amount, 'loan_taken');
 
   // Трекинг для достижений
   nation._total_loans_taken    = (nation._total_loans_taken ?? 0) + amount;
@@ -212,7 +213,7 @@ export function processLoanPayments(nationId) {
     const payment = Math.min(loan.monthly_payment, loan.remaining);
     loan.remaining   = Math.max(0, loan.remaining - payment);
     loan.turns_paid += 1;
-    nation.economy.treasury = (nation.economy.treasury ?? 0) - payment;
+    mutateTreasury(nation, -payment, 'loan_payment');
 
     if (loan.remaining === 0) {
       if (typeof addEventLog === 'function') {
@@ -265,8 +266,12 @@ export function declareBankruptcy(nationId) {
     }
   }
 
-  // Казна обнуляется
-  nation.economy.treasury = 0;
+  // Казна обнуляется — через helper, чтобы money_audit увидел расход.
+  const oldTreasury = nation.economy.treasury ?? 0;
+  if (oldTreasury > 0) mutateTreasury(nation, -oldTreasury, 'bankruptcy_zero');
+  else if (oldTreasury < 0) mutateTreasury(nation, -oldTreasury, 'bankruptcy_debt_wipe');
+  // На отрицательной казне списание идёт как «доход» (гасится долг), но это
+  // корректно с точки зрения аудита: казна была -X, стала 0 → delta=+X.
 
   if (typeof addEventLog === 'function') {
     addEventLog(

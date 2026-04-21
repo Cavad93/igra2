@@ -63,17 +63,51 @@ export function _auditMoneyConservation() {
   let totalExpense  = 0;
   let totalHoardBurn = 0;
 
-  for (const nation of Object.values(gs.nations)) {
+  // Этап 10 (диагностика): per-nation drift — чтобы увидеть, какие нации
+  // утекают сильнее всех. В топ-5 попадёт конкретный виновник (правительство,
+  // события, рыночный фантом, рекрутинг — по имени нации видно подсистему).
+  const perNationDrift = [];
+  const prevPerNation  = gs._last_treasury_per_nation || {};
+  const nextPerNation  = {};
+
+  for (const [nId, nation] of Object.entries(gs.nations)) {
     const eco = nation.economy;
     if (!eco) continue;
-    totalMoney += eco.treasury || 0;
+    const treasury = eco.treasury || 0;
+    totalMoney += treasury;
+    nextPerNation[nId] = treasury;
 
     const inc = eco._income_breakdown || {};
     const exp = eco._expense_breakdown || {};
-    // В _income_breakdown ключ total — суммарный доход за последний ход
-    totalIncome   += Number.isFinite(inc.total) ? inc.total : 0;
-    totalExpense  += Number.isFinite(exp.total) ? exp.total : 0;
+    const incTotal = Number.isFinite(inc.total) ? inc.total : 0;
+    const expTotal = Number.isFinite(exp.total) ? exp.total : 0;
+
+    // Этап 10: учитываем мутации из mutateTreasury() — события, правительство,
+    // дипломатия. _income_adj/_expense_adj — словари { source: amount }, сумма
+    // идёт как дополнительный доход/расход.
+    let incAdj = 0, expAdj = 0;
+    const incA = eco._income_adj  || {};
+    const expA = eco._expense_adj || {};
+    for (const v of Object.values(incA)) if (Number.isFinite(v)) incAdj += v;
+    for (const v of Object.values(expA)) if (Number.isFinite(v)) expAdj += v;
+
+    totalIncome   += incTotal + incAdj;
+    totalExpense  += expTotal + expAdj;
     totalHoardBurn += Number.isFinite(exp.hoard_penalty) ? exp.hoard_penalty : 0;
+
+    // Per-nation дрейф: если ключ в prevPerNation отсутствует (новая нация,
+    // первый ход) — пропускаем, чтобы не получить фиктивный drift = treasury.
+    if (gs.turn > 1 && Object.prototype.hasOwnProperty.call(prevPerNation, nId)) {
+      const expectedN = (prevPerNation[nId] || 0) + (incTotal + incAdj) - (expTotal + expAdj);
+      const driftN    = treasury - expectedN;
+      if (Math.abs(driftN) > 100) {   // шум <100 монет игнорируем
+        perNationDrift.push({ nation: nId, drift: Math.round(driftN), treasury: Math.round(treasury) });
+      }
+    }
+
+    // Сброс аккумуляторов — следующий ход начинается с чистого листа.
+    if (incA && Object.keys(incA).length) eco._income_adj  = {};
+    if (expA && Object.keys(expA).length) eco._expense_adj = {};
   }
 
   const prev = gs._last_money_total ?? totalMoney;    // первый тик: не сравниваем
@@ -83,6 +117,10 @@ export function _auditMoneyConservation() {
 
   // Логируем только значимые отклонения. 0.1% — пороговое.
   if (pct > 0.001 && Math.abs(delta) > 1000 && gs.turn > 1) {
+    // Топ-5 наций по |drift| — источник утечки локализуется здесь
+    perNationDrift.sort((a, b) => Math.abs(b.drift) - Math.abs(a.drift));
+    const topOffenders = perNationDrift.slice(0, 5);
+
     gs._money_audit ??= [];
     gs._money_audit.push({
       turn: gs.turn,
@@ -93,10 +131,12 @@ export function _auditMoneyConservation() {
       income: Math.round(totalIncome),
       expense: Math.round(totalExpense),
       hoard_burn: Math.round(totalHoardBurn),
+      top_offenders: topOffenders,
     });
   }
 
   gs._last_money_total = totalMoney;
+  gs._last_treasury_per_nation = nextPerNation;
 }
 
 // ──────────────────────────────────────────────────────────────

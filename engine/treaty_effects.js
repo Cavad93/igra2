@@ -12,6 +12,8 @@
 //   nation._treaty_effects = {}        — числовые бонусы нации (пересчитываются каждый ход)
 // ══════════════════════════════════════════════════════════════════
 
+import { mutateTreasury } from './economy.js';
+
 // ─────────────────────────────────────────────────────────────
 // ПРИМЕНЕНИЕ ЭФФЕКТОВ ПРИ ПОДПИСАНИИ (one-shot)
 // ─────────────────────────────────────────────────────────────
@@ -283,10 +285,11 @@ export function processAllTreatyTicks() {
     if (tribute <= 0) continue;
     // Раз в 12 ходов (ежегодно)
     if (turn % 12 !== 0) continue;
-    if (vasNat.economy) vasNat.economy.treasury = Math.max(0, (vasNat.economy.treasury ?? 0) - tribute);
-    if (suzNat.economy) suzNat.economy.treasury = (suzNat.economy.treasury ?? 0) + tribute;
+    const actualPaid = Math.min(tribute, vasNat.economy?.treasury ?? 0);
+    if (vasNat.economy) mutateTreasury(vasNat, -actualPaid, 'vassal_tribute_paid');
+    if (suzNat.economy) mutateTreasury(suzNat, +actualPaid, 'vassal_tribute_received');
     if (typeof _log === 'function')
-      _log(`💰 Дань: ${vasNat.name ?? vasId} → ${suzNat.name ?? suzId}: ${tribute} монет.`);
+      _log(`💰 Дань: ${vasNat.name ?? vasId} → ${suzNat.name ?? suzId}: ${actualPaid} монет.`);
   }
 }
 
@@ -415,8 +418,8 @@ function _onReparations(treaty, a, b, natA, natB, cond) {
     const payerNat = GAME_STATE.nations[payerId];
     const rcvNat   = GAME_STATE.nations[rcvId];
     if (payerNat?.economy && rcvNat?.economy) {
-      payerNat.economy.treasury -= cond.one_time_payment;
-      rcvNat.economy.treasury   += cond.one_time_payment;
+      mutateTreasury(payerNat, -cond.one_time_payment, 'reparations_paid');
+      mutateTreasury(rcvNat,   +cond.one_time_payment, 'reparations_received');
       _log(`💰 Единовременная контрибуция: ${cond.one_time_payment} монет переведено.`);
     }
   }
@@ -527,7 +530,8 @@ export function applyEmbargo(treaty, turn) {
       ?? Math.max(0, (targetNat.economy.treasury ?? 0) * 0.05);
     const penalty = income * 0.20;
     if (penalty > 0) {
-      targetNat.economy.treasury = Math.max(0, (targetNat.economy.treasury ?? 0) - penalty);
+      const actualLoss = Math.min(penalty, targetNat.economy.treasury ?? 0);
+      mutateTreasury(targetNat, -actualLoss, 'embargo_penalty');
       if ((turn ?? 0) % 12 === 0) {
         _log(`🚫 Эмбарго: ${targetNat.name ?? targetId} теряет ${Math.round(penalty)} монет (-20% дохода).`);
       }
@@ -651,8 +655,8 @@ function _onCustom(treaty, a, b, natA, natB, cond) {
     const payerNat = GAME_STATE.nations[ef.payer ?? a];
     const rcvNat   = GAME_STATE.nations[ef.receiver ?? b];
     if (payerNat?.economy && rcvNat?.economy) {
-      payerNat.economy.treasury -= ef.one_time_payment;
-      rcvNat.economy.treasury   += ef.one_time_payment;
+      mutateTreasury(payerNat, -ef.one_time_payment, 'custom_treaty_paid');
+      mutateTreasury(rcvNat,   +ef.one_time_payment, 'custom_treaty_received');
     }
   }
   if (ef.transfer_regions) {
@@ -754,8 +758,8 @@ function _processFinancialTick(treaty, a, b, cond, turn) {
     const rcv     = GAME_STATE.nations[rcvId];
     if (payer?.economy && rcv?.economy) {
       const amount = Math.min(cond.reparations_per_turn, payer.economy.treasury * 0.5);
-      payer.economy.treasury -= amount;
-      rcv.economy.treasury   += amount;
+      mutateTreasury(payer, -amount, 'reparations_per_turn_paid');
+      mutateTreasury(rcv,   +amount, 'reparations_per_turn_received');
       if (amount > 0 && turn % 12 === 0) {  // логируем раз в год
         _log(`💰 Контрибуция: ${payer.name ?? payerId} выплатил ${Math.round(amount)} монет.`);
       }
@@ -773,10 +777,11 @@ function _processFinancialTick(treaty, a, b, cond, turn) {
         const income  = vasNat.economy.income
           ?? (vasNat.economy.treasury > 0 ? vasNat.economy.treasury * 0.1 : 0);
         const tribute = income * (cond.tribute_pct ?? 0.10);
-        vasNat.economy.treasury -= tribute;
-        suzNat.economy.treasury += tribute;
-        if (tribute > 0 && turn % 12 === 0) {
-          _log(`🏳 Дань: ${vasNat.name} выплатил ${Math.round(tribute)} монет ${suzNat.name}.`);
+        const actualTribute = Math.min(tribute, vasNat.economy.treasury);
+        mutateTreasury(vasNat, -actualTribute, 'vassal_tribute_pct_paid');
+        mutateTreasury(suzNat, +actualTribute, 'vassal_tribute_pct_received');
+        if (actualTribute > 0 && turn % 12 === 0) {
+          _log(`🏳 Дань: ${vasNat.name} выплатил ${Math.round(actualTribute)} монет ${suzNat.name}.`);
         }
       }
     }

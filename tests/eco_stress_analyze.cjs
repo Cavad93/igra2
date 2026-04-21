@@ -309,6 +309,28 @@ function detectMoneyLeak(snapshots) {
       turn: audits[audits.length - 1].turn,
       detail: `${audits.length} drift-событий, сумма ${totalDrift.toLocaleString('ru-RU')}, max один ${maxSingle.toLocaleString('ru-RU')}`,
     });
+
+    // Этап 10 (диагностика): агрегируем top_offenders — какие нации утекают сильнее.
+    // Суммируем |drift| по каждой нации через все audit-события. Топ-10 → отдельный алерт.
+    const perNationDrift = new Map();
+    for (const a of audits) {
+      if (!Array.isArray(a.top_offenders)) continue;
+      for (const off of a.top_offenders) {
+        if (!off || !off.nation) continue;
+        perNationDrift.set(off.nation, (perNationDrift.get(off.nation) || 0) + (off.drift || 0));
+      }
+    }
+    if (perNationDrift.size > 0) {
+      const top = [...perNationDrift.entries()]
+        .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+        .slice(0, 10);
+      const summary = top.map(([n, d]) => `${n}:${d >= 0 ? '+' : ''}${Math.round(d).toLocaleString('ru-RU')}`).join(', ');
+      alerts.push({
+        kind: 'money_leak',
+        turn: audits[audits.length - 1].turn,
+        detail: `top-10 наций по drift: ${summary}`,
+      });
+    }
   }
 
   // Total-money экспоненциальный рост: сравниваем total_money(последний) / total_money(начало).

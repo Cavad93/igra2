@@ -16,6 +16,7 @@
 
 import { CONFIG } from '../config.js';
 import { MAP_REGIONS } from '../data/map.js';
+import { mutateTreasury } from './economy.js';
 
 // ── ИНИЦИАЛИЗАЦИЯ ────────────────────────────────────────────────────────
 
@@ -228,7 +229,7 @@ export function _applyReligionPolicy(nationId) {
 
   // Покровительство стоит денег
   if (policy.patronage) {
-    nation.economy.treasury -= RELIGION_CONFIG.PATRONAGE_COST_PER_TURN;
+    mutateTreasury(nation, -RELIGION_CONFIG.PATRONAGE_COST_PER_TURN, 'religion_patronage');
     if (nation.economy.treasury < 0) {
       policy.patronage = null; // не хватает денег
     }

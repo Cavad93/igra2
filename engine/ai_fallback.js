@@ -7,6 +7,7 @@ import {
   _findWarTarget, _findDiplomacyPartner, _findBuildTarget, _SUPER_OU_ACTION_MAP,
 } from './ai_scoring.js';
 import { SuperOU } from './super_ou.js';
+import { mutateTreasury } from './economy.js';
 
 // ──────────────────────────────────────────────────────────────
 // Этап 8 economic3.md — sellSurplusAndImportDeficits
@@ -274,7 +275,7 @@ export function applyFallbackDecision(nationId) {
       if (n > 0) {
         military.infantry = (military.infantry ?? 0) + n;
         const cost = Math.min(n, Math.floor(treasury / 10)) * (CONFIG.BALANCE?.INFANTRY_UPKEEP ?? 1) * 5;
-        nation.economy.treasury = Math.max(0, treasury - cost);
+        mutateTreasury(nation, -Math.min(cost, treasury), 'ai_recruit_infantry');
         _rec('recruit', `+${n} пехоты [agg:${ou.aggression.toFixed(2)}]`);
       }
       break;
@@ -302,7 +303,7 @@ export function applyFallbackDecision(nationId) {
       if (treasury > 5000 && (military.mercenaries ?? 0) < 300) {
         const m = Math.min(100, Math.floor((treasury - 3000) / 20));
         military.mercenaries = (military.mercenaries ?? 0) + m;
-        nation.economy.treasury -= m * (CONFIG.BALANCE?.MERCENARY_UPKEEP ?? 2) * 5;
+        mutateTreasury(nation, -m * (CONFIG.BALANCE?.MERCENARY_UPKEEP ?? 2) * 5, 'ai_recruit_mercs');
         _rec('recruit_mercs', `+${m} наёмников [agg:${ou.aggression.toFixed(2)}]`);
       } else {
         _rec('wait', 'наёмники недоступны');

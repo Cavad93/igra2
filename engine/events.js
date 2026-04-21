@@ -1,6 +1,7 @@
 // engine/events.js — Случайные события (вынесено из turn.js, этап 51)
 
 import { MAP_REGIONS } from '../data/map.js';
+import { mutateTreasury } from './economy.js';
 
 export const RANDOM_EVENTS = [
   {
@@ -10,7 +11,7 @@ export const RANDOM_EVENTS = [
     probability: 0.15,
     choices: [
       { label: 'Карантин',     desc: 'Изолировать заражённые кварталы. Потери меньше, но казна страдает.',
-        effect: (n) => { const d = Math.floor(n.population.total * 0.008); n.population.total -= d; n.economy.treasury -= 500; n.population.happiness = Math.max(0, n.population.happiness - 5); addEventLog(`Карантин введён. Погибло ${d} чел. Казна −500.`, 'warning'); } },
+        effect: (n) => { const d = Math.floor(n.population.total * 0.008); n.population.total -= d; mutateTreasury(n, -500, 'event_plague_quarantine'); n.population.happiness = Math.max(0, n.population.happiness - 5); addEventLog(`Карантин введён. Погибло ${d} чел. Казна −500.`, 'warning'); } },
       { label: 'Молебны',      desc: 'Обратиться к богам. Дёшево, но помогает мало.',
         effect: (n) => { const d = Math.floor(n.population.total * 0.015); n.population.total -= d; n.population.happiness = Math.max(0, n.population.happiness - 7); addEventLog(`Жрецы молились. Погибло ${d} чел.`, 'warning'); } },
     ],
@@ -42,14 +43,14 @@ export const RANDOM_EVENTS = [
     probability: 0.20,
     choices: [
       { label: 'Отправить флот',  desc: 'Преследовать пиратов. Риск потерь, но можно вернуть часть добычи.',
-        effect: (n) => { const loss = Math.floor(n.economy.treasury * 0.02); n.economy.treasury -= loss; addEventLog(`Флот отогнал пиратов. Потери: ${loss} монет.`, 'warning'); } },
+        effect: (n) => { const loss = Math.floor(n.economy.treasury * 0.02); mutateTreasury(n, -loss, 'event_pirate_fleet'); addEventLog(`Флот отогнал пиратов. Потери: ${loss} монет.`, 'warning'); } },
       { label: 'Откупиться',      desc: 'Заплатить выкуп. Дороже, но надёжнее.',
-        effect: (n) => { const loss = Math.floor(n.economy.treasury * 0.07); n.economy.treasury -= loss; addEventLog(`Пираты получили откуп ${loss} монет и ушли.`, 'warning'); } },
+        effect: (n) => { const loss = Math.floor(n.economy.treasury * 0.07); mutateTreasury(n, -loss, 'event_pirate_ransom'); addEventLog(`Пираты получили откуп ${loss} монет и ушли.`, 'warning'); } },
     ],
     effect: (nationId) => {
       const nation = GAME_STATE.nations[nationId];
       const loss = Math.floor(nation.economy.treasury * 0.05);
-      applyDelta(`nations.${nationId}.economy.treasury`, nation.economy.treasury - loss);
+      mutateTreasury(nation, -loss, 'event_pirate_raid');
       addEventLog(`${nation.name}: Пираты разграбили торговые суда! Потеряно ${loss} монет.`, 'warning');
     },
   },
@@ -61,7 +62,7 @@ export const RANDOM_EVENTS = [
     effect: (nationId) => {
       const nation = GAME_STATE.nations[nationId];
       const gain = Math.floor(nation.economy.treasury * 0.08 + 200);
-      applyDelta(`nations.${nationId}.economy.treasury`, nation.economy.treasury + gain);
+      mutateTreasury(nation, +gain, 'event_merchant_windfall');
       addEventLog(`${nation.name}: Удачная торговая сделка! +${gain} монет в казну.`, 'good');
     },
   },
