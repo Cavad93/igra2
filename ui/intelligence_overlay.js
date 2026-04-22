@@ -64,6 +64,12 @@ function _ensureIntelOverlay() {
 let _currentTab = 'nations';
 
 export function showIntelligenceOverlay() {
+  // Ленивая инициализация полей GAME_STATE.expeditions/rumors, если ход ещё
+  // не прошёл (runEconomyExtTick вызывает initFogOfWar, но на turn 1 до хода
+  // массивов может не быть).
+  if (typeof initFogOfWar === 'function') {
+    try { initFogOfWar(); } catch (_) {}
+  }
   const el = _ensureIntelOverlay();
   el.classList.remove('hidden');
   _switchTab(_currentTab);

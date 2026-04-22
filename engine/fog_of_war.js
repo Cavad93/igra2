@@ -16,8 +16,18 @@
 //   меткам армий/строительства (скрываются, если наблюдатель не знает
 //   детали нации-владельца региона).
 
-import { MAP_REGIONS } from '../data/map.js';
+import { MAP_REGIONS as _IMPORTED_MAP_REGIONS } from '../data/map.js';
 import { mutateTreasury } from './economy.js';
+
+// Разрешаем unit-тестам подменить MAP_REGIONS через globalThis.MAP_REGIONS,
+// сохраняя работу в браузере (там window.MAP_REGIONS = импорт).
+function _getMapRegions() {
+  if (typeof globalThis !== 'undefined' && globalThis.MAP_REGIONS
+      && globalThis.MAP_REGIONS !== _IMPORTED_MAP_REGIONS) {
+    return globalThis.MAP_REGIONS;
+  }
+  return _IMPORTED_MAP_REGIONS;
+}
 
 // ──────────────────────────────────────────────────────────────
 // Параметры механики
@@ -56,6 +66,16 @@ export function initFogOfWar() {
   if (!Array.isArray(GAME_STATE.rumors))      GAME_STATE.rumors      = [];
   // На каждой нации _known_to инициализируется лениво при первом обращении,
   // чтобы не создавать 900×900 записей при старте игры.
+
+  // Первичный расчёт уровней знаний для игрока — чтобы соседи Сиракуз
+  // были видны сразу, до первого хода. Без этого `_tickFogIntel`
+  // сработает только на ходу 3 (каждые UPDATE_PERIOD=3).
+  if (GAME_STATE.player_nation && !GAME_STATE._fog_initial_done) {
+    try {
+      _updateKnownNations(GAME_STATE.player_nation);
+      GAME_STATE._fog_initial_done = true;
+    } catch (_) {}
+  }
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -94,6 +114,7 @@ export function setNationKnownLevel(observerId, targetId, level, opts = {}) {
 // или Infinity если не достижимо в пределах SEARCH_CAP.
 export function _bfsNationDistance(observerId, targetId) {
   const CAP = FOG_CONFIG.KNOWN_DISTANCE_SEARCH_CAP;
+  const MAP_REGIONS = _getMapRegions();
   if (!GAME_STATE?.regions || !MAP_REGIONS) return Infinity;
 
   const targetRegions = new Set();
@@ -415,7 +436,7 @@ export function _getRegionOwnerKnownLevel(regionId) {
     if (!playerId) return 2;                    // pre-init — всё видно
     const region = gs?.regions?.[regionId];
     const ownerId = region?.nation
-                 || MAP_REGIONS?.[regionId]?.nation;
+                 || _getMapRegions()?.[regionId]?.nation;
     if (!ownerId || ownerId === 'neutral') return 2;
     return getNationKnownLevel(playerId, ownerId);
   } catch (_) { return 2; }
