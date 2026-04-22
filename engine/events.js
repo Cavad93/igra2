@@ -284,6 +284,145 @@ export const RANDOM_EVENTS = [
       );
     },
   },
+
+  // ══════════════════════════════════════════════════════════════
+  // Этап CB-5 — Event-based Casus Belli
+  // ══════════════════════════════════════════════════════════════
+
+  // Оскорбление посла соседом → humiliation CB на 36 ходов.
+  {
+    id: 'ENVOY_INSULT',
+    name: 'Унижение посла',
+    description: 'При дворе соседа наш посол был публично унижен.',
+    probability: 0.03,
+    playerOnly: true,
+    effect: (_targetNationId) => {
+      const gs = GAME_STATE;
+      const playerId = gs.player_nation;
+      if (!playerId) return;
+      // Ищем соседа уровня known+ с умеренными/плохими отношениями.
+      const candidates = [];
+      for (const [nId, n] of Object.entries(gs.nations)) {
+        if (nId === playerId) continue;
+        if (!n?.regions?.length) continue;
+        const lvl = n._known_to?.[playerId] ?? 0;
+        if (lvl < 1) continue;
+        const rel = gs.nations[playerId]?.relations?.[nId]?.score ?? 0;
+        if (rel < -20) candidates.push(nId);
+      }
+      if (!candidates.length) return;
+      const target = candidates[Math.floor(Math.random() * candidates.length)];
+      if (typeof registerCB === 'function') {
+        registerCB({
+          holder_id: playerId,
+          target_id: target,
+          type:      'humiliation',
+          source:    'event',
+          notes:     'Унижение посла при дворе',
+        });
+      }
+      const targetNat = gs.nations[target];
+      addEventLog(
+        `⚖ При дворе ${targetNat?.name ?? target} наш посол унижён. Появился повод для войны (Месть за оскорбление).`,
+        'warning',
+      );
+    },
+  },
+
+  // Пограничный инцидент — деревня разграблена, претензия на граничный регион.
+  {
+    id: 'BORDER_INCIDENT',
+    name: 'Пограничный инцидент',
+    description: 'Наши подданные у границы пострадали от набега соседних.',
+    probability: 0.05,
+    playerOnly: true,
+    effect: (_targetNationId) => {
+      const gs = GAME_STATE;
+      const playerId = gs.player_nation;
+      if (!playerId) return;
+      const playerRegions = gs.nations[playerId]?.regions ?? [];
+      if (!playerRegions.length) return;
+      // Найти граничный регион: сосед из другой нации.
+      const mapRegions = (typeof MAP_REGIONS !== 'undefined') ? MAP_REGIONS : null;
+      if (!mapRegions) return;
+      const borderTargets = new Set();
+      const borderRegionByTarget = {};
+      for (const rId of playerRegions) {
+        const m = mapRegions[rId];
+        if (!m?.connections) continue;
+        for (const neighborId of m.connections) {
+          const neighborReg = gs.regions?.[neighborId];
+          if (!neighborReg || !neighborReg.nation || neighborReg.nation === playerId) continue;
+          borderTargets.add(neighborReg.nation);
+          if (!borderRegionByTarget[neighborReg.nation]) {
+            borderRegionByTarget[neighborReg.nation] = neighborId;
+          }
+        }
+      }
+      const list = Array.from(borderTargets);
+      if (!list.length) return;
+      const target = list[Math.floor(Math.random() * list.length)];
+      const regionId = borderRegionByTarget[target];
+      if (typeof registerCB === 'function') {
+        registerCB({
+          holder_id: playerId,
+          target_id: target,
+          type:      'territorial_claim',
+          region_id: regionId,
+          source:    'event',
+          notes:     'Пограничный инцидент',
+        });
+      }
+      const targetNat = gs.nations[target];
+      const region = gs.regions[regionId];
+      addEventLog(
+        `🗡 Пограничный инцидент с ${targetNat?.name ?? target}: претензия на «${region?.name ?? regionId}» теперь легитимна.`,
+        'warning',
+      );
+    },
+  },
+
+  // Соперничество — неформальное объявление о rival → hegemony CB.
+  {
+    id: 'RIVAL_DECLARED',
+    name: 'Официальное соперничество',
+    description: 'Совет провозгласил соседа историческим соперником.',
+    probability: 0.02,
+    playerOnly: true,
+    effect: (_targetNationId) => {
+      const gs = GAME_STATE;
+      const playerId = gs.player_nation;
+      if (!playerId) return;
+      // Rival = соседняя нация сопоставимого размера.
+      const playerPop = gs.nations[playerId]?.population?.total ?? 0;
+      const candidates = [];
+      for (const [nId, n] of Object.entries(gs.nations)) {
+        if (nId === playerId) continue;
+        if (!n?.regions?.length) continue;
+        const lvl = n._known_to?.[playerId] ?? 0;
+        if (lvl < 1) continue;
+        const pop = n.population?.total ?? 0;
+        if (pop < playerPop * 0.33 || pop > playerPop * 3) continue;   // сопоставимый
+        candidates.push(nId);
+      }
+      if (!candidates.length) return;
+      const target = candidates[Math.floor(Math.random() * candidates.length)];
+      if (typeof registerCB === 'function') {
+        registerCB({
+          holder_id: playerId,
+          target_id: target,
+          type:      'hegemony',
+          source:    'event',
+          notes:     'Официальное соперничество',
+        });
+      }
+      const targetNat = gs.nations[target];
+      addEventLog(
+        `⚔ Совет объявил ${targetNat?.name ?? target} нашим историческим соперником. Повод для войны: гегемония.`,
+        'warning',
+      );
+    },
+  },
 ];
 
 export function triggerRandomEvent() {

@@ -342,6 +342,10 @@ function _scheduleDeferredRender() {
 export function renderAll() {
   renderCritical();
   _scheduleDeferredRender();
+  // Этап CB-10: показать pending peace offer для игрока (если есть).
+  if (typeof renderPendingPeaceOffers === 'function') {
+    try { renderPendingPeaceOffers(); } catch (_) {}
+  }
 }
 
 

@@ -316,25 +316,77 @@ export function applyFallbackDecision(nationId) {
       if (atWar) { _rec('wait', 'уже в войне'); break; }
       if (armyStr < 100) { _rec('wait', 'армия слишком мала'); break; }
       const warTarget = _findWarTarget(nationId, nation);
-      if (warTarget) {
-        const result = declareWar(nationId, warTarget);
-        if (result?.ok !== false) {
-          _rec('declare_war', `→ ${GAME_STATE.nations?.[warTarget]?.name ?? warTarget} [agg:${ou.aggression.toFixed(2)}]`);
-        } else {
-          _rec('wait', result?.reason ?? 'война невозможна');
-        }
+      if (!warTarget) { _rec('wait', 'нет подходящей цели для войны'); break; }
+
+      // Этап CB-6: AI ищет повод для войны.
+      const cb = (typeof findCB === 'function') ? findCB(nationId, warTarget) : null;
+      // Tribal/barbarian/survival — могут декларировать unjust war.
+      const personality = nation.ai_personality?.type ?? 'balanced';
+      const canDeclareUnjust = ['barbarian', 'tribal', 'survival', 'aggressive'].includes(personality)
+                              || (ou.aggression ?? 0.5) > 1.2;
+      if (!cb && !canDeclareUnjust) {
+        _rec('wait', 'нет Casus Belli для объявления войны');
+        break;
+      }
+      const result = declareWar(nationId, warTarget, {
+        cb_type:      cb?.type ?? null,
+        allow_unjust: !cb,
+      });
+      if (result?.ok !== false) {
+        const reason = cb ? `CB: ${cb.type}` : 'UNJUST';
+        _rec('declare_war', `→ ${GAME_STATE.nations?.[warTarget]?.name ?? warTarget} [${reason}, agg:${ou.aggression.toFixed(2)}]`);
       } else {
-        _rec('wait', 'нет подходящей цели для войны');
+        _rec('wait', result?.reason ?? 'война невозможна');
       }
       break;
     }
 
     case 'seek_peace': {
-      if (!atWar || typeof concludePeace !== 'function') { _rec('wait', 'нет войны'); break; }
+      if (!atWar) { _rec('wait', 'нет войны'); break; }
       const enemy = military.at_war_with[0];
       if (!enemy) { _rec('wait', 'враг не найден'); break; }
-      concludePeace(nationId, enemy, { loser: null, winner: null, ceded_regions: [] });
-      _rec('seek_peace', `мир с ${GAME_STATE.nations?.[enemy]?.name ?? enemy} [cau:${ou.caution.toFixed(2)}]`);
+
+      // Этап CB-9: проверяем минимальную длительность войны.
+      let warTurn = 0;
+      if (typeof getActiveWar === 'function') {
+        const w = getActiveWar(nationId, enemy);
+        if (w) warTurn = (GAME_STATE.turn ?? 0) - (w.started_turn ?? 0);
+      }
+      const MIN_WAR = (typeof PEACE_CONFIG !== 'undefined' ? PEACE_CONFIG.MIN_WAR_DURATION : 5);
+      if (warTurn < MIN_WAR) {
+        _rec('wait', `война молода (${warTurn}/${MIN_WAR} ходов)`);
+        break;
+      }
+
+      // WS-gating: ищем мир только если проигрываем или истощены.
+      let ownWs = 0, otherWs = 0;
+      if (typeof getWarScore === 'function') {
+        const s = getWarScore(nationId, enemy);
+        ownWs = s.player; otherWs = s.opponent;
+      }
+      const losing = (otherWs - ownWs) > 15;
+      if (!losing && !warExhausted) {
+        _rec('wait', `не проигрываем (ws: ${ownWs} vs ${otherWs})`);
+        break;
+      }
+
+      // Формируем peace-offer: мы — loser, предлагаем armistice/repraracii.
+      const cb = (typeof findCB === 'function') ? findCB(enemy, nationId) : null;
+      const demands = (typeof generatePeaceDemands === 'function')
+        ? generatePeaceDemands(nationId, enemy, 'loser', cb?.type)
+        : [{ type: 'armistice' }];
+
+      if (typeof createPeaceOffer === 'function') {
+        createPeaceOffer({
+          from: nationId,
+          to:   enemy,
+          demands,
+          initiator_ws: ownWs,
+        });
+        _rec('seek_peace', `offer → ${GAME_STATE.nations?.[enemy]?.name ?? enemy} [ws:${ownWs}/${otherWs}]`);
+      } else {
+        _rec('wait', 'peace_engine N/A');
+      }
       break;
     }
 
@@ -342,6 +394,11 @@ export function applyFallbackDecision(nationId) {
       if (!atWar || typeof createTreaty !== 'function') { _rec('wait', 'нет войны'); break; }
       const enemy = military.at_war_with[0];
       if (!enemy) { _rec('wait', 'враг не найден'); break; }
+      // AI не может односторонне подписать перемирие с игроком — только через UI.
+      if (enemy === GAME_STATE.player_nation) {
+        _rec('wait', 'перемирие с игроком только через UI');
+        break;
+      }
       if (typeof getArmistice === 'function' && getArmistice(nationId, enemy)) {
         _rec('wait', 'перемирие уже есть'); break;
       }

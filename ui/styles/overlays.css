@@ -271,3 +271,46 @@
 #intelligence-overlay .io-level.lvl2 { background: rgba(58,107,58,0.3); color: #a0d6a0; }
 #intelligence-overlay .io-truncated { text-align: center; color: var(--text-dim); font-size: 11px; padding: 8px; }
 #intel-btn { font-size: 16px; }
+
+/* ═══════════════════════════════════════════════
+   ЭТАП CB-10 — Peace Offer Overlay
+═══════════════════════════════════════════════ */
+#peace-offer-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+  display: flex; align-items: center; justify-content: center; z-index: 950;
+}
+#peace-offer-overlay.hidden { display: none; }
+#peace-offer-overlay .po-dialog {
+  background: var(--bg-panel); border: 2px solid var(--border-gold);
+  border-radius: 8px; padding: 0; max-width: 520px; width: 92%;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+#peace-offer-overlay .po-header {
+  padding: 14px 18px; border-bottom: 1px solid var(--border-gold);
+  background: rgba(107,79,26,0.18);
+}
+#peace-offer-overlay .po-header h2 { margin: 0; color: var(--text-gold); font-size: 16px; }
+#peace-offer-overlay .po-body { padding: 16px 18px; color: var(--text-dim); }
+#peace-offer-overlay .po-intro { margin: 0 0 10px; font-size: 14px; color: var(--text-light); }
+#peace-offer-overlay .po-demands { list-style: none; padding: 0; margin: 0 0 12px; }
+#peace-offer-overlay .po-demands li {
+  padding: 6px 10px; margin: 3px 0; background: rgba(255,255,255,0.04);
+  border-left: 3px solid var(--border-gold); font-size: 13px;
+}
+#peace-offer-overlay .po-ws {
+  display: flex; gap: 14px; flex-wrap: wrap; margin: 10px 0; font-size: 12px;
+  padding: 8px 10px; background: rgba(0,0,0,0.25); border-radius: 4px;
+}
+#peace-offer-overlay .po-hint { font-size: 11px; color: var(--text-dim); font-style: italic; margin: 10px 0 0; }
+#peace-offer-overlay .po-footer {
+  padding: 12px 18px; border-top: 1px solid var(--border-gold);
+  display: flex; gap: 10px; justify-content: flex-end;
+}
+#peace-offer-overlay .po-btn {
+  padding: 8px 16px; border: 1px solid var(--border-gold); border-radius: 4px;
+  cursor: pointer; font-size: 13px; font-weight: bold;
+}
+#peace-offer-overlay .po-accept { background: rgba(58,107,58,0.3); color: #a0d6a0; }
+#peace-offer-overlay .po-accept:hover { background: rgba(58,107,58,0.5); }
+#peace-offer-overlay .po-reject { background: rgba(107,40,40,0.3); color: #d6a0a0; }
+#peace-offer-overlay .po-reject:hover { background: rgba(107,40,40,0.5); }

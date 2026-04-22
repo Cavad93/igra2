@@ -600,7 +600,8 @@ function _checkVassalRebellion(treaty, turn) {
   // Объявляем войну через DiplomacyEngine.declareWar (если доступен)
   const engine = (typeof window !== 'undefined' && window.DiplomacyEngine) ? window.DiplomacyEngine : null;
   if (engine && typeof engine.declareWar === 'function') {
-    try { engine.declareWar(vasNatId, suzNatId); } catch (_) {}
+    // Восстание вассала — всегда «справедливая» война (защита независимости), без штрафов AE.
+    try { engine.declareWar(vasNatId, suzNatId, { allow_unjust: true, force_truce_break: true }); } catch (_) {}
   } else {
     // Прямая установка состояния войны
     const rel = _rel(vasNatId, suzNatId);

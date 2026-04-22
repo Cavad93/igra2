@@ -1281,6 +1281,14 @@ export function runEconomyExtTick() {
     try { initFogOfWar(); } catch (e) { console.warn('[fog:init]', e); }
   }
 
+  // Этап CB-1/11 — инициализация casus_belli и peace_offers/truces.
+  if (typeof initCasusBelli === 'function') {
+    try { initCasusBelli(); } catch (e) { console.warn('[cb:init]', e); }
+  }
+  if (typeof initPeaceEngine === 'function') {
+    try { initPeaceEngine(); } catch (e) { console.warn('[peace:init]', e); }
+  }
+
   // Этап 1 — запись торгового баланса в историю.
   try { _ecoExtRecordTradeHistory(); } catch (e) { console.warn('[economy_ext:trade_hist]', e); }
 

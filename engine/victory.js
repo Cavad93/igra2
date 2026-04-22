@@ -268,7 +268,7 @@ export const CRISIS_DEFS = {
       if (others.length && typeof declareWar === 'function') {
         const [invaderId] = others[0];
         gs._crisis_invader = invaderId;
-        try { declareWar(invaderId, nationId); } catch (e) {}
+        try { declareWar(invaderId, nationId, { allow_unjust: true, force_truce_break: true }); } catch (e) {}
       }
     },
     check_turns: 15,

@@ -377,6 +377,12 @@ export function breakTreaty(treatyId, breakerNation) {
   if (typeof addDiplomacyEvent === 'function') {
     addDiplomacyEvent(t.parties[0], t.parties[1], -20, 'treaty_broken');
   }
+
+  // Этап CB-4: жертва нарушения получает punitive CB против нарушителя.
+  const victimId = t.parties.find(p => p !== breakerNation);
+  if (victimId && typeof grantPunitiveCB === 'function') {
+    grantPunitiveCB(breakerNation, victimId, t.type);
+  }
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -1087,15 +1093,49 @@ export function processDiplomacyGlobalTick() {
 
 /**
  * Официально объявить войну. Учитывает активное перемирие (armistice).
- * @returns { ok: bool, reason: string }
+ *
+ * Этап CB-6: дополнительно валидирует Casus Belli.
+ * options.cb_type     — форсировать конкретный тип CB (проверяется наличие)
+ * options.region_id   — для region-specific CB (territorial_claim/reconquest)
+ * options.allow_unjust — разрешить войну без CB (с тяжёлыми штрафами). По
+ *                        умолчанию false — функция вернёт { ok:false, reason:'no_cb' }.
+ *
+ * Обратная совместимость: если options не передан, функция работает как раньше,
+ * но теперь пытается подобрать любой активный CB и применить его модификаторы.
+ * Если ни одного CB нет — считает войну «несправедливой» и применяет штрафы.
+ *
+ * @returns { ok: bool, reason?: string, cb?: object, unjust?: bool, ae_applied?: number }
  */
-export function declareWar(attackerNationId, targetNationId) {
+export function declareWar(attackerNationId, targetNationId, options = {}) {
   if (!GAME_STATE.diplomacy) initDiplomacy();
   const rel = getRelation(attackerNationId, targetNationId);
 
   if (rel.war) return { ok: false, reason: 'Вы уже находитесь в состоянии войны.' };
 
-  // Нарушение перемирия
+  // ── Активное перемирие (truce) — блокирует объявление войны ──
+  if (typeof hasActiveTruce === 'function' && hasActiveTruce(attackerNationId, targetNationId)) {
+    if (!options.force_truce_break) {
+      return { ok: false, reason: 'truce_active', description: 'Действует перемирие.' };
+    }
+  }
+
+  // ── Валидация Casus Belli ───────────────────────────────────
+  // Если передан конкретный cb_type — ищем именно его. Иначе — любой активный CB.
+  let cb = null;
+  if (typeof findCB === 'function') {
+    if (options.cb_type) {
+      cb = findCB(attackerNationId, targetNationId, options.cb_type);
+      if (!cb) return { ok: false, reason: 'cb_not_found', requested: options.cb_type };
+    } else {
+      cb = findCB(attackerNationId, targetNationId);
+    }
+  }
+  const isUnjust = !cb;
+  if (isUnjust && !options.allow_unjust) {
+    return { ok: false, reason: 'no_cb', description: 'Нет повода для войны. Используйте allow_unjust=true для «несправедливой» войны со штрафами.' };
+  }
+
+  // Нарушение перемирия (старая armistice-логика)
   const armistices = (GAME_STATE.diplomacy.treaties ?? []).filter(t =>
     t.status === 'active' && t.type === 'armistice' &&
     t.parties.includes(attackerNationId) && t.parties.includes(targetNationId)
@@ -1115,6 +1155,35 @@ export function declareWar(attackerNationId, targetNationId) {
     _applyArmisticeBreakCoalitionPenalty(attackerNationId, targetNationId);
     // DIP_003: записать предательство в репутацию агрессора (без вызова removeTreatyEffects)
     _recordBetrayalDirect(attackerNationId);
+  }
+
+  // ── Начисление Aggressive Expansion ─────────────────────────
+  let aeApplied = 0;
+  if (typeof computeWarDeclarationAeCost === 'function' && typeof addAeScore === 'function') {
+    aeApplied = computeWarDeclarationAeCost(cb?.type);
+    addAeScore(attackerNationId, aeApplied, cb ? `declare_war_${cb.type}` : 'declare_war_unjust');
+  }
+
+  // ── Штрафы за несправедливую войну ─────────────────────────
+  if (isUnjust) {
+    const natA = GAME_STATE.nations?.[attackerNationId];
+    if (natA) {
+      // Стабильность
+      if (natA.government) {
+        natA.government.stability = Math.max(0, (natA.government.stability ?? 50) - 15);
+      }
+      // Репутация
+      natA._reputation = Math.max(-100, (natA._reputation ?? 0) - 30);
+      natA._unjust_wars_count = (natA._unjust_wars_count ?? 0) + 1;
+    }
+    if (typeof addEventLog === 'function') {
+      addEventLog(`⚠ ${attackerNationId} объявил войну без повода (−15 стабильность, −30 репутация, +${aeApplied} AE)`, 'danger');
+    }
+  }
+
+  // ── Потребляем CB (один CB = одно объявление) ──────────────
+  if (cb && typeof consumeCB === 'function') {
+    consumeCB(cb.id);
   }
 
   // Создаём запись войны в WarScoreEngine
@@ -1200,7 +1269,13 @@ export function declareWar(attackerNationId, targetNationId) {
     _warMobilizationResponse(nationId, nation);
   }
 
-  return { ok: true, breaking_armistice: breakingArmistice };
+  return {
+    ok: true,
+    breaking_armistice: breakingArmistice,
+    cb:        cb ? { id: cb.id, type: cb.type, region_id: cb.region_id } : null,
+    unjust:    isUnjust,
+    ae_applied: aeApplied,
+  };
 }
 
 /**
@@ -1353,6 +1428,13 @@ export function transferRegion(regionId, fromNationId, toNationId) {
   if (!region) return false;
   if (region.nation !== fromNationId) return false;
 
+  // Этап CB-4: трекер бывших владельцев для reconquest-CB.
+  // region._former_owners — массив nationId, которые когда-либо владели регионом.
+  // region._core_of — изначальный владелец (бывший «метрополийный» core).
+  if (!Array.isArray(region._former_owners)) region._former_owners = [];
+  if (!region._former_owners.includes(fromNationId)) region._former_owners.push(fromNationId);
+  if (region._core_of === undefined) region._core_of = fromNationId;
+
   region.nation = toNationId;
 
   // Обновляем нации (если хранят списки регионов)
@@ -1447,6 +1529,12 @@ export function concludePeace(playerNationId, targetNationId, terms) {
       && typeof window.UIReactions.onPeace === 'function') {
     try { window.UIReactions.onPeace(); } catch (e) {}
   }
+
+  // Этап CB-11: автоматическое truce на 60 ходов после мира.
+  if (typeof addTruce === 'function') {
+    try { addTruce(playerNationId, targetNationId); } catch (_) {}
+  }
+
   return peaceTreaty;
 }
 

@@ -643,6 +643,31 @@ export async function processTurn() {
       try { _tickFogIntel(); } catch (e) { console.warn('[fog_tick]', e); }
     }
 
+    // 6.12. Casus Belli (Этап CB-4 docs/war_system.md)
+    //   Автоматические триггеры reconquest/trade_dispute + cleanup истёкших CB.
+    if (typeof tickAutomaticCB === 'function') {
+      try { tickAutomaticCB(); } catch (e) { console.warn('[cb_auto]', e); }
+    }
+    if (typeof tickCbExpiry === 'function') {
+      try { tickCbExpiry(); } catch (e) { console.warn('[cb_expiry]', e); }
+    }
+    // 6.13. Aggressive Expansion decay (Этап CB-7)
+    if (typeof tickAeDecay === 'function') {
+      try { tickAeDecay(); } catch (e) { console.warn('[ae_decay]', e); }
+    }
+    // 6.13b. Coalition check (Этап CB-12)
+    if (typeof tickCoalitionCheck === 'function') {
+      try { tickCoalitionCheck(); } catch (e) { console.warn('[coalition]', e); }
+    }
+    // 6.14. Peace offers TTL + resolution (Этап CB-9)
+    if (typeof tickPeaceOffers === 'function') {
+      try { tickPeaceOffers(); } catch (e) { console.warn('[peace_offers]', e); }
+    }
+    // 6.15. Truces expiry (Этап CB-11)
+    if (typeof tickTruces === 'function') {
+      try { tickTruces(); } catch (e) { console.warn('[truces]', e); }
+    }
+
     // 7. Автосохранение
     _setStep('Сохранение...');
     await saveGame();

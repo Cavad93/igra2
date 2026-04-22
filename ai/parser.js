@@ -312,7 +312,18 @@ export function applyNationDecision(nationId, decision) {
     case 'declare_war': {
       if (!decision.target || typeof declareWar !== 'function') break;
       if ((nation.military?.at_war_with ?? []).length >= 3) break; // не больше 3 войн
-      const result = declareWar(nationId, decision.target);
+      // Этап CB-6: LLM-AI проверяет CB перед объявлением.
+      const cb = (typeof findCB === 'function') ? findCB(nationId, decision.target) : null;
+      const personality = nation.ai_personality?.type ?? 'balanced';
+      const canDeclareUnjust = ['barbarian', 'tribal', 'survival', 'aggressive'].includes(personality);
+      if (!cb && !canDeclareUnjust) {
+        _log(`${nation.name}: нет Casus Belli против ${_name(decision.target)}, война отменена.`, 'diplomacy');
+        break;
+      }
+      const result = declareWar(nationId, decision.target, {
+        cb_type:      cb?.type ?? null,
+        allow_unjust: !cb,
+      });
       if (result?.ok !== false) {
         _log(`${nation.name} объявляет войну ${_name(decision.target)}!`, 'military');
       }
@@ -323,6 +334,8 @@ export function applyNationDecision(nationId, decision) {
       if (typeof concludePeace !== 'function') break;
       const enemy = decision.target ?? (nation.military?.at_war_with ?? [])[0];
       if (!enemy) break;
+      // AI не может односторонне заключить мир с игроком — только через UI.
+      if (enemy === GAME_STATE.player_nation) break;
       concludePeace(nationId, enemy, { loser: null, winner: null, ceded_regions: [] });
       _log(`${nation.name} заключает мир с ${_name(enemy)}.`, 'diplomacy');
       break;
@@ -332,6 +345,7 @@ export function applyNationDecision(nationId, decision) {
       if (typeof createTreaty !== 'function') break;
       const enemy = decision.target ?? (nation.military?.at_war_with ?? [])[0];
       if (!enemy) break;
+      if (enemy === GAME_STATE.player_nation) break;
       if (typeof getArmistice === 'function' && getArmistice(nationId, enemy)) break;
       createTreaty(nationId, enemy, 'armistice', { duration_years: 3 });
       _log(`${nation.name} заключает перемирие с ${_name(enemy)}.`, 'diplomacy');

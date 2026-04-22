@@ -710,14 +710,39 @@ export function dpDeclareWar(aiId) {
   const armistice = typeof DiplomacyEngine !== 'undefined'
     ? DiplomacyEngine.getArmistice?.(playerNationId, aiId) : null;
 
-  const msg = armistice
-    ? `Вы нарушите активное перемирие! Штраф: −50 к отношениям + ухудшение отношений со всеми соседями.\n\nОбъявить войну ${aiNation?.name ?? aiId}?`
-    : `Объявить войну ${aiNation?.name ?? aiId}?`;
+  // Этап CB-6: проверяем наличие Casus Belli и информируем игрока.
+  let cbInfo = null;
+  let cbType = null;
+  if (typeof findCB === 'function') {
+    cbInfo = findCB(playerNationId, aiId);
+    cbType = cbInfo?.type ?? null;
+  }
+  const cbLabel = cbInfo && typeof CASUS_BELLI_TYPES !== 'undefined'
+    ? CASUS_BELLI_TYPES[cbInfo.type]?.label ?? cbInfo.type
+    : null;
+
+  let msg;
+  if (armistice) {
+    msg = `Вы нарушите активное перемирие! Штраф: −50 к отношениям + ухудшение отношений со всеми соседями.\n\nОбъявить войну ${aiNation?.name ?? aiId}?`;
+  } else if (cbInfo) {
+    msg = `Объявить войну ${aiNation?.name ?? aiId}?\n\nПовод для войны: ${cbLabel}`;
+  } else {
+    msg = `⚠ У вас нет Casus Belli против ${aiNation?.name ?? aiId}.\n\n`
+      + `Несправедливая война:\n`
+      + `  • −30 репутация\n  • −15 стабильность\n  • +30 Aggressive Expansion (соседи готовят коалицию)\n\n`
+      + `Всё равно объявить войну?`;
+  }
 
   if (!confirm(msg)) return;
 
   if (typeof DiplomacyEngine !== 'undefined') {
-    DiplomacyEngine.declareWar(playerNationId, aiId);
+    const result = DiplomacyEngine.declareWar(playerNationId, aiId, {
+      cb_type:      cbType,
+      allow_unjust: !cbInfo,
+    });
+    if (!result?.ok && typeof addEventLog === 'function') {
+      addEventLog(`⚠ Война не объявлена: ${result?.reason ?? 'unknown'}`, 'warning');
+    }
   }
   _dpRender();
 }

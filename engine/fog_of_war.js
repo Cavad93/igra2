@@ -54,6 +54,13 @@ export const FOG_CONFIG = {
   // BFS расстояние для known-статуса
   KNOWN_DISTANCE_THRESHOLD:      3,   // свои + соседи ≤3 переходов
   KNOWN_DISTANCE_SEARCH_CAP:    10,   // BFS не дальше этого (для перф)
+
+  // Fabricate claim — шпионская кампания для получения territorial_claim CB
+  FABRICATE_COST:             1500,
+  FABRICATE_DURATION:            8,   // ходов
+  FABRICATE_FAIL_PROB:        0.25,   // шанс раскрытия
+  FABRICATE_DETECT_REL_PEN:    -15,   // штраф к отношениям при раскрытии
+  FABRICATE_DETECT_AE:          10,   // +AE при раскрытии (наказание агрессора)
 };
 
 // ──────────────────────────────────────────────────────────────
@@ -319,6 +326,68 @@ export function sendSpy(observerId, targetId) {
 }
 
 // ──────────────────────────────────────────────────────────────
+// Fabricate claim — шпионская кампания для создания CB
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Начать кампанию по фабрикации претензии на конкретный регион цели.
+ * При успехе через FABRICATE_DURATION ходов регистрируется CB типа
+ * 'territorial_claim' на region_id. При раскрытии — штраф к отношениям и AE.
+ *
+ * @param {string} observerId — кто фабрикует
+ * @param {string} targetId   — против кого
+ * @param {string} regionId   — конкретный регион претензии (должен принадлежать targetId)
+ */
+export function fabricateClaim(observerId, targetId, regionId) {
+  const gs = GAME_STATE;
+  const observer = gs?.nations?.[observerId];
+  const target   = gs?.nations?.[targetId];
+  if (!observer || !target) return { ok: false, reason: 'no_nation' };
+  if (observerId === targetId) return { ok: false, reason: 'self' };
+  if (!regionId)              return { ok: false, reason: 'no_region' };
+  // Проверяем, что регион принадлежит цели.
+  const region = gs.regions?.[regionId];
+  if (!region) return { ok: false, reason: 'unknown_region' };
+  if (region.nation !== targetId) return { ok: false, reason: 'not_target_region' };
+
+  // Не дублируем: один активный fabricate на одну и ту же пару/регион.
+  const exists = (gs.expeditions || []).some(e =>
+    e.type === 'fabricate' && e.observerId === observerId
+    && e.targetId === targetId && e.regionId === regionId
+    && (e.status === 'in_progress'));
+  if (exists) return { ok: false, reason: 'already_fabricating' };
+
+  const cost = FOG_CONFIG.FABRICATE_COST;
+  if ((observer.economy?.treasury ?? 0) < cost) {
+    return { ok: false, reason: 'no_gold', needed: cost };
+  }
+
+  mutateTreasury(observer, -cost, 'fabricate_claim');
+
+  if (!Array.isArray(gs.expeditions)) gs.expeditions = [];
+  const exp = {
+    id:          `fab_${observerId}_${targetId}_${regionId}_t${gs.turn ?? 0}`,
+    type:        'fabricate',
+    observerId,
+    targetId,
+    regionId,
+    started_turn: gs.turn ?? 0,
+    turns_left:   FOG_CONFIG.FABRICATE_DURATION,
+    status:       'in_progress',
+    cost,
+  };
+  gs.expeditions.push(exp);
+
+  if (typeof addEventLog === 'function') {
+    addEventLog(
+      `📜 Шпионская кампания по фабрикации претензии на «${region.name ?? regionId}» (${target.name ?? targetId}) начата — ${FOG_CONFIG.FABRICATE_DURATION} ходов, ${cost} монет.`,
+      'diplomacy',
+    );
+  }
+  return { ok: true, expedition: exp };
+}
+
+// ──────────────────────────────────────────────────────────────
 // Обработка экспедиций / шпионов каждый ход
 // ──────────────────────────────────────────────────────────────
 
@@ -353,6 +422,48 @@ export function processIntelligenceTick() {
           }
         }
         continue;   // не копим
+      }
+      keep.push(exp);
+      continue;
+    }
+
+    if (exp.type === 'fabricate') {
+      exp.turns_left = (exp.turns_left || 0) - 1;
+      if (exp.turns_left <= 0) {
+        const target = gs.nations?.[exp.targetId];
+        const region = gs.regions?.[exp.regionId];
+        if (Math.random() < FOG_CONFIG.FABRICATE_FAIL_PROB) {
+          // Раскрытие: штраф к отношениям и +AE атакующему.
+          _applyRelationPenalty(exp.observerId, exp.targetId, FOG_CONFIG.FABRICATE_DETECT_REL_PEN);
+          if (typeof addAeScore === 'function') {
+            addAeScore(exp.observerId, FOG_CONFIG.FABRICATE_DETECT_AE, 'fabricate_claim_detected');
+          }
+          if (typeof addEventLog === 'function') {
+            addEventLog(
+              `💀 Фабрикация претензии на «${region?.name ?? exp.regionId}» раскрыта! Репутация страдает: ${FOG_CONFIG.FABRICATE_DETECT_REL_PEN}, AE +${FOG_CONFIG.FABRICATE_DETECT_AE}.`,
+              'danger',
+            );
+          }
+        } else {
+          // Успех — регистрируем CB.
+          if (typeof registerCB === 'function') {
+            registerCB({
+              holder_id: exp.observerId,
+              target_id: exp.targetId,
+              type:      'territorial_claim',
+              region_id: exp.regionId,
+              source:    'fabricated',
+              notes:     `Fabricated via spy turn ${gs.turn}`,
+            });
+          }
+          if (typeof addEventLog === 'function') {
+            addEventLog(
+              `📜 Претензия на «${region?.name ?? exp.regionId}» (${target?.name ?? exp.targetId}) сфабрикована успешно — теперь это законный повод для войны.`,
+              'good',
+            );
+          }
+        }
+        continue;
       }
       keep.push(exp);
       continue;
