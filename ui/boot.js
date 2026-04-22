@@ -110,6 +110,7 @@ import * as _aiScoring from '../engine/ai_scoring.js';
 import * as _aiFallback from '../engine/ai_fallback.js';
 import * as _aiWorker from '../engine/ai_worker.js';
 import * as _events from '../engine/events.js';
+import * as _fogOfWar from '../engine/fog_of_war.js';
 import * as _save from '../engine/save.js';
 import * as _turn from '../engine/turn.js';
 import * as _init from '../engine/init.js';
@@ -138,6 +139,7 @@ import * as _statusBar from './status_bar.js';
 import * as _topBar from './top_bar.js';
 import * as _splash from './splash.js';
 import * as _panels from './panels.js';
+import * as _intelOverlay from './intelligence_overlay.js';
 import * as _aqueduct from './aqueduct.js';
 import * as _govTab from './government_tab.js';
 // _popTab, _ecoReact → lazy-loaded (этап 70)
@@ -190,12 +192,12 @@ _reg(
   _dialogue, _constitutional, _conspiracy, _senate, _battle, _armies,
   _combat, _siege, _victory, _charsAi, _orders, _culture, _religion,
   _storage, _idbStorage, _superOu, _achieve, _date, _charsLife, _espionage,
-  _aiScoring, _aiFallback, _aiWorker, _events, _save, _turn, _init,
+  _aiScoring, _aiFallback, _aiWorker, _events, _fogOfWar, _save, _turn, _init,
   _noise,
   _map, _mapArmies, _mapEvents, _mapFeed, _mapAiInd,
   _turnSumCard, _regCompare, _regBuild, _diploGraph,
   _portSvg, _portrait, _splashMos, _clepsydra, _turnProg,
-  _statusBar, _topBar, _splash, _panels, _aqueduct, _govTab,
+  _statusBar, _topBar, _splash, _panels, _intelOverlay, _aqueduct, _govTab,
   _ecoTab, _treasury, _siegePanel,
   _battleResult, _peacePanel, _apikey, _input,
   _ambient, _reactions, _diptych,

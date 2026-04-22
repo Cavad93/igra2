@@ -1,0 +1,441 @@
+// engine/fog_of_war.js — Этап C плана docs/fog_of_war.md
+//
+// Fog of War + Active Intelligence.
+//
+// Модель знаний (per-nation): nation._known_to[observerId] = level
+//   0 — terra incognita (только цвет + контур границ, без цифр/названия)
+//   1 — known            (название, «большая армия», без точных цифр)
+//   2 — full intel       (всё)
+//
+// Автоматическое обновление через _updateKnownNations(observerId) — раз
+// в 3 хода. Активные механики (купец/шпион/слух) — повышают уровень.
+//
+// Интеграция с существующим getIntelLevel(regionId) в ui/map.js:
+//   getIntelLevel возвращает уровень для ОДНОГО региона (по соседству и
+//   дипломатии). Здесь мы вводим НАЦИОНАЛЬНЫЙ уровень — применяется к
+//   меткам армий/строительства (скрываются, если наблюдатель не знает
+//   детали нации-владельца региона).
+
+import { MAP_REGIONS } from '../data/map.js';
+import { mutateTreasury } from './economy.js';
+
+// ──────────────────────────────────────────────────────────────
+// Параметры механики
+// ──────────────────────────────────────────────────────────────
+
+export const FOG_CONFIG = {
+  // Частота автоматического пересчёта уровня знаний.
+  UPDATE_PERIOD:              3,
+
+  // Купеческая экспедиция
+  MERCHANT_COST:               500,
+  MERCHANT_BASE_DURATION:       12,   // ходов
+  MERCHANT_DURATION_PER_5REGS:   1,   // +1 ход за каждые 5 регионов расстояния
+  MERCHANT_FAIL_PROB:          0.10,  // шанс провала (пираты, бандиты)
+
+  // Шпион
+  SPY_COST:                   2000,
+  SPY_ACTIVATION_TURNS:          3,   // подготовка перед активацией
+  SPY_ACTIVE_DURATION:          24,   // full intel на ~2 года
+  SPY_FAIL_PROB:              0.30,
+  SPY_FAIL_RELATION_PENALTY:   -10,
+  SPY_MAX_ACTIVE:                3,   // одновременных активных шпионов
+
+  // BFS расстояние для known-статуса
+  KNOWN_DISTANCE_THRESHOLD:      3,   // свои + соседи ≤3 переходов
+  KNOWN_DISTANCE_SEARCH_CAP:    10,   // BFS не дальше этого (для перф)
+};
+
+// ──────────────────────────────────────────────────────────────
+// Инициализация GAME_STATE
+// ──────────────────────────────────────────────────────────────
+
+export function initFogOfWar() {
+  if (typeof GAME_STATE === 'undefined' || !GAME_STATE) return;
+  if (!Array.isArray(GAME_STATE.expeditions)) GAME_STATE.expeditions = [];
+  if (!Array.isArray(GAME_STATE.rumors))      GAME_STATE.rumors      = [];
+  // На каждой нации _known_to инициализируется лениво при первом обращении,
+  // чтобы не создавать 900×900 записей при старте игры.
+}
+
+// ──────────────────────────────────────────────────────────────
+// Базовый доступ: уровень знания observerId о targetId
+// ──────────────────────────────────────────────────────────────
+
+export function getNationKnownLevel(observerId, targetId) {
+  if (!observerId || !targetId) return 2;
+  if (observerId === targetId) return 2;            // сам о себе
+  const target = GAME_STATE?.nations?.[targetId];
+  if (!target) return 0;
+  const map = target._known_to;
+  if (!map) return 0;
+  const lvl = map[observerId];
+  return Number.isFinite(lvl) ? lvl : 0;
+}
+
+// Установить уровень, только если он выше текущего
+// (активный шпион может временно поднять до 2, потом revert вернёт к 1).
+export function setNationKnownLevel(observerId, targetId, level, opts = {}) {
+  if (!observerId || !targetId || observerId === targetId) return;
+  const target = GAME_STATE?.nations?.[targetId];
+  if (!target) return;
+  if (!target._known_to) target._known_to = {};
+  const prev = target._known_to[observerId] ?? 0;
+  if (opts.force || level > prev) {
+    target._known_to[observerId] = level;
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// BFS: дистанция между нациями по connections
+// ──────────────────────────────────────────────────────────────
+
+// Возвращает минимум прыжков от регионов observerId до любого региона targetId,
+// или Infinity если не достижимо в пределах SEARCH_CAP.
+export function _bfsNationDistance(observerId, targetId) {
+  const CAP = FOG_CONFIG.KNOWN_DISTANCE_SEARCH_CAP;
+  if (!GAME_STATE?.regions || !MAP_REGIONS) return Infinity;
+
+  const targetRegions = new Set();
+  const frontier      = new Set();
+
+  for (const [rid, gr] of Object.entries(GAME_STATE.regions)) {
+    if (gr?.nation === observerId) frontier.add(rid);
+    if (gr?.nation === targetId)   targetRegions.add(rid);
+  }
+  if (frontier.size === 0 || targetRegions.size === 0) return Infinity;
+
+  const visited = new Set(frontier);
+  let depth = 0;
+  let current = [...frontier];
+
+  while (current.length && depth < CAP) {
+    const next = [];
+    for (const rid of current) {
+      if (targetRegions.has(rid)) return depth;
+      const md = MAP_REGIONS[rid];
+      if (!md?.connections) continue;
+      for (const nid of md.connections) {
+        if (visited.has(nid)) continue;
+        visited.add(nid);
+        next.push(nid);
+      }
+    }
+    current = next;
+    depth++;
+  }
+  return Infinity;
+}
+
+// ──────────────────────────────────────────────────────────────
+// Автоматическое обновление уровня знаний
+// ──────────────────────────────────────────────────────────────
+
+export function _updateKnownNations(observerId) {
+  if (!observerId) return;
+  const observer = GAME_STATE?.nations?.[observerId];
+  if (!observer) return;
+
+  const nationIds = Object.keys(GAME_STATE.nations);
+
+  // Быстрые индексы дипломатии.
+  const alliesSet = new Set();
+  const tradeSet  = new Set();
+  const atWarSet  = new Set(observer.military?.at_war_with || []);
+
+  const treaties = GAME_STATE.diplomacy?.treaties || [];
+  for (const t of treaties) {
+    if (t.status !== 'active') continue;
+    if (!Array.isArray(t.parties) || !t.parties.includes(observerId)) continue;
+    const other = t.parties.find(p => p !== observerId);
+    if (!other) continue;
+    if (t.type === 'defensive_alliance' || t.type === 'military_alliance'
+     || t.type === 'marriage_alliance'  || t.type === 'vassalage') {
+      alliesSet.add(other);
+    }
+    if (t.type === 'trade_agreement' || t.type === 'trade_pact'
+     || t.type === 'commerce_treaty') {
+      tradeSet.add(other);
+    }
+  }
+
+  // Активные шпионы observer'а → targetId → временный level 2.
+  const spiesByTarget = new Map();
+  for (const exp of (GAME_STATE.expeditions || [])) {
+    if (exp.type !== 'spy' || exp.observerId !== observerId) continue;
+    if (exp.status === 'active') {
+      spiesByTarget.set(exp.targetId, true);
+    }
+  }
+
+  const THRESH = FOG_CONFIG.KNOWN_DISTANCE_THRESHOLD;
+
+  for (const targetId of nationIds) {
+    if (targetId === observerId) continue;
+
+    // Уровень 2 — явные источники.
+    if (alliesSet.has(targetId) || atWarSet.has(targetId) || spiesByTarget.has(targetId)) {
+      setNationKnownLevel(observerId, targetId, 2);
+      continue;
+    }
+
+    // Уровень 1 — торговля / близкое соседство.
+    const distance = _bfsNationDistance(observerId, targetId);
+    if (tradeSet.has(targetId) || distance <= THRESH) {
+      setNationKnownLevel(observerId, targetId, 1);
+      continue;
+    }
+
+    // Иначе — не понижаем уровень (знание накапливается). Явная «забывчивость»
+    // происходит только через revert шпиона.
+  }
+}
+
+// Обновление раз в UPDATE_PERIOD ходов. Вызывается из turn.js.
+// Всегда обновляет для игрока; для AI-наций — опционально (пока отключено,
+// чтобы не замедлять ход × 900 BFS).
+export function _tickFogIntel() {
+  const gs = GAME_STATE;
+  if (!gs) return;
+  if ((gs.turn ?? 0) % FOG_CONFIG.UPDATE_PERIOD !== 0) return;
+  if (gs.player_nation) {
+    try { _updateKnownNations(gs.player_nation); } catch (e) { console.warn('[fog]', e); }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// Купеческая экспедиция
+// ──────────────────────────────────────────────────────────────
+
+export function sendMerchantExpedition(observerId, targetId) {
+  const gs = GAME_STATE;
+  const observer = gs?.nations?.[observerId];
+  const target   = gs?.nations?.[targetId];
+  if (!observer || !target) return { ok: false, reason: 'no_nation' };
+  if (observerId === targetId) return { ok: false, reason: 'self' };
+
+  const cost = FOG_CONFIG.MERCHANT_COST;
+  if ((observer.economy?.treasury ?? 0) < cost) {
+    return { ok: false, reason: 'no_gold', needed: cost };
+  }
+
+  const dist = _bfsNationDistance(observerId, targetId);
+  const duration = FOG_CONFIG.MERCHANT_BASE_DURATION
+    + (Number.isFinite(dist) ? Math.floor(dist / 5) * FOG_CONFIG.MERCHANT_DURATION_PER_5REGS : 6);
+
+  mutateTreasury(observer, -cost, 'merchant_expedition');
+
+  if (!Array.isArray(gs.expeditions)) gs.expeditions = [];
+  const exp = {
+    id:          `exp_${observerId}_${targetId}_t${gs.turn ?? 0}`,
+    type:        'merchant',
+    observerId,
+    targetId,
+    started_turn: gs.turn ?? 0,
+    turns_left:   duration,
+    status:       'travelling',
+    cost,
+  };
+  gs.expeditions.push(exp);
+
+  if (typeof addEventLog === 'function') {
+    addEventLog(
+      `🧭 Купеческая экспедиция отправлена к ${target.name ?? targetId} (${duration} ходов, ${cost} монет).`,
+      'diplomacy',
+    );
+  }
+  return { ok: true, expedition: exp };
+}
+
+// ──────────────────────────────────────────────────────────────
+// Шпион
+// ──────────────────────────────────────────────────────────────
+
+export function sendSpy(observerId, targetId) {
+  const gs = GAME_STATE;
+  const observer = gs?.nations?.[observerId];
+  const target   = gs?.nations?.[targetId];
+  if (!observer || !target) return { ok: false, reason: 'no_nation' };
+  if (observerId === targetId) return { ok: false, reason: 'self' };
+
+  // Лимит одновременных активных/подготавливающихся шпионов.
+  const myActiveSpies = (gs.expeditions || [])
+    .filter(e => e.type === 'spy' && e.observerId === observerId
+              && (e.status === 'preparing' || e.status === 'active'))
+    .length;
+  if (myActiveSpies >= FOG_CONFIG.SPY_MAX_ACTIVE) {
+    return { ok: false, reason: 'max_spies', limit: FOG_CONFIG.SPY_MAX_ACTIVE };
+  }
+
+  const cost = FOG_CONFIG.SPY_COST;
+  if ((observer.economy?.treasury ?? 0) < cost) {
+    return { ok: false, reason: 'no_gold', needed: cost };
+  }
+
+  mutateTreasury(observer, -cost, 'spy_sent');
+
+  if (!Array.isArray(gs.expeditions)) gs.expeditions = [];
+  const exp = {
+    id:          `spy_${observerId}_${targetId}_t${gs.turn ?? 0}`,
+    type:        'spy',
+    observerId,
+    targetId,
+    started_turn: gs.turn ?? 0,
+    turns_left:   FOG_CONFIG.SPY_ACTIVATION_TURNS,
+    status:       'preparing',
+    active_turns_left: FOG_CONFIG.SPY_ACTIVE_DURATION,
+    cost,
+  };
+  gs.expeditions.push(exp);
+
+  if (typeof addEventLog === 'function') {
+    addEventLog(
+      `🕵 Шпион отправлен к ${target.name ?? targetId} (${FOG_CONFIG.SPY_ACTIVATION_TURNS} ходов подготовки, ${cost} монет).`,
+      'diplomacy',
+    );
+  }
+  return { ok: true, expedition: exp };
+}
+
+// ──────────────────────────────────────────────────────────────
+// Обработка экспедиций / шпионов каждый ход
+// ──────────────────────────────────────────────────────────────
+
+export function processIntelligenceTick() {
+  const gs = GAME_STATE;
+  if (!gs || !Array.isArray(gs.expeditions)) return;
+
+  const keep = [];
+  for (const exp of gs.expeditions) {
+    if (!exp) continue;
+
+    if (exp.type === 'merchant') {
+      exp.turns_left = (exp.turns_left || 0) - 1;
+      if (exp.turns_left <= 0) {
+        // Резолюция: успех или провал.
+        if (Math.random() < FOG_CONFIG.MERCHANT_FAIL_PROB) {
+          if (typeof addEventLog === 'function') {
+            const target = gs.nations?.[exp.targetId];
+            addEventLog(
+              `⚠ Купеческая экспедиция к ${target?.name ?? exp.targetId} не вернулась — пираты/бандиты.`,
+              'warning',
+            );
+          }
+        } else {
+          setNationKnownLevel(exp.observerId, exp.targetId, 1);
+          if (typeof addEventLog === 'function') {
+            const target = gs.nations?.[exp.targetId];
+            addEventLog(
+              `🧭 Купцы вернулись из ${target?.name ?? exp.targetId}. Известны название и ориентировочная сила.`,
+              'good',
+            );
+          }
+        }
+        continue;   // не копим
+      }
+      keep.push(exp);
+      continue;
+    }
+
+    if (exp.type === 'spy') {
+      if (exp.status === 'preparing') {
+        exp.turns_left = (exp.turns_left || 0) - 1;
+        if (exp.turns_left <= 0) {
+          if (Math.random() < FOG_CONFIG.SPY_FAIL_PROB) {
+            // Провал — штраф к отношениям + событие.
+            _applyRelationPenalty(exp.observerId, exp.targetId, FOG_CONFIG.SPY_FAIL_RELATION_PENALTY);
+            if (typeof addEventLog === 'function') {
+              const target = gs.nations?.[exp.targetId];
+              addEventLog(
+                `💀 Шпион в ${target?.name ?? exp.targetId} раскрыт! Казнён, отношения ${FOG_CONFIG.SPY_FAIL_RELATION_PENALTY}.`,
+                'danger',
+              );
+            }
+            continue;
+          }
+          // Успех — активация.
+          exp.status = 'active';
+          exp.turns_left = exp.active_turns_left || FOG_CONFIG.SPY_ACTIVE_DURATION;
+          setNationKnownLevel(exp.observerId, exp.targetId, 2);
+          if (typeof addEventLog === 'function') {
+            const target = gs.nations?.[exp.targetId];
+            addEventLog(
+              `🕵 Шпион в ${target?.name ?? exp.targetId} активирован — полные данные о казне и армии.`,
+              'good',
+            );
+          }
+          keep.push(exp);
+          continue;
+        }
+        keep.push(exp);
+        continue;
+      }
+      if (exp.status === 'active') {
+        exp.turns_left = (exp.turns_left || 0) - 1;
+        if (exp.turns_left <= 0) {
+          // Возврат к уровню 1 (страна теперь «known», но не full intel).
+          setNationKnownLevel(exp.observerId, exp.targetId, 1, { force: true });
+          if (typeof addEventLog === 'function') {
+            const target = gs.nations?.[exp.targetId];
+            addEventLog(
+              `🕵 Шпион в ${target?.name ?? exp.targetId} завершил миссию. Полные данные устарели.`,
+              'info',
+            );
+          }
+          continue;
+        }
+        keep.push(exp);
+        continue;
+      }
+    }
+
+    keep.push(exp);
+  }
+
+  gs.expeditions = keep;
+}
+
+function _applyRelationPenalty(a, b, delta) {
+  const rel = GAME_STATE?.diplomacy?.relations;
+  if (!rel) return;
+  const key = [a, b].sort().join('_');
+  const r = rel[key];
+  if (r) r.score = Math.max(-100, Math.min(100, (r.score ?? 0) + delta));
+}
+
+// ──────────────────────────────────────────────────────────────
+// Helper'ы для UI рендера
+// ──────────────────────────────────────────────────────────────
+
+// Какой уровень знания ИГРОК имеет о владельце данного региона.
+export function _getRegionOwnerKnownLevel(regionId) {
+  try {
+    const gs = GAME_STATE;
+    const playerId = gs?.player_nation;
+    if (!playerId) return 2;                    // pre-init — всё видно
+    const region = gs?.regions?.[regionId];
+    const ownerId = region?.nation
+                 || MAP_REGIONS?.[regionId]?.nation;
+    if (!ownerId || ownerId === 'neutral') return 2;
+    return getNationKnownLevel(playerId, ownerId);
+  } catch (_) { return 2; }
+}
+
+// Должен ли игрок видеть армию — только если он знает нацию-владельца до level ≥2,
+// ИЛИ если армия на своей/союзной территории.
+export function shouldShowArmy(army) {
+  try {
+    if (!army) return false;
+    const gs = GAME_STATE;
+    const playerId = gs?.player_nation;
+    if (!playerId) return true;
+    if (army.nation === playerId) return true;    // своя
+    const level = getNationKnownLevel(playerId, army.nation);
+    return level >= 2;
+  } catch (_) { return true; }
+}
+
+// Должен ли игрок видеть прогресс строительства региона.
+export function shouldShowBuildMarker(regionId) {
+  return _getRegionOwnerKnownLevel(regionId) >= 2;
+}

@@ -2,6 +2,7 @@
 
 import { MAP_REGIONS } from '../data/map.js';
 import { mutateTreasury, recordMaterialFlow } from './economy.js';
+import { setNationKnownLevel } from './fog_of_war.js';
 
 export const RANDOM_EVENTS = [
   {
@@ -151,6 +152,138 @@ export const RANDOM_EVENTS = [
       addEventLog(`🌋 Вулканическая зима! Урожай пострадал по всему миру (${affectedCount} наций, −15% еды).`, 'danger');
     },
   },
+
+  // ══════════════════════════════════════════════════════════════
+  // Этап C fog_of_war.md — случайные события разведки
+  // ══════════════════════════════════════════════════════════════
+
+  // Слухи: путешественники приносят обрывочные данные о далёкой нации.
+  // Повышает уровень знания игрока о случайной неизвестной нации до 1.
+  {
+    id: 'RUMOR_DISTANT_LAND',
+    name: 'Весть из дальних земель',
+    description: 'Путешественники из дальних земель делятся новостями.',
+    probability: 0.10,
+    playerOnly: true,
+    effect: (_targetNationId) => {
+      const gs = GAME_STATE;
+      const playerId = gs.player_nation;
+      if (!playerId) return;
+
+      // Ищем случайную неизвестную нацию (level 0).
+      const unknowns = [];
+      for (const [nId, n] of Object.entries(gs.nations)) {
+        if (nId === playerId) continue;
+        if (!n?.regions?.length && !n?.population?.total) continue;
+        const lvl = n._known_to?.[playerId] ?? 0;
+        if (lvl === 0) unknowns.push(nId);
+      }
+      if (!unknowns.length) return;
+      const target = unknowns[Math.floor(Math.random() * unknowns.length)];
+      const targetNat = gs.nations[target];
+
+      setNationKnownLevel(playerId, target, 1);
+
+      const messages = [
+        `Путешественники рассказывают о ${targetNat.name ?? target}: великая держава с множеством городов.`,
+        `Купцы из дальних земель упоминают ${targetNat.name ?? target}: говорят, у них большая армия.`,
+        `Пилигримы принесли слух: в стране ${targetNat.name ?? target} урожайный год.`,
+        `Моряки передают: в ${targetNat.name ?? target} сменилась династия.`,
+      ];
+      const msg = messages[Math.floor(Math.random() * messages.length)];
+
+      if (!Array.isArray(gs.rumors)) gs.rumors = [];
+      gs.rumors.push({
+        id:      `rumor_t${gs.turn ?? 0}_${target}`,
+        turn:    gs.turn ?? 0,
+        subject: targetNat.name ?? target,
+        content: msg,
+        observerId: playerId,
+      });
+      if (gs.rumors.length > 200) gs.rumors.shift();
+
+      addEventLog(`📜 ${msg}`, 'info');
+    },
+  },
+
+  // Трофейная карта: случайное получение full intel на 12 ходов.
+  // Симулирует захват карт у пленного врага / пирата.
+  {
+    id: 'CAPTURED_MAP',
+    name: 'Захваченная карта',
+    description: 'В руки ваших людей попала подробная карта.',
+    probability: 0.03,
+    playerOnly: true,
+    effect: (_targetNationId) => {
+      const gs = GAME_STATE;
+      const playerId = gs.player_nation;
+      if (!playerId) return;
+
+      // Выбираем случайную нацию level < 2.
+      const candidates = [];
+      for (const [nId, n] of Object.entries(gs.nations)) {
+        if (nId === playerId) continue;
+        if (!n?.regions?.length) continue;
+        const lvl = n._known_to?.[playerId] ?? 0;
+        if (lvl < 2) candidates.push(nId);
+      }
+      if (!candidates.length) return;
+      const target = candidates[Math.floor(Math.random() * candidates.length)];
+      const targetNat = gs.nations[target];
+
+      // Временный full intel: создаём псевдо-шпиона на 12 ходов.
+      if (!Array.isArray(gs.expeditions)) gs.expeditions = [];
+      gs.expeditions.push({
+        id:          `capmap_${target}_t${gs.turn ?? 0}`,
+        type:        'spy',
+        observerId:  playerId,
+        targetId:    target,
+        started_turn: gs.turn ?? 0,
+        turns_left:   12,
+        status:       'active',
+        active_turns_left: 12,
+        cost: 0,
+        source: 'captured_map',
+      });
+      setNationKnownLevel(playerId, target, 2);
+
+      addEventLog(
+        `🗺 Захвачена карта ${targetNat.name ?? target}! Полные разведданные на 12 ходов.`,
+        'good',
+      );
+    },
+  },
+
+  // Дар от иностранного купца: карта в обмен на будущую скидку торговли.
+  {
+    id: 'MERCHANT_GIFT',
+    name: 'Подарок иностранного купца',
+    description: 'Купец из далёких земель преподнёс карту своей родины.',
+    probability: 0.05,
+    playerOnly: true,
+    effect: (_targetNationId) => {
+      const gs = GAME_STATE;
+      const playerId = gs.player_nation;
+      if (!playerId) return;
+
+      const unknowns = [];
+      for (const [nId, n] of Object.entries(gs.nations)) {
+        if (nId === playerId) continue;
+        if (!n?.regions?.length) continue;
+        const lvl = n._known_to?.[playerId] ?? 0;
+        if (lvl === 0) unknowns.push(nId);
+      }
+      if (!unknowns.length) return;
+      const target = unknowns[Math.floor(Math.random() * unknowns.length)];
+      const targetNat = gs.nations[target];
+
+      setNationKnownLevel(playerId, target, 1);
+      addEventLog(
+        `🎁 Иностранный купец поделился картой ${targetNat.name ?? target}.`,
+        'good',
+      );
+    },
+  },
 ];
 
 export function triggerRandomEvent() {
@@ -163,10 +296,15 @@ export function triggerRandomEvent() {
   for (const event of RANDOM_EVENTS) {
     rand -= event.probability;
     if (rand <= 0) {
-      if (targetNationId === GAME_STATE.player_nation && event.choices?.length) {
-        _showEventChoiceOverlay(event, targetNationId);
+      // Этап C: события с флагом playerOnly всегда адресуются игроку
+      // (RUMOR_DISTANT_LAND, CAPTURED_MAP, MERCHANT_GIFT — разведдонные).
+      const effectiveTarget = event.playerOnly
+        ? (GAME_STATE.player_nation || targetNationId)
+        : targetNationId;
+      if (effectiveTarget === GAME_STATE.player_nation && event.choices?.length) {
+        _showEventChoiceOverlay(event, effectiveTarget);
       } else {
-        event.effect(targetNationId);
+        event.effect(effectiveTarget);
       }
       return;
     }

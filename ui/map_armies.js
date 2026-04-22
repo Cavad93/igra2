@@ -124,10 +124,17 @@ export function renderBuildMarkers() {
   const regions = (typeof GAME_STATE !== 'undefined' && GAME_STATE && GAME_STATE.regions) || {};
   const seen = new Set();
 
+  // Этап C fog_of_war.md — скрываем прогресс строительства в регионах,
+  // нации-владельца которого игрок не знает до level ≥ 2.
+  const shouldShow = (typeof shouldShowBuildMarker === 'function')
+    ? shouldShowBuildMarker
+    : (_ => true);
+
   for (const rid of Object.keys(regions)) {
     const region = regions[rid];
     const entry  = _pickActiveBuildEntry(region);
     if (!entry) continue;
+    if (!shouldShow(rid)) continue;
 
     const center = _regionCenter(rid);
     if (!center) continue;
@@ -331,9 +338,14 @@ export function renderAllArmies() {
   Object.keys(_armyPaths).forEach(k => delete _armyPaths[k]);
   Object.keys(_siegeIcons).forEach(k => delete _siegeIcons[k]);
 
+  // Этап C fog_of_war.md — скрываем армии чужих наций, о которых игрок
+  // не имеет level ≥ 2 разведданных (своя / союзник / сосед / шпион / война).
+  const canShow = (typeof shouldShowArmy === 'function') ? shouldShowArmy : () => true;
+
   const seenArmyIds = new Set();
   for (const army of (GAME_STATE.armies ?? [])) {
     if (army.state === 'disbanded' || army.state === 'embarked') continue;
+    if (!canShow(army)) continue;
     seenArmyIds.add(army.id);
     _renderArmyMarker(army);
     if (army.path?.length > 0) _renderMovementLine(army);

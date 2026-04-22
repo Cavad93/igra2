@@ -1276,6 +1276,11 @@ export function addEconomicEvent(text) {
 export function runEconomyExtTick() {
   try { initEconomyExt(); } catch (e) { console.warn('[economy_ext:init]', e); }
 
+  // Fog of War (Этап C) — идемпотентная инициализация GAME_STATE.expeditions/rumors.
+  if (typeof initFogOfWar === 'function') {
+    try { initFogOfWar(); } catch (e) { console.warn('[fog:init]', e); }
+  }
+
   // Этап 1 — запись торгового баланса в историю.
   try { _ecoExtRecordTradeHistory(); } catch (e) { console.warn('[economy_ext:trade_hist]', e); }
 

@@ -633,6 +633,16 @@ export async function processTurn() {
     //   Drift > 0.5% от |stockpile| → запись в GAME_STATE._material_audit.
     try { _auditMaterialConservation(); } catch (e) { console.warn('[material_audit]', e); }
 
+    // 6.11. Fog of War (Этап C docs/fog_of_war.md)
+    //   Разведка: купеческие экспедиции, шпионы. Обновление уровня знаний
+    //   каждые 3 хода для игрока.
+    if (typeof processIntelligenceTick === 'function') {
+      try { processIntelligenceTick(); } catch (e) { console.warn('[intel_tick]', e); }
+    }
+    if (typeof _tickFogIntel === 'function') {
+      try { _tickFogIntel(); } catch (e) { console.warn('[fog_tick]', e); }
+    }
+
     // 7. Автосохранение
     _setStep('Сохранение...');
     await saveGame();
