@@ -349,6 +349,58 @@ function detectMoneyLeak(snapshots) {
   return alerts;
 }
 
+// Этап 11.1 economic4.md — Material balance drift.
+// Если GAME_STATE._material_audit накопил > 10 записей за прогон, значит
+// Δstockpile[good] ≠ production + trade_in − consumption − spoilage ± event,
+// то есть часть товарных изменений не отслеживается (capital inputs, army).
+// Показываем top-10 товаров по суммарному drift'у, как в money_leak.
+function detectMaterialLeak(snapshots) {
+  const alerts = [];
+  if (!snapshots.length) return alerts;
+
+  const auditByTurn = new Map();
+  for (const s of snapshots) {
+    if (!Array.isArray(s.material_audit_recent)) continue;
+    for (const a of s.material_audit_recent) {
+      if (a && a.turn) auditByTurn.set(a.turn, a);
+    }
+  }
+  const audits = [...auditByTurn.values()].sort((a, b) => a.turn - b.turn);
+
+  if (audits.length > 10) {
+    const totalEvents = audits.reduce((s, a) => s + (a.drift_count || 0), 0);
+    const perGood = new Map();
+    for (const a of audits) {
+      if (!Array.isArray(a.top_goods)) continue;
+      for (const tg of a.top_goods) {
+        if (!tg || !tg.good) continue;
+        perGood.set(tg.good, (perGood.get(tg.good) || 0) + (tg.total_drift || 0));
+      }
+    }
+    const topGoods = [...perGood.entries()]
+      .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+      .slice(0, 10);
+
+    alerts.push({
+      kind: 'material_leak',
+      turn: audits[audits.length - 1].turn,
+      detail: `${audits.length} ходов с drift'ом, суммарно ${totalEvents} нация×товар пар`,
+    });
+    if (topGoods.length) {
+      const summary = topGoods.map(([g, s]) =>
+        `${g}:${s >= 0 ? '+' : ''}${Math.round(s).toLocaleString('ru-RU')}`
+      ).join(', ');
+      alerts.push({
+        kind: 'material_leak',
+        turn: audits[audits.length - 1].turn,
+        detail: `top-10 товаров по drift: ${summary}`,
+      });
+    }
+  }
+
+  return alerts;
+}
+
 // Системный дефицит казны: ≥ 80% активных наций одновременно с отрицательной казной.
 function detectSystemicDeficit(snapshots) {
   const alerts = [];
@@ -559,6 +611,7 @@ async function main() {
     ...detectExponentialStock(snapshots),
     ...detectSystemicDeficit(snapshots),
     ...detectMoneyLeak(snapshots),
+    ...detectMaterialLeak(snapshots),
   ];
 
   const report = buildReport(snapshots, meta, hard, soft, args.topN);

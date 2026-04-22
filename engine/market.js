@@ -69,7 +69,14 @@ export function updateMarketPrices(totalProduced, totalConsumed) {
   // ── 2. Трёхзонная ценовая логика ─────────────────────────────────────────
   for (const [good, market] of Object.entries(GAME_STATE.market)) {
     const supply = worldSupply[good] || 0;
-    const demand = worldDemand[good] || market.demand || 1;
+    // Этап 11.2 economic4.md — сезонный множитель спроса.
+    // Зима/холодные месяцы → потребители покупают больше зерна/рыбы/вина.
+    // Лето → потребление падает (меньше отопления, свежий урожай).
+    // Для не-сезонных товаров мультипликатор = 1.0 (нет эффекта).
+    const seasonMult = (typeof getSeasonalDemandMult === 'function')
+      ? getSeasonalDemandMult(good) : 1.0;
+    const rawDemand = worldDemand[good] || market.demand || 1;
+    const demand = rawDemand * seasonMult;
 
     // Сохраняем агрегаты для совместимости со старым кодом
     market.supply = supply;

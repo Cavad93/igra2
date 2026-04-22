@@ -1,7 +1,7 @@
 // engine/events.js — Случайные события (вынесено из turn.js, этап 51)
 
 import { MAP_REGIONS } from '../data/map.js';
-import { mutateTreasury } from './economy.js';
+import { mutateTreasury, recordMaterialFlow } from './economy.js';
 
 export const RANDOM_EVENTS = [
   {
@@ -32,6 +32,7 @@ export const RANDOM_EVENTS = [
       const nation = GAME_STATE.nations[nationId];
       const bonus = Math.floor(nation.population.total * 0.5);
       nation.economy.stockpile.wheat = (nation.economy.stockpile.wheat || 0) + bonus;
+      recordMaterialFlow(nation, 'wheat', bonus, 'event');
       applyDelta(`nations.${nationId}.population.happiness`, Math.min(100, nation.population.happiness + 5));
       addEventLog(`${nation.name}: Богатый урожай! +${bonus} бушелей пшеницы.`, 'good');
     },
@@ -119,6 +120,9 @@ export const RANDOM_EVENTS = [
       sp.wheat  = Math.max(0, (sp.wheat  || 0) - wheatLoss);
       sp.barley = Math.max(0, (sp.barley || 0) - barleyLoss);
       sp.olives = Math.max(0, (sp.olives || 0) - olivesLoss);
+      recordMaterialFlow(nation, 'wheat',  wheatLoss,  'event');
+      recordMaterialFlow(nation, 'barley', barleyLoss, 'event');
+      recordMaterialFlow(nation, 'olives', olivesLoss, 'event');
       applyDelta(`nations.${nationId}.population.happiness`, Math.max(0, nation.population.happiness - 8));
       addEventLog(`${nation.name}: Засуха уничтожила ${wheatLoss} пшеницы, ${barleyLoss} ячменя, ${olivesLoss} оливок.`, 'danger');
     },
@@ -135,7 +139,11 @@ export const RANDOM_EVENTS = [
         const sp = n.economy?.stockpile;
         if (!sp) continue;
         for (const good of ['wheat', 'barley', 'olives', 'fish']) {
-          if (sp[good]) sp[good] = Math.floor(sp[good] * 0.85);
+          if (sp[good]) {
+            const before = sp[good];
+            sp[good] = Math.floor(before * 0.85);
+            recordMaterialFlow(n, good, before - sp[good], 'event');
+          }
         }
         if (n.population) n.population.happiness = Math.max(0, (n.population.happiness || 50) - 4);
         affectedCount++;

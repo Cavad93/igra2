@@ -228,6 +228,11 @@ function runOneTurn(ctx, t, mode) {
   if (typeof ctx._auditMoneyConservation === 'function') {
     try { ctx._auditMoneyConservation(); } catch (_) {}
   }
+
+  // Этап 11.1 economic4.md — material audit.
+  if (typeof ctx._auditMaterialConservation === 'function') {
+    try { ctx._auditMaterialConservation(); } catch (_) {}
+  }
 }
 
 // ──────────────────────────────────────────────────────────────

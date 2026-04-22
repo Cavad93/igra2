@@ -109,6 +109,8 @@ function captureSnapshot(GS, turn) {
   }
   const auditLog = Array.isArray(GS._money_audit) ? GS._money_audit : [];
   const recentAudit = auditLog.slice(-3);
+  const materialAuditLog = Array.isArray(GS._material_audit) ? GS._material_audit : [];
+  const recentMaterialAudit = materialAuditLog.slice(-3);
 
   return {
     turn,
@@ -120,6 +122,7 @@ function captureSnapshot(GS, turn) {
     },
     total_money: Math.round(totalMoney),
     money_audit_recent: recentAudit,
+    material_audit_recent: recentMaterialAudit,
   };
 }
 

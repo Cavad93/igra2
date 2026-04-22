@@ -192,6 +192,68 @@ export function takeLoan(nationId, amount, term = LOAN_DEFAULT_TERM) {
   return { ok: true, loan };
 }
 
+/** Этап 11.4 economic4.md — международный заём: одна нация кредитует другую.
+ *
+ *  Деньги переходят из казны lender в казну borrower (через mutateTreasury).
+ *  Каждый ход platёж идёт в казну lender (см. processLoanPayments).
+ *
+ *  @param {string} lenderId    — нация-кредитор
+ *  @param {string} borrowerId  — нация-заёмщик
+ *  @param {number} amount      — сумма
+ *  @param {number} annualRate  — годовая ставка (например 0.08 = 8%)
+ *  @param {number} [term=24]   — срок в ходах
+ *  @returns {{ ok: boolean, loan?: object, reason?: string }}
+ */
+export function offerLoanBetweenNations(lenderId, borrowerId, amount, annualRate = 0.08, term = LOAN_DEFAULT_TERM) {
+  if (!GAME_STATE.loans) GAME_STATE.loans = [];
+  if (!lenderId || !borrowerId || lenderId === borrowerId) {
+    return { ok: false, reason: 'Некорректные идентификаторы наций.' };
+  }
+  const lender   = GAME_STATE.nations?.[lenderId];
+  const borrower = GAME_STATE.nations?.[borrowerId];
+  if (!lender || !borrower) return { ok: false, reason: 'Нация не найдена.' };
+  if (amount < LOAN_MIN_AMOUNT) return { ok: false, reason: `Минимальная сумма: ${LOAN_MIN_AMOUNT}.` };
+  if ((lender.economy?.treasury ?? 0) < amount) {
+    return { ok: false, reason: 'У кредитора недостаточно средств.' };
+  }
+
+  const monthly = calcMonthlyPayment(amount, annualRate, term);
+  const loan = {
+    id:              `loan_intl_${lenderId}_${borrowerId}_t${GAME_STATE.turn ?? 0}`,
+    nation_id:       borrowerId,
+    lender_nation_id: lenderId,
+    principal:       amount,
+    remaining:       amount,
+    monthly_payment: monthly,
+    interest_rate:   annualRate,
+    term,
+    turns_paid:      0,
+    taken_turn:      GAME_STATE.turn ?? 0,
+    defaulted:       false,
+  };
+
+  GAME_STATE.loans.push(loan);
+  mutateTreasury(lender,   -amount, 'international_loan_given');
+  mutateTreasury(borrower, +amount, 'international_loan_received');
+
+  // Дипломатический бонус за выданный заём.
+  const relations = GAME_STATE.diplomacy?.relations;
+  if (relations) {
+    const key = [lenderId, borrowerId].sort().join('_');
+    const rel = relations[key];
+    if (rel) rel.score = Math.min(100, (rel.score ?? 0) + 10);
+  }
+
+  if (typeof addEventLog === 'function') {
+    addEventLog(
+      `🤝 Международный заём: ${lender.name ?? lenderId} выдал ${Math.round(amount)} монет ${borrower.name ?? borrowerId} (ставка ${(annualRate * 100).toFixed(1)}%, ${term} мес.)`,
+      'diplomacy',
+    );
+  }
+
+  return { ok: true, loan };
+}
+
 /** Обработать платежи по займам для одной нации за один ход.
  *  Вызывается из turn.js после updateTreasury.
  *  Если казна не позволяет — уходит в минус (государство берёт в долг у себя).
@@ -214,6 +276,15 @@ export function processLoanPayments(nationId) {
     loan.remaining   = Math.max(0, loan.remaining - payment);
     loan.turns_paid += 1;
     mutateTreasury(nation, -payment, 'loan_payment');
+
+    // Этап 11.4 economic4.md — если заём международный, платёж идёт
+    // в казну нации-кредитора, а не исчезает в «граждан».
+    if (loan.lender_nation_id) {
+      const lender = GAME_STATE.nations?.[loan.lender_nation_id];
+      if (lender?.economy) {
+        mutateTreasury(lender, +payment, 'international_loan_interest_received');
+      }
+    }
 
     if (loan.remaining === 0) {
       if (typeof addEventLog === 'function') {

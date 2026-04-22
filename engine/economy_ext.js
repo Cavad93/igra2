@@ -46,6 +46,38 @@ import { CONFIG } from '../config.js';
 import { GOODS } from '../data/goods.js';
 
 // ──────────────────────────────────────────────────────────────
+// Этап 11.2 economic4.md — сезонность.
+// 1 ход = 1 месяц; месяц = ((turn + START_MONTH − 2) mod 12) + 1.
+// ──────────────────────────────────────────────────────────────
+export function getCurrentMonth() {
+  const t = GAME_STATE?.turn ?? 1;
+  const startMonth = CONFIG?.START_MONTH ?? 1;
+  return ((t + startMonth - 2) % 12 + 12) % 12 + 1;   // гарантированно 1..12
+}
+
+export function getSeasonalHarvestMult(good) {
+  if (!CONFIG?.SEASONS_ENABLED) return 1.0;
+  const seasons = CONFIG?.SEASONS;
+  if (!Array.isArray(seasons) || seasons.length !== 12) return 1.0;
+  const m = getCurrentMonth();
+  const entry = seasons[m - 1];
+  if (!entry?.harvest) return 1.0;
+  const mult = entry.harvest[good];
+  return Number.isFinite(mult) ? mult : 1.0;
+}
+
+export function getSeasonalDemandMult(good) {
+  if (!CONFIG?.SEASONS_ENABLED) return 1.0;
+  const seasons = CONFIG?.SEASONS;
+  if (!Array.isArray(seasons) || seasons.length !== 12) return 1.0;
+  const m = getCurrentMonth();
+  const entry = seasons[m - 1];
+  if (!entry?.demand) return 1.0;
+  const mult = entry.demand[good];
+  return Number.isFinite(mult) ? mult : 1.0;
+}
+
+// ──────────────────────────────────────────────────────────────
 // INIT — идемпотентно создаём все поля расширения.
 // ──────────────────────────────────────────────────────────────
 export function initEconomyExt() {
@@ -561,6 +593,140 @@ export function getInflationMult(nationId) {
   const v = Number(ext.inflation[nationId]) || 0;
   if (!isFinite(v) || v <= 0) return 1.0;
   return 1.0 + Math.min(INFLATION_MAX, v);
+}
+
+// ══════════════════════════════════════════════════════════════
+// ЭТАП 11.3 economic4.md — DEBASEMENT (обесценивание монеты)
+//
+// Исторически: Рим 200-280 AD снижал содержание серебра в денарии с
+// 90% до 5% → гиперинфляция III века. Правитель идёт на debasement
+// когда нет иного способа закрыть бюджетный дефицит.
+//
+// Хранение: nation.economy.coin_purity (default 1.0 = 100% чистое серебро).
+//
+// Триггеры снижения:
+//   1. treasury < -3×income 3 хода подряд И debt > 10×income → −0.05 / 12 ходов
+//   2. При войне И treasury < 0 → −0.05 / 6 ходов
+//
+// Восстановление:
+//   stability > 70 И treasury > 5×income → +0.01/ход
+//
+// Эффект:
+//   • Налоги: tax_income × coin_purity (реальный вес серебра) — в updateTreasury
+//   • Цены: внутренние цены × (1 + (1−purity)×DEBASEMENT_PRICE_MULT) — в market
+//   • События: COIN_DEVALUATION при падении < 0.7/0.5/0.3
+//   • CURRENCY_COLLAPSE если <0.3 > 50 ходов подряд
+// ══════════════════════════════════════════════════════════════
+
+export const DEBASEMENT_PRICE_MULT      = 0.5;   // сила влияния на цены
+export const DEBASEMENT_THRESHOLDS      = [0.7, 0.5, 0.3];
+export const DEBASEMENT_WAR_COOLDOWN    = 6;
+export const DEBASEMENT_NORMAL_COOLDOWN = 12;
+export const DEBASEMENT_STEP            = 0.05;
+export const PURITY_RECOVERY_STEP       = 0.01;
+export const PURITY_MIN                 = 0.05;
+export const PURITY_MAX                 = 1.0;
+
+// Идемпотентная инициализация.
+function _ensureDebasementFields(nation) {
+  const eco = nation.economy;
+  if (!eco) return null;
+  if (eco.coin_purity == null) eco.coin_purity = 1.0;
+  if (eco._debasement_cooldown == null) eco._debasement_cooldown = 0;
+  if (eco._deficit_streak == null) eco._deficit_streak = 0;
+  if (eco._collapse_streak == null) eco._collapse_streak = 0;
+  return eco;
+}
+
+export function _tickDebasement() {
+  if (!GAME_STATE?.nations) return;
+  for (const [nId, nation] of Object.entries(GAME_STATE.nations)) {
+    const eco = _ensureDebasementFields(nation);
+    if (!eco) continue;
+
+    const income   = Number(eco._income_breakdown?.total ?? eco.income_per_turn ?? 0) || 0;
+    const treasury = Number(eco.treasury) || 0;
+    const stability = nation.government?.stability ?? 50;
+    const atWar    = (nation.military?.at_war_with?.length || 0) > 0;
+
+    // Считаем streak дефицита.
+    if (income > 0 && treasury < -3 * income) {
+      eco._deficit_streak = (eco._deficit_streak || 0) + 1;
+    } else {
+      eco._deficit_streak = 0;
+    }
+
+    // Cooldown между debasement'ами.
+    if (eco._debasement_cooldown > 0) eco._debasement_cooldown--;
+
+    // Триггер 1: хроническая долговая нагрузка.
+    const needDebase1 = eco._deficit_streak >= 3;
+    // Триггер 2: война + дефицит казны.
+    const needDebase2 = atWar && treasury < 0;
+
+    if ((needDebase1 || needDebase2) && eco._debasement_cooldown <= 0) {
+      const oldPurity = eco.coin_purity;
+      eco.coin_purity = Math.max(PURITY_MIN, oldPurity - DEBASEMENT_STEP);
+      eco._debasement_cooldown = needDebase2 ? DEBASEMENT_WAR_COOLDOWN : DEBASEMENT_NORMAL_COOLDOWN;
+
+      // Лог при переходе через пороги (игрок).
+      const isPlayer = (nId === GAME_STATE.player_nation);
+      if (isPlayer) {
+        for (const thr of DEBASEMENT_THRESHOLDS) {
+          if (oldPurity >= thr && eco.coin_purity < thr) {
+            addEconomicEvent(
+              `🪙 Обесценивание монеты: содержание серебра упало до ${Math.round(eco.coin_purity * 100)}%. Инфляция ускоряется.`,
+            );
+          }
+        }
+      }
+    }
+
+    // Восстановление при стабильности и профиците.
+    const canRecover = stability > 70 && income > 0 && treasury > 5 * income;
+    if (canRecover && eco.coin_purity < PURITY_MAX && eco._debasement_cooldown <= 0) {
+      eco.coin_purity = Math.min(PURITY_MAX, eco.coin_purity + PURITY_RECOVERY_STEP);
+    }
+
+    // Track collapse streak: purity < 0.3 длится 50+ ходов → CURRENCY_COLLAPSE.
+    if (eco.coin_purity < 0.3) {
+      eco._collapse_streak = (eco._collapse_streak || 0) + 1;
+      if (eco._collapse_streak === 50) {
+        // Кризис III века: армия дезертирует, счастье падает.
+        const isPlayer = (nId === GAME_STATE.player_nation);
+        if (nation.population) {
+          nation.population.happiness = Math.max(0, (nation.population.happiness || 50) - 30);
+        }
+        if (nation.military) {
+          nation.military.mercenaries = 0;
+        }
+        if (isPlayer) {
+          addEconomicEvent(
+            `🔥 КРИЗИС III ВЕКА: монета обесценилась полностью. Все наёмники дезертировали. Счастье −30.`,
+          );
+        }
+      }
+    } else {
+      eco._collapse_streak = 0;
+    }
+  }
+}
+
+// Средняя чистота монеты по всему миру — для влияния на мировые цены.
+export function getAvgWorldPurity() {
+  if (!GAME_STATE?.nations) return 1.0;
+  let sum = 0, n = 0;
+  for (const nation of Object.values(GAME_STATE.nations)) {
+    const p = nation.economy?.coin_purity;
+    if (Number.isFinite(p)) { sum += p; n++; }
+  }
+  return n > 0 ? sum / n : 1.0;
+}
+
+// Ценовой множитель от debasement. При avg_purity=0.5 → +25% к ценам.
+export function getDebasementPriceMult() {
+  const avg = getAvgWorldPurity();
+  return 1 + (1 - avg) * DEBASEMENT_PRICE_MULT;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1128,6 +1294,12 @@ export function runEconomyExtTick() {
   // в engine/buildings.js → procureCapitalInputs() (прово- и местный
   // уровни). Мировой рынок (внешние цены) остаётся незатронутым.
   try { updateInflation(); } catch (e) { console.warn('[economy_ext:infl]', e); }
+
+  // Этап 11.3 economic4.md — debasement (обесценивание монеты).
+  // Снижение coin_purity при хроническом дефиците казны; восстановление
+  // при stability >70 и профиците. Влияет на налоги (updateTreasury)
+  // и мировые цены (market.js).
+  try { _tickDebasement(); } catch (e) { console.warn('[economy_ext:debase]', e); }
 
   // Этап 5 — глобальный экономический цикл (бум/спад). Активный цикл
   // умножает производство продовольствия (CYCLE_GOODS) в

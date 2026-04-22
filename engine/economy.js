@@ -114,6 +114,33 @@ export function mutateTreasury(nation, delta, source) {
   return eco.treasury;
 }
 
+// ──────────────────────────────────────────────────────────────
+// Этап 11.1 economic4.md — трекинг товарных потоков.
+//
+// Аналог mutateTreasury() для stockpile. Записывает ВСЕ изменения количеств
+// товаров в разбивке по типам потоков — производство/потребление/порча/
+// торговля — чтобы _auditMaterialConservation() мог проверить закон
+// сохранения материи: Δstockpile = production + import − consumption −
+// export − spoilage ± other.
+//
+// В отличие от mutateTreasury, helper НЕ мутирует stockpile сам (это делает
+// вызывающий код), а только записывает delta в аккумулятор. Так проще
+// мигрировать существующий код — достаточно добавить вызов рядом с
+// существующей мутацией.
+//
+// bucket ∈ { 'prod', 'cons', 'spoil', 'trade_in', 'trade_out', 'capital',
+//            'army', 'event', 'other' }
+// ──────────────────────────────────────────────────────────────
+export function recordMaterialFlow(nation, good, amount, bucket) {
+  if (!nation?.economy || !Number.isFinite(amount) || amount === 0) return;
+  if (!good || typeof good !== 'string') return;
+  if (!bucket || typeof bucket !== 'string') bucket = 'other';
+  const key = `_mat_${bucket}`;
+  const eco = nation.economy;
+  if (!eco[key]) eco[key] = {};
+  eco[key][good] = (eco[key][good] || 0) + amount;
+}
+
 // Получить значение из GameState по пути
 export function getState(path) {
   return path.split('.').reduce((obj, key) => obj && obj[key], GAME_STATE);
@@ -519,8 +546,32 @@ export function routeProductionToLocalStockpiles(nationId, allProduced) {
       }
     }
 
+    // Этап 11.2 economic4.md — сезонность.
+    // Применяется ПОСЛЕ tech/spec/cycle, ПЕРЕД overflow и audit.
+    // Для аграрных товаров (wheat, barley, olives, grapes, fish, honey)
+    // меняет производство от 0 (зима для зерна) до ×4 (сентябрь-октябрь).
+    if (typeof getSeasonalHarvestMult === 'function') {
+      for (const good of Object.keys(prodThisTick)) {
+        const smult = getSeasonalHarvestMult(good);
+        if (smult !== 1.0) {
+          const delta = prodThisTick[good] * (smult - 1);
+          if (delta !== 0) {
+            const newProd = Math.max(0, prodThisTick[good] + delta);
+            const newLs   = Math.max(0, (ls[good] || 0) + delta);
+            prodThisTick[good] = newProd;
+            ls[good] = newLs;
+          }
+        }
+      }
+    }
+
     // Запоминаем для расчёта региональных цен и ёмкости
     region._production_last_tick = prodThisTick;
+
+    // Этап 11.1: записываем производство этого региона в material audit.
+    for (const [good, amt] of Object.entries(prodThisTick)) {
+      if (amt > 0) recordMaterialFlow(nation, good, amt, 'prod');
+    }
 
     // ── C. Overflow: только для произведённых здесь товаров ─────────────
     // Capacity = 3 тика производства. Непроизведённые товары (инструменты,
@@ -816,6 +867,7 @@ export function processTrade(nationId) {
 
       nation.economy.treasury = (nation.economy.treasury || 0) - payment;
       stockpile[good] = (stockpile[good] || 0) + fromWorld;
+      recordMaterialFlow(nation, good, fromWorld, 'trade_in');
 
       mktEntry.world_stockpile = Math.max(0, mktEntry.world_stockpile - fromWorld);
       if (!mktEntry._world_bought_tick) mktEntry._world_bought_tick = {};
@@ -887,8 +939,20 @@ export function updateTreasury(nationId, produced, consumed, tradeProfit) {
   } else {
     taxByClass = { aristocrats: 0, clergy: 0, commoners: 0, soldiers: 0 };
   }
-  const taxIncomeTotal = taxByClass.aristocrats + taxByClass.clergy
-                       + taxByClass.commoners   + taxByClass.soldiers;
+  let taxIncomeTotal = taxByClass.aristocrats + taxByClass.clergy
+                     + taxByClass.commoners   + taxByClass.soldiers;
+
+  // Этап 11.3 economic4.md — coin_purity влияет на реальный вес налогов.
+  // Обесценивание монеты означает, что те же ставки приносят меньше
+  // реального серебра. Прямой множитель на tax_income.
+  const coinPurity = economy.coin_purity;
+  if (Number.isFinite(coinPurity) && coinPurity < 1.0 && coinPurity > 0) {
+    taxIncomeTotal = Math.round(taxIncomeTotal * coinPurity);
+    taxByClass.aristocrats = Math.round(taxByClass.aristocrats * coinPurity);
+    taxByClass.clergy      = Math.round(taxByClass.clergy      * coinPurity);
+    taxByClass.commoners   = Math.round(taxByClass.commoners   * coinPurity);
+    taxByClass.soldiers    = Math.round(taxByClass.soldiers    * coinPurity);
+  }
 
   // ── ДОХОДЫ: ПОРТОВЫЕ ПОШЛИНЫ ───────────────────────────────
   // GAME_STATE.regions изначально пуст; географические данные хранятся в MAP_REGIONS
@@ -1284,7 +1348,10 @@ export function processSpoilage(activeEntries) {
       if (!rate || !sp[good] || sp[good] <= 0) continue;
       // Округляем до целого — stockpile целочисленный в кг/единицах.
       const loss = Math.floor(sp[good] * rate);
-      if (loss > 0) sp[good] -= loss;
+      if (loss > 0) {
+        sp[good] -= loss;
+        recordMaterialFlow(nation, good, loss, 'spoil');
+      }
     }
   }
 }
@@ -1446,9 +1513,18 @@ export function runEconomyTick() {
           `${nation.name}: ГОЛОД! Не хватает ${Math.round(deficit)} бушелей зерна. Погибло ${Math.round(famineMortality)} человек.`,
           'danger',
         );
+        // Этап 11.1: записываем ФАКТИЧЕСКОЕ потребление (available),
+        // не запрошенное (amount) — stockpile стал 0, потребили только
+        // то что было.
+        recordMaterialFlow(nation, 'wheat', available, 'cons');
         stockpile.wheat = 0;
       } else {
+        // Фактическое потребление = min(requested, available); при дефиците
+        // (available < amount) часть спроса не удовлетворяется и НЕ списывается
+        // со склада. Нельзя записывать `amount` — даст positive-drift в audit.
+        const actualConsumed = Math.min(amount, available);
         stockpile[good] = Math.max(0, available - amount);
+        recordMaterialFlow(nation, good, actualConsumed, 'cons');
       }
     }
     allActualConsumed[nationId] = actual;

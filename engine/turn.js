@@ -140,6 +140,131 @@ export function _auditMoneyConservation() {
 }
 
 // ──────────────────────────────────────────────────────────────
+// Этап 11.1 economic4.md — аудит материального баланса.
+//
+// Аналог _auditMoneyConservation() для товаров. Каждый ход снимает снапшот
+// всех stockpile (национальных + региональных local_stockpile), сравнивает
+// с предыдущим и проверяет что Δstockpile = production + trade_in
+// − consumption − spoilage − (capital/army/other).
+//
+// Источники drift'а, которые будут видны как «не категоризировано»:
+//   • Потребление капитала в зданиях (buildings.js procureCapitalInputs)
+//   • Потребление армии (armies.js)
+//   • AI-fallback mutations (редкие)
+//   • ai_fallback.js sellSurplus / importDeficit (отключены)
+//
+// Для полного покрытия требуется также мигрировать эти сайты на
+// recordMaterialFlow(..., 'capital' | 'army'). MVP: ловим неучтённое.
+// ──────────────────────────────────────────────────────────────
+export function _auditMaterialConservation() {
+  const gs = GAME_STATE;
+  if (!gs || !gs.nations) return;
+
+  const prevSnap = gs._last_stockpile_snapshot || {};
+  const nextSnap = {};
+  const drifts = [];
+
+  const goodsOfInterest = new Set([
+    'wheat', 'barley', 'fish', 'tuna', 'olives', 'olive_oil', 'honey', 'wine',
+    'salt', 'iron', 'bronze', 'timber', 'wool', 'cloth', 'leather', 'tools',
+    'pottery', 'papyrus', 'wax', 'trade_goods', 'sulfur', 'cattle', 'horses',
+    'slaves', 'purple_dye', 'incense', 'stone', 'charcoal',
+  ]);
+
+  for (const [nId, nation] of Object.entries(gs.nations)) {
+    if (!nation.economy?.stockpile) continue;
+    // Снапшот: nation.stockpile + все local_stockpile регионов нации.
+    const snap = {};
+    for (const [g, q] of Object.entries(nation.economy.stockpile)) {
+      if (Number.isFinite(q)) snap[g] = q;
+    }
+    for (const rid of nation.regions || []) {
+      const r = gs.regions?.[rid];
+      if (!r?.local_stockpile) continue;
+      for (const [g, q] of Object.entries(r.local_stockpile)) {
+        if (Number.isFinite(q)) snap[g] = (snap[g] || 0) + q;
+      }
+    }
+    nextSnap[nId] = snap;
+
+    const prev = prevSnap[nId];
+    if (gs.turn > 1 && prev) {
+      const prod     = nation.economy._mat_prod      || {};
+      const cons     = nation.economy._mat_cons      || {};
+      const spoil    = nation.economy._mat_spoil     || {};
+      const tradeIn  = nation.economy._mat_trade_in  || {};
+      const tradeOut = nation.economy._mat_trade_out || {};
+      const event    = nation.economy._mat_event     || {};
+      // event — знаковое (прирост от good_harvest, убыль от drought)
+      // Поэтому суммируем как есть, без отдельных разбиений.
+
+      const goods = new Set([...Object.keys(snap), ...Object.keys(prev)]);
+      for (const g of goods) {
+        if (!goodsOfInterest.has(g)) continue;
+        const pQ = prev[g] || 0;
+        const cQ = snap[g] || 0;
+        if (Math.abs(pQ) < 100 && Math.abs(cQ) < 100) continue;   // шум
+
+        // Обычно event бывает с обоих знаков — good_harvest (+) или drought (−).
+        // Записываем event как знаковая сумма: +gain, −loss.
+        const expectedDelta = (prod[g] || 0)
+                            + (tradeIn[g] || 0)
+                            - (cons[g] || 0)
+                            - (spoil[g] || 0)
+                            - (tradeOut[g] || 0)
+                            + (event[g] || 0);
+        const actualDelta = cQ - pQ;
+        const drift = actualDelta - expectedDelta;
+
+        // Порог: drift > 0.5% от max(|prev|, |curr|, 100) И drift > 10 единиц.
+        const ref = Math.max(Math.abs(pQ), Math.abs(cQ), 100);
+        if (Math.abs(drift) / ref > 0.005 && Math.abs(drift) > 10) {
+          drifts.push({
+            nation: nId, good: g,
+            drift: Math.round(drift),
+            prev: Math.round(pQ),
+            now: Math.round(cQ),
+            expected: Math.round(expectedDelta),
+          });
+        }
+      }
+    }
+
+    // Сброс аккумуляторов для следующего хода.
+    delete nation.economy._mat_prod;
+    delete nation.economy._mat_cons;
+    delete nation.economy._mat_spoil;
+    delete nation.economy._mat_trade_in;
+    delete nation.economy._mat_trade_out;
+    delete nation.economy._mat_event;
+  }
+
+  if (drifts.length > 0 && gs.turn > 1) {
+    drifts.sort((a, b) => Math.abs(b.drift) - Math.abs(a.drift));
+    gs._material_audit ??= [];
+    // Агрегируем по товару: суммарный drift на этом ходу.
+    const byGood = new Map();
+    for (const d of drifts) {
+      byGood.set(d.good, (byGood.get(d.good) || 0) + d.drift);
+    }
+    const topGoods = [...byGood.entries()]
+      .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+      .slice(0, 10)
+      .map(([g, s]) => ({ good: g, total_drift: Math.round(s) }));
+
+    gs._material_audit.push({
+      turn: gs.turn,
+      drift_count: drifts.length,
+      top_offenders: drifts.slice(0, 5),
+      top_goods: topGoods,
+    });
+    if (gs._material_audit.length > 200) gs._material_audit.shift();
+  }
+
+  gs._last_stockpile_snapshot = nextSnap;
+}
+
+// ──────────────────────────────────────────────────────────────
 // ГЛАВНАЯ ФУНКЦИЯ ХОДА
 // ──────────────────────────────────────────────────────────────
 
@@ -501,6 +626,12 @@ export async function processTurn() {
     //   не расходится с ожидаемой величиной (last_total + income − expense − burns).
     //   Отклонение > 0.1% → запись в GAME_STATE._money_audit для пост-анализа.
     try { _auditMoneyConservation(); } catch (e) { console.warn('[money_audit]', e); }
+
+    // 6.10. Material balance audit (Этап 11.1 economic4.md)
+    //   Товарный аналог money_audit — проверяет закон сохранения материи:
+    //   Δstockpile = production + trade_in − consumption − spoilage − export ± event.
+    //   Drift > 0.5% от |stockpile| → запись в GAME_STATE._material_audit.
+    try { _auditMaterialConservation(); } catch (e) { console.warn('[material_audit]', e); }
 
     // 7. Автосохранение
     _setStep('Сохранение...');

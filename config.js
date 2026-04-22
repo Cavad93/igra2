@@ -133,6 +133,41 @@ export const CONFIG = {
     },
   },
 
+  // ─────────────────────────────────────
+  // СЕЗОННОСТЬ (Этап 11.2 economic4.md)
+  // ─────────────────────────────────────
+  // 1 ход = 1 месяц. Средиземноморский климат:
+  //   Декабрь-Февраль: зима — нет урожая, высокий спрос на зерно/топливо
+  //   Март-Май:        сев, низкое производство
+  //   Июнь-Август:     рост, средний сбор ячменя
+  //   Сентябрь:        пик урожая пшеницы (main harvest)
+  //   Октябрь:         оливки, поздний виноград
+  //   Ноябрь:          запасы, подготовка к зиме
+  //
+  // harvest_mult влияет на calculateProduction (базовая ставка × seasonal).
+  // demand_mult влияет на рыночный спрос (зимой зерно дороже).
+  //
+  // Среднегодовое производство должно остаться ≈ base (сумма/12 ≈ 1.0),
+  // чтобы не ломать калибровку питания класса.
+  SEASONS_ENABLED: true,
+  SEASONS: [
+    // month (1-12), harvest_mult, demand_mult
+    // harvest = 0 означает «сезон не для этого товара» (зима для зерна)
+    // Сумма harvest для wheat за 12 мес ≈ 12 (среднее 1.0) — калибровано.
+    { month: 1,  harvest: { wheat: 0.0, barley: 0.0, olives: 0.0, grapes: 0.0, fish: 1.4, honey: 0.2 }, demand: { wheat: 1.30, barley: 1.25, fish: 1.20, wine: 1.10 } }, // январь
+    { month: 2,  harvest: { wheat: 0.0, barley: 0.0, olives: 0.0, grapes: 0.0, fish: 1.3, honey: 0.3 }, demand: { wheat: 1.25, barley: 1.20, fish: 1.15, wine: 1.05 } }, // февраль
+    { month: 3,  harvest: { wheat: 0.1, barley: 0.1, olives: 0.0, grapes: 0.2, fish: 1.1, honey: 0.5 }, demand: { wheat: 1.15, barley: 1.10, fish: 1.00, wine: 1.00 } }, // март
+    { month: 4,  harvest: { wheat: 0.2, barley: 0.3, olives: 0.1, grapes: 0.4, fish: 1.0, honey: 1.0 }, demand: { wheat: 1.05, barley: 1.00, fish: 0.95, wine: 0.95 } }, // апрель
+    { month: 5,  harvest: { wheat: 0.3, barley: 0.5, olives: 0.2, grapes: 0.6, fish: 1.0, honey: 1.3 }, demand: { wheat: 0.95, barley: 0.95, fish: 0.90, wine: 0.95 } }, // май
+    { month: 6,  harvest: { wheat: 0.5, barley: 1.0, olives: 0.3, grapes: 0.8, fish: 1.0, honey: 1.5 }, demand: { wheat: 0.85, barley: 0.90, fish: 0.85, wine: 0.90 } }, // июнь
+    { month: 7,  harvest: { wheat: 0.8, barley: 1.5, olives: 0.4, grapes: 1.0, fish: 1.0, honey: 1.8 }, demand: { wheat: 0.80, barley: 0.85, fish: 0.85, wine: 0.90 } }, // июль
+    { month: 8,  harvest: { wheat: 2.0, barley: 2.5, olives: 0.5, grapes: 1.2, fish: 0.9, honey: 1.5 }, demand: { wheat: 0.75, barley: 0.80, fish: 0.90, wine: 0.95 } }, // август (раннепшеница)
+    { month: 9,  harvest: { wheat: 4.0, barley: 2.0, olives: 1.0, grapes: 2.5, fish: 0.9, honey: 1.0 }, demand: { wheat: 0.70, barley: 0.80, fish: 0.95, wine: 1.00 } }, // сентябрь (пик сбора)
+    { month: 10, harvest: { wheat: 2.5, barley: 1.2, olives: 3.5, grapes: 3.0, fish: 0.9, honey: 0.6 }, demand: { wheat: 0.80, barley: 0.85, fish: 1.00, wine: 1.05 } }, // октябрь (оливки, виноград)
+    { month: 11, harvest: { wheat: 0.8, barley: 0.6, olives: 4.0, grapes: 1.0, fish: 1.0, honey: 0.3 }, demand: { wheat: 0.95, barley: 1.00, fish: 1.10, wine: 1.10 } }, // ноябрь (завершение оливок)
+    { month: 12, harvest: { wheat: 0.2, barley: 0.1, olives: 1.0, grapes: 0.1, fish: 1.2, honey: 0.1 }, demand: { wheat: 1.15, barley: 1.15, fish: 1.15, wine: 1.15 } }, // декабрь
+  ],
+
   // Отображение
   TURNS_PER_YEAR: 12,
   START_YEAR: -301,
