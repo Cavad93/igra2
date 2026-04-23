@@ -168,3 +168,214 @@
 /* Убрать старый прогресс-бар -- прогресс виден через мозаику */
 #splash-bar-wrap,
 #splash-bar-fill { display: none !important; }
+
+/* ═══════════════════════════════════════════════════════
+   Главное меню (splash menu) — Продолжить / Новая / Удалить
+═══════════════════════════════════════════════════════ */
+
+.splash__menu {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  margin-top: 28px;
+  min-width: 320px;
+  max-width: 420px;
+  animation: splashMenuFade 480ms ease-out;
+}
+
+@keyframes splashMenuFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.splash__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.splash__btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  background: rgba(12, 10, 6, 0.72);
+  border: 1px solid var(--border-gold, rgba(196, 160, 84, 0.5));
+  color: var(--text-light, #e8dcb8);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+  backdrop-filter: blur(4px);
+}
+
+.splash__btn:hover:not(:disabled) {
+  background: rgba(48, 34, 14, 0.85);
+  border-color: var(--gold, #c4a054);
+}
+
+.splash__btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.splash__btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.splash__btn--primary {
+  background: rgba(84, 54, 18, 0.78);
+  border-color: var(--gold, #c4a054);
+  color: var(--gold-light, #eccd8a);
+}
+
+.splash__btn--primary:hover:not(:disabled) {
+  background: rgba(108, 72, 26, 0.92);
+}
+
+.splash__btn--danger {
+  color: #d6a080;
+}
+
+.splash__btn--danger:hover:not(:disabled) {
+  background: rgba(82, 28, 22, 0.82);
+  border-color: #d6a080;
+}
+
+.splash__btn-icon {
+  font-size: 17px;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.splash__btn-label {
+  flex: 1;
+  text-align: left;
+}
+
+.splash__btn-meta {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  text-transform: none;
+}
+
+.splash__btn--small {
+  padding: 6px 14px;
+  font-size: 11px;
+}
+
+/* ─── API-ключи (сворачиваемый блок) ─── */
+
+.splash__keys {
+  margin-top: 6px;
+  padding: 0;
+  background: rgba(8, 6, 4, 0.55);
+  border: 1px solid rgba(196, 160, 84, 0.22);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.splash__keys summary {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  user-select: none;
+}
+
+.splash__keys summary::-webkit-details-marker { display: none; }
+
+.splash__keys summary:hover {
+  background: rgba(60, 44, 20, 0.4);
+  color: var(--text-light);
+}
+
+.splash__keys-status {
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.splash__keys-status--ok   { color: #8fc08f; }
+.splash__keys-status--warn { color: #d6a080; }
+
+.splash__keys-body {
+  padding: 12px 14px 14px;
+  border-top: 1px solid rgba(196, 160, 84, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.splash__key-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.splash__key-field span {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+
+.splash__key-field input {
+  padding: 7px 10px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(196, 160, 84, 0.28);
+  color: var(--text-light);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.splash__key-field input:focus {
+  border-color: var(--gold, #c4a054);
+}
+
+.splash__keys-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.splash__keys-feedback {
+  font-size: 11px;
+  flex: 1;
+}
+
+.splash__keys-feedback[data-kind="ok"]   { color: #8fc08f; }
+.splash__keys-feedback[data-kind="warn"] { color: #d6a080; }
+
+.splash__keys-note {
+  margin: 8px 0 0;
+  font-size: 10.5px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.splash__menu-footer {
+  margin-top: 4px;
+  padding-top: 10px;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  border-top: 1px solid rgba(196, 160, 84, 0.14);
+  text-transform: uppercase;
+}

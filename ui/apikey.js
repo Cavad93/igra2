@@ -293,11 +293,79 @@ export async function saveInlineAPIKeys() {
 // ИНИЦИАЛИЗАЦИЯ (вызывается при старте игры)
 // ──────────────────────────────────────────────────────────────
 
-async function initAPIKey() {
+export async function initAPIKey() {
   const foundAnthropic = await loadEncryptedAPIKey();
   const foundGroq      = await loadGroqAPIKey();
-  // Показываем модал если нет ни одного ключа
-  if (!foundAnthropic && !foundGroq) showAPIKeyModal(null);
-  // Обновляем статус инлайн-формы
+  // Главное меню (splash): ключи вводятся там, автоматический модал больше не показываем.
+  // Обновляем статус инлайн-формы (если она где-то рендерится).
   _updateInlineKeyStatus();
+  _updateSplashKeyStatus();
+  return { foundAnthropic, foundGroq };
+}
+
+// ──────────────────────────────────────────────────────────────
+// Интеграция с главным меню (#splash-menu)
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Обновить статус ключей в главном меню.
+ * Вызывается из initAPIKey() и после каждого saveSplashAPIKeys().
+ */
+export function _updateSplashKeyStatus() {
+  const status = document.getElementById('splash-keys-status');
+  if (!status) return;
+  const parts = [];
+  if (CONFIG.GROQ_API_KEY)  parts.push('Groq');
+  if (CONFIG.API_KEY)       parts.push('Anthropic');
+  if (parts.length) {
+    status.textContent = '✓ ' + parts.join(' · ');
+    status.classList.add('splash__keys-status--ok');
+    status.classList.remove('splash__keys-status--warn');
+  } else {
+    status.textContent = '⚠️ не сохранены';
+    status.classList.add('splash__keys-status--warn');
+    status.classList.remove('splash__keys-status--ok');
+  }
+}
+
+/**
+ * Сохранить ключи из splash-формы (непустые поля). Очищает поля после успеха.
+ * @returns {Promise<{saved: string[], error?: string}>}
+ */
+export async function saveSplashAPIKeys() {
+  const anthropicInp = document.getElementById('splash-anthropic-key');
+  const groqInp      = document.getElementById('splash-groq-key');
+  const feedback     = document.getElementById('splash-keys-feedback');
+
+  const anthropicVal = (anthropicInp?.value ?? '').trim();
+  const groqVal      = (groqInp?.value ?? '').trim();
+
+  const setFeedback = (msg, kind = 'ok') => {
+    if (!feedback) return;
+    feedback.textContent = msg;
+    feedback.dataset.kind = kind;
+  };
+
+  if (!anthropicVal && !groqVal) {
+    setFeedback('Введите хотя бы один ключ.', 'warn');
+    return { saved: [], error: 'empty' };
+  }
+  if (anthropicVal && !anthropicVal.startsWith('sk-ant-')) {
+    setFeedback('Anthropic-ключ должен начинаться с sk-ant-.', 'warn');
+    return { saved: [], error: 'bad_anthropic' };
+  }
+
+  try {
+    const saved = [];
+    if (groqVal)      { await saveGroqAPIKey(groqVal);      saved.push('Groq'); }
+    if (anthropicVal) { await saveEncryptedAPIKey(anthropicVal); saved.push('Anthropic'); }
+    if (anthropicInp) anthropicInp.value = '';
+    if (groqInp)      groqInp.value = '';
+    setFeedback(`✓ Сохранено: ${saved.join(' + ')}`, 'ok');
+    _updateSplashKeyStatus();
+    return { saved };
+  } catch (e) {
+    setFeedback('Ошибка шифрования: ' + e.message, 'warn');
+    return { saved: [], error: e.message };
+  }
 }

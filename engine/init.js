@@ -4,7 +4,14 @@
 import { CONFIG } from '../config.js';
 import { GOODS } from '../data/goods.js';
 
-export async function initGame() {
+/**
+ * Инициализация игры.
+ * @param {object} options
+ *   - loadSave: boolean (default true) — пытаться ли загрузить сохранение.
+ *                                         При false — новая игра из INITIAL_GAME_STATE.
+ */
+export async function initGame(options = {}) {
+  const loadSave = options.loadSave !== false;
   // Инициализируем GAME_STATE из стартовых данных
   Object.assign(GAME_STATE, JSON.parse(JSON.stringify(INITIAL_GAME_STATE)));
 
@@ -61,8 +68,10 @@ export async function initGame() {
   // Инициализируем массив приказов
   if (typeof initOrders === 'function') initOrders();
 
-  // Попытка загрузки сохранения
-  const hasSave = await loadGame();
+  // Попытка загрузки сохранения (только если loadSave=true).
+  // Для «Новой игры» передаётся loadSave=false → hasSave остаётся false
+  // и применяются стартовые буферы ниже.
+  const hasSave = loadSave ? await loadGame() : false;
 
   // Заполняем geo-данные (connections, mapType) для всех регионов из MAP_REGIONS.
   // Это гарантирует работу поиска пути армий сразу после загрузки.
@@ -348,6 +357,27 @@ export function renderAll() {
   }
 }
 
+
+// ──────────────────────────────────────────────────────────────
+// Главное меню: обёртки для «Новой игры» / «Продолжить»
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Продолжить игру — грузит сохранение, если есть; иначе — новая игра.
+ */
+export async function continueGame() {
+  return initGame({ loadSave: true });
+}
+
+/**
+ * Новая игра — сбрасывает сохранение и инициализирует свежее состояние.
+ */
+export async function startNewGame() {
+  if (typeof deleteAllSaves === 'function') {
+    try { await deleteAllSaves(); } catch (_) {}
+  }
+  return initGame({ loadSave: false });
+}
 
 // Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
 

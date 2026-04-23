@@ -557,53 +557,45 @@ function _splashHide() {
 
 _splashProgress(10, 'Инициализация...');
 
-// Ждём, пока подгрузится lazy-импортированный regions_data.js
-// (он мутирует INITIAL_GAME_STATE.regions, который читается внутри initGame()).
+// Этап «Главное меню» — больше НЕ вызываем initGame() автоматически.
+// Ждём, пока подгрузится lazy-импортированный regions_data.js, загружаем
+// API-ключи (lucky-path: ключи сохранены → просто подхватываются), затем
+// показываем главное меню. initGame() теперь вызывается из ui/splash.js
+// при клике на «Продолжить» / «Новая игра».
 _regionsDataReady.then(function () {
-  return window.initGame();
+  _splashProgress(40, 'Подготовка наций...');
+  // Применяем тему Сиракуз (до запуска), чтобы фон и цвета были готовы.
+  try {
+    if (typeof window.applyNationTheme === 'function') {
+      window.applyNationTheme('syracuse');
+    }
+  } catch (e) { console.error('[applyNationTheme]', e); }
+  try {
+    if (typeof window.initSplash === 'function') {
+      window.initSplash('syracuse');
+    }
+  } catch (e) { console.error('[initSplash]', e); }
+
+  _splashProgress(70, 'Загрузка ключей...');
+  // Загружаем ключи (если сохранены); initAPIKey больше не показывает модал.
+  return (typeof window.initAPIKey === 'function')
+    ? window.initAPIKey().catch(function () { return null; })
+    : null;
 }).then(function () {
-  _splashProgress(60, 'Загрузка карты...');
-  if (typeof window.initAllSenates === 'function') window.initAllSenates();
-  _splashProgress(80, 'Подготовка наций...');
-  renderNationLegend();
   _splashProgress(95, 'Готово');
-  if (typeof window.initAPIKey === 'function') window.initAPIKey();
 
-  try {
-    if (typeof window.applyNationTheme === 'function' && window.GAME_STATE && window.GAME_STATE.player_nation) {
-      window.applyNationTheme(window.GAME_STATE.player_nation);
-    }
-  } catch (e) { console.error('[applyNationTheme] error:', e); }
-
-  try {
-    if (typeof window.initSplash === 'function' && window.GAME_STATE && window.GAME_STATE.player_nation) {
-      window.initSplash(window.GAME_STATE.player_nation);
-    }
-  } catch (e) { console.error('[initSplash] error:', e); }
-
-  try {
-    if (typeof window.updateNationHeader === 'function' && window.GAME_STATE && window.GAME_STATE.player_nation) {
-      var pn = window.GAME_STATE.nations && window.GAME_STATE.nations[window.GAME_STATE.player_nation];
-      window.updateNationHeader(window.GAME_STATE.player_nation, pn && pn.name);
-    }
-  } catch (e) { console.error('[updateNationHeader] error:', e); }
-
-  try {
-    if (typeof window.setMapMode === 'function') window.setMapMode('political');
-  } catch (e) { console.error('[setMapMode] error:', e); }
-
-  try {
-    if (typeof window.initWindRoseKeyboard === 'function') window.initWindRoseKeyboard();
-  } catch (e) { console.error('[initWindRoseKeyboard] error:', e); }
-
-  var _revealStartBtn = function () {
+  var _menuRevealed = false;
+  var _revealMenu = function () {
+    if (_menuRevealed) return;
+    _menuRevealed = true;
     try {
-      if (typeof window.showSplashStartButton === 'function') {
+      if (typeof window.showSplashMenu === 'function') {
+        window.showSplashMenu();
+      } else if (typeof window.showSplashStartButton === 'function') {
         window.showSplashStartButton();
-      } else {
-        setTimeout(_splashHide, 300);
       }
     } catch (e) {
+      console.error('[splash.showSplashMenu]', e);
       setTimeout(_splashHide, 300);
     }
   };
@@ -614,12 +606,14 @@ _regionsDataReady.then(function () {
         setTimeout(_waitMosaic, 200);
         return;
       }
-    } catch (_) { /* сразу показываем кнопку */ }
-    _revealStartBtn();
+    } catch (_) { /* сразу показываем меню */ }
+    _revealMenu();
   };
   _waitMosaic();
+  // Safety-net: если мозаика так и не доложилась за 5 секунд — всё равно показываем меню.
+  setTimeout(_revealMenu, 5000);
 }).catch(function (e) {
-  console.error('[initGame] Критическая ошибка:', e);
+  console.error('[boot] Критическая ошибка загрузки:', e);
   _splashProgress(100, 'Ошибка инициализации');
 });
 

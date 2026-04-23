@@ -142,6 +142,38 @@ export async function saveGame(opts) {
   }
 }
 
+/**
+ * Проверить, есть ли сохранение в хранилище. НЕ меняет GAME_STATE.
+ * Используется главным меню для включения/отключения кнопки «Продолжить».
+ */
+export async function hasSavedGame() {
+  try {
+    await GameStorage.migrate(CONFIG.SAVE_KEY);
+    const state = await GameStorage.load();
+    return !!(state && typeof state === 'object' && state.turn);
+  } catch (e) {
+    console.warn('[hasSavedGame]', e);
+    return false;
+  }
+}
+
+/**
+ * Удалить только игровое сохранение. API-ключи (localStorage: _akd, _akgd, _aks)
+ * НЕ трогаются — это критическое требование.
+ */
+export async function deleteAllSaves() {
+  try {
+    await GameStorage.clear();
+    // Дополнительно убираем legacy-запись из localStorage (старые версии игры)
+    try { localStorage.removeItem(CONFIG.SAVE_KEY); } catch (_) {}
+    try { localStorage.removeItem('ancient_strategy_save_fallback'); } catch (_) {}
+    return true;
+  } catch (e) {
+    console.warn('[deleteAllSaves]', e);
+    return false;
+  }
+}
+
 export async function loadGame() {
   try {
     await GameStorage.migrate(CONFIG.SAVE_KEY);

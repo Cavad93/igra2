@@ -93,6 +93,62 @@
       <p  id="splash-subtitle" class="splash__subtitle">SYRACVSAE · CCCI BC</p>
       <div id="splash-bar-wrap"><div id="splash-bar-fill"></div></div>
       <div id="splash-status">Загрузка...</div>
+
+      <!-- Главное меню: показывается когда загрузка завершена (см. ui/splash.js) -->
+      <div id="splash-menu" class="splash__menu" style="display:none;">
+        <div class="splash__actions">
+          <button id="splash-btn-continue" class="splash__btn splash__btn--primary" type="button" disabled>
+            <span class="splash__btn-icon">▶</span>
+            <span class="splash__btn-label">Продолжить</span>
+            <span id="splash-save-meta" class="splash__btn-meta"></span>
+          </button>
+          <button id="splash-btn-new" class="splash__btn" type="button">
+            <span class="splash__btn-icon">🆕</span>
+            <span class="splash__btn-label">Новая игра</span>
+          </button>
+          <button id="splash-btn-delete" class="splash__btn splash__btn--danger" type="button" disabled>
+            <span class="splash__btn-icon">🗑</span>
+            <span class="splash__btn-label">Удалить сохранения</span>
+          </button>
+        </div>
+
+        <details id="splash-keys" class="splash__keys">
+          <summary>
+            <span>🔑 API-ключи</span>
+            <span id="splash-keys-status" class="splash__keys-status">⚠️ не сохранены</span>
+          </summary>
+          <div class="splash__keys-body">
+            <label class="splash__key-field">
+              <span>Anthropic Claude (диалоги)</span>
+              <input id="splash-anthropic-key" type="password" autocomplete="off"
+                     placeholder="sk-ant-..." spellcheck="false"/>
+            </label>
+            <label class="splash__key-field">
+              <span>Groq Llama-3.3 (военный AI)</span>
+              <input id="splash-groq-key" type="password" autocomplete="off"
+                     placeholder="gsk_..." spellcheck="false"/>
+            </label>
+            <div class="splash__keys-footer">
+              <button id="splash-keys-save" class="splash__btn splash__btn--small" type="button">
+                Сохранить ключи
+              </button>
+              <span id="splash-keys-feedback" class="splash__keys-feedback"></span>
+            </div>
+            <p class="splash__keys-note">
+              Ключи хранятся зашифрованными (AES-256 + PBKDF2) в этом браузере.
+              Не удаляются при «Удалить сохранения». Игра работает и без ключей
+              через локальный AI-алгоритм.
+            </p>
+          </div>
+        </details>
+
+        <div id="splash-menu-footer" class="splash__menu-footer">
+          Ancient Strategy · Syracuse 301 BC
+        </div>
+      </div>
+
+      <!-- Legacy-кнопка: оставляем для обратной совместимости boot.js-путей,
+           но главная кнопка теперь — в splash-menu -->
       <button id="splash-start-btn" class="splash__btn" style="display:none;">Начать игру</button>
     </div>
   </div>
@@ -724,41 +780,14 @@
         <button class="sm-close" data-action="closeSettingsModal" title="Закрыть">✕</button>
       </div>
       <div class="sm-tabs">
-        <button class="sm-tab active" data-sm-tab="keys" data-action="switchSettingsTab" data-arg="keys">🔑 API ключи</button>
-        <button class="sm-tab" data-sm-tab="hotkeys" data-action="switchSettingsTab" data-arg="hotkeys">⌨ Клавиши</button>
+        <!-- Этап «Главное меню»: вкладка «API ключи» удалена — ключи вводятся на главной странице -->
+        <button class="sm-tab active" data-sm-tab="hotkeys" data-action="switchSettingsTab" data-arg="hotkeys">⌨ Клавиши</button>
         <button class="sm-tab" data-sm-tab="ui" data-action="switchSettingsTab" data-arg="ui">🎨 Интерфейс</button>
         <button class="sm-tab" data-sm-tab="about" data-action="switchSettingsTab" data-arg="about">ℹ О проекте</button>
       </div>
       <div class="sm-body">
-        <!-- Вкладка: API ключи -->
-        <div class="sm-tab-pane active" data-sm-pane="keys">
-          <div class="api-key-prompt" id="api-key-inline-panel" style="margin:0">
-            <div class="api-key-title">🔑 API ключи AI</div>
-
-            <div class="api-key-desc">Groq — бесплатно, для AI-наций</div>
-            <div class="api-key-input-row">
-              <input type="password" id="inline-groq-key" class="api-key-field"
-                     placeholder="gsk_..." autocomplete="off" spellcheck="false">
-            </div>
-            <div class="api-key-hint" style="margin-bottom:6px">
-              🔗 <a href="https://console.groq.com" target="_blank">console.groq.com</a> → API Keys (бесплатно)
-            </div>
-
-            <div class="api-key-desc">Anthropic Claude — для дипломатии</div>
-            <div class="api-key-input-row">
-              <input type="password" id="inline-anthropic-key" class="api-key-field"
-                     placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false">
-            </div>
-            <div class="api-key-hint" style="margin-bottom:6px">
-              🔗 <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys
-            </div>
-
-            <button class="api-key-btn" style="width:100%;padding:6px;" data-action="saveInlineAPIKeys">💾 Сохранить ключи</button>
-            <div id="inline-key-status" style="font-size:10px;margin-top:4px;color:var(--text-dim);text-align:center"></div>
-          </div>
-        </div>
         <!-- Вкладка: Горячие клавиши (Шаг 28) -->
-        <div class="sm-tab-pane" data-sm-pane="hotkeys">
+        <div class="sm-tab-pane active" data-sm-pane="hotkeys">
           <table class="hotkey-table">
             <thead>
               <tr><th>Клавиша</th><th>Действие</th></tr>
