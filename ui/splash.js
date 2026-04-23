@@ -53,6 +53,10 @@ let _gameStarting = false;   // защита от двойного клика
 export async function showSplashMenu() {
   if (typeof document === 'undefined') return;
 
+  // Скрываем секцию загрузки целиком (прогрессбар + текст статуса)
+  const loading = document.querySelector('.splash__loading');
+  if (loading) loading.style.display = 'none';
+
   const wrap   = document.getElementById('splash-bar-wrap');
   const status = document.getElementById('splash-status');
   const menu   = document.getElementById('splash-menu');
@@ -71,25 +75,53 @@ export async function showSplashMenu() {
   _bindMenuHandlers();
 }
 
-/** Обновить enabled/disabled состояние «Продолжить» и «Удалить». */
+const MONTHS_RU = [
+  '', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+  'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь',
+];
+
+/**
+ * Обновить enabled/disabled состояние «Продолжить» и «Удалить».
+ * Для «Продолжить» вытягивает метаданные через getSaveMetadata()
+ * и рендерит «нация · ход N · месяц год BC/AD».
+ */
 async function _refreshSaveState() {
   const contBtn = document.getElementById('splash-btn-continue');
   const delBtn  = document.getElementById('splash-btn-delete');
   const meta    = document.getElementById('splash-save-meta');
 
-  let has = false;
+  let savedMeta = null;
   try {
-    if (typeof window.hasSavedGame === 'function') {
-      has = await window.hasSavedGame();
+    if (typeof window.getSaveMetadata === 'function') {
+      savedMeta = await window.getSaveMetadata();
+    } else if (typeof window.hasSavedGame === 'function') {
+      const has = await window.hasSavedGame();
+      if (has) savedMeta = { turn: 1 };
     }
-  } catch (_) { has = false; }
+  } catch (_) { savedMeta = null; }
+
+  const has = !!savedMeta;
 
   if (contBtn) {
     contBtn.disabled = !has;
     contBtn.title = has ? 'Продолжить последнюю игру' : 'Нет сохранений';
   }
   if (delBtn) delBtn.disabled = !has;
-  if (meta)   meta.textContent = has ? '' : '(нет сохранений)';
+
+  if (meta) {
+    if (has) {
+      const nation = savedMeta.nation_name ?? 'нация';
+      const monthName = MONTHS_RU[savedMeta.month] ?? '';
+      const yearAbs = Math.abs(savedMeta.year ?? 0);
+      const era = savedMeta.era ?? 'BC';
+      const dateStr = (monthName && yearAbs)
+        ? `${monthName} ${yearAbs} ${era}`
+        : `ход ${savedMeta.turn ?? '?'}`;
+      meta.textContent = `${nation} · ход ${savedMeta.turn} · ${dateStr}`;
+    } else {
+      meta.textContent = 'Нет сохранений';
+    }
+  }
 }
 
 function _bindMenuHandlers() {

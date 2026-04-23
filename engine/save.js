@@ -143,6 +143,46 @@ export async function saveGame(opts) {
 }
 
 /**
+ * Прочитать метаданные сохранения для UI главного меню (turn, дата, нация).
+ * НЕ меняет GAME_STATE. Возвращает null если сохранения нет.
+ *
+ * @returns {Promise<null|{turn:number, year:number, month:number, era:'BC'|'AD',
+ *                        nation_id:string, nation_name:string, saved_at:number|null}>}
+ */
+export async function getSaveMetadata() {
+  try {
+    await GameStorage.migrate(CONFIG.SAVE_KEY);
+    const state = await GameStorage.load();
+    if (!state || typeof state !== 'object' || !state.turn) return null;
+
+    const turn = state.turn | 0;
+    const startYear = CONFIG.START_YEAR ?? -301;
+    const tpy = CONFIG.TURNS_PER_YEAR ?? 12;
+    const offsetMonths = Math.max(0, turn - 1);
+    const yearsPassed  = Math.floor(offsetMonths / tpy);
+    const month        = (offsetMonths % tpy) + 1;           // 1..12
+    const year         = startYear + yearsPassed;
+    const era          = year < 0 ? 'BC' : 'AD';
+
+    const nationId = state.player_nation || '';
+    const nationName = state.nations?.[nationId]?.name ?? nationId;
+
+    return {
+      turn,
+      year,
+      month,
+      era,
+      nation_id:   nationId,
+      nation_name: nationName,
+      saved_at:    state._saved_at ?? null,
+    };
+  } catch (e) {
+    console.warn('[getSaveMetadata]', e);
+    return null;
+  }
+}
+
+/**
  * Проверить, есть ли сохранение в хранилище. НЕ меняет GAME_STATE.
  * Используется главным меню для включения/отключения кнопки «Продолжить».
  */
