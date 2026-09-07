@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- DEV: отключаем кэш браузера для index.html — JS-файлы подгружаются
+       с ?v=X query-параметрами, которые бампаются при крупных обновлениях.
+       Если index.html закэширован — query-параметры тоже старые и новый
+       код не загружается. no-cache решает это. -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Ancient Strategy — Сиракузы 301 BC</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+  <!-- base.css: :root + reset + font-roles (uisuper.md этап 32) -->
+  <link rel="stylesheet" href="ui/styles/base.css">
+  <!-- top.css: стела, топ-бар, клепсидра, nation-header (uisuper.md этап 33) -->
+  <link rel="stylesheet" href="ui/styles/top.css">
+  <!-- splash.css: splash-screen, мозаика, keyframes вынесены (uisuper.md этап 34) -->
+  <link rel="stylesheet" href="ui/styles/splash.css">
+  <!-- panels.css: панели, модалки, оверлеи, контекстное меню (uisuper.md этап 35) -->
+  <link rel="stylesheet" href="ui/styles/panels.css">
+  <!-- bottom.css: нижняя зона, лог, команда, messenger, ambient (uisuper.md этап 36) -->
+  <link rel="stylesheet" href="ui/styles/bottom.css">
+  <link rel="stylesheet" href="ui/styles/map.css">
+  <link rel="stylesheet" href="ui/styles/diplomacy.css">
+  <link rel="stylesheet" href="ui/styles/regions.css">
+  <link rel="stylesheet" href="ui/styles/population.css">
+  <link rel="stylesheet" href="ui/styles/economy.css">
+  <link rel="stylesheet" href="ui/styles/characters.css">
+  <link rel="stylesheet" href="ui/styles/government.css">
+  <link rel="stylesheet" href="ui/styles/overlays.css">
+  <link rel="stylesheet" href="ui/styles/battle.css">
+  <link rel="stylesheet" href="ui/styles/responsive.css">
+
+  <!-- Leaflet.js — интерактивные карты, без npm.
+       Без integrity= чтобы корректно загружаться с file:// -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+
+  <!-- Pixi.js v8 — battle map renderer -->
+  <script defer src="https://cdn.jsdelivr.net/npm/pixi.js@8.17.1/dist/pixi.min.js"></script>
+
+  <!-- Все CSS вынесены в ui/styles/*.css (этапы 32–79) -->
+</head>
+<body>
+
+  <!-- Шаг 27: контейнер для toast-уведомлений -->
+  <div id="toast-container"></div>
+
+  <!-- Шаг 53 (arma.md): панель сравнения двух регионов -->
+  <div id="compare-panel" class="hidden">
+    <div class="cp-header">
+      <span class="cp-title">⚖ Сравнение регионов</span>
+      <button type="button" class="cp-reset-btn" data-action="closeCompare">Сбросить</button>
+      <button type="button" class="cp-close-btn" data-action="closeCompare">✕</button>
+    </div>
+    <div class="cp-body">
+      <div class="cp-col" id="cp-left"></div>
+      <div class="cp-divider"></div>
+      <div class="cp-col" id="cp-right"></div>
+    </div>
+  </div>
+
+  <!-- Шаг 52: визуальная карточка итога хода -->
+  <div id="turn-summary-card" class="hidden">
+    <div class="tsc-header">
+      <span id="tsc-turn">Ход 0</span>
+      <span id="tsc-date"></span>
+      <span id="tsc-season">🌸</span>
+    </div>
+    <div class="tsc-deltas" id="tsc-deltas"></div>
+    <div class="tsc-alerts" id="tsc-alerts"></div>
+    <div class="tsc-footer">
+      <div class="tsc-progress"></div>
+      <button type="button" id="tsc-continue-btn" data-action="closeTurnSummaryCard">Продолжить →</button>
+    </div>
+  </div>
+
+  <!-- Шаг 30: контекстное меню правой кнопки мыши (на регионе карты) -->
+  <div id="ctx-menu"></div>
+
+  <!-- Главное меню + экран загрузки — единая композиция в стиле EU5 -->
+  <div id="splash-screen" class="splash">
+    <!-- Фон: историческая фреска -->
+    <div class="splash__bg"></div>
+    <div class="splash__vignette"></div>
+    <!-- Мозаика Сиракуз: сохраняется как декоративный фон загрузки -->
+    <canvas id="splash-mosaic"></canvas>
+
+    <!-- Разметка меню: grid (panel | main) -->
+    <div id="splash-inner" class="splash__content">
+
+      <!-- ── ЛЕВАЯ ДЕКОРАТИВНАЯ ПАНЕЛЬ ────────────────────────── -->
+      <aside class="splash__panel">
+        <!-- Орнамент верхний -->
+        <svg class="splash__ornament splash__ornament--top" viewBox="0 0 300 44"
+             aria-hidden="true">
+          <defs>
+            <linearGradient id="orn-grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#8a6f2e" stop-opacity="0"/>
+              <stop offset="50%" stop-color="#e2c166"/>
+              <stop offset="100%" stop-color="#8a6f2e" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M0 22 L130 22 M170 22 L300 22" stroke="url(#orn-grad)" stroke-width="1"/>
+          <circle cx="150" cy="22" r="6" fill="none" stroke="#e2c166" stroke-width="1.2"/>
+          <circle cx="150" cy="22" r="2.5" fill="#e2c166"/>
+          <path d="M140 22 L150 12 L160 22 L150 32 Z" fill="none" stroke="#e2c166" stroke-width="0.8" opacity="0.7"/>
+        </svg>
+
+        <!-- Лого-рамка (EU5-стиль: название в отдельной декорированной рамке) -->
+        <header class="splash__logo-frame">
+          <div class="splash__crest" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="40" height="40">
+              <circle cx="24" cy="24" r="20" fill="none" stroke="#e2c166" stroke-width="1.5"/>
+              <path d="M24 7 L28 20 L42 20 L31 28 L35 41 L24 33 L13 41 L17 28 L6 20 L20 20 Z"
+                    fill="#e2c166" opacity="0.85"/>
+            </svg>
+          </div>
+          <h1 id="splash-title" class="splash__title">ANCIENT<br/>STRATEGY</h1>
+          <p id="splash-subtitle" class="splash__subtitle">SYRACVSAE · CCCI BC</p>
+          <div class="splash__flourish"></div>
+        </header>
+
+        <!-- Статус загрузки (показывается ДО меню) -->
+        <div class="splash__loading">
+          <div id="splash-bar-wrap"><div id="splash-bar-fill"></div></div>
+          <div id="splash-status">Загрузка...</div>
+        </div>
+
+        <!-- Главное меню -->
+        <nav id="splash-menu" class="splash__menu" style="display:none;">
+          <!-- Continue — primary action, с метаданными сохранения -->
+          <button id="splash-btn-continue"
+                  class="splash__btn splash__btn--primary"
+                  type="button" disabled
+                  title="Продолжить последнее сохранение">
+            <span class="splash__btn-icon">▶</span>
+            <span class="splash__btn-body">
+              <span class="splash__btn-label">Продолжить</span>
+              <span id="splash-save-meta" class="splash__btn-meta">Нет сохранений</span>
+            </span>
+          </button>
+
+          <button id="splash-btn-new" class="splash__btn" type="button">
+            <span class="splash__btn-icon">✦</span>
+            <span class="splash__btn-body">
+              <span class="splash__btn-label">Новая игра</span>
+              <span class="splash__btn-meta">Сиракузы · 301 BC</span>
+            </span>
+          </button>
+
+          <button id="splash-btn-delete"
+                  class="splash__btn splash__btn--danger"
+                  type="button" disabled>
+            <span class="splash__btn-icon">✕</span>
+            <span class="splash__btn-body">
+              <span class="splash__btn-label">Удалить сохранения</span>
+              <span class="splash__btn-meta">Ключи API сохраняются</span>
+            </span>
+          </button>
+
+          <div class="splash__divider" aria-hidden="true">
+            <span></span><i>✦</i><span></span>
+          </div>
+
+          <!-- API-ключи, свёрнутый блок -->
+          <details id="splash-keys" class="splash__keys">
+            <summary class="splash__keys-summary">
+              <span class="splash__keys-label">
+                <span class="splash__keys-icon">🔑</span>
+                API-ключи
+              </span>
+              <span id="splash-keys-status" class="splash__keys-status splash__keys-status--warn">
+                ⚠ не сохранены
+              </span>
+            </summary>
+            <div class="splash__keys-body">
+              <label class="splash__key-field">
+                <span class="splash__key-name">Anthropic Claude</span>
+                <span class="splash__key-hint">для дипломатии</span>
+                <input id="splash-anthropic-key" type="password"
+                       autocomplete="off" placeholder="sk-ant-..."
+                       spellcheck="false"/>
+              </label>
+              <label class="splash__key-field">
+                <span class="splash__key-name">Groq Llama-3.3</span>
+                <span class="splash__key-hint">для военного AI</span>
+                <input id="splash-groq-key" type="password"
+                       autocomplete="off" placeholder="gsk_..."
+                       spellcheck="false"/>
+              </label>
+              <div class="splash__keys-footer">
+                <button id="splash-keys-save"
+                        class="splash__btn splash__btn--small"
+                        type="button">Сохранить</button>
+                <span id="splash-keys-feedback" class="splash__keys-feedback"></span>
+              </div>
+              <p class="splash__keys-note">
+                AES-256 + PBKDF2. Хранятся локально, не отправляются.
+                Игра работает и без ключей (через локальный AI-алгоритм).
+              </p>
+            </div>
+          </details>
+        </nav>
+
+        <!-- Footer панели -->
+        <footer class="splash__panel-footer">
+          <div class="splash__player-badge" title="Играющая нация">
+            <div class="splash__player-seal" aria-hidden="true">
+              <svg viewBox="0 0 36 36" width="22" height="22">
+                <!-- Стилизованный греческий шлем (Syracvsae) -->
+                <path d="M18 6 C12 6 8 11 8 17 L8 22 L10 22 L10 25 L14 25 L14 22 L22 22 L22 25 L26 25 L26 22 L28 22 L28 17 C28 11 24 6 18 6 Z
+                         M12 14 L24 14 L22 17 L14 17 Z"
+                      fill="currentColor" opacity="0.92"/>
+                <path d="M6 11 L18 5 L30 11" fill="none" stroke="currentColor"
+                      stroke-width="1.2" opacity="0.8"/>
+              </svg>
+            </div>
+            <div class="splash__player-info">
+              <div class="splash__player-name">Syracvsae</div>
+              <div class="splash__player-role">тиран Агафокл</div>
+            </div>
+          </div>
+        </footer>
+
+        <!-- Орнамент нижний -->
+        <svg class="splash__ornament splash__ornament--bottom" viewBox="0 0 300 44"
+             aria-hidden="true">
+          <use href="#" />
+          <path d="M0 22 L130 22 M170 22 L300 22" stroke="url(#orn-grad)" stroke-width="1"/>
+          <circle cx="150" cy="22" r="6" fill="none" stroke="#e2c166" stroke-width="1.2"/>
+          <circle cx="150" cy="22" r="2.5" fill="#e2c166"/>
+        </svg>
+      </aside>
+
+      <!-- ── ОСНОВНАЯ ОБЛАСТЬ: инфо-шильдики и карточки ─────── -->
+      <main class="splash__main">
+        <!-- Верхний правый — версия и системный шильдик -->
+        <div class="splash__topbar">
+          <div class="splash__badge">
+            <div class="splash__badge-name">Ancient Strategy</div>
+            <div class="splash__badge-ver">v0.9 · Pax Historia</div>
+          </div>
+        </div>
+
+        <!-- Нижние карточки — что нового, эпоха, охват -->
+        <div class="splash__cards">
+          <div class="splash__card">
+            <div class="splash__card-icon">📜</div>
+            <div class="splash__card-body">
+              <div class="splash__card-title">В этой версии</div>
+              <div class="splash__card-desc">Casus Belli · мирные переговоры · AE · fog of war</div>
+            </div>
+          </div>
+          <div class="splash__card">
+            <div class="splash__card-icon">🗺</div>
+            <div class="splash__card-body">
+              <div class="splash__card-title">Исторический охват</div>
+              <div class="splash__card-desc">301 BC → 476 AD · 9324 хода · 900+ наций</div>
+            </div>
+          </div>
+          <div class="splash__card">
+            <div class="splash__card-icon">⚖</div>
+            <div class="splash__card-body">
+              <div class="splash__card-title">Системы</div>
+              <div class="splash__card-desc">Экономика 15 товаров · Тактический бой · Династии</div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Legacy-кнопка для обратной совместимости boot.js-путей -->
+      <button id="splash-start-btn" class="splash__btn" style="display:none;">Начать игру</button>
+    </div>
+  </div>
+  <div id="app">
+
+    <!-- Этап 29 — Ambient-слой: живые тессеры фона (позади всего интерфейса) -->
+    <canvas id="ambient-canvas" aria-hidden="true"></canvas>
+
+    <!-- ═══════════════════════════
+         ВЕРХНЯЯ СТРОКА
+    ═══════════════════════════ -->
+    <header id="top-bar">
+
+      <!-- ЛЕВЫЙ БЛОК: Стела — гравировка правителя и даты -->
+      <div id="stele">
+        <!-- Этап 13 — индикатор статуса автосохранения -->
+        <div id="save-indicator" title="Статус сохранения"></div>
+        <div id="stele-ruler">AGATHOKLES · STRATEGOS</div>
+        <div id="stele-date">
+          <span id="game-month">Ἑκατομβαιών</span>
+          <span class="stele-sep">·</span>
+          <span id="game-year">CCCI BC</span>
+        </div>
+      </div>
+
+      <!-- ЦЕНТР: горизонтальная полоса ресурсов (Аквидукт).
+           Раньше висел радиалкой слева поверх карты и закрывал торец
+           TABVLAE. Теперь живёт в шапке — карта и левая панель свободны.
+           DOM id/классы сохранены: AquaWidget.init/update и
+           updateResourceBar ищут их по именам. -->
+      <div id="top-bar-center">
+        <div id="aqua-widget" aria-label="Ресурсы">
+
+          <div class="aqua-channel" id="aqua-gold"
+               data-res="gold" data-dir="right"
+               title="Казна" data-action="onResourceBarClick" data-arg="gold">
+            <span class="aqua-icon">💰</span>
+            <canvas class="aqua-stream" width="60" height="8"></canvas>
+            <div class="aqua-label">
+              <span class="aqua-val" id="aq-gold-val">—</span>
+              <span class="aqua-delta" id="aq-gold-delta"></span>
+            </div>
+          </div>
+
+          <div class="aqua-channel" id="aqua-troops"
+               data-res="troops" data-dir="right"
+               title="Войска" data-action="onResourceBarClick" data-arg="troops">
+            <span class="aqua-icon">⚔</span>
+            <canvas class="aqua-stream" width="60" height="8"></canvas>
+            <div class="aqua-label">
+              <span class="aqua-val" id="aq-troops-val">—</span>
+              <span class="aqua-delta" id="aq-troops-delta"></span>
+            </div>
+          </div>
+
+          <div class="aqua-channel" id="aqua-food"
+               data-res="food" data-dir="right"
+               title="Снабжение" data-action="onResourceBarClick" data-arg="food">
+            <span class="aqua-icon">🌾</span>
+            <canvas class="aqua-stream" width="60" height="8"></canvas>
+            <div class="aqua-label">
+              <span class="aqua-val" id="aq-food-val">—</span>
+              <span class="aqua-delta" id="aq-food-delta"></span>
+            </div>
+          </div>
+
+          <div class="aqua-channel" id="aqua-pop"
+               data-res="pop" data-dir="right"
+               title="Население" data-action="onResourceBarClick" data-arg="pop">
+            <span class="aqua-icon">👥</span>
+            <canvas class="aqua-stream" width="60" height="8"></canvas>
+            <div class="aqua-label">
+              <span class="aqua-val" id="aq-pop-val">—</span>
+              <span class="aqua-delta" id="aq-pop-delta"></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ПРАВЫЙ БЛОК: действия -->
+      <div id="top-actions">
+        <!-- Этап 13 — мини-индикатор AI (временно до Этапа 23–24) -->
+        <div id="ai-dot" class="ai-dot ready" title="AI: готов"></div>
+        <button id="search-btn" data-action="toggleSearchPanel" title="Поиск [/]">
+          <span class="icon-wrap" data-icon="search"></span>
+        </button>
+        <!-- Этап C fog_of_war.md: разведка (купцы, шпионы, слухи) -->
+        <button id="intel-btn" data-action="showIntelligenceOverlay" title="Разведка">🗺</button>
+        <button id="settings-btn" data-action="toggleSettingsModal" title="Настройки">
+          <span class="icon-wrap" data-icon="settings"></span>
+        </button>
+        <!-- Этап 11 — Rota Historiae (Маховик Истории), кнопка хода.
+             Круглое бронзовое колесо с 12 часовыми метками, вращающийся
+             диск со спицами, стрелка-указатель сверху, прогресс через
+             дугу обода. API Clepsydra.progress/setReady/flip не изменился. -->
+        <button id="end-turn-btn" data-action="processTurn"
+                title="Следующий ход [Space]" aria-label="Следующий ход">
+          <svg id="clepsydra-svg" viewBox="0 0 80 80"
+               fill="none" stroke="currentColor"
+               stroke-linecap="round" stroke-linejoin="round">
+            <!-- Внешний бронзовый обод -->
+            <circle cx="40" cy="40" r="36" class="rh-ring-outer"/>
+            <circle cx="40" cy="40" r="32" class="rh-ring-inner"/>
+
+            <!-- Дуга прогресса (pathLength=100 → в JS ставим stroke-dashoffset) -->
+            <circle id="rh-progress" cx="40" cy="40" r="34"
+                    class="rh-progress"
+                    pathLength="100"
+                    stroke-dasharray="100 100"
+                    stroke-dashoffset="100"
+                    transform="rotate(-90 40 40)"/>
+
+            <!-- 12 часовых меток по периметру -->
+            <g class="rh-ticks">
+              <line x1="40" y1="4"  x2="40" y2="10" />
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(30 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(60 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(90 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(120 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(150 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(180 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(210 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(240 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(270 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(300 40 40)"/>
+              <line x1="58" y1="8.8"  x2="55" y2="14"   transform="rotate(330 40 40)"/>
+            </g>
+
+            <!-- Стрелка-указатель (gnomon) — статичная метка сверху -->
+            <polygon points="40,2 36,12 44,12" class="rh-gnomon"/>
+
+            <!-- Внутренний диск, поворачивается на 30° за ход -->
+            <g id="rh-disc" class="rh-disc">
+              <circle cx="40" cy="40" r="26" class="rh-disc-bg"/>
+              <!-- 8 спиц -->
+              <line x1="40" y1="14" x2="40" y2="66" class="rh-spoke"/>
+              <line x1="14" y1="40" x2="66" y2="40" class="rh-spoke"/>
+              <line x1="22" y1="22" x2="58" y2="58" class="rh-spoke"/>
+              <line x1="58" y1="22" x2="22" y2="58" class="rh-spoke"/>
+              <!-- Декоративный внутренний круг -->
+              <circle cx="40" cy="40" r="18" class="rh-disc-mid"/>
+              <circle cx="40" cy="40" r="12" class="rh-disc-eye"/>
+              <!-- Центральный хаб -->
+              <circle cx="40" cy="40" r="5" class="rh-hub"/>
+            </g>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Шаг 60 (arma.md) — Иконка и имя текущей нации игрока (скрыто до обновления в след. этапах) -->
+      <div id="nation-header" title="Активная нация" style="display:none">
+        <img id="nation-icon" class="nation-icon" src="" alt="" width="28" height="28">
+        <span id="nation-name" class="nation-name"></span>
+      </div>
+
+    </header>
+
+    <!-- Шаг 49 (arma.md) — Граф дипломатических отношений -->
+    <div id="diplo-graph-overlay" class="hidden">
+      <div class="dg-header">
+        <h2>Дипломатические отношения</h2>
+        <button type="button" data-action="closeDiploGraph" title="Закрыть [Esc]">✕</button>
+      </div>
+      <svg id="diplo-graph-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="dg-legend">
+        <div class="dg-legend-row"><span class="dg-legend-swatch dg-war"></span>Война</div>
+        <div class="dg-legend-row"><span class="dg-legend-swatch dg-alliance"></span>Союз</div>
+        <div class="dg-legend-row"><span class="dg-legend-swatch dg-trade"></span>Торговый договор</div>
+        <div class="dg-legend-row"><span class="dg-legend-swatch dg-peace"></span>Мирный договор</div>
+      </div>
+    </div>
+
+    <!-- Шаг 34 — Панель поиска -->
+    <div id="search-panel" class="hidden">
+      <input id="search-input" type="text" placeholder="Поиск нации, региона, персонажа..." autocomplete="off" spellcheck="false">
+      <div id="search-results"></div>
+    </div>
+
+    <!-- ═══════════════════════════
+         ОСНОВНАЯ ОБЛАСТЬ
+    ═══════════════════════════ -->
+    <main id="main-area">
+
+      <!-- Левая панель: ЭТАП 21 (uisuper.md) — складной диптих «TABVLAE».
+           Legacy #left-nav / .lnav-btn / .lnav-badge сохранены внутри
+           #diptych-inner и скрыты визуально (см. CSS #left-panel.diptych
+           #left-nav { display:none }). Они нужны для совместимости:
+             * panels.js::renderLeftPanelTab обновляет .active у .lnav-btn;
+             * тесты arma-stage23/26/49 ищут структуру #left-nav/лоно кнопок
+               и кнопку #diplo-graph-btn. -->
+      <div id="left-panel" class="diptych closed">
+
+        <!-- ТОРЕЦ (виден когда закрыто, 48px) -->
+        <div id="diptych-spine" data-action="toggleDiptych" title="Открыть панель">
+          <!-- Золотая застёжка -->
+          <div class="diptych-clasp">
+            <svg viewBox="0 0 12 32" fill="none" stroke="currentColor"
+                 stroke-width="1" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="8" width="8" height="16" rx="1"
+                    stroke="var(--border-gold)"/>
+              <circle cx="6" cy="16" r="2" fill="var(--gold)" stroke="none"/>
+              <line x1="6" y1="2" x2="6" y2="8"
+                    stroke="var(--border-gold)"/>
+              <line x1="6" y1="24" x2="6" y2="30"
+                    stroke="var(--border-gold)"/>
+            </svg>
+          </div>
+          <!-- Надпись на торце (вертикально). Используем span вместо div:
+               иначе в HTML появляется близкая пара закрытий, и регекс
+               теста test_arma_stage23.mjs не находит вложенный left-nav. -->
+          <span class="diptych-spine-label">TABVLAE</span>
+        </div>
+
+        <!-- ВНУТРЕННОСТЬ ДИПТИХА -->
+        <div id="diptych-inner">
+
+          <!-- Заголовок с кнопкой закрытия -->
+          <div id="diptych-header">
+            <span id="diptych-title">Обзор</span>
+            <button data-action="toggleDiptych" title="Свернуть" class="diptych-close">✕</button>
+          </div>
+
+          <!-- Навигация — горизонтальные метки (не вкладки) -->
+          <div id="diptych-nav">
+            <button class="dip-nav-btn active" data-tab="overview"
+                    data-action="switchDiptychTab" data-arg="overview">Обзор</button>
+            <button class="dip-nav-btn" data-tab="army"
+                    data-action="switchDiptychTab" data-arg="army">Армия</button>
+            <button class="dip-nav-btn" data-tab="economy"
+                    data-action="switchDiptychTab" data-arg="economy">Казна</button>
+            <button class="dip-nav-btn" data-tab="diplomacy"
+                    data-action="switchDiptychTab" data-arg="diplomacy">Дипломатия</button>
+            <button class="dip-nav-btn" data-tab="laws"
+                    data-action="switchDiptychTab" data-arg="laws">Законы</button>
+          </div>
+
+          <!-- Legacy icon-bar — скрыт визуально, сохранён для совместимости -->
+          <nav id="left-nav" aria-hidden="true">
+            <button class="lnav-btn active" data-tab="overview"  title="Обзор нации" data-action="renderLeftPanelTab" data-arg="overview"><span class="icon-wrap" data-icon="overview"></span><span class="lnav-badge" id="badge-overview"  style="display:none">0</span></button>
+            <button class="lnav-btn"        data-tab="army"      title="Армия"       data-action="renderLeftPanelTab" data-arg="army"><span class="icon-wrap" data-icon="army"></span><span class="lnav-badge" id="badge-army"      style="display:none">0</span></button>
+            <button class="lnav-btn"        data-tab="economy"   title="Экономика"   data-action="renderLeftPanelTab" data-arg="economy"><span class="icon-wrap" data-icon="economy"></span><span class="lnav-badge" id="badge-economy"   style="display:none">0</span></button>
+            <button class="lnav-btn"        data-tab="diplomacy" title="Дипломатия"  data-action="renderLeftPanelTab" data-arg="diplomacy"><span class="icon-wrap" data-icon="diplomacy"></span><span class="lnav-badge" id="badge-diplomacy" style="display:none">0</span></button>
+            <button class="lnav-btn"        data-tab="laws"      title="Законы"      data-action="renderLeftPanelTab" data-arg="laws"><span class="icon-wrap" data-icon="laws"></span><span class="lnav-badge" id="badge-laws"      style="display:none">0</span></button>
+            <!-- Шаг 49 (arma.md): граф дипломатических отношений -->
+            <button class="lnav-btn"        id="diplo-graph-btn" data-tab="diplo-graph" title="Граф дипломатии" data-action="toggleDiploGraph"><span class="icon-wrap" data-icon="diplo_graph"></span></button>
+          </nav>
+
+          <!-- Прокручиваемый контент (id сохранён для panels.js) -->
+          <div id="left-panel-content">
+            <!-- Заполняется из panels.js renderLeftPanel() -->
+            <div style="color:var(--text-dim);font-size:11px;padding:8px;">Загрузка...</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ЭТАП 22 (uisuper.md): #left-resizer удалён — диптих сам управляет
+           своей шириной через CSS-анимацию классов .closed / .open.
+           Шаг 32 (arma.md): drag-to-resize более не актуален для левой панели. -->
+
+      <!-- Центральная панель: карта -->
+      <div id="center-panel">
+        <div id="map-container">
+          <!-- Leaflet монтируется сюда в renderMap() -->
+          <!-- Роза ветров и #map-mode-bar удалены: селектор режимов карты
+               переехал в правую панель под список советников (см.
+               #right-panel #map-mode-selector). Хоткеи 1-4 (см.
+               ui/top_bar.js:170) продолжают переключать режимы. -->
+          <!-- Легенда наций -->
+          <div id="nation-legend">
+            <!-- Заполняется динамически -->
+          </div>
+          <!-- Виньетка поверх карты -->
+          <div id="map-vignette"></div>
+          <!-- Шаг 45 — Сезонный оверлей (фильтр и лёгкая тонировка) -->
+          <div id="season-overlay"></div>
+        </div>
+
+        <!-- ══ ПАНЕЛЬ ОСАДЫ ══ -->
+        <div id="siege-panel">
+          <div class="sp-header">
+            <span>🏰</span>
+            <span class="sp-header-title">Осада: <span id="sp-region-name">—</span></span>
+            <span class="sp-header-sub">ход <span id="sp-turns">0</span> · осталось: <span id="sp-eta">?</span></span>
+            <button class="sp-close" data-action="closeSiegePanel">✕</button>
+          </div>
+
+          <div class="sp-anim-section">
+            <!-- SVG прогресс-кольцо -->
+            <div class="sp-ring-wrap">
+              <svg class="sp-ring-svg" width="110" height="110" viewBox="0 0 110 110">
+                <circle class="sp-ring-track" cx="55" cy="55" r="44"/>
+                <circle id="sp-ring" class="sp-ring-fill" cx="55" cy="55" r="44"
+                        stroke="var(--negative)" stroke-dasharray="276.46" stroke-dashoffset="276.46"/>
+              </svg>
+              <div class="sp-ring-center">
+                <div id="sp-fort-flame" style="display:none">🔥</div>
+                <div id="sp-fort-icon">🏰</div>
+                <div id="sp-ring-pct">0%</div>
+              </div>
+            </div>
+
+            <!-- Анимационное поле катапульта → крепость -->
+            <div id="sp-anim-field">
+              <span class="sp-catapult-icon">⚙️</span>
+              <span class="sp-castle-icon">🗼</span>
+              <!-- Снаряды добавляются динамически -->
+            </div>
+          </div>
+
+          <!-- Нации и уровень крепости -->
+          <div style="padding: 0 14px 8px; display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+            <div class="sp-nation-row">
+              <span class="sp-nation-att" id="sp-att-name">—</span>
+              <span class="sp-nation-vs">⚔️</span>
+              <span class="sp-nation-def" id="sp-def-name">—</span>
+            </div>
+            <div style="flex:1"></div>
+            <div class="sp-fort-dots" id="sp-fort-level"></div>
+          </div>
+          <div style="padding: 0 14px 6px" class="sp-meta">
+            <span>🗡 <span id="sp-troops">0</span> войск</span>
+            <span>💣 <span id="sp-artil">0</span> арт.</span>
+          </div>
+
+          <!-- Бары -->
+          <div class="sp-bars">
+            <div class="sp-bar-row">
+              <span class="sp-bar-label">⚔️ Гарнизон</span>
+              <div class="sp-bar-track"><div class="sp-bar-fill" id="sp-gar-bar"></div></div>
+              <span class="sp-bar-val" id="sp-gar-val">0/0</span>
+            </div>
+            <div class="sp-bar-row">
+              <span class="sp-bar-label">💜 Мораль</span>
+              <div class="sp-bar-track"><div class="sp-bar-fill" id="sp-mor-bar"></div></div>
+              <span class="sp-bar-val" id="sp-mor-val">0%</span>
+            </div>
+            <div class="sp-bar-row">
+              <span class="sp-bar-label">🌾 Снабжение</span>
+              <div class="sp-bar-track"><div class="sp-bar-fill" id="sp-sup-bar"></div></div>
+              <span class="sp-bar-val" id="sp-sup-val">0%</span>
+            </div>
+            <div id="sp-supply-warn"></div>
+          </div>
+
+          <!-- Кнопки -->
+          <div class="sp-footer">
+            <button class="sp-btn" id="sp-storm-btn"
+                    data-action="siegePanelStorm">⚔️ Штурм!</button>
+            <button class="sp-btn" data-action="siegePanelLift">🏳 Снять осаду</button>
+          </div>
+        </div>
+        <!-- /ПАНЕЛЬ ОСАДЫ -->
+
+        <!-- Инфо о выбранном регионе -->
+        <div id="region-info" class="hidden"></div>
+      </div>
+
+      <!-- Правая панель: двор -->
+      <div id="right-panel">
+        <div class="panel-title"><span class="icon-wrap" data-icon="court"></span> Двор Агафокла</div>
+        <button id="generate-chars-btn" data-action="handleGenerateChars">
+          <span class="icon-wrap" data-icon="ai"></span> Созвать советников (AI)
+        </button>
+
+        <!-- Шаг 22: API ключи перенесены в модальное окно настроек (⚙ в топ-баре) -->
+
+        <div class="characters-list">
+          <div style="color:var(--text-dim);font-size:11px;padding:4px;">Загрузка...</div>
+        </div>
+        <!-- Селектор режимов карты (#map-mode-selector) инжектируется
+             из ui/panels.js renderRightPanel() — панель полностью
+             перерисовывается по ходу игры, статический DOM тут
+             не выживает. -->
+      </div>
+    </main>
+
+    <!-- ═══════════════════════════
+         НИЖНЯЯ СТРОКА: ЛОГ + ВВОД
+    ═══════════════════════════ -->
+    <footer id="bottom-area">
+      <!-- Лог событий — uisuper Этап 25: «Вощёная табличка» -->
+      <div id="event-log" class="collapsed" role="log" aria-label="Хроники">
+        <!-- Полоска (strip) — видна в свёрнутом состоянии, играет роль #log-collapsed -->
+        <div id="log-strip" data-action="toggleLog">
+          <!-- Нотификации-точки по категориям -->
+          <div id="log-dots">
+            <span class="log-dot" data-filter="danger"    title="Опасность"></span>
+            <span class="log-dot" data-filter="economy"   title="Экономика"></span>
+            <span class="log-dot" data-filter="character" title="Персонажи"></span>
+          </div>
+          <!-- Последняя запись (одна строка, стиль манускрипта) -->
+          <span id="log-last-entry">—</span>
+          <!-- Кнопка раскрытия -->
+          <button id="log-expand-btn" data-action="toggleLog" tabindex="-1">▲ Хроники</button>
+        </div>
+
+        <!-- Тело таблички — раскрывается снизу (expanded) -->
+        <div id="log-body">
+          <div class="log-title">
+            <span class="icon-wrap" data-icon="chronicle"></span> Хроники
+            <div class="log-filters">
+              <button class="log-filter-btn active" data-filter="all"       data-action="setLogFilter" data-arg="all">Все</button>
+              <button class="log-filter-btn"        data-filter="danger"    data-action="setLogFilter" data-arg="danger"><span class="icon-wrap" data-icon="warning"></span></button>
+              <button class="log-filter-btn"        data-filter="economy"   data-action="setLogFilter" data-arg="economy"><span class="icon-wrap" data-icon="gold"></span></button>
+              <button class="log-filter-btn"        data-filter="character" data-action="setLogFilter" data-arg="character"><span class="icon-wrap" data-icon="population"></span></button>
+              <button class="log-filter-btn"        data-filter="law"       data-action="setLogFilter" data-arg="law"><span class="icon-wrap" data-icon="laws"></span></button>
+            </div>
+            <button class="btn-icon" data-action="showTurnSummary" title="Итоги хода" style="margin-left:auto"><span class="icon-wrap" data-icon="orders"></span></button>
+            <!-- кнопка свёртывания таблички -->
+            <button class="log-collapse-btn" data-action="toggleLog"
+                    title="Свернуть хроники" aria-label="Свернуть">▼</button>
+          </div>
+          <div id="log-entries"></div>
+        </div>
+      </div>
+
+      <!-- Шаг 27: Строка ввода команды — вощёная дощечка -->
+      <div id="input-row">
+
+        <!-- Мини-счётчик приказов (слева от поля) -->
+        <button id="orders-mini-btn" data-action="toggleOrdersMini"
+                title="Активные приказы" class="orders-counter">
+          <span class="icon-wrap" data-icon="orders"></span>
+          <span id="orders-mini-count">0</span>
+        </button>
+
+        <!-- Вощёная дощечка -->
+        <div id="tablet-wrap">
+          <input
+            type="text"
+            id="command-input"
+            placeholder="Iube, Stratege…"
+            autocomplete="off"
+            spellcheck="false"
+          >
+        </div>
+
+        <!-- Печать-кнопка -->
+        <button id="send-btn" title="Отдать приказ [Enter]" aria-label="Приказать">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Круглая печать -->
+            <circle cx="16" cy="16" r="13" stroke="currentColor" stroke-width="1.2"/>
+            <circle cx="16" cy="16" r="10" stroke="currentColor" stroke-width="0.8"
+                    stroke-dasharray="2 2"/>
+            <!-- Монограмма A (Agathokles) -->
+            <text x="16" y="20" text-anchor="middle" fill="currentColor"
+                  font-family="serif" font-size="11" font-weight="bold">A</text>
+          </svg>
+        </button>
+
+      </div>
+
+      <!-- Приказы и делегирование — popup, разворачивается вверх по клику на orders-mini-btn -->
+      <div id="orders-panel" class="closed">
+        <div class="op-hdr">
+          <span class="icon-wrap" data-icon="orders"></span> Приказы и делегирование
+          <span style="display:flex;gap:6px;align-items:center">
+            <button class="op-new-btn" data-action="showMpOrderForm">+ Новый приказ</button>
+            <button class="op-new-btn" data-action="toggleOrdersMini" title="Свернуть">▼</button>
+          </span>
+        </div>
+        <!-- Форма выдачи приказа (скрыта по умолчанию) -->
+        <div id="mp-order-form" style="display:none"></div>
+        <!-- Список активных и завершённых приказов -->
+        <div id="orders-main-list">
+          <div class="op-empty">Загрузка…</div>
+        </div>
+      </div>
+
+      <!-- AI-ответ — popup над строкой ввода -->
+      <div id="ai-response" class="hidden"></div>
+
+      <!-- Этап 28: Гонец со свитком ответа AI -->
+      <div id="messenger" class="hidden">
+        <div id="messenger-figure">
+          <!-- SVG силуэт гонца -->
+          <svg viewBox="0 0 24 40" fill="none" stroke="currentColor"
+               stroke-width="1.2" stroke-linecap="round">
+            <!-- Голова -->
+            <circle cx="12" cy="5" r="3"/>
+            <!-- Тело -->
+            <line x1="12" y1="8" x2="12" y2="22"/>
+            <!-- Руки (держит свиток) -->
+            <path d="M12 13 L7 17 M12 13 L17 17"/>
+            <!-- Ноги (бег) -->
+            <path d="M12 22 L8 32 M12 22 L16 32"/>
+            <!-- Шлем -->
+            <path d="M9 3 Q12 0 15 3"/>
+          </svg>
+        </div>
+        <div id="messenger-scroll">
+          <div id="messenger-text"></div>
+          <button id="messenger-close" data-action="dismissMessenger">Принято</button>
+        </div>
+      </div>
+
+      <!-- Шаг 22: API ключи перенесены в модальное окно настроек (⚙ в топ-баре) -->
+    </footer>
+
+    <!-- Шаг 33 — Строка статуса внизу -->
+    <div id="status-bar">
+      <span id="sb-game">—</span>
+      <span class="sb-sep">|</span>
+      <span id="sb-save"><span class="icon-wrap" data-icon="save"></span> Не сохранено</span>
+      <span class="sb-sep">|</span>
+      <span id="sb-ai" class="ready"><span class="icon-wrap" data-icon="ai"></span> AI: готов</span>
+      <span class="sb-sep">|</span>
+      <span id="sb-fps">— fps</span>
+    </div>
+
+  </div><!-- #app -->
+
+  <!-- ═══════════════════════════
+       ОВЕРЛЕИ
+  ═══════════════════════════ -->
+  <div id="char-overlay" data-action-self="closeCharacterDetail"></div>
+  <div id="voting-overlay"></div>
+
+  <!-- Шаг 43 — модал назначения на должность -->
+  <div id="assign-modal-overlay" data-action-self="closeAssignModal"></div>
+
+  <!-- Выбор реакции на случайное событие -->
+  <div id="event-choice-overlay" style="display:none" data-action-self="closeEventChoiceOverlay">
+    <div class="ec-box">
+      <div class="ec-title"></div>
+      <div class="ec-description"></div>
+      <div class="ec-choices"></div>
+    </div>
+  </div>
+
+  <!-- Итоги хода -->
+  <div id="turn-summary-overlay" style="display:none" data-action-self="hideTurnSummary">
+    <div class="ts-box" id="ts-content"></div>
+  </div>
+
+  <!-- Конец игры (победа / поражение) -->
+  <div id="endgame-overlay" style="display:none">
+    <div class="eg-box">
+      <div class="eg-icon"></div>
+      <div class="eg-title"></div>
+      <div class="eg-desc"></div>
+      <div class="eg-turn"></div>
+      <button class="eg-restart-btn" data-action="reloadPage">🔄 Начать заново</button>
+    </div>
+  </div>
+
+  <!-- Инициативы персонажей (всегда видна если есть ожидающие) -->
+  <div id="char-initiatives-panel" style="display:none"></div>
+
+  <!-- Оверлей правительства -->
+  <div id="gov-overlay" data-action-self="hideGovernmentOverlay" style="display:none">
+    <div class="gov-panel">
+      <div class="gov-panel-header">
+        <span class="gov-panel-title">🏛 Форма правления</span>
+        <button class="gov-close-btn" data-action="hideGovernmentOverlay">✕</button>
+      </div>
+      <div id="gov-content" class="gov-panel-body">
+        <!-- заполняется renderGovernmentOverlay() -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Модал клятв -->
+  <div id="vows-modal" data-action-self="hideVowsModal"
+       style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1100;align-items:center;justify-content:center">
+    <div class="gov-panel" style="max-width:520px">
+      <div class="gov-panel-header">
+        <span class="gov-panel-title">⚔️ Клятвы правителя</span>
+        <button class="gov-close-btn" data-action="hideVowsModal">✕</button>
+      </div>
+      <div id="vows-modal-content" class="gov-panel-body" style="padding:16px"></div>
+    </div>
+  </div>
+
+  <!-- Модал летописи -->
+  <div id="chronicle-modal" data-action-self="hideChronicleModal"
+       style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1100;align-items:center;justify-content:center">
+    <div class="gov-panel" style="max-width:640px">
+      <div class="gov-panel-header">
+        <span class="gov-panel-title">📖 Летопись правления</span>
+        <button class="gov-close-btn" data-action="hideChronicleModal">✕</button>
+      </div>
+      <div id="chronicle-modal-content" class="gov-panel-body" style="padding:16px;overflow-y:auto;max-height:60vh"></div>
+    </div>
+  </div>
+
+  <!-- Модал завещания (Сессия 10) -->
+  <div id="testament-modal" data-action-self="hideTestamentModal"
+       style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1100;align-items:center;justify-content:center">
+    <div class="gov-panel" style="max-width:540px">
+      <div class="gov-panel-header">
+        <span class="gov-panel-title">📜 Завещание наследнику</span>
+        <button class="gov-close-btn" data-action="hideTestamentModal">✕</button>
+      </div>
+      <div id="testament-modal-content" class="gov-panel-body" style="padding:16px"></div>
+    </div>
+  </div>
+
+  <!-- Оверлей структуры населения -->
+  <div id="population-overlay" class="hidden"></div>
+
+  <!-- Оверлей экономического обзора -->
+  <div id="economy-overlay" class="hidden"></div>
+
+  <!-- Оверлей казны -->
+  <div id="treasury-overlay" class="hidden"></div>
+
+  <!-- Оверлей дипломатии -->
+  <div id="diplomacy-overlay" class="hidden"></div>
+
+  <!-- Модал: переговорный зал (мессенджер-стиль) -->
+  <div id="dp-chat-modal" class="dp-cm-root hidden"></div>
+
+  <!-- Оверлей: результат битвы (анимация) -->
+  <div id="battle-result-overlay" data-action="closeBattleResult"></div>
+
+  <!-- Модал: мирные переговоры после победы -->
+  <div id="peace-offer-overlay" data-action-self="closePeacePanel">
+    <div id="peace-offer-box"></div>
+  </div>
+
+  <!-- Шаг 22: Модал настроек (⚙) — API ключи и прочее -->
+  <div id="settings-modal" data-action-self="closeSettingsModal">
+    <div class="sm-box">
+      <div class="sm-header">
+        <span class="sm-title">⚙ Настройки</span>
+        <button class="sm-close" data-action="closeSettingsModal" title="Закрыть">✕</button>
+      </div>
+      <div class="sm-tabs">
+        <!-- Этап «Главное меню»: вкладка «API ключи» удалена — ключи вводятся на главной странице -->
+        <button class="sm-tab active" data-sm-tab="hotkeys" data-action="switchSettingsTab" data-arg="hotkeys">⌨ Клавиши</button>
+        <button class="sm-tab" data-sm-tab="ui" data-action="switchSettingsTab" data-arg="ui">🎨 Интерфейс</button>
+        <button class="sm-tab" data-sm-tab="about" data-action="switchSettingsTab" data-arg="about">ℹ О проекте</button>
+      </div>
+      <div class="sm-body">
+        <!-- Вкладка: Горячие клавиши (Шаг 28) -->
+        <div class="sm-tab-pane active" data-sm-pane="hotkeys">
+          <table class="hotkey-table">
+            <thead>
+              <tr><th>Клавиша</th><th>Действие</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><kbd>Space</kbd></td><td>Завершить ход</td></tr>
+              <tr><td><kbd>E</kbd></td><td>Вкладка «Экономика»</td></tr>
+              <tr><td><kbd>D</kbd></td><td>Вкладка «Дипломатия»</td></tr>
+              <tr><td><kbd>A</kbd></td><td>Вкладка «Армия»</td></tr>
+              <tr><td><kbd>Esc</kbd></td><td>Закрыть открытую панель / модал</td></tr>
+              <tr><td><kbd>Tab</kbd></td><td>Перейти к следующему алерту</td></tr>
+              <tr><td><kbd>M</kbd></td><td>Сменить режим карты</td></tr>
+              <tr><td><kbd>/</kbd></td><td>Фокус на поле ввода команды</td></tr>
+            </tbody>
+          </table>
+          <div class="sm-hint" style="margin-top:10px">
+            Хоткеи игнорируются, когда курсор находится в поле ввода.
+          </div>
+        </div>
+        <!-- Вкладка: Интерфейс -->
+        <div class="sm-tab-pane" data-sm-pane="ui">
+          <div class="sm-hint">Параметры интерфейса будут добавлены позже.</div>
+        </div>
+        <!-- Вкладка: О проекте -->
+        <div class="sm-tab-pane" data-sm-pane="about">
+          <div style="font-size:12px;color:var(--text-secondary);line-height:1.7;">
+            <div style="font-size:14px;color:var(--text-gold);margin-bottom:8px;font-weight:bold;">Credits</div>
+            <div style="margin-bottom:6px;">Historical region data based on <a href="https://www.paxhistoria.co" target="_blank" style="color:var(--gold);">Pax Historia</a> community preset <em>"Legacy of Alexander | 304 BC | Wars of the Diadochi"</em>.</div>
+            <div style="margin-bottom:6px;">Map base &amp; region geometry by <strong>Rami Elhadhoudi</strong>.</div>
+            <div style="margin-bottom:6px;">Preset collaboration by <strong>Itacool</strong>.</div>
+            <div style="margin-bottom:12px;padding-top:8px;border-top:1px solid var(--border-main);font-size:11px;color:var(--text-dim);">Region names, country assignments, and colors are derived from the publicly available Pax Historia preset data (304 BC scenario). All historical facts and geographic names are in the public domain.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модал: ввод API ключа при первом запуске или смене ключа -->
+  <div id="api-key-modal">
+    <div class="akm-box">
+      <div class="akm-seal">🔑</div>
+      <h2 class="akm-title">API Ключи</h2>
+      <p class="akm-desc">
+        Введите хотя бы один ключ. Оба ключа шифруются и хранятся на вашем устройстве.
+      </p>
+
+      <div class="akm-key-section">
+        <div class="akm-key-label">
+          <span class="akm-key-badge akm-badge-groq">Groq</span>
+          Llama 3.3 70B — фоновые решения AI-наций
+          <span class="akm-key-tag">Бесплатно</span>
+        </div>
+        <input type="password" id="akm-groq-input" class="akm-input"
+               placeholder="gsk_..."
+               data-keydown="_akmKeyDown" autocomplete="off" spellcheck="false">
+        <div class="akm-key-hint">
+          Получить: <a href="https://console.groq.com" target="_blank">console.groq.com</a> → API Keys
+        </div>
+      </div>
+
+      <div class="akm-key-section" style="margin-top:12px">
+        <div class="akm-key-label">
+          <span class="akm-key-badge akm-badge-anthropic">Anthropic</span>
+          Claude Sonnet — дипломатические диалоги с игроком
+          <span class="akm-key-tag akm-tag-optional">Необязательно</span>
+        </div>
+        <input type="password" id="akm-input" class="akm-input"
+               placeholder="sk-ant-api03-..."
+               data-keydown="_akmKeyDown" autocomplete="off" spellcheck="false">
+        <div class="akm-key-hint">
+          Получить: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>
+        </div>
+      </div>
+
+      <div id="akm-error" class="akm-error"></div>
+      <button id="akm-btn" class="akm-btn" data-action="submitAPIKey">
+        Сохранить и продолжить
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════
+       ТАКТИЧЕСКИЙ БОЙ — оверлей (Pixi.js v8)
+       Полная миграция: старый Canvas 2D удалён, рендер — через
+       ui/battle_pixi_render.js в #pixi-battle-map.
+  ═══════════════════════════ -->
+  <div id="tactical-overlay">
+    <div id="tactical-top-bar">
+      <span id="tac-turn">Ход 1</span>
+      <span id="tac-terrain"></span>
+      <span id="tac-ratio"></span>
+    </div>
+    <!-- Pixi.js battle map (единственный рендерер боевой сцены) -->
+    <div id="pixi-battle-map"></div>
+    <div id="tactical-unit-panel">
+      <div id="tup-name"></div>
+      <div id="tup-strength"></div>
+      <div class="tup-bar-wrap"><div id="tup-morale"  class="tup-bar-fill tup-morale"></div></div>
+      <div class="tup-bar-wrap"><div id="tup-fatigue" class="tup-bar-fill tup-fatigue"></div></div>
+      <div id="tup-ammo"></div>
+      <div id="tup-elevation-hint"></div>
+      <div id="tup-formation-btns"></div>
+      <div id="tup-reserve-btn"></div>
+      <div id="tup-ambush-btn"></div>
+    </div>
+    <div id="tactical-bottom-bar">
+      <button id="tac-btn-next">⏭ Следующий ход</button>
+      <button id="tac-btn-retreat">🏃 Отступить</button>
+      <button id="tac-btn-auto">⚡ Авторассчёт</button>
+    </div>
+    <div id="tactical-log"></div>
+    <canvas id="tac-minimap"></canvas>
+    <div id="tac-tooltip"></div>
+  </div>
+
+  <!-- Этап 65: единственная точка входа — ui/boot.js импортирует все модули -->
+  <script type="module" src="ui/boot.js"></script>
+
+</body>
+</html>

@@ -59,3 +59,6 @@ perf/*.ndjson
 perf/*.ndjson.meta.json
 perf/*.log
 perf/eco_report.md
+
+# Локальный lock планировщика Claude Code
+.claude/scheduled_tasks.lock

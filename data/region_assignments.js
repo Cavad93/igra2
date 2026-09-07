@@ -1,5 +1,4 @@
-// AUTO-GENERATED from Pax Historia preset
-// Единственный источник правды: tools/pax_preset_regions.json
+// AUTO-GENERATED — распределение регионов между нациями в сценарии 301 BC.
 //
 // Ключ: region_id   Значение: nation_id или "neutral"
 

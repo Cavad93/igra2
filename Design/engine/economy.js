@@ -1,0 +1,2018 @@
+// Экономический движок — чистая математика, без AI
+// Порядок вызова строго определён в turn.js
+
+import { CONFIG } from '../config.js';
+import { BUILDINGS } from '../data/buildings.js';
+import { GOODS } from '../data/goods.js';
+import { MAP_REGIONS } from '../data/map.js';
+
+// ──────────────────────────────────────────────────────────────
+// НАЛОГОВЫЕ ГРУППЫ → классы общества (из social_classes.js)
+//
+// Каждая группа содержит список class_id из SOCIAL_CLASSES.
+// Налоговая база группы = Σ(class_population × SOCIAL_CLASSES[class].wealth_level)
+// ──────────────────────────────────────────────────────────────
+export const TAX_GROUP_CLASSES = {
+  aristocrats: ['aristocrats', 'officials'],                            // аристократы + чиновники
+  clergy:      ['clergy_class'],                                        // жречество
+  commoners:   ['citizens', 'craftsmen_class', 'farmers_class', 'sailors_class'], // граждане + прочие
+  soldiers:    ['soldiers_class', 'freedmen'],                          // солдаты + вольноотпущенники
+};
+
+// Калибровочный множитель: (pop × wealth_level) → золото/ход
+// wealth_level=5, pop=19000, rate=0.15, calibration=0.5 → ~7125 зол. с аристократов Сиракуз
+export const TAX_CALIBRATION = 0.5;
+
+// ──────────────────────────────────────────────────────────────
+// ВЫЧИСЛЕНИЕ НАЛОГОВЫХ БАЗ ПО ГРУППАМ
+// Использует CLASS_FROM_PROFESSION + SOCIAL_CLASSES из social_classes.js
+// Возвращает { aristocrats, clergy, commoners, soldiers } — суммарные
+// pop×wealth_level единицы для каждой налоговой группы.
+// ──────────────────────────────────────────────────────────────
+export function computeTaxGroupBases(by_profession) {
+  // Вычисляем население каждого социального класса из профессий
+  let classPops = {};
+  if (typeof calculateClassPopulations === 'function') {
+    classPops = calculateClassPopulations(by_profession);
+  }
+
+  const bases = { aristocrats: 0, clergy: 0, commoners: 0, soldiers: 0 };
+
+  for (const [group, classIds] of Object.entries(TAX_GROUP_CLASSES)) {
+    for (const classId of classIds) {
+      const pop = classPops[classId] || 0;
+      const wealthLevel = (typeof SOCIAL_CLASSES !== 'undefined')
+        ? (SOCIAL_CLASSES[classId]?.wealth_level ?? 0)
+        : 0;
+      bases[group] += pop * wealthLevel;
+    }
+  }
+
+  return bases;
+}
+
+// ──────────────────────────────────────────────────────────────
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ──────────────────────────────────────────────────────────────
+
+// Изменить значение в GameState по пути (dotted notation)
+export function applyDelta(path, value) {
+  const keys = path.split('.');
+  let obj = GAME_STATE;
+
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (obj[keys[i]] === undefined) {
+      console.warn(`applyDelta: путь не найден: ${path}`);
+      return;
+    }
+    obj = obj[keys[i]];
+  }
+
+  const lastKey = keys[keys.length - 1];
+  const oldValue = obj[lastKey];
+  obj[lastKey] = value;
+
+  // Пишем в лог только значимые изменения
+  if (typeof value === 'number' && Math.abs(value - oldValue) > 0.01) {
+    const diff = value - oldValue;
+    const sign = diff > 0 ? '+' : '';
+    // console.debug(`[Delta] ${path}: ${oldValue} → ${value} (${sign}${diff.toFixed(1)})`);
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// Этап 10 economic3.md — единая точка мутации казны с трекингом.
+//
+// Проблема: updateTreasury() каждый ход ПЕРЕЗАПИСЫВАЕТ _income_breakdown и
+// _expense_breakdown через applyDelta({...}), поэтому писать туда напрямую
+// из событий/дипломатии бесполезно — данные будут стёрты.
+//
+// Решение: отдельные аккумуляторы _income_adj / _expense_adj, которые
+// учитываются в _auditMoneyConservation() ПЛЮСОМ к `..._breakdown.total` и
+// сбрасываются после каждого аудита.
+//
+// Использование:
+//   mutateTreasury(nation, +500,  'merchant_windfall_event');   // доход
+//   mutateTreasury(nation, -250,  'recruit_infantry');          // расход
+//   mutateTreasury(nation, +loss, 'reparation_received');
+//
+// Возвращает новое значение казны.
+// ──────────────────────────────────────────────────────────────
+export function mutateTreasury(nation, delta, source) {
+  if (!nation || !nation.economy || !Number.isFinite(delta) || delta === 0) {
+    return nation?.economy?.treasury || 0;
+  }
+  if (!source || typeof source !== 'string') source = 'unknown';
+
+  const eco = nation.economy;
+  eco.treasury = (eco.treasury || 0) + delta;
+
+  const bucket = delta >= 0 ? '_income_adj' : '_expense_adj';
+  eco[bucket] ??= {};
+  eco[bucket][source] = (eco[bucket][source] || 0) + Math.abs(delta);
+
+  return eco.treasury;
+}
+
+// ──────────────────────────────────────────────────────────────
+// Этап 11.1 economic4.md — трекинг товарных потоков.
+//
+// Аналог mutateTreasury() для stockpile. Записывает ВСЕ изменения количеств
+// товаров в разбивке по типам потоков — производство/потребление/порча/
+// торговля — чтобы _auditMaterialConservation() мог проверить закон
+// сохранения материи: Δstockpile = production + import − consumption −
+// export − spoilage ± other.
+//
+// В отличие от mutateTreasury, helper НЕ мутирует stockpile сам (это делает
+// вызывающий код), а только записывает delta в аккумулятор. Так проще
+// мигрировать существующий код — достаточно добавить вызов рядом с
+// существующей мутацией.
+//
+// bucket ∈ { 'prod', 'cons', 'spoil', 'trade_in', 'trade_out', 'capital',
+//            'army', 'event', 'other' }
+// ──────────────────────────────────────────────────────────────
+export function recordMaterialFlow(nation, good, amount, bucket) {
+  if (!nation?.economy || !Number.isFinite(amount) || amount === 0) return;
+  if (!good || typeof good !== 'string') return;
+  if (!bucket || typeof bucket !== 'string') bucket = 'other';
+  const key = `_mat_${bucket}`;
+  const eco = nation.economy;
+  if (!eco[key]) eco[key] = {};
+  eco[key][good] = (eco[key][good] || 0) + amount;
+}
+
+// Получить значение из GameState по пути
+export function getState(path) {
+  return path.split('.').reduce((obj, key) => obj && obj[key], GAME_STATE);
+}
+
+// ──────────────────────────────────────────────────────────────
+// БОНУСЫ ЗДАНИЙ
+// Возвращает объект { production_mult, tax_mult, port_bonus,
+//                     happiness_bonus } для нации.
+// production_mult: множитель к производству всей нации
+// tax_mult:        множитель к налоговым доходам
+// port_bonus:      доп. золото от портов
+// happiness_bonus: прибавка к счастью за ход
+// ──────────────────────────────────────────────────────────────
+
+export const BUILDING_BONUSES = {
+  // ключ — подстрока в названии здания (нижний регистр)
+  'порт':        { port_bonus: 80,  production_mult: 1.05 },
+  'port':        { port_bonus: 80,  production_mult: 1.05 },
+  'агора':       { tax_mult: 1.10,  happiness_bonus: 3    },
+  'agora':       { tax_mult: 1.10,  happiness_bonus: 3    },
+  'forum':       { tax_mult: 1.10,  happiness_bonus: 3    },
+  'форум':       { tax_mult: 1.10,  happiness_bonus: 3    },
+  'мастерская':  { production_mult: 1.20 },
+  'workshop':    { production_mult: 1.20 },
+  'акведук':     { happiness_bonus: 4    },
+  'aqueduct':    { happiness_bonus: 4    },
+  'храм':        { happiness_bonus: 5,  tax_mult: 1.05 },
+  'temple':      { happiness_bonus: 5,  tax_mult: 1.05 },
+  'ипподром':    { happiness_bonus: 7    },
+  'hippodrome':  { happiness_bonus: 7    },
+  'склад':       { production_mult: 1.08 },
+  'warehouse':   { production_mult: 1.08 },
+  'арсенал':     { production_mult: 1.05 },
+  'arsenal':     { production_mult: 1.05 },
+};
+
+export function getBuildingBonuses(nationId) {
+  const nation  = GAME_STATE.nations[nationId];
+  const bonuses = { production_mult: 1.0, tax_mult: 1.0, port_bonus: 0, happiness_bonus: 0 };
+
+  for (const regionId of (nation?.regions ?? [])) {
+    const region = GAME_STATE.regions[regionId];
+    if (!region?.buildings) continue;
+    for (const building of region.buildings) {
+      const name = String(building).toLowerCase();
+      for (const [key, bonus] of Object.entries(BUILDING_BONUSES)) {
+        if (name.includes(key)) {
+          bonuses.production_mult *= (bonus.production_mult ?? 1);
+          bonuses.tax_mult        *= (bonus.tax_mult        ?? 1);
+          bonuses.port_bonus      += (bonus.port_bonus      ?? 0);
+          bonuses.happiness_bonus += (bonus.happiness_bonus ?? 0);
+        }
+      }
+    }
+  }
+
+  return bonuses;
+}
+
+// ──────────────────────────────────────────────────────────────
+// Session 3 + 23 (perf): детектор stub-наций.
+// ~600 из 902 наций — племенные «призраки» без продуктивной экономики
+// (пустые регионы или отсутствие зданий). Их прогон через per-nation
+// циклы runEconomyTick занимал ~30–40% экономического такта, хотя
+// результаты нигде не использовались. Считаем один раз в начале тика
+// и пропускаем тяжёлые шаги (производство/потребление/рынок/зарплаты).
+// Налоги и active_laws всё равно считаются в шаге 6.
+//
+// Session 23: добавлен агрессивный критерий — «малое племя» с
+// населением < STUB_POP_THRESHOLD и <= 1 регионом классифицируется
+// как stub даже при наличии 1-2 активных слотов. Таких наций в пресете
+// ~138; их субсистентное производство не влияет на мировой рынок, а
+// per-nation проходы по всем тяжёлым шагам обходились значительно.
+// Игрок защищён: GAME_STATE.player_nation никогда не становится stub.
+// ──────────────────────────────────────────────────────────────
+export const STUB_POP_THRESHOLD = 10000;
+
+export function _isStubNation(nation, nationId) {
+  if (!nation) return true;
+  const regs = nation.regions;
+  if (!Array.isArray(regs) || regs.length === 0) return true;
+
+  // Session 23: защита игрока — никогда не пропускаем его экономику.
+  // Сравниваем по id; is_player в пресете зеркалирует это, но id
+  // авторитетнее, если игрок сменился в рантайме.
+  const isPlayer = nationId != null
+    ? (nationId === GAME_STATE.player_nation)
+    : Boolean(nation.is_player);
+
+  if (!isPlayer) {
+    const pop = nation.population?.total ?? 0;
+    if (pop < STUB_POP_THRESHOLD && regs.length <= 1) return true;
+  }
+
+  // Legacy nation-level flat buildings (стены, ранние постройки)
+  if (Array.isArray(nation.buildings) && nation.buildings.length > 0) return false;
+
+  const regionsMap = GAME_STATE?.regions;
+  if (!regionsMap) return true;
+  for (let i = 0; i < regs.length; i++) {
+    const region = regionsMap[regs[i]];
+    if (!region) continue;
+    if (Array.isArray(region.buildings) && region.buildings.length > 0) return false;
+    const slots = region.building_slots;
+    if (Array.isArray(slots) && slots.length > 0) {
+      for (let j = 0; j < slots.length; j++) {
+        if (slots[j] && slots[j].status === 'active') return false;
+      }
+    }
+  }
+  return true;
+}
+
+// ──────────────────────────────────────────────────────────────
+// ШАГ 1: ПРОИЗВОДСТВО
+// Гибридная модель:
+//   A) Организованное — суммируется из building_slots регионов игрока.
+//   B) Неорганизованное — базовое REGION_PRODUCTION_BASE для рабочих,
+//      не занятых в зданиях (эффективность 65% от организованного).
+//
+// Для AI-наций применяется только схема B (у них нет building_slots).
+// ──────────────────────────────────────────────────────────────
+
+// Session 24 (perf): пре-вычисленные Object.entries() по терренам.
+// REGION_PRODUCTION_BASE статичен, но иначе Object.entries перевыделялся
+// на каждый регион каждой нации каждый тик (~10k новых массивов/тик).
+// Lazy-заполнение: первый обход регионов терраина заполняет cache.
+const _REGION_PROD_ENTRIES_CACHE = new Map(); // terrain → Array<[good, spec]>
+function _getRegionProdEntries(terrain) {
+  let e = _REGION_PROD_ENTRIES_CACHE.get(terrain);
+  if (e !== undefined) return e;
+  const tbl = REGION_PRODUCTION_BASE[terrain];
+  e = tbl ? Object.entries(tbl) : [];
+  _REGION_PROD_ENTRIES_CACHE.set(terrain, e);
+  return e;
+}
+
+export function calculateProduction(stubSet) {
+  const produced = {};  // { nation: { good: amount } }
+  // Session 24: SUBSISTENCE_FACTOR — константа, вынесена из внутреннего цикла.
+  const SUBSISTENCE_FACTOR = 0.65;
+
+  for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
+    // Session 3 (perf): пропускаем stub-нации целиком — у них нет
+    // зданий, а subsistence-производство без регионов с building_slots
+    // не формирует значимого вклада в мировой рынок.
+    if (stubSet && stubSet.has(nationId)) {
+      produced[nationId] = {};
+      continue;
+    }
+    const nationProd = produced[nationId] = {};
+    const bldBonuses = getBuildingBonuses(nationId);
+
+    // ── A) Производство из зданий (только для наций с building_slots) ──────
+    if (typeof calculateAllBuildingProduction === 'function') {
+      const bldProd = calculateAllBuildingProduction(nationId);
+      for (const good in bldProd) {
+        nationProd[good] = (nationProd[good] || 0) + bldProd[good];
+      }
+    }
+
+    // ── B) Неорганизованное производство ────────────────────────────────────
+    // Session 24 (perf): ВЫНЕСЕННЫЕ нация-уровневые инварианты (раньше
+    // читались на каждой итерации per-good). Все stub-нации сюда не
+    // доходят; нации без регионов проходят пустой цикл ниже.
+    const nationPop    = nation.population.total;
+    const byProf       = nation.population.by_profession || {};
+    const classMod     = nation.population._production_mod ?? 1;
+    const laborMod     = nation.demographics?.labor_productivity_mod ?? 1.0;
+    const bldMult      = bldBonuses.production_mult;
+    // Постоянная нация-уровневая часть множителя (без terrainMult × fertility × spec.rate).
+    const nationConst  = bldMult * classMod * SUBSISTENCE_FACTOR * laborMod;
+
+    if (nationPop <= 0) continue;
+
+    for (const regionId of nation.regions) {
+      const region  = GAME_STATE.regions[regionId];
+      if (!region) continue;
+
+      const terrain      = region.terrain || 'plains';
+      const multipliers  = CONFIG.BALANCE.TERRAIN_MULTIPLIERS?.[terrain]
+                        || CONFIG.BALANCE.TERRAIN_MULTIPLIERS?.plains || {};
+      const fertility    = region.fertility || 0.7;
+
+      // Доля региона в общем населении нации
+      const regionShareRaw  = region.population / nationPop;
+
+      // Занятость в зданиях этого региона
+      const employment  = region.employment || {};
+
+      // Session 24: cached entries (избегаем Object.entries на каждый регион).
+      const entries = _getRegionProdEntries(terrain);
+      const regionConst = fertility * nationConst;
+
+      for (let i = 0; i < entries.length; i++) {
+        const good = entries[i][0];
+        const spec = entries[i][1];
+        const professionPop = byProf[spec.per] || 0;
+        const localWorkers  = professionPop * regionShareRaw;
+
+        // Сколько из local workers уже задействованы в организованных зданиях.
+        const employedOfProf = employment[spec.per] || 0;
+
+        // Неорганизованные рабочие = свободные от зданий (min 0)
+        const freeWorkers = localWorkers - employedOfProf;
+        if (freeWorkers <= 0) continue;
+
+        const terrainMult = multipliers[spec.per] || 1.0;
+        const amount = (freeWorkers * 0.001) * spec.rate * terrainMult * regionConst;
+
+        if (amount > 0) {
+          nationProd[good] = (nationProd[good] || 0) + amount;
+        }
+      }
+    }
+  }
+
+  return produced;
+}
+
+// ══════════════════════════════════════════════════════════════
+// ЭТАП 3: РЕГИОНАЛЬНЫЕ ЗАПАСЫ
+//
+// Производство сначала идёт в region.local_stockpile (буфер 3 тика).
+// Избыток переливается в nation.economy.stockpile.
+// Товары, не произведённые в регионе (инструменты/скот как капитал),
+// в local_stockpile НЕ переполняются — остаются там до потребления.
+// ══════════════════════════════════════════════════════════════
+
+// Возвращает производство зданий по регионам: { regionId: { good: amount } }
+// Вызывается только из routeProductionToLocalStockpiles.
+//
+// Session 24 (perf): читает per-tick кэш buildings.js, если он заполнен
+// предшествующим calculateAllBuildingProduction в шаге 1 того же тика.
+// При кэш-хите обход слотов пропускается полностью.
+export function _getRegionalBuildingProduction(nationId) {
+  // Cache-hit: return byRegion прямо из buildings.js module cache.
+  if (typeof _getCachedRegionalBuildingProduction === 'function') {
+    const cached = _getCachedRegionalBuildingProduction(nationId);
+    if (cached) return cached;
+  }
+
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return {};
+
+  const result = {};
+  for (const rid of nation.regions) {
+    const region = GAME_STATE.regions[rid];
+    if (!region?.building_slots?.length) continue;
+
+    const regionOut = {};
+    for (const slot of region.building_slots) {
+      if (slot.status !== 'active') continue;
+      if (typeof getBuildingOutput !== 'function') continue;
+      const out = getBuildingOutput(slot, region, nation);
+      for (const good in out) {
+        regionOut[good] = (regionOut[good] || 0) + out[good];
+      }
+    }
+    if (Object.keys(regionOut).length > 0) result[rid] = regionOut;
+  }
+
+  // Записываем в кэш, чтобы последующие вызовы (например, повторный
+  // routeProductionToLocalStockpiles от другой нации) не дублировали работу.
+  if (typeof _cacheRegionalBuildingProduction === 'function') {
+    _cacheRegionalBuildingProduction(nationId, result);
+  }
+  return result;
+}
+
+// ──────────────────────────────────────────────────────────────
+// routeProductionToLocalStockpiles(nationId, allProduced)
+//
+// Заменяет прямое добавление в nation.economy.stockpile (шаг 1c).
+// Для каждого региона нации:
+//   1. Зачисляет производство зданий и неорганизованное → local_stockpile
+//   2. Вычисляет local_capacity = 3 × тик-производство региона
+//   3. Переводит overflow → nation.economy.stockpile
+//
+// Товары без производства в регионе (инструменты/скот, хранящиеся как
+// капитал) не переполняются — остаются в local_stockpile.
+// ──────────────────────────────────────────────────────────────
+export function routeProductionToLocalStockpiles(nationId, allProduced) {
+  const nation = GAME_STATE.nations[nationId];
+  if (!nation) return;
+
+  const nationProduced  = allProduced[nationId] || {};
+  const nationStockpile = nation.economy.stockpile;
+
+  // ── A. Производство зданий по регионам ──────────────────────────────────
+  const bldByRegion = _getRegionalBuildingProduction(nationId);
+
+  // Суммарное здание-производство по всей нации (для вычисления неорганизованного)
+  const bldTotal = {};
+  for (const rOut of Object.values(bldByRegion)) {
+    for (const [g, a] of Object.entries(rOut)) {
+      bldTotal[g] = (bldTotal[g] || 0) + a;
+    }
+  }
+
+  // Неорганизованное производство = nationProduced − здания
+  const unorgTotal = {};
+  for (const [good, amt] of Object.entries(nationProduced)) {
+    const unorg = Math.max(0, amt - (bldTotal[good] || 0));
+    if (unorg > 0.01) unorgTotal[good] = unorg;
+  }
+
+  // Сохранить суммы для UI (ECO_006)
+  const organizedTotal   = Object.values(bldTotal).reduce((s,v) => s+v, 0);
+  const unorganizedTotal = Object.values(unorgTotal).reduce((s,v) => s+v, 0);
+  nation._organized_production_total   = organizedTotal;
+  nation._unorganized_production_total = unorganizedTotal;
+
+  // Суммарное население всех регионов нации (для пропорций)
+  let totalRegionPop = 0;
+  for (const rid of nation.regions) {
+    totalRegionPop += GAME_STATE.regions[rid]?.population || 0;
+  }
+  if (totalRegionPop <= 0) totalRegionPop = 1;
+
+  // ── B. Маршрутизация по регионам ────────────────────────────────────────
+  for (const rid of nation.regions) {
+    const region = GAME_STATE.regions[rid];
+    if (!region) continue;
+
+    // Ленивая инициализация (не меняем regions_data.js — тысячи регионов)
+    if (!region.local_stockpile) region.local_stockpile = {};
+    if (!region.local_market)   region.local_market   = {};
+
+    const ls           = region.local_stockpile;
+    const prodThisTick = {};  // что произведено ЗДЕСЬ в этот тик
+
+    // Производство зданий региона
+    for (const [good, amt] of Object.entries(bldByRegion[rid] || {})) {
+      ls[good]             = (ls[good]             || 0) + amt;
+      prodThisTick[good]   = (prodThisTick[good]   || 0) + amt;
+    }
+
+    // Этап 7: технологический дрейф — глобальный +X% к зданиям
+    // (docs/economic2.md Улучшение 7). НЕ затрагивает неорганизованное
+    // производство — технологический прогресс впитывают только
+    // организованные мастерские. Прирост считается от bldByRegion[rid]
+    // (исходного объёма зданий региона) и добавляется и в prodThisTick,
+    // и в local_stockpile ДО расчёта overflow.
+    if (typeof getTechDriftMult === 'function') {
+      const techMult = getTechDriftMult();
+      if (techMult > 1.0) {
+        for (const [good, amt] of Object.entries(bldByRegion[rid] || {})) {
+          const delta = amt * (techMult - 1);
+          if (delta > 0) {
+            ls[good]           = (ls[good]           || 0) + delta;
+            prodThisTick[good] = (prodThisTick[good] || 0) + delta;
+          }
+        }
+      }
+    }
+
+    // Доля неорганизованного производства пропорционально населению
+    const popShare = (region.population || 0) / totalRegionPop;
+    for (const [good, unorgAmt] of Object.entries(unorgTotal)) {
+      const share = unorgAmt * popShare;
+      if (share > 0.01) {
+        ls[good]           = (ls[good]           || 0) + share;
+        prodThisTick[good] = (prodThisTick[good] || 0) + share;
+      }
+    }
+
+    // Специализация региона (этап 3, docs/economic2.md) — накопительный
+    // бонус к эффективности топ-товара. Применяется ДО расчёта overflow,
+    // чтобы прирост попал в local_stockpile и отразился в ёмкости.
+    if (typeof getRegionSpecBonus === 'function') {
+      for (const good of Object.keys(prodThisTick)) {
+        const mult = getRegionSpecBonus(rid, good);
+        if (mult > 1.0) {
+          const delta = prodThisTick[good] * (mult - 1);
+          if (delta > 0) {
+            prodThisTick[good] += delta;
+            ls[good] = (ls[good] || 0) + delta;
+          }
+        }
+      }
+    }
+
+    // Глобальный экономический цикл (этап 5, docs/economic2.md) —
+    // бум/спад влияет на CYCLE_GOODS (зерно, ячмень, оливки, виноград,
+    // рыба). Может УВЕЛИЧИВАТЬ (boom ×1.15) или УМЕНЬШАТЬ (recession
+    // ×0.82) производство. Изменения учитываются в local_stockpile
+    // ДО расчёта overflow.
+    if (typeof getCycleMult === 'function') {
+      for (const good of Object.keys(prodThisTick)) {
+        const cmult = getCycleMult(good);
+        if (cmult !== 1.0) {
+          const delta = prodThisTick[good] * (cmult - 1);
+          if (delta !== 0) {
+            // Не уходим в отрицательный сток.
+            const newProd = Math.max(0, prodThisTick[good] + delta);
+            const newLs   = Math.max(0, (ls[good] || 0) + delta);
+            prodThisTick[good] = newProd;
+            ls[good] = newLs;
+          }
+        }
+      }
+    }
+
+    // Этап 11.2 economic4.md — сезонность.
+    // Применяется ПОСЛЕ tech/spec/cycle, ПЕРЕД overflow и audit.
+    // Для аграрных товаров (wheat, barley, olives, grapes, fish, honey)
+    // меняет производство от 0 (зима для зерна) до ×4 (сентябрь-октябрь).
+    if (typeof getSeasonalHarvestMult === 'function') {
+      for (const good of Object.keys(prodThisTick)) {
+        const smult = getSeasonalHarvestMult(good);
+        if (smult !== 1.0) {
+          const delta = prodThisTick[good] * (smult - 1);
+          if (delta !== 0) {
+            const newProd = Math.max(0, prodThisTick[good] + delta);
+            const newLs   = Math.max(0, (ls[good] || 0) + delta);
+            prodThisTick[good] = newProd;
+            ls[good] = newLs;
+          }
+        }
+      }
+    }
+
+    // Запоминаем для расчёта региональных цен и ёмкости
+    region._production_last_tick = prodThisTick;
+
+    // Этап 11.1: записываем производство этого региона в material audit.
+    for (const [good, amt] of Object.entries(prodThisTick)) {
+      if (amt > 0) recordMaterialFlow(nation, good, amt, 'prod');
+    }
+
+    // ── C. Overflow: только для произведённых здесь товаров ─────────────
+    // Capacity = 3 тика производства. Непроизведённые товары (инструменты,
+    // скот как капитальный запас) не переполняются.
+    for (const [good, produced] of Object.entries(prodThisTick)) {
+      const capacity = produced * 3;
+      const current  = ls[good] || 0;
+      if (current > capacity) {
+        const overflow = current - capacity;
+        nationStockpile[good] = (nationStockpile[good] || 0) + overflow;
+        ls[good] = capacity;
+      }
+    }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// ШАГ 2: ПОТРЕБЛЕНИЕ (классовая модель)
+// ──────────────────────────────────────────────────────────────
+
+export function calculateConsumption(nation) {
+  let result;
+
+  // Предпочтительный путь: wealth-зависимая корзина потребления (Stage 6)
+  if (typeof calcNationBasketDemand === 'function') {
+    const basketDemand = calcNationBasketDemand(nation);
+    if (basketDemand) result = basketDemand;
+  }
+
+  // Запасной вариант — классовая модель
+  if (!result && typeof calculateTotalConsumptionByClass === 'function') {
+    result = calculateTotalConsumptionByClass(nation.population.by_profession);
+  }
+
+  // Последний резерв — плоская модель
+  if (!result) {
+    const pop   = nation.population.total;
+    const profs = nation.population.by_profession;
+    result = {
+      wheat: pop * CONFIG.BALANCE.FOOD_PER_PERSON,
+      salt:  pop * CONFIG.BALANCE.SALT_PER_PERSON,
+      cloth: pop * CONFIG.BALANCE.CLOTH_PER_PERSON,
+      tools: (profs.craftsmen || 0) * CONFIG.BALANCE.TOOLS_PER_CRAFTSMAN,
+    };
+  }
+
+  // Модификатор возрастной структуры (иждивенцы увеличивают нагрузку)
+  const dem = nation.demographics;
+  if (dem && dem.consumption_mult > 0 && typeof AGE_PARAMS !== 'undefined') {
+    const relMult = dem.consumption_mult / AGE_PARAMS.baseline_consumption_mult;
+    if (Math.abs(relMult - 1.0) > 0.001) {
+      for (const good of Object.keys(result)) result[good] *= relMult;
+    }
+  }
+
+  return result;
+}
+
+// ──────────────────────────────────────────────────────────────
+// ШАГ 3: ОБНОВЛЕНИЕ РЫНОЧНЫХ ЦЕН — трёхзонная модель
+//
+// Три режима в зависимости от мирового склада (world stockpile):
+//
+//   ДЕФИЦИТ  stockpile < 0.5 * target
+//     → price_delta = base * exp(shortage_streak * 0.15)   экспоненциальный рост
+//
+//   БАЛАНС   0.5 * target ≤ stockpile ≤ 2.0 * target
+//     → price_delta = (demand − supply) / supply * 0.05 * price   ±5% / тик
+//
+//   ИЗБЫТОК  stockpile > 2.0 * target
+//     → price_delta = −base * 0.03 * surplus_ratio         плавное снижение
+//
+// Ограничители:
+//   raw_new  = clamp(price + delta,  price_floor,  base * 10)
+//   new_price = lerp(price, raw_new, 0.3)   — сглаживание, рынок «плывёт»
+//
+// Склад:
+//   stockpile += supply − demand  ;  stockpile = max(0, stockpile)
+//   shortage_streak++ если stockpile < 0.5 * target, иначе max(0, streak − 1)
+// ──────────────────────────────────────────────────────────────
+// updateMarketPrices — перенесено в engine/market.js (Этап 8)
+// Функция определена там и вызывается здесь без изменений.
+
+// ──────────────────────────────────────────────────────────────
+// ШАГ 4: ТОРГОВЛЯ
+// ──────────────────────────────────────────────────────────────
+
+// ──────────────────────────────────────────────────────────────
+// _WORLD_IMPORT_GOODS — товары, которые нация закупает на мировом
+// рынке при дефиците в processTrade (не capital_inputs — они в
+// procureCapitalInputs).  Приоритет: сначала продовольствие,
+// затем инструменты и сырьё.
+// ──────────────────────────────────────────────────────────────
+/**
+ * Возвращает эффективную ставку пошлины для торговли nationId ↔ partnerId.
+ * Если есть договор — использует treaty's tariff_rate.
+ * Иначе — авторасчёт по дипломатическим отношениям.
+ *   score -100 → 35%,  score 0 → 20%,  score +100 → 5%
+ * Война → 0.99 (торговля заблокирована).
+ */
+export function _getEffectiveTariffRate(nationId, partnerId) {
+  if (typeof DiplomacyEngine === 'undefined') return 0.20;
+  const rel = DiplomacyEngine.getRelation(nationId, partnerId);
+  if (!rel) return 0.20;
+  if (rel.war) return 0.99;
+  // Если договор задал явную ставку
+  if (rel.flags?.tariff_rate !== undefined) {
+    const rate = rel.flags.tariff_rate;
+    return Number.isFinite(rate) ? Math.max(0, Math.min(0.99, rate)) : 0.20;
+  }
+  // Авторасчёт: tariff = 0.20 − (score/100) × 0.15, границы [0.05, 0.35]
+  const score = Number.isFinite(rel.score) ? rel.score : 0;
+  return Math.max(0.05, Math.min(0.35, 0.20 - (score / 100) * 0.15));
+}
+
+export const _WORLD_IMPORT_GOODS = [
+  'wheat', 'barley', 'salt', 'cloth',         // потребительские
+  'tools', 'iron', 'timber', 'bronze',         // производственные
+  'wine', 'olive_oil', 'pottery',              // ценные
+];
+
+// ──────────────────────────────────────────────────────────────
+// ПРОВЕРКА ДЕФИЦИТА ТОВАРОВ (ECO_003)
+// ──────────────────────────────────────────────────────────────
+
+export const GOOD_IMPORTANCE = {
+  wheat: 1.0, barley: 0.9, salt: 0.7, iron: 0.6,
+  timber: 0.5, cloth: 0.5, olive_oil: 0.4, wine: 0.3,
+};
+
+export function _estimateNeedForGood(nation, good) {
+  const pop = nation.population?.total || 1000;
+  // Простая оценка: пшеница/ячмень — пропорционально населению
+  if (good === 'wheat' || good === 'barley') return pop * 0.01;
+  return pop * 0.005;
+}
+
+export function checkSupplyDeficits(nation) {
+  const deficits = [];
+  const stockpile = nation.economy?.stockpile || {};
+
+  for (const [good, importance] of Object.entries(GOOD_IMPORTANCE)) {
+    const qty  = stockpile[good] ?? 0;
+    const need = _estimateNeedForGood(nation, good);
+    if (qty < need * 0.25) {
+      deficits.push({ good, severity: importance, shortage: need - qty });
+    }
+  }
+
+  if (!deficits.length) { nation._supply_deficits = []; return; }
+
+  // SuperOU: сигнал о дефиците
+  const totalSeverity = deficits.reduce((s,d) => s + d.severity, 0);
+  if (totalSeverity > 1.0 && window.SuperOU) {
+    try {
+      window.SuperOU.onDiplomacyEvent(nation.id, 'SUPPLY_DEFICIT', {
+        variable: 'trade_focus', delta: +0.15, duration: 8,
+      });
+    } catch(e) { /* SuperOU необязателен */ }
+  }
+
+  // Логировать критические (10% шанс)
+  const critical = deficits.filter(d => d.severity >= 0.7);
+  for (const d of critical) {
+    if (Math.random() < 0.1) {
+      addEventLog(`[📦] ${nation.name}: нехватка ${d.good} (−${Math.round(d.shortage)} ед)`, 'warning');
+    }
+  }
+
+  nation._supply_deficits = deficits;
+}
+
+export function processTrade(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+  let tradeProfit = 0;
+  let tariffIncome = 0;
+
+  // ── Этап 2 economic3.md: физический cap на общий торговый объём ──────
+  //   До фикса nation могла торговать до 54k кг/мес (900 пар × 1000 cap).
+  //   Физически ограничено количеством merchants + sailors + ships.
+  //   Калибровка по Полибию / Rathbone: 1 merchant обрабатывает ~0.3-0.5 кг
+  //   товара в день × 30 = ~10-15 кг/мес. Корабль corbita (~100-400 тонн)
+  //   ходит 4-6 раз в год → 100-400 кг/мес чистого оборота на корабль.
+  //   Минимум 200 кг/мес на нацию — пограничная «торговля на ослах».
+  const merchants = nation.population?.by_profession?.merchants || 0;
+  const sailors   = nation.population?.by_profession?.sailors   || 0;
+  const ships     = nation.military?.ships || 0;
+  const nationTradeCapacity = Math.max(
+    200,
+    Math.min(
+      (merchants + sailors) * 2.5,   // 2.5 кг/чел/мес (средне консервативно)
+      ships * 400 + 500              // 400 кг/корабль/мес + 500 базовая
+    )
+  );
+  let usedCapacity = 0;
+
+  // ── 1. Экспортная прибыль от торговых маршрутов ───────────────────────
+  for (const partnerNationId of (nation.economy.trade_routes || [])) {
+    const partner = GAME_STATE.nations[partnerNationId];
+    if (!partner) continue;
+
+    for (const [good, mkt] of Object.entries(GAME_STATE.market)) {
+      const nationStock = nation.economy.stockpile[good] || 0;
+      if (nationStock < 100) continue;
+
+      const surplus = nationStock - 500;
+      if (surplus <= 0) continue;
+
+      // Остаточная capacity за тик — исчерпали → пропускаем
+      const remainingCap = Math.max(0, nationTradeCapacity - usedCapacity);
+      if (remainingCap <= 0) break;
+
+      const tradeVolume = Math.min(surplus * 0.1, 1000, remainingCap);
+      if (tradeVolume <= 0) continue;
+      usedCapacity += tradeVolume;
+
+      const tariffRate = _getEffectiveTariffRate(nationId, partnerNationId);
+      // Заблокировать торговлю если эффективная пошлина ≥ 99%
+      if (tariffRate >= 0.99) continue;
+
+      // Бонус за преимущественное право на товар
+      const prefGoods = typeof DiplomacyEngine !== 'undefined'
+        ? (DiplomacyEngine.getRelation(nationId, partnerNationId)?.flags?.preferential_goods ?? [])
+        : [];
+      const isPrefGood = prefGoods.includes(good);
+      const prefBonus = isPrefGood ? 0.20 : 0.0; // +20% к прибыли для приоритетных товаров
+
+      // ECO_EXT этап 2 — монопольный бонус к цене продажи.
+      // Если nationId — единственный производитель стратегического good,
+      // цена продажи растёт на +20% (MONOPOLY_PRICE_BONUS в economy_ext.js).
+      const monopolyMult = (typeof getMonopolyPriceMult === 'function')
+        ? getMonopolyPriceMult(nationId, good) : 1.0;
+
+      const grossProfitRaw = tradeVolume * mkt.price * 0.05 * (1 + prefBonus)
+                           * (1 - CONFIG.BALANCE.PIRACY_BASE) * monopolyMult;
+      // Cap: прибыль одной сделки не превышает 15% от её "нормальной" оценки по base_price.
+      // Останавливает экспоненциальный feedback `price растёт → выручка растёт → цена растёт`
+      // когда нация оказывается монополистом по товару с разогнанной ценой (×10 от base).
+      const grossProfitCap = tradeVolume * (mkt.base ?? mkt.price) * 0.15;
+      const grossProfit = Math.min(grossProfitRaw, grossProfitCap);
+      const tariffAmount = grossProfit * tariffRate;
+      const netProfit = grossProfit - tariffAmount;
+
+      // Пропустить строку если получился NaN (защита от NaN в цене или тарифе)
+      if (!Number.isFinite(netProfit)) continue;
+
+      // tariffIncome — пошлины которые nation ПОЛУЧАЕТ как портовая держава
+      // (половина от пошлин со всей торговли через её порты)
+      tariffIncome += tariffAmount * 0.5;
+      tradeProfit += netProfit;
+    }
+  }
+
+  // ── 2. Импорт с мирового рынка при дефиците товаров ──────────────────
+  //   Условие: нация имеет доступ к мировому рынку (canAccessWorldMarket).
+  //   Закупает только то, чего не хватает (stockpile < demand × 2 тика).
+  //   Квота и транспортные расходы те же, что в procureCapitalInputs.
+  if (typeof canAccessWorldMarket === 'function' && canAccessWorldMarket(nationId)) {
+    const stockpile = nation.economy.stockpile;
+    // Session 2 (perf): Object.keys(...) в теле внешнего цикла — 11×N alloc'ов.
+    // Значение одинаково для всех good, вычисляем один раз на вызов processTrade.
+    const _nationCount = Math.max(1, Object.keys(GAME_STATE.nations).length);
+
+    for (const good of _WORLD_IMPORT_GOODS) {
+      const mktEntry = GAME_STATE.market[good];
+      if (!mktEntry || (mktEntry.world_stockpile || 0) <= 0) continue;
+
+      const currentStock = stockpile[good] || 0;
+      const demandPerTick = mktEntry.demand
+                          ? mktEntry.demand / _nationCount
+                          : 0;
+
+      // Только если запас < 2 тика потребления
+      if (demandPerTick <= 0 || currentStock >= demandPerTick * 2) continue;
+
+      const needed = demandPerTick * 2 - currentStock;
+
+      const quota      = mktEntry._quota_per_buyer ?? (mktEntry.world_stockpile || 0);
+      const boughtSoFar = (mktEntry._world_bought_tick?.[nationId] || 0);
+      const canBuy     = Math.max(0, quota - boughtSoFar);
+      const fromWorld  = Math.min(needed, canBuy, mktEntry.world_stockpile || 0);
+
+      if (fromWorld <= 0) continue;
+
+      const transportCost = typeof getWorldMarketTransportCost === 'function'
+        ? getWorldMarketTransportCost(nationId, good)
+        : 0.25;
+      const priceWithTransport = (mktEntry.price || 0) * (1 + transportCost);
+      const payment = fromWorld * priceWithTransport;
+
+      // Закупаем только если казна позволяет
+      if ((nation.economy.treasury || 0) < payment) continue;
+
+      nation.economy.treasury = (nation.economy.treasury || 0) - payment;
+      stockpile[good] = (stockpile[good] || 0) + fromWorld;
+      recordMaterialFlow(nation, good, fromWorld, 'trade_in');
+
+      mktEntry.world_stockpile = Math.max(0, mktEntry.world_stockpile - fromWorld);
+      if (!mktEntry._world_bought_tick) mktEntry._world_bought_tick = {};
+      mktEntry._world_bought_tick[nationId] = boughtSoFar + fromWorld;
+
+      // Учитываем в торговой прибыли (отрицательно — расход)
+      tradeProfit -= payment;
+    }
+  }
+
+  // Сохраняем для отображения в казне
+  const economy = GAME_STATE.nations[nationId]?.economy;
+  if (economy) economy._tariff_income_tick = Math.round(tariffIncome);
+  return tradeProfit;
+}
+
+// ──────────────────────────────────────────────────────────────
+// ШАГ 5: КАЗНА
+// ──────────────────────────────────────────────────────────────
+
+export function updateTreasury(nationId, produced, consumed, tradeProfit) {
+  const nation = GAME_STATE.nations[nationId];
+  const economy = nation.economy;
+  const military = nation.military;
+  const prof = nation.population.by_profession;
+
+  // ── БОНУСЫ ЗДАНИЙ ──────────────────────────────────────────
+  const bldBonuses = getBuildingBonuses(nationId);
+
+  // ── УРОВНИ ФИНАНСИРОВАНИЯ РАСХОДОВ (0.5..1.5) ──────────────
+  const expLevels    = economy.expense_levels || {};
+  const armyLvl      = Math.max(0.5, Math.min(1.5, expLevels.army       ?? 1.0));
+  const navyLvl      = Math.max(0.5, Math.min(1.5, expLevels.navy       ?? 1.0));
+  const courtLvl     = Math.max(0.5, Math.min(1.5, expLevels.court      ?? 1.0));
+  const stabilLvl    = Math.max(0.5, Math.min(1.5, expLevels.stability  ?? 1.0));
+  const fortressLvl  = Math.max(0.5, Math.min(1.5, expLevels.fortresses ?? 1.0));
+  const buildingsLvl = Math.max(0.5, Math.min(1.5, expLevels.buildings  ?? 1.0));
+  // slavesLvl удалён — расходы на содержание рабов покрываются maintenance зданий
+
+  // ── ДОХОДЫ: НАЛОГИ ─────────────────────────────────────────
+  // Единая механика для всех наций: tax_rates_by_class × wealth_level.
+  // Если нация не имеет явных ставок — инициализируем из единого tax_rate
+  // с исторически правдоподобным распределением по слоям.
+  if (!economy.tax_rates_by_class) {
+    const r = economy.tax_rate || 0.10;
+    economy.tax_rates_by_class = {
+      aristocrats: Math.min(0.30, parseFloat((r * 1.5).toFixed(2))),
+      clergy:      Math.min(0.30, parseFloat((r * 0.7).toFixed(2))),
+      commoners:   Math.min(0.30, parseFloat((r * 1.0).toFixed(2))),
+      soldiers:    Math.min(0.30, parseFloat((r * 0.4).toFixed(2))),
+    };
+  }
+
+  // taxBase[group] = Σ(class_pop × wealth_level) по классам группы
+  const taxBases = computeTaxGroupBases(prof);
+  const totalTaxBase = taxBases.aristocrats + taxBases.clergy
+                     + taxBases.commoners   + taxBases.soldiers;
+
+  // tax_class = taxBase[group] × rate × TAX_CALIBRATION × building_bonus
+  const r = economy.tax_rates_by_class;
+  let taxByClass;
+  if (totalTaxBase > 0) {
+    taxByClass = {
+      aristocrats: Math.round(taxBases.aristocrats * r.aristocrats * TAX_CALIBRATION * bldBonuses.tax_mult),
+      clergy:      Math.round(taxBases.clergy      * r.clergy      * TAX_CALIBRATION * bldBonuses.tax_mult),
+      commoners:   Math.round(taxBases.commoners   * r.commoners   * TAX_CALIBRATION * bldBonuses.tax_mult),
+      soldiers:    Math.round(taxBases.soldiers    * r.soldiers    * TAX_CALIBRATION * bldBonuses.tax_mult),
+    };
+  } else {
+    taxByClass = { aristocrats: 0, clergy: 0, commoners: 0, soldiers: 0 };
+  }
+  let taxIncomeTotal = taxByClass.aristocrats + taxByClass.clergy
+                     + taxByClass.commoners   + taxByClass.soldiers;
+
+  // Этап 11.3 economic4.md — coin_purity влияет на реальный вес налогов.
+  // Обесценивание монеты означает, что те же ставки приносят меньше
+  // реального серебра. Прямой множитель на tax_income.
+  const coinPurity = economy.coin_purity;
+  if (Number.isFinite(coinPurity) && coinPurity < 1.0 && coinPurity > 0) {
+    taxIncomeTotal = Math.round(taxIncomeTotal * coinPurity);
+    taxByClass.aristocrats = Math.round(taxByClass.aristocrats * coinPurity);
+    taxByClass.clergy      = Math.round(taxByClass.clergy      * coinPurity);
+    taxByClass.commoners   = Math.round(taxByClass.commoners   * coinPurity);
+    taxByClass.soldiers    = Math.round(taxByClass.soldiers    * coinPurity);
+  }
+
+  // ── ДОХОДЫ: ПОРТОВЫЕ ПОШЛИНЫ ───────────────────────────────
+  // GAME_STATE.regions изначально пуст; географические данные хранятся в MAP_REGIONS
+  const coastalRegions = nation.regions.filter(rId => {
+    const r = GAME_STATE.regions[rId] ?? MAP_REGIONS?.[rId];
+    return r && (r.terrain === 'coastal_city');
+  }).length;
+  const portDuties = Math.round(coastalRegions * 120 + bldBonuses.port_bonus);
+
+  // ── СЧАСТЬЕ ОТ ЗДАНИЙ ──────────────────────────────────────
+  if (bldBonuses.happiness_bonus > 0) {
+    nation.population.happiness = Math.min(100,
+      (nation.population.happiness ?? 50) + bldBonuses.happiness_bonus * 0.1
+    );
+  }
+
+  // Флот влияет на торговую прибыль; здания — на портовые пошлины
+  const effTradeProfit = Math.round((Number.isFinite(tradeProfit) ? tradeProfit : 0) * navyLvl);
+  const effPortDuties  = Math.round(portDuties  * buildingsLvl);
+  const tariffIncome   = Math.round((economy._tariff_income_tick ?? 0) * (buildingsLvl ?? 1));
+
+  // GOV_009: Переходный период снижает доходы на 20%
+  const transitionMod = nation.government?.in_transition ? 0.80 : 1.0;
+  const totalIncome = Math.round((taxIncomeTotal + effPortDuties + effTradeProfit + tariffIncome) * transitionMod);
+
+  // ── РАСХОДЫ: АРМИЯ ─────────────────────────────────────────
+  // Примечание: grace ramp на первые 12 ходов (0.2→1.0) пробовался как фикс startup-
+  // дефицита (86% наций в минусе на ходе 2), но вызывал регресс в exponential_stock
+  // (47→90) — армия потребляла меньше food/tools, запасы росли. Оставлено как есть;
+  // startup-дефицит лучше чинить через стартовый treasury buffer в data/nations.js.
+  const expArmyInfantry    = (military.infantry    || 0) * CONFIG.BALANCE.INFANTRY_UPKEEP;
+  const expArmyCavalry     = (military.cavalry     || 0) * CONFIG.BALANCE.CAVALRY_UPKEEP;
+  const expArmyMercenaries = (military.mercenaries || 0) * CONFIG.BALANCE.MERCENARY_UPKEEP;
+  const expNavy            = (military.ships       || 0) * CONFIG.BALANCE.SHIP_UPKEEP;
+
+  // ── РАСХОДЫ: ДВОР И СОВЕТНИКИ ──────────────────────────────
+  // Двор: все живые персонажи (базовое содержание)
+  const aliveChars = (nation.characters || []).filter(c => c.alive !== false);
+  const expCourt = aliveChars.length * 15;
+  // Советники: персонажи с ролью 'advisor' (дополнительное содержание)
+  const advisorCount = aliveChars.filter(c => c.role === 'advisor').length;
+  const expAdvisors = advisorCount * 50;
+
+  // ── РАСХОДЫ: СТАБИЛЬНОСТЬ ──────────────────────────────────
+  // 200 × (1 - stability/100): при 100% → 0, при 50% → 100, при 0% → 200
+  const stability = nation.government?.stability ?? 50;
+  const expStability = Math.round(200 * (1 - stability / 100));
+
+  // ── РАСХОДЫ: КРЕПОСТИ ──────────────────────────────────────
+  // Считаем 'walls' в nation.buildings (legacy) и building_slots с типом 'walls'
+  // ── РАСХОДЫ: КРЕПОСТИ ─────────────────────────────────────────
+  // Активные крепости — множитель ползунка применяется.
+  // Законсервированные — 10% стоимости, ползунок НЕ влияет.
+  let expFortresses = 0, expFortressesConserved = 0;
+  if (typeof calcFortressExpenses === 'function') {
+    const fCosts = calcFortressExpenses(nationId);
+    expFortresses          = fCosts.active;
+    expFortressesConserved = fCosts.conserved;
+  } else {
+    // Fallback: плоская формула для legacy-зданий
+    const legacyWalls = (nation.buildings || []).filter(b => b === 'walls').length;
+    let slotWalls = 0;
+    for (const regionId of nation.regions) {
+      const region = GAME_STATE.regions[regionId];
+      if (!region) continue;
+      slotWalls += (region.building_slots || []).filter(
+        s => s.status === 'active' && (s.building_id === 'walls' || s.building_id === 'fortress')
+      ).length;
+    }
+    expFortresses = (legacyWalls + slotWalls) * 80;
+  }
+
+  // ── РАСХОДЫ: ЗДАНИЯ ────────────────────────────────────────
+  // Обычные здания (без стен — они уже учтены выше)
+  let expBuildings = 0;
+  for (const regionId of nation.regions) {
+    const region = GAME_STATE.regions[regionId];
+    if (!region) continue;
+    // Legacy: плоский список (не стены — они в expFortresses)
+    if (region.buildings?.length) {
+      const legacyRate = CONFIG.BALANCE?.MAINTENANCE_PER_WORKER ?? 2;
+      const nonWalls = region.buildings.filter(b => b !== 'walls').length;
+      expBuildings += nonWalls * legacyRate * 5; // ~5 рабочих на устаревшее здание
+    }
+    // Новые building_slots — только для AI (игрок учтён в distributeWages).
+    // БАГ-B FIX: autonomous_builder здания (wheat_*) пропускаем — их обслуживание
+    // уже вычтено внутри profit_last, который поступает в казну через distributeClassIncome.
+    // Включать их сюда → двойной вычет из AI-казны (~15 200 ₴/тик за 76 латифундий).
+    if (nationId !== GAME_STATE.player_nation) {
+      for (const slot of (region.building_slots || [])) {
+        if (slot.status !== 'active') continue;
+        if (slot.building_id === 'walls' || slot.building_id === 'fortress') continue;
+        const bDef = (typeof BUILDINGS !== 'undefined') ? BUILDINGS[slot.building_id] : null;
+        if (bDef && !bDef.autonomous_builder) {
+          expBuildings += _calcBuildingMaintenance(bDef, slot.level || 1);
+        }
+      }
+    }
+  }
+  if (nationId === GAME_STATE.player_nation) {
+    expBuildings += economy._building_maintenance_per_turn || 0;
+  }
+
+  // Расходы на рабов из казны убраны: их содержание (питание, жильё) покрывается
+  // через maintenance зданий (workers_per_unit × 2), в которых они фактически работают.
+  // Рабы без государственных зданий — свободный рынок труда, не нагрузка на казну.
+
+  // ── ПРИМЕНЯЕМ УРОВНИ ФИНАНСИРОВАНИЯ ────────────────────────
+  const effArmyInf      = Math.round(expArmyInfantry    * armyLvl);
+  const effArmyCav      = Math.round(expArmyCavalry     * armyLvl);
+  const effArmyMerc     = Math.round(expArmyMercenaries * armyLvl);
+  const effNavyExp      = Math.round(expNavy             * navyLvl);
+  const effCourtExp     = Math.round(expCourt            * courtLvl);
+  const effAdvisorsExp  = Math.round(expAdvisors         * courtLvl);
+  const effStabExp      = Math.round(expStability        * stabilLvl);
+  // Законсервированные крепости — фиксированная стоимость, ползунок не влияет
+  const effFortresses   = Math.round(expFortresses * fortressLvl) + expFortressesConserved;
+  const effBuildings    = Math.round(expBuildings        * buildingsLvl);
+
+  const totalExpenseBase = effArmyInf + effArmyCav + effArmyMerc
+                         + effNavyExp + effCourtExp + effAdvisorsExp + effStabExp
+                         + effFortresses + effBuildings;
+
+  // ── ПРОГРЕССИВНЫЙ ШТРАФ ЗА ХОАРД ───────────────────────────
+  // Когда казна превышает 5× мес. дохода, списывается 3% "избытка" каждый ход.
+  //
+  // Этап 10.3 (после audit-fix Этапа 10): проверка на 500 ходов показала, что
+  // при 2%@10× равновесие treasury = 60×income достигается очень медленно —
+  // на 100 ходах казна всё ещё растёт 5-8%/ход, проекция к 9324 ходам ломает
+  // баланс. Усиление до 3%@5× даёт равновесие treasury = 38×income:
+  //   income = 0.03 × (T - 5×income)
+  //   T_eq = income × (1/0.03 + 5) ≈ 38.3 × income
+  // Сходимость ~3× быстрее, без потери игрового смысла (казна всё ещё может
+  // накопить ~3 года расходов, хватает на войну).
+  //
+  // Исторически обоснование: коррупция + обесценивание + вывод в роскошь.
+  // Римская Империя: ~5% в год теряла казна «просто так» при позднем Домите.
+  let hoardPenalty = 0;
+  if (totalIncome > 0 && economy.treasury > 5 * totalIncome) {
+    const excess = economy.treasury - 5 * totalIncome;
+    hoardPenalty = Math.round(excess * 0.03);
+  }
+
+  // Примечание: симметричный debt-penalty пробовался (treasury < -3×income →
+  // +1%/ход к расходам), но создал положительную обратную связь — долг
+  // увеличивал расходы, расходы увеличивали долг. На 500 ходах total_money
+  // упал до −147B (vs −5.9B без debt-penalty). Fast-mode без AI — некорректная
+  // среда для симметричного фикса; реальное банкротство обрабатывается
+  // механикой declareBankruptcy() в loans.js.
+  const totalExpense = totalExpenseBase + hoardPenalty;
+
+  // ── ОБНОВЛЯЕМ КАЗНУ ────────────────────────────────────────
+  const delta = totalIncome - totalExpense;
+  const newTreasury = economy.treasury + delta;
+
+  applyDelta(`nations.${nationId}.economy.treasury`, Math.round(newTreasury));
+  applyDelta(`nations.${nationId}.economy.income_per_turn`, Math.round(totalIncome));
+  applyDelta(`nations.${nationId}.economy.expense_per_turn`, Math.round(totalExpense));
+
+  // ── ВОССТАНОВЛЕНИЕ СТАБИЛЬНОСТИ ────────────────────────────
+  // stabilLvl масштабирует скорость восстановления (× уровень финансирования).
+  // fundingRatio убывает при дефиците (у эффективных расходов на стабильность).
+  if (expStability > 0) {
+    const currentStab = nation.government?.stability ?? 50;
+    if (currentStab < 100) {
+      const fundingRatio = delta >= 0
+        ? 1.0
+        : Math.max(0, 1 + delta / Math.max(1, effStabExp));
+      const stabRecovery = parseFloat((1.5 * fundingRatio * stabilLvl).toFixed(2));
+      if (stabRecovery > 0) {
+        applyDelta(
+          `nations.${nationId}.government.stability`,
+          Math.min(100, parseFloat((currentStab + stabRecovery).toFixed(2))),
+        );
+      }
+      economy._stability_funding_ratio = parseFloat(fundingRatio.toFixed(2));
+    }
+  }
+
+  // ── ЭФФЕКТЫ УРОВНЕЙ ФИНАНСИРОВАНИЯ ─────────────────────────
+  const totalArmy = (military.infantry || 0) + (military.cavalry || 0) + (military.mercenaries || 0);
+  if (totalArmy > 0 && Math.abs(armyLvl - 1.0) > 0.01) {
+    const moraleDelta  = parseFloat(((armyLvl - 1.0) * 15).toFixed(1));
+    const loyaltyDelta = parseFloat(((armyLvl - 1.0) *  8).toFixed(1));
+    applyDelta(`nations.${nationId}.military.morale`,
+      Math.max(0, Math.min(100, (military.morale ?? 50) + moraleDelta)));
+    applyDelta(`nations.${nationId}.military.loyalty`,
+      Math.max(0, Math.min(100, (military.loyalty ?? 50) + loyaltyDelta)));
+  }
+  if (Math.abs(courtLvl - 1.0) > 0.01) {
+    const legDelta = parseFloat(((courtLvl - 1.0) * 2).toFixed(1));
+    const gov = nation.government;
+    applyDelta(`nations.${nationId}.government.legitimacy`,
+      Math.max(0, Math.min(100, (gov?.legitimacy ?? 50) + legDelta)));
+  }
+  // Крепости: содержание гарнизона влияет на стабильность
+  economy._fortress_defense_mult = fortressLvl;
+  if (expFortresses > 0 && Math.abs(fortressLvl - 1.0) > 0.01) {
+    const stabDelta = parseFloat(((fortressLvl - 1.0) * 2.0).toFixed(2));
+    const currentStab = nation.government?.stability ?? 50;
+    if (stabDelta > 0 || currentStab > 0) {
+      applyDelta(`nations.${nationId}.government.stability`,
+        Math.max(0, Math.min(100, parseFloat((currentStab + stabDelta).toFixed(2)))));
+    }
+  }
+  // ── КЭШ РАЗБИВКИ ДЛЯ UI ────────────────────────────────────
+  const buildingProfit  = Math.round(nation.economy._building_profit_last_tick || 0);
+  // Расходы, выплачиваемые вне updateTreasury (уже вычтены из казны напрямую)
+  const soldierSalary   = Math.round(nation.economy._soldier_salary_per_turn || 0);
+  const foodSoldiers    = Math.round(nation.economy._food_spending?.treasury  || 0);
+  applyDelta(`nations.${nationId}.economy._income_breakdown`, {
+    tax_aristocrats: taxByClass.aristocrats,
+    tax_clergy:      taxByClass.clergy,
+    tax_commoners:   taxByClass.commoners,
+    tax_soldiers:    taxByClass.soldiers,
+    trade_profit:    Math.round(effTradeProfit),
+    port_duties:     Math.round(effPortDuties),
+    tariff_income:   tariffIncome,
+    building_profit:       buildingProfit,
+    state_building_count:  nation.economy._state_building_active_count || 0,
+    total:                 Math.round(totalIncome) + buildingProfit,
+  });
+  applyDelta(`nations.${nationId}.economy._expense_breakdown`, {
+    army_infantry:     effArmyInf,
+    army_cavalry:      effArmyCav,
+    army_mercenaries:  effArmyMerc,
+    army_base:         Math.round(expArmyInfantry + expArmyCavalry + expArmyMercenaries),
+    army_level:        armyLvl,
+    navy:              effNavyExp,
+    navy_base:         expNavy,
+    navy_level:        navyLvl,
+    court:             effCourtExp,
+    advisors:          effAdvisorsExp,
+    court_base:        expCourt + expAdvisors,
+    court_level:       courtLvl,
+    stability:         effStabExp,
+    stability_base:    expStability,
+    stability_level:   stabilLvl,
+    fortresses:           effFortresses,
+    fortresses_base:      expFortresses,
+    fortresses_conserved: expFortressesConserved,
+    fortresses_level:     fortressLvl,
+    buildings:         effBuildings,
+    buildings_base:    expBuildings,
+    buildings_level:   buildingsLvl,
+    soldier_salary:    soldierSalary,
+    food_soldiers:     foodSoldiers,
+    hoard_penalty:     hoardPenalty,
+    total:             totalExpense + soldierSalary + foodSoldiers,
+  });
+
+  // ── БАНКРОТСТВО ────────────────────────────────────────────
+  if (newTreasury < 0) {
+    const newLoyalty = Math.max(0, military.loyalty - 5);
+    applyDelta(`nations.${nationId}.military.loyalty`, newLoyalty);
+    addEventLog(`${nation.name}: казна пуста! Армия не получила жалованье. Лояльность упала.`, 'warning');
+  }
+
+  return { income: totalIncome, expense: totalExpense, delta };
+}
+
+// ──────────────────────────────────────────────────────────────
+// ШАГ 5b: ЗАПИСЬ ИСТОРИИ БАЛАНСА (вызывается из turn.js)
+// ──────────────────────────────────────────────────────────────
+
+export function recordEconomyHistory() {
+  const nationId = GAME_STATE.player_nation;
+  const nation   = GAME_STATE.nations?.[nationId];
+  if (!nation) return;
+  const eco  = nation.economy;
+  const turn = GAME_STATE.turn || 0;
+  // Используем _breakdown.total — включает building_profit и все внеплановые расходы
+  const income  = eco._income_breakdown?.total  ?? eco.income_per_turn  ?? 0;
+  const expense = eco._expense_breakdown?.total ?? eco.expense_per_turn ?? 0;
+  if (!Array.isArray(eco._balance_history)) eco._balance_history = [];
+  eco._balance_history.push({ turn, income, expense, net: income - expense });
+  if (eco._balance_history.length > 24) eco._balance_history.shift();
+}
+
+// ──────────────────────────────────────────────────────────────
+// ШАГ 6: ПРИМЕНЕНИЕ ЗАКОНОВ
+// ──────────────────────────────────────────────────────────────
+
+export function applyActiveLaws(nationId) {
+  const nation = GAME_STATE.nations[nationId];
+
+  for (const law of (nation.active_laws || [])) {
+    if (!law.effects_per_turn) continue;
+
+    for (const [path, effect] of Object.entries(law.effects_per_turn)) {
+      const currentValue = getState(`nations.${nationId}.${path}`);
+      if (typeof currentValue === 'number') {
+        applyDelta(`nations.${nationId}.${path}`, currentValue + effect);
+      }
+    }
+
+    // Проверяем условия отмены закона
+    if (law.conditions_for_repeal) {
+      for (const [path, condition] of Object.entries(law.conditions_for_repeal)) {
+        const currentValue = getState(`nations.${nationId}.${path}`);
+        if (evaluateCondition(currentValue, condition)) {
+          // Убираем закон
+          nation.active_laws = nation.active_laws.filter(l => l.id !== law.id);
+          addEventLog(`Закон "${law.name}" автоматически отменён: условие "${condition}" выполнено.`, 'info');
+          break;
+        }
+      }
+    }
+  }
+}
+
+export function evaluateCondition(value, condition) {
+  // Разбираем условие типа "< 0" или "> 100"
+  const match = condition.match(/^([<>=!]+)\s*(-?\d+\.?\d*)$/);
+  if (!match) return false;
+  const [, op, numStr] = match;
+  const num = parseFloat(numStr);
+  switch (op) {
+    case '<':  return value < num;
+    case '<=': return value <= num;
+    case '>':  return value > num;
+    case '>=': return value >= num;
+    case '=':
+    case '==': return value === num;
+    default:   return false;
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// ГЛАВНАЯ ФУНКЦИЯ ЭКОНОМИЧЕСКОГО ХОДА
+//
+// Канонический порядок шагов (см. turn.js шаг 1):
+//   0    POP → здания (_pop_eff)
+//   0.5  computeWorldMarketQuotas → procureCapitalInputs
+//   0.6  procureSlaves
+//   1    processAllRecipes + calculateProduction + routeProduction
+//   1.5  buildProvinceMarket + updateRegionalMarketPrices
+//   2    calculateConsumption + updatePopSatisfied
+//   3    updateBuildingFinancials + applyBuildingAdaptiveBehavior
+//   4а   distributeWages
+//   4б   updatePopWealth
+//   5    recomputeAllProductionCosts + updateMarketPrices
+//   5б   distributeClassIncome   ← после пересчёта profit_last
+//   5в   deductFoodPurchases
+//   5г   processAutonomousBuilding
+//   5д   checkClassBankruptcy
+//   6    processTrade + updateTreasury + applyActiveLaws + события
+//
+// updateProvinceControl (calculateProvinceControl) вызывается СНАРУЖИ
+// в turn.js шаг 0.95 — до runEconomyTick.
+// ──────────────────────────────────────────────────────────────
+
+// Балансировочные коэффициенты в CONFIG.BALANCE (config.js) — ECO_010
+// При изменении — тестируй на 100 ходах: доход должен расти ~5%/10 ходов
+// ──────────────────────────────────────────────────────────────
+// SPOILAGE TABLE (Этап 1 economic3.md)
+// Ставка убыли за 1 ход (1 месяц). За год ×12 (примерно).
+// Калибровка: классические силосы теряли 5-15% зерна/год → ~1% в месяц;
+// фрукты/рыба портятся быстрее; металлы почти не ржавеют; вино зреет в
+// плюс, но мы моделируем средний стокпайл, не отдельные амфоры.
+// Значения консервативные: не провоцируют голод, но убивают накопления.
+// ──────────────────────────────────────────────────────────────
+export const SPOILAGE_RATES = {
+  // Еда с коротким сроком хранения
+  wheat: 0.015, barley: 0.015,  // 1.5%/мес = ~17%/год — в античных силосах
+  fish:  0.06,  tuna:   0.04,   // быстро, соль помогает частично
+  olives: 0.03, olive_oil: 0.004,  // оливки киснут, масло хранится долго
+  honey: 0.003, wine: 0.001,       // мёд и вино практически не портятся
+  // Живые существа — естественная смертность
+  cattle: 0.008,   // 8%/год природной убыли + болезни
+  horses: 0.006,   // ~7%/год
+  slaves: 0.004,   // ~5%/год естественной смертности в рабстве (исторически)
+  // Промтовары — износ / устаревание
+  tools: 0.012,    // ~14%/год — орудия ломаются в работе
+  pottery: 0.004,  // амфоры бьются, но медленно
+  cloth: 0.006, leather: 0.008,    // моль, гниль, износ
+  // Инертные / металлы
+  iron: 0.001, bronze: 0.0005,     // ржавчина, но медленно
+  timber: 0.004, wool: 0.005,
+  salt: 0, sulfur: 0,              // соль и сера — практически вечные
+  charcoal: 0.003, stone: 0,
+  // Роскошь / специализированные
+  incense: 0.004, purple_dye: 0.002, papyrus: 0.008,
+  wax: 0.003, trade_goods: 0.005,
+};
+
+export function processSpoilage(activeEntries) {
+  for (const [, nation] of activeEntries) {
+    const sp = nation.economy?.stockpile;
+    if (!sp) continue;
+    for (const good in SPOILAGE_RATES) {
+      const rate = SPOILAGE_RATES[good];
+      if (!rate || !sp[good] || sp[good] <= 0) continue;
+      // Округляем до целого — stockpile целочисленный в кг/единицах.
+      const loss = Math.floor(sp[good] * rate);
+      if (loss > 0) {
+        sp[good] -= loss;
+        recordMaterialFlow(nation, good, loss, 'spoil');
+      }
+    }
+  }
+}
+
+export function runEconomyTick() {
+  // Session 13 (perf): бампаем счётчик кэша `_calcSlotBaseOutput`. Внутри
+  // тика `_pop_eff`, `_capital_ratio`, `production_eff`, `workers`, `level`
+  // и параметры региона остаются стабильными до последнего вызова в шаге 3a,
+  // поэтому все 5 обращений к _calcSlotBaseOutput переиспользуют кэш.
+  if (typeof _bumpBaseOutputCacheTick === 'function') _bumpBaseOutputCacheTick();
+
+  // Session 24 (perf): бампаем счётчик кэша агрегаций building-производства.
+  // Шаги 1b (calculateAllBuildingProduction) и 1c (_getRegionalBuildingProduction)
+  // переиспользуют один byRegion-map — второй обход слотов исключается.
+  if (typeof _bumpRegionalProdCacheTick === 'function') _bumpRegionalProdCacheTick();
+
+  // Session 29 (perf): инвалидируем per-tick кэш стоимости входов рецептов
+  // (`Σ(input.amount × market.price)` по building_id). Шаги 1a (processAllRecipes),
+  // 3a (updateBuildingFinancials) и 5a (recomputeAllProductionCosts) делят одну
+  // таблицу — ~50 уникальных building_id × 1-3 рецепта вместо ~10k слот-обходов.
+  // Цены стабильны между шагами 1a и 5a; updateMarketPrices запускается после 5a,
+  // поэтому кэш корректен на всём экономическом тике.
+  if (typeof _bumpRecipeCostCacheTick === 'function') _bumpRecipeCostCacheTick();
+
+  // Session 2 (perf): снимок наций один раз на тик — иначе ниже 17+ обходов
+  // Object.keys/entries(GAME_STATE.nations) на 900+ ключах. Ни один шаг ниже
+  // не добавляет/удаляет нации, поэтому снимок стабилен в пределах тика.
+  const _nationEntries = Object.entries(GAME_STATE.nations);
+  const _nationKeys    = _nationEntries.map(e => e[0]);
+
+  // Session 3 (perf): раз-за-тик классификация stub/активная нация.
+  // Stub — племенной «призрак» без building-slots и без legacy-buildings
+  // (~600 из 902 в baseline-пресете). Heavy-шаги (производство, рынок,
+  // зарплаты, бюджеты зданий, автономное строительство) для них пустые,
+  // но съедают O(N) накладных расходов на поиск/ветвления внутри каждой
+  // под-функции. Пропускаем их по списку `_activeKeys`, а налоги/законы
+  // считаем в шаге 6 по полному `_nationEntries` через проверку _stubSet.
+  const _stubSet = new Set();
+  const _activeKeys = [];
+  const _activeEntries = [];
+  for (let i = 0; i < _nationEntries.length; i++) {
+    const [nId, nation] = _nationEntries[i];
+    if (_isStubNation(nation, nId)) {
+      _stubSet.add(nId);
+    } else {
+      _activeKeys.push(nId);
+      _activeEntries.push(_nationEntries[i]);
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 0: POP-эффективность зданий
+  // прошлотиковая satisfied → slot._pop_eff
+  // ════════════════════════════════════════════════════════════
+  if (typeof applyPopSatisfiedToBuildings === 'function') {
+    for (const _nId of _activeKeys) {
+      try { applyPopSatisfiedToBuildings(_nId); } catch (e) { console.warn('[pops_eff]', e); }
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 0.5: КВОТЫ + КАПИТАЛЬНЫЕ РЕСУРСЫ ФЕРМ
+  //   Квоты мирового рынка (world_stockpile / число покупателей).
+  //   Амортизация + четырёхуровневая закупка инструментов/скота:
+  //     local → province → national → world.
+  //   Устанавливает slot._capital_ratio (влияет на выход в шаге 1).
+  // ════════════════════════════════════════════════════════════
+  if (typeof computeWorldMarketQuotas === 'function') {
+    try { computeWorldMarketQuotas(); } catch (e) { console.warn('[world_quotas]', e); }
+  }
+  if (typeof procureCapitalInputs === 'function') {
+    for (const nationId of _activeKeys) {
+      try { procureCapitalInputs(nationId); } catch (e) { console.warn('[capital_inputs]', e); }
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 0.6: ЗАКУПКА РАБОВ
+  //   Покупает рабов с мирового рынка для латифундий.
+  //   → nation.population.by_profession.slaves
+  // ════════════════════════════════════════════════════════════
+  if (typeof procureSlaves === 'function') {
+    for (const nationId of _activeKeys) {
+      try { procureSlaves(nationId); } catch (e) { console.warn('[procure_slaves]', e); }
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 1: ПРОИЗВОДСТВО
+  //   1a. Рецепты — production_ratio, production_cost, вычет входных
+  //   1b. actual output = base × _pop_eff × recipe_ratio × _capital_ratio
+  //   1c. Роутинг: → region.local_stockpile (3 тика) → overflow → nation.stockpile
+  // ════════════════════════════════════════════════════════════
+  for (const m of Object.values(GAME_STATE.market)) { m.production_cost = null; }
+  if (typeof processAllRecipes === 'function') {
+    for (const nationId of _activeKeys) {
+      try { processAllRecipes(nationId); } catch (e) { console.warn('[recipes]', e); }
+    }
+  }
+
+  const allProduced = calculateProduction(_stubSet);
+
+  for (const nationId of _activeKeys) {
+    try { routeProductionToLocalStockpiles(nationId, allProduced); } catch (e) { console.warn('[route_prod]', e); }
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 1.5: ПРОВИНЦИАЛЬНЫЙ И РЕГИОНАЛЬНЫЙ РЫНОК
+  //   buildProvinceMarket — агрегирует local_stockpile → prov.market
+  //     (транспортная надбавка +15%, −5% при дорогах;
+  //      доступ ограничен по effective_control через getProvinceMarketAccess)
+  //   updateRegionalMarketPrices — region.local_market[good].price
+  //     (±15–20% от мировой цены по балансу local_stockpile)
+  // ════════════════════════════════════════════════════════════
+  if (typeof buildProvinceMarket === 'function') {
+    try { buildProvinceMarket(); } catch (e) { console.warn('[province_market]', e); }
+  }
+  if (typeof updateRegionalMarketPrices === 'function') {
+    try { updateRegionalMarketPrices(); } catch (e) { console.warn('[regional_prices]', e); }
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 2: ПОТРЕБЛЕНИЕ POPs
+  //   2a. Корзина потребления каждой страты (wealth-зависимая)
+  //   2b. Вычесть из stockpile; зафиксировать actual vs demanded
+  //   2c. Обновить pop.satisfied = actual / demanded
+  // ════════════════════════════════════════════════════════════
+
+  const allConsumed       = {};
+  const allActualConsumed = {};
+
+  // Session 3 (perf): stub-нации не потребляют — у них нет производства,
+  // а вызов famine-ветки при пустом stockpile уничтожал бы их население.
+  // Их pops/by_profession остаются статичными (как было до нашей правки,
+  // когда subsistence + consumption балансировались).
+  for (const [nationId, nation] of _activeEntries) {
+    allConsumed[nationId] = calculateConsumption(nation);   // wealth-basket (Stage 6) или flat
+
+    const consumed  = allConsumed[nationId];
+    const stockpile = nation.economy.stockpile;
+    const actual    = {};
+
+    for (const [good, amount] of Object.entries(consumed)) {
+      const available = stockpile[good] || 0;
+      actual[good]    = Math.min(amount, available);
+      const deficit   = amount - available;
+
+      if (deficit > 0 && good === 'wheat') {
+        // Голод!
+        const famineMortality = Math.min(
+          deficit * CONFIG.BALANCE.FAMINE_MORTALITY,
+          nation.population.total * 0.05,
+        );
+        const newPop       = nation.population.total - Math.round(famineMortality);
+        const newHappiness = Math.max(0, nation.population.happiness + CONFIG.BALANCE.HAPPINESS_FROM_FAMINE);
+        applyDelta(`nations.${nationId}.population.total`, newPop);
+        applyDelta(`nations.${nationId}.population.happiness`, newHappiness);
+        addEventLog(
+          `${nation.name}: ГОЛОД! Не хватает ${Math.round(deficit)} бушелей зерна. Погибло ${Math.round(famineMortality)} человек.`,
+          'danger',
+        );
+        // Этап 11.1: записываем ФАКТИЧЕСКОЕ потребление (available),
+        // не запрошенное (amount) — stockpile стал 0, потребили только
+        // то что было.
+        recordMaterialFlow(nation, 'wheat', available, 'cons');
+        stockpile.wheat = 0;
+      } else {
+        // Фактическое потребление = min(requested, available); при дефиците
+        // (available < amount) часть спроса не удовлетворяется и НЕ списывается
+        // со склада. Нельзя записывать `amount` — даст positive-drift в audit.
+        const actualConsumed = Math.min(amount, available);
+        stockpile[good] = Math.max(0, available - amount);
+        recordMaterialFlow(nation, good, actualConsumed, 'cons');
+      }
+    }
+    allActualConsumed[nationId] = actual;
+
+    // 2c. Обновить satisfied сразу по нации
+    if (typeof updatePopSatisfied === 'function') {
+      try { updatePopSatisfied(nationId, consumed, actual); } catch (e) { console.warn('[pops_sat]', e); }
+    }
+  }
+
+  // 2d. Проверка дефицитов по всем товарам
+  for (const [nationId, nation] of _activeEntries) {
+    checkSupplyDeficits(nation);
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 2.5: SPOILAGE — естественная убыль товаров (Этап 1 economic3.md)
+  //   Еда портится, инструменты изнашиваются, скот болеет. Устраняет
+  //   exponential_stock, который на 500-ходовом прогоне ловил 60+
+  //   случаев ×10-67 накоплений. Исторически нормально: до эпохи
+  //   консервирования 5-15% годовой потери зерна в силосах — норма.
+  //   Ставки на 1 месяц (UNIT_KG=1, TURNS_PER_YEAR=12).
+  // ════════════════════════════════════════════════════════════
+  processSpoilage(_activeEntries);
+
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 3: ФИНАНСЫ ЗДАНИЙ
+  //   3a. revenue / costs / profit / loss_streak
+  //   3b. Адаптивное поведение: сокращение рабочих, приостановка, закрытие
+  // ════════════════════════════════════════════════════════════
+  if (typeof updateBuildingFinancials === 'function') {
+    for (const nationId of _activeKeys) {
+      try { updateBuildingFinancials(nationId); } catch (e) { console.warn('[bld_fin]', e); }
+    }
+  }
+  if (typeof applyBuildingAdaptiveBehavior === 'function') {
+    for (const nationId of _activeKeys) {
+      try { applyBuildingAdaptiveBehavior(nationId); } catch (e) { console.warn('[bld_adapt]', e); }
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 4: ЗАРПЛАТЫ → ДОХОДЫ POPs
+  //   4a. Распределить wages → обновить _wage_bonuses (и profit-бонусы)
+  //   4b. Обновить pop.wealth на основе incomeAdequacy + priceRatio
+  // ════════════════════════════════════════════════════════════
+  if (typeof distributeWages === 'function') {
+    for (const nationId of _activeKeys) {
+      try { distributeWages(nationId); } catch (e) { console.warn('[wages]', e); }
+    }
+  }
+
+  // ── 4б. WEALTH ────────────────────────────────────────────────────────────
+  // updatePopWealth зависит только от _wage_bonuses (шаг 4а) и рыночных цен.
+  // class_capital здесь не читается → можно вызывать до distributeClassIncome.
+  if (typeof updatePopWealth === 'function') {
+    for (const nationId of _activeKeys) {
+      try { updatePopWealth(nationId); } catch (e) { console.warn('[pops_wealth]', e); }
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 5: РЫНОК + ПРОИЗВОДСТВЕННЫЕ ЗАТРАТЫ
+  //   5a. Сброс production_cost → чистый пересчёт по текущим ценам
+  //   5b. Обновить price_floor = production_cost × 0.5
+  //   5c. Алгоритм трёх зон (дефицит/баланс/избыток), Этап 2
+  //   5d. Запись в price_history (выполняется внутри updateMarketPrices)
+  // ════════════════════════════════════════════════════════════
+  for (const m of Object.values(GAME_STATE.market)) { m.production_cost = null; }
+  if (typeof recomputeAllProductionCosts === 'function') {
+    for (const nationId of _activeKeys) {
+      try { recomputeAllProductionCosts(nationId); } catch (e) { console.warn('[prod_cost]', e); }
+    }
+  }
+  // Передаём ФАКТИЧЕСКИ потреблённые объёмы (не demanded), чтобы мировой склад
+  // и зоны дефицита/баланса/избытка отражали реальные изъятия из stockpile.
+  // allConsumed  = demanded (что хотели)
+  // allActualConsumed = что реально вычтено (min(demanded, available))
+  updateMarketPrices(allProduced, allActualConsumed);
+
+  // ── 5б. КЛАССОВАЯ ЭКОНОМИКА ───────────────────────────────────────────────
+  // Перенесено ПОСЛЕ recomputeAllProductionCosts: теперь slot.profit_last,
+  // slot.revenue_last, slot.costs_last содержат данные ТЕКУЩЕГО тика,
+  // что обеспечивает полное соответствие между числами в батарейках и P&L-разбивкой.
+  // Маршрутизирует:
+  //   nation-owned здания          → treasury
+  //   class-owned здания           → class_capital[owner]
+  //   арендная зарплата фермеров   → class_capital.farmers_class
+  //   военная зарплата солдат      → treasury → class_capital.soldiers_class
+  if (typeof distributeClassIncome === 'function') {
+    for (const nationId of _activeKeys) {
+      try { distributeClassIncome(nationId); } catch (e) { console.warn('[class_income]', e); }
+    }
+  }
+
+  // ── 5в. МОНЕТАРНЫЕ РАСХОДЫ НА ПИТАНИЕ ────────────────────────────────────
+  // Работники зданий тратят часть class_capital на покупку пшеницы с рынка.
+  // Subsistence-фермеры (не в зданиях) кормят себя напрямую — без транзакции.
+  // Вызывается сразу после distributeClassIncome (class_capital уже пополнен).
+  if (typeof deductFoodPurchases === 'function') {
+    for (const nationId of _activeKeys) {
+      try { deductFoodPurchases(nationId); } catch (e) { console.warn('[food_purchases]', e); }
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 5г: АВТОНОМНОЕ СТРОИТЕЛЬСТВО КЛАССОВ
+  //   Классы тратят class_capital на новые здания (после рынка —
+  //   чтобы использовать актуальные цены при оценке прибыльности).
+  //   Затем проверяем банкротства классов.
+  // ════════════════════════════════════════════════════════════
+  if (typeof processAutonomousBuilding === 'function') {
+    for (const nationId of _activeKeys) {
+      try { processAutonomousBuilding(nationId); } catch (e) { console.warn('[auto_build]', e); }
+    }
+  }
+  if (typeof checkClassBankruptcy === 'function') {
+    for (const nationId of _activeKeys) {
+      try { checkClassBankruptcy(nationId); } catch (e) { console.warn('[class_bankrupt]', e); }
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // ШАГ 6: UI / СОБЫТИЯ
+  //   6a. Торговля и казна
+  //   6b. Применение активных законов
+  //   6c. Триггеры событий: затяжной дефицит, банкротство
+  // ════════════════════════════════════════════════════════════
+  for (const [nationId, nation] of _nationEntries) {
+    // Stub-нации: без торговых маршрутов и производства processTrade всё
+    // равно возвращает 0, но внутренний цикл по GAME_STATE.market × партнёрам
+    // аллоцирует массивы. Пропускаем — казна (налоги) обновится ниже.
+    const isStub = _stubSet.has(nationId);
+    const tradeProfit = isStub ? 0 : processTrade(nationId);
+    const { income, expense, delta } = updateTreasury(
+      nationId,
+      allProduced[nationId] || {},
+      allConsumed[nationId] || {},
+      tradeProfit,
+    );
+    if (nationId === GAME_STATE.player_nation) {
+      const sign = delta >= 0 ? '+' : '';
+      addEventLog(
+        `Казна: ${sign}${Math.round(delta)} монет (доход ${Math.round(income)}, расход ${Math.round(expense)})`,
+        'economy',
+      );
+    }
+  }
+  for (const nationId of _nationKeys) {
+    applyActiveLaws(nationId);
+  }
+  _checkEconomicEventTriggers();
+
+  // Расширения экономики (docs/economic2.md) — этапы 1–8.
+  if (typeof runEconomyExtTick === 'function') {
+    try { runEconomyExtTick(); } catch (e) { console.warn('[economy_ext]', e); }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// ТРИГГЕРЫ ЭКОНОМИЧЕСКИХ СОБЫТИЙ (Шаг 6, Stage 7)
+//   • Затяжной дефицит: shortage_streak кратен 5 → предупреждение
+//   • Банкротство казны: treasury < 0 → тревога
+// ──────────────────────────────────────────────────────────────
+
+export function _checkEconomicEventTriggers() {
+  // Дефицит товаров (логируем каждые 5 тиков дефицита)
+  for (const [good, market] of Object.entries(GAME_STATE.market)) {
+    const streak = market.shortage_streak || 0;
+    if (streak > 0 && streak % 5 === 0) {
+      const goodName = (typeof GOODS !== 'undefined' ? GOODS[good]?.name : null) || good;
+      addEventLog(
+        `⚠ Затяжной дефицит: ${goodName} (${streak} тиков подряд). Цена: ${Math.round(market.price)}`,
+        'economy',
+      );
+    }
+  }
+
+  // Банкротство казны игрока
+  const playerNation = GAME_STATE.nations[GAME_STATE.player_nation];
+  if (playerNation && playerNation.economy.treasury < 0) {
+    addEventLog(
+      `⚠ Казна отрицательна (${Math.round(playerNation.economy.treasury)} монет). Риск банкротства!`,
+      'danger',
+    );
+    // Шаг 27: toast-уведомление о дефиците
+    if (typeof window !== 'undefined' && typeof window.showToast === 'function') {
+      window.showToast(
+        `💰 Казна пуста — дефицит (${Math.round(playerNation.economy.treasury)} монет)!`,
+        'warning',
+      );
+    }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// РОСТ НАСЕЛЕНИЯ
+// ──────────────────────────────────────────────────────────────
+
+export function updatePopulationGrowth() {
+  for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
+    const pop = nation.population;
+    const food = nation.economy.stockpile.wheat || 0;
+    const foodNeeded = pop.total * CONFIG.BALANCE.FOOD_PER_PERSON;
+
+    let growthRate = CONFIG.BALANCE.BASE_GROWTH_RATE;
+
+    if (food >= foodNeeded) {
+      // Достаточно еды — нормальный рост, счастье немного растёт
+      const newHappiness = Math.min(100, pop.happiness + 1);
+      applyDelta(`nations.${nationId}.population.happiness`, newHappiness);
+    } else {
+      // Нехватка еды замедляет рост
+      growthRate = -CONFIG.BALANCE.FAMINE_MORTALITY;
+    }
+
+    // Счастье влияет на рост
+    const happinessMod = (pop.happiness - 50) / 1000;
+    growthRate += happinessMod;
+
+    const newPop = Math.max(1000, Math.round(pop.total * (1 + growthRate)));
+    applyDelta(`nations.${nationId}.population.total`, newPop);
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// СЧАСТЬЕ НАСЕЛЕНИЯ (с учётом классовой удовлетворённости)
+// ──────────────────────────────────────────────────────────────
+
+export function updateHappiness() {
+  for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
+    const economy = nation.economy;
+
+    // ── Классовая удовлетворённость ─────────────────────────
+    let happiness = 50; // базовое
+    if (typeof calculateClassSatisfaction === 'function' && nation.population?.by_profession) {
+      const classSat = calculateClassSatisfaction(
+        nation.population.by_profession,
+        economy.stockpile,
+      );
+      // ── Зарплатные бонусы к satisfaction классов ─────────────────────
+      // Заполняются в distributeWages() для игрока каждый ход.
+      const wageBonuses   = nation.population._wage_bonuses   || {};
+      const profitBonuses = nation.population._profit_class_bonuses || {};
+
+      // Маппинг профессия → класс (совпадает с PROF_TO_CLASS в demography.js)
+      const _P2C = {
+        farmers:   'farmers_class',
+        craftsmen: 'craftsmen_class',
+        merchants: 'citizens',
+        sailors:   'sailors_class',
+        clergy:    'clergy_class',
+        soldiers:  'soldiers_class',
+        slaves:    'slaves_class',
+      };
+
+      for (const [prof, bonus] of Object.entries(wageBonuses)) {
+        const classId = _P2C[prof];
+        if (classId && classSat[classId]) {
+          classSat[classId].satisfaction = Math.max(0, Math.min(100,
+            classSat[classId].satisfaction + bonus,
+          ));
+          classSat[classId].wage_bonus = bonus; // для UI
+        }
+      }
+
+      // Profit-бонус классам-владельцам
+      for (const [classId, bonus] of Object.entries(profitBonuses)) {
+        if (bonus && classSat[classId]) {
+          classSat[classId].satisfaction = Math.max(0, Math.min(100,
+            classSat[classId].satisfaction + bonus,
+          ));
+          classSat[classId].profit_bonus = bonus; // для UI
+        }
+      }
+
+      // Amenity-бонусы зданий (таверна, акведук, храм, форум и т.д.)
+      // Заполняются в distributeWages() для игрока каждый ход; суммируются и capped.
+      const bldBonuses = nation.population._class_building_bonuses || {};
+      for (const [classId, bonus] of Object.entries(bldBonuses)) {
+        if (!bonus || !classSat[classId]) continue;
+        const capped = Math.max(-25, Math.min(25, bonus));
+        classSat[classId].satisfaction = Math.max(0, Math.min(100,
+          classSat[classId].satisfaction + capped,
+        ));
+        classSat[classId].building_bonus = capped; // для UI
+      }
+
+      // Бонусы/штрафы законов о труде + бремя иждивенцев
+      // Заполняются в collectLaborLawBonuses() из age_demographics.js каждый ход.
+      const laborLawBonuses = nation.population._labor_law_bonuses || {};
+      for (const [classId, bonus] of Object.entries(laborLawBonuses)) {
+        if (!bonus || !classSat[classId]) continue;
+        const capped = Math.max(-20, Math.min(15, bonus));
+        classSat[classId].satisfaction = Math.max(0, Math.min(100,
+          classSat[classId].satisfaction + capped,
+        ));
+        classSat[classId].labor_law_bonus = capped; // для UI
+      }
+
+      // ── Штраф от высоких налогов (2c) ─────────────────────
+      // Ставка > 20% снижает удовлетворённость затронутых классов.
+      // Формула: penalty = (rate - 0.20) × 200, макс 40 очков.
+      const taxRates = economy.tax_rates_by_class;
+      if (taxRates) {
+        for (const [group, classIds] of Object.entries(TAX_GROUP_CLASSES)) {
+          const rate = taxRates[group] ?? 0;
+          if (rate <= 0.20) continue;
+          const penalty = -Math.min(40, Math.round((rate - 0.20) * 200));
+          for (const classId of classIds) {
+            if (!classSat[classId]) continue;
+            classSat[classId].satisfaction = Math.max(0, Math.min(100,
+              classSat[classId].satisfaction + penalty,
+            ));
+            classSat[classId].tax_burden = penalty; // для UI
+          }
+        }
+      }
+
+      // Сохраняем в состояние для UI — ПОСЛЕ всех модификаторов (налоги, зарплаты,
+      // здания, законы), чтобы UI отражал полную картину удовлетворённости.
+      nation.population.class_satisfaction = classSat;
+
+      // Взвешенное счастье по политическому весу классов
+      if (typeof calculateWeightedHappiness === 'function') {
+        happiness = calculateWeightedHappiness(classSat);
+      }
+
+      // Политические эффекты
+      if (typeof calculatePoliticalEffects === 'function') {
+        const fx = calculatePoliticalEffects(classSat);
+        nation.population._political_effects = fx;
+
+        // Применяем модификаторы производства
+        if (fx.production_mod !== 0) {
+          nation.population._production_mod = 1 + Math.max(-0.4, Math.min(0.3, fx.production_mod));
+        } else {
+          nation.population._production_mod = 1;
+        }
+
+        // Военные эффекты
+        // loyalty_mod сглаживается ×0.3 как morale — не допускаем резких скачков
+        if (fx.military_loyalty_mod !== 0) {
+          const newLoyalty = Math.max(0, Math.min(100,
+            nation.military.loyalty + fx.military_loyalty_mod * 0.3,
+          ));
+          applyDelta(`nations.${nationId}.military.loyalty`, newLoyalty);
+        }
+        if (fx.military_morale_mod !== 0) {
+          const newMorale = Math.max(0, Math.min(100,
+            nation.military.morale + fx.military_morale_mod * 0.2, // сглаживание
+          ));
+          applyDelta(`nations.${nationId}.military.morale`, newMorale);
+        }
+
+        // Легитимность
+        if (fx.legitimacy_mod !== 0) {
+          const newLeg = Math.max(0, Math.min(100,
+            nation.government.legitimacy + fx.legitimacy_mod,
+          ));
+          applyDelta(`nations.${nationId}.government.legitimacy`, newLeg);
+        }
+      }
+    } else {
+      // Запасной вариант — старая логика
+      happiness = nation.population.happiness;
+    }
+
+    // ── Внешние факторы ─────────────────────────────────────
+    if ((nation.military.at_war_with || []).length > 0) {
+      happiness += CONFIG.BALANCE.HAPPINESS_FROM_WAR;
+    }
+    // Штраф от налоговой нагрузки учитывается через satisfaction классов (2c):
+    // _tpPenalty применяется в блоке «Штраф от высоких налогов» выше.
+    // Все нации теперь используют tax_rates_by_class → этот путь не нужен.
+    if (economy.treasury < 0) {
+      happiness -= 3;
+    }
+
+    // Бонус зданий уже применён в updateTreasury
+    const bldBonus = getBuildingBonuses(nationId);
+    if (bldBonus.happiness_bonus > 0) {
+      happiness += Math.round(bldBonus.happiness_bonus * 0.5);
+    }
+
+    happiness = Math.max(0, Math.min(100, Math.round(happiness)));
+    applyDelta(`nations.${nationId}.population.happiness`, happiness);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// _initEconomyPreview()
+//
+// Вызывается ОДИН РАЗ при старте игры (initGame) ДО первого хода.
+// Заполняет income_per_turn / expense_per_turn / _income_breakdown /
+// _expense_breakdown для всех наций, используя ту же формулу, что и
+// updateTreasury(), но БЕЗ изменения казны, морали или стабильности.
+// ══════════════════════════════════════════════════════════════════════════
+export function _initEconomyPreview() {
+  for (const [nationId, nation] of Object.entries(GAME_STATE.nations)) {
+    const eco = nation?.economy;
+    if (!eco) continue;
+
+    const prof = nation.population?.by_profession || {};
+    const mil  = nation.military || {};
+    const gov  = nation.government || {};
+
+    // Инициализируем ставки налогов если их нет
+    if (!eco.tax_rates_by_class) {
+      const rate = eco.tax_rate || 0.10;
+      eco.tax_rates_by_class = {
+        aristocrats: Math.min(0.30, parseFloat((rate * 1.5).toFixed(2))),
+        clergy:      Math.min(0.30, parseFloat((rate * 0.7).toFixed(2))),
+        commoners:   Math.min(0.30, parseFloat((rate * 1.0).toFixed(2))),
+        soldiers:    Math.min(0.30, parseFloat((rate * 0.4).toFixed(2))),
+      };
+    }
+
+    const bldBonuses = (typeof getBuildingBonuses === 'function')
+      ? getBuildingBonuses(nationId)
+      : { tax_mult: 1, port_bonus: 0 };
+
+    // ── Доходы ──────────────────────────────────────────────────────────
+    const taxBases = computeTaxGroupBases(prof);
+    const r = eco.tax_rates_by_class;
+    const taxMult = bldBonuses.tax_mult || 1;
+    const taxByClass = {
+      aristocrats: Math.round((taxBases.aristocrats || 0) * r.aristocrats * TAX_CALIBRATION * taxMult),
+      clergy:      Math.round((taxBases.clergy      || 0) * r.clergy      * TAX_CALIBRATION * taxMult),
+      commoners:   Math.round((taxBases.commoners   || 0) * r.commoners   * TAX_CALIBRATION * taxMult),
+      soldiers:    Math.round((taxBases.soldiers    || 0) * r.soldiers    * TAX_CALIBRATION * taxMult),
+    };
+    const taxTotal = taxByClass.aristocrats + taxByClass.clergy
+                   + taxByClass.commoners   + taxByClass.soldiers;
+
+    const coastalCount = (nation.regions || []).filter(rId => {
+      const reg = GAME_STATE.regions?.[rId];
+      return reg && reg.terrain === 'coastal_city';
+    }).length;
+    const portDuties = Math.round(coastalCount * 120 + (bldBonuses.port_bonus || 0));
+
+    const totalIncome = taxTotal + portDuties;
+
+    // ── Расходы ─────────────────────────────────────────────────────────
+    const expLvls  = eco.expense_levels || {};
+    const armyLvl  = expLvls.army  ?? 1.0;
+    const navyLvl  = expLvls.navy  ?? 1.0;
+    const courtLvl = expLvls.court ?? 1.0;
+
+    const expArmy = Math.round((
+      (mil.infantry    || 0) * CONFIG.BALANCE.INFANTRY_UPKEEP  +
+      (mil.cavalry     || 0) * CONFIG.BALANCE.CAVALRY_UPKEEP   +
+      (mil.mercenaries || 0) * CONFIG.BALANCE.MERCENARY_UPKEEP
+    ) * armyLvl);
+    const expNavy = Math.round((mil.ships || 0) * CONFIG.BALANCE.SHIP_UPKEEP * navyLvl);
+
+    const aliveChars  = (nation.characters || []).filter(c => c.alive !== false);
+    const advisorCnt  = aliveChars.filter(c => c.role === 'advisor').length;
+    const expCourt    = Math.round((aliveChars.length * 15 + advisorCnt * 50) * courtLvl);
+
+    const stability = gov.stability ?? 50;
+    const expStab   = Math.round(200 * (1 - stability / 100));
+    // Рабы не являются расходом казны: их содержание покрывается
+    // через maintenance зданий (workers × 2), в которых они работают.
+
+    const totalExpense = expArmy + expNavy + expCourt + expStab;
+
+    // ── Записываем только поля UI (казна не меняется) ───────────────────
+    eco.income_per_turn  = totalIncome;
+    eco.expense_per_turn = totalExpense;
+    eco._income_breakdown = {
+      tax_aristocrats: taxByClass.aristocrats,
+      tax_clergy:      taxByClass.clergy,
+      tax_commoners:   taxByClass.commoners,
+      tax_soldiers:    taxByClass.soldiers,
+      port_duties:     portDuties,
+      trade_profit:    0,
+      total:           totalIncome,
+    };
+    eco._expense_breakdown = {
+      army:        expArmy,
+      navy:        expNavy,
+      court:     expCourt,
+      stability: expStab,
+      total:     totalExpense,
+    };
+  }
+}
+
+// Backward compat: expose to non-module scripts (ui/, ai/, boot.js)
+

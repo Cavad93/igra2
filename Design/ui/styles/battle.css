@@ -1,0 +1,307 @@
+/* ══════════════════════════════════════════════════════════════
+   battle.css — Результат битвы, тактический бой, осада
+   Вынесено из index.html на этапе 78
+   ══════════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════
+   РЕЗУЛЬТАТ БИТВЫ (#battle-result-overlay)
+══════════════════════════════════════════ */
+#battle-result-overlay {
+  position: fixed; inset: 0; z-index: 1200;
+  background: transparent;
+  display: none; align-items: stretch; justify-content: stretch;
+  cursor: pointer;
+}
+#battle-result-overlay.br-fade-out { animation: br-fadeout 0.35s forwards; }
+@keyframes br-fadeout { to { opacity: 0; } }
+
+/* Кино-полосы сверху/снизу */
+.br-cinematic-top, .br-cinematic-bot {
+  position: fixed; left: 0; right: 0; height: 0;
+  background: #000; z-index: 1201;
+  transition: height 0.4s cubic-bezier(.4,0,.2,1);
+}
+.br-cinematic-top { top: 0; }
+.br-cinematic-bot { bottom: 0; }
+.br-bar--open { height: 48px; }
+
+/* Игровая сцена */
+.br-stage {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 64px 0 80px;
+  overflow: hidden;
+}
+.br-vignette {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%);
+}
+.br-canvas {
+  position: absolute; inset: 0; pointer-events: none;
+  width: 100%; height: 100%;
+}
+
+/* Shock ring */
+.br-shockwave {
+  position: absolute; top: 50%; left: 50%;
+  width: 20px; height: 20px;
+  margin: -10px 0 0 -10px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,200,0,0);
+  pointer-events: none;
+}
+.br-shock--active {
+  animation: br-shockwave 0.7s ease-out forwards;
+}
+@keyframes br-shockwave {
+  0%   { transform: scale(1);   border-color: rgba(232,201,122,0.9); opacity: 1; }
+  100% { transform: scale(28);  border-color: rgba(232,201,122,0);   opacity: 0; }
+}
+
+/* Стороны */
+.br-faction {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  width: 240px; max-width: 30vw;
+  opacity: 0; transition: opacity 0.5s, transform 0.5s cubic-bezier(.22,.68,0,1.2);
+}
+.br-faction--left  { transform: translateX(-120px); margin-left: 40px; }
+.br-faction--right { transform: translateX(120px);  margin-right: 40px; }
+.br-faction--visible {
+  opacity: 1; transform: translateX(0) !important;
+}
+.br-faction--winner { }
+.br-faction--loser  {
+  filter: brightness(0.55) saturate(0.4);
+  transform: translateX(0) rotate(2deg) !important;
+  transition: filter 0.5s, transform 0.5s;
+}
+.br-faction--left.br-faction--loser  { transform: translateX(-8px) rotate(-2deg) !important; }
+.br-faction--right.br-faction--loser { transform: translateX(8px)  rotate(2deg)  !important; }
+
+.br-faction-banner {
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(232,201,122,0.25);
+  border-radius: 10px;
+  padding: 16px 20px;
+  text-align: center;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  width: 100%;
+}
+.br-faction--winner .br-faction-banner {
+  border-color: rgba(232,201,122,0.7);
+  box-shadow: 0 0 32px rgba(232,201,122,0.25), 0 4px 24px rgba(0,0,0,0.5);
+  animation: br-winner-pulse 2s ease-in-out infinite alternate;
+}
+@keyframes br-winner-pulse {
+  from { box-shadow: 0 0 20px rgba(232,201,122,0.2), 0 4px 24px rgba(0,0,0,0.5); }
+  to   { box-shadow: 0 0 48px rgba(232,201,122,0.5), 0 4px 24px rgba(0,0,0,0.5); }
+}
+.br-faction-flag   { font-size: 54px; line-height: 1; margin-bottom: 6px; }
+.br-faction-name   { font-size: 16px; font-weight: bold; color: #fff; margin-bottom: 2px; }
+.br-faction-cmd    { font-size: 11px; color: rgba(232,201,122,0.7); margin-bottom: 6px; }
+.br-faction-troops { font-size: 18px; letter-spacing: 2px; margin-bottom: 4px; }
+.br-faction-count  { font-size: 12px; color: rgba(255,255,255,0.5); }
+
+/* Бейджи победителя/проигравшего */
+.br-winner-badge, .br-loser-badge {
+  font-size: 11px; font-weight: bold; letter-spacing: 2px;
+  padding: 4px 12px; border-radius: 3px;
+  opacity: 0; transform: scale(0.7);
+  transition: opacity 0.4s, transform 0.4s cubic-bezier(.22,.68,0,1.5);
+}
+.br-badge--visible { opacity: 1 !important; transform: scale(1) !important; }
+.br-winner-badge { background: rgba(232,201,122,0.2); border: 1px solid rgba(232,201,122,0.6); color: var(--gold-bright); }
+.br-loser-badge  { background: rgba(200,50,50,0.2); border: 1px solid rgba(200,50,50,0.5); color: #ef9a9a; }
+
+/* Потери */
+.br-cas-block {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  opacity: 0; transform: translateY(10px);
+  transition: opacity 0.4s, transform 0.4s;
+}
+.br-cas--visible { opacity: 1 !important; transform: none !important; }
+.br-cas-num  { font-size: 28px; font-weight: bold; color: #ef5350; text-shadow: 0 0 12px rgba(239,83,80,0.6); }
+.br-cas-lbl  { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
+
+/* Центр */
+.br-center-zone {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  flex-shrink: 0;
+}
+.br-terrain-label {
+  font-size: 12px; color: rgba(255,255,255,0.45);
+  text-transform: uppercase; letter-spacing: 2px;
+}
+.br-vs-text {
+  font-size: 40px; font-weight: bold; color: rgba(255,255,255,0.7);
+  text-shadow: 0 0 20px rgba(255,255,255,0.3);
+  transition: transform 0.2s;
+}
+.br-vs--pulse  { animation: br-vs-pulse 0.4s ease-in-out; }
+.br-vs--clash  { font-size: 52px !important; animation: br-clash-pop 0.3s cubic-bezier(.22,.68,0,1.5); }
+@keyframes br-vs-pulse  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4)} }
+@keyframes br-clash-pop { 0%{transform:scale(0.5)} 100%{transform:scale(1)} }
+
+.br-dominance-badge {
+  background: rgba(232,201,122,0.12); border: 1px solid rgba(232,201,122,0.4);
+  border-radius: 4px; padding: 6px 14px;
+  font-size: 13px; color: var(--gold-bright); letter-spacing: 1px;
+  display: flex; align-items: center; gap: 6px;
+  opacity: 0; transform: scale(0.8);
+  transition: opacity 0.4s, transform 0.4s cubic-bezier(.22,.68,0,1.4);
+}
+.br-dom--visible { opacity: 1 !important; transform: scale(1) !important; }
+
+/* Нижняя полоса */
+.br-result-strip {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 1202;
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 28px;
+  background: rgba(0,0,0,0.82);
+  border-top: 2px solid rgba(232,201,122,0.15);
+  transform: translateY(100%);
+  transition: transform 0.5s cubic-bezier(.22,.68,0,1.2);
+  backdrop-filter: blur(6px);
+}
+.br-strip--visible { transform: translateY(0) !important; }
+.br-result-text {
+  font-size: 20px; font-weight: bold; letter-spacing: 3px;
+  flex-shrink: 0;
+}
+.br-victory .br-result-text { color: var(--gold-bright); text-shadow: 0 0 16px rgba(232,201,122,0.5); }
+.br-defeat  .br-result-text { color: #ef5350; text-shadow: 0 0 16px rgba(239,83,80,0.5); }
+.br-captured {
+  font-size: 13px; color: var(--warning); flex-shrink: 0;
+}
+.br-progress-wrap {
+  flex: 1; height: 3px; background: rgba(255,255,255,0.1);
+  border-radius: 2px; overflow: hidden; min-width: 60px;
+}
+.br-progress-bar { height: 100%; background: var(--gold); width: 100%; }
+.br-close-btn {
+  background: rgba(232,201,122,0.1); border: 1px solid rgba(232,201,122,0.35);
+  color: rgba(255,255,255,0.7); padding: 7px 18px; border-radius: 4px;
+  cursor: pointer; font-size: 12px; flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.br-close-btn:hover { background: rgba(232,201,122,0.22); color: #fff; }
+
+/* Тряска экрана */
+@keyframes br-shake {
+  0%,100%{ transform: translate(0,0) rotate(0); }
+  15%    { transform: translate(-6px, 4px) rotate(-0.5deg); }
+  30%    { transform: translate(7px, -3px) rotate(0.3deg); }
+  45%    { transform: translate(-5px, 5px) rotate(-0.4deg); }
+  60%    { transform: translate(4px, -2px) rotate(0.2deg); }
+  75%    { transform: translate(-3px, 3px) rotate(-0.1deg); }
+}
+.br-shake { animation: br-shake 0.55s cubic-bezier(.36,.07,.19,.97); }
+
+/* ══════════════════════════════════════
+   ТАКТИЧЕСКИЙ БОЙ — D1: CSS-переменные
+══════════════════════════════════════ */
+#tactical-overlay {
+  --tac-bg:         #0d0d0d;
+  --tac-bar:        #111111;
+  --tac-border:     #2a2a2a;
+  --tac-border-acc: #3a3a3a;
+  --tac-text:       #c8c0b0;
+  --tac-text-dim:   #888880;
+  --tac-gold:       #e0c060;
+  --tac-green:      #88ee88;
+  --tac-red:        #ee8888;
+  --tac-panel:      rgba(10,10,10,0.92);
+}
+#tactical-overlay {
+  position: fixed; inset: 0;
+  background: var(--tac-bg);
+  z-index: 9000;
+  display: none;
+  flex-direction: column;
+  /* A3: fade-in */
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+#tactical-overlay.visible { display: flex; }
+#tactical-overlay.visible.faded-in { opacity: 1; }
+/* Pixi.js battle map — единственный рендерер. Растягивается на всё
+   пространство между top-bar и bottom-bar; canvas внутри центрируется. */
+#pixi-battle-map {
+  flex: 1; min-height: 0; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--tac-bg);
+}
+#pixi-battle-map canvas {
+  display: block; cursor: crosshair;
+  max-width: 100%; max-height: 100%;
+  /* HiDPI — Pixi сам выставит width/height; CSS ограничивает масштаб. */
+  object-fit: contain;
+}
+#tactical-top-bar {
+  height: 34px; background: var(--tac-bar); color: var(--tac-text);
+  display: flex; align-items: center; gap: 24px;
+  padding: 0 14px; font-size: 12px;
+  border-bottom: 1px solid var(--tac-border); flex-shrink: 0;
+  font-family: var(--font-display); letter-spacing: 0.04em;
+}
+#tactical-bottom-bar {
+  height: 46px; background: var(--tac-bar);
+  border-top: 1px solid var(--tac-border);
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 14px; flex-shrink: 0;
+}
+#tactical-bottom-bar button {
+  padding: 5px 14px; background: #181818;
+  border: 1px solid var(--tac-border-acc); color: var(--tac-text);
+  border-radius: 3px; cursor: pointer; font-size: 12px;
+  transition: background 0.15s;
+}
+#tactical-bottom-bar button:hover { background: #222222; }
+#tac-btn-next    { border-color: #2a6a2a; color: var(--tac-green); }
+#tac-btn-retreat { border-color: #6a2a2a; color: var(--tac-red); }
+#tactical-unit-panel {
+  position: absolute; top: 42px; left: 6px;
+  width: 176px; background: var(--tac-panel);
+  border: 1px solid var(--tac-border-acc); border-radius: 4px;
+  padding: 10px; color: var(--tac-text); font-size: 12px;
+  display: none; line-height: 1.5;
+}
+#tup-name { font-family: var(--font-display); font-size: 11px; color: var(--tac-gold); letter-spacing: 0.05em; }
+#tactical-log {
+  position: absolute; bottom: 54px; right: 6px;
+  width: 250px; background: var(--tac-panel);
+  border: 1px solid var(--tac-border); border-radius: 4px;
+  padding: 6px; font-size: 11px; color: var(--tac-text-dim);
+  max-height: 130px; overflow: hidden;
+}
+.tac-log-entry { padding: 2px 0; border-bottom: 1px solid #1e1e1e; line-height: 1.4; }
+.tac-log-entry:first-child { color: var(--tac-text); }
+#tac-minimap {
+  position: absolute; bottom: 54px; left: 6px;
+  width: 110px; height: 80px;
+  background: rgba(5,5,5,0.88);
+  border: 1px solid var(--tac-border-acc); border-radius: 3px;
+  pointer-events: none; display: none;
+}
+#tac-tooltip {
+  position: fixed; background: rgba(5,5,5,0.92);
+  border: 1px solid var(--tac-border-acc); color: var(--tac-text);
+  font-size: 11px; padding: 5px 8px; border-radius: 4px;
+  pointer-events: none; white-space: pre; z-index: 9100; display: none;
+}
+/* ── панель выбранного юнита ── */
+.tup-bar-wrap { height: 5px; background: #252525; border-radius: 2px; margin: 3px 0; }
+.tup-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+.tup-morale   { background: #3a9a3a; }
+.tup-fatigue  { background: #cc8822; }
+.tup-formation-btns { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 8px; }
+.tup-form-btn { font-size: 10px; padding: 2px 5px; background: #1a1a1a;
+  border: 1px solid #3a3a3a; color: #999; border-radius: 2px; cursor: pointer; }
+.tup-form-btn:hover  { background: #252525; }
+.tup-form-btn.active { border-color: #c8a000; color: var(--gold-bright); }
+#tup-reserve-btn button { width: 100%; margin-top: 6px; padding: 4px;
+  background: #1a1a1a; border: 1px solid #444; color: #bbb;
+  border-radius: 2px; cursor: pointer; font-size: 11px; }

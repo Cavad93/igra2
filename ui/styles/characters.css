@@ -252,7 +252,7 @@
 .adv-skill { color: var(--gold-bright); font-weight: bold; }
 
 /* ══════════════════════════════════════════════════
-   uisuper Этапы 23/24 — COURT BOARD (EU4/Imperator)
+   uisuper Этапы 23/24 — COURT BOARD (коллегия советников)
    Единый паттерн: «Коллегия» 2×2 сверху + «Зал
    заседаний» (разделитель + drop-target unassign) +
    «Roster» снизу с drag-n-drop, фильтрами и сортировкой.

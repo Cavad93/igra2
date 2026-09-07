@@ -1,0 +1,18 @@
+/* -----------------------------------------------------------
+   responsive.css -- медиа-запросы для адаптивности.
+   Подключается ПОСЛЕДНИМ из всех стилей.
+   Рефакторинг Части IV, этап 79 (uisuper.md).
+   ----------------------------------------------------------- */
+
+@media (max-width: 1024px) {
+  :root { --panel-w: 220px; }
+}
+@media (max-width: 768px) {
+  :root { --panel-w: 0px; --footer-h: 32px; }
+  #left-panel, #right-panel { display: none; }
+  #input-row   { width: auto; flex: 1; }
+  #region-info { width: 92vw; right: 4vw; }
+}
+@media (max-width: 480px) {
+  #region-info { width: 96vw; right: 2vw; font-size: 10px; }
+}

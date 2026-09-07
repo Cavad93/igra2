@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Проект
 
-**Ancient Strategy (igra2 / Syracuse 301 BC)** — браузерная историческая стратегия на ванильном JS без фреймворков (кроме Leaflet и Pixi.js по CDN). Игровая нация по умолчанию — Сиракузы, старт — 301 г. до н.э. Параллельно в репозитории живёт Node-агент **Pax Historia Chain Builder** в [agents/](agents/), который генерирует производственные цепочки через Claude API.
+**Ancient Strategy (igra2 / Syracuse 301 BC)** — браузерная историческая стратегия на ванильном JS без фреймворков (кроме Leaflet и Pixi.js по CDN). Игровая нация по умолчанию — Сиракузы, старт — 301 г. до н.э. Параллельно в репозитории живёт вспомогательный Node-агент в [agents/](agents/), который генерирует производственные цепочки через Claude API.
 
 **Исторический диапазон игры:** с **301 г. до н.э.** до **развала Западной Римской империи (476 г. н.э.)** — 777 лет × 12 ходов = **9324 хода** максимум. Все экономические, демографические и военные модели должны оставаться стабильными на этом интервале (без unbounded growth, NaN, банкротства подавляющей части наций и т.п.). Любые константы баланса выбирать так, чтобы долгосрочные прогоны (1000+ ходов) не ломали инварианты.
 
@@ -20,7 +20,7 @@ npm run dev          # vite — откроет index.html на localhost
 npm run build:vite   # vite build → dist/
 npm run preview      # vite preview
 
-# ── Агент генерации цепочек Pax Historia ──
+# ── Агент генерации производственных цепочек (вспомогательный Node-инструмент) ──
 npm run build        # node agents/chain_builder.js — пакетная генерация
 npm run ui           # node agents/server.js — HTTP+SSE UI для агента (PORT=3000)
 npm run validate     # node agents/validate_inputs.js
@@ -89,7 +89,7 @@ node test_diag.mjs                    # расширенная диагност�
 
 ### Карта и геоданные — источник истины
 
-Карта построена на **Pax Historia preset "Legacy of Alexander | 304 BC"** (Rami Elhadhoudi / Itacool) + тайлы CAWM (lib.uiowa.edu). Данные в [data/pleiades_300bc.json](data/pleiades_300bc.json), [data/world_bc300.geojson](data/world_bc300.geojson), [data/map.js](data/map.js). Миграционные скрипты в [scripts/](scripts/) (Python + JS) — одноразовые, использовались для сборки стартового состояния; при рантайме не запускаются.
+Карта — исторический сценарий на 301 г. до н.э. Данные в [data/pleiades_300bc.json](data/pleiades_300bc.json), [data/world_bc300.geojson](data/world_bc300.geojson), [data/map.js](data/map.js). Миграционные скрипты в [scripts/](scripts/) (Python + JS) — одноразовые, использовались для сборки стартового состояния; при рантайме не запускаются.
 
 ### CSS — миграция в процессе
 

@@ -20,8 +20,8 @@ export async function initGame(options = {}) {
     JSON.stringify(INITIAL_CHARACTERS_SYRACUSE)
   );
 
-  // Загружаем персонажей крупных наций (при их наличии в текущем пресете —
-  // Pax Historia 304 BC включает не все страны первоначального датасета)
+  // Загружаем персонажей крупных наций (при их наличии в текущем датасете —
+  // сценарий 301 BC включает не все страны первоначального списка)
   if (GAME_STATE.nations.rome) {
     GAME_STATE.nations.rome.characters = JSON.parse(JSON.stringify(INITIAL_SENATORS_ROME));
   }

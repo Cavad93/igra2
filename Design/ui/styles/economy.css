@@ -1,0 +1,59 @@
+/* ═══════════════════════════════════════════════════════════
+   economy.css — Стили экономического обзора
+   Вынесено из index.html (этап 75)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   ЭКОНОМИЧЕСКИЙ ОБЗОР — React overlay
+   UI полностью на inline-styles (economy_react.jsx).
+   Здесь только базовые overlay-стили и overlay hidden.
+   ════════════════════════════════════════════════════════════════ */
+
+#economy-overlay { }
+#economy-overlay.hidden { display: none !important; }
+
+/* Semantic colors */
+.good    { color: #81c784 !important; }
+.bad     { color: #ef9a9a !important; }
+.dim     { color: var(--text-dim) !important; }
+.neutral { color: var(--text-dim) !important; }
+.warn    { color: #ffb74d !important; }
+
+/* Legacy adm compatibility */
+.adm-dep--ok   { color: #81c784 !important; }
+.adm-dep--warn { color: #ffb74d !important; }
+.adm-dep--bad  { color: #ef9a9a !important; }
+
+/* ════════════════════════════════════════════════════════════════
+   ЭКОНОМИЧЕСКИЙ ОБЗОР (React) — анимации и глобальные стили
+   ════════════════════════════════════════════════════════════════ */
+
+/* Анимированный badge «Дефицит» */
+@keyframes deficitPulse {
+  0%   { background: linear-gradient(90deg, #7f1d1d 0%, #dc2626 100%); box-shadow: 0 0 6px rgba(220,38,38,0.3); }
+  50%  { background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%); box-shadow: 0 0 12px rgba(239,68,68,0.55); }
+  100% { background: linear-gradient(90deg, #7f1d1d 0%, #dc2626 100%); box-shadow: 0 0 6px rgba(220,38,38,0.3); }
+}
+.eco-deficit-badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 20px;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  color: #fff; white-space: nowrap;
+  animation: deficitPulse 2.2s ease-in-out infinite;
+}
+
+/* Мигание алертной иконки ⚠ */
+@keyframes alertBlink {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+.eco-alert-blink { animation: alertBlink 1.4s ease-in-out infinite; }
+
+/* Пульсация кнопки при income alert */
+.eco-btn-alert { border-color: rgba(224,85,85,0.6) !important; }
+@keyframes eco-pulse {
+  0%,100% { box-shadow: none; }
+  50%      { box-shadow: 0 0 9px rgba(224,85,85,0.55); }
+}
+#eco-open-btn.eco-btn-alert { animation: eco-pulse 2s ease-in-out infinite; }

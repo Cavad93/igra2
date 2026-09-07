@@ -2124,7 +2124,7 @@ function _candidateScore(char, posDef) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// uisuper Этапы 23/24 — COURT BOARD (EU4/Imperator)
+// uisuper Этапы 23/24 — COURT BOARD (коллегия советников)
 // Единый паттерн: коллегия (2×2 крупных камей) сверху + «Зал
 // заседаний» (divider, drop-target для unassign) + roster со
 // всеми свободными персонажами снизу. Drag-n-drop между roster

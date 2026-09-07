@@ -1,0 +1,731 @@
+/* -----------------------------------------------------------
+   splash.css — главное меню + экран загрузки (мозаика тессер).
+   Стиль вдохновлён Europa Universalis V:
+     • Левая декоративная панель (360px) с логотипом и кнопками
+     • Правая основная область с info-карточками
+     • Золотая декоративная рамка + SVG-орнаменты
+     • Полупрозрачный тёмный фон поверх мозаики
+
+   Зависит от: base.css (палитра, --font-display, --font-ui,
+   --gold, --gold-dim, --text-dim, --text-xs, --bg-deep).
+   ----------------------------------------------------------- */
+
+/* ═══════════════════════════════════════════════════════════════
+   Корневой контейнер + мозаика + виньетка
+═══════════════════════════════════════════════════════════════ */
+
+#splash-screen,
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #060402;
+  display: block;          /* grid будет внутри .splash__content */
+  transition: opacity 0.5s ease;
+  overflow: hidden;
+  font-family: var(--font-ui, 'Inter', sans-serif);
+  color: #e8dcb8;
+}
+
+.splash__bg { display: none; }
+
+/* Canvas мозаики — фон */
+#splash-mosaic {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Виньетка — затемняет углы, фокусирует взгляд */
+.splash__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 35%,
+    rgba(0,0,0,0.8) 100%
+  );
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Контейнер контента — grid-композиция EU5-стиля */
+.splash__content,
+#splash-inner {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  grid-template-rows: 1fr;
+  height: 100vh;
+  width: 100vw;
+  padding: 22px 24px;
+  box-sizing: border-box;
+  gap: 24px;
+  pointer-events: none;   /* клики сквозь общую область, кроме интерактивных */
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ЛЕВАЯ ДЕКОРАТИВНАЯ ПАНЕЛЬ
+═══════════════════════════════════════════════════════════════ */
+
+.splash__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background:
+    linear-gradient(180deg, rgba(14,9,4,0.92) 0%, rgba(10,7,3,0.95) 100%);
+  border: 1px solid rgba(196, 160, 84, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.4) inset,
+    0 8px 40px rgba(0,0,0,0.55),
+    0 0 60px rgba(196, 160, 84, 0.08) inset;
+  padding: 0 18px 0;
+  pointer-events: auto;
+  overflow: hidden;   /* orbs/текстуры не вылезают */
+}
+
+/* Нижняя и верхняя золотая «полочка» — декор рамки */
+.splash__panel::before,
+.splash__panel::after {
+  content: '';
+  position: absolute;
+  left: 14px; right: 14px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(196, 160, 84, 0.65) 30%,
+    rgba(226, 193, 102, 0.95) 50%,
+    rgba(196, 160, 84, 0.65) 70%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+.splash__panel::before { top: 82px; }   /* под лого */
+.splash__panel::after  { bottom: 84px; } /* над футером */
+
+/* Орнаменты — SVG сверху и снизу панели */
+.splash__ornament {
+  width: calc(100% + 36px);
+  margin: 0 -18px;
+  height: 22px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+.splash__ornament--top    { margin-top: 14px; }
+.splash__ornament--bottom { margin-top: auto; margin-bottom: 10px; }
+
+/* ── Лого в «рамке» (EU5-стиль: выделенная карточка для названия) ── */
+
+.splash__logo-frame {
+  position: relative;
+  text-align: center;
+  padding: 14px 10px 18px;
+  margin-top: 4px;
+}
+
+.splash__crest {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 0 8px rgba(226, 193, 102, 0.5));
+}
+
+#splash-title,
+.splash__title {
+  font-family: var(--font-display, 'Cormorant Garamond', 'Times New Roman', serif);
+  font-weight: 800;
+  font-size: 34px;
+  line-height: 1.0;
+  letter-spacing: 0.08em;
+  color: transparent;
+  background: linear-gradient(180deg,
+    #f4dd95 0%,
+    #e2c166 45%,
+    #b28a3e 75%,
+    #8a6f2e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: 0 2px 14px rgba(0,0,0,0.75);
+  margin: 0;
+  padding: 0;
+}
+
+#splash-subtitle,
+.splash__subtitle {
+  font-family: var(--font-display, serif);
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  color: #b08a40;
+  text-transform: uppercase;
+  margin: 8px 0 0;
+  opacity: 0.85;
+}
+
+.splash__flourish {
+  margin: 12px auto 0;
+  width: 90px;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(226, 193, 102, 0.9),
+    transparent);
+  position: relative;
+}
+.splash__flourish::after {
+  content: '✦';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #e2c166;
+  font-size: 12px;
+  background: #0a0703;
+  padding: 0 4px;
+}
+
+/* ── Статус загрузки (показывается до появления меню) ── */
+
+.splash__loading {
+  padding: 20px 4px;
+  text-align: center;
+}
+
+#splash-bar-wrap {
+  width: 80%;
+  height: 2px;
+  background: #1a1208;
+  border-radius: 2px;
+  margin: 0 auto 10px;
+  overflow: hidden;
+}
+
+#splash-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #7a5a18, #e2c166);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+#splash-status {
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  color: #8a6f2e;
+  text-transform: uppercase;
+  font-family: var(--font-ui, sans-serif);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   МЕНЮ-КНОПКИ
+═══════════════════════════════════════════════════════════════ */
+
+.splash__menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 6px 10px;
+  pointer-events: auto;
+  animation: splashMenuFade 520ms ease-out;
+}
+
+@keyframes splashMenuFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.splash__btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 16px;
+  background:
+    linear-gradient(180deg, rgba(46, 32, 14, 0.85) 0%, rgba(22, 15, 6, 0.90) 100%);
+  border: 1px solid rgba(196, 160, 84, 0.45);
+  color: #e8dcb8;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.35) inset,
+    0 1px 0 rgba(226, 193, 102, 0.1) inset,
+    0 2px 6px rgba(0,0,0,0.4);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.1s ease,
+    color 0.15s ease;
+  text-align: left;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.splash__btn:hover:not(:disabled) {
+  background:
+    linear-gradient(180deg, rgba(84, 58, 24, 0.92) 0%, rgba(46, 30, 12, 0.95) 100%);
+  border-color: #e2c166;
+  color: #f5e5b8;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.4) inset,
+    0 1px 0 rgba(255, 240, 170, 0.15) inset,
+    0 3px 10px rgba(0,0,0,0.55),
+    0 0 18px rgba(226, 193, 102, 0.22);
+}
+
+.splash__btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.4) inset;
+}
+
+.splash__btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  filter: saturate(0.6);
+}
+
+.splash__btn--primary {
+  background:
+    linear-gradient(180deg, rgba(122, 82, 32, 0.92) 0%, rgba(70, 44, 14, 0.95) 100%);
+  border-color: #e2c166;
+}
+
+.splash__btn--primary:hover:not(:disabled) {
+  background:
+    linear-gradient(180deg, rgba(158, 108, 42, 0.95) 0%, rgba(92, 60, 20, 0.98) 100%);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.4) inset,
+    0 1px 0 rgba(255, 240, 170, 0.2) inset,
+    0 4px 14px rgba(0,0,0,0.6),
+    0 0 24px rgba(226, 193, 102, 0.32);
+}
+
+.splash__btn--danger {
+  color: #d6b8a0;
+}
+
+.splash__btn--danger:hover:not(:disabled) {
+  border-color: #c48a60;
+  color: #e8cca8;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.4) inset,
+    0 1px 0 rgba(255, 210, 170, 0.12) inset,
+    0 3px 10px rgba(0,0,0,0.55),
+    0 0 18px rgba(196, 138, 96, 0.24);
+}
+
+.splash__btn-icon {
+  font-size: 17px;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+  opacity: 0.92;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+}
+
+.splash__btn-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.splash__btn-label {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: inherit;
+}
+
+.splash__btn-meta {
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: rgba(196, 160, 84, 0.7);
+  font-weight: 400;
+}
+
+.splash__btn--small {
+  padding: 7px 16px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  flex: 0 0 auto;
+  justify-content: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Разделитель с орнаментом
+═══════════════════════════════════════════════════════════════ */
+
+.splash__divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 6px;
+  padding: 0 4px;
+}
+
+.splash__divider span {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(196,160,84,0.4), transparent);
+}
+
+.splash__divider i {
+  color: #e2c166;
+  font-size: 10px;
+  font-style: normal;
+  opacity: 0.7;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   API-ключи (свёрнутый блок)
+═══════════════════════════════════════════════════════════════ */
+
+.splash__keys {
+  background: rgba(8,5,2,0.6);
+  border: 1px solid rgba(196,160,84,0.25);
+  overflow: hidden;
+}
+
+.splash__keys[open] {
+  background: rgba(10,7,3,0.8);
+  border-color: rgba(196,160,84,0.4);
+}
+
+.splash__keys summary {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--text-dim, #8a7d60);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  user-select: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.splash__keys summary::-webkit-details-marker { display: none; }
+
+.splash__keys summary:hover {
+  background: rgba(60, 44, 20, 0.45);
+  color: #e8dcb8;
+}
+
+.splash__keys-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.splash__keys-icon {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.splash__keys-status {
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-weight: 600;
+}
+
+.splash__keys-status--ok   { color: #95c695; }
+.splash__keys-status--warn { color: #d6a080; }
+
+.splash__keys-body {
+  padding: 12px 14px 14px;
+  border-top: 1px solid rgba(196, 160, 84, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.splash__key-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 2px 8px;
+  align-items: baseline;
+}
+
+.splash__key-name {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 11px;
+  color: #d8cca0;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.splash__key-hint {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 10px;
+  color: rgba(196, 160, 84, 0.6);
+  font-style: italic;
+}
+
+.splash__key-field input {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  padding: 7px 10px;
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(196,160,84,0.3);
+  color: #f0e4c0;
+  font-family: var(--font-mono, 'SF Mono', 'Consolas', monospace);
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.splash__key-field input:focus {
+  border-color: #e2c166;
+  background: rgba(0,0,0,0.75);
+}
+
+.splash__keys-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.splash__keys-feedback {
+  font-size: 11px;
+  flex: 1;
+}
+
+.splash__keys-feedback[data-kind="ok"]   { color: #95c695; }
+.splash__keys-feedback[data-kind="warn"] { color: #d6a080; }
+
+.splash__keys-note {
+  margin: 6px 0 0;
+  font-size: 10px;
+  color: #8a7d60;
+  line-height: 1.55;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Footer панели (badge игрока)
+═══════════════════════════════════════════════════════════════ */
+
+.splash__panel-footer {
+  margin-top: auto;
+  padding: 14px 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.splash__player-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.splash__player-seal {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%,
+      rgba(255,220,140,0.45) 0%,
+      rgba(138, 98, 40, 0.9) 55%,
+      rgba(60, 40, 14, 1) 100%);
+  border: 1.5px solid #e2c166;
+  color: #1a1206;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow:
+    0 0 8px rgba(226, 193, 102, 0.35),
+    0 0 0 1px rgba(0,0,0,0.3) inset;
+}
+
+.splash__player-seal svg {
+  color: #2c1f0c;
+  filter: drop-shadow(0 1px 0 rgba(255, 230, 170, 0.35));
+}
+
+.splash__player-info { min-width: 0; }
+
+.splash__player-name {
+  font-family: var(--font-display, serif);
+  font-size: 14px;
+  color: #e8dcb8;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.splash__player-role {
+  font-size: 10.5px;
+  color: #8a7d60;
+  letter-spacing: 0.02em;
+  font-style: italic;
+  margin-top: 1px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ПРАВАЯ ОСНОВНАЯ ОБЛАСТЬ (топ-бадж + карточки)
+═══════════════════════════════════════════════════════════════ */
+
+.splash__main {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4px 4px;
+  pointer-events: none;
+}
+
+.splash__topbar {
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: auto;
+}
+
+.splash__badge {
+  background: rgba(14,9,4,0.80);
+  border: 1px solid rgba(196,160,84,0.45);
+  padding: 8px 18px 8px 16px;
+  text-align: right;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.3) inset,
+    0 3px 10px rgba(0,0,0,0.4);
+}
+
+.splash__badge-name {
+  font-family: var(--font-display, serif);
+  font-size: 13px;
+  color: #e2c166;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+}
+
+.splash__badge-ver {
+  font-size: 10.5px;
+  color: #8a7d60;
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+  font-family: var(--font-ui, sans-serif);
+}
+
+/* ── Карточки внизу ─────────────────────────────────────────── */
+
+.splash__cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  pointer-events: auto;
+}
+
+.splash__card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(14,9,4,0.82);
+  border: 1px solid rgba(196,160,84,0.38);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.3) inset,
+    0 4px 12px rgba(0,0,0,0.4);
+  transition: border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.splash__card:hover {
+  border-color: rgba(226, 193, 102, 0.7);
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.35) inset,
+    0 6px 18px rgba(0,0,0,0.5),
+    0 0 20px rgba(226, 193, 102, 0.15);
+}
+
+.splash__card-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+  opacity: 0.9;
+  margin-top: -2px;
+}
+
+.splash__card-body { min-width: 0; flex: 1; }
+
+.splash__card-title {
+  font-family: var(--font-display, serif);
+  font-size: 13px;
+  color: #e2c166;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.splash__card-desc {
+  font-size: 11.5px;
+  color: #b8a87a;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Анимация скрытия splash
+═══════════════════════════════════════════════════════════════ */
+
+.splash--hiding {
+  animation: splashFade 0.8s ease forwards;
+}
+
+@keyframes splashFade {
+  to { opacity: 0; pointer-events: none; }
+}
+
+#splash-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Адаптив: узкие экраны — карточки в одну колонку, панель меньше
+═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1100px) {
+  .splash__content,
+  #splash-inner {
+    grid-template-columns: 320px 1fr;
+    padding: 16px 18px;
+    gap: 18px;
+  }
+  .splash__cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .splash__content,
+  #splash-inner {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+  .splash__panel {
+    max-width: 400px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .splash__main { display: none; } /* на мобиле — только панель */
+}
